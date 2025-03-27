@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Search - SALMART</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .search-container {
+      max-width: 700px;
+      margin: auto;
+      text-align: center;
+    }
+
+    .search-container input {
+      width: 80%;
+      padding: 12px 16px;
+      font-size: 16px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      margin-bottom: 10px;
+    }
+
+    .search-container button {
+      padding: 12px 20px;
+      background-color: #009966;
+      border: none;
+      color: white;
+      font-size: 16px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .results-section {
+      max-width: 800px;
+      margin: 30px auto;
+    }
+
+    .results-section h3 {
+      color: #333;
+      border-bottom: 2px solid #009966;
+      padding-bottom: 5px;
+      margin-top: 30px;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 10px;
+      padding: 15px;
+      display: flex;
+      align-items: center;
+      margin-bottom: 15px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      transition: 0.2s;
+    }
+
+    .card:hover {
+      transform: scale(1.02);
+    }
+
+    .card img {
+      width: 60px;
+      height: 60px;
+      object-fit: cover;
+      border-radius: 50%;
+      margin-right: 15px;
+    }
+
+    .card-content {
+      text-align: left;
+    }
+
+    .card-content strong {
+      display: block;
+      font-size: 16px;
+      color: #111;
+    }
+
+    .card-content small {
+      color: #555;
+      display: block;
+      margin-top: 3px;
+    }
+
+    .no-result {
+      text-align: center;
+      color: #999;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="search-container">
+    <h2>Search SALMART</h2>
+    <input type="text" id="searchInput" placeholder="Search for products or users...">
+    <button onclick="performSearch()">Search</button>
+  </div>
+
+  <div class="results-section" id="searchResults"></div>
+
+  <script>
+    async function performSearch() {
+      const query = document.getElementById('searchInput').value.trim();
+      if (!query) return alert("Please enter something to search.");
+
+      try {
+        const res = await fetch(`http://localhost:3000/search?q=${encodeURIComponent(query)}`);
+        const data = await res.json();
+        let output = '';
+
+        // Posts Section
+        output += `<h3>Product Results</h3>`;
+        if (!data.posts || data.posts.length === 0) {
+          output += `<p class="no-result">No matching products found.</p>`;
+        } else {
+          data.posts.forEach(post => {
+            const productImage = post.photo || '/assets/default-product.png';
+            const price = post.price ? `₦${post.price}` : 'No price';
+            const creator = post.createdBy?.userId;
+            const sellerName = creator ? `${creator.firstName || ''} ${creator.lastName || ''}` : 'Seller';
+
+            output += `
+              <div class="card">
+                <img src="${productImage}" alt="Product Image">
+                <div class="card-content">
+                  <strong>${price}</strong>
+                  <small>${post.description}</small>
+                  <small>Location: ${post.location || 'N/A'}</small>
+                  <small>Condition: ${post.productCondition || 'N/A'}</small>
+                  <small>Seller: ${sellerName}</small>
+                </div>
+              </div>
+            `;
+          });
+        }
+
+        // Users Section
+        output += `<h3>User Results</h3>`;
+        if (!data.users || data.users.length === 0) {
+          output += `<p class="no-result">No matching users found.</p>`;
+        } else {
+          data.users.forEach(user => {
+            const profilePic = user.profilePicture || '/assets/default-user.png';
+            const fullName = `${user.firstName} ${user.lastName}`;
+            output += `
+              <div class="card">
+                <img src="${profilePic}" alt="User Profile">
+                <div class="card-content">
+                  <strong>${fullName}</strong>
+                  <small>${user.email}</small>
+                </div>
+              </div>
+            `;
+          });
+        }
+
+        document.getElementById('searchResults').innerHTML = output;
+
+      } catch (err) {
+        console.error(err);
+        alert("Something went wrong while searching.");
+      }
+    }
+  </script>
+</body>
+</html>

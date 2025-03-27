@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loading Indicator Example</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="loader" id="loader"></div>
+    <div id="content" style="display: none;">
+        <!-- Your content goes here -->
+    </div>
+
+    <script>
+       // script.js
+document.addEventListener('DOMContentLoaded', function() {
+    const loader = document.getElementById('loader');
+    const content = document.getElementById('content');
+
+    function fetchData() {
+        loader.style.display = 'block'; // Show the loader
+        content.style.display = 'none'; // Hide the content
+
+        // Simulate a data fetch with setTimeout
+        setTimeout(() => {
+            loader.style.display = 'none'; // Hide the loader
+            content.style.display = 'block'; // Show the content
+            // Here you would normally fetch and display your data
+        }, 3000); // Adjust the timeout as needed
+    }
+
+    fetchData(); // Call the function to fetch data
+});
+    </script>
+    <style>
+      /* style.css */
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    padding: 50px;
+}
+
+.loader {
+    border: 16px solid #f3f3f3;
+    border-radius: 50%;
+    border-top: 16px solid #3498db;
+    width: 20px;
+    height: 20px;
+    -webkit-animation: spin 2s linear infinite; /* Safari */
+    animation: spin 2s linear infinite;
+    margin: auto;
+}
+
+/* Safari */
+@-webkit-keyframes spin {
+    0% { -webkit-transform: rotate(0deg); }
+    100% { -webkit-transform: rotate(360deg); }
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+    </style>
+</body>
+</html>

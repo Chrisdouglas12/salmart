@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Refunds</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: Poppins, sans-serif; background-color: #f8f8f8; padding: 20px; }
+    h2 { text-align: center; color: #28a745; }
+    .refund-list { margin-top: 20px; }
+    .refund-card {
+      background: white;
+      margin: 10px 0;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .refund-info { flex: 1; }
+    .refund-info p { margin: 5px 0; font-size: 14px; }
+    .refund-actions button {
+      margin-left: 10px;
+      padding: 8px 12px;
+      border: none;
+      border-radius: 5px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .approve-btn { background-color: #28a745; color: white; }
+    .approve-btn:hover { background-color: #218838; }
+    .reject-btn { background-color: #dc3545; color: white; }
+    .reject-btn:hover { background-color: #c82333; }
+  </style>
+</head>
+<body>
+
+<h2>Refund Requests</h2>
+<div id="refund-list" class="refund-list"></div>
+
+<script>
+  const adminToken = localStorage.getItem('adminToken');
+
+  async function fetchRefundRequests() {
+    try {
+      const res = await fetch('http://localhost:3000/admin/refund-requests', {
+        headers: { 'Authorization': `Bearer ${adminToken}` }
+      });
+      const data = await res.json();
+      const list = document.getElementById('refund-list');
+      list.innerHTML = '';
+
+      if (data.length === 0) {
+        list.innerHTML = '<p style="text-align:center; color:#777;">No refund requests</p>';
+        return;
+      }
+
+      data.forEach(t => {
+        const card = document.createElement('div');
+        card.className = 'refund-card';
+
+        const product = t.productId || {};
+        const productImage = product.photo || 'Default.png';
+        const productDescription = product.description || 'Product';
+        const amount = t.amount || '0';
+        const buyer = t.buyerId || {};
+
+        card.innerHTML = `
+          <div class="refund-info">
+            <p><strong>Product:</strong> ${productDescription}</p>
+            <p><strong>Buyer:</strong> ${buyer.firstName} ${buyer.lastName}</p>
+            <p><strong>Amount:</strong> ₦${amount}</p>
+            <p><strong>Status:</strong> ${t.status}</p>
+          </div>
+          <div>
+            <button class="approve-btn" onclick="approveRefund('${t._id}')">Approve</button>
+            <button class="reject-btn" onclick="rejectRefund('${t._id}')">Reject</button>
+          </div>
+        `;
+
+        list.appendChild(card);
+      });
+    } catch (err) {
+      console.error('Error fetching refunds:', err);
+    }
+  }
+
+  async function approveRefund(transactionId) {
+    if (!confirm('Are you sure you want to approve this refund?')) return;
+
+    try {
+      const res = await fetch(`http://localhost:3000/admin/approve-refund/${transactionId}`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${adminToken}`, 'Content-Type': 'application/json' }
+      });
+      const data = await res.json();
+      alert(data.message);
+      fetchRefundRequests();
+    } catch (err) {
+      alert('Error approving refund.');
+    }
+  }
+
+  async function rejectRefund(transactionId) {
+    const reason = prompt('Enter reason for rejecting the refund:');
+    if (!reason) return;
+
+    try {
+      const res = await fetch(`http://localhost:3000/admin/reject-refund/${transactionId}`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${adminToken}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason })
+      });
+      const data = await res.json();
+      alert(data.message);
+      fetchRefundRequests();
+    } catch (err) {
+      alert('Error rejecting refund.');
+    }
+  }
+
+  fetchRefundRequests();
+</script>
+
+</body>
+</html>

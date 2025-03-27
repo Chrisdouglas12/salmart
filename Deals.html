@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Deals</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+  <script src="addPic.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: Poppins, sans-serif; background-color: #f8f8f8; padding-bottom: 80px; }
+    h3 {
+      background-color: white;
+      text-align: center;
+      padding: 20px;
+      font-size: 20px;
+      color: #28a745;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+    .tabs {
+      display: flex;
+      justify-content: center;
+      background-color: white;
+      border-bottom: 1px solid #ddd;
+      padding: 10px;
+    }
+    .tab {
+      padding: 10px 20px;
+      cursor: pointer;
+      border-radius: 20px;
+      margin: 0 5px;
+      font-weight: 500;
+      color: #28a745;
+      background-color: #e8f5e9;
+    }
+    .tab.active {
+      background-color: #28a745;
+      color: white;
+    }
+    .transaction-card {
+      background: white;
+      margin: 10px;
+      border-radius: 10px;
+      padding: 15px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+    }
+    .transaction-card img {
+      width: 70px;
+      height: 70px;
+      object-fit: cover;
+      border-radius: 5px;
+      margin-right: 10px;
+    }
+    .transaction-content {
+      display: flex;
+      align-items: center;
+    }
+    .transaction-details {
+      flex: 1;
+    }
+    .transaction-details h4 {
+      margin-bottom: 5px;
+      font-size: 16px;
+    }
+    .transaction-details p {
+      font-size: 14px;
+      color: #555;
+    }
+    .badge {
+      display: inline-block;
+      padding: 5px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      margin-top: 5px;
+    }
+    .badge.pending { background-color: #ffeeba; color: #856404; }
+    .badge.released { background-color: #d4edda; color: #155724; }
+    .badge.refund-requested { background-color: #f8d7da; color: #721c24; }
+    .confirm-btn, .refund-btn {
+      margin-top: 10px;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 5px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .confirm-btn { background-color: #28a745; color: white; }
+    .confirm-btn:hover { background-color: #218838; }
+    .refund-btn { background-color: #dc3545; color: white; }
+    .refund-btn:hover { background-color: #c82333; }
+    #navbar {
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      padding-top: 10px;
+      background-color: white;
+      border-top: 1px solid #ddd;
+      box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.05);
+      z-index: 10;
+    }
+    #navbar li {
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Center items horizontally */
+  justify-content: center; /* Center items vertically */
+  text-align: center; /* Ensure text is centered */
+  padding: 8px 0; /* Add some padding for spacing */
+}
+    #navbar ul {
+      display: flex;
+      justify-content: space-around;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+    #navbar a {
+      text-decoration: none;
+      color: #28a745;
+      font-size: 16px;
+    }
+    #navbar i {
+      display: block;
+      font-size: 18px;
+      margin-bottom: 4px;
+    }
+    .active a { color: black; }
+    .profile-pic img {
+      position: fixed;
+      margin-left: 20px;
+      margin-top: -55px;
+      border-radius: 50%;
+      border: 1px solid #ddd;
+      z-index: 3;
+    }
+    #no-transactions {
+      text-align: center;
+      padding: 20px;
+      color: #777;
+    }
+    .deal-user-info {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 6px;
+      font-size: 13px;
+      margin-top: 10px;
+      color: #444;
+    }
+  </style>
+</head>
+<body>
+
+<h3>Deals</h3>
+<div class="profile-pic">
+  <img src="Default.png" id="profile-picture5" width="40" height="40" />
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="showTab('buying')">Buying</div>
+  <div class="tab" onclick="showTab('selling')">Selling</div>
+</div>
+
+<div id="transaction-list"></div>
+<p id="no-transactions" style="display:none;">No transactions yet. Check back later!</p>
+
+<!-- Navigation -->
+<nav id="navbar">
+  <ul>
+    <li><a href="index.html"><i class="fas fa-store"></i>Market</a></li>
+    <li><a href="Alerts.html"><i class="fas fa-bell"></i>Alerts</a></li>
+    <li><a href="Messages.html"><i class="fas fa-comments"></i>Messages</a></li>
+    <li><a href="Deals.html"><i class="fas fa-cart-plus"></i>Deals</a></li>
+    <li><a href="Profile.html"><i class="fas fa-user"></i>Profile</a></li>
+  </ul>
+</nav>
+
+<script>
+  const userId = localStorage.getItem('userId');
+  let currentTab = 'buying';
+
+  async function fetchTransactions() {
+    try {
+      const res = await fetch(`http://localhost:3000/get-transactions/${userId}`);
+      const data = await res.json();
+
+      const list = document.getElementById('transaction-list');
+      list.innerHTML = '';
+      const filtered = data.filter(t => (t[currentTab === 'buying' ? 'buyerId' : 'sellerId']?._id) === userId);
+
+      if (filtered.length === 0) {
+        document.getElementById('no-transactions').style.display = 'block';
+        return;
+      } else {
+        document.getElementById('no-transactions').style.display = 'none';
+      }
+
+      filtered.forEach(t => {
+        const card = document.createElement('div');
+        card.className = 'transaction-card';
+
+        const product = t.productId || {};
+        const productImage = product.photo || 'Default.png';
+        const productDescription = product.description || 'Product';
+        const amount = t.amount || '0';
+
+        const statusBadge = `<span class="badge ${t.status}">${t.status}</span>`;
+        let confirmBtn = '', refundBtn = '';
+
+        if (currentTab === 'buying' && t.status === 'pending') {
+          confirmBtn = `<button class="confirm-btn" onclick="confirmDelivery('${t._id}')">Confirm Delivery</button>`;
+          refundBtn = !t.refundRequested
+            ? `<button class="refund-btn" onclick="requestRefund('${t._id}')">Request Refund</button>`
+            : `<span class="badge refund-requested">Refund Requested</span>`;
+        }
+
+        const date = new Date(t.createdAt).toLocaleString();
+        const dealUser = currentTab === 'buying' ? t.sellerId : t.buyerId;
+        const dealUserPic = dealUser?.profilePicture || 'Default.png';
+        const dealUserName = `${dealUser?.firstName || ''} ${dealUser?.lastName || ''}`;
+
+        card.innerHTML = `
+          <div class="transaction-content">
+            <img src="${productImage}" alt="Product Image" />
+            <div class="transaction-details">
+              <h4>${productDescription}</h4>
+              <p>₦${amount}</p>
+              <p>${date}</p>
+              ${statusBadge}
+              ${confirmBtn}
+              ${refundBtn}
+              <div class="deal-user-info">
+                <span>${currentTab === 'buying' ? 'Buying from:' : 'Selling to:'}</span>
+                <img src="${dealUserPic}" class="user-profile" style="width: 20px; height: 20px; border-radius: 50%;" />
+                <strong>${dealUserName}</strong>
+              </div>
+            </div>
+          </div>
+        `;
+        list.prepend(card);
+      });
+
+    } catch (err) {
+      console.error('Error fetching transactions:', err);
+    }
+  }
+
+  function showTab(tab) {
+    currentTab = tab;
+    document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+    document.querySelectorAll('.tab')[tab === 'buying' ? 0 : 1].classList.add('active');
+    fetchTransactions();
+  }
+
+  async function confirmDelivery(transactionId) {
+    const token = localStorage.getItem('authToken');
+    try {
+      const res = await fetch(`http://localhost:3000/confirm-delivery/${transactionId}`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
+      });
+      const contentType = res.headers.get('content-type');
+      const data = contentType.includes('application/json') ? await res.json() : { message: await res.text() };
+      alert(data.message || 'Delivery confirmed.');
+      if (res.ok) fetchTransactions();
+    } catch (err) {
+      alert('Error confirming delivery.');
+    }
+  }
+
+  async function requestRefund(transactionId) {
+    const token = localStorage.getItem('authToken');
+    try {
+      const res = await fetch(`http://localhost:3000/request-refund/${transactionId}`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
+      });
+      const contentType = res.headers.get('content-type');
+      const data = contentType.includes('application/json') ? await res.json() : { message: await res.text() };
+      alert(data.message || 'Refund requested.');
+      if (res.ok) fetchTransactions();
+    } catch (err) {
+      alert('Error requesting refund.');
+    }
+  }
+
+  fetchTransactions();
+</script>
+
+</body>
+</html>
