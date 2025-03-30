@@ -5,8 +5,8 @@
   "scripts": {
     "start": "node app.js",
     "dev": "nodemon app.js",
-    "build": "npm install --omit=dev && npm run generate-ssl",  // Added build step
-    "generate-ssl": "mkdir -p ssl && openssl req -nodes -new -x509 -keyout ssl/key.pem -out ssl/cert.pem -subj '/CN=localhost'"  // SSL for HTTPS
+    "build": "npm install --omit=dev && npm run generate-ssl",
+    "generate-ssl": "mkdir -p ssl && openssl req -nodes -new -x509 -keyout ssl/key.pem -out ssl/cert.pem -subj '/CN=localhost'"
   },
   "engines": {
     "node": "18.x",
@@ -28,7 +28,7 @@
     "mongoose": "^8.9.2",
     "multer": "^1.4.5-lts.1",
     "nodemailer": "^6.10.0",
-    "nodemon": "^3.1.9",  // Kept in dependencies per your request
+    "nodemon": "^3.1.9",
     "path": "^0.12.7",
     "paystack-api": "^2.0.6",
     "pdfkit": "^0.16.0",
