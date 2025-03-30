@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Register - SALMART</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    body {
+      background: #fff;
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    #form-sec {
+      max-width: 420px;
+      margin: 30px auto;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px #ccc;
+      background: #fff;
+    }
+    h2, h3 {
+      color: #28a745;
+      text-align: center;
+    }
+    p {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .input-field {
+      width: 98.5%;
+      padding: 12px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 14px;
+      margin-left: -10px;
+    }
+    .password-container {
+      position: relative;
+    }
+    .eye-icon {
+      position: absolute;
+      right: 15px;
+      top: 40%;
+      transform: translateY(-50%);
+      cursor: pointer;
+      width: 20px;
+      height: 20px;
+      fill: #555;
+    }
+    #register-btn {
+      background: #28a745;
+      color: #fff;
+      border: none;
+      padding: 12px;
+      width: 100%;
+      font-size: 16px;
+      border-radius: 50px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    #register-btn:hover {
+      background: #218838;
+    }
+    #terms {
+      display: flex;
+      align-items: center;
+      margin-bottom: 15px;
+      font-size: 13px;
+    }
+    #terms input {
+      margin-right: 8px;
+    }
+    .note {
+      font-size: 13px;
+      color: #777;
+    }
+    .footer {
+      text-align: center;
+      font-size: 13px;
+      margin-top: 20px;
+      color: #555;
+    }
+    .verified-badge {
+      font-size: 13px;
+      margin-top: -10px;
+      margin-bottom: 10px;
+      color: green;
+    }
+    .error-badge {
+      font-size: 13px;
+      margin-top: -10px;
+      margin-bottom: 10px;
+      color: red;
+    }
+    #successModal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.6);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      display: none;
+    }
+    #successModal .modal-content {
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      text-align: center;
+      color: #28a745;
+      font-size: 16px;
+    }
+    .spinner {
+      border: 3px solid rgba(0, 0, 0, 0.1);
+      border-radius: 50%;
+      border-top: 3px solid #28a745;
+      width: 20px;
+      height: 20px;
+      animation: spin 1s linear infinite;
+      display: inline-block;
+      vertical-align: middle;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    @media (max-width: 480px) {
+      #form-sec {
+        margin: 20px 10px;
+        padding: 15px;
+      }
+      .input-field, #register-btn {
+        font-size: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div id="form-sec">
+  <h2>Salmart</h2>
+  <p>Smart trading for home electronics, household items and essentials!</p>
+  <h3>Register</h3>
+
+  <form id="form-se">
+    <input class="input-field" type="text" id="firstName" placeholder="Enter first name*" required>
+    <input class="input-field" type="text" id="lastName" placeholder="Enter last name*" required>
+    <input class="input-field" type="email" id="email" placeholder="Enter email*" required>
+
+    <div class="password-container">
+      <input class="input-field" type="password" id="password" placeholder="Enter password*" required minlength="6">
+      <svg id="togglePassword" class="eye-icon" viewBox="0 0 24 24">
+        <path d="M12 4.5C7.5 4.5 3.7 7.6 2 12c1.7 4.4 5.5 7.5 10 7.5s8.3-3.1 10-7.5c-1.7-4.4-5.5-7.5-10-7.5zm0 12c-2.5 0-4.5-2-4.5-4.5S9.5 7.5 12 7.5s4.5 2 4.5 4.5-2 4.5-4.5 4.5z"/>
+        <circle cx="12" cy="12" r="2.5"/>
+      </svg>
+    </div>
+
+    <div class="password-container">
+      <input class="input-field" type="password" id="cpassword" placeholder="Confirm password*" required minlength="6">
+      <svg id="toggleCPassword" class="eye-icon" viewBox="0 0 24 24">
+        <path d="M12 4.5C7.5 4.5 3.7 7.6 2 12c1.7 4.4 5.5 7.5 10 7.5s8.3-3.1 10-7.5c-1.7-4.4-5.5-7.5-10-7.5zm0 12c-2.5 0-4.5-2-4.5-4.5S9.5 7.5 12 7.5s4.5 2 4.5 4.5-2 4.5-4.5 4.5z"/>
+        <circle cx="12" cy="12" r="2.5"/>
+      </svg>
+    </div>
+
+    <input class="input-field" type="text" id="accountNumber" placeholder="Enter account number*" required>
+
+    <select id="bankList" class="input-field" required style="width: 106.5%;">
+      <option value="">Select Bank*</option>
+    </select>
+
+    <input class="input-field" type="text" id="bankName" placeholder="Bank Account Name (Auto-filled)" disabled>
+    <div id="accountStatus"></div>
+
+    <div id="terms">
+      <input type="checkbox" id="acceptTerms" required>
+      <label for="acceptTerms">I accept the <a href="#">Terms & Conditions</a></label>
+    </div>
+
+    <button id="register-btn" type="submit">
+      <span id="btn-text">Register</span>
+      <div id="btn-spinner" class="spinner" style="display: none;"></div>
+    </button>
+    <p class="note">Already have an account? <a href="SignIn.html">Sign in</a></p>
+  </form>
+
+  <div class="footer">&copy; Salmart Technologies 2025</div>
+</div>
+
+<!-- Modal -->
+<div id="successModal">
+  <div class="modal-content">
+    <p>Registration successful!<br>We are signing you in...</p>
+    <div class="spinner" style="margin: 20px auto;"></div>
+  </div>
+</div>
+
+<script>
+  // Toggle password visibility
+  function toggleVisibility(inputId, iconId) {
+    const input = document.getElementById(inputId);
+    const icon = document.getElementById(iconId);
+    if (input.type === 'password') {
+      input.type = 'text';
+      icon.innerHTML = '<path d="M12 5c-5 0-9 4.5-10 7 1 2.5 5 7 10 7s9-4.5 10-7c-1-2.5-5-7-10-7zm0 12c-2.8 0-5-2.2-5-5s2.2-5 5-5 5 2.2 5 5-2.2 5-5 5z"/><line x1="4" y1="4" x2="20" y2="20" stroke="red" stroke-width="2"/>';
+    } else {
+      input.type = 'password';
+      icon.innerHTML = '<path d="M12 4.5C7.5 4.5 3.7 7.6 2 12c1.7 4.4 5.5 7.5 10 7.5s8.3-3.1 10-7.5c-1.7-4.4-5.5-7.5-10-7.5zm0 12c-2.5 0-4.5-2-4.5-4.5S9.5 7.5 12 7.5s4.5 2 4.5 4.5-2 4.5-4.5 4.5z"/><circle cx="12" cy="12" r="2.5"/>';
+    }
+  }
+
+  document.getElementById('togglePassword').addEventListener('click', () => toggleVisibility('password', 'togglePassword'));
+  document.getElementById('toggleCPassword').addEventListener('click', () => toggleVisibility('cpassword', 'toggleCPassword'));
+
+  // Fetch bank list
+  async function fetchBankList() {
+    try {
+      const API_BASE_URL =
+      window.location.hostname === 'localhost'
+      ? 'http://localhost:3000'
+      :
+'https://salmart-production.up.railway.app'
+
+      const res = await fetch(`${API_BASE_URL}/banks`);
+      const data = await res.json();
+      const bankList = document.getElementById('bankList');
+      data.banks.forEach(bank => {
+        const option = document.createElement('option');
+        option.value = bank.code;
+        option.textContent = bank.name;
+        bankList.appendChild(option);
+      });
+    } catch (err) {
+      console.error('Failed to load banks');
+    }
+  }
+  fetchBankList();
+
+  // Account resolution
+  document.getElementById('accountNumber').addEventListener('blur', resolveAccount);
+  document.getElementById('bankList').addEventListener('change', resolveAccount);
+
+  async function resolveAccount() {
+    const accountNumber = document.getElementById('accountNumber').value.trim();
+    const bankCode = document.getElementById('bankList').value;
+    const bankNameField = document.getElementById('bankName');
+    const statusDiv = document.getElementById('accountStatus');
+    if (accountNumber.length < 10 || !bankCode) return;
+    try {
+      const API_BASE_URL =
+      window.location.hostname === 'localhost'
+      ? 'http://localhost:3000'
+      :
+'https://salmart-production.up.railway.app'
+      const res = await fetch(`${API_BASE_URL}/resolve-account`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ account_number: accountNumber, bank_code: bankCode })
+      });
+      const data = await res.json();
+      if (res.ok && data.account_name) {
+        bankNameField.value = data.account_name;
+        statusDiv.innerHTML = `<div class="verified-badge">✓ Verified Account</div>`;
+      } else {
+        bankNameField.value = '';
+        statusDiv.innerHTML = `<div class="error-badge">✖ Invalid account number or bank</div>`;
+      }
+    } catch (err) {
+      bankNameField.value = '';
+      statusDiv.innerHTML = `<div class="error-badge">✖ Error resolving account</div>`;
+    }
+  }
+
+  // Registration form submission
+  document.getElementById('form-se').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const registerBtn = document.getElementById('register-btn');
+    const btnText = document.getElementById('btn-text');
+    const btnSpinner = document.getElementById('btn-spinner');
+    
+    // Show loading state
+    btnText.textContent = 'Registering...';
+    btnSpinner.style.display = 'block';
+    registerBtn.disabled = true;
+
+    const user = {
+      firstName: document.getElementById('firstName').value.trim(),
+      lastName: document.getElementById('lastName').value.trim(),
+      email: document.getElementById('email').value.trim(),
+      password: document.getElementById('password').value,
+      accountNumber: document.getElementById('accountNumber').value.trim(),
+      bankCode: document.getElementById('bankList').value,
+      accountName: document.getElementById('bankName').value
+    };
+
+    const cpassword = document.getElementById('cpassword').value;
+    const acceptTerms = document.getElementById('acceptTerms').checked;
+
+    // Validation
+    if (!user.firstName || !user.lastName || !user.email || !user.password || !user.accountNumber || !user.bankCode || !user.accountName) {
+      alert('Please fill in all required fields.');
+      btnText.textContent = 'Register';
+      btnSpinner.style.display = 'none';
+      registerBtn.disabled = false;
+      return;
+    }
+
+    if (user.password !== cpassword) {
+      alert('Passwords do not match.');
+      btnText.textContent = 'Register';
+      btnSpinner.style.display = 'none';
+      registerBtn.disabled = false;
+      return;
+    }
+
+    if (!acceptTerms) {
+      alert('You must accept Terms & Conditions.');
+      btnText.textContent = 'Register';
+      btnSpinner.style.display = 'none';
+      registerBtn.disabled = false;
+      return;
+    }
+
+    try {
+      const API_BASE_URL =
+      window.location.hostname === 'localhost'
+      ? 'http://localhost:3000'
+      :
+'https://salmart-production.up.railway.app'
+      const res = await fetch(`${API_BASE_URL}/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(user)
+      });
+      
+      const data = await res.json();
+      
+      if (res.ok) {
+        // Store user data in localStorage
+        localStorage.setItem('authToken', data.token);
+        localStorage.setItem('userId', data.user._id);
+        localStorage.setItem('userEmail', data.user.email);
+        localStorage.setItem('userFirstName', data.user.firstName);
+        localStorage.setItem('userLastName', data.user.lastName);
+        
+        // Store bank details if available
+        if (data.user.bankDetails) {
+          localStorage.setItem('bankDetails', JSON.stringify(data.user.bankDetails));
+        }
+
+        // Show success modal with spinner
+        document.getElementById('successModal').style.display = 'flex';
+        
+        // Redirect to profile page after delay
+        setTimeout(() => {
+          window.location.href = 'SignIn.html';
+        }, 2000);
+      } else {
+        alert(data.message || 'Registration failed. Please try again.');
+      }
+    } catch (err) {
+      console.error('Registration error:', err);
+      alert('Failed to connect to the server. Please try again later.');
+    } finally {
+      btnText.textContent = 'Register';
+      btnSpinner.style.display = 'none';
+      registerBtn.disabled = false;
+    }
+  });
+</script>
+</body>
+</html>
