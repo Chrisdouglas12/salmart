@@ -23,7 +23,7 @@ const socketIo = require('socket.io');
 
 
 app.use(cors({
-  origin:[ 'http://localhost:8158', 'https://labrighterlanguageservices.infinityfreeapp.com' ],// Allow Acode Preview
+  origin:[ 'http://localhost:8158', 'https://labrighterlanguageservices.infinityfreeapp.com', 'https://salmart.vercel.app' ],// Allow Acode Preview
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   credentials: true
 }));
@@ -261,7 +261,8 @@ app.use(cors({
        'http://localhost:8158', 
        'https://labrighterlanguageservices.infinityfreeapp.com',
        'https://cfdouglas.rf.gd', // Add your frontend domain
-       'https://salmart-production.up.railway.app' // Add your Railway domain
+       'https://salmart-production.up.railway.app', 'https://salmart.vercel.app',
+       // Add your Railway domain
      ],
      methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
      credentials: true,
