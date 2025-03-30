@@ -23,7 +23,7 @@ const socketIo = require('socket.io');
 
 
 app.use(cors({
-  origin: 'http://localhost:8158', // Allow Acode Preview
+  origin:[ 'http://localhost:8158', 'https://labrighterlanguageservices.infinityfreeapp.com' ],// Allow Acode Preview
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   credentials: true
 }));
@@ -32,10 +32,13 @@ app.use(cors({
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: 'http://localhost:8158', // Allow Acode Preview
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+    origin:[ 'https://cfdouglas.rf.gd','http://localhost:8158',   'https://labrighterlanguageservices.infinityfreeapp.com'], 
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization']
   },
 });
+
 
 // Initialize Socket.IO
 const users = {}; // Store userId -> socketId mapping
@@ -252,14 +255,24 @@ if (!fs.existsSync(uploadDir)) {
 }
 
 
-//middleware comfiguration
-app.use(cors({ origin: 'http://localhost:8158', methods: ['GET', 'POST'] }));
+//middleware configuration
+app.use(cors({
+     origin: [
+       'http://localhost:8158', 
+       'https://labrighterlanguageservices.infinityfreeapp.com',
+       'https://cfdouglas.rf.gd', // Add your frontend domain
+       'https://salmart-production.up.railway.app' // Add your Railway domain
+     ],
+     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+     credentials: true,
+     allowedHeaders: ['Content-Type', 'Authorization']
+   }));
 app.use(express.json())
 
 //serve uploaded files
 app.use('/Uploads', express.static(uploadDir));
 // MongoDB Atlas connection string
- const uri = "mongodb+srv://chrisdouglas1700:Chris%4022@cluster0.bfiorya.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+ const uri = process.env.MONGO_URI
 
 // Connect to MongoDB using Mongoose
 mongoose.connect(uri)
@@ -315,6 +328,7 @@ res.status(500).json({message: 'Server error'})
 })
 //endpoint to authenticate user login
 app.post('/login', async (req, res) => {
+    console.log('login attempt:', req.body)
     try {
         const { email, password } = req.body;
         const user = await User.findOne({ email });

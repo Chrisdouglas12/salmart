@@ -1,13 +1,17 @@
 {
   "name": "backend",
   "version": "1.0.0",
-"main": "app.js",
-"scripts": {
-  "start": "node app.js"
-},
-  "author": "",
-  "license": "ISC",
-  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "nodemon app.js",
+    "build": "npm install --omit=dev && npm run generate-ssl",  // Added build step
+    "generate-ssl": "mkdir -p ssl && openssl req -nodes -new -x509 -keyout ssl/key.pem -out ssl/cert.pem -subj '/CN=localhost'"  // SSL for HTTPS
+  },
+  "engines": {
+    "node": "18.x",
+    "npm": "9.x"
+  },
   "dependencies": {
     "axios": "^1.8.3",
     "bcryptjs": "^2.4.3",
@@ -24,7 +28,7 @@
     "mongoose": "^8.9.2",
     "multer": "^1.4.5-lts.1",
     "nodemailer": "^6.10.0",
-    "nodemon": "^3.1.9",
+    "nodemon": "^3.1.9",  // Kept in dependencies per your request
     "path": "^0.12.7",
     "paystack-api": "^2.0.6",
     "pdfkit": "^0.16.0",
