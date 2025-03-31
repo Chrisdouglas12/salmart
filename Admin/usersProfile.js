@@ -3,6 +3,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   try {
     // Fetch the profile data
     const token = localStorage.getItem("authToken");
+    const API_BASE_URL = window.location.hostname
     const response = await fetch("http://localhost:3000/users-profile", {
       method: "GET",
       headers: {

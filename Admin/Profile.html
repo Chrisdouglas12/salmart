@@ -153,7 +153,11 @@
 
     async function updateFollowButton() {
         try {
-            const response = await fetch(`localhost:3000/api/follow-status?followerId=${loggedInUserId}&followingId=${profileOwnerId}`);
+          const API_BASE_URL = window.location.hostname === 'localhost' 
+       ?
+      'http://localhost:3000' :
+      'https://salmart-production.up.railway.app'
+            const response = await fetch(`${API_BASE_URL}/follow-status?followerId=${loggedInUserId}&followingId=${profileOwnerId}`);
             const data = await response.json();
 
             if (data.following) {
@@ -170,7 +174,11 @@
 
     followButton.addEventListener("click", async function () {
         try {
-            const response = await fetch("localhost:3000/api/follow", {
+          const API_BASE_URL = window.location.hostname === 'localhost' 
+       ?
+      'http://localhost:3000' :
+      'https://salmart-production.up.railway.app'
+            const response = await fetch(`${API_BASE_URL}/api/follow`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -500,9 +508,12 @@ a .active {
     const profileOwnerId = localStorage.getItem("userId");
     const followersCountEl = document.getElementById("followers");
     const productsCountEl = document.getElementById("products-count");
-
+const API_BASE_URL = window.location.hostname === 'localhost' 
+       ?
+      'http://localhost:3000' :
+      'https://salmart-production.up.railway.app'
     try {
-      const response = await fetch(`http://localhost:3000/profile/${profileOwnerId}`);
+      const response = await fetch(`${API_BASE_URL}/profile/${profileOwnerId}`);
       const data = await response.json();
 
       if (response.ok) {
@@ -530,6 +541,10 @@ a .active {
   const bankCodeInput = document.getElementById("bankCode");
   const accountNumberInput = document.getElementById("accountNumber");
   const accountNameInput = document.getElementById("accountName");
+  const API_BASE_URL = window.location.hostname === 'localhost' 
+       ?
+      'http://localhost:3000' :
+      'https://salmart-production.up.railway.app'
 
   // Show bottom sheet and autofill form
   openBtn.addEventListener("click", async () => {
@@ -595,7 +610,7 @@ a .active {
     const bankCode = bankCodeInput.value.trim();
 
     try {
-      const res = await fetch("http://localhost:3000/update-bank-details", {
+      const res = await fetch(`${API_BASE_URL}/update-bank-details`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -620,6 +635,10 @@ a .active {
 <script>
   document.addEventListener('DOMContentLoaded', async function () {
     let loggedInUser = null; // Define loggedInUser variable
+    const API_BASE_URL = window.location.hostname === 'localhost' 
+       ?
+      'http://localhost:3000' :
+      'https://salmart-production.up.railway.app'
 
     // Function to format time (e.g., "2 hrs ago")
     function formatTime(timestamp) {
@@ -646,7 +665,7 @@ a .active {
         }
 
         try {
-            const response = await fetch('http://localhost:3000/verify-token', {
+            const response = await fetch(`${API_BASE_URL}/verify-token`, {
                 method: 'GET',
                 headers: { 'Authorization': `Bearer ${token}` },
             });
@@ -687,7 +706,7 @@ a .active {
         }
 
         try {
-            const response = await fetch(`http://localhost:3000/post?userId=${profileOwnerId}`); // Fetch posts for the profile owner
+            const response = await fetch(`${API_BASE_URL}/post?userId=${profileOwnerId}`); // Fetch posts for the profile owner
             if (!response.ok) throw new Error('Failed to fetch posts');
 
             const posts = await response.json();
@@ -785,7 +804,7 @@ a .active {
                         likeCountElement.textContent = isLiked ? currentLikes - 1 : currentLikes + 1;
 
                         try {
-                            const response = await fetch(`http://localhost:3000/post/like/${postId}`, {
+                            const response = await fetch(`${API_BASE_URL}/post/like/${postId}`, {
                                 method: 'POST',
                                 headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` },
                             });
@@ -827,7 +846,7 @@ a .active {
                         if (!commentText) return;
 
                         try {
-                            const response = await fetch(`http://localhost:3000/post/comment/${post._id}`, {
+                            const response = await fetch(`${API_BASE_URL}/post/comment/${post._id}`, {
                                 method: 'POST',
                                 headers: {
                                     'Content-Type': 'application/json',
@@ -877,7 +896,7 @@ a .active {
                         }
 
                         try {
-                            const response = await fetch('http://localhost:3000/pay', {
+                            const response = await fetch(`${API_BASE_URL}/pay`, {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({ email, postId, buyerId }),

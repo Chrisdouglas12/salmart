@@ -183,7 +183,11 @@
 
     async function fetchMessages() {
       try {
-        const response = await fetch(`http://localhost:3000/api/messages?userId=${userId}`);
+        const API_BASE_URL = window.location.hostname === 'localhost' 
+       ?
+      'http://localhost:3000' :
+      'https://salmart-production.up.railway.app'
+        const response = await fetch(`${API_BASE_URL}/api/messages?userId=${userId}`);
         if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
 
         let messages = await response.json();
@@ -278,7 +282,7 @@
     // Force update UI after sending a new message
     async function sendMessage() {
       // Your existing message sending logic
-      await fetch('http://localhost:3000/api/send-message', { /* request payload */ });
+      await fetch(`${API_BASE_URL}/api/send-message`, { /* request payload */ });
       fetchMessages(); // Immediately update UI after sending a message
     }
   </script>

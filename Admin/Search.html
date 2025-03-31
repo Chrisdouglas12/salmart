@@ -112,7 +112,11 @@
       if (!query) return alert("Please enter something to search.");
 
       try {
-        const res = await fetch(`http://localhost:3000/search?q=${encodeURIComponent(query)}`);
+        const API_BASE_URL = window.location.hostname === 'localhost' 
+       ?
+      'http://localhost:3000' :
+      'https://salmart-production.up.railway.app'
+        const res = await fetch(`${API_BASE_URL}/search?q=${encodeURIComponent(query)}`);
         const data = await res.json();
         let output = '';
 

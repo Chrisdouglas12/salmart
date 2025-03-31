@@ -30,10 +30,15 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     if (checkLoginState()) {
+      
         const token = localStorage.getItem('authToken');
         console.log(`Fetching profile for userId: ${userId}`);
-
-        fetch(`http://localhost:3000/users-profile/${userId}`, {
+const API_BASE_URL = window.location.hostname === 'localhost' 
+       ?
+      'http://localhost:3000' :
+      'https://salmart-production.up.railway.app'
+      
+        fetch(`${API_BASE_URL}/users-profile/${userId}`, {
             method: 'GET',
             headers: {
                 'Authorization': 'Bearer ' + token,
@@ -50,7 +55,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Construct image URL (fixed version)
             let imageUrl = data.profilePicture
-                ? (data.profilePicture.startsWith("http") ? data.profilePicture : `http://localhost:3000${data.profilePicture.startsWith("/") ? data.profilePicture : '/' + data.profilePicture}`)
+                ? (data.profilePicture.startsWith("http") ? data.profilePicture : `${API_BASE_URL} ${data.profilePicture.startsWith("/") ? data.profilePicture : '/' + data.profilePicture}`)
                 : "/default-avatar.png";
 
             console.log("Final image URL:", imageUrl);

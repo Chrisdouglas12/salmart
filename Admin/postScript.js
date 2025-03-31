@@ -7,7 +7,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const urlParams = new URLSearchParams(window.location.search);
   const isEdit = urlParams.get('edit') === 'true';
   const postId = urlParams.get('postId');
-
+const API_BASE_URL = window.location.hostname === 'localhost' 
+       ?
+      'http://localhost:3000' :
+      'https://salmart-production.up.railway.app'
   // Prefill form if editing
   if (isEdit && postId) {
     fetch(`http://localhost:3000/post/${postId}`, {
@@ -78,7 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
       let response;
       if (isEdit && postId) {
         // EDIT mode (PUT request)
-        response = await fetch(`http://localhost:3000/post/edit/${postId}`, {
+        response = await fetch(`API_BASE_URL/post/edit/${postId}`, {
           method: 'PUT',
           headers: {
             Authorization: `Bearer ${token}`,
@@ -91,7 +94,7 @@ document.addEventListener('DOMContentLoaded', () => {
           showToast('Please upload an image.');
           return;
         }
-        response = await fetch('http://localhost:3000/post', {
+        response = await fetch(`${API_BASE_URL}/post`, {
           method: 'POST',
           headers: {
             Authorization: `Bearer ${token}`,
