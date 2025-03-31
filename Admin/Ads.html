@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+  <script src="https://cdn.jsdelivr.net/npm/jwt-decode@3.1.2/build/jwt-decode.min.js"></script>
+  <script>
+    document.getElementById("file-input").addEventListener("change", function (event) {
+    const files = event.target.files;
+    const previewContainer = document.getElementById("image-preview-container");
+    const mainImage = document.getElementById("preview");
+
+    if (files.length > 0) {
+        mainImage.src = URL.createObjectURL(files[0]); // Show first image as main
+        mainImage.style.display = "block"; // Make it visible
+        previewContainer.innerHTML = ""; // Clear previous thumbnails
+
+        for (let i = 1; i < files.length; i++) { // Start from second image
+            let img = document.createElement("img");
+            img.src = URL.createObjectURL(files[i]);
+            img.className = "thumbnail";
+            img.onclick = function () { openImageGallery(files, i); };
+            previewContainer.appendChild(img);
+        }
+    }
+});
+
+// Open image gallery when main image is clicked
+document.getElementById("preview").addEventListener("click", function () {
+    const files = document.getElementById("file-input").files;
+    if (files.length > 1) {
+        openImageGallery(files, 0);
+    }
+});
+
+function openImageGallery(files, startIndex) {
+    const galleryModal = document.getElementById("galleryModal");
+    const galleryContent = document.getElementById("galleryContent");
+    
+    galleryContent.innerHTML = ""; // Clear previous images
+
+    for (let i = 0; i < files.length; i++) {
+        let img = document.createElement("img");
+        img.src = URL.createObjectURL(files[i]);
+        img.className = "gallery-image";
+        galleryContent.appendChild(img);
+    }
+
+    galleryModal.style.display = "flex"; // Show modal
+}
+
+// Close gallery when clicking outside
+document.getElementById("galleryModal").addEventListener("click", function (event) {
+    if (event.target === this) {
+        this.style.display = "none";
+    }
+});
+
+
+  </script>
+  <script src="addPic.js"></script>
+</head>
+<body>
+  <div class="form-bg" >
+    <div class="h2-bg">
+  <h4 style="font-size: 17px">Create an ad</h4><br>
+  <img src="default.png" id="profile-picture2">
+  </div>
+  <form id="dataForm" >
+  <div class="input-form">
+  <label>Enter product description</label>
+  <input id="description" type="text" class="input" placeholder="eg., Nexus deep freezer, 200 liters">
+  </div>
+  
+  <div class="input-form">
+    <label>Product Condition</label>
+  <input id="productCondition" type="text" class="input" placeholder="eg., New, Used"><br>
+  </div>
+  <div class="input-form">
+    <label>Product Price</label>
+  <input id="price" type="Number" class="input" placeholder="Enter Price"><br>
+  </div>
+  <div class="input-form">
+    <label>Location</label>
+  <input id="location" type="text" class="input" placeholder="Enter Location ">
+  </div>
+  
+  
+  <br>
+  <div class="file-section">
+    <label for="fileInput">
+      Upload image
+    </label><br>
+    <div style="text-align: center">
+    <input class="media-input"type="file" id="file-input" name="photo" accept="image/*" multiple><br><br>
+    <div style="text-align: center">
+    <img id="preview">
+    </div>
+    </div>
+  <div style="text-align: center";>
+  <button type="submit" style="color: white; background-color:  #28a745; width: 80%; height: 35px; border: solid 0.1px green; border-radius: 50px; text-align: center; box-shadow: 0 0 10px 0 #fff">Publish ad</button>
+  </div>
+  </div>
+  <br>
+  <div>
+    <p style="font-size: 13px">By clicking the publish button, you hereby consent to our <a href="">Community Standards.</a> Your account will be banned if your posts are non business related.</p>
+  </div>
+  </form>
+  <!-- Toast container -->
+<div id="toast" style="position: fixed; bottom: 20px; right: 20px; background-color: #28a745; color: white; padding: 10px 20px; border-radius: 5px; box-shadow: 0 0 10px rgba(0,0,0,0.2); display: none; z-index: 9999;"></div>
+
+<script>
+  function showToast(message, color = '#28a745') {
+    const toast = document.getElementById("toast");
+    toast.textContent = message;
+    toast.style.backgroundColor = color;
+    toast.style.display = "block";
+
+    setTimeout(() => {
+      toast.style.display = "none";
+    }, 3000);
+  }
+</script>
+</body>
+
+<script src="postScript.js"></script>
+
+</html>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+}
+body{
+  font-family: 'lato', 'Sans-Serif';
+  max-width: 600px;
+  display: flex;
+  flex-direction: column;
+  justify-items: center ;
+}
+p{
+  text-align: center;
+  font-size: 16px;
+}
+a{
+  text-decoration: none;
+  color:  #28a745;
+}
+.h2-bg {
+  color:  #28a745;
+  border-bottom: solid 0.1px  #28a745;
+  padding-left: 10px;
+  border-top-radius: 8px;
+  margin-bottom: 30px;
+  display: flex;
+  justify-content: space-around;
+  padding: 10px;
+}
+.h2-bg img{
+  margin-top: 10px;
+  border: 0.1px solid grey;
+  border-radius: 50px;
+  width: 40px;
+  height: 40px;
+  margin-left: 20px
+}
+h4{
+  margin-top: 20px;
+  margin-left: -30px
+}
+  .text-area {
+    width: 95%;
+    height: 120px;
+    border: solid 1px #ddd;
+    border-radius: 5px;
+    color: black;
+    margin-left: 10px;
+  }
+  .text-area::placeholder{
+    padding: 10px 10px;
+  }
+  input:focus{
+    outline: none;
+    border-color: #4CAF50;
+  }
+  .input-form input{
+    background-color: #fff;
+    border: solid 0.1px #4CAF50;
+    border-radius: 3px;
+    padding: 15px;
+    width: 85%;
+    margin-left: 10px;
+   
+
+  }
+  label{
+    margin-left: 10px;
+    font-weight: bold;
+    margin-top: 10px;
+    
+  }
+  #file-input{
+    padding-left: 20px;
+    
+  }
+  .input-form label{
+    margin-bottom: 2px;
+    display: block;
+  }
+  .radio-button {
+    display: flex;
+    margin-bottom: 5px;
+    
+  }
+  
+  .media-input {
+    width: 85%;
+    height: 35px;
+    border: solid 1px #ddd;
+    padding: 10px 0 0px 0;
+    border-radius: 5px;
+    display: block;
+    margin-top: -10px;
+    margin-left: 10px;
+    margin-bottom: ;
+    
+  }
+  .file-section label{
+    display: flex;
+    margin-bottom: 0px;
+  
+  }
+  
+          #preview {
+            margin-left: 10px;
+            width: 300px;
+            height: 300px;
+            border-radius: 5px;
+            object-fit: cover;
+            border: 2px solid #ddd;
+            display: none; /* Hidden by default */
+        }
+</style>
+</html> 

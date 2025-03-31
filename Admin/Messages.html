@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Messages</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+  <script src="addPic.js"></script>
+  
+  <style>
+    * { padding: 0; margin: 0; box-sizing: border-box; }
+    body { font-family: Poppins; background-color: #f8f8f8; }
+
+    h3 {
+      color: #28a745;
+      background-color: white;
+      text-align: center;
+      box-shadow: 0 0 10px 0 #ddd;
+      padding: 20px;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    } 
+
+    #message-list {
+      padding: 10px;
+      max-width: 500px;
+      margin: auto;
+      overflow-x: hidden;
+    }
+
+    .message-item {
+      background-color: white;
+      padding: 15px;
+      margin-bottom: 5px;
+      border-radius: 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100vw;
+      position: relative;
+      margin-left: -3%
+    }
+
+    .message-item:hover { background-color: #f1f1f1; }
+
+    .message-item img {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+    }
+
+    .message-item .info {
+      flex-grow: 1;
+      max-width: 70%;
+    }
+
+    .message-item .info h4 {
+      font-size: 16px;
+      margin-bottom: 2px;
+    }
+
+    .message-item .info p {
+      font-size: 14px;
+      color: #777;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .message-item .time {
+      font-size: 12px;
+      color: #aaa;
+    }
+
+    .unread-dot {
+      width: 10px;
+      height: 10px;
+      background: green;
+      border-radius: 50%;
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
+    .unread {
+      font-weight: bold;
+    }
+     #navbar i {
+      display: block;
+      font-size: 17px;
+      margin-bottom: 10px;
+      color:  #28a745;
+      
+    }
+    #navbar {
+      position: fixed;
+      bottom: 0;
+      display: flex;
+      text-align: center
+    }
+    .active{
+      color: black;
+      
+      
+    }
+    #navbar a{
+      text-decoration: none;
+      color:  #28a745;
+      font-size: 16px;
+      font-weight: light
+    }
+    #navbar li{
+      list-style-type: none;
+      margin: 10px auto;
+    }
+    #navbar ul{
+      display: flex;
+      justify-content: center;
+      background-color: white;
+      border: solid;
+      border-width: 1px;
+      border-color: white;
+      box-shadow: 0 0 10px 0 #d3d3d3;
+      padding-top: 10px;
+      margin-bottom: 0px;
+      width: 100vw ;
+      
+    }
+    .profile-pic img{
+      position: fixed;
+      z-index: 2;
+      margin-left: 20px;
+      margin-top: -55px;
+      border: solid 0.1px #ddd;
+    }
+  
+  </style>
+</head>
+<body>
+ 
+</div>
+  <h3>Messages<div style="z-index: 3; position: fixed; margin-left: 80%; margin-top: -35px; font-size: 16px;">
+    <a href="">
+  <i class="fas fa-search" style="color:#28a745; border: 0.1px solid #ddd; border-radius: 20px; padding: 8.5px; background-color:#fff; box-shadow: 0 0 10px #fff; font-weight: light"></i>
+  
+  </a>
+  </div>
+  </h3>
+   <div class="profile-pic">
+  <img src="Default.png" alt="up" id="profile-picture5" width="40px" height="40px" style="border-radius: 50%">
+  </div>
+  
+  <div style="text-align: center">
+  <nav id="navbar">
+    <ul>
+      <li class="active"><a href="index.html"><i class="fas fa-store"></i>Market</a></li>
+      <li><a href="Alerts.html"><i class="fas fa-bell"></i>Alerts</a></li>
+      <li><a href="Messages.html"><i class="fas fa-comments"></i>Messages</a></li> 
+            <li><a href="Deals.html"><i class="fas fa-cart-plus"></i>Deals</a></li>
+      <li><a href="Profile.html"><i class="fas fa-user"></i>Profile</a></li>
+    </ul>
+  </nav>
+  </div>
+
+  <div id="message-list"></div>
+  <p id="no-messages" style="display:none;">No messages yet, check back later!</p>
+
+  <script>
+    const userId = localStorage.getItem("userId"); // Retrieve user ID from storage
+    let latestTimestamp = null; // Track latest message timestamp
+
+    if (!userId) {
+      console.error("User not logged in.");
+      window.location.href = "login.html"; // Redirect to login page if user is not logged in
+    } else {
+      fetchMessages();
+      setInterval(fetchMessages, 5000); // Fetch messages every 5 seconds
+    }
+
+    async function fetchMessages() {
+      try {
+        const response = await fetch(`http://localhost:3000/api/messages?userId=${userId}`);
+        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+
+        let messages = await response.json();
+        
+        // Ensure messages are sorted from newest to oldest
+        messages.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+        const messageListElement = document.getElementById("message-list");
+        const noMessagesElement = document.getElementById("no-messages");
+
+        if (messages.length === 0) {
+          noMessagesElement.style.display = "block";
+          return;
+        } else {
+          noMessagesElement.style.display = "none";
+        }
+
+        // Only update if there's a new message
+        if (!latestTimestamp || new Date(messages[0].createdAt) > new Date(latestTimestamp)) {
+          latestTimestamp = messages[0].createdAt;
+          messageListElement.innerHTML = ""; // Clear only when there's an update
+        } else {
+          return; // Skip UI update if nothing has changed
+        }
+
+        const uniqueChats = {};
+        messages.forEach((msg) => {
+          const chatPartnerId = msg.senderId === userId ? msg.receiverId : msg.senderId;
+          if (!uniqueChats[chatPartnerId] || new Date(msg.createdAt) > new Date(uniqueChats[chatPartnerId].createdAt)) {
+            uniqueChats[chatPartnerId] = msg;
+          }
+        });
+
+        Object.values(uniqueChats).forEach((message) => {
+          const chatPartnerId = message.senderId === userId ? message.receiverId : message.senderId;
+          const chatPartnerName = message.chatPartnerName;
+          const chatPartnerProfile = message.chatPartnerProfilePicture;
+          const isUnread = !message.isRead && message.receiverId === userId;
+          const messagePreview = message.text.length > 30 ? message.text.slice(0, 30) + "..." : message.text;
+
+          const messageElement = document.createElement("div");
+          messageElement.classList.add("message-item");
+          if (isUnread) messageElement.classList.add("unread");
+
+          messageElement.innerHTML = `
+            <img src="${chatPartnerProfile}" alt="Profile">
+            <div class="info">
+              <h4>${chatPartnerName}</h4>
+              <p>${messagePreview}</p>
+            </div>
+            <div class="time">${formatTime(message.createdAt)}</div>
+            ${isUnread ? '<span class="unread-dot"></span>' : ""}
+          `;
+
+          messageElement.addEventListener("click", () => {
+            window.location.href = `Chats.html?user_id=${userId}&recipient_id=${chatPartnerId}&recipient_username=${chatPartnerName}&recipient_profile_picture_url=${chatPartnerProfile}`;
+          });
+
+          messageListElement.appendChild(messageElement);
+        });
+
+      } catch (error) {
+        console.error("Error fetching messages:", error);
+        document.getElementById("message-list").innerHTML = "<p>Failed to load messages. Please try again later.</p>";
+      }
+    }
+
+    // Function to format timestamps like WhatsApp
+    function formatTime(timestamp) {
+      if (!timestamp) {
+        console.error("Empty timestamp:", timestamp);
+        return "Invalid Date";
+      }
+
+      const date = new Date(timestamp);
+      
+      if (isNaN(date.getTime())) {
+        console.error("Invalid date:", timestamp);
+        return "Invalid Date";
+      }
+
+      const now = new Date();
+      const options = { hour: "2-digit", minute: "2-digit" };
+
+      if (date.toDateString() === now.toDateString()) {
+        return date.toLocaleTimeString([], options); // Show only time if it's today
+      } else {
+        return date.toLocaleDateString([], { month: "short", day: "numeric" });
+      }
+    }
+
+    // Force update UI after sending a new message
+    async function sendMessage() {
+      // Your existing message sending logic
+      await fetch('http://localhost:3000/api/send-message', { /* request payload */ });
+      fetchMessages(); // Immediately update UI after sending a message
+    }
+  </script>
+</body>
+</html>

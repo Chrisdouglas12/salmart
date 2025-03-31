@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Profile Page</title>
+  <script src="https://cdn.jsdelivr.net/npm/jwt-decode/build/jwt-decode.min.js"></script>
+  <link rel="stylesheet" href="profile styles.css">
+  <link rel="stylesheet" href="Style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+  <script src="addPic.js"></script>
+   <script src="upload.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900&display=swap" rel="stylesheet">
+
+</head>
+<body>
+  <header style="background-color: white; padding: 20px: border: solid 2px #ccc; box-shadow: 0 0 10px #ddd; position: fixed; width: 100vw; z-index: 100">
+    <h1 id="profileHeaderUsr" style="font-size: 16px; padding: 20px;margin-top: -0px; color:  #28a745;margin-left: -2px">username</h1>
+  </header>
+  <div class="menu-icon" style="z-index: 3000">
+  <div></div>
+  <div></div>
+  <div></div>
+</div>
+    <div class="side-bar" style="z-index:3000">
+    <div class="profile-sec">
+      <img src="default-avatar.png" alt="pic" id="profile-picture1">
+      <h4 id="username1">Username</h4>
+    </div>
+    <ul>
+      <li><a href="index.html" class="active"><i class="fas fa-store"></i>Market</a></li>
+      <li><a href="Alerts.html"><i class="fas fa-bell"></i> Alerts</a></li>
+      <li><a href="Messages.html"><i class="fas fa-comment"></i>Messages</a></li> 
+            <li><a href="Deals.html"><i class="fas fa-cart-plus"></i>Deals</a></li>
+      <li><a href="Profile.html"><i class="fas fa-user"></i> Profile</a></li>
+       <li><a href="Profile.html"><i class="fa-solid fa-user-tie"></i> Hire Skills</a></li>
+       <li><a href="Profile.html"><i class="fa-solid fa-receipt"></i> Generate Reciepts</a></li>
+        <li><a href="Profile.html"><i class="fa-solid fa-lock"></i> Privacy Policy</a></li>
+         <li><a href="Privacy.html"><i class="fa-solid fa-circle-info"></i> Community Standards</a></li>
+          <li><a href="SignIn.html"><i class="fas fa-sign-out-alt"></i><span id="logout text">Log out</span></a></li>
+    </ul>
+    <pre style="font-size: 10px; text-align: center; margin-top: 40px; color: green">&copy;Salmart Technologies 2025</pre>
+  </div>
+  <form id="upload-form">
+    <div class="profile-picture-container">
+      <img src="default-avatar.png" id="profile-picture" class="profile-picture">
+      <input type="file" id="profile-picture-upload" accept="image/jpeg, image/png" style="display: none;">
+      <label for="profile-picture-upload" class="file-input-icon">
+        <i class="fas fa-camera"></i>
+      </label>
+    </div>
+    <h1 id="username">Username</h1>
+    
+
+  </form>
+
+
+  <div style="text-align: center">
+    <nav id="navbar">
+      <ul>
+        <li class="active"><a href="index.html"><i class="fas fa-store"></i>Market</a></li>
+        <li><a href="Alerts.html"><i class="fas fa-bell"></i>Alerts</a></li>
+        <li><a href="Messages.html"><i class="fas fa-comments"></i>Messages</a></li>
+              <li><a href="Deals.html"><i class="fas fa-cart-plus"></i>Deals</a></li>
+        <li><a href="Profile.html"><i class="fas fa-user"></i>Profile</a></li>
+      </ul>
+    </nav>
+  </div>
+
+  <div class="stats">
+    <div class="stats-item">
+      <p>Followers</p>
+      <h3 id="followers">0</h3>
+    </div>
+    <div class="stats-item">
+      <p>Products</p>
+      <h3 id="products-count">0</h3>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tabs-active">Home</button>
+    <button>Reviews</button>
+  </div>
+  <div class="product-list" id="product-list"></div>
+  <div id="post-container"></div>
+<!-- Slide-Up Bank Details Form -->
+<!-- Dimmed Overlay -->
+<div id="overlay" class="overlay"></div>
+
+<!-- Bottom Sheet Form -->
+<div id="bottom-sheet" class="bottom-sheet">
+  <div class="bottom-sheet-header">
+    <h3>Update Bank Details</h3>
+    <span id="close-sheet" class="close-sheet">&times;</span>
+  </div>
+  <form id="bank-details-form">
+    <label for="bankName">Bank Name:</label>
+    <input type="text" id="bankName" required>
+        <label for="bankCode">Bank Code:</label>
+    <input type="text" id="bankCode" required>
+
+    <label for="accountNumber">Account Number:</label>
+    <input type="number" id="accountNumber" required>
+
+    <label for="accountName">Account Name:</label>
+    <input type="text" id="accountName" required>
+
+    <button type="submit" class="submit-bank-btn">Save</button>
+  </form>
+</div>
+  
+  
+</div>
+  <div id="posts-container" class="product-list"></div>
+</body>
+<script>
+  document.addEventListener("DOMContentLoaded", async function () {
+    const followButton = document.getElementById("follow-button");
+
+    if (!followButton) {
+        console.error("Follow button not found!");
+        return;
+    }
+
+    function getProfileOwnerId() {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get("userId") ? urlParams.get("userId").trim() : null;
+    }
+
+    function getLoggedInUserId() {
+        const token = localStorage.getItem("authToken");
+        if (!token) return null;
+
+        try {
+            const decodedToken = jwt_decode(token);
+            return decodedToken.userId ? decodedToken.userId.toString().trim() : null;
+        } catch (error) {
+            console.error("Error decoding token:", error);
+            return null;
+        }
+    }
+
+    const profileOwnerId = getProfileOwnerId();
+    const loggedInUserId = getLoggedInUserId();
+
+    if (profileOwnerId && loggedInUserId && profileOwnerId === loggedInUserId) {
+        followButton.style.display = "none";
+        return;
+    }
+
+    async function updateFollowButton() {
+        try {
+            const response = await fetch(`localhost:3000/api/follow-status?followerId=${loggedInUserId}&followingId=${profileOwnerId}`);
+            const data = await response.json();
+
+            if (data.following) {
+                followButton.classList.add("following");
+                followButton.textContent = "Following";
+            } else {
+                followButton.classList.remove("following");
+                followButton.textContent = "Follow";
+            }
+        } catch (error) {
+            console.error("Error fetching follow status:", error);
+        }
+    }
+
+    followButton.addEventListener("click", async function () {
+        try {
+            const response = await fetch("localhost:3000/api/follow", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    followerId: loggedInUserId,
+                    followingId: profileOwnerId
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                if (followButton.classList.contains("following")) {
+                    followButton.classList.remove("following");
+                    followButton.textContent = "Follow";
+                } else {
+                    followButton.classList.add("following");
+                    followButton.textContent = "Following";
+                }
+            }
+        } catch (error) {
+            console.error("Error following/unfollowing user:", error);
+        }
+    });
+
+    updateFollowButton();
+});
+</script>
+
+<style>
+*{
+  margin: 0;
+  padding: 0
+}
+body {
+  font-family: 'Poppins', sans-serif;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-size: 16px
+}
+
+.profile-picture-container {
+  position: position;
+  width: 120px;
+  height: 120px;
+  margin: 20px ;
+  margin-top: 20%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profile-picture {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 2px solid #28a745;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.file-input-icon {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  background-color: white;
+  border: 1px solid #28a745;
+  border-radius: 150%;
+  padding: 5px ;
+  cursor: pointer;
+}
+
+.file-input-icon i {
+  color: #28a745;
+  font-size: 14px;
+}
+
+.upload-button {
+  display: none;
+  background-color: #28a745;
+  color: white;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 20px;
+  margin-top: 10px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.upload-button:hover {
+  background-color: #1e7a33;
+}
+
+h1 {
+  text-align: center;
+  font-size: 24px;
+  margin-top: -30px;
+}
+
+#upload-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stats, .bio, .tabs, .product-list, footer {
+  margin: 0px;
+}
+
+.stats {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 30px
+}
+
+.stats-item {
+  text-align: center;
+}
+
+.tabs {
+  display: flex;
+  justify-content: center;
+  margin-bottom: -10px;
+}
+
+.tabs button {
+  background-color: #f0f2f5;
+  border: none;
+  padding: 10px 20px;
+  margin: 0 10px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.tabs-active {
+  background-color: #28a745;
+  color: white;
+}
+
+.tabs button:hover {
+  background-color: #e0e2e5;
+}
+/* Overlay Background */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.4);
+  display: none;
+  z-index: 99;
+}
+
+/* Bottom Sheet Container */
+.bottom-sheet {
+  position: fixed;
+  bottom: -100%;
+  width: 90%;
+  background: #fff;
+  padding: 20px;
+  border-radius: 16px 16px 0 0;
+  box-shadow: 0 -2px 10px rgba(0,0,0,0.2);
+  z-index: 100;
+  transition: bottom 0.3s ease-in-out;
+  
+}
+
+/* Bottom Sheet Header */
+.bottom-sheet-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.bottom-sheet-header h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.close-sheet {
+  font-size: 22px;
+  cursor: pointer;
+}
+
+/* Input Fields */
+#bank-details-form label {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 14px;
+}
+
+#bank-details-form input {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 15px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  margin-left:-10px;
+  
+}
+input:focus{
+  border-color: green
+}
+
+/* Save Button */
+.submit-bank-btn {
+  width: 100%;
+  background-color: #28a745;
+  color: white;
+  padding: 10px;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.submit-bank-btn:hover {
+  background-color: #1e7a33;
+}
+button i{
+  font-size: 14px;
+  cursor: pointer;
+}
+
+
+.bank-button {
+  background-color: #fff;
+  color: #28a745;
+  width: 70%;
+  height: 35px;
+  border: solid 1px #28a745;
+  border-radius: 10px;
+  margin-top: 15px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.bank-button:hover {
+  background-color: #1e7a33;
+}
+
+.following {
+  background-color: #6c757d;
+}
+  .side-bar{
+    display: none;
+    position: fixed;
+    top: 0px;
+    left: 0;
+    z-index: 6;
+    background-color: #fff;
+    border: 1px #ddd solid;
+    box-shadow: 0 0 10px #ddd;
+    height: 100vh;
+    width: 70%;
+  }
+  h4{
+    margin: 20px 0px;
+    margin-left: 5px;
+    
+  }
+  .side-bar ul{
+    list-style: none;
+     margin: 0;
+     padding: 0;
+  padding-top: 20px;
+  margin-left: 5px;
+  
+  }
+  .side-bar li{
+    margin-bottom: 10px;
+    border: 0.1px solid #fff;
+    padding: 10px;
+    border-end-end-radius: 20px;
+    background-color:  #fff;
+    box-shadow: 0 0 10px #ddd;
+    margin-right: 3px;
+  }
+  .side-bar .active{
+    color:  #dd;
+  }
+  .side-bar a{
+    text-decoration: none;
+    color:  #28a745;
+    padding-right: 10%;
+    
+  }
+  .side-bar i{
+    margin-right: 20px;
+    
+  }
+.profile-sec {
+  width: 100%; /* Ensures it spans the entire width of the sidebar */
+  border-bottom: 0.1px solid #fff; /* The line at the bottom */
+  padding-bottom: 5px;
+  display: flex;
+  box-sizing: border-box;
+  box-shadow: 0 0 10px #ddd;
+}
+
+.profile-sec img {
+  border: solid 0.1px #fff;
+  box-shadow: 0 0 10px #ddd;
+  border-radius: 100%;
+  width: 45px; 
+  height: 45px;
+  margin-left: 5px;
+  margin-top: 10px;
+}
+  no-scroll {
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+}
+.menu-icon{
+  color: #28a745;
+}
+a .active {
+  color: blue;
+}
+</style>
+<script>
+  document.addEventListener("DOMContentLoaded", async function () {
+    const profileOwnerId = localStorage.getItem("userId");
+    const followersCountEl = document.getElementById("followers");
+    const productsCountEl = document.getElementById("products-count");
+
+    try {
+      const response = await fetch(`http://localhost:3000/profile/${profileOwnerId}`);
+      const data = await response.json();
+
+      if (response.ok) {
+        followersCountEl.textContent = data.followersCount;
+        productsCountEl.textContent = data.productsCount; // Adjust if needed
+      }
+    } catch (err) {
+      console.error("Error fetching profile data:", err);
+    }
+  });
+</script>
+<script>
+  const openBtn = document.createElement("button");
+  openBtn.textContent = "Update Bank Details";
+  openBtn.className = "bank-button";
+  openBtn.style.marginTop = "10px";
+  openBtn.type = "button"; // prevent form submit reload
+  document.getElementById("upload-form").appendChild(openBtn);
+
+  const overlay = document.getElementById("overlay");
+  const bottomSheet = document.getElementById("bottom-sheet");
+  const closeBtn = document.getElementById("close-sheet");
+
+  const bankNameInput = document.getElementById("bankName");
+  const bankCodeInput = document.getElementById("bankCode");
+  const accountNumberInput = document.getElementById("accountNumber");
+  const accountNameInput = document.getElementById("accountName");
+
+  // Show bottom sheet and autofill form
+  openBtn.addEventListener("click", async () => {
+    bottomSheet.style.bottom = "0";
+    overlay.style.display = "block";
+
+    const token = localStorage.getItem("authToken"); // Get the token from localStorage
+
+    if (!token) {
+      alert("You are not logged in. Please log in to update bank details.");
+      return;
+    }
+
+    try {
+      const res = await fetch(`http://localhost:3000/get-bank-details`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}` // Include the token in the headers
+        }
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.success && data.bankDetails) {
+        bankNameInput.value = data.bankDetails.bankName || "";
+        accountNumberInput.value = data.bankDetails.accountNumber || "";
+        bankCodeInput.value = data.bankDetails.bankCode || "";
+        accountNameInput.value = data.bankDetails.accountName || "";
+      } else {
+        bankNameInput.value = "";
+        accountNumberInput.value = "";
+        accountNameInput.value = "";
+      }
+    } catch (err) {
+      console.error("Error loading bank details:", err);
+    }
+  });
+
+  // Close bottom sheet
+  const closeSheet = () => {
+    bottomSheet.style.bottom = "-100%";
+    overlay.style.display = "none";
+  };
+
+  closeBtn.addEventListener("click", closeSheet);
+  overlay.addEventListener("click", closeSheet);
+
+  // Handle form submit
+  document.getElementById("bank-details-form").addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    const token = localStorage.getItem("authToken"); // Get the token from localStorage
+
+    if (!token) {
+      alert("You are not logged in. Please log in to update bank details.");
+      return;
+    }
+
+    const bankName = bankNameInput.value.trim();
+    const accountNumber = accountNumberInput.value.trim();
+    const accountName = accountNameInput.value.trim();
+    const bankCode = bankCodeInput.value.trim();
+
+    try {
+      const res = await fetch("http://localhost:3000/update-bank-details", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}` // Include the token in the headers
+        },
+        body: JSON.stringify({ bankName, accountNumber, accountName, bankCode }),
+      });
+
+      const result = await res.json();
+      if (res.ok && result.success) {
+        alert("Bank details updated successfully!");
+        closeSheet();
+      } else {
+        alert("Failed to update: " + result.message);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Something went wrong!");
+    }
+  });
+</script>
+<script>
+  document.addEventListener('DOMContentLoaded', async function () {
+    let loggedInUser = null; // Define loggedInUser variable
+
+    // Function to format time (e.g., "2 hrs ago")
+    function formatTime(timestamp) {
+        const now = new Date();
+        const postDate = new Date(timestamp);
+        const diffInSeconds = Math.floor((now - postDate) / 1000);
+
+        if (diffInSeconds < 60) return "Just now";
+        if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} min ago`;
+        if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hrs ago`;
+        if (diffInSeconds < 172800) return "Yesterday";
+
+        return postDate.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+    }
+
+    // Function to check login status
+    async function checkLoginStatus() {
+        const token = localStorage.getItem('authToken');
+        const tokenExpiry = localStorage.getItem('tokenExpiry');
+
+        if (!token || Date.now() > tokenExpiry) {
+            console.log('Token expired or missing. Redirecting to login...');
+            return;
+        }
+
+        try {
+            const response = await fetch('http://localhost:3000/verify-token', {
+                method: 'GET',
+                headers: { 'Authorization': `Bearer ${token}` },
+            });
+
+            if (response.ok) {
+                const userData = await response.json();
+                loggedInUser = userData.userId; // Set loggedInUser to the current user's ID
+                fetchPosts(); // Fetch posts after successful login
+            } else {
+                throw new Error('Token validation failed');
+            }
+        } catch (error) {
+            console.error('Token validation failed:', error);
+        }
+    }
+
+    // Function to get the profile owner's ID from the URL
+    
+
+    // Function to fetch and display posts for the profile owner
+    async function fetchPosts() {
+        const urlParams = new URLSearchParams(window.location.search)
+        let profileOwnerId = localStorage.getItem("userId")// Get the profile owner's ID
+        
+        
+        if (!profileOwnerId) {
+            profileOwnerId = localhost.getItem("userId")
+        }
+        if(!profileOwnerId) {
+          console.log('No userId found');
+          return;
+        }
+
+        const postsContainer = document.getElementById('posts-container');
+        if (!postsContainer) {
+            console.error('Posts container not found.');
+            return;
+        }
+
+        try {
+            const response = await fetch(`http://localhost:3000/post?userId=${profileOwnerId}`); // Fetch posts for the profile owner
+            if (!response.ok) throw new Error('Failed to fetch posts');
+
+            const posts = await response.json();
+            postsContainer.innerHTML = ""; // Clear existing posts
+
+            posts.forEach(post => {
+                if (post.createdBy.userId === profileOwnerId ) { // Only display posts by the profile owner
+                    const postElement = document.createElement('div');
+                    postElement.classList.add('post');
+                    postElement.innerHTML = `
+                        <div class="post-header">
+                            <a href="Profile.html?userId=${post.createdBy.userId}">
+                                <img src="${post.profilePicture || 'default-avatar.png'}" class="post-avatar">
+                            </a>
+                            <div class="post-user-info">
+                                <a href="Profile.html?userId=${post.createdBy.userId}">
+                                    <h4 class="post-user-name">${post.createdBy.name}</h4>
+                                </a>
+                                <p class="post-time">${formatTime(post.createdAt)}</p>
+                            </div>
+                            ${post.createdBy.userId !== loggedInUser ?
+                                `<button class="follow-button" data-user-id="${post.createdBy.userId}" data-is-following="${post.isFollowing}"><i class="fas fa-user-plus"></i> Follow</button>` : ''}
+                            <div class="post-options">
+                                <button class="post-options-button"><i class="fas fa-ellipsis-h"></i></button>
+                                <div class="post-options-menu">
+                                    <ul>
+                                        ${post.createdBy.userId === loggedInUser ? `
+                                            <li><button class="delete-post-button" data-post-id="${post._id}">Delete Post</button></li>
+                                            <li><button class="edit-post-button" data-post-id="${post._id}">Edit Post</button></li>
+                                        ` : ''}
+                                        <li><button class="report-post-button" data-post-id="${post._id}">Report Post</button></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="post-description"><b>Product:</b> ${post.description}</p>
+                        <p class="post-description"><b>Condition:</b> ${post.productCondition}</p>
+                        <p class="post-description"><b>Price:</b> ${post.price}</p>
+                        <p class="post-description"><b>Location:</b> ${post.location}</p>
+                        <img src="${post.photo || 'default-image.png'}" class="post-image" onclick="openImage('${post.photo || 'default-image.png'}')">
+                        <div class="buy" style="text-align: center">
+                            <button class="buy-now-button" data-post-id="${post._id}" ${post.isSold ? 'disabled' : ''}>${post.isSold ? 'Sold Out' : 'Buy Now'}</button>
+                            <a id="send-message-link">
+                                <button class="buy-now-button" id="send-message-btn"
+                                    data-recipient-id="${post.createdBy.userId}"
+                                    data-product-image="${post.photo || 'default-image.png'}"
+                                    data-product-description="${post.description}">
+                            ${post.isSold ? 'Unavailable': 'Check Available'}
+                                </button>
+                            </a>
+                        </div>
+                        <div class="post-actions">
+                            <button class="like-button">
+                                <i class="${post.likes.includes(loggedInUser) ? 'fas' : 'far'} fa-heart"></i>
+                                <span class="like-count">${post.likes.length}</span>
+                            </button>
+                            <button class="reply-button"><i class="far fa-comment"></i> <span class="comment-count">${post.comments ? post.comments.length : 0}</span></button>
+                            <button class="share-button"><i class="fas fa-share"></i></button>
+                        </div>
+                        <div class="comment-section" style="display: none;">
+                            <div class="comments-list">
+                                ${post.comments.map(comment => `
+                                    <div class="comment">
+                                        <img src="${comment.profilePicture || 'default-avatar.png'}" class="comment-avatar">
+                                        <div class="comment-info">
+                                            <strong>${comment.name}</strong>
+                                            <p>${comment.text}</p>
+                                            <span class="comment-time">${formatTime(comment.createdAt)}</span>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            <div class="comment-input">
+                                <input type="text" placeholder="Write a comment..." class="comment-text">
+                                <button class="comment-submit" data-post-id="${post._id}">Post</button>
+                            </div>
+                        </div>
+                    `;
+                    postsContainer.prepend(postElement);
+
+                    // Add event listeners for buttons (like, comment, follow, etc.)
+                    // Like functionality
+                    const likeButton = postElement.querySelector('.like-button');
+                    likeButton.addEventListener('click', async () => {
+                        const likeCountElement = likeButton.querySelector('.like-count');
+                        const icon = likeButton.querySelector('i');
+                        const postId = post._id;
+
+                        let currentLikes = parseInt(likeCountElement.textContent, 10);
+                        let isLiked = icon.classList.contains('fas');
+
+                        // Optimistic UI update
+                        icon.classList.toggle('fas', !isLiked);
+                        icon.classList.toggle('far', isLiked);
+                        likeCountElement.textContent = isLiked ? currentLikes - 1 : currentLikes + 1;
+
+                        try {
+                            const response = await fetch(`http://localhost:3000/post/like/${postId}`, {
+                                method: 'POST',
+                                headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` },
+                            });
+
+                            if (!response.ok) throw new Error('Failed to like/unlike post');
+
+                            const data = await response.json();
+                            likeCountElement.textContent = data.likes.length;
+                            if (data.likes.includes(loggedInUser)) {
+                                icon.classList.add('fas');
+                                icon.classList.remove('far');
+                            } else {
+                                icon.classList.add('far');
+                                icon.classList.remove('fas');
+                            }
+
+                            if (!isLiked) {
+                                socket.emit('likePost', { postId, userId: loggedInUser });
+                            }
+                        } catch (error) {
+                            console.error('Error liking/unliking post:', error);
+                            icon.classList.toggle('fas', isLiked);
+                            icon.classList.toggle('far', !isLiked);
+                            likeCountElement.textContent = currentLikes;
+                        }
+                    });
+
+                    // Comment functionality
+                    const commentToggleButton = postElement.querySelector('.reply-button');
+                    const commentSection = postElement.querySelector('.comment-section');
+                    commentToggleButton.addEventListener('click', () => {
+                        commentSection.style.display = commentSection.style.display === "none" ? "block" : "none";
+                    });
+
+                    const commentButton = postElement.querySelector('.comment-submit');
+                    const commentInput = postElement.querySelector('.comment-text');
+                    commentButton.addEventListener('click', async () => {
+                        const commentText = commentInput.value.trim();
+                        if (!commentText) return;
+
+                        try {
+                            const response = await fetch(`http://localhost:3000/post/comment/${post._id}`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+                                },
+                                body: JSON.stringify({ text: commentText }),
+                            });
+
+                            if (!response.ok) throw new Error('Failed to post comment');
+
+                            const result = await response.json();
+                            const newComment = result.comment;
+
+                            const commentList = postElement.querySelector('.comments-list');
+                            const newCommentHTML = `
+                                <div class="comment">
+                                    <img src="${newComment.profilePicture || 'default-avatar.png'}" class="comment-avatar">
+                                    <div class="comment-info">
+                                        <strong>${newComment.name}</strong>
+                                        <p>${newComment.text}</p>
+                                        <span class="comment-time">${formatTime(newComment.createdAt)}</span>
+                                    </div>
+                                </div>
+                            `;
+                            commentList.insertAdjacentHTML('afterbegin', newCommentHTML);
+                            commentInput.value = "";
+
+                            const commentCountElement = postElement.querySelector('.comment-count');
+                            commentCountElement.textContent = parseInt(commentCountElement.textContent) + 1;
+
+                            showToast("Your comment has been submitted!");
+                        } catch (error) {
+                            console.error('Error posting comment:', error);
+                        }
+                    });
+
+                    // Buy now functionality
+                    const buyNowButton = postElement.querySelector('.buy-now-button');
+                    buyNowButton.addEventListener('click', async () => {
+                        const postId = buyNowButton.getAttribute('data-post-id').trim();
+                        const email = localStorage.getItem('email');
+                        const buyerId = localStorage.getItem('userId');
+
+                        if (!email || !buyerId) {
+                            alert("No email or user ID found in localStorage. Please log in.");
+                            return;
+                        }
+
+                        try {
+                            const response = await fetch('http://localhost:3000/pay', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ email, postId, buyerId }),
+                            });
+
+                            const result = await response.json();
+                            if (result.success) {
+                                window.location.href = result.url;
+                            } else {
+                                alert("Payment failed!");
+                            }
+                        } catch (error) {
+                            console.error("Error processing payment:", error);
+                            alert("Payment error!");
+                        }
+                    });
+
+                    // Check availability functionality
+                    const sendMessageBtn = postElement.querySelector("#send-message-btn");
+                    if(post.isSold) {
+                      sendMessageBtn.disabled = true;
+                    }
+                    const sendMessageLink = postElement.querySelector("#send-message-link");
+                    sendMessageBtn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const recipientId = sendMessageBtn.dataset.recipientId;
+                        const recipientUsername = post.createdBy.name;
+                        const recipientProfilePictureUrl = post.profilePicture || 'default-avatar.png';
+                        const productImage = sendMessageBtn.dataset.productImage;
+                        const productDescription = sendMessageBtn.dataset.productDescription;
+
+                        // Construct the message with product details
+                        const message = `Is this item still available?\n\nProduct: ${productDescription}\nImage: ${productImage}`;
+                        const userId = localStorage.getItem("userId")
+
+                        // Redirect to the chat page with the pre-filled message
+                        sendMessageLink.href = `Chats.html?user_id=${userId}&recipient_id=${recipientId}&recipient_username=${recipientUsername}&recipient_profile_picture_url=${recipientProfilePictureUrl}&message=${encodeURIComponent(message)}`;
+                        window.location.href = sendMessageLink.href;
+                    });
+
+                    // Post menu functionality
+                    const optionsButton = postElement.querySelector('.post-options-button');
+                    const optionsMenu = postElement.querySelector('.post-options-menu');
+                    optionsButton.addEventListener('click', (e) => {
+                        e.stopPropagation(); // Prevent bubbling
+                        document.querySelectorAll('.post-options-menu.show').forEach(menu => {
+                            if (menu !== optionsMenu) menu.classList.remove('show');
+                        });
+                        optionsMenu.classList.toggle('show');
+                    });
+
+                    // Close menu if user clicks outside
+                    document.addEventListener('click', () => {
+                        document.querySelectorAll('.post-options-menu.show').forEach(menu => {
+                            menu.classList.remove('show');
+                        });
+                    });
+
+                    // Delete post functionality
+                    const deleteButton = postElement.querySelector('.delete-post-button');
+                    if (deleteButton) {
+                        deleteButton.addEventListener('click', async () => {
+                            const postId = deleteButton.getAttribute('data-post-id');
+                            const authToken = localStorage.getItem('authToken');
+
+                            const confirmDelete = confirm("Are you sure you want to delete this post?");
+                            if (!confirmDelete) return;
+
+                            try {
+                                const response = await fetch(`http://localhost:3000/post/delete/${postId}`, {
+                                    method: 'DELETE',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'Authorization': `Bearer ${authToken}`,
+                                    },
+                                });
+
+                                if (!response.ok) throw new Error('Failed to delete post');
+
+                                postElement.remove();
+                                showToast('Post deleted successfully!');
+                            } catch (error) {
+                                console.error('Error deleting post:', error);
+                                showToast('Error deleting post. Please try again.');
+                            }
+                        });
+                    }
+
+                    // Edit post functionality
+                    const editButton = postElement.querySelector('.edit-post-button');
+                    if (editButton) {
+                        editButton.addEventListener('click', () => {
+                            const postId = editButton.getAttribute('data-post-id');
+                            window.location.href = `Ads.html?edit=true&postId=${postId}`;
+                        });
+                    }
+                }
+            });
+        } catch (error) {
+            console.error('Error fetching posts:', error);
+            postsContainer.innerHTML = '<p>Failed to fetch posts. Please try again later.</p>';
+        }
+    }
+
+    // Function to show toast notifications
+    function showToast(message) {
+        const toast = document.createElement('div');
+        toast.classList.add('toast-message');
+        toast.textContent = message;
+        document.body.appendChild(toast);
+
+        setTimeout(() => {
+            toast.classList.add('fade-out');
+            setTimeout(() => {
+                toast.remove();
+            }, 500);
+        }, 3000);
+    }
+
+    // Check login status when the page loads
+    checkLoginStatus();
+});
+</script>
+<script>
+const menuIcon = document.querySelector('.menu-icon');
+const sideBar = document.querySelector('.side-bar');
+const body = document.body;
+
+menuIcon.addEventListener('click', () => {
+  sideBar.style.display = sideBar.style.display === 'block' ? 'none' : 'block';
+  body.classList.toggle('no-scroll');
+});
+
+document.body.addEventListener('click', (e) => {
+  if (sideBar.style.display === 'block' && !sideBar.contains(e.target) && !menuIcon.contains(e.target)) {
+    sideBar.style.display = 'none';
+    body.classList.remove('no-scroll');
+  }
+});
+
+</script>
+</html> 

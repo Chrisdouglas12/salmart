@@ -28,6 +28,7 @@ app.use(cors({
   credentials: true
 }));
 
+
 // Create an HTTP server
 const server = http.createServer(app);
 const io = socketIo(server, {
@@ -39,6 +40,10 @@ const io = socketIo(server, {
   },
 });
 
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+}); 
 
 // Initialize Socket.IO
 const users = {}; // Store userId -> socketId mapping
@@ -237,10 +242,7 @@ socket.on('commentPost', async ({ postId, userId, comment }) => {
 
 
 
-// Update the server to listen with the HTTP server
-server.listen(3000, () => {
-  console.log('Server is running on port 3000');
-});
+
 
 require('dotenv').config(); // Load environment variables
 const paystack = require('paystack-api')(process.env.PAYSTACK_SECRET_KEY);
@@ -277,7 +279,7 @@ app.use('/Uploads', express.static(uploadDir));
 
 // Connect to MongoDB using Mongoose
 mongoose.connect(uri)
-  .then(() => console.log("Connected to MongoDB with Mongoose!"))
+  .then(() => console.log("Connected to MongoDB!"))
   .catch(err => console.error("MongoDB connection error:", err));
 
 
@@ -343,7 +345,7 @@ app.post('/login', async (req, res) => {
         }
 
         // Generate JWT
-        const token = jwt.sign({ userId: user._id }, 'ghgh6rrjrfhteldwb', { expiresIn: '1w' });
+        const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1w' });
 
         // Save userId in localStorage (on frontend)
         res.status(201).json({
@@ -373,7 +375,7 @@ const verifyToken = (req, res, next) => {
 
   const token = authHeader.split(' ')[1]; // Extract the token
   try {
-    const decoded = jwt.verify(token, 'ghgh6rrjrfhteldwb'); // Replace with your secret
+    const decoded = jwt.verify(token, process.env.JWT_SECRET); // Replace with your secret
     req.user = decoded; // Attach decoded token info to req.user
     next(); // Proceed to the next middleware/route
   } catch (err) {
@@ -521,7 +523,7 @@ app.get('/post', async (req, res) => {
     const authHeader = req.headers['authorization'];
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.split(' ')[1];
-      const decoded = jwt.verify(token, 'ghgh6rrjrfhteldwb'); 
+      const decoded = jwt.verify(token, process.env.JWT_SECRET); 
       loggedInUserId = decoded.userId;
     }
 
@@ -795,7 +797,7 @@ app.get('/payment-success', async (req, res) => {
             const sellerName = `${seller.firstName} ${seller.lastName}`;
             const sellerProfilePic = seller.profilePicture || "default.jpg";
             
-            const COMMISSION_PERCENT = 10; // Platform earns 10%
+            const COMMISSION_PERCENT = 2; // Platform earns 2%
 
 const totalAmount = amountPaid; // Already calculated
 const commission = (COMMISSION_PERCENT / 100) * totalAmount;
@@ -2558,6 +2560,11 @@ app.get('/check-payment-status', async (req, res) => {
     res.status(500).json({ error: 'Error checking payment status' });
   }
 });
+
+app.get('/', (req, res) => {
+    res.send('Salmart API is running');
+});
+
 
 
  
