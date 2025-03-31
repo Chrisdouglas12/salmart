@@ -28,6 +28,17 @@ app.use(cors({
   credentials: true
 }));
 
+const cloudinary = require('cloudinary').v2;
+
+cloudinary.config({ 
+    cloud_name: process.env.CLOUD_NAME, 
+    api_key: process.env.CLOUDINARY_API_KEY, 
+    api_secret: process.env.CLOUDINARY_API_SECRET 
+});
+
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+
+
 
 // Create an HTTP server
 const server = http.createServer(app);
@@ -247,6 +258,7 @@ socket.on('commentPost', async ({ postId, userId, comment }) => {
 require('dotenv').config(); // Load environment variables
 const paystack = require('paystack-api')(process.env.PAYSTACK_SECRET_KEY);
 
+
 const uploadDir = path.join(__dirname, 'Uploads');00
 
 
@@ -271,9 +283,6 @@ app.use(cors({
      allowedHeaders: ['Content-Type', 'Authorization']
    }));
 app.use(express.json())
-
-//serve uploaded files
-app.use('/Uploads', express.static(uploadDir));
 // MongoDB Atlas connection string
  const uri = process.env.MONGO_URI
 
@@ -283,23 +292,63 @@ mongoose.connect(uri)
   .catch(err => console.error("MongoDB connection error:", err));
 
 
-// Define storage settings
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'Uploads/'); // Directory to store uploaded files
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1E9)}`;
-    const fileExt = path.extname(file.originalname); // Get the file extension
-    cb(null, `${uniqueSuffix}${fileExt}`); // Generate unique file name
-  },
+// Check if in production
+const isProduction = process.env.NODE_ENV === 'production';
+
+// Configure Cloudinary (for production)
+if (isProduction) {
+    cloudinary.config({ 
+        cloud_name: process.env.CLOUD_NAME, 
+        api_key: process.env.CLOUDINARY_API_KEY, 
+        api_secret: process.env.CLOUDINARY_API_SECRET 
+    });
+}
+
+// Set up storage dynamically
+let storage;
+if (isProduction) {
+    // Cloudinary storage (for production)
+    storage = new CloudinaryStorage({
+        cloudinary: cloudinary,
+        params: {
+            folder: 'uploads',
+            allowed_formats: ['jpg', 'png', 'jpeg']
+        }
+    });
+} else {
+    // Local storage (for development)
+    const uploadDir = path.join(__dirname, 'Uploads/');
+    if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir); // Ensure folder exists
+
+    storage = multer.diskStorage({
+        destination: (req, file, cb) => {
+            cb(null, uploadDir);
+        },
+        filename: (req, file, cb) => {
+            const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1E9)}`;
+            const fileExt = path.extname(file.originalname);
+            cb(null, `${uniqueSuffix}${fileExt}`);
+        }
+    });
+}
+
+// Multer setup
+const upload = multer({ storage });
+
+// Upload Route
+app.post('/upload', upload.single('image'), (req, res) => {
+    if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+
+    const imageUrl = isProduction ? req.file.path : `/Uploads/${req.file.filename}`;
+    res.json({ imageUrl }); // Return Cloudinary URL or local file path
 });
 
-// Multer configuration without file filter
-const upload = multer({
-  storage: storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // Limit file size to 5MB
-});
+// Serve local images in development
+if (!isProduction) {
+    app.use('/Uploads', express.static(path.join(__dirname, 'Uploads')));
+}
+
+
 
 
 //Endpoint to register user

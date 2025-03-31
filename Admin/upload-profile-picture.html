@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+</head>
+<body>
+  <input type="file" id="profile-picture-input" accept="image/*">
+  <br><br>
+<button id="upload-btn">Upload</button>
+<img id="profile-picture" src="default-avatar.png" alt="Profile Picture">
+
+</body>
+<script>
+  const profilePictureInput = document.getElementById('profile-picture-input');
+const uploadBtn = document.getElementById('upload-btn');
+const profilePicture = document.getElementById('profile-picture');
+
+uploadBtn.addEventListener('click', async () => {
+  const file = profilePictureInput.files[0];
+  if (!file) return alert('Please select a picture');
+
+  const formData = new FormData();
+  formData.append('profilePicture', file);
+
+  try {
+    const response = await fetch('http://localhost:3000/upload-profile-picture', {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      profilePicture.src = data.profilePicture;
+    } else {
+      alert('Failed to upload profile picture');
+    }
+  } catch (error) {
+    console.error(error);
+  }
+});
+</script>
+<style>
+  input{
+    width: 50px;
+    height: 50px;
+    border: solid 1px green;
+    border-radius: 50%;
+    background-color: blue;
+    color: blue;
+  }
+</style>
+</html>
