@@ -13,7 +13,7 @@ const API_BASE_URL = window.location.hostname === 'localhost'
       'https://salmart-production.up.railway.app'
   // Prefill form if editing
   if (isEdit && postId) {
-    fetch(`http://localhost:3000/post/${postId}`, {
+    fetch(`${API_BASE_URL}/post/${postId}`, {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${token}`,
@@ -81,7 +81,7 @@ const API_BASE_URL = window.location.hostname === 'localhost'
       let response;
       if (isEdit && postId) {
         // EDIT mode (PUT request)
-        response = await fetch(`API_BASE_URL/post/edit/${postId}`, {
+        response = await fetch(`${API_BASE_URL}/post/edit/${postId}`, {
           method: 'PUT',
           headers: {
             Authorization: `Bearer ${token}`,
