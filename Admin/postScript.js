@@ -1,46 +1,50 @@
-
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   const form = document.getElementById('dataForm');
   const fileInput = document.getElementById('file-input');
   const preview = document.getElementById('preview');
+  const submitBtn = form.querySelector('button[type="submit"]');
   const token = localStorage.getItem('authToken');
+
+  // Check authentication
+  if (!token) {
+    showToast('Please log in first', '#dc3545');
+    window.location.href = '/SignIn.html'; // Redirect to login
+    return;
+  }
+
   const urlParams = new URLSearchParams(window.location.search);
   const isEdit = urlParams.get('edit') === 'true';
   const postId = urlParams.get('postId');
-const API_BASE_URL = window.location.hostname === 'localhost' 
-       ?
-      'http://localhost:3000' :
-      'https://salmart-production.up.railway.app'
+
+  const API_BASE_URL = window.location.hostname === 'localhost' 
+    ? 'http://localhost:3000' 
+    : 'https://salmart-production.up.railway.app';
+
   // Prefill form if editing
   if (isEdit && postId) {
-    fetch(`${API_BASE_URL}/post/${postId}`, {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success) {
-          const post = data.post;
-          document.getElementById('description').value = post.description || '';
-          document.getElementById('productCondition').value = post.productCondition || '';
-          document.getElementById('price').value = post.price || '';
-          document.getElementById('location').value = post.location || '';
-
-          // Show image preview
-          if (post.photoUrl) {
-            preview.src = post.photoUrl;
-            preview.style.display = 'block';
-          }
-        } else {
-          alert('Failed to load post for editing');
-        }
-      })
-      .catch((err) => {
-        console.error('Error loading post:', err);
-        alert('Error loading post for editing.');
+    try {
+      const response = await fetch(`${API_BASE_URL}/post/${postId}`, {
+        method: 'GET',
+        headers: { Authorization: `Bearer ${token}` },
       });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || 'Failed to load post');
+
+      const post = data.post;
+      document.getElementById('description').value = post.description || '';
+      document.getElementById('productCondition').value = post.productCondition || '';
+      document.getElementById('price').value = post.price || '';
+      document.getElementById('location').value = post.location || '';
+
+      if (post.photoUrl) {
+        preview.src = post.photoUrl;
+        preview.style.display = 'block';
+      }
+    } catch (err) {
+      console.error('Error loading post:', err);
+      showToast(err.message || 'Error loading post', '#dc3545');
+    }
   }
 
   // Preview selected image
@@ -59,58 +63,58 @@ const API_BASE_URL = window.location.hostname === 'localhost'
   // Handle form submission
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
-
-    const description = document.getElementById('description').value;
-    const productCondition = document.getElementById('productCondition').value;
-    const price = document.getElementById('price').value;
-    const location = document.getElementById('location').value;
+    
+    const description = document.getElementById('description').value.trim();
+    const productCondition = document.getElementById('productCondition').value.trim();
+    const price = document.getElementById('price').value.trim();
+    const location = document.getElementById('location').value.trim();
     const file = fileInput.files[0];
+
+    // Basic validation
+    if (!description || !price || !location) {
+      showToast('Please fill all required fields', '#dc3545');
+      return;
+    }
+
+    if (!isEdit && !file) {
+      showToast('Please upload an image', '#dc3545');
+      return;
+    }
+
+    submitBtn.disabled = true; // Prevent double submission
 
     const formData = new FormData();
     formData.append('description', description);
     formData.append('productCondition', productCondition);
     formData.append('price', price);
     formData.append('location', location);
-
-    // If a new image is selected
-    if (file) {
-      formData.append('photo', file);
-    }
+    if (file) formData.append('photo', file);
 
     try {
-      let response;
-      if (isEdit && postId) {
-        // EDIT mode (PUT request)
-        response = await fetch(`${API_BASE_URL}/post/edit/${postId}`, {
-          method: 'PUT',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          body: formData,
-        });
-      } else {
-        // CREATE mode (POST request)
-        if (!file) {
-          showToast('Please upload an image.');
-          return;
-        }
-        response = await fetch(`${API_BASE_URL}/post`, {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          body: formData,
-        });
-      }
+      const endpoint = isEdit && postId 
+        ? `${API_BASE_URL}/post/edit/${postId}`
+        : `${API_BASE_URL}/post`;
+
+      const method = isEdit && postId ? 'PUT' : 'POST';
+
+      const response = await fetch(endpoint, {
+        method,
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
 
       const result = await response.json();
       if (!response.ok) throw new Error(result.message || 'Request failed');
 
-      showToast(isEdit ? 'Post updated successfully!' : 'Post created successfully!');
-      window.location.href = '/index.html'; // Redirect to homepage
+      showToast(isEdit ? 'Post updated!' : 'Post created!');
+      setTimeout(() => {
+        window.location.href = '/index.html';
+      }, 1500);
     } catch (error) {
-      console.error(isEdit ? 'Error updating post:' : 'Error creating post:', error);
-      showToast("something went wrong", "#dc3545"); // red for error
+      console.error('API Error:', error);
+      showToast(error.message || 'Something went wrong', '#dc3545');
+    } finally {
+      submitBtn.disabled = false;
     }
   });
 });
