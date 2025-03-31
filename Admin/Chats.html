@@ -467,7 +467,11 @@
   </div>
 
 <script>
-  const socket = io('http://localhost:3000');
+  const API_BASE_URL = window.location.hostname === 'localhost' 
+       ?
+      'http://localhost:3000' :
+      'https://salmart-production.up.railway.app'
+  const socket = io(`${API_BASE_URL}`);
   const chatMessages = document.getElementById('chat-messages');
   const typeSection = document.getElementById('type-section');
   const sendBtn = document.getElementById('send-btn');
@@ -558,7 +562,7 @@ if (parsed && parsed.offer && message.receiverId === userId) {
     document.getElementById('confirmAcceptBtn').onclick = async () => {
     try {
         // Send request to update product price
-        const response = await fetch(`http://localhost:3000/posts/${productDetails.productId}/update-price`, {
+        const response = await fetch(`${API_BASE_URL}/posts/${productDetails.productId}/update-price`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ newPrice: productDetails.offer })
@@ -626,7 +630,7 @@ if (parsed && parsed.payment) {
   // Function to verify payment status
   const verifyPayment = async () => {
     try {
-      const response = await fetch(`http://localhost:3000/payment-success?productId=${parsed.productId}&buyerId=${userId}`);
+      const response = await fetch(`${API_BASE_URL}/payment-success?productId=${parsed.productId}&buyerId=${userId}`);
       const result = await response.json();
       
       if (result.paymentCompleted) {
@@ -662,7 +666,7 @@ if (parsed && parsed.payment) {
           paymentBtn.textContent = 'Processing...';
 
           // Initiate payment
-          const response = await fetch('http://localhost:3000/pay', {
+          const response = await fetch(`${API_BASE_URL}/pay`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, postId, buyerId }),
@@ -749,7 +753,7 @@ if (parsed && parsed.payment) {
   });
 
   async function loadChatHistory() {
-    const res = await fetch(`http://localhost:3000/messages?user1=${userId}&user2=${receiverId}`);
+    const res = await fetch(`${API_BASE_URL}/messages?user1=${userId}&user2=${receiverId}`);
     const messages = await res.json();
     messages.forEach(displayMessage);
   }
@@ -771,7 +775,7 @@ if (parsed && parsed.payment) {
     document.getElementById('bargainModal').style.display = 'block';
     try {
       // Fetch products created by the receiver (seller)
-      const res = await fetch(`http://localhost:3000/products?sellerId=${receiverId}`);
+      const res = await fetch(`${API_BASE_URL}/products?sellerId=${receiverId}`);
       const products = await res.json();
       const container = document.getElementById('bargainProductsContainer');
       container.innerHTML = '';
