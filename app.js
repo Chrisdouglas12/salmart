@@ -50,7 +50,11 @@ const io = socketIo(server, {
     allowedHeaders: ['Content-Type', 'Authorization']
   },
   path: '/socket.io', //allow explicit path
-  transports: ['websockets'] //force websockets
+  transports: ['websocket', 'polling'], //force websockets
+  pingTimeout: 60000, //important for production
+  pingInterval: 25000,
+  cookie: true,
+  
 });
 
 const PORT = process.env.PORT || 3000;
@@ -634,28 +638,44 @@ app.delete('/users/:id', async (req, res) => {
   }
 });
 // Endpoint to upload a profile picture
-// Endpoint to upload a profile picture
-app.post('/upload-profile-picture', verifyToken, upload.single('profilePicture'), async (req, res) => {
+
+const isDev = process.env.NODE_ENV === "development";
+
+app.post("/upload-profile-picture", verifyToken, upload.single("profilePicture"), async (req, res) => {
   try {
     const userId = req.user.userId;
     const user = await User.findById(userId);
 
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({ message: "User not found" });
     }
 
     if (!req.file) {
-      return res.status(400).json({ message: 'Profile picture is required' });
+      return res.status(400).json({ message: "Profile picture is required" });
     }
 
-    const profilePictureUrl = `${req.protocol}://${req.get('host')}/Uploads/${req.file.filename}`;
+    let profilePictureUrl;
+
+    if (isDev) {
+      // Local storage in development
+      profilePictureUrl = `${req.protocol}://${req.get("host")}/Uploads/${req.file.filename}`;
+    } else {
+      // Upload to Cloudinary in production
+      const result = await cloudinary.uploader.upload(req.file.path, {
+        folder: "profile_pictures",
+        use_filename: true,
+        unique_filename: false,
+      });
+      profilePictureUrl = result.secure_url;
+    }
+
     user.profilePicture = profilePictureUrl;
     await user.save();
 
     res.json({ profilePicture: profilePictureUrl });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: "Server error" });
   }
 });
 //get profile picture
@@ -1075,199 +1095,13 @@ app.post("/send-receipt", async (req, res) => {
         res.status(500).json({ success: false, message: error.message });
     }
 });
-app.get('/payment-success', async (req, res) => {
-    const { reference, postId } = req.query;
 
-    try {
-        console.log("🔍 Verifying Payment with reference:", reference);
 
-        const paystackSecretKey = process.env.PAYSTACK_SECRET_KEY || "your_test_secret_key";
 
-        const response = await fetch(`https://api.paystack.co/transaction/verify/${reference}`, {
-            method: "GET",
-            headers: {
-                Authorization: `Bearer ${paystackSecretKey}`,
-                "Content-Type": "application/json"
-            }
-        });
-
-        const data = await response.json();
-        console.log("✅ Paystack Response:", JSON.stringify(data, null, 2));
-
-        if (!data.status) {
-            throw new Error(data.message || "Failed to verify payment");
-        }
-
-        if (data.data.status === 'success') {
-            console.log("🎉 Payment Verified Successfully!");
-            
-
-const notification = new Notification({
-  userId: sellerId,             // Who should receive the notification (the seller)
-  senderId: buyerId,            // Who triggered the notification (the buyer)
-  type: 'payment',              // New notification type
-  postId: productId,            // Optional, if you want to link to the product
-  message: `${buyer.firstName} ${buyer.lastName} just paid for your product: "${product.name}"`,
-  createdAt: new Date()
-});
-
-await notification.save();
-
-// Send real-time notification via Socket.IO
-io.to(sellerId.toString()).emit('notification', notification);
-
-            const post = await Post.findById(postId);
-            if (!post) {
-                console.log("⚠️ Post not found!");
-                return res.status(404).send("Post not found.");
-            }
-
-            const email = data.data.customer.email;
-            const buyer = await User.findOne({ email });
-            const seller = await User.findById(post.createdBy.userId); // Get seller from post
-
-            if (!seller) {
-                console.log("⚠️ Seller not found!");
-                return res.status(404).send("Seller not found.");
-            }
-
-            const buyerName = buyer ? `${buyer.firstName} ${buyer.lastName}` : "Unknown Buyer";
-            const amountPaid = data.data.amount / 100;
-            const transactionDate = new Date(data.data.paid_at).toLocaleString();
-            const productName = post.title;
-            const productDescription = post.description || "No description available.";
-            const sellerId = post.createdBy.userId.toString(); // Ensure seller ID is a string
-
-            res.send(`
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Payment Receipt</title>
-        <style>
-            body { font-family: Arial, sans-serif; background-color: #f8f8f8; text-align: center; padding: 20px; }
-            .receipt-container {
-                max-width: 400px;
-                margin: auto;
-                padding: 20px;
-                background: white;
-                border-radius: 10px;
-                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-                text-align: left;
-            }
-            .header {
-                text-align: center;
-                padding-bottom: 10px;
-                border-bottom: 2px solid #007bff;
-            }
-            .header img { width: 80px; }
-            .header h2 { color: #007bff; margin: 5px 0; }
-            .status { text-align: center; font-size: 18px; padding: 10px; color: green; font-weight: bold; }
-            .details p { font-size: 14px; margin: 5px 0; }
-            .details span { font-weight: bold; }
-            .footer {
-                text-align: center;
-                font-size: 12px;
-                color: gray;
-                padding-top: 10px;
-                border-top: 1px solid #ddd;
-            }
-            .share-button {
-                display: block;
-                width: 100%;
-                padding: 10px;
-                margin-top: 10px;
-                background: #28a745;
-                color: white;
-                border: none;
-                border-radius: 5px;
-                cursor: pointer;
-                text-align: center;
-            }
-            .share-button:hover { background: #218838; }
-        </style>
-    </head>
-    <body>
-        <div class="receipt-container">
-            <div class="header">
-                <img src="https://yourwebsite.com/logo.png" alt="Company Logo"> <!-- Replace with your logo URL -->
-                <h2>Payment Receipt</h2>
-            </div>
-
-            <p class="status">✅ Payment Successful</p>
-
-            <div class="details">
-                <p><span>Transaction Reference:</span> ${reference}</p>
-                <p><span>Amount Paid:</span> ₦${amountPaid}</p>
-                <p><span>Payment Date:</span> ${transactionDate}</p>
-                <p><span>Buyer Name:</span> ${buyerName}</p>
-                <p><span>Buyer Email:</span> ${email}</p>
-                <p><span>Product:</span> ${productName}</p>
-                <p><span>Description:</span> ${productDescription}</p>
-            </div>
-
-            <button class="share-button" onclick="redirectToChat()">📤 Share Receipt</button>
-
-            <div class="footer">
-                <p>Need help? Contact <a href="mailto:support@yourwebsite.com">support@yourwebsite.com</a></p>
-                <p>© 2025 salmart technologies. All rights reserved.</p>
-            </div>
-        </div>
-<script>
-    function redirectToChat() {
-        const sellerId = "${sellerId}";
-        const userId = "${buyerId}";
-        const sellerName = "${sellerName}";
-        const sellerProfilePic = "${sellerProfilePic}";
-
-        localStorage.setItem("recipient_username", sellerName);
-        localStorage.setItem("recipient_profile_picture_url", sellerProfilePic);
-
-        fetch('/generate-receipt-image', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                reference: "${reference}",
-                amountPaid: "${amountPaid}",
-                transactionDate: "${transactionDate}",
-                buyerName: "${buyerName}",
-                email: "${email}",
-                productName: "${productName}",
-                productDescription: "${productDescription}",
-                buyerId: userId,
-                sellerId: sellerId
-            })
-        })
-        .then(response => response.json())
-        .then(result => {
-            if (result.success) {
-                const receiptUrl = encodeURIComponent(result.receiptUrl);
-                const chatPageUrl = \`http://localhost:8158/Chats.html?user_id=\${userId}&recipient_id=\${sellerId}&receipt=\${receiptUrl}\`;
-                window.location.href = chatPageUrl;
-            } else {
-                alert("❌ Failed to send receipt.");
-            }
-        })
-        .catch(error => {
-            console.error("🚨 Error sharing receipt:", error);
-        });
-    }
-</script>
-    </body>
-    </html>
-`);
-        } else {
-            console.log("⚠️ Payment verification failed:", data.data.status);
-            res.status(400).send("Payment verification failed. Please contact support.");
-        }
-    } catch (error) {
-        console.error('🚨 Error during payment verification:', error.message);
-        res.status(500).send(`An error occurred: ${error.message}`);
-    }
-});
 
         
+  
+            
           
             
 
@@ -1337,15 +1171,7 @@ app.post("/generate-receipt-image", async (req, res) => {
 // Serve PDF receipts
 app.use('/receipts', express.static(path.join(__dirname, 'receipts')));
 
-// Start the server
 
-
-//chats
- 
-
-
-
- 
  
 app.get('/messages', async (req, res) => {
   const senderId = req.query.user1; // Get senderId from query parameter

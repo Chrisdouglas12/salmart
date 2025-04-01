@@ -50,6 +50,7 @@
       <label for="profile-picture-upload" class="file-input-icon">
         <i class="fas fa-camera"></i>
       </label>
+      <button id="upload-button" class="upload-button" style="display: none;">Upload Profile Picture</button>
     </div>
     <h1 id="username">Username</h1>
     
@@ -257,8 +258,8 @@ body {
   font-size: 14px;
 }
 
+
 .upload-button {
-  display: none;
   background-color: #28a745;
   color: white;
   padding: 8px 16px;
@@ -267,12 +268,12 @@ body {
   margin-top: 10px;
   cursor: pointer;
   transition: background-color 0.3s ease;
+  display: none; /* Hidden by default */
 }
 
 .upload-button:hover {
   background-color: #1e7a33;
 }
-
 h1 {
   text-align: center;
   font-size: 24px;
@@ -1037,5 +1038,73 @@ document.body.addEventListener('click', (e) => {
   }
 });
 
+</script>
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+  const profilePictureUpload = document.getElementById('profile-picture-upload');
+  const profilePicture = document.getElementById('profile-picture');
+  const uploadButton = document.getElementById('upload-button');
+  const API_BASE_URL = window.location.hostname === 'localhost' 
+    ? 'http://localhost:3000' 
+    : 'https://salmart-production.up.railway.app';
+
+  // When a new image is selected
+  profilePictureUpload.addEventListener('change', function(e) {
+    if (e.target.files.length > 0) {
+      const file = e.target.files[0];
+      const reader = new FileReader();
+      
+      reader.onload = function(event) {
+        profilePicture.src = event.target.result;
+        uploadButton.style.display = 'block'; // Show upload button
+      }
+      
+      reader.readAsDataURL(file);
+    }
+  });
+
+  // Handle upload when button is clicked
+  uploadButton.addEventListener('click', async function() {
+    const file = profilePictureUpload.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('profilePicture', file);
+
+    try {
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        alert('Please log in to upload a profile picture');
+        return;
+      }
+
+      const response = await fetch(`${API_BASE_URL}/upload-profile-picture`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+
+      const result = await response.json();
+      
+      if (response.ok) {
+        alert('Profile picture updated successfully!');
+        uploadButton.style.display = 'none'; // Hide upload button after success
+        
+        // Update the profile picture in the sidebar too
+        const sidebarPic = document.getElementById('profile-picture1');
+        if (sidebarPic) {
+          sidebarPic.src = profilePicture.src;
+        }
+      } else {
+        throw new Error(result.message || 'Failed to upload profile picture');
+      }
+    } catch (error) {
+      console.error('Error uploading profile picture:', error);
+      alert(error.message);
+    }
+  });
+});
 </script>
 </html> 
