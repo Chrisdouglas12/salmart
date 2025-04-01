@@ -44,11 +44,13 @@ const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin:[ 'https://cfdouglas.rf.gd','http://localhost:8158',   'https://labrighterlanguageservices.infinityfreeapp.com'], 
+    origin:[ 'https://cfdouglas.rf.gd','http://localhost:8158',   'https://labrighterlanguageservices.infinityfreeapp.com', 'https://salmart.vercel.app'], 
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization']
   },
+  path: '/socket.io', //allow explicit path
+  transports: ['websockets'] //force websockets
 });
 
 const PORT = process.env.PORT || 3000;
@@ -493,48 +495,48 @@ app.post('/post', verifyToken, upload.single('photo'), async (req, res) => {
     const { description, productCondition, location } = req.body;
     const price = Number(req.body.price);
 
-    if (!description || !productCondition || !price || !location) {
+    // Validate input
+    if (!description || !productCondition || !price || !location || !req.file) {
       return res.status(400).json({ message: 'All fields are required' });
     }
 
-    if (isNaN(price)) {
-      return res.status(400).json({ message: 'Price must be a valid number' });
-    }
-
-    if (!req.file) {
-      return res.status(400).json({ message: 'Photo is required' });
-    }
-
-    // Get the logged-in user ID from the token
     const userId = req.user.userId;
-
-    // Find the user by ID
     const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    // Get the correct image URL based on environment
+    let photoUrl;
+    if (process.env.NODE_ENV === 'production') {
+      // Cloudinary gives us the URL in req.file.path
+      photoUrl = req.file.path; 
+    } else {
+      // Local development
+      photoUrl = `${req.protocol}://${req.get('host')}/Uploads/${req.file.filename}`;
     }
 
-    // Create a new post
     const newPost = new Post({
       description,
       productCondition,
       price,
       location,
-      photo: `${req.protocol}://${req.get('host')}/Uploads/${req.file.filename}`,
+      photo: photoUrl, // Use the correct URL
       profilePicture: user.profilePicture,
       createdBy: {
         userId: user._id,
         name: `${user.firstName} ${user.lastName}`,
       },
       likes: [],
-      createdAt: Date.now(), // Unix timestamp
+      createdAt: Date.now(),
     });
 
     await newPost.save();
-    res.status(201).json({ message: 'Post created successfully', post: newPost });
+    res.status(201).json({ 
+      message: 'Post created successfully', 
+      post: newPost 
+    });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Internal Server error' });
+    console.error('Post creation error:', error);
+    res.status(500).json({ message: 'Server error' });
   }
 });
 //endpoint to get all users

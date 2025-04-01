@@ -471,7 +471,23 @@
        ?
       'http://localhost:3000' :
       'https://salmart-production.up.railway.app'
-  const socket = io(`${API_BASE_URL}`);
+  const socket = io(API_BASE_URL, {
+  path: '/socket.io',
+  transports: ['websocket'],
+  reconnectionAttempts: 5,
+  reconnectionDelay: 1000,
+  withCredentials: true
+});
+
+// Add connection state listeners
+socket.on('connect_error', (err) => {
+  console.error('Connection error:', err);
+  showToast(`Connection failed: ${err.message}`, 'error');
+});
+
+socket.on('reconnect_attempt', (attempt) => {
+  console.log('Reconnection attempt:', attempt);
+});
   const chatMessages = document.getElementById('chat-messages');
   const typeSection = document.getElementById('type-section');
   const sendBtn = document.getElementById('send-btn');
