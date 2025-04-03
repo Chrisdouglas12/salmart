@@ -47,7 +47,16 @@ document.addEventListener('DOMContentLoaded', async function () {
                 homeProfilePicture.src = userData.profilePicture || 'default-avatar.png';
                 usernameContainer.textContent = `Welcome, ${userData.firstName}`;
                 loggedInUser = userData.userId; // Set loggedInUser to the current user's ID
-                fetchPosts(); // Fetch posts after successful login
+                fetchPosts(); // Load all posts initially
+
+// Add event listeners for category buttons
+document.querySelectorAll('.category-btn').forEach(button => {
+    button.addEventListener('click', function () {
+        const selectedCategory = this.getAttribute('data-category');
+        fetchPosts(selectedCategory);
+    });
+});
+                // Fetch posts after successful login
             } else {
                 throw new Error('Token validation failed');
             }
@@ -65,10 +74,10 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 
     // Function to fetch and display posts
-    async function fetchPosts() {
-        const postsContainer = document.getElementById('posts-container');
-        try {
-            const response = await fetch(`${API_BASE_URL}/post`);
+    async function fetchPosts(category = '') {
+    const postsContainer = document.getElementById('posts-container');
+    try {
+        const response = await fetch(`${API_BASE_URL}/post?category=${encodeURIComponent(category)}`);
             if (!response.ok) throw new Error('Failed to fetch posts');
 
             const posts = await response.json();
@@ -105,7 +114,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                     </div>
                     <p class="post-description"><b>Product:</b> ${post.description}</p>
                     <p class="post-description"><b>Condition:</b> ${post.productCondition}</p>
-                    <p class="post-description"><b>Price:</b> ${post.price}</p>
+                    <p class="post-description"><b>Price:</b> &#8358;${Number(post.price).toLocaleString('en-Ng')}</p>
                     <p class="post-description"><b>Location:</b> ${post.location}</p>
                     <img src="${post.photo || 'default-image.png'}" class="post-image" onclick="openImage('${post.photo || 'default-image.png'}')">
                     <div class="buy" style="text-align: center">
@@ -160,49 +169,65 @@ document.addEventListener('DOMContentLoaded', async function () {
                     optionsMenu.classList.toggle('show');
                 });
 
-                // Like functionality
-                const likeButton = postElement.querySelector('.like-button');
-                likeButton.addEventListener('click', async () => {
-                    const likeCountElement = likeButton.querySelector('.like-count');
-                    const icon = likeButton.querySelector('i');
-                    const postId = post._id;
+  // Like functionality
+const likeButton = postElement.querySelector('.like-button');
+likeButton.addEventListener('click', async () => {
+    const likeCountElement = likeButton.querySelector('.like-count');
+    const icon = likeButton.querySelector('i');
+    const postId = post._id;
+    
+    // Get current state from DOM
+    const isCurrentlyLiked = icon.classList.contains('fas');
+    let currentLikes = parseInt(likeCountElement.textContent, 10);
 
-                    let currentLikes = parseInt(likeCountElement.textContent, 10);
-                    let isLiked = icon.classList.contains('fas');
+    // Immediately disable button to prevent double clicks
+    likeButton.disabled = true;
 
-                    // Optimistic UI update
-                    icon.classList.toggle('fas', !isLiked);
-                    icon.classList.toggle('far', isLiked);
-                    likeCountElement.textContent = isLiked ? currentLikes - 1 : currentLikes + 1;
+    // Optimistic UI update
+    likeCountElement.textContent = isCurrentlyLiked ? currentLikes - 1 : currentLikes + 1;
+    icon.classList.toggle('fas', !isCurrentlyLiked);
+    icon.classList.toggle('far', isCurrentlyLiked);
 
-                    try {
-                        const response = await fetch(`${API_BASE_URL}/post/like/${postId}`, {
-                            method: 'POST',
-                            headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` },
-                        });
+    try {
+        const response = await fetch(`${API_BASE_URL}/post/like/${postId}`, {
+            method: 'POST',
+            headers: { 
+                'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ action: isCurrentlyLiked ? 'unlike' : 'like' })
+        });
 
-                        if (!response.ok) throw new Error('Failed to like/unlike post');
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to like/unlike post');
+        }
 
-                        const data = await response.json();
-                        likeCountElement.textContent = data.likes.length;
-                        if (data.likes.includes(loggedInUser)) {
-                            icon.classList.add('fas');
-                            icon.classList.remove('far');
-                        } else {
-                            icon.classList.add('far');
-                            icon.classList.remove('fas');
-                        }
+        const data = await response.json();
+        
+        // Always use server response as the source of truth
+        likeCountElement.textContent = data.likes.length;
+        
+        // Determine if current user still likes the post
+        const userStillLikes = data.likes.includes(loggedInUser);
+        icon.classList.toggle('fas', userStillLikes);
+        icon.classList.toggle('far', !userStillLikes);
 
-                        if (!isLiked) {
-                            socket.emit('likePost', { postId, userId: loggedInUser });
-                        }
-                    } catch (error) {
-                        console.error('Error liking/unliking post:', error);
-                        icon.classList.toggle('fas', isLiked);
-                        icon.classList.toggle('far', !isLiked);
-                        likeCountElement.textContent = currentLikes;
-                    }
-                });
+        // Only emit socket event if the action was successful
+        if (userStillLikes && !isCurrentlyLiked) {
+            socket.emit('likePost', { postId, userId: loggedInUser });
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        // Revert to original state on error
+        likeCountElement.textContent = currentLikes;
+        icon.classList.toggle('fas', isCurrentlyLiked);
+        icon.classList.toggle('far', !isCurrentlyLiked);
+        showToast(error.message || 'Action failed. Please try again.', '#dc3545');
+    } finally {
+        likeButton.disabled = false;
+    }
+});
 
                 
                 // Send message functionality
@@ -341,8 +366,7 @@ sendMessageBtn.addEventListener('click', (e) => {
                     });
                 }
 
-                // Follow button functionality
-                // Function to check follow status on page load and hide buttons if already following
+     // Function to check follow status on page load and hide buttons if already following
 async function checkFollowStatusOnLoad() {
     const token = localStorage.getItem('authToken');
     const loggedInUserId = localStorage.getItem('userId');
@@ -470,24 +494,22 @@ document.querySelectorAll('.follow-button').forEach(followButton => {
             }
         } catch (error) {
             console.error('Error fetching posts:', error);
-            postsContainer.innerHTML = '<p>Failed to fetch posts. Please try again later.</p>';
+            postsContainer.innerHTML = '<p style="text-align: center; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">No ads yet. Try again or create one!</p>';
         }
     }
 
     // Function to show toast notifications
     function showToast(message) {
-        const toast = document.createElement('div');
-        toast.classList.add('toast-message');
-        toast.textContent = message;
-        document.body.appendChild(toast);
+    let toast = document.createElement("div");
+    toast.className = "toast-message show";
+    toast.innerText = message;
+    document.body.appendChild(toast);
 
-        setTimeout(() => {
-            toast.classList.add('fade-out');
-            setTimeout(() => {
-                toast.remove();
-            }, 500);
-        }, 3000);
-    }
+    setTimeout(() => {
+        toast.classList.remove("show");
+        setTimeout(() => toast.remove(), 500);
+    }, 3000);
+}
 
     // Check login status when the page loads
     checkLoginStatus();

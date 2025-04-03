@@ -21,7 +21,13 @@ accountName: String,
 accountNumber: String,
 bankName: String,
 bankCode: String
-}
+},
+blockedUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  reportCount: { type: Number, default: 0 },
+  isReported: { type: Boolean, default: false },
+  isBanned: { type: Boolean, default: false },
+  isAdmin: { type: Boolean, default: false }
+
 });
 
 module.exports = mongoose.model('User', userSchema);

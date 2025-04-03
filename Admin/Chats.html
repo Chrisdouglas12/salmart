@@ -32,9 +32,10 @@
       margin-right: 10px;
     }
     #chats-userName {
+      font-weight: 600;
       font-size: 18px;
       margin-top: -8px;
-      margin-left: 10px;
+      margin-left: 5px;
     }
 
     #chat-messages {
@@ -45,29 +46,43 @@
     }
     .message {
       max-width: 70%;
-      padding: 10px;
-      margin: 10px 0;
-      border-radius: 10px;
+      padding: 12px 15px;
+      margin: 8px 0;
+      border-radius: 18px;
       position: relative;
+      line-height: 1.4;
       word-wrap: break-word;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
     .sent {
-      background-color: #28a745;
+      background: linear-gradient(135deg, #28a745, #218838);
       margin-left: auto;
+      border-top-right-radius: 4px;
       color: white;
       font-size: 14px;
     }
     .received {
       background-color: #fff;
-      border: solid 0.1px #fff;
+      border: solid 0.1px #e5e5ea;
       box-shadow: 0 0 10px #ddd;
+      border-top-left-radius: 4px;
       font-size: 14px;
+    }
+    .sent::after .received::after {
+       content: '' ;
+       position: absolute;
+       bottom: 0;
+       width: 12px;
+       height: 12px;
     }
     .message-timestamp {
       font-size: 11px;
       color: #666;
-      margin-top: 5px;
+      margin-top: 8px;
       text-align: right;
+    }
+    .sent .message-timestamp{
+      color: #fff;
     }
 
     .message-container {
@@ -393,19 +408,13 @@
   <div id="chat-dropdown" class="dropdown-menu">
     
     <div class="dropdown-item" onclick="blockUser()">Block User</div>
-    <div class="dropdown-item" onclick="reportUser()">Report User</div>
+    <div class="dropdown-item" onclick="report">Report User</div>
   </div>
 
   <div class="chats-header">
     <img id="chatspic" alt="User">
     <div>
             
-  <i class="fas fa-ellipsis-v" id="ellipsis-btn"></i>
-  <div id="chat-dropdown" class="dropdown-menu">
-    <div class="dropdown-item" onclick="deleteChat()">Delete Chat</div>
-    <div class="dropdown-item" onclick="blockUser()">Block User</div>
-    <div class="dropdown-item" onclick="reportUser()">Report User</div>
-  </div>
 
       <div id="chats-userName">Username</div>
 
@@ -471,23 +480,7 @@
        ?
       'http://localhost:3000' :
       'https://salmart-production.up.railway.app'
-  const socket = io(API_BASE_URL, {
-  path: '/socket.io',
-  transports: ['websocket'],
-  reconnectionAttempts: 5,
-  reconnectionDelay: 1000,
-  withCredentials: true
-});
-
-// Add connection state listeners
-socket.on('connect_error', (err) => {
-  console.error('Connection error:', err);
-  showToast(`Connection failed: ${err.message}`, 'error');
-});
-
-socket.on('reconnect_attempt', (attempt) => {
-  console.log('Reconnection attempt:', attempt);
-});
+  const socket = io(`${API_BASE_URL}`);
   const chatMessages = document.getElementById('chat-messages');
   const typeSection = document.getElementById('type-section');
   const sendBtn = document.getElementById('send-btn');
@@ -590,7 +583,7 @@ if (parsed && parsed.offer && message.receiverId === userId) {
                 senderId: userId,
                 receiverId: productDetails.senderId,
                 text: JSON.stringify({
-                    text: `Your offer for "${productDetails.productName}" has been accepted. New price is ₦${productDetails.offer}`,
+                    text: `Your offer for "${productDetails.productName}" has been accepted. New price is ₦${Number(productDetails.offer).toLocaleString('en-Ng')}`,
                     productId: productDetails.productId,
                     productName: productDetails.productName,
                     offer: productDetails.offer,
@@ -639,6 +632,7 @@ if (parsed && parsed.offer && message.receiverId === userId) {
     // Check for payment message
     // Check for payment message
 if (parsed && parsed.payment) {
+  if(message.receiverId === userId){
   const paymentBtn = document.createElement('button');
   paymentBtn.className = 'proceed-to-payment-btn';
   paymentBtn.textContent = 'Proceed to Payment';
@@ -710,6 +704,7 @@ if (parsed && parsed.payment) {
   
   msgDiv.appendChild(paymentBtn);
 }
+}
 
     chatMessages.appendChild(msgDiv);
     chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -726,7 +721,7 @@ if (parsed && parsed.payment) {
           senderId: userId,
           receiverId: receiverId,
           text: JSON.stringify({
-            text: `I can give you "${productName}" for ₦${lastPrice}`,
+            text: `I can give you "${productName}" for ₦${Number(lastPrice).toLocaleString('en-Ng')}`,
             offer: lastPrice,
             productId: productId,
             productName: productName,
@@ -738,7 +733,9 @@ if (parsed && parsed.payment) {
       }
     };
   }
-
+if (!window.location.pathname.includes("Chats.html")) {
+  verifyPayment();
+}
   // Close modal for seller's last price
   function closeLastPriceModal() {
     lastPriceModal.style.display = 'none';
@@ -803,7 +800,7 @@ if (parsed && parsed.payment) {
           <img src="${product.photo}" alt="">
           <div>
             <strong>${product.description}</strong><br>
-            ₦${product.price}<br>
+            ₦${Number(product.price).toLocaleString('en-Ng')}<br>
             <input type="number" class="bargain-price-input" placeholder="Your Offer Price">
             <button class="confirm-bargain-btn">Send Offer</button>
           </div>
@@ -815,7 +812,7 @@ if (parsed && parsed.payment) {
               senderId: userId,
               receiverId,
               text: JSON.stringify({
-                text: `My offer for "${product.description}" is ₦${price}`,
+                text: `My offer for "${product.description}" is ₦${Number(price).toLocaleString('en-Ng')}`,
                 offer: price,
                 productId: product._id,
                 productName: product.description,
@@ -924,6 +921,87 @@ if (parsed && parsed.payment) {
         }, 500);
     }, 3000);
 }
+</script>
+<script>
+  // Report User Function
+  function reportUser() {
+    const reason = prompt("Please enter a reason for reporting this user:");
+    if (reason) {
+      // Show loading state
+      showToast("Submitting report...", 'warning');
+      
+      fetch(`${API_BASE_URL}/users/report`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        },
+        body: JSON.stringify({
+          reportedUserId: receiverId,
+          reason: reason,
+          reporterId: userId
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          showToast("User reported successfully. Our team will review the report.");
+          // Close dropdown after reporting
+          document.getElementById('chat-dropdown').style.display = 'none';
+        } else {
+          showToast(data.message || "Failed to report user. Please try again.", 'error');
+        }
+      })
+      .catch(error => {
+        console.error("Error reporting user:", error);
+        showToast("An error occurred while reporting the user.", 'error');
+      });
+    }
+  }
+
+  // Block User Function
+  function blockUser() {
+    if (confirm(`Are you sure you want to block ${recipientUsername}? You won't be able to message each other.`)) {
+      // Show loading state
+      showToast("Blocking user...", 'warning');
+      
+      fetch(`${API_BASE_URL}/users/block`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        },
+        body: JSON.stringify({
+          blockerId: userId,
+          blockedUserId: receiverId
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          showToast("User blocked successfully.");
+          // Close dropdown after blocking
+          document.getElementById('chat-dropdown').style.display = 'none';
+          
+          // Option 1: Redirect to chats list
+          window.location.href = 'chats.html';
+          
+          // Option 2: Disable chat functionality (alternative approach)
+           document.getElementById('type-section').disabled = true;
+           document.getElementById('send-btn').disabled = true;
+          document.getElementById('bargain-btn').disabled = true;
+          document.getElementById('ellipsis-btn').style.display = 'none';
+        } else {
+          showToast(data.message || "Failed to block user. Please try again.", 'error');
+        }
+      })
+      .catch(error => {
+        console.error("Error blocking user:", error);
+        showToast("An error occurred while blocking the user.", 'error');
+      });
+    }
+  }
+
 </script>
 </body>
 </html>

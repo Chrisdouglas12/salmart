@@ -5,6 +5,7 @@ const User = require('./Schema.js');
 const Post  = require('./postSchema.js')
 const Profile = require('./profileSchema.js') 
 const Admin = require('./adminSchema.js')
+const Report = require('./reportSchema.js')
 const Message = require('./messageSchema.js')
 const payOutLog = require('./payOut.js')
 const Escrow = require('./EscrowSchema.js') 
@@ -65,6 +66,7 @@ server.listen(PORT, () => {
 // Initialize Socket.IO
 const users = {}; // Store userId -> socketId mapping
 
+
 // Handle Socket.IO Connections
 
  
@@ -78,7 +80,30 @@ io.on('connection', (socket) => {
       console.log(`User ${userId} joined with socket ID: ${socket.id}`);
     }
   });
+  // Server-side (Node.js with Socket.IO)
 
+io.on("connection", (socket) => {
+  socket.on("authenticate", (userId) => {
+    socket.join(`user_${userId}`); // Room for user-specific messages
+  });
+
+  // When a new message is saved in the database:
+  function onNewMessage(message) {
+    io.to(`user_${message.receiverId}`).emit("new_message", { type: "new_message" });
+  }
+});
+// create post
+socket.on('createPost', async (postData) => {
+  try {
+    const newPost = await Post.create({
+      ...postData,
+      userId: socket.userId
+    });
+    io.emit('newPost', newPost); // Broadcast to all clients
+  } catch (err) {
+    socket.emit('postError', err.message);
+  }
+});
   // Handle sending messages
   socket.on('sendMessage', async (message) => {
     try {
@@ -496,11 +521,11 @@ app.patch('/users/:id', verifyToken, async (req, res) => {
 // Endpoint to create a post
 app.post('/post', verifyToken, upload.single('photo'), async (req, res) => {
   try {
-    const { description, productCondition, location } = req.body;
+    const { description, productCondition, location, category } = req.body;
     const price = Number(req.body.price);
 
     // Validate input
-    if (!description || !productCondition || !price || !location || !req.file) {
+    if (!description || !productCondition || !price || !location || !req.file || !category) {
       return res.status(400).json({ message: 'All fields are required' });
     }
 
@@ -523,6 +548,7 @@ app.post('/post', verifyToken, upload.single('photo'), async (req, res) => {
       productCondition,
       price,
       location,
+      category,
       photo: photoUrl, // Use the correct URL
       profilePicture: user.profilePicture,
       createdBy: {
@@ -573,8 +599,9 @@ app.get('/users-profile/:id', verifyToken, async (req, res) => {
 app.get('/post', async (req, res) => {
   try {
     let loggedInUserId = null;
+    const { category } = req.query; // Get category from query params
 
-    // Try to get the token from headers
+    // Authentication check (keep your existing token logic)
     const authHeader = req.headers['authorization'];
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.split(' ')[1];
@@ -582,15 +609,22 @@ app.get('/post', async (req, res) => {
       loggedInUserId = decoded.userId;
     }
 
-    const posts = await Post.find().sort({ createdAt: -1 });
+    // Build the query object
+    const query = {};
+    if (category && ['electronics', 'fashion', 'home', 'vehicles', 'music', 'other'].includes(category)) {
+      query.category = category;
+    }
+
+    // Apply the query
+    const posts = await Post.find(query).sort({ createdAt: -1 });
 
     if (!posts || posts.length === 0) {
       return res.status(404).json({ message: 'No posts found' });
     }
 
+    // Keep your existing population logic
     const populatedPosts = await Promise.all(posts.map(async (post) => {
       const user = await User.findById(post.createdBy.userId);
-
       const isFollowing = user?.followers?.includes(loggedInUserId);
 
       return {
@@ -678,7 +712,7 @@ app.post("/upload-profile-picture", verifyToken, upload.single("profilePicture")
     res.status(500).json({ message: "Server error" });
   }
 });
-//get profile picture
+
 // Endpoint to get profile picture
 app.get('/profile-picture', verifyToken, async (req, res) => {
   try {
@@ -695,33 +729,66 @@ app.get('/profile-picture', verifyToken, async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
-// Like a post
 
-app.post('/post/like/:id', verifyToken, async (req, res) => { try { const postId = req.params.id; const userId = req.user.userId;  // Corrected here
+//Endpoint to like a post
+app.post('/post/like/:id', verifyToken, async (req, res) => {
+    try {
+        const postId = req.params.id;
+        const userId = req.user.userId; // Get user ID from verified token
 
-// Find the post
-const post = await Post.findById(postId); if (!post) { return res.status(404).json({ message: 'Post not found' }); }
+        // 1. Validate Post Existence
+        const post = await Post.findById(postId);
+        if (!post) {
+            return res.status(404).json({ 
+                success: false,
+                message: 'Post not found' 
+            });
+        }
 
-// Check if the user has already liked the post
-const alreadyLiked = post.likes.includes(userId);
+        // 2. Check Current Like Status
+        const userIndex = post.likes.findIndex(id => id.toString() === userId.toString());
+        const alreadyLiked = userIndex !== -1;
 
-if (alreadyLiked) {
-    // Remove the like if the user already liked the post
-    post.likes = post.likes.filter(id => id !== userId);
-} else {
-    // Add the user ID to the likes array
-    post.likes.push(userId);
-}
+        // 3. Perform Like/Unlike Action
+        if (alreadyLiked) {
+            // Unlike - Remove user from likes array
+            post.likes.splice(userIndex, 1);
+        } else {
+            // Like - Add user to likes array (avoid duplicates)
+            if (!post.likes.some(id => id.toString() === userId.toString())) {
+                post.likes.push(userId);
+            }
+        }
 
-// Save the post with updated likes
-await post.save();
+        // 4. Save Changes
+        const updatedPost = await post.save();
 
-return res.status(200).json(post);
+        // 5. Prepare Response Data
+        const responseData = {
+            success: true,
+            likes: updatedPost.likes, // Return full array of likes
+            likeCount: updatedPost.likes.length,
+            isLiked: !alreadyLiked, // Current state after toggle
+            message: alreadyLiked ? 'Post unliked successfully' : 'Post liked successfully'
+        };
 
-} catch (error) { console.error('Error liking post:', error); res.status(500).json({ message: 'Server error' }); }
+        // 6. Send Success Response
+        res.status(200).json(responseData);
 
-}); //comments 
-app.post('/post/comment/:postId', verifyToken, async (req, res) => { try { const { text } = req.body; const userId = req.user.userId; // ✅ Corrected: Access userId from verified token
+    } catch (error) {
+        console.error('Error in like/unlike operation:', error);
+        
+        // 7. Error Handling
+        res.status(500).json({ 
+            success: false,
+            message: 'Internal server error',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
+});
+
+//Endpoint to handle comments 
+app.post('/post/comment/:postId', verifyToken, async (req, res) => { try { const { text } = req.body; const userId = req.user.userId;
 
 if (!text) return res.status(400).json({ error: "Comment text is required" });
 
@@ -827,16 +894,7 @@ app.get('/payment-success', async (req, res) => {
         if (data.data.status === 'success') {
             console.log("🎉 Payment Verified Successfully!");
 
-
-   
-
-
-
-
-
 // Save escrow record
-
-          
             const post = await Post.findById(postId);
             if (!post) {
                 console.log("⚠️ Post not found!");
@@ -862,7 +920,7 @@ app.get('/payment-success', async (req, res) => {
             const amountPaid = data.data.amount / 100;
             
             const transactionDate = new Date(data.data.paid_at).toLocaleString();
-            const productName = post.title;
+          
             const productDescription = post.description || "No description available.";
             const sellerId = seller._id.toString();
             const sellerName = `${seller.firstName} ${seller.lastName}`;
@@ -939,7 +997,7 @@ async function generateReceiptPDF(reference, amountPaid, transactionDate, buyerN
         doc.text(`Payment Date: ${transactionDate}`);
         doc.text(`Buyer Name: ${buyerName}`);
         doc.text(`Buyer Email: ${email}`);
-        doc.text(`Product: ${productName}`);
+        
         doc.text(`Description: ${productDescription}`);
         doc.moveDown();
         doc.text("Thank you for your purchase!", { align: "center" });
@@ -952,7 +1010,7 @@ async function generateReceiptPDF(reference, amountPaid, transactionDate, buyerN
 }
 
 // ✅ Generate the PDF
-const pdfPath = await generateReceiptPDF(reference, amountPaid, transactionDate, buyerName, email, productName, productDescription);
+const pdfPath = await generateReceiptPDF(reference, amountPaid, transactionDate, buyerName, email, productDescription);
 console.log("✅ Receipt PDF Generated:", pdfPath);
 
             // ✅ Send receipt page
@@ -1016,11 +1074,11 @@ console.log("✅ Receipt PDF Generated:", pdfPath);
 
             <div class="details">
                 <p><span>Transaction Reference:</span> ${reference}</p>
-                <p><span>Amount Paid:</span> ₦${amountPaid}</p>
+                <p><span>Amount Paid:</span> ₦${Number(amountPaid).toLocaleString('en-Ng')}</p>
                 <p><span>Payment Date:</span> ${transactionDate}</p>
                 <p><span>Buyer Name:</span> ${buyerName}</p>
                 <p><span>Buyer Email:</span> ${email}</p>
-                <p><span>Product:</span> ${productName}</p>
+                
                 <p><span>Description:</span> ${productDescription}</p>
             </div>
 
@@ -2442,7 +2500,176 @@ app.get('/', (req, res) => {
     res.send('Salmart API is running');
 });
 
+// Report User Endpoint
+app.post('/users/report', verifyToken, async (req, res) => {
+  try {
+    const { reportedUserId, reason } = req.body;
+    const reporterId = req.user.userId; // From the verified token
 
+    // Validate input
+    if (!reportedUserId || !reason) {
+      return res.status(400).json({ success: false, message: 'Missing required fields' });
+    }
 
+    // Check if user is reporting themselves
+    if (reportedUserId === reporterId) {
+      return res.status(400).json({ success: false, message: 'You cannot report yourself' });
+    }
+
+    // Check if the report already exists
+    const existingReport = await Report.findOne({
+      reportedUser: reportedUserId,
+      reportedBy: reporterId
+    });
+
+    if (existingReport) {
+      return res.status(400).json({ success: false, message: 'You have already reported this user' });
+    }
+
+    // Create new report
+    const report = new Report({
+      reportedUser: reportedUserId,
+      reportedBy: reporterId,
+      reason: reason,
+      status: 'pending'
+    });
+
+    await report.save();
+
+    // Update the reported user's record
+    await User.findByIdAndUpdate(reportedUserId, { 
+      $inc: { reportCount: 1 },
+      $set: { isReported: true }
+    });
+
+    res.status(201).json({ 
+      success: true, 
+      message: 'User reported successfully',
+      report
+    });
+
+  } catch (error) {
+    console.error('Error reporting user:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// Block User Endpoint
+app.post('/users/block', verifyToken, async (req, res) => {
+  try {
+    const { userIdToBlock } = req.body;
+    const blockerId = req.user.userId; // From the verified token
+
+    // Validate input
+    if (!userIdToBlock) {
+      return res.status(400).json({ success: false, message: 'User ID to block is required' });
+    }
+
+    // Check if user is blocking themselves
+    if (userIdToBlock === blockerId) {
+      return res.status(400).json({ success: false, message: 'You cannot block yourself' });
+    }
+
+    // Check if already blocked
+    const user = await User.findById(blockerId);
+    if (user.blockedUsers.includes(userIdToBlock)) {
+      return res.status(400).json({ success: false, message: 'User is already blocked' });
+    }
+
+    // Add to blocked users list
+    user.blockedUsers.push(userIdToBlock);
+    await user.save();
+
+    res.status(200).json({ 
+      success: true, 
+      message: 'User blocked successfully',
+      blockedUsers: user.blockedUsers
+    });
+
+  } catch (error) {
+    console.error('Error blocking user:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// Get Reported Users (Admin Only)
+app.get('/admin/reported-users', verifyToken, async (req, res) => {
+  try {
+    // Check if user is admin
+    const user = await User.findById(req.user.userId);
+    if (!user || !user.isAdmin) {
+      return res.status(403).json({ success: false, message: 'Unauthorized: Admin access required' });
+    }
+
+    // Get all reports with populated user data
+    const reportedUsers = await Report.find({ status: 'pending' })
+      .populate('reportedUser', 'firstName lastName email profilePicture reportCount')
+      .populate('reportedBy', 'firstName lastName email')
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({ 
+      success: true, 
+      reportedUsers 
+    });
+
+  } catch (error) {
+    console.error('Error fetching reported users:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// Admin Resolve Report
+app.post('/admin/resolve-report', verifyToken, async (req, res) => {
+  try {
+    const { reportId, action } = req.body; // action: 'warn' or 'ban'
+    const adminId = req.user.userId;
+
+    // Check if user is admin
+    const admin = await User.findById(adminId);
+    if (!admin || !admin.isAdmin) {
+      return res.status(403).json({ success: false, message: 'Unauthorized: Admin access required' });
+    }
+
+    // Find the report
+    const report = await Report.findById(reportId);
+    if (!report) {
+      return res.status(404).json({ success: false, message: 'Report not found' });
+    }
+
+    // Update report status
+    report.status = 'resolved';
+    report.resolvedBy = adminId;
+    report.resolution = action;
+    await report.save();
+
+    // Take action based on resolution
+    const reportedUser = await User.findById(report.reportedUser);
+    if (action === 'warn') {
+      // Send warning notification
+      const notification = new Notification({
+        userId: report.reportedUser,
+        type: 'warning',
+        message: 'You have received a warning for violating community guidelines',
+        createdAt: new Date()
+      });
+      await notification.save();
+    } 
+    else if (action === 'ban') {
+      // Ban the user
+      reportedUser.isBanned = true;
+      await reportedUser.save();
+    }
+
+    res.status(200).json({ 
+      success: true, 
+      message: `Report resolved with action: ${action}`,
+      report
+    });
+
+  } catch (error) {
+    console.error('Error resolving report:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
  
 

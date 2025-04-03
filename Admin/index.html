@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>SALMART-Home</title>
 </head>
 <link rel="stylesheet" href="./Style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -37,7 +37,7 @@
 <div style="text-align:center">
   <div style="z-index: 3; position: fixed; margin-left: 83%; margin-top: 16px; font-size: 16px;">
     <a href="Search.html">
-  <i class="fas fa-search" style="color:#28a745; border: 0.0px solid #ddd; border-radius: 20px; padding: 8.5px; background-color:#fff; box-shadow: 0 0 10px #fff; font-weight: light"></i>
+  <i class="fas fa-search" style="color:#28a745; border: 0.1px solid #ddd; border-radius: 20px; padding: 8.5px; background-color:#fff; box-shadow: 0 0 10px #fff; font-weight: light"></i>
   
   </a>
   </div>
@@ -74,7 +74,7 @@
        <li><a href="Profile.html"><i class="fa-solid fa-receipt"></i> Generate Reciepts</a></li>
         <li><a href="Profile.html"><i class="fa-solid fa-lock"></i> Privacy Policy</a></li>
          <li><a href="Privacy.html"><i class="fa-solid fa-circle-info"></i> Community Standards</a></li>
-          <li><a href="SignIn.html"><i class="fas fa-sign-out-alt"></i><span id="logout text">Log out</span></a></li>
+<li><a href="SignIn.html" id="logout-link"><i class="fas fa-sign-out-alt"></i> <span id="logout-text">Log out</span></a></li>
     </ul>
     <pre style="font-size: 10px; text-align: center; margin-top: 40px; color: green">&copy;Salmart Technologies 2025</pre>
   </div>
@@ -84,7 +84,18 @@
          <a href="Ads.html"><button class="post-input"  placeholder="Create an ad..." style="background-color:#007bff; color: white">Create an ad...</button></a>
                   <a href="Ads.html"><button class="post-input" placeholder="Create a request..." style="background-color:  #28a745; color: white">Create a request...</button></a>
           </div>
-     
+     <!-- Category Filter Section -->
+<div class="category-filter">
+  <div class="category-scroll">
+    <button class="category-btn active" data-category="all">All</button>
+    <button class="category-btn" data-category="electronics">Electronics</button>
+    <button class="category-btn" data-category="fashion">Fashion</button>
+    <button class="category-btn" data-category="home">Home & Garden</button>
+    <button class="category-btn" data-category="vehicles">Vehicles</button>
+    <button class="category-btn" data-category="music">Music Gear</button>
+    <button class="category-btn" data-category="other">Other</button>
+  </div>
+</div>
  </div> 
  
   <div>
@@ -113,26 +124,22 @@ document.body.addEventListener('click', (e) => {
 
 </script>
 <script>
-// Check login status when the page loads
 window.onload = function() {
-    // Check if the user is logged in
-    const isLoggedIn = localStorage.getItem('userId'); // or localStorage.getItem('isLoggedIn')
+    const isLoggedIn = localStorage.getItem('userId');
     const logoutText = document.getElementById('logout-text');
     const logoutLink = document.getElementById('logout-link');
 
-    if (isLoggedIn === 'true') {
-        // If logged in, show "Log out" link
+    if (isLoggedIn) {
         logoutText.innerText = 'Log out';
-        logoutLink.href = '#'; // Prevents navigating to SignIn.html directly
-        logoutLink.addEventListener('click', function() {
-            // Log out the user
-            localStorage.removeItem('userId'); // or localStorage.removeItem('isLoggedIn')
-            window.location.href = 'SignIn.html'; // Redirect to login page
+        logoutLink.href = '#';
+        logoutLink.addEventListener('click', function(event) {
+            event.preventDefault();
+            localStorage.removeItem('userId');
+            window.location.href = 'SignIn.html';
         });
     } else {
-        // If logged out, show "Log in" link
         logoutText.innerText = 'Log in';
-        logoutLink.href = 'SignIn.html'; // Redirect to login page
+        logoutLink.href = 'SignIn.html';
     }
 };
 </script>
@@ -217,6 +224,53 @@ window.onload = function() {
 a .active {
   color: blue;
 }
+/* Category Filter Styles */
+.category-filter {
+  top: 70px;
+  z-index: 100;
+  background-color: white;
+  padding: 10px 0;
+  border-bottom: 1px solid #eee;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.category-scroll {
+  display: flex;
+  overflow-x: auto;
+  gap: 8px;
+  padding: 0 15px;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+
+.category-scroll::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
+}
+
+.category-btn {
+  flex: 0 0 auto;
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: 1px solid #e0e0e0;
+  background-color: #f8f9fa;
+  color: #333;
+  font-size: 14px;
+  font-family: 'Poppins', sans-serif;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.category-btn:hover {
+  background-color: #e9ecef;
+}
+
+.category-btn.active {
+  background-color: #28a745;
+  color: white;
+  border-color: #28a745;
+}
+
 </style>
 <!-- Load Socket.IO from CDN -->
 <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
@@ -340,6 +394,72 @@ a .active {
       toast.style.display = "none";
     }, 3000);
   }
+</script>
+<script>
+  // Category Filter Functionality
+let currentCategory = 'all';
+let allPostsCache = [];
+const API_BASE_URL = window.location.hostname === 'localhost' 
+  ? 'http://localhost:3000' 
+  : 'https://salmart-production.up.railway.app';
+document.addEventListener('DOMContentLoaded', function() {
+  const categoryBtns = document.querySelectorAll('.category-btn');
+  
+  // Initialize category buttons
+  categoryBtns.forEach(btn => {
+    btn.addEventListener('click', async function() {
+      // Update active button
+      categoryBtns.forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+      
+      // Set current category and fetch posts
+      currentCategory = this.dataset.category;
+      await fetchPostsByCategory();
+    });
+  });
+});
+
+
+</script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+  const categoryFilter = document.querySelector('.category-filter');
+  const header = document.querySelector('.head');
+  const headerHeight = header.offsetHeight;
+  
+  // Calculate the exact position where it should stick (60px from top)
+  const stickyPosition = 60;
+  
+  // Create spacer element
+  const spacer = document.createElement('div');
+  spacer.style.height = categoryFilter.offsetHeight + 'px';
+  spacer.style.display = 'none';
+  categoryFilter.parentNode.insertBefore(spacer, categoryFilter.nextSibling);
+  
+  // Initial positioning
+  const initialTop = categoryFilter.getBoundingClientRect().top + window.scrollY;
+  
+  window.addEventListener('scroll', function() {
+    const scrollY = window.scrollY || window.pageYOffset;
+    
+    if (scrollY >= initialTop - stickyPosition) {
+      // Apply fixed positioning immediately
+      categoryFilter.style.position = 'fixed';
+      categoryFilter.style.top = stickyPosition + 'px';
+      categoryFilter.style.left = '0';
+      categoryFilter.style.right = '0';
+      categoryFilter.style.zIndex = '100';
+      spacer.style.display = 'block';
+    } else {
+      // Return to normal flow
+      categoryFilter.style.position = 'static';
+      spacer.style.display = 'none';
+    }
+  });
+  
+  // Force initial calculation to prevent any jump
+  window.dispatchEvent(new Event('scroll'));
+});
 </script>
 
 </html> 
