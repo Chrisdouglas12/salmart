@@ -83,7 +83,8 @@ io.on('connection', (socket) => {
   // Server-side (Node.js with Socket.IO)
 
 io.on("connection", (socket) => {
-  socket.on("authenticate", (userId) => {
+  socket.removeAllListeners("authenticate")//remove all previus
+  socket.once("authenticate", (userId) => {
     socket.join(`user_${userId}`); // Room for user-specific messages
   });
 
@@ -2736,15 +2737,6 @@ app.post('/send-notification', async (req, res) => {
 
 
 
-let env = fs.readFileSync('.env', 'utf-8');
-
-env = env.replace(/FIREBASE_ADMIN_KEY_BASE64\s*=\s*([\s\S]+?)\n(?=\w+=|$)/, (_, val) => {
-  const singleLine = val.replace(/[\r\n\\]+/g, '').replace(/\s+/g, '');
-  return `FIREBASE_ADMIN_KEY_BASE64=${singleLine}\n`;
-});
-
-fs.writeFileSync('.env', env);
-console.log('Fixed .env file!');
 
 
 

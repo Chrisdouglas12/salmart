@@ -28,23 +28,32 @@ document.addEventListener('DOMContentLoaded', async () => {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message || 'Failed to load post');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to load post');
+      }
 
-      const post = data.post;
+      const data = await response.json();
+      const post = data.post || data; // Handle different response structures
+
       document.getElementById('description').value = post.description || '';
       document.getElementById('productCondition').value = post.productCondition || '';
+      document.getElementById('category').value = post.category || '';
       
       // Format price with ₦ and commas when displaying
-      document.getElementById('price').value = post.price 
-        ? `₦${parseFloat(post.price).toLocaleString('en-NG')}` 
-        : '';
+      if (post.price) {
+        const priceValue = typeof post.price === 'string' 
+          ? parseFloat(post.price.replace(/[^0-9.]/g, '')) 
+          : post.price;
+        document.getElementById('price').value = `₦${priceValue.toLocaleString('en-NG')}`;
+      }
       
       document.getElementById('location').value = post.location || '';
 
       if (post.photoUrl) {
         preview.src = post.photoUrl;
         preview.style.display = 'block';
+        fileInput.required = false; // Make image not required when editing
       }
     } catch (err) {
       console.error('Error loading post:', err);
@@ -56,6 +65,21 @@ document.addEventListener('DOMContentLoaded', async () => {
   fileInput.addEventListener('change', (event) => {
     const file = event.target.files[0];
     if (file) {
+      // Validate file type
+      const validTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+      if (!validTypes.includes(file.type)) {
+        showToast('Please upload a valid image (JPEG, PNG, JPG)', '#dc3545');
+        fileInput.value = ''; // Clear the input
+        return;
+      }
+
+      // Validate file size (e.g., 5MB max)
+      if (file.size > 5 * 1024 * 1024) {
+        showToast('Image size should be less than 5MB', '#dc3545');
+        fileInput.value = ''; // Clear the input
+        return;
+      }
+
       const reader = new FileReader();
       reader.onload = (e) => {
         preview.src = e.target.result;
@@ -92,10 +116,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     event.target.value = value ? `₦${value}` : ''; // Add ₦ only if there's a value
   });
 
-  // Ensure ₦ is present when focused
-  priceInput.addEventListener('focus', (event) => {
-    if (!event.target.value.startsWith('₦') && event.target.value) {
-      event.target.value = `₦${event.target.value}`;
+  // Ensure cursor position isn't affected by ₦
+  priceInput.addEventListener('keydown', (event) => {
+    if (event.target.selectionStart === 1 && event.key === 'Backspace') {
+      event.preventDefault();
+      event.target.value = '';
     }
   });
 
@@ -107,14 +132,30 @@ document.addEventListener('DOMContentLoaded', async () => {
     const productCondition = document.getElementById('productCondition').value.trim();
     const formattedPrice = document.getElementById('price').value.trim();
     const location = document.getElementById('location').value.trim();
+    const category = document.getElementById('category').value.trim(); // Fixed this line
     const file = fileInput.files[0];
 
     // Clean the price (remove ₦ and commas)
     const cleanPrice = formattedPrice.replace(/[₦,]/g, '');
     
     // Validation
-    if (!description || !cleanPrice || !location) {
-      showToast('Please fill all required fields', '#dc3545');
+    if (!description || description.length < 10) {
+      showToast('Description must be at least 10 characters', '#dc3545');
+      return;
+    }
+
+    if (!cleanPrice || isNaN(cleanPrice)) {
+      showToast('Please enter a valid price', '#dc3545');
+      return;
+    }
+
+    if (!location) {
+      showToast('Please enter a location', '#dc3545');
+      return;
+    }
+
+    if (!category) {
+      showToast('Please select a category', '#dc3545');
       return;
     }
 
@@ -124,15 +165,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     submitBtn.disabled = true;
-
-    const formData = new FormData();
-    formData.append('description', description);
-    formData.append('productCondition', productCondition);
-    formData.append('price', cleanPrice); // Send cleaned price (e.g., "5000.50")
-    formData.append('location', location);
-    if (file) formData.append('photo', file);
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
 
     try {
+      const formData = new FormData();
+      formData.append('description', description);
+      formData.append('productCondition', productCondition);
+      formData.append('category', category);
+      formData.append('price', cleanPrice);
+      formData.append('location', location);
+      if (file) formData.append('photo', file);
+
       const endpoint = isEdit && postId 
         ? `${API_BASE_URL}/post/edit/${postId}`
         : `${API_BASE_URL}/post`;
@@ -146,17 +189,55 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
 
       const result = await response.json();
-      if (!response.ok) throw new Error(result.message || 'Request failed');
 
-      showToast(isEdit ? 'Post updated!' : 'Post created!');
+      if (!response.ok) {
+        throw new Error(
+          result.message || 
+          result.error || 
+          (result.errors ? result.errors.join(', ') : 'Request failed')
+        );
+      }
+
+      showToast(
+        isEdit ? 'Post updated successfully!' : 'Post created successfully!', 
+        '#28a745'
+      );
+      
       setTimeout(() => {
         window.location.href = '/index.html';
       }, 1500);
     } catch (error) {
       console.error('API Error:', error);
-      showToast(error.message || 'Something went wrong', '#dc3545');
+      showToast(
+        error.message || 'Something went wrong. Please try again.', 
+        '#dc3545'
+      );
     } finally {
       submitBtn.disabled = false;
+      submitBtn.innerHTML = isEdit ? 'Update Post' : 'Create Post';
     }
   });
 });
+
+// Toast function (in case it's not defined elsewhere)
+function showToast(message, backgroundColor = '#28a745') {
+  const toast = document.createElement('div');
+  toast.style.position = 'fixed';
+  toast.style.bottom = '20px';
+  toast.style.right = '20px';
+  toast.style.padding = '10px 20px';
+  toast.style.backgroundColor = backgroundColor;
+  toast.style.color = 'white';
+  toast.style.borderRadius = '5px';
+  toast.style.zIndex = '1000';
+  toast.style.boxShadow = '0 4px 8px rgba(0,0,0,0.1)';
+  toast.textContent = message;
+
+  document.body.appendChild(toast);
+
+  setTimeout(() => {
+    toast.style.transition = 'opacity 0.5s';
+    toast.style.opacity = '0';
+    setTimeout(() => document.body.removeChild(toast), 500);
+  }, 3000);
+}

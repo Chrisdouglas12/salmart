@@ -178,7 +178,7 @@
       window.location.href = "login.html"; // Redirect to login page if user is not logged in
     } else {
       fetchMessages();
-      setInterval(fetchMessages, 5000); // Fetch messages every 5 seconds
+      setInterval(fetchMessages, 100); // Fetch messages every 5 seconds
     }
 
     async function fetchMessages() {
@@ -287,4 +287,4 @@
     }
   </script>
 </body>
-</html>
+</html> 
