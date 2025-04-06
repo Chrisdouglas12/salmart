@@ -844,15 +844,15 @@ app.post('/pay', async (req, res) => {
 
         const amount = parseFloat(post.price) * 100;
 
-        const sellerId = post.createdBy;  // ✅ Ensure sellerId is correctly assigned
+        const sellerId = post.createdBy;  // Ensure sellerId is correctly assigned
 
         console.log("Seller ID from post:", sellerId); // Debugging log
-
-        // ✅ Include correct sellerId in metadata
+     const API_BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart-production.up.railway.app'
+        // include correct sellerId in metadata
         const response = await paystack.transaction.initialize({
             email,
             amount: amount,
-            callback_url: `http://localhost:3000/payment-success?postId=${trimmedPostId}&buyerId=${buyerId}`,
+            callback_url: `${API_BASE_URL}/payment-success?postId=${trimmedPostId}&buyerId=${buyerId}`,
             metadata: {
                 postId: trimmedPostId,
                 email,
