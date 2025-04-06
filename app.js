@@ -2677,7 +2677,11 @@ const admin = require('firebase-admin');
 
 
 // Initialize Firebase Admin SDK
-const serviceAccount = require('./firebase-admin-key.json'); // Download from Firebase Console
+
+const firebaseKey = Buffer.from(process.env.FIREBASE_ADMIN_KEY_BASE64, 'base64').toString('utf8');
+const serviceAccount = JSON.parse(firebaseKey);
+
+// Download from Firebase Console
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
@@ -2729,6 +2733,18 @@ app.post('/send-notification', async (req, res) => {
     res.status(500).send('Error sending notification');
   }
 });
+
+
+
+let env = fs.readFileSync('.env', 'utf-8');
+
+env = env.replace(/FIREBASE_ADMIN_KEY_BASE64\s*=\s*([\s\S]+?)\n(?=\w+=|$)/, (_, val) => {
+  const singleLine = val.replace(/[\r\n\\]+/g, '').replace(/\s+/g, '');
+  return `FIREBASE_ADMIN_KEY_BASE64=${singleLine}\n`;
+});
+
+fs.writeFileSync('.env', env);
+console.log('Fixed .env file!');
 
 
 
