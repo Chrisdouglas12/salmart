@@ -20,6 +20,7 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
+    "firebase-admin": "^13.2.0",
     "fs": "^0.0.1-security",
     "fs-extra": "^11.3.0",
     "git": "^0.1.5",

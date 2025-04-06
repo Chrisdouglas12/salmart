@@ -2672,4 +2672,63 @@ app.post('/admin/resolve-report', verifyToken, async (req, res) => {
   }
 });
  
+//Push Notifications
+const admin = require('firebase-admin');
+
+
+// Initialize Firebase Admin SDK
+const serviceAccount = require('./firebase-admin-key.json'); // Download from Firebase Console
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+  databaseURL: 'https://salmart-330ab.firebaseio.com' // Replace with your URL
+});
+
+// Save FCM Tokens (Matches your frontend's /save-token endpoint)
+app.post('/save-token', async (req, res) => {
+  const { userId, token } = req.body;
+
+  try {
+    // Save to Firestore (or your database)
+    await admin.firestore().collection('users').doc(userId).set({
+      fcmToken: token,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+
+    res.status(200).send('Token saved');
+  } catch (err) {
+    console.error('Error saving token:', err);
+    res.status(500).send('Error saving token');
+  }
+});
+
+// Send Notification (Customize as needed)
+app.post('/send-notification', async (req, res) => {
+  const { userId, title, body } = req.body;
+
+  try {
+    const userDoc = await admin.firestore().collection('users').doc(userId).get();
+    const token = userDoc.data()?.fcmToken;
+
+    if (!token) {
+      return res.status(404).send('User token not found');
+    }
+
+    // Send notification (matches your original frontend expectations)
+    await admin.messaging().send({
+      token,
+      notification: { title, body },
+      webpush: {
+        headers: { Urgency: 'high' }
+      }
+    });
+
+    res.status(200).send('Notification sent');
+  } catch (err) {
+    console.error('Error sending notification:', err);
+    res.status(500).send('Error sending notification');
+  }
+});
+
+
 

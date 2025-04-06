@@ -755,6 +755,15 @@ if (!window.location.pathname.includes("Chats.html")) {
       socket.emit('sendMessage', message);
       displayMessage(message);
       typeSection.value = '';
+      fetch('/send-notification', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          userId: receiverId,
+          title: `New message from ${localStorage.getItem('username') || 'A user'}`,
+          body: text.length > 30 ? `${text.substring(0, 30)}...` : text
+        }) 
+      }).catch(err => console.error('Notification error:', err))
     }
   };
 
@@ -973,7 +982,7 @@ if (!window.location.pathname.includes("Chats.html")) {
         },
         body: JSON.stringify({
           blockerId: userId,
-          blockedUserId: receiverId
+          userIdToBlock: receiverId
         })
       })
       .then(response => response.json())

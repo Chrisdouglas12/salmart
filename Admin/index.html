@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SALMART-Home</title>
+    <title>Home-SALMART</title>
 </head>
 <link rel="stylesheet" href="./Style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -227,7 +227,7 @@ a .active {
 /* Category Filter Styles */
 .category-filter {
   top: 70px;
-  z-index: 100;
+  z-index: 0;
   background-color: white;
   padding: 10px 0;
   border-bottom: 1px solid #eee;
@@ -461,5 +461,51 @@ document.addEventListener('DOMContentLoaded', function() {
   window.dispatchEvent(new Event('scroll'));
 });
 </script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-messaging-compat.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyCmu0kXlzWE29eNlRDMoYG0qYyxnC5Vra4",
+    authDomain: "salmart-330ab.firebaseapp.com",
+    projectId: "salmart-330ab",
+    messagingSenderId: "396604566472",
+    appId: "1:396604566472:web:60eff66ef26ab223a12efd"
+  };
 
+  // Initialize Firebase
+  const app = firebase.initializeApp(firebaseConfig);
+  const messaging = firebase.messaging();
+
+  // Request permission and get token
+  
+if ('Notification' in window) {
+  Notification.requestPermission().then((permission) => {
+    if (permission === 'granted') {
+      console.log('Notification permission granted.');
+      firebase.messaging().getToken({ 
+        vapidKey: "BCtAsyYJYCSfpg_kXL2aO59szQsPFE3DvmqqLOnW03JTVR88Jb435-jDnUgj0j0mL5VCWLiGGfErTuwQ-XUArho" 
+      }).then((token) => {
+        console.log("FCM Token:", token);
+        fetch("/save-token", { 
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId: localStorage.getItem('userId'), token })
+        });
+      }).catch((err) => console.error("Token error:", err));
+    }
+  });
+} else {
+  console.warn('This browser does not support notifications');
+}
+
+// For foreground messages
+firebase.messaging().onMessage((payload) => {
+  console.log("Foreground message:", payload);
+  if ('Notification' in window && Notification.permission === 'granted') {
+    new Notification(payload.notification.title, { 
+      body: payload.notification.body 
+    });
+  }
+});
+</script>
 </html> 
