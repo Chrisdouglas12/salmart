@@ -609,3 +609,281 @@ input:focus{
       justify-content: space-between;
     }
     
+    /* Report Modal Styles */
+.report-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.report-modal-content {
+    background-color: white;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    animation: modalFadeIn 0.3s ease-out;
+}
+
+@keyframes modalFadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.report-modal-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.report-modal-header h3 {
+    margin: 0;
+    font-size: 18px;
+    color: #333;
+}
+
+.close-modal {
+    font-size: 24px;
+    cursor: pointer;
+    color: #777;
+    transition: color 0.2s;
+}
+
+.close-modal:hover {
+    color: #333;
+}
+
+.report-modal-body {
+    padding: 20px;
+}
+
+.report-modal-body p {
+    margin-bottom: 15px;
+    color: #555;
+}
+
+.report-reasons {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.report-reason {
+    display: flex;
+    align-items: center;
+    padding: 12px 15px;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.report-reason:hover {
+    background-color: #f0f0f0;
+}
+
+.report-reason input {
+    margin-right: 12px;
+}
+
+.other-reason-container {
+    margin-top: 15px;
+}
+
+.other-reason-container textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    resize: none;
+    font-family: inherit;
+}
+
+.report-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    padding: 16px 20px;
+    border-top: 1px solid #eee;
+    gap: 10px;
+}
+
+.report-modal-footer button {
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: none;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.cancel-report {
+    background-color: #f0f0f0;
+    color: #333;
+}
+
+.cancel-report:hover {
+    background-color: #e0e0e0;
+}
+
+.submit-report {
+    background-color: #ff4444;
+    color: white;
+}
+
+.submit-report:hover {
+    background-color: #cc0000;
+}
+
+.submit-report:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+/* Share Modal Styles */
+.share-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.share-modal-content {
+    background-color: white;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    animation: modalFadeIn 0.3s ease-out;
+}
+
+.share-modal-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.share-modal-header h3 {
+    margin: 0;
+    font-size: 18px;
+    color: #333;
+}
+
+.close-share-modal {
+    font-size: 24px;
+    cursor: pointer;
+    color: #777;
+    transition: color 0.2s;
+}
+
+.close-share-modal:hover {
+    color: #333;
+}
+
+.share-modal-body {
+    padding: 20px;
+}
+
+.share-options {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.share-option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 15px 10px;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.share-option:hover {
+    background-color: #f0f0f0;
+    transform: translateY(-2px);
+}
+
+.share-option i {
+    font-size: 24px;
+    margin-bottom: 8px;
+}
+
+.share-option[data-platform="whatsapp"] i {
+    color: #25D366;
+}
+
+.share-option[data-platform="facebook"] i {
+    color: #1877F2;
+}
+
+.share-option[data-platform="twitter"] i {
+    color: #1DA1F2;
+}
+
+.share-option[data-platform="telegram"] i {
+    color: #0088CC;
+}
+
+.share-option span {
+    font-size: 12px;
+    color: #555;
+}
+
+.share-link-container {
+    display: flex;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.share-link-input {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    outline: none;
+    font-family: inherit;
+    background-color: #f9f9f9;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.copy-link-button {
+    padding: 0 15px;
+    border: none;
+    background-color: #f0f0f0;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.copy-link-button:hover {
+    background-color: #e0e0e0;
+}
+
+.copy-link-button i {
+    color: #555;
+}
+    

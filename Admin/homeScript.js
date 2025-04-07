@@ -22,7 +22,14 @@ document.addEventListener('DOMContentLoaded', async function () {
 
         return postDate.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
     }
-
+    
+let followingList = [];
+   try {
+       followingList = JSON.parse(localStorage.getItem('followingList')) || [];
+   } catch (e) {
+       console.error("Error parsing followingList:", e);
+       followingList = [];
+   }
     // Function to check login status
     async function checkLoginStatus() {
         const token = localStorage.getItem('authToken');
@@ -83,22 +90,37 @@ document.querySelectorAll('.category-btn').forEach(button => {
             const posts = await response.json();
             postsContainer.innerHTML = ""; // Clear existing posts
 
-            posts.forEach(post => {
-                const postElement = document.createElement('div');
-                postElement.classList.add('post');
-                postElement.innerHTML = `
-                    <div class="post-header">
-                        <a href="Profile.html?userId=${post.createdBy.userId}">
-                            <img src="${post.profilePicture || 'default-avatar.png'}" class="post-avatar">
-                        </a>
-                        <div class="post-user-info">
-                            <a href="Profile.html?userId=${post.createdBy.userId}">
-                                <h4 class="post-user-name">${post.createdBy.name}</h4>
-                            </a>
-                            <p class="post-time">${formatTime(post.createdAt)}</p>
-                        </div>
-                        ${post.createdBy.userId !== loggedInUser ?
-                            `<button class="follow-button" data-user-id="${post.createdBy.userId}" data-is-following="${post.isFollowing}"><i class="fas fa-user-plus"></i> Follow</button>` : ''}
+            // First, update the post creation code to properly handle follow status
+posts.forEach(post => {
+    const postElement = document.createElement('div');
+    postElement.classList.add('post');
+    
+    // Check if the current user is already following this post's author
+    const isFollowing = post.isFollowing || false;
+    
+    postElement.innerHTML = `
+        <div class="post-header">
+            <a href="Profile.html?userId=${post.createdBy.userId}">
+                <img src="${post.profilePicture || 'default-avatar.png'}" class="post-avatar">
+            </a>
+            <div class="post-user-info">
+                <a href="Profile.html?userId=${post.createdBy.userId}">
+                    <h4 class="post-user-name">${post.createdBy.name}</h4>
+                </a>
+                <p class="post-time">${formatTime(post.createdAt)}</p>
+            </div>
+
+
+${post.createdBy.userId !== loggedInUser ?
+    followingList.includes(post.createdBy.userId) ?
+        `<button class="follow-button" data-user-id="${post.createdBy.userId}" 
+            style="display:none">
+            <i class="fas fa-user-check"></i> Following
+        </button>` :
+        `<button class="follow-button" data-user-id="${post.createdBy.userId}">
+            <i class="fas fa-user-plus"></i> Follow
+        </button>`
+    : ''}
                         <div class="post-options">
                             <button class="post-options-button"><i class="fas fa-ellipsis-h"></i></button>
                             <div class="post-options-menu">
@@ -335,6 +357,318 @@ sendMessageBtn.addEventListener('click', (e) => {
                         console.error('Error posting comment:', error);
                     }
                 });
+                // Replace the existing share button code with this:
+const shareButton = postElement.querySelector('.share-button');
+shareButton.addEventListener('click', (e) => {
+    e.stopPropagation();
+    showShareModal(post);
+});
+// share ads function
+function sharePost(post, postLink, platform) {
+    const shareText = `Check out this product: ${post.description} - ${post.price ? '₦' + Number(post.price).toLocaleString('en-Ng') : 'Price not specified'}`;
+    
+    switch(platform) {
+        case 'copy':
+            copyToClipboard(postLink);
+            showToast('Link copied to clipboard!');
+            break;
+            
+        case 'whatsapp':
+            // Try WhatsApp app first, then fall back to web
+            const whatsappUrl = `whatsapp://send?text=${encodeURIComponent(shareText + '\n' + postLink)}`;
+            const whatsappWebUrl = `https://wa.me/?text=${encodeURIComponent(shareText + '\n' + postLink)}`;
+            openAppOrWeb(whatsappUrl, whatsappWebUrl);
+            break;
+            
+        case 'facebook':
+            // Facebook app deep link
+            const facebookUrl = `fb://sharer.php?u=${encodeURIComponent(postLink)}`;
+            const facebookWebUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(postLink)}`;
+            openAppOrWeb(facebookUrl, facebookWebUrl);
+            break;
+            
+        case 'twitter':
+            // Twitter app deep link
+            const twitterUrl = `twitter://post?message=${encodeURIComponent(shareText)}&url=${encodeURIComponent(postLink)}`;
+            const twitterWebUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(postLink)}`;
+            openAppOrWeb(twitterUrl, twitterWebUrl);
+            break;
+            
+        case 'telegram':
+            // Telegram app deep link
+            const telegramUrl = `tg://msg_url?url=${encodeURIComponent(postLink)}&text=${encodeURIComponent(shareText)}`;
+            const telegramWebUrl = `https://t.me/share/url?url=${encodeURIComponent(postLink)}&text=${encodeURIComponent(shareText)}`;
+            openAppOrWeb(telegramUrl, telegramWebUrl);
+            break;
+            
+        case 'instagram':
+            // Instagram doesn't support direct sharing, but we can open the app
+            const instagramUrl = `instagram://library?AssetPath=${encodeURIComponent(postLink)}`;
+            openAppOrWeb(instagramUrl, `https://www.instagram.com/`);
+            break;
+    }
+}
+
+// Add this new helper function to try opening apps first:
+function openAppOrWeb(appUrl, webUrl) {
+    // Try to open the app
+    window.location.href = appUrl;
+    
+    // If the app doesn't open, fall back to web after a delay
+    setTimeout(() => {
+        if (!document.hidden) {
+            window.open(webUrl, '_blank');
+        }
+    }, 500);
+}
+
+// Update the showShareModal function to include Instagram:
+function showShareModal(post) {
+    // Create modal element
+    const shareModal = document.createElement('div');
+    shareModal.className = 'share-modal';
+    
+    // Generate the post link
+    const postLink = `${window.location.origin}/index.html?id=${post._id}`;
+    
+    // Modal content with Instagram option
+    shareModal.innerHTML = `
+        <div class="share-modal-content">
+            <div class="share-modal-header">
+                <h3>Share this post</h3>
+                <span class="close-share-modal">&times;</span>
+            </div>
+            <div class="share-modal-body">
+                <div class="share-options">
+                    <button class="share-option" data-platform="copy">
+                        <i class="fas fa-copy"></i>
+                        <span>Copy Link</span>
+                    </button>
+                    <button class="share-option" data-platform="whatsapp">
+                        <i class="fab fa-whatsapp"></i>
+                        <span>WhatsApp</span>
+                    </button>
+                    <button class="share-option" data-platform="facebook">
+                        <i class="fab fa-facebook"></i>
+                        <span>Facebook</span>
+                    </button>
+                    <button class="share-option" data-platform="twitter">
+                        <i class="fab fa-twitter"></i>
+                        <span>Twitter</span>
+                    </button>
+                    <button class="share-option" data-platform="telegram">
+                        <i class="fab fa-telegram"></i>
+                        <span>Telegram</span>
+                    </button>
+                    <button class="share-option" data-platform="instagram">
+                        <i class="fab fa-instagram"></i>
+                        <span>Instagram</span>
+                    </button>
+                </div>
+                <div class="share-link-container">
+                    <input type="text" value="${postLink}" readonly class="share-link-input">
+                    <button class="copy-link-button">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(shareModal);
+    document.body.style.overflow = 'hidden';
+
+    // Close modal handlers
+    const closeModal = () => {
+        document.body.removeChild(shareModal);
+        document.body.style.overflow = '';
+    };
+
+    shareModal.querySelector('.close-share-modal').addEventListener('click', closeModal);
+
+    // Click outside to close
+    shareModal.addEventListener('click', (e) => {
+        if (e.target === shareModal) {
+            closeModal();
+        }
+    });
+
+    // Handle share options
+    const shareOptions = shareModal.querySelectorAll('.share-option');
+    shareOptions.forEach(option => {
+        option.addEventListener('click', () => {
+            const platform = option.getAttribute('data-platform');
+            sharePost(post, postLink, platform);
+            closeModal();
+        });
+    });
+
+    // Enhanced clipboard copy
+    shareModal.querySelector('.copy-link-button').addEventListener('click', async () => {
+        const success = await copyToClipboard(postLink);
+        showToast(success ? 'Link copied to clipboard!' : 'Failed to copy link');
+    });
+}
+
+// Update the copyToClipboard function to use modern API:
+async function copyToClipboard(text) {
+    try {
+        // Try modern clipboard API first
+        if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(text);
+            return true;
+        } else {
+            // Fallback for older browsers
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+            return true;
+        }
+    } catch (err) {
+        console.error('Failed to copy:', err);
+        return false;
+    }
+}
+      
+// Report post functionality - Modern UI Modal Version
+const reportButton = postElement.querySelector('.report-post-button');
+reportButton.addEventListener('click', async () => {
+    const postId = reportButton.getAttribute('data-post-id');
+    const authToken = localStorage.getItem('authToken');
+    
+    if (!authToken) {
+        showToast("Please log in to report posts");
+        return;
+    }
+
+    // Create a modal for reporting
+    const reportModal = document.createElement('div');
+    reportModal.className = 'report-modal';
+    reportModal.innerHTML = `
+        <div class="report-modal-content">
+            <div class="report-modal-header">
+                <h3>Report Post</h3>
+                <span class="close-modal">&times;</span>
+            </div>
+            <div class="report-modal-body">
+                <p>Please select the reason for reporting this post:</p>
+                <div class="report-reasons">
+                    <label class="report-reason">
+                        <input type="radio" name="report-reason" value="Spam">
+                        <span>Spam or misleading content</span>
+                    </label>
+                    <label class="report-reason">
+                        <input type="radio" name="report-reason" value="Inappropriate">
+                        <span>Inappropriate content</span>
+                    </label>
+                    <label class="report-reason">
+                        <input type="radio" name="report-reason" value="Harassment">
+                        <span>Harassment or bullying</span>
+                    </label>
+                    <label class="report-reason">
+                        <input type="radio" name="report-reason" value="Scam">
+                        <span>Scam or fraud</span>
+                    </label>
+                    <label class="report-reason">
+                        <input type="radio" name="report-reason" value="Other">
+                        <span>Other (please specify)</span>
+                    </label>
+                </div>
+                <div class="other-reason-container" style="display: none;">
+                    <textarea id="other-reason" placeholder="Please provide details..." rows="3"></textarea>
+                </div>
+            </div>
+            <div class="report-modal-footer">
+                <button class="cancel-report">Cancel</button>
+                <button class="submit-report" disabled>Submit Report</button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(reportModal);
+    document.body.style.overflow = 'hidden'; // Prevent scrolling
+
+    // Handle radio button changes
+    const radioButtons = reportModal.querySelectorAll('input[type="radio"]');
+    const otherReasonContainer = reportModal.querySelector('.other-reason-container');
+    const submitButton = reportModal.querySelector('.submit-report');
+    
+    radioButtons.forEach(radio => {
+        radio.addEventListener('change', () => {
+            submitButton.disabled = false;
+            if (radio.value === 'Other') {
+                otherReasonContainer.style.display = 'block';
+            } else {
+                otherReasonContainer.style.display = 'none';
+            }
+        });
+    });
+
+    // Close modal handlers
+    const closeModal = () => {
+        document.body.removeChild(reportModal);
+        document.body.style.overflow = '';
+    };
+
+    reportModal.querySelector('.close-modal').addEventListener('click', closeModal);
+    reportModal.querySelector('.cancel-report').addEventListener('click', closeModal);
+
+    // Click outside to close
+    reportModal.addEventListener('click', (e) => {
+        if (e.target === reportModal) {
+            closeModal();
+        }
+    });
+
+    // Submit report handler
+    submitButton.addEventListener('click', async () => {
+        const selectedReason = reportModal.querySelector('input[name="report-reason"]:checked').value;
+        let reportDetails = selectedReason;
+        
+        if (selectedReason === 'Other') {
+            const otherDetails = reportModal.querySelector('#other-reason').value.trim();
+            if (!otherDetails) {
+                showToast("Please provide details for your report");
+                return;
+            }
+            reportDetails += `: ${otherDetails}`;
+        }
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/post/report/${postId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${authToken}`,
+                },
+                body: JSON.stringify({ 
+                    reason: reportDetails,
+                    postDescription: post.description 
+                }),
+            });
+
+            const result = await response.json();
+            
+            if (!response.ok) {
+                throw new Error(result.message || 'Failed to report post');
+            }
+
+            // Update UI to show reported status
+            reportButton.innerHTML = '<i class="fas fa-flag"></i> Reported';
+            reportButton.disabled = true;
+            reportButton.style.color = '#ff0000';
+            
+            showToast(result.message || 'Post reported successfully! Admin will review it shortly.');
+            closeModal();
+        } catch (error) {
+            console.error('Error reporting post:', error);
+            showToast(error.message || 'Error reporting post. Please try again.');
+        }
+    });
+});
 
                 // Delete post functionality
                 const deleteButton = postElement.querySelector('.delete-post-button');
@@ -369,106 +703,82 @@ sendMessageBtn.addEventListener('click', (e) => {
      // Function to check follow status on page load and hide buttons if already following
 async function checkFollowStatusOnLoad() {
     const token = localStorage.getItem('authToken');
-    const loggedInUserId = localStorage.getItem('userId');
+    if (!token) return;
 
-    if (!token || !loggedInUserId) {
-        console.log('User not logged in. Skipping follow status check.');
-        return;
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/following`, {
+            method: 'GET',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (response.ok) {
+            const { following } = await response.json();
+            // Store following list in localStorage to use during post rendering
+            localStorage.setItem('followingList', JSON.stringify(following));
+        }
+    } catch (error) {
+        console.error('Error checking follow status:', error);
     }
-
-    const allFollowButtons = document.querySelectorAll('.follow-button');
-
-    allFollowButtons.forEach(async button => {
-        const userIdToFollow = button.getAttribute('data-user-id');
-
-        try {
-            const response = await fetch(`${API_BASE_URL}/api/is-following/${userIdToFollow}`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                },
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to fetch follow status');
-            }
-
-            const result = await response.json();
-
-            if (result.isFollowing) {
-                // Hide the follow button if the user is already following
-                button.setAttribute('data-is-following', 'true');
-                button.innerHTML = `<i class="fas fa-user-check"></i> Following`;
-                button.disabled = true;
-                button.style.display = 'none';
-            }
-        } catch (error) {
-            console.error('Error fetching follow status:', error);
-        }
-    });
 }
-
-
 // Call the function to check follow status on page load
-document.addEventListener('DOMContentLoaded', checkFollowStatusOnLoad);
-// Add event listeners to all follow buttons
+
+ //Then update the follow button click handler:
 document.querySelectorAll('.follow-button').forEach(followButton => {
-    followButton.addEventListener('click', async () => {
-        const userIdToFollow = followButton.getAttribute('data-user-id');
-        const token = localStorage.getItem('authToken');
+       followButton.addEventListener('click', async () => {
+           const userIdToFollow = followButton.getAttribute('data-user-id');
+           const token = localStorage.getItem('authToken');
 
-        if (!token) {
-            console.warn('No token found');
-            alert('Please log in to follow users.');
-            return;
-        }
+           if (!token) {
+               showToast('Please log in to follow users');
+               return;
+           }
 
-        try {
-            const response = await fetch(`${API_BASE_URL}/follow/${userIdToFollow}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
-                },
-            });
+           try {
+               const response = await fetch(`${API_BASE_URL}/follow/${userIdToFollow}`, {
+                   method: 'POST',
+                   headers: {
+                       'Content-Type': 'application/json',
+                       'Authorization': `Bearer ${token}`,
+                   },
+               });
 
-            if (!response.ok) {
-                throw new Error('Failed to follow user');
-            }
+               // First check if there's any response at all
+               if (!response.ok) {
+                   throw new Error(`HTTP error! status: ${response.status}`);
+               }
 
-            const result = await response.json();
+               // Check if response has content before parsing
+               const text = await response.text();
+               const result = text ? JSON.parse(text) : {};
 
-            if (result.success) {
-                // Update the UI immediately
-                followButton.setAttribute('data-is-following', 'true');
-                followButton.innerHTML = `<i class="fas fa-user-check"></i> Following`;
-                followButton.disabled = true;
-                followButton.style.display = 'none';
+               // Update localStorage following list
+               let followingList = [];
+               try {
+                   followingList = JSON.parse(localStorage.getItem('followingList')) || [];
+               } catch (e) {
+                   console.error("Error parsing followingList:", e);
+               }
 
-                // Hide all other follow buttons for the same user across other posts
-                const allFollowButtons = document.querySelectorAll('.follow-button');
-                allFollowButtons.forEach(button => {
-                    if (button.getAttribute('data-user-id') === userIdToFollow) {
-                        button.setAttribute('data-is-following', 'true');
-                        button.innerHTML = `<i class="fas fa-user-check"></i> Following`;
-                        button.disabled = true;
-                        button.style.display = 'none';
-                    }
-                });
+               if (!followingList.includes(userIdToFollow)) {
+                   followingList.push(userIdToFollow);
+                   localStorage.setItem('followingList', JSON.stringify(followingList));
+               }
 
-                // Show a success message
-                showToast(`You are now following this user!`);
-            } else {
-                console.error('Follow failed:', result.message || result.error);
-                showToast('Failed to follow user.');
-            }
-        } catch (error) {
-            console.error('Fetch error:', error);
-            showToast('Failed to follow user. Please try again.');
-        }
-    });
-});
+               // Update all follow buttons for this user
+               document.querySelectorAll(`.follow-button[data-user-id="${userIdToFollow}"]`).forEach(button => {
+                   button.innerHTML = `<i class="fas fa-user-check"></i> Following`;
+                   button.style.backgroundColor = '#28a745'; // Visual feedback
+               });
 
+               showToast(`You are now following this user!`);
+           } catch (error) {
+               console.error('Error following user:', error);
+               showToast(error.message || 'Failed to follow user. Please try again.');
+           }
+       });
+   });
+        
+ 
                 // Edit post functionality
                 const editButton = postElement.querySelector('.edit-post-button');
                 if (editButton) {
@@ -478,6 +788,7 @@ document.querySelectorAll('.follow-button').forEach(followButton => {
                     });
                 }
             });
+            
 
             // Close menu if user clicks outside
             document.addEventListener('click', () => {

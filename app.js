@@ -600,9 +600,9 @@ app.get('/users-profile/:id', verifyToken, async (req, res) => {
 app.get('/post', async (req, res) => {
   try {
     let loggedInUserId = null;
-    const { category } = req.query; // Get category from query params
+    const { category } = req.query;
 
-    // Authentication check (keep your existing token logic)
+    // Get auth token if present
     const authHeader = req.headers['authorization'];
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.split(' ')[1];
@@ -610,28 +610,33 @@ app.get('/post', async (req, res) => {
       loggedInUserId = decoded.userId;
     }
 
-    // Build the query object
+    // Build category filter
     const query = {};
-    if (category && ['electronics', 'fashion', 'home', 'vehicles', 'music', 'other'].includes(category)) {
+    if (category && ['electronics', 'fashion', 'home', 'vehicles', 'music', 'others'].includes(category)) {
       query.category = category;
     }
 
-    // Apply the query
+    // Get posts
     const posts = await Post.find(query).sort({ createdAt: -1 });
 
     if (!posts || posts.length === 0) {
       return res.status(404).json({ message: 'No posts found' });
     }
 
-    // Keep your existing population logic
+    // Get who current user is following
+    const following = loggedInUserId 
+      ? await Follow.find({ follower: loggedInUserId }).distinct('following') 
+      : [];
+
+    // Prepare final post data with isFollowing and profilePicture
     const populatedPosts = await Promise.all(posts.map(async (post) => {
       const user = await User.findById(post.createdBy.userId);
-      const isFollowing = user?.followers?.includes(loggedInUserId);
+      const isFollowing = following.includes(post.createdBy.userId);
 
       return {
-        ...post._doc,
+        ...post.toObject(),
         profilePicture: user?.profilePicture || '',
-        isFollowing: isFollowing || false
+        isFollowing: isFollowing
       };
     }));
 
@@ -847,7 +852,9 @@ app.post('/pay', async (req, res) => {
         const sellerId = post.createdBy;  // Ensure sellerId is correctly assigned
 
         console.log("Seller ID from post:", sellerId); // Debugging log
-     const API_BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart-production.up.railway.app'
+   const protocol = req.secure ? 'http' : 'https';
+const host = req.get('host');
+const API_BASE_URL = `${protocol}://${host}`;
         // include correct sellerId in metadata
         const response = await paystack.transaction.initialize({
             email,
@@ -2043,7 +2050,7 @@ app.post('/confirm-delivery/:transactionId', verifyToken, async (req, res) => {
 
     // Calculate amount to transfer (minus platform commission)
     const productPrice = transaction.productId?.price || 0;
-    const commissionPercent = 10;
+    const commissionPercent = 2.5;
     const commission = Math.floor((commissionPercent / 100) * productPrice);
     const amountToTransfer = productPrice - commission;
 
@@ -2737,6 +2744,144 @@ app.post('/send-notification', async (req, res) => {
 
 
 
+app.post('/post/report/:postId', verifyToken, async (req, res) => {
+    try {
+        const { postId } = req.params;
+        const { reason } = req.body;
+        const reporterId = req.user.userId;
 
+        // Validate input
+        if (!reason || reason.trim() === '') {
+            return res.status(400).json({ error: 'Reason is required' });
+        }
 
+        // Find the post and populate creator info
+        const post = await Post.findById(postId).populate('createdBy', 'userId');
+        if (!post) {
+            return res.status(404).json({ error: 'Post not found' });
+        }
 
+        // Check if user already reported this post
+        const existingReport = await Report.findOne({
+            reportedUser: post.createdBy.userId,
+            reportedBy: reporterId,
+            'relatedPost': postId
+        });
+
+        if (existingReport) {
+            return res.status(400).json({ 
+                error: 'You have already reported this post',
+                reportId: existingReport._id
+            });
+        }
+
+        // Create new report
+        const newReport = new Report({
+            reportedUser: post.createdBy.userId,
+            reportedBy: reporterId,
+            reason: reason.trim(),
+            relatedPost: postId,
+            status: 'pending'
+        });
+        console.log(reason)
+
+        await newReport.save();
+
+        // Also add to post's reports array for quick reference
+        post.reports.push({
+            reportId: newReport._id,
+            reason: reason.trim(),
+            reportedAt: new Date()
+        });
+
+        // Check report threshold for auto-flagging
+        const reportCount = await Report.countDocuments({
+            reportedUser: post.createdBy.userId,
+            status: 'pending'
+        });
+
+        if (reportCount >= 3) { // Configurable threshold
+            post.status = 'under_review';
+            // Optionally notify admin
+        }
+
+        await post.save();
+
+        res.json({ 
+            success: true, 
+            message: 'Post reported successfully',
+            reportId: newReport._id
+        });
+
+    } catch (error) {
+        console.error('Error reporting post:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Get all pending reports
+app.get('/admin/reports/pending', verifyToken, async (req, res) => {
+    try {
+        const reports = await Report.find({ status: 'pending' })
+            .populate('reportedUser', 'name email profilePicture')
+            .populate('reportedBy', 'name email')
+            .populate('relatedPost', 'description photo')
+            .sort({ createdAt: -1 });
+
+        res.json(reports);
+    } catch (error) {
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Resolve a report
+app.post('/admin/reports/:reportId/resolve', verifyToken, async (req, res) => {
+    try {
+        const { reportId } = req.params;
+        const { action, adminNotes } = req.body;
+
+        const report = await Report.findById(reportId);
+        if (!report) {
+            return res.status(404).json({ error: 'Report not found' });
+        }
+
+        // Update report
+        report.status = 'resolved';
+        report.resolution = action;
+        report.resolvedBy = req.user.userId;
+        report.adminNotes = adminNotes;
+        report.resolvedAt = new Date();
+
+        // Take appropriate action
+        if (action === 'ban') {
+            await User.findByIdAndUpdate(report.reportedUser, { isBanned: true });
+        } else if (action === 'post_removed') {
+            await Post.findByIdAndUpdate(report.relatedPost, { status: 'removed' });
+        }
+        // Warn action might involve sending a notification
+
+        await report.save();
+
+        res.json({ success: true, message: `Report resolved with action: ${action}` });
+    } catch (error) {
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// In your Express server
+app.post('/api/save-fcm-token', verifyToken, async (req, res) => {
+  try {
+    const { token } = req.body;
+    const userId = req.user.userId;
+    
+    await User.findByIdAndUpdate(userId, { 
+      fcmToken: token,
+      notificationEnabled: true 
+    });
+    
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error saving FCM token:', error);
+    res.status(500).json({ error: 'Failed to save token' });
+  }
+});

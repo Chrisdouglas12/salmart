@@ -18,7 +18,17 @@ const postSchema = new mongoose.Schema({
       required: true,
       enum: ['electronics', 'fashion', 'home', 'vehicles', 'music', 'others']
     },
-     
+    
+    reports: [{
+        reportId: { type: mongoose.Schema.Types.ObjectId, ref: 'Report' },
+        reason: String,
+        reportedAt: { type: Date, default: Date.now }
+    }],
+    status: {
+        type: String,
+        enum: ['active', 'under_review', 'removed'],
+        default: 'active'
+    },
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date },
     likes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
@@ -34,7 +44,8 @@ const postSchema = new mongoose.Schema({
     isSold: {
       type: Boolean,
       default: false
-    }
+    },
+  
 });
 
 module.exports = mongoose.model('Post', postSchema);
