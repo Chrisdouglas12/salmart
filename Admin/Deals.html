@@ -188,6 +188,103 @@
 a .active {
   color: blue;
 }
+/* Modal Styles */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 10;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.5);
+  backdrop-filter: blur(5px);
+  transition: all 0.3s ease;
+}
+
+.modal-content {
+  background-color: #fefefe;
+  margin: 15% auto;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+  width: 90%;
+  max-width: 400px;
+  animation: modalopen 0.3s;
+}
+
+@keyframes modalopen {
+  from { opacity: 0; transform: translateY(-50px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #eee;
+}
+
+.modal-header h4 {
+  color: #28a745;
+  font-size: 18px;
+  margin: 0;
+}
+
+.close-modal {
+  color: #aaa;
+  font-size: 24px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.close-modal:hover {
+  color: #555;
+}
+
+.modal-body {
+  padding: 20px 0;
+  color: #555;
+}
+
+.modal-body p {
+  margin-bottom: 10px;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 15px;
+  border-top: 1px solid #eee;
+}
+
+.modal-btn {
+  padding: 8px 16px;
+  border-radius: 5px;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.cancel-btn {
+  background-color: #f1f1f1;
+  color: #333;
+}
+
+.cancel-btn:hover {
+  background-color: #e0e0e0;
+}
+
+.confirm-btn {
+  background-color: #28a745;
+  color: white;
+}
+
+.confirm-btn:hover {
+  background-color: #218838;
+}
   </style>
 </head>
 <body>
@@ -217,6 +314,23 @@ a .active {
     </ul>
     <pre style="font-size: 10px; text-align: center; margin-top: 40px; color: green">&copy;Salmart Technologies 2025</pre>
   </div>
+  <!-- Modern Confirmation Modal -->
+<div id="confirmationModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h4>Confirm Delivery</h4>
+      <span class="close-modal">&times;</span>
+    </div>
+    <div class="modal-body">
+      <p>Are you sure you want to confirm this delivery?</p>
+      <p>This action cannot be undone.</p>
+    </div>
+    <div class="modal-footer">
+      <button id="cancelConfirm" class="modal-btn cancel-btn">Cancel</button>
+      <button id="confirmDeliveryBtn" class="modal-btn confirm-btn">Confirm</button>
+    </div>
+  </div>
+</div>
 
 <div class="tabs">
   <div class="tab active" onclick="showTab('buying')">Buying</div>
@@ -240,6 +354,11 @@ a .active {
 <script>
   const userId = localStorage.getItem('userId');
   let currentTab = 'buying';
+  let currentTransactionId = null;
+const modal = document.getElementById('confirmationModal');
+const closeModal = document.querySelector('.close-modal');
+const cancelConfirm = document.getElementById('cancelConfirm');
+const confirmDeliveryBtn = document.getElementById('confirmDeliveryBtn');
 
   async function fetchTransactions() {
     try {
@@ -275,7 +394,7 @@ a .active {
         let confirmBtn = '', refundBtn = '';
 
         if (currentTab === 'buying' && t.status === 'pending') {
-          confirmBtn = `<button class="confirm-btn" onclick="confirmDelivery('${t._id}')">Confirm Delivery</button>`;
+          confirmBtn = `<button class="confirm-btn" onclick="showConfirmationModal'${t._id}')">Confirm Delivery</button>`;
           refundBtn = !t.refundRequested
             ? `<button class="refund-btn" onclick="requestRefund('${t._id}')">Request Refund</button>`
             : `<span class="badge refund-requested">Refund Requested</span>`;
@@ -319,26 +438,82 @@ a .active {
     fetchTransactions();
   }
 
-  async function confirmDelivery(transactionId) {
-    const token = localStorage.getItem('authToken');
-    try {
-      const API_BASE_URL =
-      window.location.hostname === 'localhost'
-      ? 'http://localhost:3000'
-      :
-'https://salmart-production.up.railway.app'
-      const res = await fetch(`${API_BASE_URL}/confirm-delivery/${transactionId}`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
-      });
-      const contentType = res.headers.get('content-type');
-      const data = contentType.includes('application/json') ? await res.json() : { message: await res.text() };
-      alert(data.message || 'Delivery confirmed.');
-      if (res.ok) fetchTransactions();
-    } catch (err) {
-      alert('Error confirming delivery.');
-    }
+  
+
+// Modify your confirmDelivery function to use the modal
+function showConfirmationModal(transactionId) {
+  currentTransactionId = transactionId;
+  modal.style.display = 'block';
+  document.body.classList.add('no-scroll');
+}
+
+// Close modal when clicking X or cancel button
+closeModal.addEventListener('click', () => {
+  modal.style.display = 'none';
+  document.body.classList.remove('no-scroll');
+});
+
+cancelConfirm.addEventListener('click', () => {
+  modal.style.display = 'none';
+  document.body.classList.remove('no-scroll');
+});
+
+// Close modal when clicking outside
+window.addEventListener('click', (e) => {
+  if (e.target === modal) {
+    modal.style.display = 'none';
+    document.body.classList.remove('no-scroll');
   }
+});
+
+// Handle the actual confirmation
+confirmDeliveryBtn.addEventListener('click', async () => {
+  modal.style.display = 'none';
+  document.body.classList.remove('no-scroll');
+  
+  if (currentTransactionId) {
+    await confirmDelivery(currentTransactionId);
+    currentTransactionId = null;
+  }
+});
+
+// Update your original confirmDelivery function to be async
+async function confirmDelivery(transactionId) {
+  const token = localStorage.getItem('authToken');
+  try {
+    const API_BASE_URL = window.location.hostname === 'localhost' 
+      ? 'http://localhost:3000'
+      : 'https://salmart-production.up.railway.app';
+    
+    const res = await fetch(`${API_BASE_URL}/confirm-delivery/${transactionId}`, {
+      method: 'POST',
+      headers: { 
+        'Authorization': `Bearer ${token}`, 
+        'Content-Type': 'application/json' 
+      }
+    });
+    
+    const contentType = res.headers.get('content-type');
+    const data = contentType.includes('application/json') 
+      ? await res.json() 
+      : { message: await res.text() };
+    
+    if (res.ok) {
+      fetchTransactions();
+      // Optional: Show a success message
+      alert(data.message || 'Delivery confirmed successfully!');
+    } else {
+      alert(data.message || 'Error confirming delivery.');
+    }
+  } catch (err) {
+    alert('Error confirming delivery. Please try again.');
+    console.error('Error confirming delivery:', err);
+  }
+}
+
+// Update the button in your transaction card to use the modal
+// In the card.innerHTML section, change the confirm button to:
+// 
 
   async function requestRefund(transactionId) {
     const token = localStorage.getItem('authToken');

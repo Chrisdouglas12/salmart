@@ -1,27 +1,37 @@
-
 const mongoose = require('mongoose');
 
 const messageSchema = new mongoose.Schema({
   senderId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   receiverId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  text: { type: String, required: true },
-  status: {type: String, enum: ['sent', 'delivered', 'seen'], default: 'sent'},
-  
-  attachment: {
-    type: String,
-    url: String,
+  text: { type: String, required: false }, // Changed to optional for image messages
+  status: { type: String, enum: ['sent', 'delivered', 'seen'], default: 'sent' },
+  isRead: {
+    type: Boolean,
+    default: false,
   },
-  proposedPrice: Number,
+  attachment: {
+    url: { type: String, required: false }, // URL for images or other media
+  },
+  proposedPrice: { type: Number, required: false },
   messageType: {
-    type: 'String',
-    default: 'text'
+    type: String,
+    enum: ['text', 'image'], // Explicitly allow 'image'
+    default: 'text',
   },
   bargainStatus: {
-    type: 'String',
-    enum: ['pending', 'accpeted', 'declined'], default: null
+    type: String,
+    enum: ['pending', 'accepted', 'declined', null],
+    default: null,
   },
   createdAt: { type: Date, default: Date.now },
 });
 
+// Add validation to ensure at least one of text or attachment.url is provided
+messageSchema.pre('validate', function (next) {
+  if (!this.text && (!this.attachment || !this.attachment.url)) {
+    next(new Error('Message must have either text or an attachment URL'));
+  }
+  next();
+});
+
 module.exports = mongoose.model('Message', messageSchema);
- 

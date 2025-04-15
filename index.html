@@ -341,5 +341,60 @@ a .active {
     }, 3000);
   }
 </script>
+<script>
+  // Inside the Firebase script, add to initializeNotifications
+  async function initializeNotifications() {
+    if ('Notification' in window) {
+      try {
+        const permission = await Notification.requestPermission();
+        if (permission === 'granted') {
+          console.log('Notification permission granted.');
+          const token = await messaging.getToken({
+            vapidKey: "BCtAsyYJYCSfpg_kXL2aO59szQsPFE3DvmqqLOnW03JTVR88Jb435-jDnUgj0j0mL5VCWLiGGfErTuwQ-XUArho"
+          });
+          console.log('FCM Token:', token);
+
+          const userId = localStorage.getItem('userId');
+          if (userId) {
+            await fetch('/api/save-fcm-token', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+              },
+              body: JSON.stringify({ token })
+            });
+            console.log('Token saved to server');
+          }
+
+          // Handle token refresh
+          messaging.onTokenRefresh(async () => {
+            console.log('Token refreshed');
+            const newToken = await messaging.getToken({
+              vapidKey: "BCtAsyYJYCSfpg_kXL2aO59szQsPFE3DvmqqLOnW03JTVR88Jb435-jDnUgj0j0mL5VCWLiGGfErTuwQ-XUArho"
+            });
+            if (userId) {
+              await fetch('/api/save-fcm-token', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify({ token: newToken })
+              });
+              console.log('New token saved to server');
+            }
+          });
+        } else {
+          console.warn('Notification permission denied');
+        }
+      } catch (err) {
+        console.error('Error initializing notifications:', err);
+      }
+    } else {
+      console.warn('Notifications not supported in this browser');
+    }
+  }
+</script>
 
 </html> 

@@ -21,6 +21,7 @@ const fsExtra = require('fs-extra')
 const path = require('path');
 const http = require('http');
 const socketIo = require('socket.io');
+const redis = require('redis')
 
 
 app.use(cors({
@@ -64,54 +65,234 @@ server.listen(PORT, () => {
 }); 
 
 // Initialize Socket.IO
-const users = {}; // Store userId -> socketId mapping
 
-
-// Handle Socket.IO Connections
-
- 
 io.on('connection', (socket) => {
-  console.log('A user connected:', socket.id);
+  console.log('A New client is connected:', socket.id);
 
-  // Handle user joining
-  socket.on('joinRoom', (userId) => {
-    if (userId) {
-      users[userId] = socket.id;
-      console.log(`User ${userId} joined with socket ID: ${socket.id}`);
+  socket.on('joinRoom', async (userId) => {
+    try {
+      if (!mongoose.Types.ObjectId.isValid(userId)) return;
+      await User.findByIdAndUpdate(userId, { socketId: socket.id }, { new: true });
+      socket.join(`user_${userId}`);
+      console.log(`User ${userId} joined room user_${userId}`);
+      await NotificationService.sendCountsToUser(userId);
+    } catch (err) {
+      console.log('Error in joinRoom:', err);
+    }
+  }); 
+
+  socket.on('badge-update', async ({ type, count, userId }) => {
+    try {
+      io.to(`user_${userId}`).emit('badge-update', { type, count, userId });
+      console.log(`Broadcasted badge-update for ${type} to user ${userId}`);
+      await NotificationService.sendCountsToUser(userId);
+    } catch (error) {
+      console.error('Error broadcasting badge-update:', error);
     }
   });
-  // Server-side (Node.js with Socket.IO)
 
-io.on("connection", (socket) => {
-  socket.removeAllListeners("authenticate")//remove all previus
-  socket.once("authenticate", (userId) => {
-    socket.join(`user_${userId}`); // Room for user-specific messages
+// Helper function to send FCM notification
+async function sendFCMNotification(userId, title, body, data = {}) {
+  try {
+    const userDoc = await admin.firestore().collection('users').doc(userId).get();
+    const token = userDoc.data()?.fcmToken;
+
+    if (!token) {
+      console.log(`No FCM token for user ${userId}`);
+      return;
+    }
+
+    const message = {
+      token,
+      notification: {
+        title,
+        body,
+      },
+      data: {
+        ...data, // Additional data for click actions
+        userId: userId.toString(),
+      },
+      webpush: {
+        headers: { Urgency: 'high' },
+        notification: {
+          icon: 'https://salmart.vercel.app/favicon.ico', // Replace with your app icon
+          requireInteraction: true,
+        },
+      },
+    };
+
+    await admin.messaging().send(message);
+    console.log(`FCM notification sent to user ${userId}: ${title}`);
+  } catch (err) {
+    console.error(`Error sending FCM notification to user ${userId}:`, err);
+  }
+}
+
+
+  socket.on('followUser', async ({ followerId, followedId }) => {
+  try {
+    const follower = await User.findById(followerId).select('firstName lastName profilePicture');
+    if (!follower) return;
+
+    const notification = new Notification({
+      userId: followedId,
+      type: 'follow',
+      senderId: followerId,
+      message: `${follower.firstName} ${follower.lastName} followed you`,
+      createdAt: new Date(),
+    });
+    await notification.save();
+
+      io.to(`user_${followedId}`).emit('notification', {
+        type: 'follow',
+        userId: followerId,
+        sender: { firstName: follower.firstName, lastName: follower.lastName, profilePicture: follower.profilePicture },
+        createdAt: new Date(),
+      });
+    
+
+    await sendFCMNotification(
+      followedId.toString(),
+      'New Follower',
+      `${follower.firstName} ${follower.lastName} followed you`,
+      { type: 'follow', userId: followerId.toString() }
+    );
+    await NotificationService.triggerCountUpdate(followedId);
+  } catch (error) {
+    console.error('Error handling followUser event:', error);
+  }
+});
+
+  socket.on('likePost', async ({ postId, userId }) => {
+    try {
+      if (!mongoose.Types.ObjectId.isValid(userId) || !mongoose.Types.ObjectId.isValid(postId)) {
+        console.error('Invalid userId or postId');
+        return;
+      }
+
+      const post = await Post.findById(postId).select('createdBy');
+      if (!post) {
+        console.error(`Post ${postId} not found`);
+        return;
+      }
+
+      const sender = await User.findById(userId).select('firstName lastName profilePicture');
+      if (!sender) {
+        console.error(`User ${userId} not found`);
+        return;
+      }
+
+      const notification = new Notification({
+        userId: post.createdBy.userId,
+        type: 'like',
+        senderId: userId,
+        postId,
+        message: `${sender.firstName} ${sender.lastName} liked your post`,
+        createdAt: new Date(),
+      });
+
+      await notification.save();
+
+      // Emit real-time notification
+    
+        io.to(`user_${post.createdBy.userId}`).emit('notification', {
+          type: 'like',
+          postId,
+          userId,
+          sender: {
+            firstName: sender.firstName,
+            lastName: sender.lastName,
+            profilePicture: sender.profilePicture,
+          },
+          createdAt: new Date(),
+        });
+      
+
+      // Send FCM push notification
+      await sendFCMNotification(
+        post.createdBy.userId.toString(),
+        'New Like',
+        `${sender.firstName} ${sender.lastName} liked your post`,
+        { type: 'like', postId: postId.toString() }
+      );
+
+      await NotificationService.triggerCountUpdate(post.createdBy.userId);
+    } catch (error) {
+      console.error('Error handling likePost event:', error);
+    }
   });
 
-  // When a new message is saved in the database:
-  function onNewMessage(message) {
-    io.to(`user_${message.receiverId}`).emit("new_message", { type: "new_message" });
-  }
-});
-// create post
-socket.on('createPost', async (postData) => {
-  try {
-    const newPost = await Post.create({
-      ...postData,
-      userId: socket.userId
-    });
-    io.emit('newPost', newPost); // Broadcast to all clients
-  } catch (err) {
-    socket.emit('postError', err.message);
-  }
-});
-  // Handle sending messages
+  socket.on('commentPost', async ({ postId, userId, comment }) => {
+    try {
+      if (!mongoose.Types.ObjectId.isValid(userId) || !mongoose.Types.ObjectId.isValid(postId)) {
+        console.error('Invalid userId or postId');
+        return;
+      }
+
+      const post = await Post.findById(postId).select('createdBy');
+      if (!post) {
+        console.error(`Post ${postId} not found`);
+        return;
+      }
+
+      const sender = await User.findById(userId).select('firstName lastName profilePicture');
+      if (!sender) {
+        console.error(`User ${userId} not found`);
+        return;
+      }
+
+      const notification = new Notification({
+        userId: post.createdBy.userId,
+        type: 'comment',
+        senderId: userId,
+        postId,
+        message: `${sender.firstName} ${sender.lastName} commented on your post`,
+        createdAt: new Date(),
+      });
+
+      await notification.save();
+
+      // Emit real-time notification
+      
+        io.to(`user_${post.createdBy.userId}`).emit('notification', {
+          type: 'comment',
+          postId,
+          userId,
+          comment,
+          sender: {
+            firstName: sender.firstName,
+            lastName: sender.lastName,
+            profilePicture: sender.profilePicture,
+          },
+          createdAt: new Date(),
+        });
+      
+
+      // Send FCM push notification
+      await sendFCMNotification(
+        post.createdBy.userId.toString(),
+        'New Comment',
+        `${sender.firstName} ${sender.lastName}: ${comment}`,
+        { type: 'comment', postId: postId.toString() }
+      );
+
+      await NotificationService.triggerCountUpdate(post.createdBy.userId);
+    } catch (error) {
+      console.error('Error handling commentPost event:', error);
+    }
+  });
+
   socket.on('sendMessage', async (message) => {
     try {
       const { senderId, receiverId, text } = message;
-
       if (!senderId || !receiverId || !text) {
         console.error('Error: Missing senderId, receiverId, or text');
+        return;
+      }
+
+      const sender = await User.findById(senderId).select('firstName lastName profilePicture');
+      if (!sender) {
+        console.error(`Sender ${senderId} not found`);
         return;
       }
 
@@ -122,169 +303,60 @@ socket.on('createPost', async (postData) => {
         status: 'sent',
         timestamp: new Date(),
       });
-      await newMessage.save();
-      console.log('Message saved successfully:', newMessage);
 
-      if (users[receiverId]) {
-        io.to(users[receiverId]).emit('receiveMessage', newMessage);
-      } else {
-        console.log(`User ${receiverId} is offline, storing message.`);
-      }
+      await newMessage.save();
+
+      // Emit real-time message
+    
+        io.to(`user_${receiverId}`).emit('receiveMessage', newMessage);
+      
+
+      // Send FCM push notification
+      await sendFCMNotification(
+        receiverId.toString(),
+        'New Message',
+        `${sender.firstName} ${sender.lastName}: ${text}`,
+        { type: 'message', senderId: senderId.toString() }
+      );
+
+      await NotificationService.triggerCountUpdate(receiverId);
     } catch (error) {
       console.error('Error sending message:', error);
     }
   });
 
-  // Handle marking messages as seen
   socket.on('markAsSeen', async ({ senderId, receiverId }) => {
     try {
-      if (!senderId || !receiverId) {
-        console.error('Error: Missing senderId or receiverId');
-        return;
-      }
-
-      if (!mongoose.Types.ObjectId.isValid(senderId) || !mongoose.Types.ObjectId.isValid(receiverId)) {
-        console.error('Invalid senderId or receiverId format:', { senderId, receiverId });
-        return;
-      }
-
+      if (!senderId || !receiverId) return;
       const senderObjectId = new mongoose.Types.ObjectId(senderId);
       const receiverObjectId = new mongoose.Types.ObjectId(receiverId);
-
       await Message.updateMany(
-        {
-          senderId: senderObjectId,
-          receiverId: receiverObjectId,
-          status: { $ne: 'seen' }
-        },
+        { senderId: senderObjectId, receiverId: receiverObjectId, status: 'sent' },
         { $set: { status: 'seen' } }
       );
-
-      if (users[senderId]) {
-        io.to(users[senderId]).emit('messagesSeen', { senderId: receiverId });
-      }
+      
+        io.to(`user_${senderId}`).emit('messagesSeen', { senderId: receiverId });
+      
+      await NotificationService.triggerCountUpdate(senderId);
+      await NotificationService.triggerCountUpdate(receiverId);
     } catch (error) {
       console.error('Error updating message status:', error);
     }
   });
 
-socket.on('likePost', async ({ postId, userId }) => {
-    try {
-        if (!mongoose.Types.ObjectId.isValid(userId) || !mongoose.Types.ObjectId.isValid(postId)) {
-            console.error("Invalid userId or postId");
-            return;
-        }
-
-        const post = await Post.findById(postId).select('createdBy');
-        if (!post) {
-            console.error(`Post ${postId} not found`);
-            return;
-        }
-        
- const sender = await User.findById(userId).select('firstName lastName profilePicture')
- if(!sender) {
-   console.error(`User ${userId} not found`)
- }
-        // Save the notification to the database
-        const notification = new Notification({
-            userId: post.createdBy.userId, // Notify the post owner
-            type: 'like',
-            senderId: userId,  // The user who liked the post
-            postId,
-            message: 'Someone liked your post',
-        });{
-          console.log(`${sender.firstName} ${sender.lastName} like your post was liked`)
-        }
-
-        await notification.save();
-        
-
-        // Emit the notification to the post owner if they are online
-        if (users[post.createdBy.userId]) {
-            io.to(users[post.createdBy.userId]).emit('notification', {
-                type: 'like',
-                postId,
-                userId,
-                sender:{
-                  firstName: sender.firstName,
-                 lastName: sender.lastName,
-                 profilePicture: sender.profilePicture,
-                },
-                createdAt: new date()
-            });
-        }
-    } catch (error) {
-        console.error('Error handling likePost event:', error);
-    }
-});
-
-// Handle comment notifications
-socket.on('commentPost', async ({ postId, userId, comment }) => {
-    try {
-        if (!mongoose.Types.ObjectId.isValid(userId) || !mongoose.Types.ObjectId.isValid(postId)) {
-            console.error("Invalid userId or postId");
-            return;
-        }
-
-        const post = await Post.findById(postId).select('createdBy');
-        if (!post) {
-            console.error(`Post ${postId} not found`);
-            return;
-        }
-
-        const sender = await User.findById(userId).select('firstName lastName profilePicture');
-        if (!sender) {
-            console.error(`User ${userId} not found`);
-            return;
-        }
-
-        const notification = new Notification({
-            userId: post.createdBy, // Notify the post owner
-            type: 'comment',
-            senderId: userId,  // The user who commented
-            postId,
-            message: 'Someone commented on your post',
-        });
-
-        console.log(`${sender.firstName} ${sender.lastName} commented on your post`);
-
-        await notification.save();
-
-        // Emit the notification to the post owner if they are online
-        if (users[post.createdBy]) {
-            io.to(users[post.createdBy]).emit('notification', {
-                type: 'comment',
-                postId,
-                userId,
-                comment,
-                sender: {
-                    firstName: sender.firstName,
-                    lastName: sender.lastName,
-                    profilePicture: sender.profilePicture,
-                },
-                createdAt: new Date()
-            });
-        }
-
-    } catch (error) {
-        console.error('Error handling commentPost event:', error);
-    }
-});
-
+  
   // Handle user disconnection
-  socket.on('disconnect', () => {
-    console.log('A user disconnected:', socket.id);
-    const userId = Object.keys(users).find((key) => users[key] === socket.id);
-    if (userId) {
-      delete users[userId];
-    }
-    console.log('Updated users mapping', users);
-  });
+  
+socket.on('disconnect', async () => {
+  try {
+    console.log('Client disconnected:', socket.id);
+    await User.updateOne({ socketId: socket.id }, { socketId: null });
+    console.log(`Cleared socketId ${socket.id}`);
+  } catch (err) {
+    console.log('Error handling disconnect:', err);
+  }
 });
-
-
-
-
+})
 
 
 require('dotenv').config(); // Load environment variables
@@ -293,14 +365,10 @@ const paystack = require('paystack-api')(process.env.PAYSTACK_SECRET_KEY);
 
 const uploadDir = path.join(__dirname, 'Uploads');00
 
-
-
 // Check if the directory exists, if not create it
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
-
-
 //middleware configuration
 app.use(cors({
      origin: [
@@ -488,6 +556,101 @@ app.get('/verify-token', verifyToken, async (req, res) => {
         res.status(500).json({ message: 'Server error' });
     }
 });
+// Example route
+app.get('/post/reply/:postId/:commentId', async (req, res) => {
+    const { postId, commentId } = req.params;
+    const post = await Post.findById(postId);
+    const comment = post.comments.id(commentId);
+    res.json({ comment });
+});
+
+app.post('/post/reply/:postId/:commentId', verifyToken, async (req, res) => {
+  try {
+    const { postId, commentId } = req.params;
+    const { text } = req.body;
+
+    // Validate input
+    if (!text) {
+      return res.status(400).json({ message: 'Reply text is required' });
+    }
+
+    // Check if post exists
+    const post = await Post.findById(postId);
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+
+    // Check if comment exists
+    const comment = post.comments.id(commentId);
+    if (!comment) {
+      return res.status(404).json({ message: 'Comment not found' });
+    }
+
+    // Fetch user
+    const user = await User.findById(req.user.userId).select('firstName lastName profilePicture');
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Create reply
+    const reply = {
+      userId: req.user.userId,
+      name: `${user.firstName} ${user.lastName}`,
+      text,
+      profilePicture: user.profilePicture || 'default-avatar.png',
+      createdAt: new Date(),
+    };
+
+    // Add reply to comment
+    comment.replies.push(reply);
+    await post.save();
+
+    // Create notification for post owner if they're not the one replying
+    if (post.createdBy.userId.toString() !== req.user.userId.toString()) {
+      const notification = new Notification({
+        userId: post.createdBy.userId,
+        type: 'reply',
+        senderId: req.user.userId,
+        postId,
+        message: `${user.firstName} ${user.lastName} replied to your comment`,
+        createdAt: new Date(),
+      });
+      await notification.save();
+
+      // Emit real-time notification
+      io.to(`user_${post.createdBy.userId}`).emit('notification', {
+        type: 'reply',
+        postId,
+        userId: req.user.userId,
+        commentId,
+        text,
+        sender: {
+          firstName: user.firstName,
+          lastName: user.lastName,
+          profilePicture: user.profilePicture,
+        },
+        createdAt: new Date(),
+      });
+
+      // Send FCM push notification
+      await sendFCMNotification(
+        post.createdBy.userId.toString(),
+        'New Reply',
+        `${user.firstName} ${user.lastName} replied to your comment`,
+        { type: 'reply', postId: postId.toString(), commentId: commentId.toString() }
+      );
+
+      // Update notification counts
+      await NotificationService.triggerCountUpdate(post.createdBy.userId);
+    }
+
+    // Respond with the reply
+    res.status(201).json({ reply });
+  } catch (error) {
+    console.error('Error in reply route:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
 app.get('/user/:userId', async(req, res) => {
     const userId = req.params.userId;
     // Fetch user data based on userId
@@ -568,6 +731,53 @@ app.post('/post', verifyToken, upload.single('photo'), async (req, res) => {
   } catch (error) {
     console.error('Post creation error:', error);
     res.status(500).json({ message: 'Server error' });
+  }
+});
+// to get single post
+app.get('/post/:postId', async (req, res) => {
+  console.log('Get post endpoint hit');
+  try {
+    const { postId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(postId)) {
+      return res.status(400).json({ success: false, message: 'Invalid post ID' });
+    }
+
+    const post = await Post.findById(postId).populate('createdBy.userId', 'firstName lastName profilePicture');
+    if (!post) {
+      return res.status(404).json({ success: false, message: 'Post not found' });
+    }
+
+    let loggedInUserId = null;
+    const authHeader = req.headers['authorization'];
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.split(' ')[1];
+      try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        loggedInUserId = decoded.userId;
+      } catch (err) {
+        console.log('Invalid or missing token:', err.message);
+      }
+    }
+
+    const postData = {
+      ...post.toObject(),
+      createdBy: {
+        userId: post.createdBy.userId._id,
+        name: `${post.createdBy.userId.firstName} ${post.createdBy.userId.lastName}`,
+        profilePicture: post.createdBy.userId.profilePicture || 'default-avatar.png'
+      },
+      likes: post.likes || [],
+      comments: post.comments || [],
+      isLiked: loggedInUserId ? post.likes.includes(loggedInUserId) : false
+    };
+
+    delete postData.createdBy.userId._id;
+
+    res.status(200).json(postData); // Return postData directly
+  } catch (error) {
+    console.error('Error fetching post:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
   }
 });
 //endpoint to get all users
@@ -876,6 +1086,10 @@ const API_BASE_URL = `${protocol}://${host}`;
 });
 
 
+
+
+
+
 app.get('/payment-success', async (req, res) => {
     const { reference, postId } = req.query;
 
@@ -902,7 +1116,6 @@ app.get('/payment-success', async (req, res) => {
         if (data.data.status === 'success') {
             console.log("🎉 Payment Verified Successfully!");
 
-// Save escrow record
             const post = await Post.findById(postId);
             if (!post) {
                 console.log("⚠️ Post not found!");
@@ -911,215 +1124,334 @@ app.get('/payment-success', async (req, res) => {
 
             const email = data.data.customer.email;
             const buyer = await User.findOne({ email });
-            const seller = await User.findById(post.createdBy.userId); // Get seller
+            const seller = await User.findById(post.createdBy.userId);
 
             if (!seller) {
                 console.log("⚠️ Seller not found!");
                 return res.status(404).send("Seller not found.");
             }
 
-            // ✅ Extract required data
-            const buyerId = buyer ? buyer._id.toString() : null;
-            const buyerName = `${buyer.firstName || ''} ${buyer.lastName || ''}`.trim()
-            if(!buyer) {
-              console.log('buyer not found');
-              res.status(404).json({message: 'buyer not found'})
+            if (!buyer) {
+                console.log("⚠️ Buyer not found!");
+                return res.status(404).send("Buyer not found.");
             }
+
+            const buyerId = buyer._id.toString();
+            const buyerName = `${buyer.firstName || ''} ${buyer.lastName || ''}`.trim();
             const amountPaid = data.data.amount / 100;
-            
             const transactionDate = new Date(data.data.paid_at).toLocaleString();
-          
             const productDescription = post.description || "No description available.";
             const sellerId = seller._id.toString();
             const sellerName = `${seller.firstName} ${seller.lastName}`;
             const sellerProfilePic = seller.profilePicture || "default.jpg";
-            
-            const COMMISSION_PERCENT = 2; // Platform earns 2%
 
-const totalAmount = amountPaid; // Already calculated
-const commission = (COMMISSION_PERCENT / 100) * totalAmount;
-const sellerShare = totalAmount - commission;
-            
+            const COMMISSION_PERCENT = 2;
+            const totalAmount = amountPaid;
+            const commission = (COMMISSION_PERCENT / 100) * totalAmount;
+            const sellerShare = totalAmount - commission;
+
             const notification = new Notification({
-  userId: sellerId,       // Who should receive the notification (the seller)
-  senderId: buyerId, // Who triggered the notification (the buyer)
-  type: 'payment',  
-  postId: postId,// New notification type
-  payment: post.description,     
-  message: `${buyer.firstName} ${buyer.lastName} just paid for your product: "${post.description}"`,
-  createdAt: new Date()
-  
-});
-const escrow = new Escrow({
-  product : postId,
-  buyer: buyerId,
-  seller: sellerId,
-  amount: amountPaid,
-  commission,
-  sellerShare,
-  paymentReference: reference,
-  status: 'In Escrow'
-});
+                userId: sellerId,
+                senderId: buyerId,
+                type: 'payment',
+                postId: postId,
+                payment: post.description,
+                message: `${buyer.firstName} ${buyer.lastName} just paid for your product: "${post.description}"`,
+                createdAt: new Date()
+            });
 
-await escrow.save();
+            const escrow = new Escrow({
+                product: postId,
+                buyer: buyerId,
+                seller: sellerId,
+                amount: amountPaid,
+                commission,
+                sellerShare,
+                paymentReference: reference,
+                status: 'In Escrow'
+            });
 
-const transaction = new Transaction({
-  buyerId,
-  sellerId,
-  productId: postId,
-  amount: amountPaid ,
-  status: 'pending'
-});
-await transaction.save();
-console.log("✅ Transaction record saved.");
-post.isSold = true;
-await post.save();
+            await escrow.save();
 
-console.log("✅ Escrow record saved.");
+            const transaction = new Transaction({
+                buyerId,
+                sellerId,
+                productId: postId,
+                amount: amountPaid,
+                status: 'pending',
+                viewed: false
+            });
+            await transaction.save();
+            console.log("✅ Transaction record saved.");
+            post.isSold = true;
+            await post.save();
 
-await notification.save();
-console.log('notification sent')
-// Send real-time notification via Socket.IO
-io.to(sellerId.toString()).emit('notification', notification);
-            
+            await NotificationService.triggerCountUpdate(buyerId);
+            await NotificationService.triggerCountUpdate(seller._id.toString());
+            console.log("✅ Escrow record saved.");
 
-// Function to generate the receipt PDF
-async function generateReceiptPDF(reference, amountPaid, transactionDate, buyerName, email, productName, productDescription) {
-    return new Promise((resolve, reject) => {
-        const doc = new PDFDocument();
-        const receiptPath = path.join(__dirname, `receipts/${reference}.pdf`);
+            await notification.save();
+            console.log('notification sent');
+            io.to(sellerId.toString()).emit('notification', notification);
 
-        // Ensure receipts folder exists
-        if (!fs.existsSync(path.join(__dirname, "receipts"))) {
-            fs.mkdirSync(path.join(__dirname, "receipts"));
-        }
+            // Generate receipt image
+            const receiptHtml = `
+                <html>
+                <head>
+                    <style>
+                        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+                        .receipt-container { max-width: 400px; margin: auto; padding: 20px; background: white; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); text-align: left; }
+                        .header { text-align: center; padding-bottom: 10px; border-bottom: 2px solid #007bff; }
+                        .header h2 { color: #007bff; margin: 5px 0; }
+                        .status { text-align: center; font-size: 18px; padding: 10px; color: green; font-weight: bold; }
+                        .details p { font-size: 14px; margin: 5px 0; }
+                        .details span { font-weight: bold; }
+                    </style>
+                </head>
+                <body>
+                    <div class="receipt-container">
+                        <div class="header">
+                            <h2>Payment Receipt</h2>
+                        </div>
+                        <p class="status">✅ Payment Successful</p>
+                        <div class="details">
+                            <p><span>Transaction Reference:</span> ${reference}</p>
+                            <p><span>Amount Paid:</span> ₦${Number(amountPaid).toLocaleString('en-Ng')}</p>
+                            <p><span>Payment Date:</span> ${transactionDate}</p>
+                            <p><span>Buyer Name:</span> ${buyerName}</p>
+                            <p><span>Buyer Email:</span> ${email}</p>
+                            <p><span>Description:</span> ${productDescription}</p>
+                        </div>
+                    </div>
+                </body>
+                </html>`;
 
-        const stream = fs.createWriteStream(receiptPath);
-        doc.pipe(stream);
+            const imagePath = path.join(__dirname, `receipts/receipt_${reference}.png`);
+            if (!fs.existsSync(path.join(__dirname, "receipts"))) {
+                fs.mkdirSync(path.join(__dirname, "receipts"));
+            }
+            await htmlToImage.toPng(document.createElement('div'), { output: imagePath, html: receiptHtml });
+            console.log("🖼️ Receipt Image Generated:", imagePath);
 
-        // PDF Content
-        doc.fontSize(18).text("Payment Receipt", { align: "center" });
-        doc.moveDown();
-        doc.fontSize(12).text(`Transaction Reference: ${reference}`);
-        doc.text(`Amount Paid: ₦${amountPaid}`);
-        doc.text(`Payment Date: ${transactionDate}`);
-        doc.text(`Buyer Name: ${buyerName}`);
-        doc.text(`Buyer Email: ${email}`);
-        
-        doc.text(`Description: ${productDescription}`);
-        doc.moveDown();
-        doc.text("Thank you for your purchase!", { align: "center" });
+            // Store image in Cloudinary (for production)
+            let receiptUrl = imagePath;
+            if (process.env.NODE_ENV === 'production') {
+                const cloudinaryResult = await cloudinary.uploader.upload(imagePath, {
+                    folder: 'receipts',
+                    public_id: `receipt_${reference}`
+                });
+                receiptUrl = cloudinaryResult.secure_url;
+                fs.unlinkSync(imagePath); // Clean up local file
+            } else {
+                receiptUrl = `${req.protocol}://${req.get('host')}/receipts/receipt_${reference}.png`;
+            }
 
-        doc.end();
-
-        stream.on("finish", () => resolve(receiptPath));
-        stream.on("error", reject);
-    });
-}
-
-// ✅ Generate the PDF
-const pdfPath = await generateReceiptPDF(reference, amountPaid, transactionDate, buyerName, email, productDescription);
-console.log("✅ Receipt PDF Generated:", pdfPath);
-
-            // ✅ Send receipt page
             res.send(`
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Payment Receipt</title>
-        <style>
-            body { font-family: Arial, sans-serif; background-color: #f8f8f8; text-align: center; padding: 20px; }
-            .receipt-container {
-                max-width: 400px;
-                margin: auto;
-                padding: 20px;
-                background: white;
-                border-radius: 10px;
-                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-                text-align: left;
-            }
-            .header {
-                text-align: center;
-                padding-bottom: 10px;
-                border-bottom: 2px solid #007bff;
-            }
-            .header img { width: 80px; }
-            .header h2 { color: #007bff; margin: 5px 0; }
-            .status { text-align: center; font-size: 18px; padding: 10px; color: green; font-weight: bold; }
-            .details p { font-size: 14px; margin: 5px 0; }
-            .details span { font-weight: bold; }
-            .footer {
-                text-align: center;
-                font-size: 12px;
-                color: gray;
-                padding-top: 10px;
-                border-top: 1px solid #ddd;
-            }
-            .share-button {
-                display: block;
-                width: 100%;
-                padding: 10px;
-                margin-top: 10px;
-                background: #28a745;
-                color: white;
-                border: none;
-                border-radius: 5px;
-                cursor: pointer;
-                text-align: center;
-            }
-            .share-button:hover { background: #218838; }
-        </style>
-    </head>
-    <body>
-        <div class="receipt-container">
-            <div class="header">
-                <h2>Payment Receipt</h2>
-            </div>
-
-            <p class="status">✅ Payment Successful</p>
-
-            <div class="details">
-                <p><span>Transaction Reference:</span> ${reference}</p>
-                <p><span>Amount Paid:</span> ₦${Number(amountPaid).toLocaleString('en-Ng')}</p>
-                <p><span>Payment Date:</span> ${transactionDate}</p>
-                <p><span>Buyer Name:</span> ${buyerName}</p>
-                <p><span>Buyer Email:</span> ${email}</p>
-                
-                <p><span>Description:</span> ${productDescription}</p>
-            </div>
-
-            <button class="share-button" onclick="redirectToChat()">📤 Share Receipt</button>
-
-            <div class="footer">
-                <p>© 2025 Salmart Technologies. All rights reserved.</p>
-            </div>
-        </div>
-
-<script>
-    function redirectToChat() {
-        const sellerId = "${sellerId}";
-        const userId = "${buyerId}";
-        const sellerName = "${sellerName}";
-        const sellerProfilePic = "${sellerProfilePic}";
-        const reference = "${reference}";
-
-        localStorage.setItem("recipient_username", sellerName);
-        localStorage.setItem("recipient_profile_picture_url", sellerProfilePic);
-
-        // Send the PDF receipt to the seller via chat
-        
-</script>
-    </body>
-    </html>
-`);
+                <!DOCTYPE html>
+                <html lang="en">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>Payment Receipt</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; background-color: #f8f8f8; text-align: center; padding: 20px; }
+                        .receipt-container {
+                            max-width: 400px;
+                            margin: auto;
+                            padding: 20px;
+                            background: white;
+                            border-radius: 10px;
+                            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                            text-align: left;
+                        }
+                        .header {
+                            text-align: center;
+                            padding-bottom: 10px;
+                            border-bottom: 2px solid #007bff;
+                        }
+                        .header h2 { color: #007bff; margin: 5px 0; }
+                        .status { text-align: center; font-size: 18px; padding: 10px; color: green; font-weight: bold; }
+                        .details p { font-size: 14px; margin: 5px 0; }
+                        .details span { font-weight: bold; }
+                        .footer {
+                            text-align: center;
+                            font-size: 12px;
+                            color: gray;
+                            padding-top: 10px;
+                            border-top: 1px solid #ddd;
+                        }
+                        .share-button {
+                            display: block;
+                            width: 100%;
+                            padding: 10px;
+                            margin-top: 10px;
+                            background: #28a745;
+                            color: white;
+                            border: none;
+                            border-radius: 5px;
+                            cursor: pointer;
+                            text-align: center;
+                        }
+                        .share-button:hover { background: #218838; }
+                    </style>
+                </head>
+                <body>
+                    <div class="receipt-container">
+                        <div class="header">
+                            <h2>Payment Receipt</h2>
+                        </div>
+                        <p class="status">✅ Payment Successful</p>
+                        <div class="details">
+                            <p><span>Transaction Reference:</span> ${reference}</p>
+                            <p><span>Amount Paid:</span> ₦${Number(amountPaid).toLocaleString('en-Ng')}</p>
+                            <p><span>Payment Date:</span> ${transactionDate}</p>
+                            <p><span>Buyer Name:</span> ${buyerName}</p>
+                            <p><span>Buyer Email:</span> ${email}</p>
+                            <p><span>Description:</span> ${productDescription}</p>
+                        </div>
+                        <button class="share-button" onclick="shareReceipt()">📤 Share Receipt</button>
+                        <div class="footer">
+                            <p>© 2025 Salmart Technologies. All rights reserved.</p>
+                        </div>
+                    </div>
+                    <script>
+                        async function shareReceipt() {
+                            const response = await fetch('/share-receipt', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    reference: "${reference}",
+                                    buyerId: "${buyerId}",
+                                    sellerId: "${sellerId}",
+                                    amountPaid: ${amountPaid},
+                                    transactionDate: "${transactionDate}",
+                                    buyerName: "${buyerName}",
+                                    email: "${email}",
+                                    productDescription: "${productDescription}"
+                                })
+                            });
+                            const result = await response.json();
+                            if (result.success) {
+                                alert('Receipt shared successfully!');
+                                window.location.href = '/chat.html?recipientId=${sellerId}';
+                            } else {
+                                alert('Failed to share receipt: ' + result.message);
+                            }
+                        }
+                    </script>
+                </body>
+                </html>
+            `);
         }
     } catch (error) {
         console.error('🚨 Error during payment verification:', error.message);
         res.status(500).send(`An error occurred: ${error.message}`);
     }
 });
+            
+            
+app.post('/share-receipt', async (req, res) => {
+    try {
+        const { reference, buyerId, sellerId, amountPaid, transactionDate, buyerName, email, productDescription } = req.body;
+
+        if (!reference || !buyerId || !sellerId) {
+            return res.status(400).json({ success: false, message: 'Missing required fields' });
+        }
+
+        // Verify buyer and seller exist
+        const buyer = await User.findById(buyerId);
+        const seller = await User.findById(sellerId);
+        if (!buyer || !seller) {
+            return res.status(404).json({ success: false, message: 'Buyer or seller not found' });
+        }
+
+        // Check if image exists or regenerate if needed
+        let receiptUrl;
+        const localImagePath = path.join(__dirname, `receipts/receipt_${reference}.png`);
+        if (fs.existsSync(localImagePath)) {
+            receiptUrl = process.env.NODE_ENV === 'production'
+                ? (await cloudinary.uploader.upload(localImagePath, { folder: 'receipts', public_id: `receipt_${reference}` })).secure_url
+                : `${req.protocol}://${req.get('host')}/receipts/receipt_${reference}.png`;
+        } else {
+            // Regenerate image if missing
+            const receiptHtml = `
+                <html>
+                <head>
+                    <style>
+                        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+                        .receipt-container { max-width: 400px; margin: auto; padding: 20px; background: white; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); text-align: left; }
+                        .header { text-align: center; padding-bottom: 10px; border-bottom: 2px solid #007bff; }
+                        .header h2 { color: #007bff; margin: 5px 0; }
+                        .status { text-align: center; font-size: 18px; padding: 10px; color: green; font-weight: bold; }
+                        .details p { font-size: 14px; margin: 5px 0; }
+                        .details span { font-weight: bold; }
+                    </style>
+                </head>
+                <body>
+                    <div class="receipt-container">
+                        <div class="header">
+                            <h2>Payment Receipt</h2>
+                        </div>
+                        <p class="status">✅ Payment Successful</p>
+                        <div class="details">
+                            <p><span>Transaction Reference:</span> ${reference}</p>
+                            <p><span>Amount Paid:</span> ₦${Number(amountPaid).toLocaleString('en-Ng')}</p>
+                            <p><span>Payment Date:</span> ${transactionDate}</p>
+                            <p><span>Buyer Name:</span> ${buyerName}</p>
+                            <p><span>Buyer Email:</span> ${email}</p>
+                            <p><span>Description:</span> ${productDescription}</p>
+                        </div>
+                    </div>
+                </body>
+                </html>`;
+            if (!fs.existsSync(path.join(__dirname, "receipts"))) {
+                fs.mkdirSync(path.join(__dirname, "receipts"));
+            }
+            await htmlToImage.toPng(document.createElement('div'), { output: localImagePath, html: receiptHtml });
+            receiptUrl = process.env.NODE_ENV === 'production'
+                ? (await cloudinary.uploader.upload(localImagePath, { folder: 'receipts', public_id: `receipt_${reference}` })).secure_url
+                : `${req.protocol}://${req.get('host')}/receipts/receipt_${reference}.png`;
+            if (process.env.NODE_ENV === 'production') {
+                fs.unlinkSync(localImagePath); // Clean up local file
+            }
+        }
+
+        // Save message to chat
+        const newMessage = new Message({
+            senderId: buyerId,
+            receiverId: sellerId,
+            messageType: 'image',
+            attachment: { url: receiptUrl },
+            status: 'sent',
+            isRead: false,
+            createdAt: new Date(),
+            // Optionally add a caption:
+            // text: 'Payment receipt for your purchase'
+        });
+
+        await newMessage.save();
+        console.log("📩 Receipt Image Sent to Chat!");
+
+        // Emit real-time message to seller
+        io.to(`user_${sellerId}`).emit('receiveMessage', newMessage);
+
+        // Send FCM push notification
+        await sendFCMNotification(
+            sellerId,
+            'New Message',
+            `${buyer.firstName} ${buyer.lastName} sent you a payment receipt`,
+            { type: 'message', senderId: buyerId }
+        );
+
+        await NotificationService.triggerCountUpdate(sellerId);
+
+        res.json({ success: true, message: 'Receipt shared successfully', receiptUrl });
+    } catch (error) {
+        console.error("🚨 Error sharing receipt:", error);
+        res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+});
+        
 const nodemailer = require('nodemailer');
 
 async function sendEmail(to, subject, message) {
@@ -1161,15 +1493,6 @@ app.post("/send-receipt", async (req, res) => {
         res.status(500).json({ success: false, message: error.message });
     }
 });
-
-
-
-
-        
-  
-            
-          
-            
 
 app.post("/generate-receipt-image", async (req, res) => {
     try {
@@ -1268,13 +1591,7 @@ app.get('/messages', async (req, res) => {
   }
 });
 
-
-
 // Route to fetch messages for a user
-
-
-
-
 app.get("/api/messages", async (req, res) => {
   const { userId } = req.query;
 
@@ -1363,28 +1680,7 @@ app.get('/notifications', verifyToken, async (req, res) => {
     }
 });
 
-app.put('/notifications/mark-as-read', verifyToken, async (req, res) => {
-    try {
-        const userId = req.user.userId; // Ensure userId is correctly extracted
-        console.log('User ID:', userId);
 
-        if (!userId) {
-            return res.status(401).json({ message: 'Unauthorized' });
-        }
-
-        const result = await Notification.updateMany(
-            { userId, isRead: false }, // Find unread notifications for this user
-            { $set: { isRead: true } } // Mark them as read
-        );
-
-        console.log('Notifications updated:', result);
-
-        res.json({ message: 'Notifications marked as read' });
-    } catch (error) {
-        console.error('Error marking notifications as read:', error);
-        res.status(500).json({ message: 'Server error' });
-    }
-});
 // DELETE post route 
 app.delete('/post/delete/:postId', verifyToken, async (req, res) => {
     try {
@@ -1925,7 +2221,9 @@ app.post('/verify-payment', async (req, res) => {
         sellerId,
         productId,
         amount: payment.amount / 100,
-        status: 'pending'
+        status: 'pending',
+        viewed: false,
+        createdAt: new Date(),
       });
 
       return res.redirect('/transactions');
@@ -2085,7 +2383,20 @@ app.post('/confirm-delivery/:transactionId', verifyToken, async (req, res) => {
     transaction.status = 'released';
     await transaction.save();
     console.log('[TRANSACTION STATUS UPDATED TO "released"]');
-
+const buyerId = transaction.buyerId._id.toString()
+const sellerId = transaction.sellerId._id.toString()
+await NotificationService.triggerCountUpdate(buyerId)
+await NotificationService.triggerCountUpdate(sellerId)
+io.to(`user_${buyerId}`).emit('badge-update', {
+      type: 'deals',
+      count: await Transaction.countDocuments({ $or: [{ buyerId }, { sellerId: buyerId }], status: 'pending' }),
+      userId: buyerId
+    });
+    io.to(`user_${sellerId}`).emit('badge-update', {
+      type: 'deals',
+      count: await Transaction.countDocuments({ $or: [{ buyerId: sellerId }, { sellerId }], status: 'pending' }),
+      userId: sellerId
+    });
     // Update escrow status
     const escrowPostId = transaction.productId?._id;
     const updatedEscrow = await Escrow.findOneAndUpdate(
@@ -2242,13 +2553,14 @@ app.get('/get-bank-details', verifyToken, async (req, res) => {
 
 // Request Refund Endpoint
 app.post('/request-refund/:transactionId', verifyToken, async (req, res) => {
+  console.log('REQUEST REFUND ENDPOINT HIT')
   const userId = req.user.userId;
   const { transactionId } = req.params;
-  const { reason } = req.body;
+  const { reason, evidence } = req.body;
 
   try {
     const transaction = await Transaction.findById(transactionId);
-
+console.log( `Reason: ${reason}` )
     if (!transaction) {
       return res.status(404).json({ error: 'Transaction not found' });
     }
@@ -2316,7 +2628,7 @@ app.get('/search', async (req, res) => {
 });
 
 // GET all products (not sold)
-app.get('/products', async (req, res) => {
+app.get('/products', verifyToken, async (req, res) => {
   try {
     const { sellerId } = req.query; // Get sellerId from query parameters
 
@@ -2346,7 +2658,7 @@ app.get('/products', async (req, res) => {
 });
 
 // Backend route to update product price
-app.put('/posts/:postId/update-price', async (req, res) => {
+app.put('/posts/:postId/update-price', verifyToken, async (req, res) => {
   const { postId } = req.params;
   const { newPrice } = req.body;
 
@@ -2404,7 +2716,7 @@ app.post('/resolve-account', async (req, res) => {
 //Register admin
 
 
-const SECRET_ADMIN_CODE = "Chris@23%#2025"; 
+const SECRET_ADMIN_CODE = process.env.SECRET_ADMIN_CODE; 
 
 // Admin Registration Route
 app.post("/admin/register", async (req, res) => {
@@ -2695,24 +3007,78 @@ admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
   databaseURL: 'https://salmart-330ab.firebaseio.com' // Replace with your URL
 });
-
-// Save FCM Tokens (Matches your frontend's /save-token endpoint)
-app.post('/save-token', async (req, res) => {
-  const { userId, token } = req.body;
-
+async function sendFCMNotification(userId, title, body, data = {}) {
   try {
-    // Save to Firestore (or your database)
-    await admin.firestore().collection('users').doc(userId).set({
-      fcmToken: token,
-      updatedAt: admin.firestore.FieldValue.serverTimestamp()
-    }, { merge: true });
-
-    res.status(200).send('Token saved');
+    const user = await User.findById(userId);
+    const token = user?.fcmToken;
+    if (!token) {
+      console.log(`No FCM token for user ${userId}`);
+      return;
+    }
+    // Check notification preference
+    if (data.type && !user.notificationPreferences[data.type]) {
+      console.log(`User ${userId} has disabled ${data.type} notifications`);
+      return;
+    }
+    const message = {
+      token,
+      notification: { title, body },
+      data: { ...data, userId: userId.toString() },
+      webpush: {
+        headers: { Urgency: 'high' },
+        notification: {
+          icon: 'https://salmart.vercel.app/favicon.ico',
+          requireInteraction: true,
+        },
+      },
+    };
+    await admin.messaging().send(message);
+    console.log(`FCM notification sent to user ${userId}: ${title}`);
   } catch (err) {
-    console.error('Error saving token:', err);
-    res.status(500).send('Error saving token');
+    console.error(`Error sending FCM notification to user ${userId}:`, err);
+    if (err.code === 'messaging/registration-token-not-registered') {
+      await User.findByIdAndUpdate(userId, { fcmToken: null, notificationEnabled: false });
+      console.log(`Removed invalid FCM token for user ${userId}`);
+    }
+  }
+}
+//notification-preferences
+app.patch('/user/notification-preferences', verifyToken, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const preferences = req.body; // e.g., { likes: false, comments: true }
+    await User.findByIdAndUpdate(userId, { notificationPreferences: preferences });
+    res.json({ success: true, message: 'Notification preferences updated' });
+  } catch (error) {
+    console.error('Error updating notification preferences:', error);
+    res.status(500).json({ error: 'Server error' });
   }
 });
+    
+app.post('/api/save-fcm-token', verifyToken, async (req, res) => {
+  try {
+    const { token } = req.body;
+    const userId = req.user.userId;
+
+    if (!token) {
+      return res.status(400).json({ error: 'Token is required' });
+    }
+
+    // Save token to mongoDb
+    await User.findByIdAndUpdate(userId, { fcmToken: token, notificationEnabled: true });
+        res.json({ success: true });
+
+await User.findByIdAndUpdate(userId, { 
+    $addToSet: { fcmTokens: token }, // Avoid duplicates
+    notificationEnabled: true 
+});
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error saving FCM token:', error);
+    res.status(500).json({ error: 'Failed to save token' });
+  }
+});
+
 
 // Send Notification (Customize as needed)
 app.post('/send-notification', async (req, res) => {
@@ -2884,4 +3250,175 @@ app.post('/api/save-fcm-token', verifyToken, async (req, res) => {
     console.error('Error saving FCM token:', error);
     res.status(500).json({ error: 'Failed to save token' });
   }
+});
+// notification badge
+app.get('/notification-counts', verifyToken, async (req, res) => {
+  try {
+    const userId = req.query.userId || req.user.userId; // Fallback to token userId
+    if (!userId) {
+      return res.status(400).json({ error: 'User ID is required' });
+    }
+    console.log('[NOTIFICATION COUNTS] Request received from user:', userId);
+
+    const counts = await NotificationService.getNotificationCounts(userId);
+
+    console.log('[NOTIFICATION COUNTS] Counts retrieved:', { userId, counts });
+    res.json(counts);
+  } catch (error) {
+    console.error('[NOTIFICATION COUNTS ERROR]', { userId: req.user.userId, error: error.message });
+    res.status(500).json({ error: 'Error fetching notification counts' });
+  }
+});
+
+
+// Notification Service Functions
+const NotificationService = {
+  async sendCountsToUser(userId) {
+    try {
+      const counts = await this.getNotificationCounts(userId);
+      
+        io.to(`user_${userId}`).emit('badge-update', { type: 'alerts', count: counts.alertsCount, userId });
+        io.to(`user_${userId}`).emit('badge-update', { type: 'messages', count: counts.messagesCount, userId });
+        io.to(`user_${userId}`).emit('badge-update', { type: 'deals', count: counts.dealsCount, userId });
+        console.log(`Sent counts to user ${userId} via room user_${userId}:`, counts);
+    
+    } catch (error) {
+      console.error('Error sending counts:', error);
+    }
+  },
+  async getNotificationCounts(userId) {
+    try {
+      console.log('[GET COUNTS] Starting for user:', userId);
+      
+      const [alertsCount, messagesCount, dealsCount] = await Promise.all([
+        Notification.countDocuments({ userId, isRead: false }),
+        Message.countDocuments({ receiverId: userId, status: 'sent' }),
+        Transaction.countDocuments({
+          $or: [{ buyerId: userId }, { sellerId: userId }],
+          status: 'pending' // Count only unviewed deals
+        })
+      ]);
+
+      const counts = { alertsCount, messagesCount, dealsCount };
+      console.log('[GET COUNTS] Retrieved counts:', { userId, counts });
+      
+      return counts;
+    } catch (error) {
+      console.error('[GET COUNTS ERROR]', { userId, error: error.message });
+      return { alertsCount: 0, messagesCount: 0, dealsCount: 0 };
+    }
+  },
+  async triggerCountUpdate(userId) {
+    console.log('[TRIGGER UPDATE] Starting for user:', userId);
+    await this.sendCountsToUser(userId);
+  }
+};
+// Alerts
+app.post('/alerts/mark-as-viewed', verifyToken, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const result = await Notification.updateMany(
+      { userId, isRead: false },
+      { $set: { isRead: true } }
+    );
+    if (result.modifiedCount > 0) {
+      
+        io.to(`user_${userId}`).emit('badge-update', { type: 'alerts', count: 0, userId });
+      
+      await NotificationService.triggerCountUpdate(userId);
+      res.json({ success: true, message: 'Alerts marked as viewed', updated: result.modifiedCount });
+    } else {
+      res.json({ success: true, message: 'No unread alerts to mark as viewed' });
+    }
+  } catch (error) {
+    console.error('Error marking alerts as viewed:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Messages
+app.post('/messages/mark-as-viewed', verifyToken, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const result = await Message.updateMany(
+      { receiverId: userId, status: 'sent' },
+      { $set: { status: 'seen' } } // Match Socket.IO 'markAsSeen'
+    );
+    if (result.modifiedCount > 0) {
+      
+        io.to(`user_${userId}`).emit('badge-update', { type: 'messages', count: 0, userId });
+      
+      await NotificationService.triggerCountUpdate(userId);
+      res.json({ success: true, message: 'Messages marked as viewed', updated: result.modifiedCount });
+    } else {
+      res.json({ success: true, message: 'No unread messages to mark as viewed' });
+    }
+  } catch (error) {
+    console.error('Error marking messages as viewed:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Deals
+app.post('/deals/mark-as-viewed', verifyToken, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const result = await Transaction.updateMany(
+      {
+        $or: [{ buyerId: userId }, { sellerId: userId }],
+        status: 'pending', // Only pending deals
+        viewed: false // Only unviewed
+      },
+      { $set: { viewed: true } }
+    );
+    console.log(`[DEALS MARK AS VIEWED] Updated ${result.modifiedCount} transactions for user ${userId}`);
+    if (result.modifiedCount > 0) {
+      io.to(`user_${userId}`).emit('badge-update', { type: 'deals', count: await Transaction.countDocuments({ $or: [{ buyerId: userId }, { sellerId: userId }], status: 'pending' }), userId });
+      await NotificationService.triggerCountUpdate(userId);
+      res.json({ success: true, message: 'Deals marked as viewed', updated: result.modifiedCount });
+    } else {
+      res.json({ success: true, message: 'No unviewed pending deals to mark' });
+    }
+  } catch (error) {
+    console.error('Error marking deals as viewed:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+io.on('connection', (socket) => {
+  console.log('New client connected:', socket.id);
+
+  socket.on('joinRoom', async (userId) => {
+  try {
+    if (!mongoose.Types.ObjectId.isValid(userId)) return;
+    if (!socket.rooms.has(`user_${userId}`)) {
+      await User.findByIdAndUpdate(userId, { socketId: socket.id }, { new: true });
+      socket.join(`user_${userId}`);
+      console.log(`User ${userId} joined room user_${userId}`);
+      await NotificationService.sendCountsToUser(userId);
+    }
+  } catch (err) {
+    console.log('Error in joinRoom:', err);
+  }
+});
+
+  socket.on('badge-update', async ({ type, count, userId }) => {
+    try {
+      io.to(`user_${userId}`).emit('badge-update', { type, count, userId });
+      console.log(`Broadcasted badge-update for ${type} to user ${userId}`);
+      await NotificationService.sendCountsToUser(userId); // Sync full counts
+    } catch (error) {
+      console.error('Error broadcasting badge-update:', error);
+    }
+  });
+
+  socket.on('disconnect', async () => {
+    try {
+      console.log('Client disconnected:', socket.id);
+      await User.updateOne({ socketId: socket.id }, { socketId: null });
+      console.log(`Cleared socketId ${socket.id}`);
+    } catch (err) {
+      console.log('Error handling disconnect:', err);
+    }
+  });
 });

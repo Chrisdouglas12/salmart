@@ -3,7 +3,9 @@ body {
       font-size: 16px;
       padding-top: 0px;
       padding-bottom: 0px;
-      
+      background-color: #F9f9f9;
+      color: #333;
+      padding: 0;
   }
   h1{
     font-size: 16px;
@@ -23,96 +25,49 @@ body {
 #posts-container {
   max-width: 100%;
   margin: 0 auto;
-  margin-bottom: 25%;
-  padding: 0;
+  padding: 8px;
   display: flex;
   flex-direction: column-reverse;
+  gap: 10px;
+}
+.post * {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 .post {
-  background-color: #fff;
-  border: 1px solid #e1e8ed;
+  background-color: #FFFFFF;
+  border: none;
   margin-bottom: 5px;
   height: 20%;
+ border-radius:12px ;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   padding: 15px;
-  transition: all 0.3s ease;
+  overflow: hidden;
+
 }
 @media only screen and(min-width: 700px){
   #post-container{
     max-width: 600px;
   }
 }
-/* Post Header Three-Dot Menu */
-.post-menu {
-    position: relative;
-}
 
-.menu-icon {
-    background: none;
-    border: none;
-    font-size: 20px;
-    cursor: pointer;
-    color: #888;
-}
 
-.menu-options {
-    position: absolute;
-    top: 20px;
-    right: 0;
-    background: white;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    z-index: 10;
-    display: none;
-    padding: 10px;
-    list-style: none;
-}
-
-.menu-options ul {
-    padding: 0;
-    margin: 0;
-}
-
-.menu-options li {
-    margin: 0;
-    padding: 5px 10px;
-    cursor: pointer;
-}
-
-.menu-options li button {
-    background: none;
-    border: none;
-    font-size: 14px;
-    color: #555;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-}
-
-.menu-options li button:hover {
-    background-color: #f0f0f0;
-}
-
-/* Show menu when active */
-.menu-options.hidden {
-    display: none;
-}
-
-.menu-options:not(.hidden) {
-    display: block;
-}
 .post-header {
   display: flex;
   align-items: center;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
+  position: relative;
 }
 
 .post-avatar {
-  width: 40px;
-  height: 40px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   margin-right: 10px;
+  object-fit: cover;
+  border: 2px solid #E8ECEF;
 }
 .user-pic{
   border: solid 1px #F4F2F8;
@@ -127,12 +82,20 @@ body {
 .post-user-name {
   font-weight: bold;
   margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #2A6A6A;
+  text-decoration: none;
+  transition: color 0.2 ease;
+}
+.post-user-name:hover{
+  color: #FF6F61;
 }
 
 .post-time {
-  font-size: 12px;
-  color: #657786;
-  margin-top: 4px;
+  font-size: 13px;
+  color: #6B7280;
+  margin-top: 2px;
 }
 .dm-serif-display-regular {
   font-family: "DM Serif Display", serif;
@@ -159,7 +122,7 @@ body {
   width: 100%;
   max-width: 100%;
   margin-top: 10px;
-  border-radius: 0px;
+  border-radius: 8px;
 }
 
 .post-actions {
@@ -168,45 +131,16 @@ body {
   margin-top: 15px;
 }
 
-.post-actions button {
-  background-color: transparent;
-  border: none;
-  color: #1da1f2;
-  font-size: 14px;
-  cursor: pointer;
-  transition: color 0.2s ease;
-}
 
-.post-actions button:hover {
-  color: #005fa1;
-}
   
   .post-container {
   background-color: #fff;
   border: 1px solid #ddd;
-  padding: 15px;
-  margin-bottom: 20px;
+  padding: 5px;
+  gap: 10px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
-.product-posts div{
-  border: solid 1px #fff;
-  background-color: white;
-  box-shadow: 0 0 10px 0 #ddd;
-  width: 100vw;
-  height: 200px;
-  margin: 2px;
-  border-radius: 4px;
-}
-.product-posts{
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  gap: 0px;
-  text-align: center;
-  align-items: center;
-  justify-content: center;
-  margin- top: -10px
-}
+
 
 a{
   text-decoration: none;
@@ -390,6 +324,30 @@ a::hover{
     color: #555;
     cursor: pointer;
 }
+.post-actions button {
+    background: none;
+    border: none;
+    color: #6B7280;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px;
+    border-radius: 6px;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.post-actions button:hover {
+    
+    color: #2A6A6A;
+}
+
+.post-actions i {
+    color: #28a745; /* Keep green for icons */
+    font-size: 16px;
+}
 
 .comment-section {
     border-top: 1px solid #ddd;
@@ -513,24 +471,29 @@ input:focus{
   margin-top: 8px;
 }
 .follow-button {
-    background-color: #fff;
+    background-color: transparent;
     color: #28a745;
     border: 0.1px solid #28a745;
-    padding: 5px 10px;
-    border-radius: 5px;
+    padding: 6px 12px;
+    border-radius: 20px;
     cursor: pointer;
-    font-size: 12px;
+    font-size: 13px;
+    font-weight: 500px;
+    transition: background-color 0.2s ease, color 0.2s ease;
     margin-right: 5%; /* Align to the right */
     margin-top: -10px;
 }
 
 .follow-button:hover {
-    background-color: #0056b3;
+    background-color: #28a745;
+    color: #FFFFFF;
 }
 
 .follow-button:disabled {
     background-color: #6c757d;
     cursor: not-allowed;
+    cursor: not-allowed;
+    color: #9CA3AF;
 }
 .post-options {
   position: relative;
@@ -887,3 +850,24 @@ input:focus{
     color: #555;
 }
     
+.notification-badge {
+  display: none;
+  background-color: #28a745;
+  color: white;
+  border-radius: 50%;
+  padding: 2px 6px ;
+  font-size: 0.40rem;
+  position: absolute;
+  top: -11px;
+  right: 8px;
+  z-index: 120;
+  
+}
+/* For navbar badges */
+#navbar ul li {
+  position: relative; /* Essential for badge positioning */
+}
+
+#messages-badge{
+  margin-right: 18px;
+}

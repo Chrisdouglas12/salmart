@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SALMART-Home</title>
-</head>
+
 <link rel="stylesheet" href="./Style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
    <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -48,16 +48,22 @@
   
   <div style="text-align: center">
 
-  <nav id="navbar">
-    <ul>
-      <li class="active"><a href="index.html"><i class="fas fa-store"></i>Market</a></li>
-      <li><a href="Alerts.html"><i class="fas fa-bell"></i>Alerts</a></li>
-      <li><a href="Messages.html"><i class="fas fa-comments"></i>Messages</a></li> 
-      <li><a href="Deals.html"><i class="fas fa-cart-plus"></i>Deals</a></li>
-      <li><a href="Profile.html"><i class="fas fa-user"></i>Profile</a></li>
+  
+    
+    <nav id="navbar">
+  <ul>
+    <li class="active"><a href="index.html"><i class="fas fa-store"></i>Market</a></li>
+    <li><a href="Alerts.html" onclick="clearBadge('alerts')"><i class="fas fa-bell"></i>Alerts <span class="notification-badge" id="alerts-badge"></span></a></li>
+    <li><a href="Messages.html" onclick="clearBadge('messages')"><i class="fas fa-comments"></i>Messages <span class="notification-badge" id="messages-badge"></span></a></li> 
+    <li><a href="Deals.html" onclick="clearBadge('deals')"><i class="fas fa-cart-plus"></i>Deals <span class="notification-badge" id="deals-badge"></span></a></li>
+    <li><a href="Profile.html"><i class="fas fa-user"></i>Profile</a></li>
+  </ul>
+</nav>
 
-    </ul>
-  </nav>
+    <!-- Add to body -->
+<div id="toast" style="display: none; position: fixed; bottom: 20px; right: 20px; padding: 10px 20px; border-radius: 5px; color: #fff; z-index: 1000;"></div>
+
+  
   </div>
   <div class="side-bar">
     <div class="profile-sec">
@@ -275,8 +281,11 @@ a .active {
 <!-- Load Socket.IO from CDN -->
 <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
 <script>
+  const API_BASE_URL = window.location.hostname === 'localhost' 
+  ? 'http://localhost:3000' 
+  : 'https://salmart-production.up.railway.app';
   // Connect to your backend (replace with actual URL)
-  const socket = io('http://localhost:3000');
+  const socket = io(`${API_BASE_URL}`);
 
   // Check connection
   socket.on('connect', () => {
@@ -399,9 +408,6 @@ a .active {
   // Category Filter Functionality
 let currentCategory = 'all';
 let allPostsCache = [];
-const API_BASE_URL = window.location.hostname === 'localhost' 
-  ? 'http://localhost:3000' 
-  : 'https://salmart-production.up.railway.app';
 document.addEventListener('DOMContentLoaded', function() {
   const categoryBtns = document.querySelectorAll('.category-btn');
   
@@ -472,40 +478,368 @@ document.addEventListener('DOMContentLoaded', function() {
     appId: "1:396604566472:web:60eff66ef26ab223a12efd"
   };
 
-  // Initialize Firebase
   const app = firebase.initializeApp(firebaseConfig);
   const messaging = firebase.messaging();
 
-  // Request permission and get token
-  
-if ('Notification' in window) {
-  Notification.requestPermission().then((permission) => {
-    if (permission === 'granted') {
-      console.log('Notification permission granted.');
-      firebase.messaging().getToken({ 
-        vapidKey: "BCtAsyYJYCSfpg_kXL2aO59szQsPFE3DvmqqLOnW03JTVR88Jb435-jDnUgj0j0mL5VCWLiGGfErTuwQ-XUArho" 
-      }).then((token) => {
-        console.log("FCM Token:", token);
-        fetch("/save-token", { 
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId: localStorage.getItem('userId'), token })
-        });
-      }).catch((err) => console.error("Token error:", err));
+  // Request permission and save token
+  async function initializeNotifications() {
+    if ('Notification' in window) {
+      try {
+        const permission = await Notification.requestPermission();
+        if (permission === 'granted') {
+          console.log('Notification permission granted.');
+          const token = await messaging.getToken({
+            vapidKey: "BCtAsyYJYCSfpg_kXL2aO59szQsPFE3DvmqqLOnW03JTVR88Jb435-jDnUgj0j0mL5VCWLiGGfErTuwQ-XUArho"
+          });
+          console.log('FCM Token:', token);
+
+          const userId = localStorage.getItem('userId');
+          if (userId) {
+            await fetch(`${API_BASE_URL}/api/save-fcm-token`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+              },
+              body: JSON.stringify({ token })
+            });
+            console.log('Token saved to server');
+          }
+        } else {
+          console.warn('Notification permission denied');
+        }
+      } catch (err) {
+        console.error('Error initializing notifications:', err);
+      }
+    } else {
+      console.warn('Notifications not supported in this browser');
+    }
+  }
+
+  // Handle foreground messages
+  messaging.onMessage((payload) => {
+    console.log('Foreground message:', payload);
+    if (Notification.permission === 'granted') {
+      const { title, body } = payload.notification;
+      const { type, postId, senderId } = payload.data || {};
+
+      const notification = new Notification(title, {
+        body,
+        icon: '/favicon.ico', // Replace with your app icon
+        data: { type, postId, senderId }
+      });
+
+      notification.onclick = (event) => {
+        event.preventDefault();
+        const { type, postId, senderId } = event.target.data || {};
+        if (type === 'like' || type === 'comment') {
+          window.location.href = `post.html?postId=${postId}`; // Adjust to your post page
+        } else if (type === 'message') {
+          window.location.href = `Messages.html?userId=${senderId}`; // Adjust to your messages page
+        }
+      };
     }
   });
-} else {
-  console.warn('This browser does not support notifications');
+
+  // Initialize on load
+  window.addEventListener('load', initializeNotifications);
+</script>
+<script>
+// Function to check for new content
+async function checkForNewContent() {
+  try {
+    const userId = localStorage.getItem('userId');
+    if (!userId) return;
+
+    // Fetch notification counts from your backend
+    const response = await fetch(`${API_BASE_URL}/notification-counts?userId=${userId}`);
+    const data = await response.json();
+    
+    // Update badges based on response
+    updateBadge('alerts-badge', data.alertsCount);
+    updateBadge('messages-badge', data.messagesCount);
+    updateBadge('deals-badge', data.dealsCount);
+    
+  } catch (error) {
+    console.error('Error fetching notification counts:', error);
+  }
 }
 
-// For foreground messages
-firebase.messaging().onMessage((payload) => {
-  console.log("Foreground message:", payload);
-  if ('Notification' in window && Notification.permission === 'granted') {
-    new Notification(payload.notification.title, { 
-      body: payload.notification.body 
-    });
+// Helper function to update badge display
+function updateBadge(badgeId, count) {
+  const badge = document.getElementById(badgeId);
+  if (!badge) return;
+  
+  if (count > 0) {
+    badge.style.display = 'inline-block';
+    badge.textContent = count > 9 ? '9+' : count;
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+// Check for new content periodically
+setInterval(checkForNewContent, 30000); // Check every 30 seconds
+
+// Also check when page loads
+document.addEventListener('DOMContentLoaded', checkForNewContent);
+
+// Listen for real-time updates via Socket.IO
+socket.on('new-notification', (data) => {
+  if (data.type === 'alert') {
+    updateBadge('alerts-badge', data.count);
+  } else if (data.type === 'message') {
+    updateBadge('messages-badge', data.count);
+  } else if (data.type === 'deal') {
+    updateBadge('deals-badge', data.count);
   }
 });
+</script>
+<script>
+
+  // Socket.IO connection handling
+  socket.on("connect", () => {
+    console.log("✅ Socket.IO connected with ID:", socket.id);
+    const userId = localStorage.getItem("userId");
+    if (userId) {
+      console.log("👤 Registering user with Socket.IO:", userId);
+      socket.emit("joinRoom", userId);
+    } else {
+      console.warn("⚠️ No userId found in localStorage");
+    }
+  });
+
+  socket.on("disconnect", () => {
+    console.log("❌ Socket.IO disconnected");
+  });
+
+  socket.on("connect_error", (error) => {
+    console.error("🔥 Socket.IO connection error:", error);
+  });
+
+  // Update badge display
+  function updateBadge(badgeId, count) {
+    const badge = document.getElementById(badgeId);
+    if (!badge) {
+      console.error(`❌ Badge element not found: ${badgeId}`);
+      return;
+    }
+    console.log(`🔄 Updating badge ${badgeId} with count:`, count);
+    if (count > 0) {
+      badge.style.display = "inline-block";
+      badge.textContent = count > 9 ? "9+" : count;
+    } else {
+      badge.style.display = "none";
+      badge.textContent = "0";
+    }
+  }
+
+  // Unified badge clearing function
+  async function clearBadge(type) {
+    const badgeId = `${type}-badge`;
+    const userId = localStorage.getItem("userId");
+    const token = localStorage.getItem("authToken");
+
+    if (!userId || !token) {
+      console.warn("⚠️ User not logged in or no token found");
+      return;
+    }
+
+    // Immediate UI update
+    updateBadge(badgeId, 0);
+
+    try {
+      // Notify server to mark as viewed
+      const response = await fetch(`${API_BASE_URL}/${type}/mark-as-viewed`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ userId }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to mark ${type} as viewed: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log(`✅ ${type} marked as viewed:`, data);
+
+      // Broadcast the update via Socket.IO
+      socket.emit("badge-update", { type, count: 0, userId });
+
+      // Fetch updated counts to ensure consistency
+      await checkForNewContent();
+    } catch (error) {
+      console.error(`❌ Error clearing ${type} badge:`, error);
+      // Revert UI if API call fails (optional)
+      checkForNewContent(); // Fetch latest state to recover
+    }
+  }
+
+  // Fetch notification counts from server
+  async function checkForNewContent() {
+    const userId = localStorage.getItem("userId");
+    const token = localStorage.getItem("authToken");
+
+    if (!userId || !token) return;
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/notification-counts?userId=${userId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      const data = await response.json();
+      console.log("📊 Notification counts:", data);
+
+      updateBadge("alerts-badge", data.alertsCount || 0);
+      updateBadge("messages-badge", data.messagesCount || 0);
+      updateBadge("deals-badge", data.dealsCount || 0);
+    } catch (error) {
+      console.error("💥 Error fetching notification counts:", error);
+    }
+  }
+
+  // Listen for real-time badge updates
+  socket.on("badge-update", (data) => {
+    const userId = localStorage.getItem("userId");
+    if (data.userId === userId) {
+      console.log("📢 Received badge update:", data);
+      updateBadge(`${data.type}-badge`, data.count);
+    }
+  });
+
+  // Initial setup
+  document.addEventListener("DOMContentLoaded", () => {
+    console.log("🏁 Page loaded - initializing badges");
+    checkForNewContent();
+
+    // Debug badge elements
+    setTimeout(() => {
+      console.log("🔍 Badge elements:", {
+        alerts: document.getElementById("alerts-badge"),
+        messages: document.getElementById("messages-badge"),
+        deals: document.getElementById("deals-badge"),
+      });
+    }, 1000);
+  });
+
+  // Periodic polling as fallback
+  setInterval(checkForNewContent, 30000); // Every 30 seconds
+
+   
+</script>
+<script>
+  const socket = io('https://salmart-production.up.railway.app', {
+    path: '/socket.io',
+    transports: ['websocket', 'polling']
+  });
+
+  socket.on('connect', () => {
+    console.log('Connected to server');
+    const userId = localStorage.getItem('userId');
+    if (userId) {
+      socket.emit('joinRoom', userId);
+    }
+  });
+
+  // Handle like and comment notifications
+  socket.on('notification', (data) => {
+    console.log('Received notification:', data);
+    showToast(`${data.sender.firstName} ${data.sender.lastName} ${data.type === 'like' ? 'liked' : 'commented on'} your post`, '#28a745');
+    // FCM handles the actual notification; toast is for in-app feedback
+  });
+
+  // Handle new messages
+  socket.on('receiveMessage', (message) => {
+    console.log('New message:', message);
+    showToast(`New message from ${message.senderId}`, '#28a745');
+    // FCM handles the notification
+  });
+
+  function likePost(postId, userId) {
+    socket.emit('likePost', { postId, userId });
+  }
+
+  function commentPost(postId, userId, comment) {
+    socket.emit('commentPost', { postId, userId, comment });
+  }
+
+  function sendMessage(senderId, receiverId, text) {
+    socket.emit('sendMessage', { senderId, receiverId, text });
+  }
+  
+  function showToast(message, color = '#28a745') {
+  const toast = document.getElementById("toast");
+  if (!toast) {
+    console.error('Toast element not found');
+    return;
+  }
+  toast.textContent = message;
+  toast.style.backgroundColor = color;
+  toast.style.display = "block";
+  setTimeout(() => { toast.style.display = "none"; }, 3000);
+}
+</script>
+<script>
+  async function initializeNotifications() {
+  if ('Notification' in window) {
+    try {
+      const permission = await Notification.requestPermission();
+      if (permission === 'granted') {
+        console.log('Notification permission granted.');
+        const token = await messaging.getToken({
+          vapidKey: "BCtAsyYJYCSfpg_kXL2aO59szQsPFE3DvmqqLOnW03JTVR88Jb435-jDnUgj0j0mL5VCWLiGGfErTuwQ-XUArho"
+        });
+        console.log('FCM Token:', token);
+        await saveToken(token);
+
+        // Handle token refresh
+        messaging.onTokenRefresh(async () => {
+          console.log('Token refreshed');
+          const newToken = await messaging.getToken({
+            vapidKey: "BCtAsyYJYCSfpg_kXL2aO59szQsPFE3DvmqqLOnW03JTVR88Jb435-jDnUgj0j0mL5VCWLiGGfErTuwQ-XUArho"
+          });
+          await saveToken(newToken);
+        });
+      } else {
+        console.warn('Notification permission denied');
+      }
+    } catch (err) {
+      console.error('Error initializing notifications:', err);
+    }
+  } else {
+    console.warn('Notifications not supported in this browser');
+  }
+}
+
+async function saveToken(token) {
+  const userId = localStorage.getItem('userId');
+  const jwt = localStorage.getItem('token');
+  if (userId && jwt) {
+    try {
+      const response = await fetch('/api/save-fcm-token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${jwt}`
+        },
+        body: JSON.stringify({ token })
+      });
+      if (response.ok) {
+        console.log('Token saved to server');
+      } else {
+        console.error('Failed to save token:', response.status);
+      }
+    } catch (err) {
+      console.error('Error saving token:', err);
+    }
+  } else {
+    console.warn('No userId or JWT found');
+  }
+}
 </script>
 </html> 

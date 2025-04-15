@@ -26,9 +26,22 @@ blockedUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   reportCount: { type: Number, default: 0 },
   isReported: { type: Boolean, default: false },
   isBanned: { type: Boolean, default: false },
-  isAdmin: { type: Boolean, default: false }
+  isAdmin: { type: Boolean, default: false },
+  fcmToken: { type: String, default: null },
+  notificationPreferences: {
+    likes: { type: Boolean, default: true },
+    comments: { type: Boolean, default: true },
+    messages: { type: Boolean, default: true },
+    follows: { type: Boolean, default: true },
+    payments: { type: Boolean, default: true },
+    delivery: { type: Boolean, default: true },
+  },
+  socketId: { type: String, default: null },
+  notificationEnabled: Boolean,
+ 
 
 });
+userSchema.index({ socketId: 1 });
 
 module.exports = mongoose.model('User', userSchema);
 
