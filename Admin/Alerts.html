@@ -167,7 +167,13 @@ h3 {
 </div>
 
   <script>
-    const socket = io('http://localhost:3000');
+    const API_BASE_URL =
+      window.location.hostname === 'localhost'
+      ? 'http://localhost:3000'
+      :
+'https://salmart-production.up.railway.app'
+
+    const socket = io(`${API_BASE_URL}`);
 
     function formatTime(timestamp) {
       const now = new Date();
@@ -183,7 +189,7 @@ h3 {
 
     async function fetchNotifications() {
       try {
-        const response = await fetch('http://localhost:3000/notifications', {
+        const response = await fetch(`${API_BASE_URL}/notifications`, {
           method: 'GET',
           headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` }
         });
@@ -257,8 +263,8 @@ else if (notification.type === 'warning') {
           return;
         }
 
-        const response = await fetch('http://localhost:3000/notifications/mark-as-read', {
-          method: 'PUT',
+        const response = await fetch(`${API_BASE_URL}/alerts/mark-as-viewed`, {
+          method: 'POST',
           headers: { 'Authorization': `Bearer ${token}` },
         });
 
@@ -303,5 +309,46 @@ else if (notification.type === 'warning') {
 
     document.addEventListener('DOMContentLoaded', fetchNotifications);
   </script>
+  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+<script>
+  const socket = io('https://salmart-production.up.railway.app', {
+    path: '/socket.io',
+    transports: ['websocket', 'polling']
+  });
+
+  socket.on('connect', () => {
+    console.log('Connected to server');
+    const userId = localStorage.getItem('userId');
+    if (userId) {
+      socket.emit('joinRoom', userId);
+    }
+  });
+
+  // Handle like and comment notifications
+  socket.on('notification', (data) => {
+    console.log('Received notification:', data);
+    showToast(`${data.sender.firstName} ${data.sender.lastName} ${data.type === 'like' ? 'liked' : 'commented on'} your post`, '#28a745');
+    // FCM handles the actual notification; toast is for in-app feedback
+  });
+
+  // Handle new messages
+  socket.on('receiveMessage', (message) => {
+    console.log('New message:', message);
+    showToast(`New message from ${message.senderId}`, '#28a745');
+    // FCM handles the notification
+  });
+
+  function likePost(postId, userId) {
+    socket.emit('likePost', { postId, userId });
+  }
+
+  function commentPost(postId, userId, comment) {
+    socket.emit('commentPost', { postId, userId, comment });
+  }
+
+  function sendMessage(senderId, receiverId, text) {
+    socket.emit('sendMessage', { senderId, receiverId, text });
+  }
+</script>
 </body>
 </html>
