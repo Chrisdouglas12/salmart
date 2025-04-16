@@ -524,18 +524,25 @@ function displayMessage(message) {
     msgDiv.classList.add('message', message.senderId === userId ? 'sent' : 'received');
     const time = message.createdAt ? new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
 
-    // Handle receipt images
-    if (message.messageType === 'image' && message.attachment && message.attachment.url) {
+if (message.messageType === 'image') {
+    // ✅ Handle both cases:
+    // 1. attachment: { url: "..." } (schema-compliant)
+    // 2. attachment: "..." (fallback)
+    const imageUrl = 
+        (message.attachment && message.attachment.url) ||  // Nested
+        message.attachment ||                             // Flat
+        message.content;                                  // Alternative field
+
+    if (imageUrl) {
         msgDiv.innerHTML = `
             ${message.text ? `<div>${message.text}</div>` : ''}
-            <img src="${message.attachment.url}" class="product-photo-preview" alt="Receipt">
-            <div class="message-timestamp">${time} ${message.isRead ? '✔✔' : ''}</div>
+            <img src="${imageUrl}" class="product-photo-preview" alt="Receipt">
+            <div class="message-timestamp">${time}</div>
         `;
         chatMessages.appendChild(msgDiv);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
         return;
     }
-
+}
     // Existing text/offer/payment logic
     let msg = message.text, img = null, parsed;
     try {
