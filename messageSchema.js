@@ -15,7 +15,7 @@ const messageSchema = new mongoose.Schema({
   proposedPrice: { type: Number, required: false },
   messageType: {
     type: String,
-    enum: ['text', 'image'], // Explicitly allow 'image'
+    enum: ['text', 'image', 'file'], // Explicitly allow 'image'
     default: 'text',
   },
   bargainStatus: {

@@ -21,7 +21,12 @@ const fsExtra = require('fs-extra')
 const path = require('path');
 const http = require('http');
 const socketIo = require('socket.io');
-const redis = require('redis')
+const Jimp = require('jimp');
+console.log('Jimp imported:', typeof Jimp, 'read:', typeof Jimp.read);
+
+const ALIGN_CENTER = 1;
+const ALIGN_TOP = 2;
+
 
 
 app.use(cors({
@@ -1062,7 +1067,9 @@ app.post('/pay', async (req, res) => {
         const sellerId = post.createdBy;  // Ensure sellerId is correctly assigned
 
         console.log("Seller ID from post:", sellerId); // Debugging log
-   const protocol = req.secure ? 'http' : 'https';
+   app.enable('trust proxy'); // only once in your app config
+
+const protocol = req.secure ? 'https' : 'http';
 const host = req.get('host');
 const API_BASE_URL = `${protocol}://${host}`;
         // include correct sellerId in metadata
@@ -1084,10 +1091,6 @@ const API_BASE_URL = `${protocol}://${host}`;
         res.status(500).json({ success: false, message: "Payment failed" });
     }
 });
-
-
-
-
 
 
 app.get('/payment-success', async (req, res) => {
@@ -1116,6 +1119,7 @@ app.get('/payment-success', async (req, res) => {
         if (data.data.status === 'success') {
             console.log("🎉 Payment Verified Successfully!");
 
+// Save escrow record
             const post = await Post.findById(postId);
             if (!post) {
                 console.log("⚠️ Post not found!");
@@ -1124,334 +1128,282 @@ app.get('/payment-success', async (req, res) => {
 
             const email = data.data.customer.email;
             const buyer = await User.findOne({ email });
-            const seller = await User.findById(post.createdBy.userId);
+            const seller = await User.findById(post.createdBy.userId); // Get seller
 
             if (!seller) {
                 console.log("⚠️ Seller not found!");
                 return res.status(404).send("Seller not found.");
             }
 
-            if (!buyer) {
-                console.log("⚠️ Buyer not found!");
-                return res.status(404).send("Buyer not found.");
+            // ✅ Extract required data
+            const buyerId = buyer ? buyer._id.toString() : null;
+            const buyerName = `${buyer.firstName || ''} ${buyer.lastName || ''}`.trim()
+            if(!buyer) {
+              console.log('buyer not found');
+              res.status(404).json({message: 'buyer not found'})
             }
-
-            const buyerId = buyer._id.toString();
-            const buyerName = `${buyer.firstName || ''} ${buyer.lastName || ''}`.trim();
             const amountPaid = data.data.amount / 100;
+            
             const transactionDate = new Date(data.data.paid_at).toLocaleString();
+          
             const productDescription = post.description || "No description available.";
             const sellerId = seller._id.toString();
             const sellerName = `${seller.firstName} ${seller.lastName}`;
             const sellerProfilePic = seller.profilePicture || "default.jpg";
+            
+            const COMMISSION_PERCENT = 2; // Platform earns 2%
 
-            const COMMISSION_PERCENT = 2;
-            const totalAmount = amountPaid;
-            const commission = (COMMISSION_PERCENT / 100) * totalAmount;
-            const sellerShare = totalAmount - commission;
-
+const totalAmount = amountPaid; // Already calculated
+const commission = (COMMISSION_PERCENT / 100) * totalAmount;
+const sellerShare = totalAmount - commission;
+            
             const notification = new Notification({
-                userId: sellerId,
-                senderId: buyerId,
-                type: 'payment',
-                postId: postId,
-                payment: post.description,
-                message: `${buyer.firstName} ${buyer.lastName} just paid for your product: "${post.description}"`,
-                createdAt: new Date()
-            });
+  userId: sellerId,       // Who should receive the notification (the seller)
+  senderId: buyerId, // Who triggered the notification (the buyer)
+  type: 'payment',  
+  postId: postId,// New notification type
+  payment: post.description,     
+  message: `${buyer.firstName} ${buyer.lastName} just paid for your product: "${post.description}"`,
+  createdAt: new Date()
+  
+});
+const escrow = new Escrow({
+  product : postId,
+  buyer: buyerId,
+  seller: sellerId,
+  amount: amountPaid,
+  commission,
+  sellerShare,
+  paymentReference: reference,
+  status: 'In Escrow'
+});
 
-            const escrow = new Escrow({
-                product: postId,
-                buyer: buyerId,
-                seller: sellerId,
-                amount: amountPaid,
-                commission,
-                sellerShare,
-                paymentReference: reference,
-                status: 'In Escrow'
-            });
+await escrow.save();
 
-            await escrow.save();
+const transaction = new Transaction({
+  buyerId,
+  sellerId,
+  productId: postId,
+  amount: amountPaid ,
+  status: 'pending', 
+  viewed: false,
+  paymentReference: reference,
+});
+await transaction.save();
+console.log("✅ Transaction record saved.");
+post.isSold = true;
+await post.save();
+//Trigger notificatiin uodates for bith buyer and seller
+await NotificationService.triggerCountUpdate(buyerId);
+await NotificationService.triggerCountUpdate(seller._id.toString())
+console.log("✅ Escrow record saved.");
 
-            const transaction = new Transaction({
-                buyerId,
-                sellerId,
-                productId: postId,
-                amount: amountPaid,
-                status: 'pending',
-                viewed: false
-            });
-            await transaction.save();
-            console.log("✅ Transaction record saved.");
-            post.isSold = true;
-            await post.save();
+await notification.save();
+console.log('notification sent')
+// Send real-time notification via Socket.IO
+io.to(sellerId.toString()).emit('notification', notification);
+    let receiptImageUrl = '';
+try {
+    const receiptsDir = path.join(__dirname, 'receipts');
+    if (!fs.existsSync(receiptsDir)) {
+        fs.mkdirSync(receiptsDir, { recursive: true });
+        console.log('Created receipts directory:', receiptsDir);
+    }
+    const imagePath = path.join(receiptsDir, `${reference}.png`);
 
-            await NotificationService.triggerCountUpdate(buyerId);
-            await NotificationService.triggerCountUpdate(seller._id.toString());
-            console.log("✅ Escrow record saved.");
+    console.log('Starting Jimp image generation...');
 
-            await notification.save();
-            console.log('notification sent');
-            io.to(sellerId.toString()).emit('notification', notification);
+    // Create image - synchronous constructor
+    console.log('Jimp constructor:', Jimp);
+    const image = new Jimp(600, 800, 0xFFFFFFFF); // White background
+    console.log('Jimp image created:', image.bitmap.width, image.bitmap.height);
 
-            // Generate receipt image
-            const receiptHtml = `
-                <html>
-                <head>
-                    <style>
-                        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
-                        .receipt-container { max-width: 400px; margin: auto; padding: 20px; background: white; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); text-align: left; }
-                        .header { text-align: center; padding-bottom: 10px; border-bottom: 2px solid #007bff; }
-                        .header h2 { color: #007bff; margin: 5px 0; }
-                        .status { text-align: center; font-size: 18px; padding: 10px; color: green; font-weight: bold; }
-                        .details p { font-size: 14px; margin: 5px 0; }
-                        .details span { font-weight: bold; }
-                    </style>
-                </head>
-                <body>
-                    <div class="receipt-container">
-                        <div class="header">
-                            <h2>Payment Receipt</h2>
-                        </div>
-                        <p class="status">✅ Payment Successful</p>
-                        <div class="details">
-                            <p><span>Transaction Reference:</span> ${reference}</p>
-                            <p><span>Amount Paid:</span> ₦${Number(amountPaid).toLocaleString('en-Ng')}</p>
-                            <p><span>Payment Date:</span> ${transactionDate}</p>
-                            <p><span>Buyer Name:</span> ${buyerName}</p>
-                            <p><span>Buyer Email:</span> ${email}</p>
-                            <p><span>Description:</span> ${productDescription}</p>
-                        </div>
-                    </div>
-                </body>
-                </html>`;
+    // Load fonts
+    const font = await Jimp.loadFont(Jimp.FONT_SANS_32_BLACK);
+    const fontLarge = await Jimp.loadFont(Jimp.FONT_SANS_64_BLACK);
+    console.log('Fonts loaded');
 
-            const imagePath = path.join(__dirname, `receipts/receipt_${reference}.png`);
-            if (!fs.existsSync(path.join(__dirname, "receipts"))) {
-                fs.mkdirSync(path.join(__dirname, "receipts"));
+    // Draw border
+    for (let x = 0; x < 600; x++) {
+        for (let y = 0; y < 800; y++) {
+            if (x < 15 || x > 585 || y < 15 || y > 785) {
+                image.setPixelColor(Jimp.rgbaToInt(0, 123, 255, 255), x, y);
             }
-            await htmlToImage.toPng(document.createElement('div'), { output: imagePath, html: receiptHtml });
-            console.log("🖼️ Receipt Image Generated:", imagePath);
+        }
+    }
 
-            // Store image in Cloudinary (for production)
-            let receiptUrl = imagePath;
-            if (process.env.NODE_ENV === 'production') {
-                const cloudinaryResult = await cloudinary.uploader.upload(imagePath, {
-                    folder: 'receipts',
-                    public_id: `receipt_${reference}`
-                });
-                receiptUrl = cloudinaryResult.secure_url;
-                fs.unlinkSync(imagePath); // Clean up local file
-            } else {
-                receiptUrl = `${req.protocol}://${req.get('host')}/receipts/receipt_${reference}.png`;
+    // Title - centered
+    const titleText = 'Payment Receipt';
+    const titleX = (600 - Jimp.measureText(fontLarge, titleText)) / 2;
+    image.print(fontLarge, titleX, 50, titleText);
+
+    // Details with proper alignment
+    const details = [
+        `Reference: ${reference || 'N/A'}`,
+        `Amount Paid: ₦${Number(amountPaid || 0).toLocaleString('en-NG')}`,
+        `Date: ${transactionDate || new Date().toISOString()}`,
+        `Buyer: ${buyerName || 'Unknown'}`,
+        `Email: ${email || 'N/A'}`,
+        `Description: ${productDescription || 'Purchase'}`
+    ];
+
+    let yPosition = 180;
+    details.forEach(line => {
+        image.print(font, 40, yPosition, line);
+        yPosition += 50;
+    });
+
+    // Footer
+    const footerText = 'Thank you for your payment!';
+    const footerX = (600 - Jimp.measureText(font, footerText)) / 2;
+    image.print(font, footerX, 700, footerText);
+
+    // Save image
+    await image.writeAsync(imagePath);
+    console.log('✅ Receipt image generated:', imagePath);
+
+    // Upload to Cloudinary
+    const cloudinaryResponse = await cloudinary.uploader.upload(imagePath, {
+        public_id: `receipts/${reference}`,
+        folder: 'salmart_receipts'
+    });
+    receiptImageUrl = cloudinaryResponse.secure_url;
+    console.log('✅ Receipt image uploaded to Cloudinary:', receiptImageUrl);
+
+    // Clean up
+    await fs.promises.unlink(imagePath);
+    console.log('Temporary image deleted:', imagePath);
+} catch (imageError) {
+    console.error('🚨 Error generating or uploading image:', imageError.message, imageError.stack);
+    receiptImageUrl = '';
+    console.warn('⚠️ Proceeding without receipt image');
+}
+const safeReceiptImageUrl = String(receiptImageUrl || '');
+
+// ✅ Send receipt page
+res.send(`
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Payment Receipt</title>
+        <style>
+            body { font-family: Arial, sans-serif; background-color: #f8f8f8; text-align: center; padding: 20px; }
+            .receipt-container {
+                max-width: 400px;
+                margin: auto;
+                padding: 20px;
+                background: white;
+                border-radius: 10px;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                text-align: left;
             }
+            .header {
+                text-align: center;
+                padding-bottom: 10px;
+                border-bottom: 2px solid #007bff;
+            }
+            .header img { width: 80px; }
+            .header h2 { color: #007bff; margin: 5px 0; }
+            .status { text-align: center; font-size: 18px; padding: 10px; color: green; font-weight: bold; }
+            .details p { font-size: 14px; margin: 5px 0; }
+            .details span { font-weight: bold; }
+            .footer {
+                text-align: center;
+                font-size: 12px;
+                color: gray;
+                padding-top: 10px;
+                border-top: 1px solid #ddd;
+            }
+            .share-button {
+                display: block;
+                width: 100%;
+                padding: 10px;
+                margin-top: 10px;
+                background: #28a745;
+                color: white;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+                text-align: center;
+            }
+            .share-button:hover { background: #218838; }
+        </style>
+    </head>
+    <body>
+        <div class="receipt-container">
+            <div class="header">
+                <h2>Payment Receipt</h2>
+            </div>
 
-            res.send(`
-                <!DOCTYPE html>
-                <html lang="en">
-                <head>
-                    <meta charset="UTF-8">
-                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                    <title>Payment Receipt</title>
-                    <style>
-                        body { font-family: Arial, sans-serif; background-color: #f8f8f8; text-align: center; padding: 20px; }
-                        .receipt-container {
-                            max-width: 400px;
-                            margin: auto;
-                            padding: 20px;
-                            background: white;
-                            border-radius: 10px;
-                            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-                            text-align: left;
-                        }
-                        .header {
-                            text-align: center;
-                            padding-bottom: 10px;
-                            border-bottom: 2px solid #007bff;
-                        }
-                        .header h2 { color: #007bff; margin: 5px 0; }
-                        .status { text-align: center; font-size: 18px; padding: 10px; color: green; font-weight: bold; }
-                        .details p { font-size: 14px; margin: 5px 0; }
-                        .details span { font-weight: bold; }
-                        .footer {
-                            text-align: center;
-                            font-size: 12px;
-                            color: gray;
-                            padding-top: 10px;
-                            border-top: 1px solid #ddd;
-                        }
-                        .share-button {
-                            display: block;
-                            width: 100%;
-                            padding: 10px;
-                            margin-top: 10px;
-                            background: #28a745;
-                            color: white;
-                            border: none;
-                            border-radius: 5px;
-                            cursor: pointer;
-                            text-align: center;
-                        }
-                        .share-button:hover { background: #218838; }
-                    </style>
-                </head>
-                <body>
-                    <div class="receipt-container">
-                        <div class="header">
-                            <h2>Payment Receipt</h2>
-                        </div>
-                        <p class="status">✅ Payment Successful</p>
-                        <div class="details">
-                            <p><span>Transaction Reference:</span> ${reference}</p>
-                            <p><span>Amount Paid:</span> ₦${Number(amountPaid).toLocaleString('en-Ng')}</p>
-                            <p><span>Payment Date:</span> ${transactionDate}</p>
-                            <p><span>Buyer Name:</span> ${buyerName}</p>
-                            <p><span>Buyer Email:</span> ${email}</p>
-                            <p><span>Description:</span> ${productDescription}</p>
-                        </div>
-                        <button class="share-button" onclick="shareReceipt()">📤 Share Receipt</button>
-                        <div class="footer">
-                            <p>© 2025 Salmart Technologies. All rights reserved.</p>
-                        </div>
-                    </div>
-                    <script>
-                        async function shareReceipt() {
-                            const response = await fetch('/share-receipt', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({
-                                    reference: "${reference}",
-                                    buyerId: "${buyerId}",
-                                    sellerId: "${sellerId}",
-                                    amountPaid: ${amountPaid},
-                                    transactionDate: "${transactionDate}",
-                                    buyerName: "${buyerName}",
-                                    email: "${email}",
-                                    productDescription: "${productDescription}"
-                                })
-                            });
-                            const result = await response.json();
-                            if (result.success) {
-                                alert('Receipt shared successfully!');
-                                window.location.href = '/chat.html?recipientId=${sellerId}';
-                            } else {
-                                alert('Failed to share receipt: ' + result.message);
-                            }
-                        }
-                    </script>
-                </body>
-                </html>
-            `);
+            <p class="status">✅ Payment Successful</p>
+
+            <div class="details">
+                <p><span>Transaction Reference:</span> ${reference}</p>
+                <p><span>Amount Paid:</span> ₦${Number(amountPaid).toLocaleString('en-NG')}</p>
+                <p><span>Payment Date:</span> ${transactionDate}</p>
+                <p><span>Buyer Name:</span> ${buyerName}</p>
+                <p><span>Buyer Email:</span> ${email}</p>
+                <p><span>Description:</span> ${productDescription}</p>
+            </div>
+
+            <button class="share-button" onclick="shareReceipt()">📤 Share Receipt</button>
+
+            <div class="footer">
+                <p>© 2025 Salmart Technologies. All rights reserved.</p>
+            </div>
+        </div>
+           <script>
+            const API_BASE_URL = window.location.hostname === 'localhost' 
+                ? 'http://localhost:3000' 
+                : 'https://salmart-production.up.railway.app';
+            async function shareReceipt() {
+                try {
+                    const payload = {
+                        reference: '${reference || ''}',
+                        buyerId: '${buyer._id || ''}',
+                        sellerId: '${seller._id || ''}',
+                        amountPaid: ${amountPaid || 0},
+                        transactionDate: '${transactionDate || ''}',
+                        buyerName: '${buyerName || ''}',
+                        email: '${buyer.email || ''}',
+                        productDescription: '${productDescription || ''}',
+                        receiptImageUrl: '${safeReceiptImageUrl}'
+                    };
+                    console.log('Sending /share-receipt payload:', payload);
+                    const response = await fetch(API_BASE_URL + '/share-receipt', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    const result = await response.json();
+                    if (result.success) {
+                        window.location.href = API_BASE_URL + '/Chats.html?recipient_id=${seller._id || ''}&recipient_usernarme=' + encodeURIComponent('${sellerName || ''}') + '&recipient_profile_picture_url=' + encodeURIComponent('${sellerProfilePic || ''}') + '&user_id=${buyer._id || ''}';
+                    } else {
+                        alert('Failed to share receipt: ' + result.message);
+                    }
+                } catch (error) {
+                    alert('Error sharing receipt: ' + error.message);
+                    console.error(error);
+                }
+            }
+        </script>  
+            </body>
+            </html>
+        `);
         }
     } catch (error) {
         console.error('🚨 Error during payment verification:', error.message);
         res.status(500).send(`An error occurred: ${error.message}`);
     }
 });
-            
-            
-app.post('/share-receipt', async (req, res) => {
-    try {
-        const { reference, buyerId, sellerId, amountPaid, transactionDate, buyerName, email, productDescription } = req.body;
-
-        if (!reference || !buyerId || !sellerId) {
-            return res.status(400).json({ success: false, message: 'Missing required fields' });
-        }
-
-        // Verify buyer and seller exist
-        const buyer = await User.findById(buyerId);
-        const seller = await User.findById(sellerId);
-        if (!buyer || !seller) {
-            return res.status(404).json({ success: false, message: 'Buyer or seller not found' });
-        }
-
-        // Check if image exists or regenerate if needed
-        let receiptUrl;
-        const localImagePath = path.join(__dirname, `receipts/receipt_${reference}.png`);
-        if (fs.existsSync(localImagePath)) {
-            receiptUrl = process.env.NODE_ENV === 'production'
-                ? (await cloudinary.uploader.upload(localImagePath, { folder: 'receipts', public_id: `receipt_${reference}` })).secure_url
-                : `${req.protocol}://${req.get('host')}/receipts/receipt_${reference}.png`;
-        } else {
-            // Regenerate image if missing
-            const receiptHtml = `
-                <html>
-                <head>
-                    <style>
-                        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
-                        .receipt-container { max-width: 400px; margin: auto; padding: 20px; background: white; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); text-align: left; }
-                        .header { text-align: center; padding-bottom: 10px; border-bottom: 2px solid #007bff; }
-                        .header h2 { color: #007bff; margin: 5px 0; }
-                        .status { text-align: center; font-size: 18px; padding: 10px; color: green; font-weight: bold; }
-                        .details p { font-size: 14px; margin: 5px 0; }
-                        .details span { font-weight: bold; }
-                    </style>
-                </head>
-                <body>
-                    <div class="receipt-container">
-                        <div class="header">
-                            <h2>Payment Receipt</h2>
-                        </div>
-                        <p class="status">✅ Payment Successful</p>
-                        <div class="details">
-                            <p><span>Transaction Reference:</span> ${reference}</p>
-                            <p><span>Amount Paid:</span> ₦${Number(amountPaid).toLocaleString('en-Ng')}</p>
-                            <p><span>Payment Date:</span> ${transactionDate}</p>
-                            <p><span>Buyer Name:</span> ${buyerName}</p>
-                            <p><span>Buyer Email:</span> ${email}</p>
-                            <p><span>Description:</span> ${productDescription}</p>
-                        </div>
-                    </div>
-                </body>
-                </html>`;
-            if (!fs.existsSync(path.join(__dirname, "receipts"))) {
-                fs.mkdirSync(path.join(__dirname, "receipts"));
-            }
-            await htmlToImage.toPng(document.createElement('div'), { output: localImagePath, html: receiptHtml });
-            receiptUrl = process.env.NODE_ENV === 'production'
-                ? (await cloudinary.uploader.upload(localImagePath, { folder: 'receipts', public_id: `receipt_${reference}` })).secure_url
-                : `${req.protocol}://${req.get('host')}/receipts/receipt_${reference}.png`;
-            if (process.env.NODE_ENV === 'production') {
-                fs.unlinkSync(localImagePath); // Clean up local file
-            }
-        }
-
-        // Save message to chat
-        const newMessage = new Message({
-            senderId: buyerId,
-            receiverId: sellerId,
-            messageType: 'image',
-            attachment: { url: receiptUrl },
-            status: 'sent',
-            isRead: false,
-            createdAt: new Date(),
-            // Optionally add a caption:
-            // text: 'Payment receipt for your purchase'
-        });
-
-        await newMessage.save();
-        console.log("📩 Receipt Image Sent to Chat!");
-
-        // Emit real-time message to seller
-        io.to(`user_${sellerId}`).emit('receiveMessage', newMessage);
-
-        // Send FCM push notification
-        await sendFCMNotification(
-            sellerId,
-            'New Message',
-            `${buyer.firstName} ${buyer.lastName} sent you a payment receipt`,
-            { type: 'message', senderId: buyerId }
-        );
-
-        await NotificationService.triggerCountUpdate(sellerId);
-
-        res.json({ success: true, message: 'Receipt shared successfully', receiptUrl });
-    } catch (error) {
-        console.error("🚨 Error sharing receipt:", error);
-        res.status(500).json({ success: false, message: 'Internal server error' });
-    }
+app.get('/Chats.html', (req, res) => {
+    console.log('Serving chat.html');
+    res.sendFile(path.join(__dirname, 'public', 'Chats.html'));
 });
-        
+
 const nodemailer = require('nodemailer');
 
 async function sendEmail(to, subject, message) {
@@ -1475,86 +1427,72 @@ const PDFDocument = require('pdfkit');
 
 
 const bodyParser = require('body-parser');
-app.post("/send-receipt", async (req, res) => {
+app.post('/share-receipt', async (req, res) => {
     try {
-        const { reference, sellerId, userId } = req.body;
-        const receiptPath = path.join(__dirname, `receipts/${reference}.pdf`);
+        const {
+            reference,
+            buyerId,
+            sellerId,
+            amountPaid,
+            transactionDate,
+            buyerName,
+            email,
+            productDescription,
+            receiptImageUrl = ''
+        } = req.body;
 
-        if (!fs.existsSync(receiptPath)) {
-            return res.status(404).json({ success: false, message: "Receipt not found." });
+        console.log('Received /share-receipt request:', req.body);
+
+        const missingFields = [];
+        if (!reference) missingFields.push('reference');
+        if (!buyerId) missingFields.push('buyerId');
+        if (!sellerId) missingFields.push('sellerId');
+        if (amountPaid == null) missingFields.push('amountPaid');
+        if (!transactionDate) missingFields.push('transactionDate');
+        if (!buyerName) missingFields.push('buyerName');
+        if (!email) missingFields.push('email');
+        if (!productDescription) missingFields.push('productDescription');
+        if (!receiptImageUrl) missingFields.push('receiptImageUrl');
+
+        if (missingFields.length > 0) {
+            console.error('Missing required fields:', missingFields, req.body);
+            return res.status(400).json({
+                success: false,
+                message: `Missing required fields: ${missingFields.join(', ')}`,
+                missing: missingFields
+            });
         }
 
-        // Simulate sending receipt via chat (Replace this with your chat logic)
-        console.log(`📤 Sending receipt ${reference}.pdf to seller ${sellerId}`);
+        const transaction = await Transaction.findOne({ paymentReference: reference });
+        if (!transaction) {
+            console.error('Transaction not found for paymentReference:', reference);
+            return res.status(400).json({ success: false, message: 'Invalid transaction reference' });
+        }
 
-        res.json({ success: true, message: "Receipt sent successfully." });
-    } catch (error) {
-        console.error("🚨 Error sending receipt:", error.message);
-        res.status(500).json({ success: false, message: error.message });
-    }
-});
-
-app.post("/generate-receipt-image", async (req, res) => {
-    try {
-        const { reference, amountPaid, transactionDate, buyerName, email, productName, productDescription, buyerId, sellerId } = req.body;
-        if (!buyerId || !sellerId) return res.status(400).json({ success: false, message: "Missing data" });
-
-        // ✅ Generate HTML for the receipt
-        const receiptHtml = `
-        <html>
-        <head>
-            <style>
-                body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
-                .receipt-container { max-width: 400px; margin: auto; padding: 20px; background: white; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); text-align: left; }
-                .header { text-align: center; padding-bottom: 10px; border-bottom: 2px solid #007bff; }
-                .header h2 { color: #007bff; margin: 5px 0; }
-                .status { text-align: center; font-size: 18px; padding: 10px; color: green; font-weight: bold; }
-                .details p { font-size: 14px; margin: 5px 0; }
-                .details span { font-weight: bold; }
-            </style>
-        </head>
-        <body>
-            <div class="receipt-container">
-                <div class="header">
-                    <h2>Payment Receipt</h2>
-                </div>
-                <p class="status">✅ Payment Successful</p>
-                <div class="details">
-                    <p><span>Transaction Reference:</span> ${reference}</p>
-                    <p><span>Amount Paid:</span> ₦${amountPaid}</p>
-                    <p><span>Payment Date:</span> ${transactionDate}</p>
-                    <p><span>Buyer Name:</span> ${buyerName}</p>
-                    <p><span>Buyer Email:</span> ${email}</p>
-                    <p><span>Product:</span> ${productName}</p>
-                    <p><span>Description:</span> ${productDescription}</p>
-                </div>
-            </div>
-        </body>
-        </html>`;
-
-        // ✅ Convert HTML to an image
-        const imagePath = path.join(__dirname, `receipts/receipt_${Date.now()}.png`);
-        await htmlToImage({ output: imagePath, html: receiptHtml });
-
-        console.log("🖼️ Receipt Image Created:", imagePath);
-
-        // Store the image URL (modify if using a hosting service)
-        const receiptUrl = `http://yourserver.com/receipts/${path.basename(imagePath)}`;
-
-        // ✅ Save message to chat
-        await Message.create({
+        const message = new Message({
             senderId: buyerId,
-            recipientId: sellerId,
-            messageType: "image",
-            content: receiptUrl,
+            receiverId: sellerId,
+            messageType: 'image',
+            attachment: { url: receiptImageUrl },
+            text: `Receipt for ${productDescription}`,
+            status: 'sent',
             timestamp: new Date()
         });
 
-        console.log("📩 Receipt Sent to Chat!");
-        res.json({ success: true, receiptUrl });
+        await message.save();
+        console.log('Sending message', message)
+        io.to(`user_${sellerId}`).emit('receiveMessage', message.toObject());
+        await sendFCMNotification(
+            sellerId,
+            'New Receipt',
+            `${buyerName} shared a receipt for ${productDescription}`,
+            { type: 'message', senderId: buyerId, receiptImageUrl }
+        );
+
+        res.json({ success: true, message: 'Receipt shared successfully' });
     } catch (error) {
-        console.error("🚨 Error generating receipt image:", error);
-        res.status(500).json({ success: false, message: "Internal server error" });
+        console.error('Error sharing receipt:', error.message, error.stack);
+        res.status(500).json({ success: false, message: 'Server error' });
     }
 });
 // Serve PDF receipts
@@ -1591,7 +1529,13 @@ app.get('/messages', async (req, res) => {
   }
 });
 
+
+
 // Route to fetch messages for a user
+
+
+
+
 app.get("/api/messages", async (req, res) => {
   const { userId } = req.query;
 

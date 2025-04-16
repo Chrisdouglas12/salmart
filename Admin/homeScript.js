@@ -158,24 +158,7 @@ ${post.createdBy.userId !== loggedInUser ?
                         <button class="reply-button"><i class="far fa-comment"></i> <span class="comment-count">${post.comments ? post.comments.length : 0}</span></button>
                         <button class="share-button"><i class="fas fa-share"></i></button>
                     </div>
-                    <div class="comment-section" style="display: none;">
-                        <div class="comments-list">
-                            ${post.comments.map(comment => `
-                                <div class="comment">
-                                    <img src="${comment.profilePicture || 'default-avatar.png'}" class="comment-avatar">
-                                    <div class="comment-info">
-                                        <strong>${comment.name}</strong>
-                                        <p>${comment.text}</p>
-                                        <span class="comment-time">${formatTime(comment.createdAt)}</span>
-                                    </div>
-                                </div>
-                            `).join('')}
-                        </div>
-                        <div class="comment-input">
-                            <input type="text" placeholder="Write a comment..." class="comment-text">
-                            <button class="comment-submit" data-post-id="${post._id}">Post</button>
-                        </div>
-                    </div>
+                  
                 `;
                 postsContainer.prepend(postElement);
 
@@ -307,57 +290,12 @@ sendMessageBtn.addEventListener('click', (e) => {
                 });
 
                 // Toggle comment section
-                const commentToggleButton = postElement.querySelector('.reply-button');
-                const commentSection = postElement.querySelector('.comment-section');
-                commentToggleButton.addEventListener('click', () => {
-                    commentSection.style.display = commentSection.style.display === "none" ? "block" : "none";
-                });
-
-                // Add comment functionality
-                const commentButton = postElement.querySelector('.comment-submit');
-                const commentInput = postElement.querySelector('.comment-text');
-                commentButton.addEventListener('click', async () => {
-                    const commentText = commentInput.value.trim();
-                    if (!commentText) return;
-
-                    try {
-                        const response = await fetch(`${API_BASE_URL}/post/comment/${post._id}`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-                            },
-                            body: JSON.stringify({ text: commentText }),
-                        });
-
-                        if (!response.ok) throw new Error('Failed to post comment');
-
-                        const result = await response.json();
-                        const newComment = result.comment;
-
-                        const commentList = postElement.querySelector('.comments-list');
-                        const newCommentHTML = `
-                            <div class="comment">
-                                <img src="${newComment.profilePicture || 'default-avatar.png'}" class="comment-avatar">
-                                <div class="comment-info">
-                                    <strong>${newComment.name}</strong>
-                                    <p>${newComment.text}</p>
-                                    <span class="comment-time">${formatTime(newComment.createdAt)}</span>
-                                </div>
-                            </div>
-                        `;
-                        commentList.insertAdjacentHTML('afterbegin', newCommentHTML);
-                        commentInput.value = "";
-
-                        const commentCountElement = postElement.querySelector('.comment-count');
-                        commentCountElement.textContent = parseInt(commentCountElement.textContent) + 1;
-
-                        showToast("Your comment has been submitted!");
-                    } catch (error) {
-                        console.error('Error posting comment:', error);
-                    }
-                });
-                // Replace the existing share button code with this:
+const commentToggleButton = postElement.querySelector('.reply-button');
+commentToggleButton.addEventListener('click', () => {
+    window.location.href = `posts-details.html?postId=${post._id}`;
+});
+                
+  //share ad functionality
 const shareButton = postElement.querySelector('.share-button');
 shareButton.addEventListener('click', (e) => {
     e.stopPropagation();

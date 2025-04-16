@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comment Replies</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="posts-details.css"> <!-- Reuse existing styles -->
+</head>
+<body>
+    <div class="container">
+        <header class="post-details-header" style="margin-bottom: 20px">
+            <a href="javascript:history.back()" class="back-button"><i class="fas fa-arrow-left"></i> Back</a>
+            <div class="center">
+                <h2>Comment Replies</h2>
+            </div>
+            <div class="right"></div>
+        </header>
+        <div class="comment-details-container" style="margin-bottom: 30px">
+            <!-- Parent comment and replies will be injected here -->
+        </div>
+        <div class="comment-input-sticky">
+            <img src="default-avatar.png" class="comment-avatar" id="user-avatar">
+            <input type="text" placeholder="Write a reply..." class="comment-text" id="reply-input">
+            <button class="comment-submit" id="reply-submit">Post</button>
+        </div>
+    </div>
+    <div class="toast-message"></div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.0/socket.io.min.js"></script>
+    <script src="reply.js"></script>
+</body>
+</html>
