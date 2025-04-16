@@ -188,102 +188,75 @@
 a .active {
   color: blue;
 }
-/* Modal Styles */
-.modal {
-  display: none;
+.toast {
+  visibility: hidden;
+  min-width: 200px;
+  background-color: #4BB543;
+  color: white;
+  text-align: center;
+  border-radius: 8px;
+  padding: 12px 16px;
   position: fixed;
-  z-index: 10;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0,0,0,0.5);
-  backdrop-filter: blur(5px);
-  transition: all 0.3s ease;
+  z-index: 1000;
+  left: 50%;
+  bottom: 30px;
+  transform: translateX(-50%);
+  font-family: Poppins, sans-serif;
+  font-size: 14px;
+  opacity: 0;
+  transition: opacity 0.5s ease, bottom 0.5s ease;
+}
+.toast.show {
+  visibility: visible;
+  opacity: 1;
+  bottom: 50px;
+}
+.snackbar {
+  visibility: hidden;
+  min-width: 220px;
+  background-color: #323232;
+  color: #fff;
+  text-align: center;
+  border-radius: 8px;
+  padding: 14px 24px;
+  position: fixed;
+  left: 50%;
+  bottom: 20px;
+  font-family: Poppins, sans-serif;
+  font-size: 14px;
+  z-index: 9999;
+  opacity: 0;
+  transition: all 0.4s ease;
 }
 
-.modal-content {
-  background-color: #fefefe;
-  margin: 15% auto;
-  padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-  width: 90%;
-  max-width: 400px;
-  animation: modalopen 0.3s;
-}
-
-@keyframes modalopen {
-  from { opacity: 0; transform: translateY(-50px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-bottom: 15px;
-  border-bottom: 1px solid #eee;
-}
-
-.modal-header h4 {
-  color: #28a745;
-  font-size: 18px;
-  margin: 0;
-}
-
-.close-modal {
-  color: #aaa;
-  font-size: 24px;
-  font-weight: bold;
-  cursor: pointer;
-}
-
-.close-modal:hover {
-  color: #555;
-}
-
-.modal-body {
-  padding: 20px 0;
-  color: #555;
-}
-
-.modal-body p {
-  margin-bottom: 10px;
-}
-
-.modal-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  padding-top: 15px;
-  border-top: 1px solid #eee;
-}
-
-.modal-btn {
-  padding: 8px 16px;
-  border-radius: 5px;
+.snackbar.show {
+  visibility: visible;
+  opacity: 1;
+  
+  .cancel-btn {
+  margin-top: 10px;
   border: none;
+  padding: 8px 12px;
+  border-radius: 5px;
+  font-size: 14px;
   cursor: pointer;
-  font-weight: 500;
-}
-
-.cancel-btn {
-  background-color: #f1f1f1;
-  color: #333;
-}
-
-.cancel-btn:hover {
-  background-color: #e0e0e0;
-}
-
-.confirm-btn {
-  background-color: #28a745;
+  background-color: #6c757d;
   color: white;
 }
+.cancel-btn:hover {
+  background-color: #5a6268;
+}
 
-.confirm-btn:hover {
-  background-color: #218838;
+#refundReason {
+  font-family: 'Poppins', sans-serif;
+  resize: vertical;
+  min-height: 100px;
+  max-height: 200px;
+}
+
+#refundReason:focus {
+  outline: none;
+  border-color: #28a745;
 }
   </style>
 </head>
@@ -314,23 +287,6 @@ a .active {
     </ul>
     <pre style="font-size: 10px; text-align: center; margin-top: 40px; color: green">&copy;Salmart Technologies 2025</pre>
   </div>
-  <!-- Modern Confirmation Modal -->
-<div id="confirmationModal" class="modal">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h4>Confirm Delivery</h4>
-      <span class="close-modal">&times;</span>
-    </div>
-    <div class="modal-body">
-      <p>Are you sure you want to confirm this delivery?</p>
-      <p>This action cannot be undone.</p>
-    </div>
-    <div class="modal-footer">
-      <button id="cancelConfirm" class="modal-btn cancel-btn">Cancel</button>
-      <button id="confirmDeliveryBtn" class="modal-btn confirm-btn">Confirm</button>
-    </div>
-  </div>
-</div>
 
 <div class="tabs">
   <div class="tab active" onclick="showTab('buying')">Buying</div>
@@ -341,95 +297,171 @@ a .active {
 <p id="no-transactions" style="display:none;">No transactions yet. Check back later!</p>
 
 <!-- Navigation -->
+
+  
+
+<!-- Bottom Navigation Bar -->
 <nav id="navbar">
   <ul>
-    <li><a href="index.html"><i class="fas fa-store"></i>Market</a></li>
-    <li><a href="Alerts.html"><i class="fas fa-bell"></i>Alerts</a></li>
-    <li><a href="Messages.html"><i class="fas fa-comments"></i>Messages</a></li>
-    <li><a href="Deals.html"><i class="fas fa-cart-plus"></i>Deals</a></li>
-    <li><a href="Profile.html"><i class="fas fa-user"></i>Profile</a></li>
+    <li><a href="index.html"><i class="fas fa-store"></i>Market <span id="market-badge-nav" class="notification-badge" style="display: none">0</span></a></li>
+    <li><a href="Alerts.html"><i class="fas fa-bell"></i>Alerts <span id="alerts-badge-nav" class="notification-badge" style="display: none">0</span></a></li>
+    <li><a href="Messages.html"><i class="fas fa-comments"></i>Messages <span id="messages-badge-nav" class="notification-badge" style="display: none">0</span></a></li>
+    <li><a href="Deals.html"><i class="fas fa-cart-plus"></i>Deals <span id="deals-badge-nav" class="notification-badge" style="display: none">0</span></a></li>
+    <li><a href="Profile.html"><i class="fas fa-user"></i>Profile <span id="profile-badge-nav" class="notification-badge" style="display: none">0</span></a></li>
   </ul>
 </nav>
+<!-- Confirmation Modal -->
+<div id="confirmationModal" style="display: none; position: fixed; z-index: 999; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5);">
+  <div style="background: white; width: 90%; max-width: 400px; margin: 100px auto; padding: 20px; border-radius: 10px; text-align: center;">
+    <h4>Are you sure you want to confirm this delivery?</h4>
+    <p>This action cannot be undone.</p>
+    <button id="confirmYes" class="confirm-btn">Yes, Confirm</button>
+    <button id="confirmNo" class="refund-btn" style="margin-left: 10px;">Cancel</button>
+  </div>
+</div>
+<!-- Refund Request Modal -->
+<div id="refundModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background-color: rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
+  <div style="background:white; padding:20px; border-radius:10px; width:90%; max-width:400px;">
+    <h4 style="margin-bottom:10px;">Request a Refund</h4>
 
+    <label for="reason">Select Reason</label>
+    <select id="reason" style="width:100%; padding:10px; margin-bottom:15px; border:1px solid #ccc; border-radius:5px;">
+      <option value="">-- Choose a reason --</option>
+      <option>Item not as described</option>
+      <option>Item was damaged</option>
+      <option>Didn’t receive the item</option>
+      <option>Seller didn’t respond</option>
+            <option>Suspicious or frudalent seller</option>
+      <option>Other</option>
+    </select>
+
+    <label for="refundEvidence">Upload Evidence</label>
+    <input type="file" id="refundEvidence" accept="image/*,application/pdf" style="margin:10px 0;">
+
+    <textarea id="refundNote" placeholder="Additional comments (optional)" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px;"></textarea>
+
+    <button onclick="submitRefund()" class="refund-btn" style="width:100%; margin-top:15px;">Submit Request</button>
+    <button onclick="closeRefundModal()" class="cancel-btn" style="width:100%; margin-top:10px;">Cancel</button>
+  </div>
+</div>
+<div id="snackbar" class="snackbar">Message goes here</div> 
+<div id="toast" class="toast">Message sent</div>
+<script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
 <script>
-  const userId = localStorage.getItem('userId');
-  let currentTab = 'buying';
-  let currentTransactionId = null;
-const modal = document.getElementById('confirmationModal');
-const closeModal = document.querySelector('.close-modal');
-const cancelConfirm = document.getElementById('cancelConfirm');
-const confirmDeliveryBtn = document.getElementById('confirmDeliveryBtn');
-
-  async function fetchTransactions() {
-    try {
-      const API_BASE_URL =
+  const API_BASE_URL =
       window.location.hostname === 'localhost'
       ? 'http://localhost:3000'
       :
 'https://salmart-production.up.railway.app'
-      const res = await fetch(`${API_BASE_URL}/get-transactions/${userId}`);
-      const data = await res.json();
+  const socket = io(`${API_BASE_URL}`)
+  const userId = localStorage.getItem('userId');
+  let currentTab = 'buying';
+  
+function updateDealsBadge(count) {
+  const badge = document.getElementById('deals-badge-nav');
+  if(!badge) return;
+  if(count > 0) {
+    badge.style.display = 'inline-block';
+    badge.textContent = count > 9 ? '9+' : count
+  }else {
+    badge.style.display = 'none'
+  }
+}
 
-      const list = document.getElementById('transaction-list');
-      list.innerHTML = '';
-      const filtered = data.filter(t => (t[currentTab === 'buying' ? 'buyerId' : 'sellerId']?._id) === userId);
+  async function fetchTransactions() {
+  try {
+    const API_BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart-production.up.railway.app';
+    const res = await fetch(`${API_BASE_URL}/get-transactions/${userId}`);
+    const data = await res.json();
 
-      if (filtered.length === 0) {
-        document.getElementById('no-transactions').style.display = 'block';
-        return;
-      } else {
-        document.getElementById('no-transactions').style.display = 'none';
+    const unReadCount = data.filter(d => !d.viewed).length;
+    updateDealsBadge(unReadCount);
+
+    const list = document.getElementById('transaction-list');
+    list.innerHTML = '';
+    const filtered = data.filter(t => (t[currentTab === 'buying' ? 'buyerId' : 'sellerId']?._id) === userId);
+
+    if (filtered.length === 0) {
+      document.getElementById('no-transactions').style.display = 'block';
+      return;
+    } else {
+      document.getElementById('no-transactions').style.display = 'none';
+    }
+
+    filtered.forEach(t => {
+      const card = document.createElement('div');
+      card.className = 'transaction-card';
+
+      const product = t.productId || {};
+      const productImage = product.photo || 'Default.png';
+      const productDescription = product.description || 'Product';
+      const amount = t.amount || '0';
+
+      const statusBadge = `<span class="badge ${t.status}">${t.status}</span>`;
+      let confirmBtn = '', refundBtn = '';
+
+      if (currentTab === 'buying' && t.status === 'pending') {
+        confirmBtn = `<button class="confirm-btn" onclick="showConfirmationModal('${t._id}')">Confirm Delivery</button>`;
+        refundBtn = !t.refundRequested
+          ? `<button class="refund-btn" onclick="openRefundModal('${t._id}')">Request Refund</button>`
+          : `<span class="badge refund-requested">Refund Requested</span>`;
       }
 
-      filtered.forEach(t => {
-        const card = document.createElement('div');
-        card.className = 'transaction-card';
+      const date = new Date(t.createdAt).toLocaleString();
+      const dealUser = currentTab === 'buying' ? t.sellerId : t.buyerId;
+      const dealUserPic = dealUser?.profilePicture || 'Default.png';
+      const dealUserName = `${dealUser?.firstName || ''} ${dealUser?.lastName || ''}`;
 
-        const product = t.productId || {};
-        const productImage = product.photo || 'Default.png';
-        const productDescription = product.description || 'Product';
-        const amount = t.amount || '0';
-
-        const statusBadge = `<span class="badge ${t.status}">${t.status}</span>`;
-        let confirmBtn = '', refundBtn = '';
-
-        if (currentTab === 'buying' && t.status === 'pending') {
-          confirmBtn = `<button class="confirm-btn" onclick="showConfirmationModal'${t._id}')">Confirm Delivery</button>`;
-          refundBtn = !t.refundRequested
-            ? `<button class="refund-btn" onclick="requestRefund('${t._id}')">Request Refund</button>`
-            : `<span class="badge refund-requested">Refund Requested</span>`;
-        }
-
-        const date = new Date(t.createdAt).toLocaleString();
-        const dealUser = currentTab === 'buying' ? t.sellerId : t.buyerId;
-        const dealUserPic = dealUser?.profilePicture || 'Default.png';
-        const dealUserName = `${dealUser?.firstName || ''} ${dealUser?.lastName || ''}`;
-
-        card.innerHTML = `
-          <div class="transaction-content">
-            <img src="${productImage}" alt="Product Image" />
-            <div class="transaction-details">
-              <h4>${productDescription}</h4>
-              <p>₦${amount}</p>
-              <p>${date}</p>
-              ${statusBadge}
-              ${confirmBtn}
-              ${refundBtn}
-              <div class="deal-user-info">
-                <span>${currentTab === 'buying' ? 'Buying from:' : 'Selling to:'}</span>
-                <img src="${dealUserPic}" class="user-profile" style="width: 20px; height: 20px; border-radius: 50%;" />
-                <strong>${dealUserName}</strong>
-              </div>
+      card.innerHTML = `
+        <div class="transaction-content">
+          <img src="${productImage}" alt="Product Image" />
+          <div class="transaction-details">
+            <h4>${productDescription}</h4>
+            <p>₦${Number(amount).toLocaleString('en-Ng')}</p>
+            <p>${date}</p>
+            ${statusBadge}
+            ${confirmBtn}
+            ${refundBtn}
+            <div class="deal-user-info">
+              <span>${currentTab === 'buying' ? 'Buying from:' : 'Selling to:'}</span>
+              <img src="${dealUserPic}" class="user-profile" style="width: 20px; height: 20px; border-radius: 50%;" />
+              <strong>${dealUserName}</strong>
             </div>
           </div>
-        `;
-        list.prepend(card);
-      });
-
-    } catch (err) {
-      console.error('Error fetching transactions:', err);
-    }
+        </div>
+      `;
+      list.prepend(card);
+    });
+    markDealsAsViewed()
+  } catch (err) {
+    console.error('Error fetching transactions:', err);
   }
+}
+async function markDealsAsViewed() {
+  try {
+    console.log('Getting counts')
+    const token = localStorage.getItem('authToken');
+    await fetch(`${API_BASE_URL}/deals/mark-as-viewed`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    fetchTransactions(); // Refresh list
+  } catch (err) {
+    console.error('Error marking deals as viewed:', err);
+  }
+}
+
+// Call when Deals page loads
+document.addEventListener('DOMContentLoaded', () => {
+  if (window.location.pathname.includes('Deals.html')) {
+    markDealsAsViewed();
+  }
+});
+
 
   function showTab(tab) {
     currentTab = tab;
@@ -438,84 +470,7 @@ const confirmDeliveryBtn = document.getElementById('confirmDeliveryBtn');
     fetchTransactions();
   }
 
-  
-
-// Modify your confirmDelivery function to use the modal
-function showConfirmationModal(transactionId) {
-  currentTransactionId = transactionId;
-  modal.style.display = 'block';
-  document.body.classList.add('no-scroll');
-}
-
-// Close modal when clicking X or cancel button
-closeModal.addEventListener('click', () => {
-  modal.style.display = 'none';
-  document.body.classList.remove('no-scroll');
-});
-
-cancelConfirm.addEventListener('click', () => {
-  modal.style.display = 'none';
-  document.body.classList.remove('no-scroll');
-});
-
-// Close modal when clicking outside
-window.addEventListener('click', (e) => {
-  if (e.target === modal) {
-    modal.style.display = 'none';
-    document.body.classList.remove('no-scroll');
-  }
-});
-
-// Handle the actual confirmation
-confirmDeliveryBtn.addEventListener('click', async () => {
-  modal.style.display = 'none';
-  document.body.classList.remove('no-scroll');
-  
-  if (currentTransactionId) {
-    await confirmDelivery(currentTransactionId);
-    currentTransactionId = null;
-  }
-});
-
-// Update your original confirmDelivery function to be async
-async function confirmDelivery(transactionId) {
-  const token = localStorage.getItem('authToken');
-  try {
-    const API_BASE_URL = window.location.hostname === 'localhost' 
-      ? 'http://localhost:3000'
-      : 'https://salmart-production.up.railway.app';
-    
-    const res = await fetch(`${API_BASE_URL}/confirm-delivery/${transactionId}`, {
-      method: 'POST',
-      headers: { 
-        'Authorization': `Bearer ${token}`, 
-        'Content-Type': 'application/json' 
-      }
-    });
-    
-    const contentType = res.headers.get('content-type');
-    const data = contentType.includes('application/json') 
-      ? await res.json() 
-      : { message: await res.text() };
-    
-    if (res.ok) {
-      fetchTransactions();
-      // Optional: Show a success message
-      alert(data.message || 'Delivery confirmed successfully!');
-    } else {
-      alert(data.message || 'Error confirming delivery.');
-    }
-  } catch (err) {
-    alert('Error confirming delivery. Please try again.');
-    console.error('Error confirming delivery:', err);
-  }
-}
-
-// Update the button in your transaction card to use the modal
-// In the card.innerHTML section, change the confirm button to:
-// 
-
-  async function requestRefund(transactionId) {
+  async function confirmDelivery(transactionId) {
     const token = localStorage.getItem('authToken');
     try {
       const API_BASE_URL =
@@ -523,20 +478,95 @@ async function confirmDelivery(transactionId) {
       ? 'http://localhost:3000'
       :
 'https://salmart-production.up.railway.app'
-      const res = await fetch(`${API_BASE_URL}/request-refund/${transactionId}`, {
+      const res = await fetch(`${API_BASE_URL}/confirm-delivery/${transactionId}`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
       });
       const contentType = res.headers.get('content-type');
       const data = contentType.includes('application/json') ? await res.json() : { message: await res.text() };
-      alert(data.message || 'Refund requested.');
+      showToast(data.message || 'Delivery confirmed. Processing transfer to seller.');
       if (res.ok) fetchTransactions();
     } catch (err) {
-      alert('Error requesting refund.');
+      showToast('Error confirming delivery.');
     }
   }
+  
+  
+  function showToast(message) {
+  const toast = document.getElementById("toast");
+  toast.textContent = message;
+  toast.className = "toast show";
+  setTimeout(() => {
+    toast.className = "toast";
+  }, 5000);
+}
+function showSnackbar(message) {
+  const snackbar = document.getElementById("snackbar");
+  snackbar.textContent = message;
+  snackbar.classList.add("show");
 
-  fetchTransactions();
+  setTimeout(() => {
+    snackbar.classList.remove("show");
+  }, 3000);
+}
+let currentTransactionId = null;
+
+function openRefundModal(transactionId) {
+  currentTransactionId = transactionId;
+  document.getElementById('refundModal').style.display = 'flex';
+}
+
+function closeRefundModal() {
+  document.getElementById('refundModal').style.display = 'none';
+}
+
+async function submitRefund() {
+    const reason = document.getElementById('reason').value;
+    const note = document.getElementById('refundNote').value;
+    const file = document.getElementById('refundEvidence').files[0];
+    const token = localStorage.getItem('authToken');
+
+    if (!reason) {
+        alert("Please select a refund reason.");
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('reason', reason);
+    if (note) formData.append('note', note);
+    if (file) formData.append('evidence', file);
+
+    try {
+        const API_BASE_URL = window.location.hostname === 'localhost' 
+            ? 'http://localhost:3000' 
+            : 'https://salmart-production.up.railway.app';
+        
+        const res = await fetch(`${API_BASE_URL}/request-refund/${currentTransactionId}`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`
+                // Don't set Content-Type - let browser set it with boundary
+            },
+            body: formData
+        });
+
+        if (!res.ok) {
+            throw new Error(`HTTP error! status: ${res.status}`);
+        }
+
+        const data = await res.json();
+        showToast(data.message || 'Refund requested successfully.');
+        closeRefundModal();
+        fetchTransactions();
+        
+    } catch (err) {
+        console.error('Refund request error:', err);
+        showToast(err.message || 'Error requesting refund. Please try again.');
+    }
+}
+    
+
+fetchTransactions()
 </script>
 
 <script>
@@ -556,6 +586,28 @@ document.body.addEventListener('click', (e) => {
   }
 });
 
+</script>
+ <script>
+  let pendingConfirmId = null;
+
+// Confirmation modal event listeners
+document.getElementById('confirmYes').addEventListener('click', function() {
+  if (pendingConfirmId) {
+    confirmDelivery(pendingConfirmId);
+    pendingConfirmId = null;
+  }
+  document.getElementById('confirmationModal').style.display = 'none';
+});
+
+document.getElementById('confirmNo').addEventListener('click', function() {
+  pendingConfirmId = null;
+  document.getElementById('confirmationModal').style.display = 'none';
+});
+
+function showConfirmationModal(transactionId) {
+  pendingConfirmId = transactionId;
+  document.getElementById('confirmationModal').style.display = 'block';
+}
 </script>
 
 </body>
