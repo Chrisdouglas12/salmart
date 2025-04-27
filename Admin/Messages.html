@@ -89,47 +89,62 @@
     .unread {
       font-weight: bold;
     }
-     #navbar i {
-      display: block;
-      font-size: 17px;
-      margin-bottom: 10px;
-      color:  #28a745;
-      
-    }
-    #navbar {
-      position: fixed;
-      bottom: 0;
-      display: flex;
-      text-align: center
-    }
-    .active{
-      color: black;
-      
-      
-    }
-    #navbar a{
-      text-decoration: none;
-      color:  #28a745;
-      font-size: 16px;
-      font-weight: light
-    }
-    #navbar li{
-      list-style-type: none;
-      margin: 10px auto;
-    }
-    #navbar ul{
-      display: flex;
-      justify-content: center;
-      background-color: white;
-      border: solid;
-      border-width: 1px;
-      border-color: white;
-      box-shadow: 0 0 10px 0 #d3d3d3;
-      padding-top: 10px;
-      margin-bottom: 0px;
-      width: 100vw ;
-      
-    }
+     /* Bottom Navigation Bar */
+#navbar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background-color: white;
+  box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+}
+
+#navbar ul {
+  display: flex;
+  justify-content: space-around; /* Distributes items evenly */
+  align-items: center;
+  list-style: none;
+  padding: 10px 0;
+  margin: 0;
+}
+
+#navbar li {
+  flex: 1; /* Each item takes equal width */
+  text-align: center;
+}
+
+#navbar a {
+  display: flex;
+  flex-direction: column; /* Stack icon, text, and badge vertically */
+  align-items: center; /* Center horizontally */
+  justify-content: center; /* Center vertically */
+  text-decoration: none;
+  color: #28a745;
+  font-size: 12px;
+  padding: 5px;
+}
+
+#navbar a i {
+  font-size: 20px; /* Adjust icon size */
+  margin-bottom: 5px; /* Space between icon and text */
+}
+
+#navbar a span.notification-badge {
+  position: absolute;
+  top: 0;
+  right: -10px;
+  background-color: #dc3545;
+  color: white;
+  border-radius: 50%;
+  padding: 2px 6px;
+  font-size: 10px;
+}
+
+/* Ensure active state is styled if needed */
+#navbar a.active {
+  color: #218838; /* Darker green for active state */
+}
     .profile-pic img{
       position: fixed;
       z-index: 2;
@@ -145,7 +160,7 @@
 </div>
   <h3>Messages<div style="z-index: 3; position: fixed; margin-left: 80%; margin-top: -35px; font-size: 16px;">
     <a href="">
-  <i class="fas fa-search" style="color:#28a745; border: 0.1px solid #ddd; border-radius: 20px; padding: 8.5px; background-color:#fff; box-shadow: 0 0 10px #fff; font-weight: light"></i>
+  <i class="fas fa-search" style="color:#28a745; border: 0.1px solid #fff; border-radius: 20px; padding: 8.5px; background-color:#fff; box-shadow: 0 0 10px #ddd; font-weight: light"></i>
   
   </a>
   </div>
@@ -168,123 +183,157 @@
 
   <div id="message-list"></div>
   <p id="no-messages" style="display:none;">No messages yet, check back later!</p>
-
-  <script>
-    const userId = localStorage.getItem("userId"); // Retrieve user ID from storage
-    let latestTimestamp = null; // Track latest message timestamp
-
-    if (!userId) {
-      console.error("User not logged in.");
-      window.location.href = "login.html"; // Redirect to login page if user is not logged in
-    } else {
-      fetchMessages();
-      setInterval(fetchMessages, 100); // Fetch messages every 5 seconds
-    }
-
-    async function fetchMessages() {
-      try {
-        const API_BASE_URL = window.location.hostname === 'localhost' 
-       ?
-      'http://localhost:3000' :
-      'https://salmart-production.up.railway.app'
-        const response = await fetch(`${API_BASE_URL}/api/messages?userId=${userId}`);
-        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-
-        let messages = await response.json();
-        
-        // Ensure messages are sorted from newest to oldest
-        messages.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-
-        const messageListElement = document.getElementById("message-list");
-        const noMessagesElement = document.getElementById("no-messages");
-
-        if (messages.length === 0) {
-          noMessagesElement.style.display = "block";
-          return;
-        } else {
-          noMessagesElement.style.display = "none";
-        }
-
-        // Only update if there's a new message
-        if (!latestTimestamp || new Date(messages[0].createdAt) > new Date(latestTimestamp)) {
-          latestTimestamp = messages[0].createdAt;
-          messageListElement.innerHTML = ""; // Clear only when there's an update
-        } else {
-          return; // Skip UI update if nothing has changed
-        }
-
-        const uniqueChats = {};
-        messages.forEach((msg) => {
-          const chatPartnerId = msg.senderId === userId ? msg.receiverId : msg.senderId;
-          if (!uniqueChats[chatPartnerId] || new Date(msg.createdAt) > new Date(uniqueChats[chatPartnerId].createdAt)) {
-            uniqueChats[chatPartnerId] = msg;
-          }
-        });
-
-        Object.values(uniqueChats).forEach((message) => {
-          const chatPartnerId = message.senderId === userId ? message.receiverId : message.senderId;
-          const chatPartnerName = message.chatPartnerName;
-          const chatPartnerProfile = message.chatPartnerProfilePicture;
-          const isUnread = !message.isRead && message.receiverId === userId;
-          const messagePreview = message.text.length > 30 ? message.text.slice(0, 30) + "..." : message.text;
-
-          const messageElement = document.createElement("div");
-          messageElement.classList.add("message-item");
-          if (isUnread) messageElement.classList.add("unread");
-
-          messageElement.innerHTML = `
-            <img src="${chatPartnerProfile}" alt="Profile">
-            <div class="info">
-              <h4>${chatPartnerName}</h4>
-              <p>${messagePreview}</p>
-            </div>
-            <div class="time">${formatTime(message.createdAt)}</div>
-            ${isUnread ? '<span class="unread-dot"></span>' : ""}
-          `;
-
-          messageElement.addEventListener("click", () => {
-            window.location.href = `Chats.html?user_id=${userId}&recipient_id=${chatPartnerId}&recipient_username=${chatPartnerName}&recipient_profile_picture_url=${chatPartnerProfile}`;
-          });
-
-          messageListElement.appendChild(messageElement);
-        });
-
-      } catch (error) {
-        console.error("Error fetching messages:", error);
-        document.getElementById("message-list").innerHTML = "<p>Failed to load messages. Please try again later.</p>";
-      }
-    }
-
-    // Function to format timestamps like WhatsApp
-    function formatTime(timestamp) {
-      if (!timestamp) {
-        console.error("Empty timestamp:", timestamp);
-        return "Invalid Date";
-      }
-
-      const date = new Date(timestamp);
-      
-      if (isNaN(date.getTime())) {
-        console.error("Invalid date:", timestamp);
-        return "Invalid Date";
-      }
-
-      const now = new Date();
-      const options = { hour: "2-digit", minute: "2-digit" };
-
-      if (date.toDateString() === now.toDateString()) {
-        return date.toLocaleTimeString([], options); // Show only time if it's today
-      } else {
-        return date.toLocaleDateString([], { month: "short", day: "numeric" });
-      }
-    }
-
-    // Force update UI after sending a new message
-    async function sendMessage() {
-      // Your existing message sending logic
-      await fetch(`${API_BASE_URL}/api/send-message`, { /* request payload */ });
-      fetchMessages(); // Immediately update UI after sending a message
-    }
-  </script>
 </body>
-</html> 
+<script>
+  const userId = localStorage.getItem("userId");
+  let latestTimestamp = null;
+  let API_BASE_URL;
+
+  if (!userId) {
+    window.location.href = "SignIn.html";
+  } else {
+    initialize();
+  }
+
+  async function initialize() {
+    API_BASE_URL = window.location.hostname === 'localhost' 
+      ? 'http://localhost:3000' 
+      : 'https://salmart-production.up.railway.app';
+    
+    await fetchMessages();
+    setInterval(fetchMessages, 5000);
+  }
+
+  async function fetchMessages() {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/messages?userId=${userId}`);
+      if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+      
+      await markMessagesAsRead()
+      const messages = await response.json();
+      processMessages(messages);
+    } catch (error) {
+      console.error("Fetch error:", error);
+      document.getElementById("message-list").innerHTML = 
+        "<p>Failed to load messages. Please try again later.</p>";
+    }
+  }
+
+async function markMessagesAsRead() {
+  try {
+    await fetch(`${API_BASE_URL}/messages/mark-as-read`, {
+      method: 'PUT',
+      headers:{'Authorization': `Bearer ${localStorage.getItem('authToken')}`}
+    })
+  }catch(error) {
+    console.error('Failed to mark messages as read')
+  }
+}
+
+  function processMessages(messages) {
+    unreadCount = messages.filter(msg => 
+      !msg.isRead && (msg.receiverId === userId || (msg.senderId === userId && msg.receiverId === userId ))
+    ).length;
+    
+    
+    messages.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    
+    const messageListElement = document.getElementById("message-list");
+    const noMessagesElement = document.getElementById("no-messages");
+    
+    if (messages.length === 0) {
+      noMessagesElement.style.display = "block";
+      return;
+    }
+    noMessagesElement.style.display = "none";
+
+    if (shouldUpdateUI(messages)) {
+      latestTimestamp = messages[0].createdAt;
+      messageListElement.innerHTML = generateMessageHTML(messages);
+    }
+  }
+
+  function shouldUpdateUI(messages) {
+    return !latestTimestamp || 
+      new Date(messages[0].createdAt) > new Date(latestTimestamp);
+  }
+
+  function generateMessageHTML(messages) {
+    const uniqueChats = {};
+    messages.forEach(msg => {
+      const chatPartnerId = msg.senderId === userId ? msg.receiverId : msg.senderId;
+      if (!uniqueChats[chatPartnerId] || new Date(msg.createdAt) > new Date(uniqueChats[chatPartnerId].createdAt)) {
+        uniqueChats[chatPartnerId] = msg;
+      }
+    });
+
+    return Object.values(uniqueChats).map(message => {
+      const chatPartnerId = message.senderId === userId ? message.receiverId : message.senderId;
+      //for self messages, consider read if unread is true
+      const isUnread = !message.isRead && (message.receiverId === userId || (message.senderId === userId && message.receiverId === userId));
+      const messagePreview = message.text.length > 30 ? 
+        `${message.text.slice(0, 30)}...` : message.text;
+
+      return `
+        <div class="message-item ${isUnread ? 'unread' : ''}" 
+             onclick="handleMessageClick('${chatPartnerId}', '${escapeHTML(message.chatPartnerName)}', '${escapeHTML(message.chatPartnerProfilePicture)}')">
+          <img src="${escapeHTML(message.chatPartnerProfilePicture)}" alt="Profile">
+          <div class="info">
+            <h4>${escapeHTML(message.chatPartnerName)}</h4>
+            <p>${escapeHTML(messagePreview)}</p>
+          </div>
+          <div class="time">${formatTime(message.createdAt)}</div>
+          ${isUnread ? '<span class="unread-dot"></span>' : ''}
+        </div>
+      `;
+    }).join('');
+  }
+
+  async function handleMessageClick(partnerId, partnerName, partnerProfile) {
+    try {
+      const token = localStorage.getItem('authToken');
+      await fetch(`${API_BASE_URL}/messages/mark-as-viewed`, {
+        method: 'PUT',
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ 
+          userId,
+          partnerId 
+        })
+      });
+      //refresh the messaga list to update the UI imediately
+      await fetchMessages();
+      
+      window.location.href = `Chats.html?user_id=${userId}&recipient_id=${partnerId}&recipient_username=${partnerName}&recipient_profile_picture_url=${partnerProfile}`;
+    } catch (error) {
+      console.error('Message click error:', error);
+    }
+  }
+
+  function formatTime(timestamp) {
+    try {
+      const date = new Date(timestamp);
+      if (isNaN(date)) return '';
+      
+      const options = { hour: '2-digit', minute: '2-digit' };
+      return date.toDateString() === new Date().toDateString() 
+        ? date.toLocaleTimeString([], options)
+        : date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+    } catch {
+      return '';
+    }
+  }
+
+  
+
+  function escapeHTML(str) {
+    return str.replace(/&/g, '&amp;')
+             .replace(/</g, '&lt;')
+             .replace(/>/g, '&gt;')
+             .replace(/"/g, '&quot;')
+             .replace(/'/g, '&#039;');
+  }
+</script>
+</html>

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Update Bank Details</title>
+  <style>
+    body { font-family: 'Poppins', sans-serif; padding: 20px; background: #f9f9f9; }
+    .form-box { background: #fff; padding: 20px; max-width: 400px; margin: auto; box-shadow: 0 0 10px #ccc; border-radius: 8px; }
+    input, select, button { width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 4px; }
+    button { background: #28a745; color: white; cursor: pointer; border: none; }
+    button:hover { background: #218838; }
+    #accountName { font-weight: bold; color: #28a745; margin-top: -10px; }
+  </style>
+</head>
+<body>
+
+  <div class="form-box">
+    <h3>Update Bank Details</h3>
+    <form id="bankForm">
+      <label>Account Number</label>
+      <input type="text" id="accountNumber" required maxlength="10">
+
+      <label>Select Bank</label>
+      <select id="bankList" required></select>
+
+      <div id="accountName">Account Name: <span id="resolvedName">---</span></div>
+
+      <button type="submit">Update Bank Details</button>
+    </form>
+  </div>
+
+  <script>
+    const token = localStorage.getItem('token'); // Your saved auth token
+
+    const bankList = document.getElementById('bankList');
+    const accountNumberInput = document.getElementById('accountNumber');
+    const resolvedNameSpan = document.getElementById('resolvedName');
+
+    // Fetch bank list from Paystack
+    async function loadBanks() {
+      try {
+        const res = await fetch('https://api.paystack.co/bank', {
+          headers: { Authorization: 'Bearer YOUR_PAYSTACK_SECRET_KEY' } // Replace before upload
+        });
+        const data = await res.json();
+
+        data.data.forEach(bank => {
+          const opt = document.createElement('option');
+          opt.value = bank.code;
+          opt.textContent = bank.name;
+          opt.setAttribute('data-name', bank.name);
+          bankList.appendChild(opt);
+        });
+      } catch (err) {
+        alert('Failed to load banks');
+        console.error(err);
+      }
+    }
+
+    // Auto resolve account name
+    async function resolveAccountName(accountNumber, bankCode) {
+      if (accountNumber.length !== 10) return;
+
+      try {
+        const res = await fetch(`https://api.paystack.co/bank/resolve?account_number=${accountNumber}&bank_code=${bankCode}`, {
+          headers: { Authorization: 'Bearer YOUR_PAYSTACK_SECRET_KEY' }
+        });
+        const data = await res.json();
+
+        if (data.status) {
+          resolvedNameSpan.textContent = data.data.account_name;
+        } else {
+          resolvedNameSpan.textContent = 'Invalid account';
+        }
+      } catch (err) {
+        resolvedNameSpan.textContent = 'Error resolving account';
+      }
+    }
+
+    // Event listeners
+    accountNumberInput.addEventListener('input', () => {
+      const bankCode = bankList.value;
+      const accNo = accountNumberInput.value;
+      if (bankCode) resolveAccountName(accNo, bankCode);
+    });
+
+    bankList.addEventListener('change', () => {
+      const accNo = accountNumberInput.value;
+      const bankCode = bankList.value;
+      if (accNo.length === 10) resolveAccountName(accNo, bankCode);
+    });
+
+    // Submit bank update form
+    document.getElementById('bankForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const accountNumber = accountNumberInput.value;
+      const bankCode = bankList.value;
+      const bankName = bankList.options[bankList.selectedIndex].getAttribute('data-name');
+
+      try {
+        const res = await fetch('http://localhost:3000/update-bank-details', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({ accountNumber, bankCode, bankName })
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          alert('Bank details updated successfully!');
+        } else {
+          alert('Failed: ' + data.message);
+        }
+      } catch (err) {
+        alert('Error updating bank details.');
+        console.error(err);
+      }
+    });
+
+    // Load banks on page load
+    loadBanks();
+  </script>
+</body>
+</html>

@@ -22,7 +22,7 @@ form.addEventListener('submit', async (event) => {
     try {
      const API_BASE_URL = window.location.hostname === 'localhost' 
        ?
-      'localhost:3000' :
+      'http://localhost:3000' :
       'https://salmart-production.up.railway.app'
       const response = await fetch(`${API_BASE_URL}/login`, {
     method: 'POST',

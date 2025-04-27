@@ -30,14 +30,14 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     if (checkLoginState()) {
-      
+
         const token = localStorage.getItem('authToken');
         console.log(`Fetching profile for userId: ${userId}`);
 const API_BASE_URL = window.location.hostname === 'localhost' 
        ?
       'http://localhost:3000' :
       'https://salmart-production.up.railway.app'
-      
+
         fetch(`${API_BASE_URL}/users-profile/${userId}`, {
             method: 'GET',
             headers: {
@@ -102,7 +102,7 @@ const API_BASE_URL = window.location.hostname === 'localhost'
             if (username) username.textContent = `${data.firstName} ${data.lastName}`;
             if (profileUsername) profileUsername.textContent = `${data.firstName} ${data.lastName}`;
             if (productsCount) productsCount.textContent = data.products?.length || 0;
-            
+
         })
         .catch(error => {
             console.error('Error fetching profile:', error);

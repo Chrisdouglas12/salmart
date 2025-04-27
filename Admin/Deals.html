@@ -211,6 +211,62 @@ a .active {
   opacity: 1;
   bottom: 50px;
 }
+/* Bottom Navigation Bar */
+#navbar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background-color: white;
+  box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+}
+
+#navbar ul {
+  display: flex;
+  justify-content: space-around; /* Distributes items evenly */
+  align-items: center;
+  list-style: none;
+  padding: 10px 0;
+  margin: 0;
+}
+
+#navbar li {
+  flex: 1; /* Each item takes equal width */
+  text-align: center;
+}
+
+#navbar a {
+  display: flex;
+  flex-direction: column; /* Stack icon, text, and badge vertically */
+  align-items: center; /* Center horizontally */
+  justify-content: center; /* Center vertically */
+  text-decoration: none;
+  color: #28a745;
+  font-size: 12px;
+  padding: 5px;
+}
+
+#navbar a i {
+  font-size: 20px; /* Adjust icon size */
+  margin-bottom: 5px; /* Space between icon and text */
+}
+
+#navbar a span.notification-badge {
+  position: absolute;
+  top: 0;
+  right: -10px;
+  background-color: #dc3545;
+  color: white;
+  border-radius: 50%;
+  padding: 2px 6px;
+  font-size: 10px;
+}
+
+/* Ensure active state is styled if needed */
+#navbar a.active {
+  color: #218838; /* Darker green for active state */
+}
 .snackbar {
   visibility: hidden;
   min-width: 220px;
@@ -349,37 +405,37 @@ a .active {
 <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
 <script>
   const API_BASE_URL =
-      window.location.hostname === 'localhost'
-      ? 'http://localhost:3000'
-      :
-'https://salmart-production.up.railway.app'
-  const socket = io(`${API_BASE_URL}`)
-  const userId = localStorage.getItem('userId');
-  let currentTab = 'buying';
-  
+  window.location.hostname === 'localhost'
+    ? 'http://localhost:3000'
+    : 'https://salmart-production.up.railway.app';
+const socket = io(`${API_BASE_URL}`);
+const userId = localStorage.getItem('userId');
+let currentTab = 'buying';
+
 function updateDealsBadge(count) {
   const badge = document.getElementById('deals-badge-nav');
-  if(!badge) return;
-  if(count > 0) {
+  if (!badge) return;
+  if (count > 0) {
     badge.style.display = 'inline-block';
-    badge.textContent = count > 9 ? '9+' : count
-  }else {
-    badge.style.display = 'none'
+    badge.textContent = count > 9 ? '9+' : count;
+  } else {
+    badge.style.display = 'none';
   }
 }
 
-  async function fetchTransactions() {
+async function fetchTransactions() {
   try {
-    const API_BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart-production.up.railway.app';
     const res = await fetch(`${API_BASE_URL}/get-transactions/${userId}`);
     const data = await res.json();
 
-    const unReadCount = data.filter(d => !d.viewed).length;
+    const unReadCount = data.filter((d) => !d.viewed).length;
     updateDealsBadge(unReadCount);
 
     const list = document.getElementById('transaction-list');
     list.innerHTML = '';
-    const filtered = data.filter(t => (t[currentTab === 'buying' ? 'buyerId' : 'sellerId']?._id) === userId);
+    const filtered = data.filter(
+      (t) => (t[currentTab === 'buying' ? 'buyerId' : 'sellerId']?._id) === userId
+    );
 
     if (filtered.length === 0) {
       document.getElementById('no-transactions').style.display = 'block';
@@ -388,7 +444,7 @@ function updateDealsBadge(count) {
       document.getElementById('no-transactions').style.display = 'none';
     }
 
-    filtered.forEach(t => {
+    filtered.forEach((t) => {
       const card = document.createElement('div');
       card.className = 'transaction-card';
 
@@ -398,13 +454,20 @@ function updateDealsBadge(count) {
       const amount = t.amount || '0';
 
       const statusBadge = `<span class="badge ${t.status}">${t.status}</span>`;
-      let confirmBtn = '', refundBtn = '';
+      let confirmBtn = '';
+      let refundBtn = '';
 
-      if (currentTab === 'buying' && t.status === 'pending') {
-        confirmBtn = `<button class="confirm-btn" onclick="showConfirmationModal('${t._id}')">Confirm Delivery</button>`;
-        refundBtn = !t.refundRequested
-          ? `<button class="refund-btn" onclick="openRefundModal('${t._id}')">Request Refund</button>`
-          : `<span class="badge refund-requested">Refund Requested</span>`;
+      if (currentTab === 'buying') {
+        // Only show Confirm Delivery button if status is pending and no refund has been requested
+        if (t.status === 'pending' && !t.refundRequested) {
+          confirmBtn = `<button class="confirm-btn" onclick="showConfirmationModal('${t._id}')">Confirm Delivery</button>`;
+        }
+        // Only show Request Refund button if status is pending and delivery has not been confirmed
+        if (t.status === 'pending' && !t.refundRequested) {
+          refundBtn = `<button class="refund-btn" onclick="openRefundModal('${t._id}')">Request Refund</button>`;
+        } else if (t.refundRequested) {
+          refundBtn = `<span class="badge refund-requested">Refund Requested</span>`;
+        }
       }
 
       const date = new Date(t.createdAt).toLocaleString();
@@ -432,23 +495,22 @@ function updateDealsBadge(count) {
       `;
       list.prepend(card);
     });
-    markDealsAsViewed()
+    markDealsAsViewed();
   } catch (err) {
     console.error('Error fetching transactions:', err);
   }
 }
+
 async function markDealsAsViewed() {
   try {
-    console.log('Getting counts')
     const token = localStorage.getItem('authToken');
     await fetch(`${API_BASE_URL}/deals/mark-as-viewed`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
     });
-    
     fetchTransactions(); // Refresh list
   } catch (err) {
     console.error('Error marking deals as viewed:', err);
@@ -462,53 +524,54 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
+function showTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab').forEach((tab) => tab.classList.remove('active'));
+  document
+    .querySelectorAll('.tab')
+    [tab === 'buying' ? 0 : 1].classList.add('active');
+  fetchTransactions();
+}
 
-  function showTab(tab) {
-    currentTab = tab;
-    document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-    document.querySelectorAll('.tab')[tab === 'buying' ? 0 : 1].classList.add('active');
-    fetchTransactions();
+async function confirmDelivery(transactionId) {
+  const token = localStorage.getItem('authToken');
+  try {
+    const res = await fetch(`${API_BASE_URL}/confirm-delivery/${transactionId}`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+    const contentType = res.headers.get('content-type');
+    const data = contentType.includes('application/json')
+      ? await res.json()
+      : { message: await res.text() };
+    showToast(data.message || 'Delivery confirmed. Processing transfer to seller.');
+    if (res.ok) fetchTransactions();
+  } catch (err) {
+    showToast('Error confirming delivery.');
   }
+}
 
-  async function confirmDelivery(transactionId) {
-    const token = localStorage.getItem('authToken');
-    try {
-      const API_BASE_URL =
-      window.location.hostname === 'localhost'
-      ? 'http://localhost:3000'
-      :
-'https://salmart-production.up.railway.app'
-      const res = await fetch(`${API_BASE_URL}/confirm-delivery/${transactionId}`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
-      });
-      const contentType = res.headers.get('content-type');
-      const data = contentType.includes('application/json') ? await res.json() : { message: await res.text() };
-      showToast(data.message || 'Delivery confirmed. Processing transfer to seller.');
-      if (res.ok) fetchTransactions();
-    } catch (err) {
-      showToast('Error confirming delivery.');
-    }
-  }
-  
-  
-  function showToast(message) {
-  const toast = document.getElementById("toast");
+function showToast(message) {
+  const toast = document.getElementById('toast');
   toast.textContent = message;
-  toast.className = "toast show";
+  toast.className = 'toast show';
   setTimeout(() => {
-    toast.className = "toast";
+    toast.className = 'toast';
   }, 5000);
 }
-function showSnackbar(message) {
-  const snackbar = document.getElementById("snackbar");
-  snackbar.textContent = message;
-  snackbar.classList.add("show");
 
+function showSnackbar(message) {
+  const snackbar = document.getElementById('snackbar');
+  snackbar.textContent = message;
+  snackbar.classList.add('show');
   setTimeout(() => {
-    snackbar.classList.remove("show");
+    snackbar.classList.remove('show');
   }, 3000);
 }
+
 let currentTransactionId = null;
 
 function openRefundModal(transactionId) {
@@ -521,52 +584,68 @@ function closeRefundModal() {
 }
 
 async function submitRefund() {
-    const reason = document.getElementById('reason').value;
-    const note = document.getElementById('refundNote').value;
-    const file = document.getElementById('refundEvidence').files[0];
-    const token = localStorage.getItem('authToken');
+  const reason = document.getElementById('reason').value;
+  const note = document.getElementById('refundNote').value;
+  const file = document.getElementById('refundEvidence').files[0];
+  const token = localStorage.getItem('authToken');
 
-    if (!reason) {
-        alert("Please select a refund reason.");
-        return;
+  if (!reason) {
+    alert('Please select a refund reason.');
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append('reason', reason);
+  if (note) formData.append('note', note);
+  if (file) formData.append('evidence', file);
+
+  try {
+    const res = await fetch(
+      `${API_BASE_URL}/request-refund/${currentTransactionId}`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      }
+    );
+
+    if (!res.ok) {
+      throw new Error(`HTTP error! status: ${res.status}`);
     }
 
-    const formData = new FormData();
-    formData.append('reason', reason);
-    if (note) formData.append('note', note);
-    if (file) formData.append('evidence', file);
-
-    try {
-        const API_BASE_URL = window.location.hostname === 'localhost' 
-            ? 'http://localhost:3000' 
-            : 'https://salmart-production.up.railway.app';
-        
-        const res = await fetch(`${API_BASE_URL}/request-refund/${currentTransactionId}`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`
-                // Don't set Content-Type - let browser set it with boundary
-            },
-            body: formData
-        });
-
-        if (!res.ok) {
-            throw new Error(`HTTP error! status: ${res.status}`);
-        }
-
-        const data = await res.json();
-        showToast(data.message || 'Refund requested successfully.');
-        closeRefundModal();
-        fetchTransactions();
-        
-    } catch (err) {
-        console.error('Refund request error:', err);
-        showToast(err.message || 'Error requesting refund. Please try again.');
-    }
+    const data = await res.json();
+    showToast(data.message || 'Refund requested successfully.');
+    closeRefundModal();
+    fetchTransactions();
+  } catch (err) {
+    console.error('Refund request error:', err);
+    showToast(err.message || 'Error requesting refund. Please try again.');
+  }
 }
-    
 
-fetchTransactions()
+let pendingConfirmId = null;
+
+document.getElementById('confirmYes').addEventListener('click', function () {
+  if (pendingConfirmId) {
+    confirmDelivery(pendingConfirmId);
+    pendingConfirmId = null;
+  }
+  document.getElementById('confirmationModal').style.display = 'none';
+});
+
+document.getElementById('confirmNo').addEventListener('click', function () {
+  pendingConfirmId = null;
+  document.getElementById('confirmationModal').style.display = 'none';
+});
+
+function showConfirmationModal(transactionId) {
+  pendingConfirmId = transactionId;
+  document.getElementById('confirmationModal').style.display = 'block';
+}
+
+fetchTransactions();
 </script>
 
 <script>

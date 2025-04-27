@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Transactions - SALMART Admin</title>
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      background: #f5f7fa;
+    }
+
+    header {
+      background-color: #2f855a;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+
+    main {
+      padding: 30px 20px;
+    }
+
+    .page-title {
+      font-size: 20px;
+      color: #2f855a;
+      margin-bottom: 20px;
+    }
+
+    .filters {
+      margin-bottom: 20px;
+    }
+
+    .filters button {
+      padding: 8px 14px;
+      margin-right: 10px;
+      border: none;
+      border-radius: 5px;
+      background: #e6f4ec;
+      color: #2f855a;
+      cursor: pointer;
+    }
+
+    .filters button.active {
+      background-color: #2f855a;
+      color: white;
+    }
+
+    .transaction-card {
+      background: white;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      padding: 16px;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+    }
+
+    .transaction-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .status-badge {
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    .status-pending {
+      background: #fff3cd;
+      color: #856404;
+    }
+
+    .status-completed {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .status-refunded {
+      background: #f8d7da;
+      color: #721c24;
+    }
+
+    .transaction-body {
+      display: flex;
+      gap: 15px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+
+    .product-img {
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 6px;
+    }
+
+    .transaction-details {
+      flex: 1;
+    }
+
+    .transaction-details p {
+      margin: 5px 0;
+      font-size: 14px;
+      color: #444;
+    }
+
+    .action-buttons {
+      margin-top: 10px;
+    }
+
+    .action-buttons button {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 5px;
+      margin-right: 8px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .btn-confirm {
+      background: #2f855a;
+      color: white;
+    }
+
+    .btn-refund {
+      background: #e53e3e;
+      color: white;
+    }
+
+    @media (max-width: 768px) {
+      .transaction-body {
+        flex-direction: column;
+      }
+
+      .product-img {
+        width: 100%;
+        height: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>SALMART Admin Panel</h1>
+  </header>
+
+  <main>
+    <h2 class="page-title">Manage Transactions</h2>
+
+    <div class="filters">
+      <button class="active" onclick="filterTransactions('all')">All</button>
+      <button onclick="filterTransactions('pending')">Pending</button>
+      <button onclick="filterTransactions('completed')">Completed</button>
+      <button onclick="filterTransactions('refunded')">Refunded</button>
+    </div>
+
+    <!-- Sample Transaction Card -->
+    <div class="transaction-card" data-status="pending">
+      <div class="transaction-header">
+        <strong>Transaction ID: TXN10293</strong>
+        <span class="status-badge status-pending">Pending</span>
+      </div>
+      <div class="transaction-body">
+        <img src="https://via.placeholder.com/80" class="product-img" alt="Product Image">
+        <div class="transaction-details">
+          <p><strong>Product:</strong> Samsung A14 5G</p>
+          <p><strong>Amount:</strong> ₦115,000</p>
+          <p><strong>Buyer:</strong> John Buyer (john@example.com)</p>
+          <p><strong>Seller:</strong> Jane Seller (jane@seller.com)</p>
+          <p><strong>Date:</strong> March 21, 2025</p>
+        </div>
+      </div>
+      <div class="action-buttons">
+        <button class="btn-confirm" onclick="confirmAction('Confirm Delivery', 'TXN10293')">Confirm Delivery</button>
+        <button class="btn-refund" onclick="confirmAction('Refund', 'TXN10293')">Refund</button>
+      </div>
+    </div>
+
+    <div class="transaction-card" data-status="completed">
+      <div class="transaction-header">
+        <strong>Transaction ID: TXN10288</strong>
+        <span class="status-badge status-completed">Completed</span>
+      </div>
+      <div class="transaction-body">
+        <img src="https://via.placeholder.com/80" class="product-img" alt="Product Image">
+        <div class="transaction-details">
+          <p><strong>Product:</strong> LG LED TV 43"</p>
+          <p><strong>Amount:</strong> ₦210,000</p>
+          <p><strong>Buyer:</strong> Mary Buyer (mary@example.com)</p>
+          <p><strong>Seller:</strong> Kingsley Store (kingsley@store.com)</p>
+          <p><strong>Date:</strong> March 19, 2025</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="transaction-card" data-status="refunded">
+      <div class="transaction-header">
+        <strong>Transaction ID: TXN10245</strong>
+        <span class="status-badge status-refunded">Refunded</span>
+      </div>
+      <div class="transaction-body">
+        <img src="https://via.placeholder.com/80" class="product-img" alt="Product Image">
+        <div class="transaction-details">
+          <p><strong>Product:</strong> Tecno Spark 10</p>
+          <p><strong>Amount:</strong> ₦78,000</p>
+          <p><strong>Buyer:</strong> Peter Buyer (peter@example.com)</p>
+          <p><strong>Seller:</strong> Ezinne Gadgets (ezinne@gadgets.com)</p>
+          <p><strong>Date:</strong> March 18, 2025</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    function filterTransactions(status) {
+      const cards = document.querySelectorAll('.transaction-card');
+      document.querySelectorAll('.filters button').forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+
+      cards.forEach(card => {
+        if (status === 'all') {
+          card.style.display = 'block';
+        } else {
+          card.style.display = card.dataset.status === status ? 'block' : 'none';
+        }
+      });
+    }
+
+    function confirmAction(action, txnId) {
+      const confirmed = confirm(`Are you sure you want to ${action} for transaction ${txnId}?`);
+      if (confirmed) {
+        alert(`${action} request sent for ${txnId}`);
+        // Send to backend via fetch/axios POST request if needed
+      }
+    }
+  </script>
+
+</body>
+</html>

@@ -408,7 +408,7 @@
   <div id="chat-dropdown" class="dropdown-menu">
     
     <div class="dropdown-item" onclick="blockUser()">Block User</div>
-    <div class="dropdown-item" onclick="report">Report User</div>
+    <div class="dropdown-item" onclick="reportUser()">Report User</div>
   </div>
 
   <div class="chats-header">
@@ -434,6 +434,25 @@
     <button id="send-btn">Send</button>
     <button id="bargain-btn">Bargain</button>
   </div>
+  <!-- Report modal -->
+<div id="reportConfirmationModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.7); z-index:2000; align-items:center; justify-content:center;">
+  <div style="background:white; max-width:350px; margin:120px auto; padding:24px; border-radius:10px; text-align:center;">
+    <h3>Report User</h3>
+    <p id="reportConfirmationText"></p>
+    <textarea id="reportReason" placeholder="Reason for reporting..." style="width:100%; height:100px; margin:10px 0; padding:8px; border-radius:5px; border:1px solid #ddd;"></textarea>
+    <button id="confirmReportBtn" style="background:#28a745; color:white; border:none; padding:10px 20px; border-radius:5px; margin-right:10px;">Submit Report</button>
+    <button id="cancelReportBtn" style="background:red; color:white; border:none; padding:10px 20px; border-radius:5px;">Cancel</button>
+  </div>
+</div>
+
+<div id="blockConfirmationModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.7); z-index:2000; align-items:center; justify-content:center;">
+  <div style="background:white; max-width:350px; margin:120px auto; padding:24px; border-radius:10px; text-align:center;">
+    <h3>Block User</h3>
+    <p id="blockConfirmationText"></p>
+    <button id="confirmBlockBtn" style="background:#28a745; color:white; border:none; padding:10px 20px; border-radius:5px; margin-right:10px;">Yes, Block</button>
+    <button id="cancelBlockBtn" style="background:red; color:white; border:none; padding:10px 20px; border-radius:5px;">Cancel</button>
+  </div>
+</div>
 
   <!-- Bargain Modal -->
   <div id="bargainModal">
@@ -919,8 +938,16 @@ function showToast(message, type = 'success') {
 }
 
 function reportUser() {
-    const reason = prompt('Please enter a reason for reporting this user:');
-    if (reason) {
+    const modal = document.getElementById('reportConfirmationModal');
+    modal.style.display = 'flex';
+    
+    document.getElementById('confirmReportBtn').onclick = () => {
+        const reason = document.getElementById('reportReason').value.trim();
+        if (!reason) {
+            showToast('Please enter a reason for reporting', 'error');
+            return;
+        }
+        
         showToast('Submitting report...', 'warning');
         fetch(`${API_BASE_URL}/users/report`, {
             method: 'POST',
@@ -942,16 +969,28 @@ function reportUser() {
             } else {
                 showToast(data.message || 'Failed to report user. Please try again.', 'error');
             }
+            modal.style.display = 'none';
         })
         .catch(error => {
             console.error('Error reporting user:', error);
             showToast('An error occurred while reporting the user.', 'error');
+            modal.style.display = 'none';
         });
-    }
+    };
+
+    document.getElementById('cancelReportBtn').onclick = () => {
+        modal.style.display = 'none';
+    };
 }
 
+
 function blockUser() {
-    if (confirm(`Are you sure you want to block ${recipientUsername}? You won't be able to message each other.`)) {
+    document.getElementById('blockConfirmationText').textContent =
+      `Are you sure you want to block ${recipientUsername}? You won't be able to message each other.`;
+    const modal = document.getElementById('blockConfirmationModal');
+    modal.style.display = 'flex';
+
+    document.getElementById('confirmBlockBtn').onclick = () => {
         showToast('Blocking user...', 'warning');
         fetch(`${API_BASE_URL}/users/block`, {
             method: 'POST',
@@ -973,13 +1012,20 @@ function blockUser() {
             } else {
                 showToast(data.message || 'Failed to block user. Please try again.', 'error');
             }
+            modal.style.display = 'none';
         })
         .catch(error => {
             console.error('Error blocking user:', error);
             showToast('An error occurred while blocking the user.', 'error');
+            modal.style.display = 'none';
         });
-    }
+    };
+
+    document.getElementById('cancelBlockBtn').onclick = () => {
+        modal.style.display = 'none';
+    };
 }
+
 </script>
 </body>
 </html>
