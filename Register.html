@@ -226,7 +226,13 @@
   // Fetch bank list
   async function fetchBankList() {
     try {
-      const res = await fetch('http://localhost:3000/banks');
+      const API_BASE_URL =
+      window.location.hostname === 'localhost'
+      ? 'http://localhost:3000'
+      :
+'https://salmart-production.up.railway.app'
+
+      const res = await fetch(`${API_BASE_URL}/banks`);
       const data = await res.json();
       const bankList = document.getElementById('bankList');
       data.banks.forEach(bank => {
@@ -252,7 +258,12 @@
     const statusDiv = document.getElementById('accountStatus');
     if (accountNumber.length < 10 || !bankCode) return;
     try {
-      const res = await fetch('http://localhost:3000/resolve-account', {
+      const API_BASE_URL =
+      window.location.hostname === 'localhost'
+      ? 'http://localhost:3000'
+      :
+'https://salmart-production.up.railway.app'
+      const res = await fetch(`${API_BASE_URL}/resolve-account`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ account_number: accountNumber, bank_code: bankCode })
@@ -323,7 +334,12 @@
     }
 
     try {
-      const res = await fetch('http://localhost:3000/register', {
+      const API_BASE_URL =
+      window.location.hostname === 'localhost'
+      ? 'http://localhost:3000'
+      :
+'https://salmart-production.up.railway.app'
+      const res = await fetch(`${API_BASE_URL}/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(user)

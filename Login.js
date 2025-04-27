@@ -20,13 +20,23 @@ form.addEventListener('submit', async (event) => {
     toggleButtonState(true);
 
     try {
-        const response = await fetch('http://localhost:3000/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password }),
-        });
+     const API_BASE_URL = window.location.hostname === 'localhost' 
+       ?
+      'http://localhost:3000' :
+      'https://salmart-production.up.railway.app'
+      const response = await fetch(`${API_BASE_URL}/login`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+});
 
-        const data = await response.json();
+// Check if there's content before calling response.json()
+if (response.status === 204) {
+    throw new Error('No content received from the server.');
+}
+
+const data = await response.json();
 
         if (response.ok) {
             const token = data.token;
@@ -52,7 +62,7 @@ form.addEventListener('submit', async (event) => {
         }
     } catch (error) {
         console.error('Login error:', error);
-        displayError('Failed to connect to the server. Please try again later.');
+        displayError('Cannot connect to the server. Please try again later.');
     } finally {
         toggleButtonState(false);
     }

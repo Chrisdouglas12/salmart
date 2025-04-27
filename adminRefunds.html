@@ -1,129 +1,332 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Refunds</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SALMART Admin Dashboard</title>
   <style>
-    body { font-family: Poppins, sans-serif; background-color: #f8f8f8; padding: 20px; }
-    h2 { text-align: center; color: #28a745; }
-    .refund-list { margin-top: 20px; }
-    .refund-card {
-      background: white;
-      margin: 10px 0;
-      padding: 15px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.05);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+    * {
+      box-sizing: border-box;
     }
-    .refund-info { flex: 1; }
-    .refund-info p { margin: 5px 0; font-size: 14px; }
-    .refund-actions button {
-      margin-left: 10px;
-      padding: 8px 12px;
-      border: none;
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f9;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      width: 90%;
+      margin: auto;
+      padding: 20px;
+    }
+    header {
+      background-color: #2d3748;
+      color: white;
+      padding: 20px;
+      text-align: center;
+      font-size: 1.5rem;
+    }
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+    .tab {
+      background: #fff;
+      padding: 10px 15px;
       border-radius: 5px;
-      font-size: 14px;
+      border: 1px solid #ccc;
       cursor: pointer;
     }
-    .approve-btn { background-color: #28a745; color: white; }
-    .approve-btn:hover { background-color: #218838; }
-    .reject-btn { background-color: #dc3545; color: white; }
-    .reject-btn:hover { background-color: #c82333; }
+    .tab.active {
+      background: #3182ce;
+      color: white;
+      border-color: #3182ce;
+    }
+    .panel {
+      display: none;
+      margin-top: 20px;
+    }
+    .panel.active {
+      display: block;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+    li {
+      background: white;
+      border: 1px solid #ccc;
+      padding: 15px;
+      margin-bottom: 10px;
+      border-radius: 5px;
+      position: relative;
+    }
+    button {
+      margin-top: 10px;
+      margin-right: 5px;
+      padding: 6px 12px;
+      border: none;
+      border-radius: 4px;
+      background: #3182ce;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #2b6cb0;
+    }
+    button.danger {
+      background: #e53e3e;
+    }
+    button.success {
+      background: #38a169;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0,0,0,0.6);
+      justify-content: center;
+      align-items: center;
+      z-index: 999;
+    }
+    .modal-content {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      width: 90%;
+      max-width: 500px;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+    .close-btn {
+      float: right;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 20px;
+    }
+    .evidence-img {
+      max-width: 100%;
+      margin-top: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
   </style>
 </head>
 <body>
+  <header>SALMART Admin Dashboard</header>
+  <div class="container">
+    <div class="tabs">
+      <div class="tab active" data-panel="users">Reported Users</div>
+      <div class="tab" data-panel="posts">Reported Posts</div>
+      <div class="tab" data-panel="refunds">Refund Requests</div>
+      <div class="tab" data-panel="transactions">All Transactions</div>
+      <div class="tab" data-panel="all-users">All Users</div>
+      <div class="tab" data-panel="banned-users">Banned Users</div>
+    </div>
+    <div class="panel active" id="users"><ul id="reported-users"></ul></div>
+    <div class="panel" id="posts"><ul id="reported-posts"></ul></div>
+    <div class="panel" id="refunds"><ul id="refund-requests"></ul></div>
+    <div class="panel" id="transactions"><ul id="transactions"></ul></div>
+    <div class="panel" id="all-users"><ul id="all-users-list"></ul></div>
+    <div class="panel" id="banned-users"><ul id="banned-users-list"></ul></div>
+  </div>
 
-<h2>Refund Requests</h2>
-<div id="refund-list" class="refund-list"></div>
+  <!-- Modal -->
+  <div class="modal" id="detail-modal">
+    <div class="modal-content">
+      <span class="close-btn" onclick="closeModal()">×</span>
+      <div id="modal-body"></div>
+    </div>
+  </div>
 
-<script>
-  const adminToken = localStorage.getItem('adminToken');
+  <script>
+    // Tab switching logic
+    const tabs = document.querySelectorAll('.tab');
+    const panels = document.querySelectorAll('.panel');
 
-  async function fetchRefundRequests() {
-    try {
-      const res = await fetch('http://localhost:3000/admin/refund-requests', {
-        headers: { 'Authorization': `Bearer ${adminToken}` }
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => t.classList.remove('active'));
+        panels.forEach(p => p.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById(tab.dataset.panel).classList.add('active');
       });
-      const data = await res.json();
-      const list = document.getElementById('refund-list');
-      list.innerHTML = '';
+    });
 
-      if (data.length === 0) {
-        list.innerHTML = '<p style="text-align:center; color:#777;">No refund requests</p>';
-        return;
-      }
-
-      data.forEach(t => {
-        const card = document.createElement('div');
-        card.className = 'refund-card';
-
-        const product = t.productId || {};
-        const productImage = product.photo || 'Default.png';
-        const productDescription = product.description || 'Product';
-        const amount = t.amount || '0';
-        const buyer = t.buyerId || {};
-
-        card.innerHTML = `
-          <div class="refund-info">
-            <p><strong>Product:</strong> ${productDescription}</p>
-            <p><strong>Buyer:</strong> ${buyer.firstName} ${buyer.lastName}</p>
-            <p><strong>Amount:</strong> ₦${amount}</p>
-            <p><strong>Status:</strong> ${t.status}</p>
-          </div>
-          <div>
-            <button class="approve-btn" onclick="approveRefund('${t._id}')">Approve</button>
-            <button class="reject-btn" onclick="rejectRefund('${t._id}')">Reject</button>
-          </div>
-        `;
-
-        list.appendChild(card);
-      });
-    } catch (err) {
-      console.error('Error fetching refunds:', err);
+    // Modal
+    function closeModal() {
+      document.getElementById('detail-modal').style.display = 'none';
     }
-  }
 
-  async function approveRefund(transactionId) {
-    if (!confirm('Are you sure you want to approve this refund?')) return;
-
-    try {
-      const res = await fetch(`http://localhost:3000/admin/approve-refund/${transactionId}`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${adminToken}`, 'Content-Type': 'application/json' }
-      });
-      const data = await res.json();
-      alert(data.message);
-      fetchRefundRequests();
-    } catch (err) {
-      alert('Error approving refund.');
+    function openModal(content) {
+      document.getElementById('modal-body').innerHTML = content;
+      document.getElementById('detail-modal').style.display = 'flex';
     }
-  }
 
-  async function rejectRefund(transactionId) {
-    const reason = prompt('Enter reason for rejecting the refund:');
-    if (!reason) return;
-
-    try {
-      const res = await fetch(`http://localhost:3000/admin/reject-refund/${transactionId}`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${adminToken}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reason })
-      });
-      const data = await res.json();
-      alert(data.message);
-      fetchRefundRequests();
-    } catch (err) {
-      alert('Error rejecting refund.');
+    // Fetch & render
+    function fetchRender(url, elementId, formatter) {
+      fetch(url)
+        .then(res => res.json())
+        .then(data => {
+          const container = document.getElementById(elementId);
+          const items = elementId === 'reported-users' ? data.reports : data;
+          container.innerHTML = items.length
+            ? items.map(formatter).join('')
+            : '<li>No data found.</li>';
+        })
+        .catch(err => {
+          console.error('Fetch error:', err);
+          document.getElementById(elementId).innerHTML = '<li>Error loading data.</li>';
+        });
     }
-  }
 
-  fetchRefundRequests();
-</script>
+    function resolveAction(endpoint, btn, elementId, formatter) {
+      btn.disabled = true;
+      fetch(endpoint, { method: 'POST' })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            fetchRender(`http://localhost:3000/api/admin/${elementId === 'all-users-list' ? 'users' : elementId === 'banned-users-list' ? 'users/banned' : elementId.split('-')[0]}`, elementId, formatter);
+          } else {
+            throw new Error(data.message || 'Action failed');
+          }
+        })
+        .catch(err => {
+          console.error(err);
+          alert('Action failed: ' + err.message);
+          btn.disabled = false;
+        });
+    }
 
+    function userItem(report) {
+      const user = report.reportedUser;
+      const reportedBy = report.reportedBy;
+      const details = `
+        <strong>User:</strong> ${user.firstName} ${user.lastName}<br>
+        <strong>Email:</strong> ${user.email}<br>
+        <strong>Reported By:</strong> ${reportedBy.firstName} ${reportedBy.lastName} (${reportedBy.email})<br>
+        <strong>Reason:</strong> ${report.reason}<br>
+        <strong>Reported At:</strong> ${new Date(report.createdAt).toLocaleString()}<br>
+        ${user.profilePicture ? `<img src="${user.profilePicture}" class="evidence-img" alt="Profile Picture">` : ''}
+      `;
+      return `<li>
+        <strong>User:</strong> ${user.firstName} ${user.lastName} (${user.email})<br>
+        <strong>Reason:</strong> ${report.reason}<br>
+        <button onclick="openModal('${details}')">View</button>
+        <button class="success" onclick="resolveAction('/api/admin/reports/users/${report.report._id}/resolve', this, 'reported-users', userItem)">Resolve</button>
+      </li>`;
+    }
+
+    function postItem(post) {
+      return `<li>
+        <strong>Post ID:</strong> ${post.reportedId}<br>
+        <strong>Reason:</strong> ${post.reason}<br>
+        <button onclick="openModal('Post content: ${post.content || 'No extra info'}')">View</button>
+        <button class="success" onclick="resolveAction('/api/admin/reports/posts/${post._id}/resolve', this, 'reported-posts', postItem)">Resolve</button>
+      </li>`;
+    }
+
+    function refundItem(refund) {
+      const images = refund.evidence?.length
+        ? refund.evidence.map(url => `<img src="${url}" class="evidence-img" alt="Evidence">`).join('')
+        : 'No evidence provided';
+      const details = `
+        <strong>Transaction ID:</strong> ${refund.transactionId._id}<br>
+        <strong>Buyer:</strong> ${refund.buyerName}<br>
+        <strong>Seller:</strong> ${refund.sellerName}<br>
+        <strong>Amount:</strong> ₦${refund.transactionId.amount}<br>
+        <strong>Reason:</strong> ${refund.reason}<br>
+        <strong>Status:</strong> ${refund.status}<br>
+        <strong>Admin Comment:</strong> ${refund.adminComment || 'None'}<br>
+        <strong>Transaction Description:</strong> ${refund.transactionId.description || 'None'}<br>
+        <strong>Transaction Date:</strong> ${new Date(refund.transactionId.date).toLocaleString()}<br>
+        <strong>Created At:</strong> ${new Date(refund.createdAt).toLocaleString()}<br>
+        <strong>Evidence:</strong><br>${images}
+      `;
+      return `<li>
+        <strong>Transaction ID:</strong> ${refund.transactionId._id}<br>
+        <strong>Buyer:</strong> ${refund.buyerName}<br>
+        <strong>Seller:</strong> ${refund.sellerName}<br>
+        <strong>Amount:</strong> ₦${refund.transactionId.amount}<br>
+        <strong>Reason:</strong> ${refund.reason}<br>
+        <strong>Status:</strong> ${refund.status}<br>
+        <button onclick="openModal(\`${details}\`)">View</button>
+        <button class="success" onclick="resolveAction('/api/admin/refunds/${refund._id}/approve', this, 'refund-requests', refundItem)">Approve</button>
+        <button class="danger" onclick="resolveAction('/api/admin/refunds/${refund._id}/deny', this, 'refund-requests', refundItem)">Deny</button>
+      </li>`;
+    }
+
+    function transactionItem(tx) {
+      const details = `
+        <strong>Transaction ID:</strong> ${tx._id}<br>
+        <strong>Buyer:</strong> ${tx.buyerName} (${tx.buyerId.email})<br>
+        <strong>Seller:</strong> ${tx.sellerName} (${tx.sellerId.email})<br>
+        <strong>Product:</strong> ${tx.productTitle}<br>
+        <strong>Amount:</strong> ₦${tx.amount}<br>
+        <strong>Status:</strong> ${tx.status}<br>
+        <strong>Payment Reference:</strong> ${tx.paymentReference}<br>
+        <strong>Refund Requested:</strong> ${tx.refundRequested ? 'Yes' : 'No'}<br>
+        ${tx.refundRequested ? `<strong>Refund Reason:</strong> ${tx.refundReason || 'N/A'}<br>` : ''}
+        <strong>Created At:</strong> ${new Date(tx.createdAt).toLocaleString()}
+      `;
+      return `<li>
+        <strong>Transaction ID:</strong> ${tx._id}<br>
+        <strong>Buyer:</strong> ${tx.buyerName}<br>
+        <strong>Seller:</strong> ${tx.sellerName}<br>
+        <strong>Product:</strong> ${tx.productTitle}<br>
+        <strong>Amount:</strong> ₦${tx.amount}<br>
+        <strong>Status:</strong> ${tx.status}<br>
+        <button onclick="openModal(\`${details}\`)">View</button>
+      </li>`;
+    }
+
+    function allUsersItem(user) {
+      const details = `
+        <strong>Name:</strong> ${user.fullName}<br>
+        <strong>Email:</strong> ${user.email}<br>
+        <strong>Status:</strong> ${user.isBanned ? 'Banned' : 'Active'}<br>
+        <strong>Created At:</strong> ${new Date(user.createdAt).toLocaleString()}<br>
+        ${user.profilePicture ? `<img src="${user.profilePicture}" class="evidence-img" alt="Profile Picture">` : ''}
+      `;
+      return `<li>
+        <strong>Name:</strong> ${user.fullName}<br>
+        <strong>Email:</strong> ${user.email}<br>
+        <strong>Status:</strong> ${user.isBanned ? 'Banned' : 'Active'}<br>
+        <button onclick="openModal(\`${details}\`)">View</button>
+        ${user.isBanned 
+          ? `<button class="success" onclick="resolveAction('/api/admin/users/${user._id}/unban', this, 'all-users-list', allUsersItem)">Unban</button>`
+          : `<button class="danger" onclick="resolveAction('http://localhost:3000/api/admin/users/${user._id}/ban', this, 'all-users-list', allUsersItem)">Ban</button>`}
+      </li>`;
+    }
+
+    function bannedUsersItem(user) {
+      const details = `
+        <strong>Name:</strong> ${user.fullName}<br>
+        <strong>Email:</strong> ${user.email}<br>
+        <strong>Status:</strong> Banned<br>
+        <strong>Created At:</strong> ${new Date(user.createdAt).toLocaleString()}<br>
+        ${user.profilePicture ? `<img src="${user.profilePicture}" class="evidence-img" alt="Profile Picture">` : ''}
+      `;
+      return `<li>
+        <strong>Name:</strong> ${user.fullName}<br>
+        <strong>Email:</strong> ${user.email}<br>
+        <strong>Status:</strong> Banned<br>
+        <button onclick="openModal(\`${details}\`)">View</button>
+        <button class="success" onclick="resolveAction('http://localhost:3000/api/admin/users/${user._id}/unban', this, 'banned-users-list', bannedUsersItem)">Unban</button>
+      </li>`;
+    }
+
+    fetchRender('http://localhost:3000/api/reported-users', 'reported-users', userItem);
+    fetchRender('http://localhost:3000/api/admin/reports/posts', 'reported-posts', postItem);
+    fetchRender('http://localhost:3000/api/admin/refunds', 'refund-requests', refundItem);
+    fetchRender('http://localhost:3000/api/admin/transactions', 'transactions', transactionItem);
+    fetchRender('http://localhost:3000/api/admin/users', 'all-users-list', allUsersItem);
+    fetchRender('http://localhost:3000/api/admin/users/banned', 'banned-users-list', bannedUsersItem);
+  </script>
 </body>
 </html>

@@ -9,9 +9,10 @@
   <link rel="stylesheet" href="profile styles.css">
   <link rel="stylesheet" href="Style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-
+<script src="profilePostScript.js"></script>
   <script src="addPic.js"></script>
    <script src="upload.js"></script>
+
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900&display=swap" rel="stylesheet">
 
 </head>
@@ -50,12 +51,37 @@
       <label for="profile-picture-upload" class="file-input-icon">
         <i class="fas fa-camera"></i>
       </label>
+      <button id="upload-button" class="upload-button" style="display: none;">Upload Profile Picture</button>
     </div>
     <h1 id="username">Username</h1>
     
 
   </form>
 
+<div id="delete-modal" class="modern-modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Confirm Deletion</h3>
+      <button class="close-modal">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#e74c3c">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+        </svg>
+      </div>
+      <p>Are you sure you want to delete this Ad?</p>
+      <p class="secondary-text">This action cannot be undone and the Ad will be permanently removed.</p>
+    </div>
+    <div class="modal-footer">
+      <button id="cancel-delete" class="secondary-button">Cancel</button>
+      <button id="confirm-delete" class="danger-button">
+        <span class="button-loader" id="delete-loader"></span>
+        <span class="button-text">Delete</span>
+      </button>
+    </div>
+  </div>
+</div>
 
   <div style="text-align: center">
     <nav id="navbar">
@@ -112,7 +138,604 @@
   </form>
 </div>
   
+  <!-- Add this to your HTML, preferably near the other modal -->
+<div id="profile-pic-modal" class="modern-profile-modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Update Profile Picture</h3>
+      <button class="close-modal">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="image-preview-container">
+        <img id="image-preview" src="default-avatar.png" alt="Preview">
+      </div>
+      <div class="upload-options">
+        <button id="take-photo-btn" class="option-btn">
+          <i class="fas fa-camera"></i> Take Photo
+        </button>
+        <button id="choose-photo-btn" class="option-btn">
+          <i class="fas fa-image"></i> Choose from Gallery
+        </button>
+      </div>
+      <div class="edit-options">
+        <button id="crop-btn" class="edit-btn" disabled>
+          <i class="fas fa-crop"></i> Crop
+        </button>
+        <button id="rotate-btn" class="edit-btn" disabled>
+          <i class="fas fa-sync-alt"></i> Rotate
+        </button>
+        <button id="adjust-btn" class="edit-btn" disabled>
+          <i class="fas fa-sliders-h"></i> Adjust
+        </button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button id="cancel-upload" class="secondary-button">Cancel</button>
+      <button id="save-profile-pic" class="primary-button" disabled>
+        <span class="button-loader" id="upload-loader"></span>
+        <span class="button-text">Save Changes</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<style>
+/* Modern Profile Picture Modal Styles */
+.modern-profile-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.modern-profile-modal.show {
+  display: flex;
+  opacity: 1;
+}
+
+.modern-profile-modal .modal-content {
+  background-color: white;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 450px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  transform: translateY(20px);
+  transition: transform 0.3s ease;
+}
+
+.modern-profile-modal.show .modal-content {
+  transform: translateY(0);
+}
+
+.modern-profile-modal .modal-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid #f0f0f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modern-profile-modal .modal-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
+.modern-profile-modal .close-modal {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #888;
+  padding: 0;
+  line-height: 1;
+}
+
+.modern-profile-modal .modal-body {
+  padding: 20px;
+}
+
+.image-preview-container {
+  width: 200px;
+  height: 200px;
+  margin: 0 auto 20px;
+  border-radius: 50%;
+  border: 2px dashed #ddd;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  position: relative;
+}
+
+#image-preview {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: cover;
+}
+
+.upload-options {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.option-btn {
+  background-color: #f8f9fa;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 15px;
+  font-size: 14px;
+  color: #333;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+
+.option-btn:hover {
+  background-color: #e9ecef;
+}
+
+.option-btn i {
+  font-size: 16px;
+}
+
+.edit-options {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.edit-btn {
+  background-color: transparent;
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  color: #666;
+  transition: all 0.2s;
+}
+
+.edit-btn:hover {
+  background-color: #f0f0f0;
+  color: #333;
+}
+
+.edit-btn:disabled {
+  color: #ccc;
+  cursor: not-allowed;
+}
+
+.modern-profile-modal .modal-footer {
+  padding: 16px 20px;
+  border-top: 1px solid #f0f0f0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.secondary-button {
+  background-color: #f8f9fa;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.secondary-button:hover {
+  background-color: #e9ecef;
+}
+
+.primary-button {
+  background-color: #28a745;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.primary-button:hover {
+  background-color: #218838;
+}
+
+.primary-button:disabled {
+  background-color: #b3d9bc;
+  cursor: not-allowed;
+}
+
+.button-loader {
+  display: none;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 1s ease-in-out infinite;
+  margin-right: 8px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* When upload is in progress */
+.uploading .button-text {
+  display: none;
+}
+
+.uploading .button-loader {
+  display: inline-block;
+}
+</style>
+
+<!-- Add this to your HTML, preferably near the other modal -->
+<div id="profile-pic-modal" class="modern-profile-modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Update Profile Picture</h3>
+      <button class="close-modal">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="image-preview-container">
+        <img id="image-preview" src="default-avatar.png" alt="Preview">
+      </div>
+      <div class="upload-options">
+        <button id="take-photo-btn" class="option-btn">
+          <i class="fas fa-camera"></i> Take Photo
+        </button>
+        <button id="choose-photo-btn" class="option-btn">
+          <i class="fas fa-image"></i> Choose from Gallery
+        </button>
+      </div>
+      <div class="edit-options">
+        <button id="crop-btn" class="edit-btn" disabled>
+          <i class="fas fa-crop"></i> Crop
+        </button>
+        <button id="rotate-btn" class="edit-btn" disabled>
+          <i class="fas fa-sync-alt"></i> Rotate
+        </button>
+        <button id="adjust-btn" class="edit-btn" disabled>
+          <i class="fas fa-sliders-h"></i> Adjust
+        </button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button id="cancel-upload" class="secondary-button">Cancel</button>
+      <button id="save-profile-pic" class="primary-button" disabled>
+        <span class="button-loader" id="upload-loader"></span>
+        <span class="button-text">Save Changes</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<style>
+/* Modern Profile Picture Modal Styles */
+.modern-profile-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.modern-profile-modal.show {
+  display: flex;
+  opacity: 1;
+}
+
+.modern-profile-modal .modal-content {
+  background-color: white;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 450px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  transform: translateY(20px);
+  transition: transform 0.3s ease;
+}
+
+.modern-profile-modal.show .modal-content {
+  transform: translateY(0);
+}
+
+.modern-profile-modal .modal-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid #f0f0f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modern-profile-modal .modal-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
+.modern-profile-modal .close-modal {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #888;
+  padding: 0;
+  line-height: 1;
+}
+
+.modern-profile-modal .modal-body {
+  padding: 20px;
+}
+
+.image-preview-container {
+  width: 200px;
+  height: 200px;
+  margin: 0 auto 20px;
+  border-radius: 50%;
+  border: 2px dashed #ddd;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  position: relative;
+}
+
+#image-preview {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: cover;
+}
+
+.upload-options {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.option-btn {
+  background-color: #f8f9fa;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 15px;
+  font-size: 14px;
+  color: #333;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+
+.option-btn:hover {
+  background-color: #e9ecef;
+}
+
+.option-btn i {
+  font-size: 16px;
+}
+
+.edit-options {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.edit-btn {
+  background-color: transparent;
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  color: #666;
+  transition: all 0.2s;
+}
+
+.edit-btn:hover {
+  background-color: #f0f0f0;
+  color: #333;
+}
+
+.edit-btn:disabled {
+  color: #ccc;
+  cursor: not-allowed;
+}
+
+.modern-profile-modal .modal-footer {
+  padding: 16px 20px;
+  border-top: 1px solid #f0f0f0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.secondary-button {
+  background-color: #f8f9fa;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.secondary-button:hover {
+  background-color: #e9ecef;
+}
+
+.primary-button {
+  background-color: #28a745;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.primary-button:hover {
+  background-color: #218838;
+}
+
+.primary-button:disabled {
+  background-color: #b3d9bc;
+  cursor: not-allowed;
+}
+
+.button-loader {
+  display: none;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 1s ease-in-out infinite;
+  margin-right: 8px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* When upload is in progress */
+.uploading .button-text {
+  display: none;
+}
+
+.uploading .button-loader {
+  display: inline-block;
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  const modal = document.getElementById('profile-pic-modal');
+  const closeModalBtn = document.querySelector('#profile-pic-modal .close-modal');
+  const cancelBtn = document.getElementById('cancel-upload');
+  const saveBtn = document.getElementById('save-profile-pic');
+  const choosePhotoBtn = document.getElementById('choose-photo-btn');
+  const takePhotoBtn = document.getElementById('take-photo-btn');
+  const imagePreview = document.getElementById('image-preview');
+  const fileInput = document.getElementById('profile-picture-upload');
   
+  // Open modal when clicking the camera icon
+  document.querySelector('.file-input-icon').addEventListener('click', function(e) {
+    e.preventDefault();
+    modal.classList.add('show');
+  });
+  
+  // Close modal handlers
+  function closeModal() {
+    modal.classList.remove('show');
+  }
+  
+  closeModalBtn.addEventListener('click', closeModal);
+  cancelBtn.addEventListener('click', closeModal);
+  
+  // Click on overlay closes modal
+  modal.addEventListener('click', function(e) {
+    if (e.target === modal) {
+      closeModal();
+    }
+  });
+  
+  // Choose photo handler
+  choosePhotoBtn.addEventListener('click', function() {
+    fileInput.click();
+  });
+  
+  // File input change handler
+  fileInput.addEventListener('change', function(e) {
+    if (e.target.files && e.target.files[0]) {
+      const reader = new FileReader();
+      
+      reader.onload = function(event) {
+        imagePreview.src = event.target.result;
+        // Enable editing buttons
+        document.querySelectorAll('.edit-btn').forEach(btn => {
+          btn.disabled = false;
+        });
+        saveBtn.disabled = false;
+      };
+      
+      reader.readAsDataURL(e.target.files[0]);
+    }
+  });
+  
+  // Take photo handler (would need more implementation for actual camera access)
+  takePhotoBtn.addEventListener('click', function() {
+    alert('Camera functionality would be implemented here');
+    // In a real implementation, you would access the device camera
+  });
+  
+  // Save button handler
+  saveBtn.addEventListener('click', function() {
+    // Show loading state
+    saveBtn.classList.add('uploading');
+    
+    // Simulate upload (replace with actual upload logic)
+    setTimeout(function() {
+      // Hide loading state
+      saveBtn.classList.remove('uploading');
+      
+      // Update profile picture
+      const profilePic = document.getElementById('profile-picture');
+      const profilePic1 = document.getElementById('profile-picture1');
+      if (profilePic) profilePic.src = imagePreview.src;
+      if (profilePic1) profilePic1.src = imagePreview.src;
+      
+      // Close modal
+      closeModal();
+      
+      // Show success message
+      alert('Profile picture updated successfully!');
+    }, 1500);
+  });
+});
+</script>
 </div>
   <div id="posts-container" class="product-list"></div>
 </body>
@@ -153,7 +776,11 @@
 
     async function updateFollowButton() {
         try {
-            const response = await fetch(`localhost:3000/api/follow-status?followerId=${loggedInUserId}&followingId=${profileOwnerId}`);
+          const API_BASE_URL = window.location.hostname === 'localhost' 
+       ?
+      'http://localhost:3000' :
+      'https://salmart-production.up.railway.app'
+            const response = await fetch(`${API_BASE_URL}/follow-status?followerId=${loggedInUserId}&followingId=${profileOwnerId}`);
             const data = await response.json();
 
             if (data.following) {
@@ -170,7 +797,11 @@
 
     followButton.addEventListener("click", async function () {
         try {
-            const response = await fetch("localhost:3000/api/follow", {
+          const API_BASE_URL = window.location.hostname === 'localhost' 
+       ?
+      'http://localhost:3000' :
+      'https://salmart-production.up.railway.app'
+            const response = await fetch(`${API_BASE_URL}/api/follow`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -208,8 +839,6 @@
 }
 body {
   font-family: 'Poppins', sans-serif;
-  margin: 0;
-  padding: 0;
   box-sizing: border-box;
   font-size: 16px
 }
@@ -249,8 +878,8 @@ body {
   font-size: 14px;
 }
 
+
 .upload-button {
-  display: none;
   background-color: #28a745;
   color: white;
   padding: 8px 16px;
@@ -259,12 +888,12 @@ body {
   margin-top: 10px;
   cursor: pointer;
   transition: background-color 0.3s ease;
+  display: none; /* Hidden by default */
 }
 
 .upload-button:hover {
   background-color: #1e7a33;
 }
-
 h1 {
   text-align: center;
   font-size: 24px;
@@ -497,526 +1126,72 @@ a .active {
 </style>
 <script>
   document.addEventListener("DOMContentLoaded", async function () {
-    const profileOwnerId = localStorage.getItem("userId");
+    // Get the API base URL
+    const API_BASE_URL = window.location.hostname === 'localhost' 
+        ? 'http://localhost:3000' 
+        : 'https://salmart-production.up.railway.app';
+
+    // Function to get the current user's ID from the token
+    function getLoggedInUserId() {
+        const token = localStorage.getItem("authToken");
+        if (!token) return null;
+        
+        try {
+            const decoded = jwt_decode(token);
+            return decoded.userId;
+        } catch (error) {
+            console.error("Error decoding token:", error);
+            return null;
+        }
+    }
+
+    // Get profile owner ID - first from URL, then fall back to logged-in user
+    const urlParams = new URLSearchParams(window.location.search);
+    let profileOwnerId = urlParams.get('userId');
+    
+    if (!profileOwnerId) {
+        profileOwnerId = getLoggedInUserId();
+        if (!profileOwnerId) {
+            // If no user is logged in and no userId provided, redirect to login
+            window.location.href = "SignIn.html";
+            return;
+        }
+    }
+
     const followersCountEl = document.getElementById("followers");
     const productsCountEl = document.getElementById("products-count");
-
-    try {
-      const response = await fetch(`http://localhost:3000/profile/${profileOwnerId}`);
-      const data = await response.json();
-
-      if (response.ok) {
-        followersCountEl.textContent = data.followersCount;
-        productsCountEl.textContent = data.productsCount; // Adjust if needed
-      }
-    } catch (err) {
-      console.error("Error fetching profile data:", err);
-    }
-  });
-</script>
-<script>
-  const openBtn = document.createElement("button");
-  openBtn.textContent = "Update Bank Details";
-  openBtn.className = "bank-button";
-  openBtn.style.marginTop = "10px";
-  openBtn.type = "button"; // prevent form submit reload
-  document.getElementById("upload-form").appendChild(openBtn);
-
-  const overlay = document.getElementById("overlay");
-  const bottomSheet = document.getElementById("bottom-sheet");
-  const closeBtn = document.getElementById("close-sheet");
-
-  const bankNameInput = document.getElementById("bankName");
-  const bankCodeInput = document.getElementById("bankCode");
-  const accountNumberInput = document.getElementById("accountNumber");
-  const accountNameInput = document.getElementById("accountName");
-
-  // Show bottom sheet and autofill form
-  openBtn.addEventListener("click", async () => {
-    bottomSheet.style.bottom = "0";
-    overlay.style.display = "block";
-
-    const token = localStorage.getItem("authToken"); // Get the token from localStorage
-
-    if (!token) {
-      alert("You are not logged in. Please log in to update bank details.");
-      return;
-    }
-
-    try {
-      const res = await fetch(`http://localhost:3000/get-bank-details`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}` // Include the token in the headers
-        }
-      });
-
-      const data = await res.json();
-
-      if (res.ok && data.success && data.bankDetails) {
-        bankNameInput.value = data.bankDetails.bankName || "";
-        accountNumberInput.value = data.bankDetails.accountNumber || "";
-        bankCodeInput.value = data.bankDetails.bankCode || "";
-        accountNameInput.value = data.bankDetails.accountName || "";
-      } else {
-        bankNameInput.value = "";
-        accountNumberInput.value = "";
-        accountNameInput.value = "";
-      }
-    } catch (err) {
-      console.error("Error loading bank details:", err);
-    }
-  });
-
-  // Close bottom sheet
-  const closeSheet = () => {
-    bottomSheet.style.bottom = "-100%";
-    overlay.style.display = "none";
-  };
-
-  closeBtn.addEventListener("click", closeSheet);
-  overlay.addEventListener("click", closeSheet);
-
-  // Handle form submit
-  document.getElementById("bank-details-form").addEventListener("submit", async function (e) {
-    e.preventDefault();
-
-    const token = localStorage.getItem("authToken"); // Get the token from localStorage
-
-    if (!token) {
-      alert("You are not logged in. Please log in to update bank details.");
-      return;
-    }
-
-    const bankName = bankNameInput.value.trim();
-    const accountNumber = accountNumberInput.value.trim();
-    const accountName = accountNameInput.value.trim();
-    const bankCode = bankCodeInput.value.trim();
-
-    try {
-      const res = await fetch("http://localhost:3000/update-bank-details", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}` // Include the token in the headers
-        },
-        body: JSON.stringify({ bankName, accountNumber, accountName, bankCode }),
-      });
-
-      const result = await res.json();
-      if (res.ok && result.success) {
-        alert("Bank details updated successfully!");
-        closeSheet();
-      } else {
-        alert("Failed to update: " + result.message);
-      }
-    } catch (err) {
-      console.error(err);
-      alert("Something went wrong!");
-    }
-  });
-</script>
-<script>
-  document.addEventListener('DOMContentLoaded', async function () {
-    let loggedInUser = null; // Define loggedInUser variable
-
-    // Function to format time (e.g., "2 hrs ago")
-    function formatTime(timestamp) {
-        const now = new Date();
-        const postDate = new Date(timestamp);
-        const diffInSeconds = Math.floor((now - postDate) / 1000);
-
-        if (diffInSeconds < 60) return "Just now";
-        if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} min ago`;
-        if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hrs ago`;
-        if (diffInSeconds < 172800) return "Yesterday";
-
-        return postDate.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
-    }
-
-    // Function to check login status
-    async function checkLoginStatus() {
-        const token = localStorage.getItem('authToken');
-        const tokenExpiry = localStorage.getItem('tokenExpiry');
-
-        if (!token || Date.now() > tokenExpiry) {
-            console.log('Token expired or missing. Redirecting to login...');
-            return;
-        }
-
-        try {
-            const response = await fetch('http://localhost:3000/verify-token', {
-                method: 'GET',
-                headers: { 'Authorization': `Bearer ${token}` },
-            });
-
-            if (response.ok) {
-                const userData = await response.json();
-                loggedInUser = userData.userId; // Set loggedInUser to the current user's ID
-                fetchPosts(); // Fetch posts after successful login
-            } else {
-                throw new Error('Token validation failed');
-            }
-        } catch (error) {
-            console.error('Token validation failed:', error);
-        }
-    }
-
-    // Function to get the profile owner's ID from the URL
     
+    
+    try {
+        // Fetch profile data
+        const response = await fetch(`${API_BASE_URL}/profile/${profileOwnerId}`);
+        const data = await response.json();
 
-    // Function to fetch and display posts for the profile owner
-    async function fetchPosts() {
-        const urlParams = new URLSearchParams(window.location.search)
-        let profileOwnerId = localStorage.getItem("userId")// Get the profile owner's ID
-        
-        
-        if (!profileOwnerId) {
-            profileOwnerId = localhost.getItem("userId")
+        if (response.ok) {
+            // Update profile stats
+            followersCountEl.textContent = data.followersCount || "0";
+            productsCountEl.textContent = data.productsCount || "0";
+            
+            // Update profile info
+            if (usernameEl) usernameEl.textContent = data.name || "User";
+            if (profileHeaderEl) profileHeaderEl.textContent = data.name || "Profile";
+            if (profilePicEl) profilePicEl.src = data.profilePicture || "default-avatar.png";
+
+            // Hide follow button if viewing own profile
+            const loggedInUserId = getLoggedInUserId();
+            const followButton = document.getElementById("follow-button");
+            if (followButton && profileOwnerId === loggedInUserId) {
+                followButton.style.display = "none";
+            }
+        } else {
+            console.error("Error fetching profile:", data.message);
         }
-        if(!profileOwnerId) {
-          console.log('No userId found');
-          return;
-        }
-
-        const postsContainer = document.getElementById('posts-container');
-        if (!postsContainer) {
-            console.error('Posts container not found.');
-            return;
-        }
-
-        try {
-            const response = await fetch(`http://localhost:3000/post?userId=${profileOwnerId}`); // Fetch posts for the profile owner
-            if (!response.ok) throw new Error('Failed to fetch posts');
-
-            const posts = await response.json();
-            postsContainer.innerHTML = ""; // Clear existing posts
-
-            posts.forEach(post => {
-                if (post.createdBy.userId === profileOwnerId ) { // Only display posts by the profile owner
-                    const postElement = document.createElement('div');
-                    postElement.classList.add('post');
-                    postElement.innerHTML = `
-                        <div class="post-header">
-                            <a href="Profile.html?userId=${post.createdBy.userId}">
-                                <img src="${post.profilePicture || 'default-avatar.png'}" class="post-avatar">
-                            </a>
-                            <div class="post-user-info">
-                                <a href="Profile.html?userId=${post.createdBy.userId}">
-                                    <h4 class="post-user-name">${post.createdBy.name}</h4>
-                                </a>
-                                <p class="post-time">${formatTime(post.createdAt)}</p>
-                            </div>
-                            ${post.createdBy.userId !== loggedInUser ?
-                                `<button class="follow-button" data-user-id="${post.createdBy.userId}" data-is-following="${post.isFollowing}"><i class="fas fa-user-plus"></i> Follow</button>` : ''}
-                            <div class="post-options">
-                                <button class="post-options-button"><i class="fas fa-ellipsis-h"></i></button>
-                                <div class="post-options-menu">
-                                    <ul>
-                                        ${post.createdBy.userId === loggedInUser ? `
-                                            <li><button class="delete-post-button" data-post-id="${post._id}">Delete Post</button></li>
-                                            <li><button class="edit-post-button" data-post-id="${post._id}">Edit Post</button></li>
-                                        ` : ''}
-                                        <li><button class="report-post-button" data-post-id="${post._id}">Report Post</button></li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                        <p class="post-description"><b>Product:</b> ${post.description}</p>
-                        <p class="post-description"><b>Condition:</b> ${post.productCondition}</p>
-                        <p class="post-description"><b>Price:</b> ${post.price}</p>
-                        <p class="post-description"><b>Location:</b> ${post.location}</p>
-                        <img src="${post.photo || 'default-image.png'}" class="post-image" onclick="openImage('${post.photo || 'default-image.png'}')">
-                        <div class="buy" style="text-align: center">
-                            <button class="buy-now-button" data-post-id="${post._id}" ${post.isSold ? 'disabled' : ''}>${post.isSold ? 'Sold Out' : 'Buy Now'}</button>
-                            <a id="send-message-link">
-                                <button class="buy-now-button" id="send-message-btn"
-                                    data-recipient-id="${post.createdBy.userId}"
-                                    data-product-image="${post.photo || 'default-image.png'}"
-                                    data-product-description="${post.description}">
-                            ${post.isSold ? 'Unavailable': 'Check Available'}
-                                </button>
-                            </a>
-                        </div>
-                        <div class="post-actions">
-                            <button class="like-button">
-                                <i class="${post.likes.includes(loggedInUser) ? 'fas' : 'far'} fa-heart"></i>
-                                <span class="like-count">${post.likes.length}</span>
-                            </button>
-                            <button class="reply-button"><i class="far fa-comment"></i> <span class="comment-count">${post.comments ? post.comments.length : 0}</span></button>
-                            <button class="share-button"><i class="fas fa-share"></i></button>
-                        </div>
-                        <div class="comment-section" style="display: none;">
-                            <div class="comments-list">
-                                ${post.comments.map(comment => `
-                                    <div class="comment">
-                                        <img src="${comment.profilePicture || 'default-avatar.png'}" class="comment-avatar">
-                                        <div class="comment-info">
-                                            <strong>${comment.name}</strong>
-                                            <p>${comment.text}</p>
-                                            <span class="comment-time">${formatTime(comment.createdAt)}</span>
-                                        </div>
-                                    </div>
-                                `).join('')}
-                            </div>
-                            <div class="comment-input">
-                                <input type="text" placeholder="Write a comment..." class="comment-text">
-                                <button class="comment-submit" data-post-id="${post._id}">Post</button>
-                            </div>
-                        </div>
-                    `;
-                    postsContainer.prepend(postElement);
-
-                    // Add event listeners for buttons (like, comment, follow, etc.)
-                    // Like functionality
-                    const likeButton = postElement.querySelector('.like-button');
-                    likeButton.addEventListener('click', async () => {
-                        const likeCountElement = likeButton.querySelector('.like-count');
-                        const icon = likeButton.querySelector('i');
-                        const postId = post._id;
-
-                        let currentLikes = parseInt(likeCountElement.textContent, 10);
-                        let isLiked = icon.classList.contains('fas');
-
-                        // Optimistic UI update
-                        icon.classList.toggle('fas', !isLiked);
-                        icon.classList.toggle('far', isLiked);
-                        likeCountElement.textContent = isLiked ? currentLikes - 1 : currentLikes + 1;
-
-                        try {
-                            const response = await fetch(`http://localhost:3000/post/like/${postId}`, {
-                                method: 'POST',
-                                headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` },
-                            });
-
-                            if (!response.ok) throw new Error('Failed to like/unlike post');
-
-                            const data = await response.json();
-                            likeCountElement.textContent = data.likes.length;
-                            if (data.likes.includes(loggedInUser)) {
-                                icon.classList.add('fas');
-                                icon.classList.remove('far');
-                            } else {
-                                icon.classList.add('far');
-                                icon.classList.remove('fas');
-                            }
-
-                            if (!isLiked) {
-                                socket.emit('likePost', { postId, userId: loggedInUser });
-                            }
-                        } catch (error) {
-                            console.error('Error liking/unliking post:', error);
-                            icon.classList.toggle('fas', isLiked);
-                            icon.classList.toggle('far', !isLiked);
-                            likeCountElement.textContent = currentLikes;
-                        }
-                    });
-
-                    // Comment functionality
-                    const commentToggleButton = postElement.querySelector('.reply-button');
-                    const commentSection = postElement.querySelector('.comment-section');
-                    commentToggleButton.addEventListener('click', () => {
-                        commentSection.style.display = commentSection.style.display === "none" ? "block" : "none";
-                    });
-
-                    const commentButton = postElement.querySelector('.comment-submit');
-                    const commentInput = postElement.querySelector('.comment-text');
-                    commentButton.addEventListener('click', async () => {
-                        const commentText = commentInput.value.trim();
-                        if (!commentText) return;
-
-                        try {
-                            const response = await fetch(`http://localhost:3000/post/comment/${post._id}`, {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-                                },
-                                body: JSON.stringify({ text: commentText }),
-                            });
-
-                            if (!response.ok) throw new Error('Failed to post comment');
-
-                            const result = await response.json();
-                            const newComment = result.comment;
-
-                            const commentList = postElement.querySelector('.comments-list');
-                            const newCommentHTML = `
-                                <div class="comment">
-                                    <img src="${newComment.profilePicture || 'default-avatar.png'}" class="comment-avatar">
-                                    <div class="comment-info">
-                                        <strong>${newComment.name}</strong>
-                                        <p>${newComment.text}</p>
-                                        <span class="comment-time">${formatTime(newComment.createdAt)}</span>
-                                    </div>
-                                </div>
-                            `;
-                            commentList.insertAdjacentHTML('afterbegin', newCommentHTML);
-                            commentInput.value = "";
-
-                            const commentCountElement = postElement.querySelector('.comment-count');
-                            commentCountElement.textContent = parseInt(commentCountElement.textContent) + 1;
-
-                            showToast("Your comment has been submitted!");
-                        } catch (error) {
-                            console.error('Error posting comment:', error);
-                        }
-                    });
-
-                    // Buy now functionality
-                    const buyNowButton = postElement.querySelector('.buy-now-button');
-                    buyNowButton.addEventListener('click', async () => {
-                        const postId = buyNowButton.getAttribute('data-post-id').trim();
-                        const email = localStorage.getItem('email');
-                        const buyerId = localStorage.getItem('userId');
-
-                        if (!email || !buyerId) {
-                            alert("No email or user ID found in localStorage. Please log in.");
-                            return;
-                        }
-
-                        try {
-                            const response = await fetch('http://localhost:3000/pay', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ email, postId, buyerId }),
-                            });
-
-                            const result = await response.json();
-                            if (result.success) {
-                                window.location.href = result.url;
-                            } else {
-                                alert("Payment failed!");
-                            }
-                        } catch (error) {
-                            console.error("Error processing payment:", error);
-                            alert("Payment error!");
-                        }
-                    });
-
-                    // Check availability functionality
-                    const sendMessageBtn = postElement.querySelector("#send-message-btn");
-                    if(post.isSold) {
-                      sendMessageBtn.disabled = true;
-                    }
-                    const sendMessageLink = postElement.querySelector("#send-message-link");
-                    sendMessageBtn.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        const recipientId = sendMessageBtn.dataset.recipientId;
-                        const recipientUsername = post.createdBy.name;
-                        const recipientProfilePictureUrl = post.profilePicture || 'default-avatar.png';
-                        const productImage = sendMessageBtn.dataset.productImage;
-                        const productDescription = sendMessageBtn.dataset.productDescription;
-
-                        // Construct the message with product details
-                        const message = `Is this item still available?\n\nProduct: ${productDescription}\nImage: ${productImage}`;
-                        const userId = localStorage.getItem("userId")
-
-                        // Redirect to the chat page with the pre-filled message
-                        sendMessageLink.href = `Chats.html?user_id=${userId}&recipient_id=${recipientId}&recipient_username=${recipientUsername}&recipient_profile_picture_url=${recipientProfilePictureUrl}&message=${encodeURIComponent(message)}`;
-                        window.location.href = sendMessageLink.href;
-                    });
-
-                    // Post menu functionality
-                    const optionsButton = postElement.querySelector('.post-options-button');
-                    const optionsMenu = postElement.querySelector('.post-options-menu');
-                    optionsButton.addEventListener('click', (e) => {
-                        e.stopPropagation(); // Prevent bubbling
-                        document.querySelectorAll('.post-options-menu.show').forEach(menu => {
-                            if (menu !== optionsMenu) menu.classList.remove('show');
-                        });
-                        optionsMenu.classList.toggle('show');
-                    });
-
-                    // Close menu if user clicks outside
-                    document.addEventListener('click', () => {
-                        document.querySelectorAll('.post-options-menu.show').forEach(menu => {
-                            menu.classList.remove('show');
-                        });
-                    });
-
-                    // Delete post functionality
-                    const deleteButton = postElement.querySelector('.delete-post-button');
-                    if (deleteButton) {
-                        deleteButton.addEventListener('click', async () => {
-                            const postId = deleteButton.getAttribute('data-post-id');
-                            const authToken = localStorage.getItem('authToken');
-
-                            const confirmDelete = confirm("Are you sure you want to delete this post?");
-                            if (!confirmDelete) return;
-
-                            try {
-                                const response = await fetch(`http://localhost:3000/post/delete/${postId}`, {
-                                    method: 'DELETE',
-                                    headers: {
-                                        'Content-Type': 'application/json',
-                                        'Authorization': `Bearer ${authToken}`,
-                                    },
-                                });
-
-                                if (!response.ok) throw new Error('Failed to delete post');
-
-                                postElement.remove();
-                                showToast('Post deleted successfully!');
-                            } catch (error) {
-                                console.error('Error deleting post:', error);
-                                showToast('Error deleting post. Please try again.');
-                            }
-                        });
-                    }
-
-                    // Edit post functionality
-                    const editButton = postElement.querySelector('.edit-post-button');
-                    if (editButton) {
-                        editButton.addEventListener('click', () => {
-                            const postId = editButton.getAttribute('data-post-id');
-                            window.location.href = `Ads.html?edit=true&postId=${postId}`;
-                        });
-                    }
-                }
-            });
-        } catch (error) {
-            console.error('Error fetching posts:', error);
-            postsContainer.innerHTML = '<p>Failed to fetch posts. Please try again later.</p>';
-        }
+    } catch (err) {
+        console.error("Error fetching profile data:", err);
     }
 
-    // Function to show toast notifications
-    function showToast(message) {
-        const toast = document.createElement('div');
-        toast.classList.add('toast-message');
-        toast.textContent = message;
-        document.body.appendChild(toast);
-
-        setTimeout(() => {
-            toast.classList.add('fade-out');
-            setTimeout(() => {
-                toast.remove();
-            }, 500);
-        }, 3000);
-    }
-
-    // Check login status when the page loads
-    checkLoginStatus();
-});
-</script>
-<script>
-const menuIcon = document.querySelector('.menu-icon');
-const sideBar = document.querySelector('.side-bar');
-const body = document.body;
-
-menuIcon.addEventListener('click', () => {
-  sideBar.style.display = sideBar.style.display === 'block' ? 'none' : 'block';
-  body.classList.toggle('no-scroll');
-});
-
-document.body.addEventListener('click', (e) => {
-  if (sideBar.style.display === 'block' && !sideBar.contains(e.target) && !menuIcon.contains(e.target)) {
-    sideBar.style.display = 'none';
-    body.classList.remove('no-scroll');
-  }
-});
 
 </script>
+<script src="sideBar"></script>
+<script src="updateBankDetails.js"></script>
 </html> 

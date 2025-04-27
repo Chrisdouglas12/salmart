@@ -1,13 +1,8 @@
 document.addEventListener('DOMContentLoaded', async function () {
-    const profilePictureContainer = document.getElementById('profile-picture1');
-    const homeProfilePicture = document.getElementById('profile-picture3');
-    const usernameContainer = document.getElementById('username1');
     let loggedInUser = null; // Define loggedInUser variable
-    const API_BASE_URL =
-      window.location.hostname === 'localhost'
-      ? 'http://localhost:3000'
-      :
-'https://salmart-production.up.railway.app'
+    const API_BASE_URL = window.location.hostname === 'localhost' 
+        ? 'http://localhost:3000' 
+        : 'https://salmart-production.up.railway.app';
 
     // Function to format time (e.g., "2 hrs ago")
     function formatTime(timestamp) {
@@ -22,7 +17,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
         return postDate.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
     }
-    
+    //check following list
 let followingList = [];
    try {
        followingList = JSON.parse(localStorage.getItem('followingList')) || [];
@@ -37,12 +32,10 @@ let followingList = [];
 
         if (!token || Date.now() > tokenExpiry) {
             console.log('Token expired or missing. Redirecting to login...');
-            showLoginOption();
             return;
         }
 
         try {
-          
             const response = await fetch(`${API_BASE_URL}/verify-token`, {
                 method: 'GET',
                 headers: { 'Authorization': `Bearer ${token}` },
@@ -50,67 +43,67 @@ let followingList = [];
 
             if (response.ok) {
                 const userData = await response.json();
-                profilePictureContainer.src = userData.profilePicture || 'default-avatar.png';
-                homeProfilePicture.src = userData.profilePicture || 'default-avatar.png';
-                usernameContainer.textContent = `Welcome, ${userData.firstName}`;
                 loggedInUser = userData.userId; // Set loggedInUser to the current user's ID
-                fetchPosts(); // Load all posts initially
-
-// Add event listeners for category buttons
-document.querySelectorAll('.category-btn').forEach(button => {
-    button.addEventListener('click', function () {
-        const selectedCategory = this.getAttribute('data-category');
-        fetchPosts(selectedCategory);
-    });
-});
-                // Fetch posts after successful login
+                fetchPosts(); // Fetch posts after successful login
             } else {
                 throw new Error('Token validation failed');
             }
         } catch (error) {
             console.error('Token validation failed:', error);
-            showLoginOption();
+            fetchPosts(); // Still attempt to fetch posts (for public profiles)
         }
     }
 
-    // Function to show login option if user is not logged in
-    function showLoginOption() {
-        profilePictureContainer.src = 'default-avatar.png';
-        homeProfilePicture.src = 'default-avatar.png';
-        usernameContainer.textContent = 'Please log in';
-    }
+    // Function to fetch and display posts for the profile owner
+    async function fetchPosts() {
+        const urlParams = new URLSearchParams(window.location.search);
+        let profileOwnerId = urlParams.get('userId'); // Get userId from URL query parameter
 
-    // Function to fetch and display posts
-    async function fetchPosts(category = '') {
-    const postsContainer = document.getElementById('posts-container');
-    try {
-        const response = await fetch(`${API_BASE_URL}/post?category=${encodeURIComponent(category)}`);
+        // If no userId in URL, fall back to logged-in user's ID
+        if (!profileOwnerId) {
+            profileOwnerId = loggedInUser || localStorage.getItem('userId');
+        }
+
+        // If still no profileOwnerId, log error and exit
+        if (!profileOwnerId) {
+            console.log('No userId found in URL or localStorage');
+            return;
+        }
+
+        const postsContainer = document.getElementById('posts-container');
+        if (!postsContainer) {
+            console.error('Posts container not found.');
+            return;
+        }
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/post?userId=${profileOwnerId}`);
             if (!response.ok) throw new Error('Failed to fetch posts');
 
             const posts = await response.json();
-            postsContainer.innerHTML = ""; // Clear existing posts
+            postsContainer.innerHTML = ''; // Clear existing posts
 
-            // First, update the post creation code to properly handle follow status
-posts.forEach(post => {
-    const postElement = document.createElement('div');
-    postElement.classList.add('post');
-    
-    // Check if the current user is already following this post's author
-    const isFollowing = post.isFollowing || false;
-    
-    postElement.innerHTML = `
-        <div class="post-header">
-            <a href="Profile.html?userId=${post.createdBy.userId}">
-                <img src="${post.profilePicture || 'default-avatar.png'}" class="post-avatar">
-            </a>
-            <div class="post-user-info">
-                <a href="Profile.html?userId=${post.createdBy.userId}">
-                    <h4 class="post-user-name">${post.createdBy.name}</h4>
-                </a>
-                <p class="post-time">${formatTime(post.createdAt)}</p>
-            </div>
+            posts.forEach(post => {
+                if (post.createdBy.userId === profileOwnerId) { // Only display posts by the profile owner
+                // Normalize isFollowing to boolean in case it's a string
+                    const isFollowing = post.isFollowing === true || post.isFollowing === 'true';
 
+                    // Debug log to verify follow status
+                    console.log(`Post by ${post.createdBy.userId}, loggedInUser: ${loggedInUser}, isFollowing: ${isFollowing}`);
 
+                    const postElement = document.createElement('div');
+                    postElement.classList.add('post');
+                    postElement.innerHTML = `
+                        <div class="post-header">
+                            <a href="Profile.html?userId=${post.createdBy.userId}">
+                                <img src="${post.profilePicture || 'default-avatar.png'}" class="post-avatar">
+                            </a>
+                            <div class="post-user-info">
+                                <a href="Profile.html?userId=${post.createdBy.userId}">
+                                    <h4 class="post-user-name">${post.createdBy.name}</h4>
+                                </a>
+                                <p class="post-time">${formatTime(post.createdAt)}</p>
+                            </div>
 ${post.createdBy.userId !== loggedInUser ?
     followingList.includes(post.createdBy.userId) ?
         `<button class="follow-button" data-user-id="${post.createdBy.userId}" 
@@ -121,26 +114,27 @@ ${post.createdBy.userId !== loggedInUser ?
             <i class="fas fa-user-plus"></i> Follow
         </button>`
     : ''}
-                        <div class="post-options">
-                            <button class="post-options-button"><i class="fas fa-ellipsis-h"></i></button>
-                            <div class="post-options-menu">
-                                <ul>
-                                    ${post.createdBy.userId === loggedInUser ? `
-                                        <li><button class="delete-post-button" data-post-id="${post._id}">Delete Post</button></li>
-                                        <li><button class="edit-post-button" data-post-id="${post._id}">Edit Post</button></li>
-                                    ` : ''}
-                                    <li><button class="report-post-button" data-post-id="${post._id}">Report Post</button></li>
-                                </ul>
+
+                            <div class="post-options">
+                                <button class="post-options-button"><i class="fas fa-ellipsis-h"></i></button>
+                                <div class="post-options-menu">
+                                    <ul>
+                                        ${post.createdBy.userId === loggedInUser ? `
+                                            <li><button class="delete-post-button" data-post-id="${post._id}">Delete Post</button></li>
+                                            <li><button class="edit-post-button" data-post-id="${post._id}">Edit Post</button></li>
+                                        ` : ''}
+                                        <li><button class="report-post-button" data-post-id="${post._id}">Report Post</button></li>
+                                    </ul>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <p class="post-description"><b>Product:</b> ${post.description}</p>
-                    <p class="post-description"><b>Condition:</b> <span style="color: red; font-weight: 500"> ${post.productCondition}</p> </span>
-                    <p class="post-description"><b>Price:</b><span style="color: #28a745; font-weight: 600;"> &#8358;${Number(post.price).toLocaleString('en-Ng')} </span></p>
-                    <p class="post-description"><b>Location:</b> ${post.location}</p>
-                    <img src="${post.photo || 'default-image.png'}" class="post-image" onclick="openImage('${post.photo || 'default-image.png'}')">
-                    <div class="buy" style="text-align: center">
-                        <button class="buy-now-button" data-post-id="${post._id}" ${post.isSold ? 'disabled' : ''}>${post.isSold ? 'Sold Out' : 'Buy Now'}</button>
+                        <p class="post-description"><b>Product:</b> ${post.description}</p>
+                        <p class="post-description"><b>Condition:</b> ${post.productCondition}</p>
+                        <p class="post-description"><b>Price:</b> ₦${Number(post.price).toLocaleString('en-Ng')}</p>
+                        <p class="post-description"><b>Location:</b> ${post.location}</p>
+                        <img src="${post.photo || 'default-image.png'}" class="post-image" onclick="openImage('${post.photo || 'default-image.png'}')">
+                        <div class="buy" style="text-align: center">
+          <button class="buy-now-button" data-post-id="${post._id}" ${post.isSold ? 'disabled' : ''}>${post.isSold ? 'Sold Out' : 'Buy Now'}</button>
 <a id="send-message-link">
   <button class="buy-now-button" id="send-message-btn"
     data-recipient-id="${post.createdBy.userId}"
@@ -150,162 +144,209 @@ ${post.createdBy.userId !== loggedInUser ?
   </button>
 </a>
                     </div>
-                    <div class="post-actions">
-                        <button class="like-button">
-                            <i class="${post.likes.includes(loggedInUser) ? 'fas' : 'far'} fa-heart"></i>
-                            <span class="like-count">${post.likes.length}</span>
-                        </button>
-                        <button class="reply-button"><i class="far fa-comment-alt"></i> <span class="comment-count">${post.comments ? post.comments.length : 0}</span></button>
-                        <button class="share-button"><i class="fas fa-share"></i></button>
-                    </div>
-                  
-                `;
-                postsContainer.prepend(postElement);
+                        <div class="post-actions">
+                            <button class="like-button">
+                                <i class="${post.likes.includes(loggedInUser) ? 'fas' : 'far'} fa-heart"></i>
+                                <span class="like-count">${post.likes.length}</span>
+                            </button>
+                            <button class="reply-button"><i class="far fa-comment"></i> <span class="comment-count">${post.comments ? post.comments.length : 0}</span></button>
+                            <button class="share-button"><i class="fas fa-share"></i></button>
+                        </div>
+                        <div class="comment-section" style="display: none;">
+                            <div class="comments-list">
+                                ${post.comments.map(comment => `
+                                    <div class="comment">
+                                        <img src="${comment.profilePicture || 'default-avatar.png'}" class="comment-avatar">
+                                        <div class="comment-info">
+                                            <strong>${comment.name}</strong>
+                                            <p>${comment.text}</p>
+                                            <span class="comment-time">${formatTime(comment.createdAt)}</span>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            <div class="comment-input">
+                                <input type="text" placeholder="Write a comment..." class="comment-text">
+                                <button class="comment-submit" data-post-id="${post._id}">Post</button>
+                            </div>
+                        </div>
+                    `;
+                    postsContainer.prepend(postElement);
 
-                // Toggle post options menu
-                const optionsButton = postElement.querySelector('.post-options-button');
-                const optionsMenu = postElement.querySelector('.post-options-menu');
+                    // Add event listeners for buttons (like, comment, follow, etc.)
+                    // Like functionality
+                    const likeButton = postElement.querySelector('.like-button');
+                    likeButton.addEventListener('click', async () => {
+                        const likeCountElement = likeButton.querySelector('.like-count');
+                        const icon = likeButton.querySelector('i');
+                        const postId = post._id;
 
-                optionsButton.addEventListener('click', (e) => {
-                    e.stopPropagation(); // Prevent bubbling
-                    document.querySelectorAll('.post-options-menu.show').forEach(menu => {
-                        if (menu !== optionsMenu) menu.classList.remove('show');
-                    });
-                    optionsMenu.classList.toggle('show');
-                });
+                        let currentLikes = parseInt(likeCountElement.textContent, 10);
+                        let isLiked = icon.classList.contains('fas');
 
-  // Like functionality
-const likeButton = postElement.querySelector('.like-button');
-likeButton.addEventListener('click', async () => {
-    const likeCountElement = likeButton.querySelector('.like-count');
-    const icon = likeButton.querySelector('i');
-    const postId = post._id;
-    
-    // Get current state from DOM
-    const isCurrentlyLiked = icon.classList.contains('fas');
-    let currentLikes = parseInt(likeCountElement.textContent, 10);
+                        // Optimistic UI update
+                        icon.classList.toggle('fas', !isLiked);
+                        icon.classList.toggle('far', isLiked);
+                        likeCountElement.textContent = isLiked ? currentLikes - 1 : currentLikes + 1;
 
-    // Immediately disable button to prevent double clicks
-    likeButton.disabled = true;
+                        try {
+                            const response = await fetch(`${API_BASE_URL}/post/like/${postId}`, {
+                                method: 'POST',
+                                headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` },
+                            });
 
-    // Optimistic UI update
-    likeCountElement.textContent = isCurrentlyLiked ? currentLikes - 1 : currentLikes + 1;
-    icon.classList.toggle('fas', !isCurrentlyLiked);
-    icon.classList.toggle('far', isCurrentlyLiked);
+                            if (!response.ok) throw new Error('Failed to like/unlike post');
 
-    try {
-        const response = await fetch(`${API_BASE_URL}/post/like/${postId}`, {
-            method: 'POST',
-            headers: { 
-                'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ action: isCurrentlyLiked ? 'unlike' : 'like' })
-        });
+                            const data = await response.json();
+                            likeCountElement.textContent = data.likes.length;
+                            if (data.likes.includes(loggedInUser)) {
+                                icon.classList.add('fas');
+                                icon.classList.remove('far');
+                            } else {
+                                icon.classList.add('far');
+                                icon.classList.remove('fas');
+                            }
 
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || 'Failed to like/unlike post');
-        }
-
-        const data = await response.json();
-        
-        // Always use server response as the source of truth
-        likeCountElement.textContent = data.likes.length;
-        
-        // Determine if current user still likes the post
-        const userStillLikes = data.likes.includes(loggedInUser);
-        icon.classList.toggle('fas', userStillLikes);
-        icon.classList.toggle('far', !userStillLikes);
-
-        // Only emit socket event if the action was successful
-        if (userStillLikes && !isCurrentlyLiked) {
-            socket.emit('likePost', { postId, userId: loggedInUser });
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        // Revert to original state on error
-        likeCountElement.textContent = currentLikes;
-        icon.classList.toggle('fas', isCurrentlyLiked);
-        icon.classList.toggle('far', !isCurrentlyLiked);
-        showToast(error.message || 'Action failed. Please try again.', '#dc3545');
-    } finally {
-        likeButton.disabled = false;
-    }
-});
-
-                
-                // Send message functionality
-// Fix for sendMessageBtn null error
-            const sendMessageBtn = postElement.querySelector('#send-message-btn');
-            const sendMessageLink = postElement.querySelector('#send-message-link');
-            if (sendMessageBtn) {
-                if (post.isSold) {
-                    sendMessageBtn.disabled = true;
-                }
-                sendMessageBtn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    const recipientId = sendMessageBtn.dataset.recipientId;
-                    const recipientUsername = post.createdBy.name;
-                    const recipientProfilePictureUrl = post.profilePicture || 'default-avatar.png';
-                    const productImage = sendMessageBtn.dataset.productImage;
-                    const productDescription = sendMessageBtn.dataset.productDescription;
-
-                    const message = `Is this item still available?\n\nProduct: ${productDescription}\nImage: ${productImage}`;
-                    sendMessageLink.href = `Chats.html?user_id=${loggedInUser}&recipient_id=${recipientId}&recipient_username=${recipientUsername}&recipient_profile_picture_url=${recipientProfilePictureUrl}&message=${encodeURIComponent(message)}`;
-                    window.location.href = sendMessageLink.href;
-                });
-            } else {
-                console.warn('send-message-btn not found for post:', post._id);
-            }
-
-          
-
-                // Buy now functionality
-                const buyNowButton = postElement.querySelector('.buy-now-button');
-                buyNowButton.addEventListener('click', async () => {
-                    const postId = buyNowButton.getAttribute('data-post-id').trim();
-                    const email = localStorage.getItem('email');
-                    const buyerId = localStorage.getItem('userId');
-
-                    if (!email || !buyerId) {
-                        alert("No email or user ID found in localStorage. Please log in.");
-                        return;
-                    }
-
-                    try {
-                        const response = await fetch(`${API_BASE_URL}/pay`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ email, postId, buyerId }),
-                        });
-
-                        const result = await response.json();
-                        if (result.success) {
-                            window.location.href = result.url;
-                        } else {
-                            alert("Payment failed!");
+                            if (!isLiked) {
+                                socket.emit('likePost', { postId, userId: loggedInUser });
+                            }
+                        } catch (error) {
+                            console.error('Error liking/unliking post:', error);
+                            icon.classList.toggle('fas', isLiked);
+                            icon.classList.toggle('far', !isLiked);
+                            likeCountElement.textContent = currentLikes;
                         }
-                    } catch (error) {
-                        console.error("Error processing payment:", error);
-                        alert("Payment error!");
+                    });
+
+                    // Comment functionality
+                    const commentToggleButton = postElement.querySelector('.reply-button');
+                    const commentSection = postElement.querySelector('.comment-section');
+                    commentToggleButton.addEventListener('click', () => {
+                        commentSection.style.display = commentSection.style.display === "none" ? "block" : "none";
+                    });
+
+                    const commentButton = postElement.querySelector('.comment-submit');
+                    const commentInput = postElement.querySelector('.comment-text');
+                    commentButton.addEventListener('click', async () => {
+                        const commentText = commentInput.value.trim();
+                        if (!commentText) return;
+
+                        try {
+                            const response = await fetch(`${API_BASE_URL}/post/comment/${post._id}`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+                                },
+                                body: JSON.stringify({ text: commentText }),
+                            });
+
+                            if (!response.ok) throw new Error('Failed to post comment');
+
+                            const result = await response.json();
+                            const newComment = result.comment;
+
+                            const commentList = postElement.querySelector('.comments-list');
+                            const newCommentHTML = `
+                                <div class="comment">
+                                    <img src="${newComment.profilePicture || 'default-avatar.png'}" class="comment-avatar">
+                                    <div class="comment-info">
+                                        <strong>${newComment.name}</strong>
+                                        <p>${newComment.text}</p>
+                                        <span class="comment-time">${formatTime(newComment.createdAt)}</span>
+                                    </div>
+                                </div>
+                            `;
+                            commentList.insertAdjacentHTML('afterbegin', newCommentHTML);
+                            commentInput.value = "";
+
+                            const commentCountElement = postElement.querySelector('.comment-count');
+                            commentCountElement.textContent = parseInt(commentCountElement.textContent) + 1;
+
+                            showToast("Your comment has been submitted!");
+                        } catch (error) {
+                            console.error('Error posting comment:', error);
+                        }
+                    });
+
+                    // Buy now functionality
+                    const buyNowButton = postElement.querySelector('.buy-now-button');
+                    buyNowButton.addEventListener('click', async () => {
+                        const postId = buyNowButton.getAttribute('data-post-id').trim();
+                        const email = localStorage.getItem('email');
+                        const buyerId = localStorage.getItem('userId');
+
+                        if (!email || !buyerId) {
+                            alert("No email or user ID found in localStorage. Please log in.");
+                            return;
+                        }
+
+                        try {
+                            const response = await fetch(`${API_BASE_URL}/pay`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ email, postId, buyerId }),
+                            });
+
+                            const result = await response.json();
+                            if (result.success) {
+                                window.location.href = result.url;
+                            } else {
+                                alert("Payment failed!");
+                            }
+                        } catch (error) {
+                            console.error("Error processing payment:", error);
+                            alert("Payment error!");
+                        }
+                    });
+
+                    // Check availability functionality
+                    const sendMessageBtn = postElement.querySelector("#send-message-btn");
+                    if (post.isSold) {
+                        sendMessageBtn.disabled = true;
                     }
-                });
-                
-        //hide buy button and Check availabilty button from Posts owners
-     if (post.createdBy.userId === loggedInUser) {
+                    const sendMessageLink = postElement.querySelector("#send-message-link");
+                    sendMessageBtn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const recipientId = sendMessageBtn.dataset.recipientId;
+                        const recipientUsername = post.createdBy.name;
+                        const recipientProfilePictureUrl = post.profilePicture || 'default-avatar.png';
+                        const productImage = sendMessageBtn.dataset.productImage;
+                        const productDescription = sendMessageBtn.dataset.productDescription;
+
+                        // Construct the message with product details
+                        const message = `Is this item still available?\n\nProduct: ${productDescription}\nImage: ${productImage}`;
+                        const userId = localStorage.getItem("userId");
+
+                        // Redirect to the chat page with the pre-filled message
+                        sendMessageLink.href = `Chats.html?user_id=${userId}&recipient_id=${recipientId}&recipient_username=${recipientUsername}&recipient_profile_picture_url=${recipientProfilePictureUrl}&message=${encodeURIComponent(message)}`;
+                        window.location.href = sendMessageLink.href;
+                    });
+                    
+  if (post.createdBy.userId === loggedInUser) {
     const buyDiv = postElement.querySelector('.buy');
     if (buyDiv) {
         buyDiv.remove(); // Remove the buy div entirely
     }
 }
 
- // Toggle comment section
-const commentToggleButton = postElement.querySelector('.reply-button');
-commentToggleButton.addEventListener('click', () => {
-    window.location.href = `posts-details.html?postId=${post._id}`;
-});
-                
+                    // Post menu functionality
+                    const optionsButton = postElement.querySelector('.post-options-button');
+                    const optionsMenu = postElement.querySelector('.post-options-menu');
+                    optionsButton.addEventListener('click', (e) => {
+                        e.stopPropagation(); // Prevent bubbling
+                        document.querySelectorAll('.post-options-menu.show').forEach(menu => {
+                            if (menu !== optionsMenu) menu.classList.remove('show');
+                        });
+                        optionsMenu.classList.toggle('show');
+                    });
+
+                    // Close menu if user clicks outside
+                    document.addEventListener('click', () => {
+                        document.querySelectorAll('.post-options-menu.show').forEach(menu => {
+                            menu.classList.remove('show');
+                        });
+                    });
   //share ad functionality
 const shareButton = postElement.querySelector('.share-button');
 shareButton.addEventListener('click', (e) => {
@@ -371,6 +412,61 @@ function openAppOrWeb(appUrl, webUrl) {
     }, 500);
 }
 
+ //Then update the follow button click handler:
+document.querySelectorAll('.follow-button').forEach(followButton => {
+       followButton.addEventListener('click', async () => {
+           const userIdToFollow = followButton.getAttribute('data-user-id');
+           const token = localStorage.getItem('authToken');
+
+           if (!token) {
+               showToast('Please log in to follow users');
+               return;
+           }
+
+           try {
+               const response = await fetch(`${API_BASE_URL}/follow/${userIdToFollow}`, {
+                   method: 'POST',
+                   headers: {
+                       'Content-Type': 'application/json',
+                       'Authorization': `Bearer ${token}`,
+                   },
+               });
+
+               // First check if there's any response at all
+               if (!response.ok) {
+                   throw new Error(`HTTP error! status: ${response.status}`);
+               }
+
+               // Check if response has content before parsing
+               const text = await response.text();
+               const result = text ? JSON.parse(text) : {};
+
+               // Update localStorage following list
+               let followingList = [];
+               try {
+                   followingList = JSON.parse(localStorage.getItem('followingList')) || [];
+               } catch (e) {
+                   console.error("Error parsing followingList:", e);
+               }
+
+               if (!followingList.includes(userIdToFollow)) {
+                   followingList.push(userIdToFollow);
+                   localStorage.setItem('followingList', JSON.stringify(followingList));
+               }
+
+               // Update all follow buttons for this user
+               document.querySelectorAll(`.follow-button[data-user-id="${userIdToFollow}"]`).forEach(button => {
+                   button.innerHTML = `<i class="fas fa-user-check"></i> Following`;
+                   button.style.backgroundColor = '#28a745'; // Visual feedback
+               });
+
+               showToast(`You are now following this user!`);
+           } catch (error) {
+               console.error('Error following user:', error);
+               showToast(error.message || 'Failed to follow user. Please try again.');
+           }
+       });
+   });
 // Update the showShareModal function to include Instagram:
 function showShareModal(post) {
     // Create modal element
@@ -617,7 +713,8 @@ reportButton.addEventListener('click', async () => {
             showToast(error.message || 'Error reporting post. Please try again.');
         }
     });
-});
+});  
+
 // Delete post functionality - Modern version
 const deleteButton = postElement.querySelector('.delete-post-button');
 if (deleteButton) {
@@ -702,115 +799,21 @@ if (deleteButton) {
     document.addEventListener('keydown', handleKeydown);
   });
 }
-     // Function to check follow status on page load and hide buttons if already following
-async function checkFollowStatusOnLoad() {
-    const token = localStorage.getItem('authToken');
-    if (!token) return;
 
-    try {
-        const response = await fetch(`${API_BASE_URL}/api/following`, {
-            method: 'GET',
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-
-        if (response.ok) {
-            const { following } = await response.json();
-            // Store following list in localStorage to use during post rendering
-            localStorage.setItem('followingList', JSON.stringify(following));
-        }
-    } catch (error) {
-        console.error('Error checking follow status:', error);
-    }
-}
-// Call the function to check follow status on page load
-
- //Then update the follow button click handler:
-document.querySelectorAll('.follow-button').forEach(followButton => {
-       followButton.addEventListener('click', async () => {
-           const userIdToFollow = followButton.getAttribute('data-user-id');
-           const token = localStorage.getItem('authToken');
-
-           if (!token) {
-               showToast('Please log in to follow users');
-               return;
-           }
-
-           try {
-               const response = await fetch(`${API_BASE_URL}/follow/${userIdToFollow}`, {
-                   method: 'POST',
-                   headers: {
-                       'Content-Type': 'application/json',
-                       'Authorization': `Bearer ${token}`,
-                   },
-               });
-
-               // First check if there's any response at all
-               if (!response.ok) {
-                   throw new Error(`HTTP error! status: ${response.status}`);
-               }
-
-               // Check if response has content before parsing
-               const text = await response.text();
-               const result = text ? JSON.parse(text) : {};
-
-               // Update localStorage following list
-               let followingList = [];
-               try {
-                   followingList = JSON.parse(localStorage.getItem('followingList')) || [];
-               } catch (e) {
-                   console.error("Error parsing followingList:", e);
-               }
-
-               if (!followingList.includes(userIdToFollow)) {
-                   followingList.push(userIdToFollow);
-                   localStorage.setItem('followingList', JSON.stringify(followingList));
-               }
-
-               // Update all follow buttons for this user
-               document.querySelectorAll(`.follow-button[data-user-id="${userIdToFollow}"]`).forEach(button => {
-                   button.innerHTML = `<i class="fas fa-user-check"></i> Following`;
-                   button.style.backgroundColor = '#28a745'; // Visual feedback
-               });
-
-               showToast(`You are now following this user!`);
-           } catch (error) {
-               console.error('Error following user:', error);
-               showToast(error.message || 'Failed to follow user. Please try again.');
-           }
-       });
-   });
-        
- 
-                // Edit post functionality
-                const editButton = postElement.querySelector('.edit-post-button');
-                if (editButton) {
-                    editButton.addEventListener('click', () => {
-                        const postId = editButton.getAttribute('data-post-id');
-                        window.location.href = `Ads.html?edit=true&postId=${postId}`;
-                    });
+                    // Edit post functionality
+                    const editButton = postElement.querySelector('.edit-post-button');
+                    if (editButton) {
+                        editButton.addEventListener('click', () => {
+                            const postId = editButton.getAttribute('data-post-id');
+                            window.location.href = `Ads.html?edit=true&postId=${postId}`;
+                        });
+                    }
                 }
             });
-            
-
-            // Close menu if user clicks outside
-            document.addEventListener('click', () => {
-                document.querySelectorAll('.post-options-menu.show').forEach(menu => {
-                    menu.classList.remove('show');
-                });
-            });
-
-            // Socket.IO connection
-            const socket = io(`${API_BASE_URL}`);
-            const userId = localStorage.getItem('userId');
-            if (userId) {
-                socket.emit('join', userId);
-            }
         } catch (error) {
             console.error('Error fetching posts:', error);
-            postsContainer.innerHTML = '<p style="text-align: center; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">No ads yet. Try again or create one!</p>';
         }
     }
-
     // Function to show toast notifications
     function showToast(message) {
     let toast = document.createElement("div");
@@ -823,8 +826,6 @@ document.querySelectorAll('.follow-button').forEach(followButton => {
         setTimeout(() => toast.remove(), 500);
     }, 3000);
 }
-
-    // Check login status when the page loads
+    // Initialize by checking login status
     checkLoginStatus();
 });
-

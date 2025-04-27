@@ -7,71 +7,99 @@
   <title>Request</title>
 </head>
 <body>
-  <h3 style="font-size: 16px">
-    Create a request
-  </h3>
-<form class="request-form">
-  <input placeholder="What would you like to buy?" type="text">
- <input placeholder="Enter your budget?" type="number">
- <input placeholder="" type="number">
- <button class="request-btn">Create request</button>
-</form>
+  <!-- Request Feed Section -->
+<div class="request-feed-container">
+  <div id="create-request" class="create-request">
+    <textarea placeholder="What do you want to buy?" id="request-input"></textarea>
+    <div class="request-actions">
+      <button id="submit-request">Post Request</button>
+    </div>
+  </div>
+
+  <div id="request-feed" class="request-feed">
+    <!-- Requests will be displayed here -->
+  </div>
+</div>
 
 
 
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-    }
-
-    h3 {
-      text-align: center;
-      color: green;
-      background-color: white;
-      border: solid 1px white;
-      box-shadow: 0 0 10px 0 #ddd;
-      padding: 20px;
-    }
-    input{
-      width: 90%;
-      height: 40px;
-      margin-top: 10px;
-      border: solid 1px #fff;
-      box-shadow: 0 0 10px 0 #ddd;
-      border-radius: 4px;
-    }
-    input::placeholder{
-      color: grey;
-      font-size: 16px;
-      padding: 10px 10px 10px;
-    }
-    
-
-.request-btn{
-  color: white;
-  background-color: green;
-  width: 70%;
-  height: 40px;
-  border: solid 1px #fff;
-  margin: 20px;
-  border-radius:  50px
+.create-request {
+  background: white;
+  border-radius: 10px;
+  padding: 15px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  margin-bottom: 15px;
+  font-family: 'Poppins', sans-serif;
 }
-.request-form{
-  text-align: center;
-  background-color: white;
-  border: solid 1px #fff;
-  box-shadow: 0 0 10px 0 #ddd;
-  height: 40vh;
-  margin: 10px;
-  padding-top: 20px;
-  display: block;
-  align-items: center;
-  justify-content: center;
-  border-radius: 8px
+
+.create-request textarea {
+  width: 100%;
+  border: none;
+  resize: none;
+  font-size: 14px;
+  padding: 10px;
+  border-radius: 8px;
+  background: #f0f2f5;
+  outline: none;
+}
+
+.request-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+
+.request-actions button {
+  background-color: #28a745;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 14px;
 }
 
 
   </style>
+  <script>
+  const submitBtn = document.getElementById('submit-request');
+  const requestInput = document.getElementById('request-input');
+
+  // Handle posting a new request
+  submitBtn.addEventListener('click', async () => {
+    const requestText = requestInput.value.trim();
+    
+    if (!requestText) return alert('Please write a request!');
+
+    const newRequest = {
+      text: requestText,
+      category: 'General',  // You can add a category field here later
+      budget: 1000,         // Example budget
+      location: 'Lagos'    // Example location
+    };
+
+    try {
+      const response = await fetch('http://localhost:3000/create-request', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        },
+        body: JSON.stringify(newRequest)
+      });
+
+      if (response.ok) {
+        const savedRequest = await response.json();
+        requestInput.value = ''; // Clear the input
+        window.location.href = 'index.html'; // Redirect to index.html after request is created
+      } else {
+        alert('Error posting request.');
+      }
+    } catch (err) {
+      console.error('Error posting request:', err);
+    }
+  });
+</script>
 </body>
 </html>
