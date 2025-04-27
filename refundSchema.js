@@ -6,8 +6,10 @@ const refundSchema = new mongoose.Schema({
   transactionId: { type: mongoose.Schema.Types.ObjectId, ref: 'Transaction' },
   reason: String,
   evidence: [String], // URLs of images/screenshots
+  description: {type: mongoose.Schema.Types.ObjectId, ref: 'Post' },
+  photo: { type: mongoose.Schema.Types.ObjectId, ref: 'Post' },
   status: { type: String, enum: ['pending', 'approved', 'rejected', 'refunded'], default: 'pending' },
   adminComment: String
 }, { timestamps: true });
 
-module.exports = mongoose.model('RefundRequest', refundSchema);
+module.exports = mongoose.model('RefundRequests', refundSchema);

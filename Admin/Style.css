@@ -23,7 +23,7 @@ body {
   align-items: center;
 }
 #posts-container {
-  max-width: 100%;
+  max-width: 700px;
   margin: 0 auto;
   padding: 8px;
   display: flex;
@@ -84,12 +84,8 @@ body {
   margin: 0;
   font-size: 15px;
   font-weight: 600;
-  color: #2A6A6A;
+  color: black;
   text-decoration: none;
-  transition: color 0.2 ease;
-}
-.post-user-name:hover{
-  color: #FF6F61;
 }
 
 .post-time {
@@ -192,48 +188,63 @@ a::hover{
     margin : 0;
     box-sizing: border-box
     }
-    #navbar i {
-      display: block;
-      font-size: 17px;
-      margin-bottom: 10px;
-      color:  #28a745;
-      
-    }
-    #navbar {
-      position: fixed;
-      bottom: 0;
-      display: flex;
-      text-align: center
-      z-index: 1000;
-    }
-    .active{
-      color: black;
-      
-      
-    }
-    #navbar a{
-      text-decoration: none;
-      color:  #28a745;
-      font-size: 16px;
-      font-weight: light
-    }
-    #navbar li{
-      list-style-type: none;
-      margin: 10px auto;
-    }
-    #navbar ul{
-      display: flex;
-      justify-content: center;
-      background-color: white;
-      border: solid;
-      border-width: 1px;
-      border-color: white;
-      box-shadow: 0 0 10px 0 #d3d3d3;
-      padding-top: 10px;
-      margin-bottom: 0px;
-      width: 100vw ;
-      
-    }
+/* Bottom Navigation Bar */
+#navbar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background-color: white;
+  box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+}
+
+#navbar ul {
+  display: flex;
+  justify-content: space-around; /* Distributes items evenly */
+  align-items: center;
+  list-style: none;
+  padding: 10px 0;
+  margin: 0;
+}
+
+#navbar li {
+  flex: 1; /* Each item takes equal width */
+  text-align: center;
+}
+
+#navbar a {
+  display: flex;
+  flex-direction: column; /* Stack icon, text, and badge vertically */
+  align-items: center; /* Center horizontally */
+  justify-content: center; /* Center vertically */
+  text-decoration: none;
+  color: #28a745;
+  font-size: 14px;
+  padding: 5px;
+}
+
+#navbar a i {
+  font-size: 20px; /* Adjust icon size */
+  margin-bottom: 5px; /* Space between icon and text */
+}
+
+#navbar a span.notification-badge {
+  position: absolute;
+  top: 0;
+  right: 17px;
+  background-color: #dc3545;
+  color: white;
+  border-radius: 50%;
+  padding: 2px 6px;
+  font-size: 10px;
+}
+
+/* Ensure active state is styled if needed */
+#navbar a.active {
+  color: #218838; /* Darker green for active state */
+}
+
   
 .post-box{
   background-color: #fff;
@@ -430,7 +441,7 @@ input:focus{
     color: white;
     padding: 15px 25px;
     border-radius: 8px;
-    font-size: 16px;
+    font-size: 12px;
     font-weight: bold;
     box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
     opacity: 0;
@@ -871,3 +882,304 @@ input:focus{
 #messages-badge{
   margin-right: 18px;
 }
+
+/* Modern Modal Styles */
+  .modern-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+  }
+  
+  .modern-modal.show {
+    opacity: 1;
+    visibility: visible;
+  }
+  
+  .modal-content {
+    background-color: white;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    transform: translateY(20px);
+    transition: transform 0.3s ease;
+  }
+  
+  .modern-modal.show .modal-content {
+    transform: translateY(0);
+  }
+  
+  .modal-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid #f0f0f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .modal-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+  }
+  
+  .close-modal {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #999;
+    padding: 0;
+    line-height: 1;
+  }
+  
+  .modal-body {
+    padding: 20px;
+    text-align: center;
+  }
+  
+  .modal-icon {
+    margin-bottom: 16px;
+  }
+  
+  .modal-icon svg {
+    width: 48px;
+    height: 48px;
+  }
+  
+  .modal-body p {
+    margin: 8px 0;
+    color: #333;
+    font-size: 16px;
+  }
+  
+  .secondary-text {
+    color: #666;
+    font-size: 14px;
+  }
+  
+  .modal-footer {
+    padding: 16px 20px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    border-top: 1px solid #f0f0f0;
+  }
+  
+  .secondary-button {
+    padding: 10px 16px;
+    border-radius: 6px;
+    background-color: #f0f0f0;
+    color: #333;
+    border: none;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+  
+  .secondary-button:hover {
+    background-color: #e0e0e0;
+  }
+  
+  .danger-button {
+    padding: 10px 16px;
+    border-radius: 6px;
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 80px;
+  }
+  
+  .danger-button:hover {
+    background-color: #c0392b;
+  }
+  
+  .button-loader {
+    display: none;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: white;
+    animation: spin 1s ease-in-out infinite;
+    margin-right: 8px;
+  }
+  
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+  
+  .danger-button.loading .button-text {
+    display: none;
+  }
+  
+  .danger-button.loading .button-loader {
+    display: block;
+  }
+  /* Modern Modal Styles */
+  .modern-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+  }
+  
+  .modern-modal.show {
+    opacity: 1;
+    visibility: visible;
+  }
+  
+  .modal-content {
+    background-color: white;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    transform: translateY(20px);
+    transition: transform 0.3s ease;
+  }
+  
+  .modern-modal.show .modal-content {
+    transform: translateY(0);
+  }
+  
+  .modal-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid #f0f0f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .modal-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+  }
+  
+  .close-modal {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #999;
+    padding: 0;
+    line-height: 1;
+  }
+  
+  .modal-body {
+    padding: 20px;
+    text-align: center;
+  }
+  
+  .modal-icon {
+    margin-bottom: 16px;
+  }
+  
+  .modal-icon svg {
+    width: 48px;
+    height: 48px;
+  }
+  
+  .modal-body p {
+    margin: 8px 0;
+    color: #333;
+    font-size: 16px;
+  }
+  
+  .secondary-text {
+    color: #666;
+    font-size: 14px;
+  }
+  
+  .modal-footer {
+    padding: 16px 20px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    border-top: 1px solid #f0f0f0;
+  }
+  
+  .secondary-button {
+    padding: 10px 16px;
+    border-radius: 6px;
+    background-color: #f0f0f0;
+    color: #333;
+    border: none;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+  
+  .secondary-button:hover {
+    background-color: #e0e0e0;
+  }
+  
+  .danger-button {
+    padding: 10px 16px;
+    border-radius: 6px;
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 80px;
+  }
+  
+  .danger-button:hover {
+    background-color: #c0392b;
+  }
+  
+  .button-loader {
+    display: none;
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: white;
+    animation: spin 1s ease-in-out infinite;
+    margin-right: 8px;
+  }
+  
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+  
+  .danger-button.loading .button-text {
+    display: none;
+  }
+  
+  .danger-button.loading .button-loader {
+    display: block;
+  }

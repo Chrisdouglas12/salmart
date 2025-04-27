@@ -6,6 +6,8 @@ const Post  = require('./postSchema.js')
 const Profile = require('./profileSchema.js') 
 const Admin = require('./adminSchema.js')
 const Report = require('./reportSchema.js')
+const RefundRequests = require('./refundSchema.js')
+const Request = require('./RequestSchema.js')
 const Message = require('./messageSchema.js')
 const payOutLog = require('./payOut.js')
 const Escrow = require('./EscrowSchema.js') 
@@ -492,6 +494,14 @@ app.post('/login', async (req, res) => {
         if (!user) {
             return res.status(400).json({ message: 'User not found' });
         }
+        const restrictBanned = async (req, res, next) => {
+  const user = await User.findById(req.user.userId);
+  if (user.isBanned) {
+    return res.status(403).json({ message: 'Account is banned' });
+  }
+  next();
+};
+await Post.updateMany({ userId: user._id }, { isHidden: true });
 
         const isPassword = await bcrypt.compare(password, user.password);
         if (!isPassword) {
@@ -687,6 +697,42 @@ app.patch('/users/:id', verifyToken, async (req, res) => {
 });
 
 
+// Create Request
+app.post('/create-request', verifyToken, async (req, res) => {
+  try {
+    const { text, category, budget, location } = req.body;
+
+    const newRequest = new Request({
+      user: req.user._id,
+      text,
+      category,
+      budget,
+      location
+    });
+
+    const savedRequest = await newRequest.save();
+    res.status(201).json(savedRequest);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to create request' });
+  }
+});
+
+// Get All Requests
+app.get('/requests', async (req, res) => {
+  try {
+    const requests = await Request.find()
+      .sort({ createdAt: -1 })
+      .populate('user', 'firstName lastName profilePicture');
+
+    res.json(requests);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch requests' });
+  }
+});
+
+
 // Endpoint to create a post
 app.post('/post', verifyToken, upload.single('photo'), async (req, res) => {
   try {
@@ -785,6 +831,9 @@ app.get('/post/:postId', async (req, res) => {
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
+
+
+
 //endpoint to get all users
 app.get('/users-profile/:id', verifyToken, async (req, res) => {
     const userId = req.params.id;
@@ -1006,6 +1055,99 @@ app.post('/post/like/:id', verifyToken, async (req, res) => {
             error: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     }
+});
+// Get comments for a request (NEW ENDPOINT NEEDED)
+app.get('/requests/comments/:id', async (req, res) => {
+  try {
+    const requestId = req.params.id;
+    const request = await Request.findById(requestId).populate('comments.user', 'firstName lastName profilePicture');
+    
+    if (!request) return res.status(404).json({ message: 'Request not found' });
+    
+    res.json(request.comments);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Get comment count (NEW ENDPOINT NEEDED)
+app.get('/requests/:id/comments/count', async (req, res) => {
+  try {
+    const requestId = req.params.id;
+    const request = await Request.findById(requestId);
+    
+    if (!request) return res.status(404).json({ message: 'Request not found' });
+    
+    res.json({ success: true, count: request.comments.length });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Your existing comment endpoint (MODIFIED FOR BETTER RESPONSE)
+app.post('/requests/comment/:id', verifyToken, async (req, res) => {
+  try {
+    const requestId = req.params.id;
+    const { text } = req.body;
+    const userId = req.user.userId;
+
+    const request = await Request.findById(requestId);
+    if (!request) return res.status(404).json({ message: 'Request not found' });
+
+    const comment = { user: userId, text, createdAt: new Date() };
+    request.comments.push(comment);
+
+    await request.save();
+    
+    // Populate user data before sending response
+    const populatedComment = await Request.populate(request, {
+      path: 'comments.user',
+      select: 'firstName lastName profilePicture'
+    });
+    
+    const newComment = populatedComment.comments[populatedComment.comments.length - 1];
+    
+    res.json({ 
+      success: true, 
+      comment: {
+        ...newComment.toObject(),
+        user: {
+          firstName: newComment.user.firstName,
+          lastName: newComment.user.lastName,
+          profilePicture: newComment.user.profilePicture
+        }
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+// Your existing like endpoint (MODIFIED FOR BETTER RESPONSE)
+app.post('/requests/like/:id', verifyToken, async (req, res) => {
+  try {
+    const requestId = req.params.id;
+    const userId = req.user.userId;
+
+    const request = await Request.findById(requestId);
+    if (!request) return res.status(404).json({ message: 'Request not found' });
+
+    const hasLiked = request.likes.includes(userId);
+
+    if (hasLiked) {
+      request.likes.pull(userId);
+    } else {
+      request.likes.push(userId);
+    }
+
+    await request.save();
+    res.json({ 
+      success: true,
+      liked: !hasLiked, 
+      totalLikes: request.likes.length 
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 //Endpoint to handle comments 
@@ -2491,20 +2633,16 @@ app.get('/get-bank-details', verifyToken, async (req, res) => {
   }
 });
 
-
-// Submit Refund Request
-
-
 // Request Refund Endpoint
 app.post('/request-refund/:transactionId', verifyToken, async (req, res) => {
-  console.log('REQUEST REFUND ENDPOINT HIT')
+  console.log('REQUEST REFUND ENDPOINT HIT');
   const userId = req.user.userId;
   const { transactionId } = req.params;
   const { reason, evidence } = req.body;
 
   try {
     const transaction = await Transaction.findById(transactionId);
-console.log( `Reason: ${reason}` )
+
     if (!transaction) {
       return res.status(404).json({ error: 'Transaction not found' });
     }
@@ -2517,22 +2655,179 @@ console.log( `Reason: ${reason}` )
       return res.status(400).json({ error: 'Refund not applicable. Transaction already completed.' });
     }
 
-    if (transaction.refundRequested) {
+    // Check if refund already exists for this transaction
+    const existingRefund = await RefundRequests.findOne({ transactionId });
+    if (existingRefund) {
       return res.status(400).json({ error: 'Refund has already been requested for this transaction.' });
     }
 
+    // Create new refund document
+    const refund = new RefundRequests({
+      transactionId,
+      buyerId: userId,
+      reason,
+      evidence,
+      status: 'pending', // default status
+    });
+
+    await refund.save();
+
+    // Optionally mark the transaction as having a refund requested
     transaction.refundRequested = true;
-    transaction.refundReason = reason; // Save reason
     await transaction.save();
 
     res.status(200).json({ message: 'Refund requested successfully.' });
+
   } catch (err) {
     console.error('Error requesting refund:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });
 
+// Get All Refund Requests (Admin)
+app.get('/api/admin/refunds', async (req, res) => {
+  try {
+    const refunds = await RefundRequests.find()
+      .populate({ path: 'buyerId', select: 'firstName lastName' })
+      .populate({ path: 'sellerId', select: 'firstName lastName' })
+      .populate({ path: 'transactionId', select: 'amount description date' })
+      .populate({ path: 'description', select: 'description'})
+      .select('buyerId sellerId transactionId reason evidence status adminComment createdAt updatedAt');
 
+    const formattedRefunds = refunds.map(refund => ({
+      ...refund.toObject(),
+      buyerName: `${refund.buyerId?.firstName || ''} ${refund.buyerId?.lastName || ''}`,
+      sellerName: `${refund.sellerId?.firstName || ''} ${refund.sellerId?.lastName || ''}`
+    }));
+
+    res.status(200).json(formattedRefunds);
+  } catch (err) {
+    console.error('Error fetching refunds:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+// Get All Users (Admin)
+app.get('/api/admin/users', async (req, res) => {
+  try {
+    const users = await User.find()
+      .select('firstName lastName email profilePicture createdAt isBanned')
+      .sort({ createdAt: -1 });
+
+    const formattedUsers = users.map(user => ({
+      ...user.toObject(),
+      fullName: `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'N/A'
+    }));
+
+    res.status(200).json(formattedUsers);
+  } catch (err) {
+    console.error('Error fetching users:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+// Ban a User (Admin)
+app.post('/api/admin/users/:id/ban', async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+    if (user.isBanned) {
+      return res.status(400).json({ success: false, message: 'User is already banned' });
+    }
+    user.isBanned = true;
+    await user.save();
+    res.status(200).json({ success: true, message: 'User banned successfully' });
+  } catch (err) {
+    console.error('Error banning user:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+// Get All Banned Users (Admin)
+app.get('/api/admin/users/banned', async (req, res) => {
+  try {
+    const bannedUsers = await User.find({ isBanned: true })
+      .select('firstName lastName email profilePicture createdAt isBanned')
+      .sort({ createdAt: -1 });
+
+    const formattedUsers = bannedUsers.map(user => ({
+      ...user.toObject(),
+      fullName: `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'N/A'
+    }));
+
+    res.status(200).json(formattedUsers);
+  } catch (err) {
+    console.error('Error fetching banned users:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Unban a User (Admin)
+app.post('/api/admin/users/:id/unban', async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+    if (!user.isBanned) {
+      return res.status(400).json({ success: false, message: 'User is not banned' });
+    }
+    user.isBanned = false;
+    await user.save();
+    res.status(200).json({ success: true, message: 'User unbanned successfully' });
+  } catch (err) {
+    console.error('Error unbanning user:', err);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+// Get All Transactions (Admin)
+app.get('/api/admin/transactions', async (req, res) => {
+  try {
+    const transactions = await Transaction.find()
+      .populate({ path: 'buyerId', select: 'firstName lastName email' })
+      .populate({ path: 'sellerId', select: 'firstName lastName email' })
+      .populate({ path: 'productId', select: 'description' })
+      .select('buyerId sellerId productId amount status createdAt refundRequested refundReason paymentReference')
+      .sort({ createdAt: -1 });
+
+    const formattedTransactions = transactions.map(tx => ({
+      ...tx.toObject(),
+      buyerName: `${tx.buyerId?.firstName || ''} ${tx.buyerId?.lastName || ''}`,
+      sellerName: `${tx.sellerId?.firstName || ''} ${tx.sellerId?.lastName || ''}`,
+      productTitle: tx.productId?.description || 'N/A'
+    }));
+
+    res.status(200).json(formattedTransactions);
+  } catch (err) {
+    console.error('Error fetching transactions:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+// Resolve Refund (Approve or Deny)
+app.post('/api/admin/refunds/:id/:action', async (req, res) => {
+  const { id, action } = req.params;
+
+  try {
+    const transaction = await Transaction.findById(id);
+    if (!transaction || !transaction.refundRequested) {
+      return res.status(404).json({ error: 'Refund request not found' });
+    }
+
+    if (action === 'approve') {
+      transaction.status = 'refunded'; // or your appropriate status
+      transaction.refundRequested = false;
+    } else if (action === 'deny') {
+      transaction.refundRequested = false;
+    } else {
+      return res.status(400).json({ error: 'Invalid action. Use "approve" or "deny".' });
+    }
+
+    await transaction.save();
+    res.status(200).json({ message: `Refund ${action}d successfully.` });
+  } catch (err) {
+    console.error('Error resolving refund:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
 // routes/searchRoute.js
 
 app.get('/search', async (req, res) => {
@@ -2817,6 +3112,34 @@ app.post('/users/report', verifyToken, async (req, res) => {
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
+// GET /admin/reported-users
+app.get('/api/reported-users', async (req, res) => {
+  try {
+    // Get reports with user details
+    const reports = await Report.find({ status: 'pending' })
+      .populate('reportedUser', 'firstName lastName email profilePicture createdAt')
+      .populate('reportedBy', 'firstName lastName email')
+      .sort({ createdAt: -1 });
+
+    // Format response
+    const formatted = reports.map(report => ({
+      reportedUser: report.reportedUser,
+      reportedBy: report.reportedBy,
+      reason: report.reason,
+      createdAt: report.createdAt,
+      report
+    }));
+
+    res.status(200).json({
+      success: true,
+      reports: formatted
+    });
+
+  } catch (error) {
+    console.error('Error fetching reported users:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
 
 // Block User Endpoint
 app.post('/users/block', verifyToken, async (req, res) => {
@@ -2857,13 +3180,8 @@ app.post('/users/block', verifyToken, async (req, res) => {
 });
 
 // Get Reported Users (Admin Only)
-app.get('/admin/reported-users', verifyToken, async (req, res) => {
+app.get('/admin/reported-users',  async (req, res) => {
   try {
-    // Check if user is admin
-    const user = await User.findById(req.user.userId);
-    if (!user || !user.isAdmin) {
-      return res.status(403).json({ success: false, message: 'Unauthorized: Admin access required' });
-    }
 
     // Get all reports with populated user data
     const reportedUsers = await Report.find({ status: 'pending' })
