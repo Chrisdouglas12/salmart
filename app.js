@@ -3345,6 +3345,40 @@ app.post('/api/save-fcm-token', verifyToken, async (req, res) => {
     res.status(500).json({ error: 'Failed to save token' });
   }
 });
+app.post('/send-notification', async (req, res) => {
+  const { userId, title, body } = req.body;
+
+  console.log('Received request to send notification:', { userId, title, body });
+
+  try {
+    const user = await User.findById(userId);
+    if (!user) {
+      console.error(`User with ID ${userId} not found in MongoDB.`);
+      return res.status(404).send('User not found');
+    }
+
+    if (!user.fcmToken) {
+      console.error(`User with ID ${userId} does not have an FCM token.`);
+      return res.status(404).send('User token not found');
+    }
+
+    console.log(`Sending notification to user ${userId} with token: ${user.fcmToken}`);
+
+    await admin.messaging().send({
+      token: user.fcmToken,
+      notification: { title, body },
+      webpush: {
+        headers: { Urgency: 'high' }
+      }
+    });
+
+    console.log(`Notification successfully sent to user ${userId}.`);
+    res.status(200).send('Notification sent');
+  } catch (err) {
+    console.error('Error sending notification:', err);
+    res.status(500).send('Error sending notification');
+  }
+});
 
 // Send Notification (Customize as needed)
 app.post('/send-notification', async (req, res) => {

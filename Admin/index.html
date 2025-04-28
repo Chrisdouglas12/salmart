@@ -763,7 +763,7 @@ document.addEventListener('DOMContentLoaded', function() {
     appId: "1:396604566472:web:60eff66ef26ab223a12efd"
   };
 
-
+  
 
   // Fallback for showToast
   function showToast(message, color) {
@@ -773,13 +773,26 @@ document.addEventListener('DOMContentLoaded', function() {
 
   console.log('🔥 Initializing Firebase...');
   console.log('ℹ️ Browser User Agent:', navigator.userAgent);
-  firebase.initializeApp(firebaseConfig);
-  const messaging = firebase.messaging();
-  console.log('✅ Firebase initialized');
+  let messaging;
+  try {
+    firebase.initializeApp(firebaseConfig);
+    messaging = firebase.messaging();
+    console.log('✅ Firebase initialized');
+  } catch (initErr) {
+    console.error('❌ Firebase initialization failed:', initErr);
+    showToast('Failed to initialize Firebase. Notifications unavailable.', '#e74c3c');
+    // Skip further initialization instead of return
+  }
 
   let isInitialized = false;
 
   async function initializeNotifications() {
+    if (!messaging) {
+      console.warn('⚠️ Firebase messaging not initialized, skipping notifications');
+      showToast('Notifications unavailable due to initialization error.', '#e74c3c');
+      return;
+    }
+
     console.log('🔍 Entering initializeNotifications...');
     if (isInitialized) {
       console.log('🚫 initializeNotifications already called, skipping');
@@ -791,7 +804,7 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('ℹ️ Notification API available:', 'Notification' in window);
     if (!('Notification' in window)) {
       console.warn('⚠️ Notifications not supported in this browser');
-      showToast('Your browser does not support notifications. Please use Chrome or Firefox.', '#e74c3c');
+      showToast('Your browser does not support notifications. Please use Chrome.', '#e74c3c');
       return;
     }
     console.log('✅ Notification API supported');
@@ -799,22 +812,46 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('ℹ️ Service Worker API available:', 'serviceWorker' in navigator);
     if (!navigator.serviceWorker) {
       console.warn('⚠️ Service workers not supported in this browser');
-      showToast('Your browser does not support service workers. Please use Chrome or Firefox.', '#e74c3c');
+      showToast('Your browser does not support service workers. Please use Chrome.', '#e74c3c');
       return;
     }
     console.log('✅ Service Worker API supported');
 
     try {
-      console.log('📡 Registering service worker...');
-      const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
-      console.log('✅ Service Worker registered with scope:', registration.scope);
+      console.log('📡 Registering service worker at /Admin/firebase-messaging-sw.js...');
+      console.log('ℹ️ Attempting to fetch service worker file...');
+      const swResponse = await fetch('/Admin/firebase-messaging-sw.js');
+      console.log('ℹ️ Service worker file response:', swResponse.status, swResponse.statusText);
+      if (!swResponse.ok) {
+        throw new Error(`Failed to fetch service worker: ${swResponse.status} ${swResponse.statusText}`);
+      }
+
+      let registration;
+      try {
+        registration = await navigator.serviceWorker.register('/Admin/firebase-messaging-sw.js');
+        console.log('✅ Service Worker registered with scope:', registration.scope);
+      } catch (regErr) {
+        console.error('❌ Service Worker registration failed:', regErr);
+        console.error('Error details:', JSON.stringify(regErr, null, 2));
+        showToast('Failed to register service worker. Check console for details.', '#e74c3c');
+        throw regErr;
+      }
+
       console.log('🔗 Linking service worker to Firebase Messaging...');
       messaging.useServiceWorker(registration);
       console.log('✅ Service worker linked');
 
       console.log('🔐 Requesting notification permission...');
-      const permission = await Notification.requestPermission();
-      console.log('ℹ️ Notification permission result:', permission);
+      let permission;
+      try {
+        permission = await Notification.requestPermission();
+        console.log('ℹ️ Notification permission result:', permission);
+      } catch (permErr) {
+        console.error('❌ Notification permission request failed:', permErr);
+        showToast('Failed to request notification permission.', '#e74c3c');
+        throw permErr;
+      }
+
       if (permission === 'granted') {
         console.log('✅ Notification permission granted');
         showToast('Notification granted, generating FCM token', '#28a745');
@@ -859,7 +896,7 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('ℹ️ User ID:', userId, 'JWT:', jwt ? '[Present]' : '[Missing]');
     if (userId && jwt) {
       try {
-        console.log('📤 Sending token to server...');
+        console.log('📤 Sending token to server:', `${API_BASE_URL}/api/save-fcm-token`);
         const response = await fetch(`${API_BASE_URL}/api/save-fcm-token`, {
           method: 'POST',
           headers: {
@@ -894,7 +931,7 @@ document.addEventListener('DOMContentLoaded', function() {
       console.log('🔔 Displaying foreground notification:', { title, body, type, postId, senderId });
       const notification = new Notification(title, {
         body,
-        icon: '/favicon.ico',
+        icon: '/Admin/favicon.ico',
         data: { type, postId, senderId }
       });
 
