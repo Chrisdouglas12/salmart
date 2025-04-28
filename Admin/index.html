@@ -712,6 +712,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 </script>
+<script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+<script>eruda.init();</script>
 <script>
   document.addEventListener('DOMContentLoaded', function() {
   const categoryFilter = document.querySelector('.category-filter');
@@ -752,20 +754,31 @@ document.addEventListener('DOMContentLoaded', function() {
   window.dispatchEvent(new Event('scroll'));
 });
 </script>
-<script src="https://cdn.jsdelivr.net/npm/eruda"></script>
-<script>eruda.init();</script>
-<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-messaging-compat.js"></script>
-<script>
+<script type="module">
+  // Import Firebase modular SDK
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js';
+  import { getMessaging, getToken, onMessage } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-messaging.js';
+
+  // Firebase configuration
   const firebaseConfig = {
     apiKey: "AIzaSyCmu0kXlzWE29eNlRDMoYG0qYyxnC5Vra4",
     authDomain: "salmart-330ab.firebaseapp.com",
     projectId: "salmart-330ab",
     messagingSenderId: "396604566472",
-    appId: "1:396604566472:web:60eff66ef26ab223a12efd"
+    appId: "1:396604566472:web:60eff66ef26ab223a12efd",
   };
 
-  
+  // Initialize Firebase
+  console.log('🔥 Initializing Firebase...');
+  const app = initializeApp(firebaseConfig);
+  let messaging;
+  try {
+    messaging = getMessaging(app);
+    console.log('✅ Firebase Messaging initialized');
+  } catch (initErr) {
+    console.error('❌ Firebase Messaging initialization failed:', initErr);
+    showToast('Failed to initialize Firebase. Notifications unavailable.', '#e74c3c');
+  }
 
   // Fallback for showToast
   function showToast(message, color) {
@@ -773,37 +786,15 @@ document.addEventListener('DOMContentLoaded', function() {
     alert(message); // Temporary fallback
   }
 
-  console.log('🔥 Initializing Firebase...');
-  console.log('ℹ️ Browser User Agent:', navigator.userAgent);
-  let messaging;
-  try {
-    firebase.initializeApp(firebaseConfig);
-    messaging = firebase.messaging();
-    console.log('✅ Firebase initialized');
-  } catch (initErr) {
-    console.error('❌ Firebase initialization failed:', initErr);
-    showToast('Failed to initialize Firebase. Notifications unavailable.', '#e74c3c');
-    // Skip further initialization instead of return
-  }
-
-  let isInitialized = false;
-
+  // Initialize notifications
   async function initializeNotifications() {
     if (!messaging) {
-      console.warn('⚠️ Firebase messaging not initialized, skipping notifications');
+      console.warn('⚠️ Firebase Messaging not initialized, skipping notifications');
       showToast('Notifications unavailable due to initialization error.', '#e74c3c');
       return;
     }
 
     console.log('🔍 Entering initializeNotifications...');
-    if (isInitialized) {
-      console.log('🚫 initializeNotifications already called, skipping');
-      return;
-    }
-    isInitialized = true;
-
-    console.log('🔎 Checking browser support...');
-    console.log('ℹ️ Notification API available:', 'Notification' in window);
     if (!('Notification' in window)) {
       console.warn('⚠️ Notifications not supported in this browser');
       showToast('Your browser does not support notifications. Please use Chrome.', '#e74c3c');
@@ -811,8 +802,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     console.log('✅ Notification API supported');
 
-    console.log('ℹ️ Service Worker API available:', 'serviceWorker' in navigator);
-    if (!navigator.serviceWorker) {
+    if (!('serviceWorker' in navigator)) {
       console.warn('⚠️ Service workers not supported in this browser');
       showToast('Your browser does not support service workers. Please use Chrome.', '#e74c3c');
       return;
@@ -820,70 +810,27 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('✅ Service Worker API supported');
 
     try {
-      console.log('📡 Registering service worker at firebase-messaging-sw.js testing...');
-      console.log('ℹ️ Attempting to fetch service worker file...');
-      if ('serviceWorker' in navigator) {
-  try {
-    // Register the service worker located at the root (same directory as index.html)
-    const registration = await navigator.serviceWorker.register('firebase-messaging-sw.js');
-    console.log('Service Worker registered:', registration);
-  } catch (err) {
-    console.error('Service Worker registration failed:', err);
-  }
-} else {
-  console.warn('Service Workers are not supported in this browser.');
-}
-
-      let registration;
-      try {
-        registration = await navigator.serviceWorker.register('firebase-messaging-sw.js');
-        console.log('✅ Service Worker registered with scope:', registration.scope);
-      } catch (regErr) {
-        console.error('❌ Service Worker registration failed:', regErr);
-        console.error('Error details:', JSON.stringify(regErr, null, 2));
-        showToast('Failed to register service worker. Check console for details.', '#e74c3c');
-        throw regErr;
-      }
-
-      console.log('🔗 Linking service worker to Firebase Messaging...');
-      messaging.useServiceWorker(registration);
-      console.log('✅ Service worker linked');
+      console.log('📡 Registering service worker at firebase-messaging-sw.js...');
+      const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+      console.log('✅ Service Worker registered with scope:', registration.scope);
 
       console.log('🔐 Requesting notification permission...');
-      let permission;
-      try {
-        permission = await Notification.requestPermission();
-        console.log('ℹ️ Notification permission result:', permission);
-      } catch (permErr) {
-        console.error('❌ Notification permission request failed:', permErr);
-        showToast('Failed to request notification permission.', '#e74c3c');
-        throw permErr;
-      }
+      const permission = await Notification.requestPermission();
+      console.log('ℹ️ Notification permission result:', permission);
 
       if (permission === 'granted') {
         console.log('✅ Notification permission granted');
         showToast('Notification granted, generating FCM token', '#28a745');
         try {
           console.log('🔑 Generating FCM token...');
-          const token = await messaging.getToken({
-            vapidKey: "BCtAsyYJYCSfpg_kXL2aO59szQsPFE3DvmqqLOnW03JTVR88Jb435-jDnUgj0j0mL5VCWLiGGfErTuwQ-XUArho"
+          const token = await getToken(messaging, {
+            vapidKey: 'BCtAsyYJYCSfpg_kXL2aO59szQsPFE3DvmqqLOnW03JTVR88Jb435-jDnUgj0j0mL5VCWLiGGfErTuwQ-XUArho',
+            serviceWorkerRegistration: registration, // Pass service worker
           });
           console.log('🎉 FCM Token generated:', token);
           await saveToken(token);
-
-          console.log('🔄 Setting up token refresh handler...');
-          messaging.onTokenRefresh(async () => {
-            console.log('🔄 FCM token refreshed');
-            const newToken = await messaging.getToken({
-              vapidKey: "BCtAsyYJYCSfpg_kXL2aO59szQsPFE3DvmqqLOnW03JTVR88Jb435-jDnUgj0j0mL5VCWLiGGfErTuwQ-XUArho"
-            });
-            console.log('🎉 New FCM Token:', newToken);
-            await saveToken(newToken);
-          });
-          console.log('✅ Token refresh handler set up');
         } catch (tokenErr) {
           console.error('❌ Error generating FCM token:', tokenErr);
-          console.error('Error details:', JSON.stringify(tokenErr, null, 2));
           showToast('Failed to generate notification token.', '#e74c3c');
         }
       } else {
@@ -892,16 +839,17 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     } catch (err) {
       console.error('❌ Error initializing notifications:', err);
-      console.error('Error details:', JSON.stringify(err, null, 2));
       showToast('Failed to initialize notifications.', '#e74c3c');
     }
   }
 
+  // Save FCM token to server
   async function saveToken(token) {
     console.log('💾 Attempting to save FCM token:', token);
     const userId = localStorage.getItem('userId');
     const jwt = localStorage.getItem('authToken');
     console.log('ℹ️ User ID:', userId, 'JWT:', jwt ? '[Present]' : '[Missing]');
+
     if (userId && jwt) {
       try {
         console.log('📤 Sending token to server:', `${API_BASE_URL}/api/save-fcm-token`);
@@ -909,9 +857,9 @@ document.addEventListener('DOMContentLoaded', function() {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${jwt}`
+            'Authorization': `Bearer ${jwt}`,
           },
-          body: JSON.stringify({ userId, token })
+          body: JSON.stringify({ userId, token }),
         });
         if (response.ok) {
           console.log('✅ Token saved to server');
@@ -930,116 +878,41 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
-  messaging.onMessage((payload) => {
-    console.log('📩 Foreground message received:', JSON.stringify(payload, null, 2));
-    if (Notification.permission === 'granted') {
-      const { title, body } = payload.notification || {};
-      const { type, postId, senderId } = payload.data || {};
+  // Handle foreground messages
+  if (messaging) {
+    onMessage(messaging, (payload) => {
+      console.log('📩 Foreground message received:', JSON.stringify(payload, null, 2));
+      if (Notification.permission === 'granted') {
+        const { title, body } = payload.notification || {};
+        const { type, postId, senderId } = payload.data || {};
 
-      console.log('🔔 Displaying foreground notification:', { title, body, type, postId, senderId });
-      const notification = new Notification(title, {
-        body,
-        icon: 'favicon.ico',
-        data: { type, postId, senderId }
-      });
+        console.log('🔔 Displaying foreground notification:', { title, body, type, postId, senderId });
+        const notification = new Notification(title, {
+          body,
+          icon: '/favicon.ico',
+          data: { type, postId, senderId },
+        });
 
-      notification.onclick = (event) => {
-        event.preventDefault();
-        const { type, postId, senderId } = event.target.data || {};
-        console.log('🖱️ Notification clicked:', { type, postId, senderId });
-        if (type === 'like' || type === 'comment') {
-          window.location.href = `post.html?postId=${postId}`;
-        } else if (type === 'message') {
-          window.location.href = `Messages.html?userId=${senderId}`;
-        }
-      };
-    }
-  });
+        notification.onclick = (event) => {
+          event.preventDefault();
+          const { type, postId, senderId } = event.target.data || {};
+          console.log('🖱️ Notification clicked:', { type, postId, senderId });
+          if (type === 'like' || type === 'comment') {
+            window.location.href = `post.html?postId=${postId}`;
+          } else if (type === 'message') {
+            window.location.href = `Messages.html?userId=${senderId}`;
+          }
+        };
+      }
+    });
+  }
 
+  // Initialize notifications on page load
   console.log('🌐 Adding load event listener...');
   window.addEventListener('load', () => {
     console.log('🌐 Page loaded, initializing notifications...');
     initializeNotifications();
   });
-</script>
-<script type="module">
-  import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js';
-  import { getMessaging, getToken, onMessage } from 'https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging.js';
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyCmu0kXlzWE29eNlRDMoYG0qYyxnC5Vra4",
-    authDomain: "salmart-330ab.firebaseapp.com",
-    projectId: "salmart-330ab",
-    messagingSenderId: "396604566472",
-    appId: "1:396604566472:web:60eff66ef26ab223a12efd"
-  };
-
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-
-  // Initialize Firebase Cloud Messaging
-  const messaging = getMessaging(app);
-
-  async function initializeNotifications() {
-    if ('Notification' in window) {
-      try {
-        const permission = await Notification.requestPermission();
-        if (permission === 'granted') {
-          console.log('Notification permission granted.');
-          const token = await getToken(messaging, {
-            vapidKey: "BCtAsyYJYCSfpg_kXL2aO59szQsPFE3DvmqqLOnW03JTVR88Jb435-jDnUgj0j0mL5VCWLiGGfErTuwQ-XUArho"
-          });
-          console.log('FCM Token:', token);
-          if (token) {
-            await saveToken(token);
-          } else {
-            console.error('No FCM token available');
-          }
-        } else {
-          console.warn('Notification permission denied');
-        }
-      } catch (err) {
-        console.error('Error initializing notifications:', err);
-      }
-    } else {
-      console.warn('Notifications not supported in this browser');
-    }
-  }
-
-  async function saveToken(token) {
-    const userId = localStorage.getItem('userId');
-    const jwt = localStorage.getItem('authToken');
-    if (userId && jwt) {
-      try {
-        const response = await fetch(`${API_BASE_URL}/api/save-fcm-token`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${jwt}`
-          },
-          body: JSON.stringify({ token })
-        });
-        if (response.ok) {
-          console.log('Token saved to server');
-        } else {
-          console.error('Failed to save token:', response.status);
-        }
-      } catch (err) {
-        console.error('Error saving token:', err);
-      }
-    } else {
-      console.warn('No userId or JWT found');
-    }
-  }
-
-  // Optionally handle foreground messages
-  onMessage(messaging, (payload) => {
-    console.log('Message received. ', payload);
-    // Customize your notification logic here
-  });
-
-  // Call the function to initialize notifications
-  initializeNotifications();
 </script>
 <script>
 // Function to check for new content
