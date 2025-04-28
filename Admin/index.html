@@ -1201,7 +1201,7 @@ socket.on('new-notification', (data) => {
 
   // Register service worker for FCM (must be at your site's root)
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/firebase-messaging-sw.js')
+    navigator.serviceWorker.register('/Admin/firebase-messaging-sw.js')
       .then((registration) => {
         console.log('Service Worker registered:', registration);
       })
