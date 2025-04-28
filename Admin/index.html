@@ -956,6 +956,85 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeNotifications();
   });
 </script>
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js';
+  import { getMessaging, getToken, onMessage } from 'https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging.js';
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCmu0kXlzWE29eNlRDMoYG0qYyxnC5Vra4",
+    authDomain: "salmart-330ab.firebaseapp.com",
+    projectId: "salmart-330ab",
+    messagingSenderId: "396604566472",
+    appId: "1:396604566472:web:60eff66ef26ab223a12efd"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+
+  // Initialize Firebase Cloud Messaging
+  const messaging = getMessaging(app);
+
+  async function initializeNotifications() {
+    if ('Notification' in window) {
+      try {
+        const permission = await Notification.requestPermission();
+        if (permission === 'granted') {
+          console.log('Notification permission granted.');
+          const token = await getToken(messaging, {
+            vapidKey: "BCtAsyYJYCSfpg_kXL2aO59szQsPFE3DvmqqLOnW03JTVR88Jb435-jDnUgj0j0mL5VCWLiGGfErTuwQ-XUArho"
+          });
+          console.log('FCM Token:', token);
+          if (token) {
+            await saveToken(token);
+          } else {
+            console.error('No FCM token available');
+          }
+        } else {
+          console.warn('Notification permission denied');
+        }
+      } catch (err) {
+        console.error('Error initializing notifications:', err);
+      }
+    } else {
+      console.warn('Notifications not supported in this browser');
+    }
+  }
+
+  async function saveToken(token) {
+    const userId = localStorage.getItem('userId');
+    const jwt = localStorage.getItem('authToken');
+    if (userId && jwt) {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/save-fcm-token`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${jwt}`
+          },
+          body: JSON.stringify({ token })
+        });
+        if (response.ok) {
+          console.log('Token saved to server');
+        } else {
+          console.error('Failed to save token:', response.status);
+        }
+      } catch (err) {
+        console.error('Error saving token:', err);
+      }
+    } else {
+      console.warn('No userId or JWT found');
+    }
+  }
+
+  // Optionally handle foreground messages
+  onMessage(messaging, (payload) => {
+    console.log('Message received. ', payload);
+    // Customize your notification logic here
+  });
+
+  // Call the function to initialize notifications
+  initializeNotifications();
+</script>
 <script>
 // Function to check for new content
 async function checkForNewContent() {
@@ -1184,70 +1263,7 @@ socket.on('new-notification', (data) => {
   setTimeout(() => { toast.style.display = "none"; }, 3000);
 }
 </script>
-<script>
-  async function initializeNotifications() {
-  if ('Notification' in window) {
-    try {
-      const permission = await Notification.requestPermission();
-      if (permission === 'granted') {
-        console.log('Notification permission granted.');
-        
-        const messaging = getMessaging(); // Ensure messaging is initialized
-        
-        const token = await getToken(messaging, { 
-          vapidKey: "BCtAsyYJYCSfpg_kXL2aO59szQsPFE3DvmqqLOnW03JTVR88Jb435-jDnUgj0j0mL5VCWLiGGfErTuwQ-XUArho" 
-        });
-        
-        console.log('FCM Token:', token);
-        await saveToken(token);
 
-        // Handle token refresh
-        onTokenRefresh(async (newToken) => {
-          console.log('Token refreshed:', newToken);
-          await saveToken(newToken);
-        });
-      } else {
-        console.warn('Notification permission denied');
-      }
-    } catch (err) {
-      console.error('Error initializing notifications:', err);
-    }
-  } else {
-    console.warn('Notifications not supported in this browser');
-  }
-}
-
-async function saveToken(token) {
-  const userId = localStorage.getItem('userId');
-  const jwt = localStorage.getItem('authToken');
-  
-  if (userId && jwt) {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/save-fcm-token`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${jwt}`
-        },
-        body: JSON.stringify({ token })
-      });
-      
-      if (response.ok) {
-        console.log('Token saved to server');
-      } else {
-        console.error('Failed to save token:', response.status);
-      }
-    } catch (err) {
-      console.error('Error saving token:', err);
-    }
-  } else {
-    console.warn('No userId or JWT found');
-  }
-}
-
-// Call the function to initialize notifications
-initializeNotifications();
-</script>
 <script>
 // Function to get the time difference in a human-readable format
 function timeAgo(date) {
