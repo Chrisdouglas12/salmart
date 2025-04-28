@@ -764,13 +764,15 @@ document.addEventListener('DOMContentLoaded', function() {
   };
 
 
-  // Fallback for showToast if undefined
+
+  // Fallback for showToast
   function showToast(message, color) {
     console.log(`[Toast] ${message} (Color: ${color})`);
     alert(message); // Temporary fallback
   }
 
   console.log('🔥 Initializing Firebase...');
+  console.log('ℹ️ Browser User Agent:', navigator.userAgent);
   firebase.initializeApp(firebaseConfig);
   const messaging = firebase.messaging();
   console.log('✅ Firebase initialized');
@@ -786,16 +788,18 @@ document.addEventListener('DOMContentLoaded', function() {
     isInitialized = true;
 
     console.log('🔎 Checking browser support...');
+    console.log('ℹ️ Notification API available:', 'Notification' in window);
     if (!('Notification' in window)) {
       console.warn('⚠️ Notifications not supported in this browser');
-      showToast('Your browser does not support notifications.', '#e74c3c');
+      showToast('Your browser does not support notifications. Please use Chrome or Firefox.', '#e74c3c');
       return;
     }
     console.log('✅ Notification API supported');
 
+    console.log('ℹ️ Service Worker API available:', 'serviceWorker' in navigator);
     if (!navigator.serviceWorker) {
       console.warn('⚠️ Service workers not supported in this browser');
-      showToast('Your browser does not support service workers.', '#e74c3c');
+      showToast('Your browser does not support service workers. Please use Chrome or Firefox.', '#e74c3c');
       return;
     }
     console.log('✅ Service Worker API supported');
@@ -813,6 +817,7 @@ document.addEventListener('DOMContentLoaded', function() {
       console.log('ℹ️ Notification permission result:', permission);
       if (permission === 'granted') {
         console.log('✅ Notification permission granted');
+        showToast('Notification granted, generating FCM token', '#28a745');
         try {
           console.log('🔑 Generating FCM token...');
           const token = await messaging.getToken({
