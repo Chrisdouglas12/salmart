@@ -135,8 +135,8 @@ ${post.createdBy.userId !== loggedInUser ?
                         </div>
                     </div>
                     <p class="post-description"><b>Product:</b> ${post.description}</p>
-                    <p class="post-description"><b>Condition:</b> <span style="color: red; font-weight: 500"> ${post.productCondition}</p> </span>
-                    <p class="post-description"><b>Price:</b><span style="color: #28a745; font-weight: 600;"> &#8358;${Number(post.price).toLocaleString('en-Ng')} </span></p>
+                    <p class="post-description"><b>Condition:</b> ${post.productCondition}</p>
+                    <p class="post-description"><b>Price:</b> &#8358;${Number(post.price).toLocaleString('en-Ng')}</p>
                     <p class="post-description"><b>Location:</b> ${post.location}</p>
                     <img src="${post.photo || 'default-image.png'}" class="post-image" onclick="openImage('${post.photo || 'default-image.png'}')">
                     <div class="buy" style="text-align: center">
@@ -155,7 +155,7 @@ ${post.createdBy.userId !== loggedInUser ?
                             <i class="${post.likes.includes(loggedInUser) ? 'fas' : 'far'} fa-heart"></i>
                             <span class="like-count">${post.likes.length}</span>
                         </button>
-                        <button class="reply-button"><i class="far fa-comment-alt"></i> <span class="comment-count">${post.comments ? post.comments.length : 0}</span></button>
+                        <button class="reply-button"><i class="far fa-comment"></i> <span class="comment-count">${post.comments ? post.comments.length : 0}</span></button>
                         <button class="share-button"><i class="fas fa-share"></i></button>
                     </div>
                   
@@ -236,30 +236,27 @@ likeButton.addEventListener('click', async () => {
 
                 
                 // Send message functionality
-// Fix for sendMessageBtn null error
-            const sendMessageBtn = postElement.querySelector('#send-message-btn');
-            const sendMessageLink = postElement.querySelector('#send-message-link');
-            if (sendMessageBtn) {
-                if (post.isSold) {
-                    sendMessageBtn.disabled = true;
-                }
-                sendMessageBtn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    const recipientId = sendMessageBtn.dataset.recipientId;
-                    const recipientUsername = post.createdBy.name;
-                    const recipientProfilePictureUrl = post.profilePicture || 'default-avatar.png';
-                    const productImage = sendMessageBtn.dataset.productImage;
-                    const productDescription = sendMessageBtn.dataset.productDescription;
+const sendMessageBtn = postElement.querySelector("#send-message-btn");
+if(post.isSold) {
+  sendMessageBtn.disabled = true
+}
+const sendMessageLink = postElement.querySelector("#send-message-link");
 
-                    const message = `Is this item still available?\n\nProduct: ${productDescription}\nImage: ${productImage}`;
-                    sendMessageLink.href = `Chats.html?user_id=${loggedInUser}&recipient_id=${recipientId}&recipient_username=${recipientUsername}&recipient_profile_picture_url=${recipientProfilePictureUrl}&message=${encodeURIComponent(message)}`;
-                    window.location.href = sendMessageLink.href;
-                });
-            } else {
-                console.warn('send-message-btn not found for post:', post._id);
-            }
+sendMessageBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    const recipientId = sendMessageBtn.dataset.recipientId;
+    const recipientUsername = post.createdBy.name;
+    const recipientProfilePictureUrl = post.profilePicture || 'default-avatar.png';
+    const productImage = sendMessageBtn.dataset.productImage;
+    const productDescription = sendMessageBtn.dataset.productDescription;
 
-          
+    // Construct the message with product details
+    const message = `Is this item still available?\n\nProduct: ${productDescription}\nImage: ${productImage}`;
+
+    // Redirect to the chat page with the pre-filled message
+    sendMessageLink.href = `Chats.html?user_id=${userId}&recipient_id=${recipientId}&recipient_username=${recipientUsername}&recipient_profile_picture_url=${recipientProfilePictureUrl}&message=${encodeURIComponent(message)}`;
+    window.location.href = sendMessageLink.href;
+});
 
                 // Buy now functionality
                 const buyNowButton = postElement.querySelector('.buy-now-button');
@@ -291,16 +288,8 @@ likeButton.addEventListener('click', async () => {
                         alert("Payment error!");
                     }
                 });
-                
-        //hide buy button and Check availabilty button from Posts owners
-     if (post.createdBy.userId === loggedInUser) {
-    const buyDiv = postElement.querySelector('.buy');
-    if (buyDiv) {
-        buyDiv.remove(); // Remove the buy div entirely
-    }
-}
 
- // Toggle comment section
+                // Toggle comment section
 const commentToggleButton = postElement.querySelector('.reply-button');
 commentToggleButton.addEventListener('click', () => {
     window.location.href = `posts-details.html?postId=${post._id}`;
@@ -618,90 +607,37 @@ reportButton.addEventListener('click', async () => {
         }
     });
 });
-// Delete post functionality - Modern version
-const deleteButton = postElement.querySelector('.delete-post-button');
-if (deleteButton) {
-  deleteButton.addEventListener('click', async (e) => {
-    e.stopPropagation();
-    const postId = deleteButton.getAttribute('data-post-id');
-    const authToken = localStorage.getItem('authToken');
-    
-    // Show the modal
-    const modal = document.getElementById('delete-modal');
-    const confirmButton = document.getElementById('confirm-delete');
-    const cancelButton = document.getElementById('cancel-delete');
-    const deleteLoader = document.getElementById('delete-loader');
-    
-    modal.classList.add('show');
-    
-    // Handle confirm delete
-    const handleConfirm = async () => {
-      try {
-        // Show loading state
-        confirmButton.classList.add('loading');
-        confirmButton.disabled = true;
-        
-        const response = await fetch(`${API_BASE_URL}/post/delete/${postId}`, {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${authToken}`,
-          },
-        });
 
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Failed to delete post');
-        }
+                // Delete post functionality
+                const deleteButton = postElement.querySelector('.delete-post-button');
+                if (deleteButton) {
+                    deleteButton.addEventListener('click', async () => {
+                        const postId = deleteButton.getAttribute('data-post-id');
+                        const authToken = localStorage.getItem('authToken');
 
-        // Remove the post element with animation
-        postElement.style.transition = 'opacity 0.3s, transform 0.3s';
-        postElement.style.opacity = '0';
-        postElement.style.transform = 'translateX(-20px)';
-        
-        // Wait for animation to complete before removing
-        setTimeout(() => {
-          postElement.remove();
-          showToast('Post deleted successfully!', '#2ecc71');
-        }, 300);
-      } catch (error) {
-        console.error('Error deleting post:', error);
-        showToast(error.message || 'Error deleting post. Please try again.', '#e74c3c');
-      } finally {
-        // Clean up
-        confirmButton.classList.remove('loading');
-        confirmButton.disabled = false;
-        modal.classList.remove('show');
-        confirmButton.removeEventListener('click', handleConfirm);
-        cancelButton.removeEventListener('click', handleCancel);
-        document.removeEventListener('keydown', handleKeydown);
-      }
-    };
+                        const confirmDelete = confirm("Are you sure you want to delete this post?");
+                        if (!confirmDelete) return;
 
-    // Handle cancel
-    const handleCancel = () => {
-      modal.classList.remove('show');
-      confirmButton.removeEventListener('click', handleConfirm);
-      cancelButton.removeEventListener('click', handleCancel);
-      document.removeEventListener('keydown', handleKeydown);
-    };
+                        try {
+                            const response = await fetch(`${API_BASE_URL}/post/delete/${postId}`, {
+                                method: 'DELETE',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${authToken}`,
+                                },
+                            });
 
-    // Add event listeners
-    confirmButton.addEventListener('click', handleConfirm);
-    cancelButton.addEventListener('click', handleCancel);
-    
-    // Close modal on overlay click
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal) handleCancel();
-    });
+                            if (!response.ok) throw new Error('Failed to delete post');
 
-    // Close modal on Esc key
-    const handleKeydown = (e) => {
-      if (e.key === 'Escape') handleCancel();
-    };
-    document.addEventListener('keydown', handleKeydown);
-  });
-}
+                            postElement.remove();
+                            showToast('Post deleted successfully!');
+                        } catch (error) {
+                            console.error('Error deleting post:', error);
+                            showToast('Error deleting post. Please try again.');
+                        }
+                    });
+                }
+
      // Function to check follow status on page load and hide buttons if already following
 async function checkFollowStatusOnLoad() {
     const token = localStorage.getItem('authToken');
@@ -799,12 +735,7 @@ document.querySelectorAll('.follow-button').forEach(followButton => {
                 });
             });
 
-            // Socket.IO connection
-            const socket = io(`${API_BASE_URL}`);
-            const userId = localStorage.getItem('userId');
-            if (userId) {
-                socket.emit('join', userId);
-            }
+            
         } catch (error) {
             console.error('Error fetching posts:', error);
             postsContainer.innerHTML = '<p style="text-align: center; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">No ads yet. Try again or create one!</p>';

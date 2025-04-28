@@ -8,10 +8,10 @@
 <link rel="stylesheet" href="./Style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
    <link rel="preconnect" href="https://fonts.googleapis.com">
-   
+
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
-  
+
   <title>MarketPlace</title>
 
 <script src="homeScript.js"></script>
@@ -23,7 +23,7 @@
 <body>
   <div class="Genenral-container">
     <div class="loader" id="loader">
-      
+
     </div>
 <div class="menu-icon">
   <div></div>
@@ -39,14 +39,14 @@
   <div style="z-index: 3; position: fixed; margin-left: 83.5%; margin-top: 16px; font-size: 16px;">
     <a href="Search.html">
   <i class="fas fa-search" style="color:#28a745; border: 0.1px solid #fff; border-radius: 20px; padding: 8.5px; background-color:#fff; box-shadow: 0 0 10px #ddd; font-weight: light; margin-left: auto"></i>
-  
+
   </a>
   </div>
-  
+
   <h2 class="head" style=" color:  #28a745; background-color: white; padding-top: 20px; padding-bottom: 20px;  margin-top: -0px; box-shadow: 0 0px 10px 0px #d3d3d3; border: solid; border-width: 1px; border-color: #fff; position: fixed;  z-index:1; width: 100vw; font-size: 19px; font-family: Poppins">Salmart</h2> 
   </div>
-  
-  
+
+
   <div style="text-align: center">
 
     <!-- Delete Confirmation Modal -->
@@ -87,7 +87,7 @@
     <!-- toast notification -->
 <div id="toast" style="display: none; position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); padding: 5px; border-radius: 5px; color: #fff; z-index: 1000; font-size: 12px"></div>
 
-  
+
   </div>
   <div class="side-bar">
     <div class="profile-sec">
@@ -200,7 +200,7 @@ window.onload = function() {
   h1{
     margin: 20px 0px;
     margin-left: 5px;
-    
+
   }
   .side-bar ul{
     list-style: none;
@@ -208,7 +208,7 @@ window.onload = function() {
      padding: 0;
   padding-top: 20px;
   margin-left: 5px;
-  
+
   }
   .side-bar li{
     margin-bottom: 10px;
@@ -226,11 +226,11 @@ window.onload = function() {
     text-decoration: none;
     color:  #28a745;
     padding-right: 10%;
-    
+
   }
   .side-bar i{
     margin-right: 20px;
-    
+
   }
 .profile-sec {
   width: 100%; /* Ensures it spans the entire width of the sidebar */
@@ -323,7 +323,10 @@ a .active {
   ? 'http://localhost:3000' 
   : 'https://salmart-production.up.railway.app';
   // Connect to your backend (replace with actual URL)
-  const socket = io(`${API_BASE_URL}`);
+  const socket = io(`${API_BASE_URL}`,
+   {
+    path: '/socket.io',
+    transports: ['websocket', 'polling']});
 
   // Check connection
   socket.on('connect', () => {
@@ -485,7 +488,7 @@ a .active {
   font-size: 14px;
   color: #777;
   margin-top: 10px;
-  
+
 }
 
 .request-card .location {
@@ -692,14 +695,14 @@ let currentCategory = 'all';
 let allPostsCache = [];
 document.addEventListener('DOMContentLoaded', function() {
   const categoryBtns = document.querySelectorAll('.category-btn');
-  
+
   // Initialize category buttons
   categoryBtns.forEach(btn => {
     btn.addEventListener('click', async function() {
       // Update active button
       categoryBtns.forEach(b => b.classList.remove('active'));
       this.classList.add('active');
-      
+
       // Set current category and fetch posts
       currentCategory = this.dataset.category;
       await fetchPostsByCategory();
@@ -714,22 +717,22 @@ document.addEventListener('DOMContentLoaded', function() {
   const categoryFilter = document.querySelector('.category-filter');
   const header = document.querySelector('.head');
   const headerHeight = header.offsetHeight;
-  
+
   // Calculate the exact position where it should stick (60px from top)
   const stickyPosition = 60;
-  
+
   // Create spacer element
   const spacer = document.createElement('div');
   spacer.style.height = categoryFilter.offsetHeight + 'px';
   spacer.style.display = 'none';
   categoryFilter.parentNode.insertBefore(spacer, categoryFilter.nextSibling);
-  
+
   // Initial positioning
   const initialTop = categoryFilter.getBoundingClientRect().top + window.scrollY;
-  
+
   window.addEventListener('scroll', function() {
     const scrollY = window.scrollY || window.pageYOffset;
-    
+
     if (scrollY >= initialTop - stickyPosition) {
       // Apply fixed positioning immediately
       categoryFilter.style.position = 'fixed';
@@ -744,7 +747,7 @@ document.addEventListener('DOMContentLoaded', function() {
       spacer.style.display = 'none';
     }
   });
-  
+
   // Force initial calculation to prevent any jump
   window.dispatchEvent(new Event('scroll'));
 });
@@ -836,12 +839,12 @@ async function checkForNewContent() {
     // Fetch notification counts from your backend
     const response = await fetch(`${API_BASE_URL}/notification-counts?userId=${userId}`);
     const data = await response.json();
-    
+
     // Update badges based on response
     updateBadge('alerts-badge', data.alertsCount);
     updateBadge('messages-badge', data.messagesCount);
     updateBadge('deals-badge', data.dealsCount);
-    
+
   } catch (error) {
     console.error('Error fetching notification counts:', error);
   }
@@ -851,7 +854,7 @@ async function checkForNewContent() {
 function updateBadge(badgeId, count) {
   const badge = document.getElementById(badgeId);
   if (!badge) return;
-  
+
   if (count > 0) {
     badge.style.display = 'inline-block';
     badge.textContent = count > 9 ? '9+' : count;
@@ -1012,22 +1015,10 @@ socket.on('new-notification', (data) => {
   // Periodic polling as fallback
   setInterval(checkForNewContent, 30000); // Every 30 seconds
 
-   
+
 </script>
 <script>
-  const socket = io('https://salmart-production.up.railway.app', {
-    path: '/socket.io',
-    transports: ['websocket', 'polling']
-  });
-
-  socket.on('connect', () => {
-    console.log('Connected to server');
-    const userId = localStorage.getItem('userId');
-    if (userId) {
-      socket.emit('joinRoom', userId);
-    }
-  });
-
+  
   // Handle like and comment notifications
   socket.on('notification', (data) => {
     console.log('Received notification:', data);
@@ -1053,7 +1044,7 @@ socket.on('new-notification', (data) => {
   function sendMessage(senderId, receiverId, text) {
     socket.emit('sendMessage', { senderId, receiverId, text });
   }
-  
+
   function showToast(message, color = '#28a745') {
   const toast = document.getElementById("toast");
   if (!toast) {
@@ -1100,10 +1091,10 @@ socket.on('new-notification', (data) => {
 
 async function saveToken(token) {
   const userId = localStorage.getItem('userId');
-  const jwt = localStorage.getItem('token');
+  const jwt = localStorage.getItem('authtoken');
   if (userId && jwt) {
     try {
-      const response = await fetch('/api/save-fcm-token', {
+      const response = await fetch(`${API_BASE_URL}/api/save-fcm-token`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

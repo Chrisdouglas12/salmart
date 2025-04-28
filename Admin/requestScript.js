@@ -2,10 +2,6 @@ const requestFeed = document.getElementById('request-feed');
 let currentUserId = null; // This should be set when user logs in
 // After successful authentication:
 
-const API_BASE_URL = window.location.hostname === 'localhost' 
-       ?
-      'http://localhost:3000' :
-      'https://salmart-production.up.railway.app'
 
 const commentModal = document.createElement('div');
 commentModal.classList.add('comment-modal');

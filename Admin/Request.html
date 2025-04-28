@@ -80,7 +80,12 @@
     };
 
     try {
-      const response = await fetch('http://localhost:3000/create-request', {
+      const API_BASE_URL =
+      window.location.hostname === 'localhost'
+      ? 'http://localhost:3000'
+      :
+'https://salmart-production.up.railway.app'
+      const response = await fetch(`${API_BASE_URL}/create-request`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
