@@ -894,7 +894,7 @@ document.addEventListener('DOMContentLoaded', function() {
   async function saveToken(token) {
     console.log('💾 Attempting to save FCM token:', token);
     const userId = localStorage.getItem('userId');
-    const jwt = localStorage.getItem('authtoken');
+    const jwt = localStorage.getItem('authToken');
     console.log('ℹ️ User ID:', userId, 'JWT:', jwt ? '[Present]' : '[Missing]');
     if (userId && jwt) {
       try {
@@ -1198,12 +1198,23 @@ socket.on('new-notification', (data) => {
         await saveToken(token);
 
         // Handle token refresh
-        messaging.onTokenRefresh(async () => {
-          console.log('Token refreshed');
-          const newToken = await messaging.getToken({
-            vapidKey: "BCtAsyYJYCSfpg_kXL2aO59szQsPFE3DvmqqLOnW03JTVR88Jb435-jDnUgj0j0mL5VCWLiGGfErTuwQ-XUArho"
-          });
-          await saveToken(newToken);
+        // Inside initializeNotifications(), replace this:
+messaging.onTokenRefresh(async () => {
+  console.log('🔄 FCM token refreshed');
+  const newToken = await messaging.getToken({ vapidKey:  "BCtAsyYJYCSfpg_kXL2aO59szQsPFE3DvmqqLOnW03JTVR88Jb435-jDnUgj0j0mL5VCWLiGGfErTuwQ-XUArho" });
+  await saveToken(newToken);
+});
+
+// ✅ With this (v9-compatible approach):
+navigator.serviceWorker.addEventListener('message', async (event) => {
+  if (event.data && event.data.type === 'TOKEN_REFRESH') {
+    console.log('🔄 FCM token refresh detected');
+    const newToken = await messaging.getToken({ 
+      vapidKey: "BCtAsyYJYCSfpg_kXL2aO59szQsPFE3DvmqqLOnW03JTVR88Jb435-jDnUgj0j0mL5VCWLiGGfErTuwQ-XUArho"
+    });
+    await saveToken(newToken);
+  }
+});
         });
       } else {
         console.warn('Notification permission denied');
