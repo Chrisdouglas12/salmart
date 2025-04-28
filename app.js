@@ -101,8 +101,15 @@ io.on('connection', (socket) => {
 // Helper function to send FCM notification
 async function sendFCMNotification(userId, title, body, data = {}) {
   try {
-    const userDoc = await admin.firestore().collection('users').doc(userId).get();
-    const token = userDoc.data()?.fcmToken;
+    console.log(`Fetching user from MongoDB: ${userId}`);
+    const user = await User.findById(userId);
+
+    if (!user) {
+      console.log(`No user found with ID ${userId}`);
+      return;
+    }
+
+    const token = user.fcmToken;
 
     if (!token) {
       console.log(`No FCM token for user ${userId}`);
@@ -134,7 +141,6 @@ async function sendFCMNotification(userId, title, body, data = {}) {
     console.error(`Error sending FCM notification to user ${userId}:`, err);
   }
 }
-
 
   socket.on('followUser', async ({ followerId, followedId }) => {
   try {
@@ -194,7 +200,7 @@ async function sendFCMNotification(userId, title, body, data = {}) {
         type: 'like',
         senderId: userId,
         postId,
-        message: `${sender.firstName} ${sender.lastName} liked your post`,
+        message: `${sender.firstName} ${sender.lastName} just liked your ad`,
         createdAt: new Date(),
       });
 
@@ -219,7 +225,7 @@ async function sendFCMNotification(userId, title, body, data = {}) {
       await sendFCMNotification(
         post.createdBy.userId.toString(),
         'New Like',
-        `${sender.firstName} ${sender.lastName} liked your post`,
+        `${sender.firstName} ${sender.lastName} just liked your post`,
         { type: 'like', postId: postId.toString() }
       );
 
@@ -3326,43 +3332,50 @@ app.post('/api/save-fcm-token', verifyToken, async (req, res) => {
       return res.status(400).json({ error: 'Token is required' });
     }
 
-    // Save token to mongoDb
-    await User.findByIdAndUpdate(userId, { fcmToken: token, notificationEnabled: true });
-        res.json({ success: true });
+    // Save token to MongoDB
+    await User.findByIdAndUpdate(userId, { 
+      fcmToken: token, 
+      notificationEnabled: true 
+    });
 
-await User.findByIdAndUpdate(userId, { 
-    $addToSet: { fcmTokens: token }, // Avoid duplicates
-    notificationEnabled: true 
-});
     res.json({ success: true });
+    
   } catch (error) {
     console.error('Error saving FCM token:', error);
     res.status(500).json({ error: 'Failed to save token' });
   }
 });
 
-
 // Send Notification (Customize as needed)
 app.post('/send-notification', async (req, res) => {
   const { userId, title, body } = req.body;
 
-  try {
-    const userDoc = await admin.firestore().collection('users').doc(userId).get();
-    const token = userDoc.data()?.fcmToken;
+  console.log('Received request to send notification:', { userId, title, body });
 
-    if (!token) {
+  try {
+    const user = await User.findById(userId);
+
+    if (!user) {
+      console.error(`User with ID ${userId} not found in MongoDB.`);
+      return res.status(404).send('User not found');
+    }
+
+    if (!user.fcmToken) {
+      console.error(`User with ID ${userId} does not have an FCM token.`);
       return res.status(404).send('User token not found');
     }
 
-    // Send notification (matches your original frontend expectations)
+    console.log(`Sending notification to user ${userId} with token: ${user.fcmToken}`);
+
     await admin.messaging().send({
-      token,
+      token: user.fcmToken,
       notification: { title, body },
       webpush: {
         headers: { Urgency: 'high' }
       }
     });
 
+    console.log(`Notification successfully sent to user ${userId}.`);
     res.status(200).send('Notification sent');
   } catch (err) {
     console.error('Error sending notification:', err);
@@ -3496,23 +3509,7 @@ app.post('/admin/reports/:reportId/resolve', verifyToken, async (req, res) => {
     }
 });
 
-// In your Express server
-app.post('/api/save-fcm-token', verifyToken, async (req, res) => {
-  try {
-    const { token } = req.body;
-    const userId = req.user.userId;
-    
-    await User.findByIdAndUpdate(userId, { 
-      fcmToken: token,
-      notificationEnabled: true 
-    });
-    
-    res.json({ success: true });
-  } catch (error) {
-    console.error('Error saving FCM token:', error);
-    res.status(500).json({ error: 'Failed to save token' });
-  }
-});
+
 // notification badge
 app.get('/notification-counts', verifyToken, async (req, res) => {
   try {
