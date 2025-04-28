@@ -2,6 +2,11 @@ const requestFeed = document.getElementById('request-feed');
 let currentUserId = null; // This should be set when user logs in
 // After successful authentication:
 
+const API_BASE_URL = window.location.hostname === 'localhost' 
+       ?
+      'http://localhost:3000' :
+      'https://salmart-production.up.railway.app'
+
 const commentModal = document.createElement('div');
 commentModal.classList.add('comment-modal');
 commentModal.innerHTML = `
@@ -286,7 +291,7 @@ postCommentBtn.addEventListener('click', async () => {
   
   try {
     const token = localStorage.getItem('authToken');
-    const res = await fetch(`http://localhost:3000/requests/comment/${currentRequestId}`, {
+    const res = await fetch(`${API_BASE_URL}/requests/comment/${currentRequestId}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -324,7 +329,7 @@ commentInput.addEventListener('keypress', (e) => {
 // Function to fetch and display comments
 async function fetchComments(requestId) {
   try {
-    const res = await fetch(`http://localhost:3000/requests/comments/${requestId}`);
+    const res = await fetch(`${API_BASE_URL}/requests/comments/${requestId}`);
     if (!res.ok) {
       throw new Error('Failed to fetch comments');
     }
@@ -369,7 +374,7 @@ async function fetchComments(requestId) {
 // Function to update comment count on the request card
 async function updateCommentCount(requestId) {
   try {
-    const res = await fetch(`http://localhost:3000/requests/${requestId}/comments/count`);
+    const res = await fetch(`${API_BASE_URL}/requests/${requestId}/comments/count`);
     if (!res.ok) {
       throw new Error('Failed to fetch comment count');
     }
@@ -422,7 +427,7 @@ function setupDropdownMenu(cardElement, requestId, isOwner) {
 // Fetch and display all requests
 async function fetchRequests() {
   try {
-    const res = await fetch('http://localhost:3000/requests');
+    const res = await fetch(`${API_BASE_URL}/requests`);
     if (!res.ok) {
       throw new Error('Failed to fetch requests');
     }
@@ -502,7 +507,7 @@ requests.forEach(request => {
     
     try {
       const token = localStorage.getItem('authToken');
-      const res = await fetch(`http://localhost:3000/requests/like/${requestId}`, {
+      const res = await fetch(`${API_BASE_URL}/requests/like/${requestId}`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -562,7 +567,7 @@ requests.forEach(request => {
 async function handleDeleteRequest(requestId) {
   try {
     const token = localStorage.getItem('authToken');
-    const res = await fetch(`http://localhost:3000/requests/${requestId}`, {
+    const res = await fetch(`${API_BASE_URL}/requests/${requestId}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`
@@ -607,7 +612,7 @@ function handleEditRequest(requestId) {
     if (newText) {
       try {
         const token = localStorage.getItem('authToken');
-        const res = await fetch(`http://localhost:3000/requests/${requestId}`, {
+        const res = await fetch(`${API_BASE_URL}/requests/${requestId}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
