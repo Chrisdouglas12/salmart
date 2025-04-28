@@ -822,10 +822,8 @@ document.addEventListener('DOMContentLoaded', function() {
     try {
       console.log('📡 Registering service worker at /Admin/firebase-messaging-sw.js...');
       console.log('ℹ️ Attempting to fetch service worker file...');
-      if ('serviceWorker' in navigator) {
   try {
-    // Register the service worker located at the root (same directory as index.html)
-    const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+     const registration = await navigator.serviceWorker.register('firebase-messaging-sw.js');
     console.log('Service Worker registered:', registration);
   } catch (err) {
     console.error('Service Worker registration failed:', err);
