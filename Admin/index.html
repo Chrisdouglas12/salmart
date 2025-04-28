@@ -822,7 +822,7 @@ document.addEventListener('DOMContentLoaded', function() {
     try {
       console.log('📡 Registering service worker at /Admin/firebase-messaging-sw.js...');
       console.log('ℹ️ Attempting to fetch service worker file...');
-      const swResponse = await fetch('/Admin/firebase-messaging-sw.js');
+      const swResponse = await fetch('firebase-messaging-sw.js');
       console.log('ℹ️ Service worker file response:', swResponse.status, swResponse.statusText);
       if (!swResponse.ok) {
         throw new Error(`Failed to fetch service worker: ${swResponse.status} ${swResponse.statusText}`);
@@ -830,7 +830,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
       let registration;
       try {
-        registration = await navigator.serviceWorker.register('/Admin/firebase-messaging-sw.js');
+        registration = await navigator.serviceWorker.register('firebase-messaging-sw.js');
         console.log('✅ Service Worker registered with scope:', registration.scope);
       } catch (regErr) {
         console.error('❌ Service Worker registration failed:', regErr);
