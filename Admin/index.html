@@ -763,71 +763,154 @@ document.addEventListener('DOMContentLoaded', function() {
     appId: "1:396604566472:web:60eff66ef26ab223a12efd"
   };
 
-  const app = firebase.initializeApp(firebaseConfig);
-  const messaging = firebase.messaging();
 
-  // Request permission and save token
+  // Fallback for showToast if undefined
+  function showToast(message, color) {
+    console.log(`[Toast] ${message} (Color: ${color})`);
+    alert(message); // Temporary fallback
+  }
+
+  console.log('🔥 Initializing Firebase...');
+  firebase.initializeApp(firebaseConfig);
+  const messaging = firebase.messaging();
+  console.log('✅ Firebase initialized');
+
+  let isInitialized = false;
+
   async function initializeNotifications() {
-    if ('Notification' in window) {
-      try {
-        const permission = await Notification.requestPermission();
-        if (permission === 'granted') {
-          console.log('Notification permission granted.');
+    console.log('🔍 Entering initializeNotifications...');
+    if (isInitialized) {
+      console.log('🚫 initializeNotifications already called, skipping');
+      return;
+    }
+    isInitialized = true;
+
+    console.log('🔎 Checking browser support...');
+    if (!('Notification' in window)) {
+      console.warn('⚠️ Notifications not supported in this browser');
+      showToast('Your browser does not support notifications.', '#e74c3c');
+      return;
+    }
+    console.log('✅ Notification API supported');
+
+    if (!navigator.serviceWorker) {
+      console.warn('⚠️ Service workers not supported in this browser');
+      showToast('Your browser does not support service workers.', '#e74c3c');
+      return;
+    }
+    console.log('✅ Service Worker API supported');
+
+    try {
+      console.log('📡 Registering service worker...');
+      const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+      console.log('✅ Service Worker registered with scope:', registration.scope);
+      console.log('🔗 Linking service worker to Firebase Messaging...');
+      messaging.useServiceWorker(registration);
+      console.log('✅ Service worker linked');
+
+      console.log('🔐 Requesting notification permission...');
+      const permission = await Notification.requestPermission();
+      console.log('ℹ️ Notification permission result:', permission);
+      if (permission === 'granted') {
+        console.log('✅ Notification permission granted');
+        try {
+          console.log('🔑 Generating FCM token...');
           const token = await messaging.getToken({
             vapidKey: "BCtAsyYJYCSfpg_kXL2aO59szQsPFE3DvmqqLOnW03JTVR88Jb435-jDnUgj0j0mL5VCWLiGGfErTuwQ-XUArho"
           });
-          console.log('FCM Token:', token);
+          console.log('🎉 FCM Token generated:', token);
+          await saveToken(token);
 
-          const userId = localStorage.getItem('userId');
-          if (userId) {
-            await fetch(`${API_BASE_URL}/api/save-fcm-token`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-              },
-              body: JSON.stringify({ token })
+          console.log('🔄 Setting up token refresh handler...');
+          messaging.onTokenRefresh(async () => {
+            console.log('🔄 FCM token refreshed');
+            const newToken = await messaging.getToken({
+              vapidKey: "BCtAsyYJYCSfpg_kXL2aO59szQsPFE3DvmqqLOnW03JTVR88Jb435-jDnUgj0j0mL5VCWLiGGfErTuwQ-XUArho"
             });
-            console.log('Token saved to server');
-          }
-        } else {
-          console.warn('Notification permission denied');
+            console.log('🎉 New FCM Token:', newToken);
+            await saveToken(newToken);
+          });
+          console.log('✅ Token refresh handler set up');
+        } catch (tokenErr) {
+          console.error('❌ Error generating FCM token:', tokenErr);
+          console.error('Error details:', JSON.stringify(tokenErr, null, 2));
+          showToast('Failed to generate notification token.', '#e74c3c');
         }
-      } catch (err) {
-        console.error('Error initializing notifications:', err);
+      } else {
+        console.warn('⚠️ Notification permission denied:', permission);
+        showToast('Please enable notifications in your browser settings.', '#e74c3c');
       }
-    } else {
-      console.warn('Notifications not supported in this browser');
+    } catch (err) {
+      console.error('❌ Error initializing notifications:', err);
+      console.error('Error details:', JSON.stringify(err, null, 2));
+      showToast('Failed to initialize notifications.', '#e74c3c');
     }
   }
 
-  // Handle foreground messages
+  async function saveToken(token) {
+    console.log('💾 Attempting to save FCM token:', token);
+    const userId = localStorage.getItem('userId');
+    const jwt = localStorage.getItem('authtoken');
+    console.log('ℹ️ User ID:', userId, 'JWT:', jwt ? '[Present]' : '[Missing]');
+    if (userId && jwt) {
+      try {
+        console.log('📤 Sending token to server...');
+        const response = await fetch(`${API_BASE_URL}/api/save-fcm-token`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${jwt}`
+          },
+          body: JSON.stringify({ userId, token })
+        });
+        if (response.ok) {
+          console.log('✅ Token saved to server');
+          showToast('Notifications enabled successfully!', '#28a745');
+        } else {
+          console.error('❌ Failed to save token:', response.status, await response.text());
+          showToast('Failed to enable notifications.', '#e74c3c');
+        }
+      } catch (err) {
+        console.error('❌ Error saving token:', err);
+        showToast('Error enabling notifications.', '#e74c3c');
+      }
+    } else {
+      console.warn('⚠️ No userId or JWT found:', { userId, jwt });
+      showToast('Please log in to enable notifications.', '#e74c3c');
+    }
+  }
+
   messaging.onMessage((payload) => {
-    console.log('Foreground message:', payload);
+    console.log('📩 Foreground message received:', JSON.stringify(payload, null, 2));
     if (Notification.permission === 'granted') {
-      const { title, body } = payload.notification;
+      const { title, body } = payload.notification || {};
       const { type, postId, senderId } = payload.data || {};
 
+      console.log('🔔 Displaying foreground notification:', { title, body, type, postId, senderId });
       const notification = new Notification(title, {
         body,
-        icon: '/favicon.ico', // Replace with your app icon
+        icon: '/favicon.ico',
         data: { type, postId, senderId }
       });
 
       notification.onclick = (event) => {
         event.preventDefault();
         const { type, postId, senderId } = event.target.data || {};
+        console.log('🖱️ Notification clicked:', { type, postId, senderId });
         if (type === 'like' || type === 'comment') {
-          window.location.href = `post.html?postId=${postId}`; // Adjust to your post page
+          window.location.href = `post.html?postId=${postId}`;
         } else if (type === 'message') {
-          window.location.href = `Messages.html?userId=${senderId}`; // Adjust to your messages page
+          window.location.href = `Messages.html?userId=${senderId}`;
         }
       };
     }
   });
 
-  // Initialize on load
-  window.addEventListener('load', initializeNotifications);
+  console.log('🌐 Adding load event listener...');
+  window.addEventListener('load', () => {
+    console.log('🌐 Page loaded, initializing notifications...');
+    initializeNotifications();
+  });
 </script>
 <script>
 // Function to check for new content
