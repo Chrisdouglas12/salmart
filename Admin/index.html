@@ -822,11 +822,17 @@ document.addEventListener('DOMContentLoaded', function() {
     try {
       console.log('📡 Registering service worker at /Admin/firebase-messaging-sw.js...');
       console.log('ℹ️ Attempting to fetch service worker file...');
-      const swResponse = await fetch('firebase-messaging-sw.js');
-      console.log('ℹ️ Service worker file response:', swResponse.status, swResponse.statusText);
-      if (!swResponse.ok) {
-        throw new Error(`Failed to fetch service worker: ${swResponse.status} ${swResponse.statusText}`);
-      }
+      if ('serviceWorker' in navigator) {
+  try {
+    // Register the service worker located at the root (same directory as index.html)
+    const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+    console.log('Service Worker registered:', registration);
+  } catch (err) {
+    console.error('Service Worker registration failed:', err);
+  }
+} else {
+  console.warn('Service Workers are not supported in this browser.');
+}
 
       let registration;
       try {
