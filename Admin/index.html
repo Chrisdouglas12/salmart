@@ -820,10 +820,12 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('✅ Service Worker API supported');
 
     try {
-      console.log('📡 Registering service worker at /Admin/firebase-messaging-sw.js...');
+      console.log('📡 Registering service worker at firebase-messaging-sw.js...');
       console.log('ℹ️ Attempting to fetch service worker file...');
+      if ('serviceWorker' in navigator) {
   try {
-     const registration = await navigator.serviceWorker.register('firebase-messaging-sw.js');
+    // Register the service worker located at the root (same directory as index.html)
+    const registration = await navigator.serviceWorker.register('firebase-messaging-sw.js');
     console.log('Service Worker registered:', registration);
   } catch (err) {
     console.error('Service Worker registration failed:', err);
@@ -937,7 +939,7 @@ document.addEventListener('DOMContentLoaded', function() {
       console.log('🔔 Displaying foreground notification:', { title, body, type, postId, senderId });
       const notification = new Notification(title, {
         body,
-        icon: '/Admin/favicon.ico',
+        icon: 'favicon.ico',
         data: { type, postId, senderId }
       });
 
