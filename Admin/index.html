@@ -1218,7 +1218,7 @@ socket.on('new-notification', (data) => {
 
 async function saveToken(token) {
   const userId = localStorage.getItem('userId');
-  const jwt = localStorage.getItem('authtoken');
+  const jwt = localStorage.getItem('authToken');
   if (userId && jwt) {
     try {
       const response = await fetch(`${API_BASE_URL}/api/save-fcm-token`, {
