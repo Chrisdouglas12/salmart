@@ -709,7 +709,7 @@ app.post('/create-request', verifyToken, async (req, res) => {
     const { text, category, budget, location } = req.body;
 
     const newRequest = new Request({
-      user: req.user._id,
+      user: req.user.userId,
       text,
       category,
       budget,

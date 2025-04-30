@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', async function () {
       :
 'https://salmart-production.up.railway.app'
 
+
     // Function to format time (e.g., "2 hrs ago")
     function formatTime(timestamp) {
         const now = new Date();
@@ -139,14 +140,14 @@ ${post.createdBy.userId !== loggedInUser ?
                     <p class="post-description"><b>Price:</b> &#8358;${Number(post.price).toLocaleString('en-Ng')}</p>
                     <p class="post-description"><b>Location:</b> ${post.location}</p>
                     <img src="${post.photo || 'default-image.png'}" class="post-image" onclick="openImage('${post.photo || 'default-image.png'}')">
-                    <div class="buy" style="text-align: center">
-                        <button class="buy-now-button" data-post-id="${post._id}" ${post.isSold ? 'disabled' : ''}>${post.isSold ? 'Sold Out' : 'Buy Now'}</button>
+                        <div class="buy" style="text-align: center">
+          <button class="buy-now-button" data-post-id="${post._id}" ${post.isSold ? 'disabled' : ''}> <i class="fas fa-shopping-cart"></i> ${post.isSold ? 'Sold Out' : 'Buy Now'}</button>
 <a id="send-message-link">
   <button class="buy-now-button" id="send-message-btn"
     data-recipient-id="${post.createdBy.userId}"
     data-product-image="${post.photo || 'default-image.png'}"
     data-product-description="${post.description}">
-    ${post.isSold ? 'Unavailable': 'Check availabilty'}
+    <i class="fas fa-circle-dot"></i>   ${post.isSold ? 'Unavailable': 'Check availabilty'}
   </button>
 </a>
                     </div>
@@ -155,13 +156,43 @@ ${post.createdBy.userId !== loggedInUser ?
                             <i class="${post.likes.includes(loggedInUser) ? 'fas' : 'far'} fa-heart"></i>
                             <span class="like-count">${post.likes.length}</span>
                         </button>
-                        <button class="reply-button"><i class="far fa-comment"></i> <span class="comment-count">${post.comments ? post.comments.length : 0}</span></button>
+                        <button class="reply-button"><i class="far fa-comment-alt"></i> <span class="comment-count">${post.comments ? post.comments.length : 0}</span></button>
                         <button class="share-button"><i class="fas fa-share"></i></button>
                     </div>
                   
                 `;
                 postsContainer.prepend(postElement);
+                
+                
+// Check availability functionality
+const sendMessageBtn = postElement.querySelector("#send-message-btn");
+if (post.isSold) {
+    sendMessageBtn.disabled = true;
+}
+const sendMessageLink = postElement.querySelector("#send-message-link");
+sendMessageBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    const recipientId = sendMessageBtn.dataset.recipientId;
+    const recipientUsername = post.createdBy.name;
+    const recipientProfilePictureUrl = post.profilePicture || 'default-avatar.png';
+    const productImage = sendMessageBtn.dataset.productImage;
+    const productDescription = sendMessageBtn.dataset.productDescription;
 
+    // Construct the predefined message
+    const message = `Is this item still available?\n\nProduct: ${productDescription}`;
+    const userId = localStorage.getItem("userId");
+
+    // Encode parameters for the URL
+    const encodedMessage = encodeURIComponent(message);
+    const encodedProductImage = encodeURIComponent(productImage);
+    const encodedRecipientUsername = encodeURIComponent(recipientUsername);
+    const encodedRecipientProfilePictureUrl = encodeURIComponent(recipientProfilePictureUrl);
+
+    // Redirect to the chat page with all necessary parameters
+    sendMessageLink.href = `Chats.html?user_id=${userId}&recipient_id=${recipientId}&recipient_username=${encodedRecipientUsername}&recipient_profile_picture_url=${encodedRecipientProfilePictureUrl}&message=${encodedMessage}&product_image=${encodedProductImage}`;
+    window.location.href = sendMessageLink.href;
+});
+  
                 // Toggle post options menu
                 const optionsButton = postElement.querySelector('.post-options-button');
                 const optionsMenu = postElement.querySelector('.post-options-menu');
@@ -173,6 +204,8 @@ ${post.createdBy.userId !== loggedInUser ?
                     });
                     optionsMenu.classList.toggle('show');
                 });
+                
+        
 
   // Like functionality
 const likeButton = postElement.querySelector('.like-button');
@@ -235,28 +268,7 @@ likeButton.addEventListener('click', async () => {
 });
 
                 
-                // Send message functionality
-const sendMessageBtn = postElement.querySelector("#send-message-btn");
-if(post.isSold) {
-  sendMessageBtn.disabled = true
-}
-const sendMessageLink = postElement.querySelector("#send-message-link");
 
-sendMessageBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-    const recipientId = sendMessageBtn.dataset.recipientId;
-    const recipientUsername = post.createdBy.name;
-    const recipientProfilePictureUrl = post.profilePicture || 'default-avatar.png';
-    const productImage = sendMessageBtn.dataset.productImage;
-    const productDescription = sendMessageBtn.dataset.productDescription;
-
-    // Construct the message with product details
-    const message = `Is this item still available?\n\nProduct: ${productDescription}\nImage: ${productImage}`;
-
-    // Redirect to the chat page with the pre-filled message
-    sendMessageLink.href = `Chats.html?user_id=${userId}&recipient_id=${recipientId}&recipient_username=${recipientUsername}&recipient_profile_picture_url=${recipientProfilePictureUrl}&message=${encodeURIComponent(message)}`;
-    window.location.href = sendMessageLink.href;
-});
 
                 // Buy now functionality
                 const buyNowButton = postElement.querySelector('.buy-now-button');
@@ -288,7 +300,12 @@ sendMessageBtn.addEventListener('click', (e) => {
                         alert("Payment error!");
                     }
                 });
-
+if (post.createdBy.userId === loggedInUser) {
+    const buyDiv = postElement.querySelector('.buy');
+    if (buyDiv) {
+        buyDiv.remove(); // Remove the buy div entirely
+    }
+}
                 // Toggle comment section
 const commentToggleButton = postElement.querySelector('.reply-button');
 commentToggleButton.addEventListener('click', () => {

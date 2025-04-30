@@ -174,7 +174,7 @@ style.textContent = `
   .timestamp {
     color: #888;
     font-size: 12px;
-    margin-bottom: 10px;
+    margin-top: -15px;
   }
 
   .request-bg {
@@ -202,16 +202,12 @@ style.textContent = `
     background: none;
     border: none;
     cursor: pointer;
-    display: flex;
-    align-items: center;
   }
 
   .like-btn {
     background: none;
     border: none;
     cursor: pointer;
-    display: flex;
-    align-items: center;
     padding: 5px 10px;
     border-radius: 5px;
   }
@@ -231,6 +227,7 @@ style.textContent = `
   .comment-btn {
     padding: 5px 10px;
     border-radius: 5px;
+    
   }
 
   .comment-btn:hover {
@@ -242,6 +239,14 @@ style.textContent = `
     padding: 20px;
     color: #888;
   }
+  .engagement-actions{
+  display: flex;
+  margin-left: auto;
+  font-size: 14px;
+  border-top: solid 1px #28a745;
+  width: 100%;
+  }
+  
 `;
 document.head.appendChild(style);
 
@@ -469,7 +474,13 @@ requests.forEach(request => {
     </div>
     ${request.location ? `<div class="location"><i class="fas fa-map-marker-alt"></i> ${escapeHtml(request.location)}</div>` : ''}
     ${request.budget ? `<div class="budget">Budget: ₦${escapeHtml(request.budget.toString())}</div>` : ''}
+  
     <div class="engagement-actions">
+    <div class="contact-btn">
+      <a id="contact-link">
+    <button data-recipient-id="${request.user.userId}" id="contact-creator-link"><i class="fas fa-paper-plane"></i> Send message</button>
+    </a>
+    </div>
       <form class="like-form">
         <button type="submit" class="like-btn ${isLiked ? 'liked' : ''}">
           <i class="fa${isLiked ? 's' : 'r'} fa-heart"></i>
@@ -488,6 +499,36 @@ requests.forEach(request => {
 
   requestFeed.appendChild(requestCard);
 });
+
+// Check availability functionality
+const sendMessageBtn = postElement.
+if (post.isSold) {
+    sendMessageBtn.disabled = true;
+}
+const sendMessageLink = postElement.querySelector("#send-message-link");
+sendMessageBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    const recipientId = sendMessageBtn.dataset.recipientId;
+    const recipientUsername = post.createdBy.name;
+    const recipientProfilePictureUrl = post.profilePicture || 'default-avatar.png';
+    const productImage = sendMessageBtn.dataset.productImage;
+    const productDescription = sendMessageBtn.dataset.productDescription;
+
+    // Construct the predefined message
+    const message = `Is this item still available?\n\nProduct: ${productDescription}`;
+    const userId = localStorage.getItem("userId");
+
+    // Encode parameters for the URL
+    const encodedMessage = encodeURIComponent(message);
+    const encodedProductImage = encodeURIComponent(productImage);
+    const encodedRecipientUsername = encodeURIComponent(recipientUsername);
+    const encodedRecipientProfilePictureUrl = encodeURIComponent(recipientProfilePictureUrl);
+
+    // Redirect to the chat page with all necessary parameters
+    sendMessageLink.href = `Chats.html?user_id=${userId}&recipient_id=${recipientId}&recipient_username=${encodedRecipientUsername}&recipient_profile_picture_url=${encodedRecipientProfilePictureUrl}&message=${encodedMessage}&product_image=${encodedProductImage}`;
+    window.location.href = sendMessageLink.href;
+});
+  
     
     // Add event listeners for like buttons
     document.querySelectorAll('.like-form').forEach(form => {

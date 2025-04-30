@@ -5,106 +5,329 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <title>Request</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+      background-color: #f5f7fa;
+      padding: 20px;
+      min-height: 100vh;
+    }
+
+    .request-feed-container {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .create-request {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+    }
+
+    .create-request h3 {
+      font-size: 18px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 15px;
+    }
+
+    .create-request .form-group {
+      margin-bottom: 15px;
+    }
+
+    .create-request label {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      color: #555;
+      margin-bottom: 5px;
+    }
+
+    .create-request textarea,
+    .create-request input {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      background: #f0f2f5;
+      font-size: 14px;
+      outline: none;
+      transition: background 0.2s;
+    }
+
+    .create-request textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    .create-request input[type="number"]::-webkit-inner-spin-button,
+    .create-request input[type="number"]::-webkit-outer-spin-button {
+      opacity: 1;
+    }
+
+    .create-request textarea:focus,
+    .create-request input:focus {
+      background: #e8ecef;
+    }
+
+    .create-request .error {
+      color: #dc3545;
+      font-size: 12px;
+      margin-top: 5px;
+      display: none;
+    }
+
+    .request-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .request-actions button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    .request-actions .submit-btn {
+      background-color: #28a745;
+      color: white;
+    }
+
+    .request-actions .submit-btn:hover {
+      background-color: #218838;
+      transform: translateY(-1px);
+    }
+
+    .request-actions .submit-btn:disabled {
+      background-color: #6c757d;
+      cursor: not-allowed;
+    }
+
+    .request-actions .clear-btn {
+      background-color: #6c757d;
+      color: white;
+    }
+
+    .request-actions .clear-btn:hover {
+      background-color: #5a6268;
+      transform: translateY(-1px);
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      padding: 12px 20px;
+      border-radius: 8px;
+      color: white;
+      font-size: 14px;
+      opacity: 0;
+      transition: opacity 0.3s, transform 0.3s;
+      transform: translateY(20px);
+      z-index: 1000;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .toast.success {
+      background-color: #28a745;
+    }
+
+    .toast.error {
+      background-color: #dc3545;
+    }
+
+    @media (max-width: 600px) {
+      .request-feed-container {
+        padding: 0 10px;
+      }
+
+      .create-request {
+        padding: 15px;
+      }
+
+      .create-request h3 {
+        font-size: 16px;
+      }
+
+      .request-actions button {
+        padding: 8px 16px;
+        font-size: 13px;
+      }
+    }
+  </style>
 </head>
 <body>
   <!-- Request Feed Section -->
-<div class="request-feed-container">
-  <div id="create-request" class="create-request">
-    <textarea placeholder="What do you want to buy?" id="request-input"></textarea>
-    <div class="request-actions">
-      <button id="submit-request">Post Request</button>
+  <div class="request-feed-container">
+    <div id="create-request" class="create-request">
+      <h3>Create a Request</h3>
+      <div class="form-group">
+        <label for="request-input">What do you want to buy?</label>
+        <textarea id="request-input" placeholder="e.g., iPhone 13 in good condition"></textarea>
+        <div id="request-error" class="error">Please enter a request description.</div>
+      </div>
+      <div class="form-group">
+        <label for="budget-input">Budget (₦)</label>
+        <input type="number" id="budget-input" placeholder="e.g., 50000" min="0">
+        <div id="budget-error" class="error">Please enter a valid budget.</div>
+      </div>
+      <div class="form-group">
+        <label for="location-input">Location</label>
+        <input type="text" id="location-input" placeholder="e.g., Lagos, Nigeria">
+        <div id="location-error" class="error">Please enter a location.</div>
+      </div>
+      <div class="request-actions">
+        <button id="clear-request" class="clear-btn">Clear</button>
+        <button id="submit-request" class="submit-btn">Post Request</button>
+      </div>
+    </div>
+
+    <div id="request-feed" class="request-feed">
+      <!-- Requests will be displayed here -->
     </div>
   </div>
 
-  <div id="request-feed" class="request-feed">
-    <!-- Requests will be displayed here -->
-  </div>
-</div>
+  <div id="toast" class="toast"></div>
 
-
-
-  <style>
-.create-request {
-  background: white;
-  border-radius: 10px;
-  padding: 15px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-  margin-bottom: 15px;
-  font-family: 'Poppins', sans-serif;
-}
-
-.create-request textarea {
-  width: 100%;
-  border: none;
-  resize: none;
-  font-size: 14px;
-  padding: 10px;
-  border-radius: 8px;
-  background: #f0f2f5;
-  outline: none;
-}
-
-.request-actions {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 10px;
-}
-
-.request-actions button {
-  background-color: #28a745;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 20px;
-  cursor: pointer;
-  font-size: 14px;
-}
-
-
-  </style>
   <script>
-  const submitBtn = document.getElementById('submit-request');
-  const requestInput = document.getElementById('request-input');
-
-  // Handle posting a new request
-  submitBtn.addEventListener('click', async () => {
-    const requestText = requestInput.value.trim();
-    
-    if (!requestText) return alert('Please write a request!');
-
-    const newRequest = {
-      text: requestText,
-      category: 'General',  // You can add a category field here later
-      budget: 1000,         // Example budget
-      location: 'Lagos'    // Example location
-    };
-
-    try {
-      const API_BASE_URL =
-      window.location.hostname === 'localhost'
+    const API_BASE_URL = window.location.hostname === 'localhost'
       ? 'http://localhost:3000'
-      :
-'https://salmart-production.up.railway.app'
-      const response = await fetch(`${API_BASE_URL}/create-request`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-        },
-        body: JSON.stringify(newRequest)
-      });
+      : 'https://salmart-production.up.railway.app';
 
-      if (response.ok) {
-        const savedRequest = await response.json();
-        requestInput.value = ''; // Clear the input
-        window.location.href = 'index.html'; // Redirect to index.html after request is created
-      } else {
-        alert('Error posting request.');
-      }
-    } catch (err) {
-      console.error('Error posting request:', err);
+    const submitBtn = document.getElementById('submit-request');
+    const clearBtn = document.getElementById('clear-request');
+    const requestInput = document.getElementById('request-input');
+    const budgetInput = document.getElementById('budget-input');
+    const locationInput = document.getElementById('location-input');
+    const requestError = document.getElementById('request-error');
+    const budgetError = document.getElementById('budget-error');
+    const locationError = document.getElementById('location-error');
+    const toast = document.getElementById('toast');
+
+    // Show toast notification
+    function showToast(message, type = 'success') {
+      toast.textContent = message;
+      toast.className = `toast ${type} show`;
+      setTimeout(() => {
+        toast.className = 'toast';
+      }, 3000);
     }
-  });
-</script>
+
+    // Validate form inputs
+    function validateForm() {
+      let isValid = true;
+
+      // Reset error states
+      requestError.style.display = 'none';
+      budgetError.style.display = 'none';
+      locationError.style.display = 'none';
+
+      // Validate request text
+      if (!requestInput.value.trim()) {
+        requestError.style.display = 'block';
+        isValid = false;
+      }
+
+      // Validate budget
+      const budget = parseFloat(budgetInput.value);
+      if (!budgetInput.value || isNaN(budget) || budget <= 0) {
+        budgetError.style.display = 'block';
+        isValid = false;
+      }
+
+      // Validate location
+      if (!locationInput.value.trim()) {
+        locationError.style.display = 'block';
+        isValid = false;
+      }
+
+      return isValid;
+    }
+
+    // Clear form inputs
+    clearBtn.addEventListener('click', () => {
+      requestInput.value = '';
+      budgetInput.value = '';
+      locationInput.value = '';
+      requestError.style.display = 'none';
+      budgetError.style.display = 'none';
+      locationError.style.display = 'none';
+    });
+
+    // Handle posting a new request
+    submitBtn.addEventListener('click', async () => {
+      if (!validateForm()) {
+        showToast('Please fill in all fields correctly.', 'error');
+        return;
+      }
+
+      // Get user ID from localStorage
+      const userId = localStorage.getItem('userId');
+      if (!userId) {
+        showToast('You must be logged in to post a request.', 'error');
+        return;
+      }
+
+      const newRequest = {
+        text: requestInput.value.trim(),
+        budget: parseFloat(budgetInput.value),
+        location: locationInput.value.trim(),
+        user: userId
+      };
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Posting...';
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/create-request`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+          },
+          body: JSON.stringify(newRequest)
+        });
+
+        if (response.ok) {
+          const savedRequest = await response.json();
+          showToast('Request posted successfully!', 'success');
+          requestInput.value = '';
+          budgetInput.value = '';
+          locationInput.value = '';
+          setTimeout(() => {
+            window.location.href = 'index.html';
+          }, 1000);
+        } else {
+          const errorData = await response.json();
+          showToast(errorData.message || 'Error posting request.', 'error');
+        }
+      } catch (err) {
+        console.error('Error posting request:', err);
+        showToast('Failed to post request. Please try again.', 'error');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Post Request';
+      }
+    });
+  </script>
 </body>
 </html>
