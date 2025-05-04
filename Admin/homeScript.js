@@ -85,6 +85,8 @@ document.querySelectorAll('.category-btn').forEach(button => {
     async function fetchPosts(category = '') {
     const postsContainer = document.getElementById('posts-container');
     try {
+          window.postsForMixing = []; // Initialize the array
+        
         const response = await fetch(`${API_BASE_URL}/post?category=${encodeURIComponent(category)}`);
             if (!response.ok) throw new Error('Failed to fetch posts');
 
@@ -95,7 +97,7 @@ document.querySelectorAll('.category-btn').forEach(button => {
 posts.forEach(post => {
     const postElement = document.createElement('div');
     postElement.classList.add('post');
-    
+    postElement.dataset.createdAt = post.createdAt;
     // Check if the current user is already following this post's author
     const isFollowing = post.isFollowing || false;
     
@@ -163,7 +165,14 @@ ${post.createdBy.userId !== loggedInUser ?
                 `;
                 postsContainer.prepend(postElement);
                 
-                
+      // Store for mixing (inside forEach)
+            window.postsForMixing.push({
+                element: postElement,
+                timestamp: new Date(post.createdAt),
+                type: 'post'
+            });
+               
+          
 // Check availability functionality
 const sendMessageBtn = postElement.querySelector("#send-message-btn");
 if (post.isSold) {
@@ -752,7 +761,8 @@ document.querySelectorAll('.follow-button').forEach(followButton => {
                 });
             });
 
-            
+            // Dispatch event AFTER all posts are processed (outside forEach)
+        document.dispatchEvent(new CustomEvent('PostsLoaded'));
         } catch (error) {
             console.error('Error fetching posts:', error);
             postsContainer.innerHTML = '<p style="text-align: center; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">No ads yet. Try again or create one!</p>';
@@ -774,5 +784,6 @@ document.querySelectorAll('.follow-button').forEach(followButton => {
 
     // Check login status when the page loads
     checkLoginStatus();
+    
 });
 

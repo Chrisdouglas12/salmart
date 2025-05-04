@@ -428,6 +428,8 @@ function setupDropdownMenu(cardElement, requestId, isOwner) {
 // Fetch and display all requests
 async function fetchRequests() {
   try {
+        window.requestsForMixing = []; // Initialize
+    
     const res = await fetch(`${API_BASE_URL}/requests`);
     if (!res.ok) {
       throw new Error('Failed to fetch requests');
@@ -442,11 +444,12 @@ async function fetchRequests() {
       return;
     }
     
-    // In your fetchRequests() function, modify the request creation:
+   //requestion fetch function
 requests.forEach(request => {
   const requestCard = document.createElement('div');
   requestCard.classList.add('request-card');
   requestCard.setAttribute('data-id', request._id);
+  requestCard.dataset.createdAt = request.createdAt;
   
   const isLiked = currentUserId && request.likes.includes(currentUserId);
   const isOwner = String(currentUserId) === String(request.user._id);
@@ -476,11 +479,20 @@ requests.forEach(request => {
     ${request.budget ? `<div class="budget">Budget: ₦${escapeHtml(request.budget.toString())}</div>` : ''}
   
     <div class="engagement-actions">
-    <div class="contact-btn">
-      <a id="contact-link">
-    <button data-recipient-id="${request.user.userId}" id="contact-creator-link"><i class="fas fa-paper-plane"></i> Send message</button>
-    </a>
-    </div>
+      ${isOwner ? '' : `
+        <div class="contact-btn">
+          <a id="contact-link">
+            <button 
+              data-recipient-id="${request.user._id}" 
+              data-recipient-username="${request.user.firstName} ${request.user.lastName || 'Request Creator'}" 
+              data-profile-picture="${request.user.profilePicture || 'default-avatar.png'}"
+              id="contact-creator-link"
+            >
+              <i class="fas fa-paper-plane"></i> Send message
+            </button>
+          </a>
+        </div>
+      `}
       <form class="like-form">
         <button type="submit" class="like-btn ${isLiked ? 'liked' : ''}">
           <i class="fa${isLiked ? 's' : 'r'} fa-heart"></i>
@@ -497,39 +509,56 @@ requests.forEach(request => {
   // Add the dropdown functionality AFTER the card is created
   setupDropdownMenu(requestCard, request._id, isOwner);
 
-  requestFeed.appendChild(requestCard);
+  requestFeed.prepend(requestCard);
+      // ... create requestElement ...
+        window.requestsForMixing.push({
+            element: request,
+            timestamp: new Date(request.createdAt),
+            type: 'request'
+        });
 });
 
-// Check availability functionality
-const sendMessageBtn = postElement.
-if (post.isSold) {
-    sendMessageBtn.disabled = true;
-}
-const sendMessageLink = postElement.querySelector("#send-message-link");
-sendMessageBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-    const recipientId = sendMessageBtn.dataset.recipientId;
-    const recipientUsername = post.createdBy.name;
-    const recipientProfilePictureUrl = post.profilePicture || 'default-avatar.png';
-    const productImage = sendMessageBtn.dataset.productImage;
-    const productDescription = sendMessageBtn.dataset.productDescription;
-
-    // Construct the predefined message
-    const message = `Is this item still available?\n\nProduct: ${productDescription}`;
-    const userId = localStorage.getItem("userId");
-
-    // Encode parameters for the URL
-    const encodedMessage = encodeURIComponent(message);
-    const encodedProductImage = encodeURIComponent(productImage);
-    const encodedRecipientUsername = encodeURIComponent(recipientUsername);
-    const encodedRecipientProfilePictureUrl = encodeURIComponent(recipientProfilePictureUrl);
-
-    // Redirect to the chat page with all necessary parameters
-    sendMessageLink.href = `Chats.html?user_id=${userId}&recipient_id=${recipientId}&recipient_username=${encodedRecipientUsername}&recipient_profile_picture_url=${encodedRecipientProfilePictureUrl}&message=${encodedMessage}&product_image=${encodedProductImage}`;
-    window.location.href = sendMessageLink.href;
-});
   
-    
+// Message sending functionality for multiple request creator buttons
+const sendMessageButtons = document.querySelectorAll("#contact-creator-link");
+
+sendMessageButtons.forEach((sendMessageBtn) => {
+    // Disable button if the recipient is the current user
+    const userId = localStorage.getItem("userId");
+    const recipientId = sendMessageBtn.dataset.recipientId;
+    if (userId === recipientId) {
+        sendMessageBtn.disabled = true;
+        sendMessageBtn.title = "You cannot message yourself";
+    }
+
+    sendMessageBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+
+        // Validate userId
+        if (!userId) {
+            alert("Please log in to send a message");
+            return;
+        }
+
+        // Get recipient details from button dataset
+        const recipientId = sendMessageBtn.dataset.recipientId;
+        const recipientUsername = sendMessageBtn.dataset.recipientUsername || "Request Creator";
+        const recipientProfilePictureUrl = sendMessageBtn.dataset.profilePicture || 'default-avatar.png';
+
+        // Predefined message
+        const message = `Do you still need this item`;
+
+        // Encode parameters for URL
+        const encodedMessage = encodeURIComponent(message);
+        const encodedRecipientUsername = encodeURIComponent(recipientUsername);
+        const encodedRecipientProfilePictureUrl = encodeURIComponent(recipientProfilePictureUrl);
+
+        // Redirect to chat page
+        window.location.href = `Chats.html?user_id=${userId}&recipient_id=${recipientId}&recipient_username=${encodedRecipientUsername}&recipient_profile_picture_url=${encodedRecipientProfilePictureUrl}&message=${encodedMessage}`;
+    });
+});
+
+
     // Add event listeners for like buttons
     document.querySelectorAll('.like-form').forEach(form => {
   form.addEventListener('submit', async (e) => {
@@ -730,6 +759,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Only fetch requests if we have a user ID
   if (currentUserId) {
     fetchRequests();
+    
   } else {
     // Redirect to login or show appropriate message
     requestFeed.innerHTML = '<p class="error-message">Please log in to view requests</p>';

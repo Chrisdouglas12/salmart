@@ -14,7 +14,6 @@
 
   <title>MarketPlace</title>
 
-<script src="homeScript.js"></script>
 <script src="addPic.js"></script>
 
 
@@ -423,6 +422,10 @@ a .active {
   margin: 0 auto;
   padding: 10px;
   box-sizing: border-box;
+ flex-direction: column-reverse;
+}
+.request-feed {
+     flex-direction: column-reverse;
 }
 
 /* Style for the individual request cards */
@@ -1356,6 +1359,7 @@ function timeAgo(date) {
   return `${years} year${years !== 1 ? 's' : ''} ago`;
 }
 </script>
-
+<script src="sorter.js"></script>
 <script src="requestScript.js"></script>
+<script src="homeScript.js"></script>
 </html> 
