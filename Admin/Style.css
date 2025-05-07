@@ -1183,37 +1183,4 @@ input:focus{
   .danger-button.loading .button-loader {
     display: block;
   }
-  #mixed-feed-container {
-    margin-top: 80px; /* Adjust based on your header height */
-    padding: 20px;
-    width: 100%;
-    max-width: 800px; /* Or your preferred max width */
-    margin-left: auto;
-    margin-right: auto;
-}
-
-/* For mobile responsiveness */
-@media (max-width: 768px) {
-    #mixed-feed-container {
-        margin-top: 60px;
-        padding: 10px;
-    }
-}
-
-/* Style for both post and request cards in the mixed feed */
-#mixed-feed-container .post,
-#mixed-feed-container .request-card {
-    margin-bottom: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    overflow: hidden;
-}
-
-/* Visual distinction between types */
-#mixed-feed-container .post {
-    border-left: 4px solid #4CAF50; /* Green for posts */
-}
-
-#mixed-feed-container .request-card {
-    border-left: 4px solid #2196F3; /* Blue for requests */
-}
+  

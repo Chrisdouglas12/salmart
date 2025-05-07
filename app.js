@@ -724,20 +724,58 @@ app.post('/create-request', verifyToken, async (req, res) => {
   }
 });
 
-// Get All Requests
+
+
 app.get('/requests', async (req, res) => {
   try {
-    const requests = await Request.find()
+    let loggedInUserId = null;
+    const { category } = req.query;
+
+    // Check auth token
+    const authHeader = req.headers['authorization'];
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.split(' ')[1];
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      loggedInUserId = decoded.userId;
+    }
+
+    // Build category filter
+    const query = {};
+    if (category && ['electronics', 'fashion', 'home', 'vehicles', 'music', 'others'].includes(category)) {
+      query.category = category;
+    }
+
+    // Fetch requests
+    const requests = await Request.find(query)
       .sort({ createdAt: -1 })
       .populate('user', 'firstName lastName profilePicture');
 
-    res.json(requests);
+    if (!requests || requests.length === 0) {
+      return res.status(404).json({ message: 'No requests found' });
+    }
+
+    // Get following list
+    const following = loggedInUserId
+      ? await Follow.find({ follower: loggedInUserId }).distinct('following')
+      : [];
+
+    // Add name, isFollowing, and profilePicture to each request
+    const enrichedRequests = requests.map((req) => {
+      const isFollowing = following.includes(req.user._id.toString());
+      return {
+        ...req.toObject(),
+        name: `${req.user.firstName} ${req.user.lastName}`,
+        profilePicture: req.user.profilePicture || '',
+        isFollowing: isFollowing
+      };
+    });
+
+    res.status(200).json(enrichedRequests);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to fetch requests' });
   }
 });
-
 
 // Endpoint to create a post
 app.post('/post', verifyToken, upload.single('photo'), async (req, res) => {

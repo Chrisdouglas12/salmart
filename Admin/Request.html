@@ -173,6 +173,20 @@
         font-size: 13px;
       }
     }
+    .create-request select {
+  width: 100%;
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+  background: #f0f2f5;
+  font-size: 14px;
+  outline: none;
+  transition: background 0.2s;
+}
+
+.create-request select:focus {
+  background: #e8ecef;
+}
   </style>
 </head>
 <body>
@@ -195,6 +209,19 @@
         <input type="text" id="location-input" placeholder="e.g., Lagos, Nigeria">
         <div id="location-error" class="error">Please enter a location.</div>
       </div>
+     <div class="form-group">
+  <label>Product Category</label>
+  <select id="category" class="input" required>
+    <option value="" disabled selected>Select a category</option>
+    <option value="electronics">Electronics</option>
+    <option value="fashion">Fashion</option>
+    <option value="home">Home & Garden</option>
+    <option value="vehicles">Vehicles</option>
+    <option value="music">Music Gear</option>
+    <option value="others">Other</option>
+  </select>
+  <div id="category-error" class="error">Please select a category.</div>
+</div>
       <div class="request-actions">
         <button id="clear-request" class="clear-btn">Clear</button>
         <button id="submit-request" class="submit-btn">Post Request</button>
@@ -207,127 +234,139 @@
   </div>
 
   <div id="toast" class="toast"></div>
+<script>
+  const API_BASE_URL = window.location.hostname === 'localhost'
+  ? 'http://localhost:3000'
+  : 'https://salmart-production.up.railway.app';
 
-  <script>
-    const API_BASE_URL = window.location.hostname === 'localhost'
-      ? 'http://localhost:3000'
-      : 'https://salmart-production.up.railway.app';
+const submitBtn = document.getElementById('submit-request');
+const clearBtn = document.getElementById('clear-request');
+const requestInput = document.getElementById('request-input');
+const budgetInput = document.getElementById('budget-input');
+const locationInput = document.getElementById('location-input');
+const category = document.getElementById('category');
+const requestError = document.getElementById('request-error');
+const budgetError = document.getElementById('budget-error');
+const locationError = document.getElementById('location-error');
+const categoryError = document.getElementById('category-error');
+const toast = document.getElementById('toast');
 
-    const submitBtn = document.getElementById('submit-request');
-    const clearBtn = document.getElementById('clear-request');
-    const requestInput = document.getElementById('request-input');
-    const budgetInput = document.getElementById('budget-input');
-    const locationInput = document.getElementById('location-input');
-    const requestError = document.getElementById('request-error');
-    const budgetError = document.getElementById('budget-error');
-    const locationError = document.getElementById('location-error');
-    const toast = document.getElementById('toast');
+// Show toast notification
+function showToast(message, type = 'success') {
+  toast.textContent = message;
+  toast.className = `toast ${type} show`;
+  setTimeout(() => {
+    toast.className = 'toast';
+  }, 3000);
+}
 
-    // Show toast notification
-    function showToast(message, type = 'success') {
-      toast.textContent = message;
-      toast.className = `toast ${type} show`;
-      setTimeout(() => {
-        toast.className = 'toast';
-      }, 3000);
-    }
+// Validate form inputs
+function validateForm() {
+  let isValid = true;
 
-    // Validate form inputs
-    function validateForm() {
-      let isValid = true;
+  // Reset error states
+  requestError.style.display = 'none';
+  budgetError.style.display = 'none';
+  locationError.style.display = 'none';
+  categoryError.style.display = 'none';
 
-      // Reset error states
-      requestError.style.display = 'none';
-      budgetError.style.display = 'none';
-      locationError.style.display = 'none';
+  // Validate request text
+  if (!requestInput.value.trim()) {
+    requestError.style.display = 'block';
+    isValid = false;
+  }
 
-      // Validate request text
-      if (!requestInput.value.trim()) {
-        requestError.style.display = 'block';
-        isValid = false;
-      }
+  // Validate budget
+  const budget = parseFloat(budgetInput.value);
+  if (!budgetInput.value || isNaN(budget) || budget <= 0) {
+    budgetError.style.display = 'block';
+    isValid = false;
+  }
 
-      // Validate budget
-      const budget = parseFloat(budgetInput.value);
-      if (!budgetInput.value || isNaN(budget) || budget <= 0) {
-        budgetError.style.display = 'block';
-        isValid = false;
-      }
+  // Validate location
+  if (!locationInput.value.trim()) {
+    locationError.style.display = 'block';
+    isValid = false;
+  }
 
-      // Validate location
-      if (!locationInput.value.trim()) {
-        locationError.style.display = 'block';
-        isValid = false;
-      }
+  // Validate category
+  if (!category.value) {
+    categoryError.style.display = 'block';
+    isValid = false;
+  }
 
-      return isValid;
-    }
+  return isValid;
+}
 
-    // Clear form inputs
-    clearBtn.addEventListener('click', () => {
+// Clear form inputs
+clearBtn.addEventListener('click', () => {
+  requestInput.value = '';
+  budgetInput.value = '';
+  locationInput.value = '';
+  category.value = ''; // Reset category to default
+  requestError.style.display = 'none';
+  budgetError.style.display = 'none';
+  locationError.style.display = 'none';
+  categoryError.style.display = 'none';
+});
+
+// Handle posting a new request
+submitBtn.addEventListener('click', async () => {
+  if (!validateForm()) {
+    showToast('Please fill in all fields correctly.', 'error');
+    return;
+  }
+
+  // Get user ID from localStorage
+  const userId = localStorage.getItem('userId');
+  if (!userId) {
+    showToast('You must be logged in to post a request.', 'error');
+    return;
+  }
+
+  const newRequest = {
+    text: requestInput.value.trim(),
+    budget: parseFloat(budgetInput.value),
+    location: locationInput.value.trim(),
+    category: category.value, // Use category instead of categoryInput
+    user: userId
+  };
+
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Posting...';
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/create-request`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+      },
+      body: JSON.stringify(newRequest)
+    });
+
+    if (response.ok) {
+      const savedRequest = await response.json();
+      showToast('Request posted successfully!', 'success');
       requestInput.value = '';
       budgetInput.value = '';
       locationInput.value = '';
-      requestError.style.display = 'none';
-      budgetError.style.display = 'none';
-      locationError.style.display = 'none';
-    });
-
-    // Handle posting a new request
-    submitBtn.addEventListener('click', async () => {
-      if (!validateForm()) {
-        showToast('Please fill in all fields correctly.', 'error');
-        return;
-      }
-
-      // Get user ID from localStorage
-      const userId = localStorage.getItem('userId');
-      if (!userId) {
-        showToast('You must be logged in to post a request.', 'error');
-        return;
-      }
-
-      const newRequest = {
-        text: requestInput.value.trim(),
-        budget: parseFloat(budgetInput.value),
-        location: locationInput.value.trim(),
-        user: userId
-      };
-
-      submitBtn.disabled = true;
-      submitBtn.textContent = 'Posting...';
-
-      try {
-        const response = await fetch(`${API_BASE_URL}/create-request`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-          },
-          body: JSON.stringify(newRequest)
-        });
-
-        if (response.ok) {
-          const savedRequest = await response.json();
-          showToast('Request posted successfully!', 'success');
-          requestInput.value = '';
-          budgetInput.value = '';
-          locationInput.value = '';
-          setTimeout(() => {
-            window.location.href = 'index.html';
-          }, 1000);
-        } else {
-          const errorData = await response.json();
-          showToast(errorData.message || 'Error posting request.', 'error');
-        }
-      } catch (err) {
-        console.error('Error posting request:', err);
-        showToast('Failed to post request. Please try again.', 'error');
-      } finally {
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Post Request';
-      }
-    });
-  </script>
+      category.value = ''; // Reset category after submission
+      setTimeout(() => {
+        window.location.href = 'requestlists.html';
+      }, 1000);
+    } else {
+      const errorData = await response.json();
+      showToast(errorData.message || 'Error posting request.', 'error');
+    }
+  } catch (err) {
+    console.error('Error posting request:', err);
+    showToast('Failed to post request. Please try again.', 'error');
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Post Request';
+  }
+});
+</script>
 </body>
 </html>

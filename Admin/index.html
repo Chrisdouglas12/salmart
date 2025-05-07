@@ -131,6 +131,26 @@
 </div>
  </div> 
  </div>
+ <!-- Notification Permission Popup -->
+<div id="notification-popup" class="notification-modal" style="display: none;">
+  <div class="notification-modal-content">
+    <div class="notification-modal-header">
+      <h3>Enable Notifications</h3>
+    </div>
+    <div class="notification-modal-body">
+      <div class="notification-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#28a745">
+          <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/>
+        </svg>
+      </div>
+      <p>Stay updated with Salmart! Allow notifications to receive alerts about new deals, messages, and requests.</p>
+    </div>
+    <div class="notification-modal-footer">
+      <button id="notification-decline" class="secondary-button">Not Now</button>
+      <button id="notification-allow" class="primary-button">Allow</button>
+    </div>
+  </div>
+</div>
  <div id="loader" style="display: none;">Loading...</div>
   <div>
     <div id="posts-container"></div>
@@ -260,6 +280,115 @@ window.onload = function() {
 }
 a .active {
   color: blue;
+}
+/* Notification Popup Styles */
+.notification-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.notification-modal-content {
+  background: #fff;
+  border-radius: 12px;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  font-family: 'Poppins', sans-serif;
+  animation: slideIn 0.3s ease-in-out;
+}
+
+.notification-modal-header {
+  padding: 15px 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.notification-modal-header h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #333;
+  font-weight: 600;
+}
+
+.notification-modal-body {
+  padding: 20px;
+  text-align: center;
+}
+
+.notification-icon {
+  margin-bottom: 15px;
+}
+
+.notification-icon svg {
+  width: 40px;
+  height: 40px;
+}
+
+.notification-modal-body p {
+  font-size: 14px;
+  color: #555;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.notification-modal-footer {
+  padding: 15px 20px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  border-top: 1px solid #eee;
+}
+
+.primary-button {
+  background: #28a745;
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.primary-button:hover {
+  background: #218838;
+}
+
+.secondary-button {
+  background: #f5f5f5;
+  color: #333;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.secondary-button:hover {
+  background: #e0e0e0;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideIn {
+  from { transform: translateY(-20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
 }
 /* Category Filter Styles */
 .category-filter {
@@ -423,10 +552,12 @@ a .active {
   margin: 0 auto;
   padding: 10px;
   box-sizing: border-box;
- flex-direction: column-reverse;
+  display: flex; /* Explicitly set flexbox */
+  flex-direction: column; /* Top-to-bottom order */
 }
 .request-feed {
-     flex-direction: column-reverse;
+  display: flex; /* Explicitly set flexbox */
+  flex-direction: column; /* Top-to-bottom order */
 }
 
 /* Style for the individual request cards */
@@ -736,12 +867,30 @@ document.addEventListener('DOMContentLoaded', function() {
   } catch (initErr) {
     console.error('❌ Firebase Messaging initialization failed:', initErr);
     showToast('Failed to initialize Firebase. Notifications unavailable.', '#e74c3c');
+    return;
   }
 
-  // Fallback for showToast
+  // Use your existing showToast function (updated to use DOM toast)
   function showToast(message, color) {
-    console.log(`[Toast] ${message} (Color: ${color})`);
-    alert(message); // Temporary fallback (replace with a proper toast UI if available)
+    const toast = document.getElementById("toast");
+    if (toast) {
+      toast.textContent = message;
+      toast.style.backgroundColor = color;
+      toast.style.display = "block";
+      setTimeout(() => {
+        toast.style.display = "none";
+      }, 3000);
+    } else {
+      console.log(`[Toast] ${message} (Color: ${color})`);
+    }
+  }
+
+  // Show or hide notification popup
+  function showNotificationPopup(show) {
+    const popup = document.getElementById('notification-popup');
+    if (popup) {
+      popup.style.display = show ? 'flex' : 'none';
+    }
   }
 
   // Initialize notifications
@@ -767,39 +916,76 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     console.log('✅ Service Worker API supported');
 
+    // Check if user has already made a choice
+    const notificationChoice = localStorage.getItem('notificationChoice');
+    const permission = Notification.permission;
+    console.log('🔔 Current notification permission:', permission);
+    console.log('🔔 Notification choice:', notificationChoice);
+
+    if (permission === 'granted') {
+      // Permission already granted, proceed to get token
+      await registerForPushNotifications();
+    } else if (permission === 'denied' || notificationChoice === 'declined') {
+      // Permission denied or user declined, do nothing
+      console.warn('⚠️ Notifications blocked or declined by user');
+      showToast('Notifications are disabled. Enable them in settings if needed.', '#e74c3c');
+    } else {
+      // Show custom popup for users who haven't decided
+      showNotificationPopup(true);
+
+      // Handle popup buttons
+      const allowBtn = document.getElementById('notification-allow');
+      const declineBtn = document.getElementById('notification-decline');
+
+      allowBtn.addEventListener('click', async () => {
+        showNotificationPopup(false);
+        try {
+          console.log('🔐 Requesting notification permission...');
+          const permission = await Notification.requestPermission();
+          console.log('ℹ️ Notification permission result:', permission);
+
+          if (permission === 'granted') {
+            console.log('✅ Notification permission granted');
+            localStorage.setItem('notificationChoice', 'allowed');
+            await registerForPushNotifications();
+          } else {
+            console.warn('⚠️ Notification permission denied:', permission);
+            localStorage.setItem('notificationChoice', 'declined');
+            showToast('Please enable notifications in your browser settings.', '#e74c3c');
+          }
+        } catch (err) {
+          console.error('❌ Error requesting notification permission:', err);
+          localStorage.setItem('notificationChoice', 'declined');
+          showToast('Failed to request notifications.', '#e74c3c');
+        }
+      });
+
+      declineBtn.addEventListener('click', () => {
+        showNotificationPopup(false);
+        localStorage.setItem('notificationChoice', 'declined');
+        console.log('⚠️ User declined notifications');
+        showToast('Notifications were declined.', '#e74c3c');
+      });
+    }
+  }
+
+  // Register for push notifications and get FCM token
+  async function registerForPushNotifications() {
     try {
       console.log('📡 Registering service worker at firebase-messaging-sw.js...');
       const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
       console.log('✅ Service Worker registered with scope:', registration.scope);
 
-      console.log('🔐 Requesting notification permission...');
- 
-
-      const permission = await Notification.requestPermission();
-      console.log('ℹ️ Notification permission result:', permission);
-
-      if (permission === 'granted') {
-        console.log('✅ Notification permission granted');
-        showToast('Notifications enabled, generating FCM token', '#28a745');
-        try {
-          console.log('🔑 Generating FCM token...');
-          const token = await getToken(messaging, {
-            vapidKey: 'BCtAsyYJYCSfpg_kXL2aO59szQsPFE3DvmqqLOnW03JTVR88Jb435-jDnUgj0j0mL5VCWLiGGfErTuwQ-XUArho',
-            serviceWorkerRegistration: registration,
-          });
-          console.log('🎉 FCM Token generated:', token);
-          await saveToken(token);
-        } catch (tokenErr) {
-          console.error('❌ Error generating FCM token:', tokenErr);
-          showToast('Failed to generate notification token.', '#e74c3c');
-        }
-      } else {
-        console.warn('⚠️ Notification permission denied:', permission);
-        showToast('Please enable notifications in your browser settings.', '#e74c3c');
-      }
-    } catch (err) {
-      console.error('❌ Error initializing notifications:', err);
-      showToast('Failed to initialize notifications.', '#e74c3c');
+      console.log('🔑 Generating FCM token...');
+      const token = await getToken(messaging, {
+        vapidKey: 'BCtAsyYJYCSfpg_kXL2aO59szQsPFE3DvmqqLOnW03JTVR88Jb435-jDnUgj0j0mL5VCWLiGGfErTuwQ-XUArho',
+        serviceWorkerRegistration: registration,
+      });
+      console.log('🎉 FCM Token generated:', token);
+      await saveToken(token);
+    } catch (tokenErr) {
+      console.error('❌ Error generating FCM token:', tokenErr);
+      showToast('Failed to generate notification token.', '#e74c3c');
     }
   }
 

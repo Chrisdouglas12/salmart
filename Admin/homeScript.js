@@ -85,7 +85,6 @@ document.querySelectorAll('.category-btn').forEach(button => {
     async function fetchPosts(category = '') {
     const postsContainer = document.getElementById('posts-container');
     try {
-          window.postsForMixing = []; // Initialize the array
         
         const response = await fetch(`${API_BASE_URL}/post?category=${encodeURIComponent(category)}`);
             if (!response.ok) throw new Error('Failed to fetch posts');
@@ -156,21 +155,15 @@ ${post.createdBy.userId !== loggedInUser ?
                     <div class="post-actions">
                         <button class="like-button">
                             <i class="${post.likes.includes(loggedInUser) ? 'fas' : 'far'} fa-heart"></i>
-                            <span class="like-count">${post.likes.length}</span>
+                            <span class="like-count">${post.likes.length} Likes</span>
                         </button>
-                        <button class="reply-button"><i class="far fa-comment-alt"></i> <span class="comment-count">${post.comments ? post.comments.length : 0}</span></button>
+                        <button class="reply-button"><i class="far fa-comment-alt"></i> <span class="comment-count">${post.comments ? post.comments.length : 0} Comments</span></button>
                         <button class="share-button"><i class="fas fa-share"></i></button>
                     </div>
                   
                 `;
                 postsContainer.prepend(postElement);
                 
-      // Store for mixing (inside forEach)
-            window.postsForMixing.push({
-                element: postElement,
-                timestamp: new Date(post.createdAt),
-                type: 'post'
-            });
                
           
 // Check availability functionality
@@ -761,8 +754,7 @@ document.querySelectorAll('.follow-button').forEach(followButton => {
                 });
             });
 
-            // Dispatch event AFTER all posts are processed (outside forEach)
-        document.dispatchEvent(new CustomEvent('PostsLoaded'));
+          
         } catch (error) {
             console.error('Error fetching posts:', error);
             postsContainer.innerHTML = '<p style="text-align: center; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">No ads yet. Try again or create one!</p>';

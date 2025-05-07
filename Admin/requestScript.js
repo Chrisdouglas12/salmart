@@ -425,17 +425,22 @@ function setupDropdownMenu(cardElement, requestId, isOwner) {
   }
 }
 
+
 // Fetch and display all requests
-async function fetchRequests() {
+async function fetchRequests(category = '') {
   try {
-        window.requestsForMixing = []; // Initialize
-    
-    const res = await fetch(`${API_BASE_URL}/requests`);
+    const res = await fetch(`${API_BASE_URL}/requests?category=${encodeURIComponent(category)}&sort=-createdAt`);
     if (!res.ok) {
       throw new Error('Failed to fetch requests');
     }
     
     const requests = await res.json();
+    if (!Array.isArray(requests)) {
+      throw new Error('Expected an array of requests');
+    }
+    
+    // Sort requests by createdAt in descending order (newest first)
+    requests.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     
     requestFeed.innerHTML = '';
     
@@ -444,80 +449,76 @@ async function fetchRequests() {
       return;
     }
     
-   //requestion fetch function
-requests.forEach(request => {
-  const requestCard = document.createElement('div');
-  requestCard.classList.add('request-card');
-  requestCard.setAttribute('data-id', request._id);
-  requestCard.dataset.createdAt = request.createdAt;
-  
-  const isLiked = currentUserId && request.likes.includes(currentUserId);
-  const isOwner = String(currentUserId) === String(request.user._id);
-  console.log('CurrentUser:', currentUserId, 'Owner:', request.user._id);
-
-  requestCard.innerHTML = `
-    <div class="user-info">
-      <img src="${request.user.profilePicture || '/default-avatar.png'}" alt="${request.user.firstName}" />
-      <span>${request.user.firstName} ${request.user.lastName}</span>
-      <div class="request-actions-container">
-        <button class="ellipsis-btn"><i class="fas fa-ellipsis-h"></i></button>
-        <div class="dropdown-menu">
-          ${isOwner ? `
-            <button class="dropdown-item edit-btn">Edit</button>
-            <button class="dropdown-item delete-btn">Delete</button>
-          ` : `
-            <button class="dropdown-item report-btn">Report</button>
+    // Initialize requestsForMixing
+    window.requestsForMixing = [];
+    
+    // Debug: Log the order of requests
+    console.log('Rendering requests:', requests.map(r => ({ id: r._id, createdAt: r.createdAt })));
+    
+    for (const request of requests) {
+      const requestCard = document.createElement('div');
+      requestCard.classList.add('request-card');
+      requestCard.setAttribute('data-id', request._id);
+      requestCard.dataset.createdAt = request.createdAt;
+      
+      const isLiked = currentUserId && request.likes.includes(currentUserId);
+      const isOwner = String(currentUserId) === String(request.user._id);
+      
+      requestCard.innerHTML = `
+        <div class="user-info">
+          <img src="${request.user.profilePicture || '/default-avatar.png'}" alt="${request.user.firstName}" />
+          <span>${request.user.firstName} ${request.user.lastName}</span>
+          <div class="request-actions-container">
+            <button class="ellipsis-btn"><i class="fas fa-ellipsis-h"></i></button>
+            <div class="dropdown-menu">
+              ${isOwner ? `
+                <button class="dropdown-item edit-btn">Edit</button>
+                <button class="dropdown-item delete-btn">Delete</button>
+              ` : `
+                <button class="dropdown-item report-btn">Report</button>
+              `}
+            </div>
+          </div>
+        </div>
+        <div class="timestamp">${timeAgo(new Date(request.createdAt))}</div>
+        <div class="request-bg">
+          <div class="text">${escapeHtml(request.text)}</div>
+        </div>
+        ${request.location ? `<div class="location"><i class="fas fa-map-marker-alt"></i> ${escapeHtml(request.location)}</div>` : ''}
+        ${request.budget ? `<div class="budget">Budget: ₦${escapeHtml(request.budget.toString())}</div>` : ''}
+        ${isOwner ? '' : `
+            <div class="contact-btn">
+              <a id="contact-link">
+                <button 
+                  data-recipient-id="${request.user._id}" 
+                  data-recipient-username="${request.user.firstName} ${request.user.lastName || 'Request Creator'}" 
+                  data-profile-picture="${request.user.profilePicture || 'default-avatar.png'}"
+                  id="contact-creator-link"
+                >
+                  <i class="fas fa-paper-plane"></i> Send message
+                </button>
+              </a>
+            </div>
           `}
-        </div>
-      </div>
-    </div>
-    <div class="timestamp">${timeAgo(new Date(request.createdAt))}</div>
-    <div class="request-bg">
-      <div class="text">${escapeHtml(request.text)}</div>
-    </div>
-    ${request.location ? `<div class="location"><i class="fas fa-map-marker-alt"></i> ${escapeHtml(request.location)}</div>` : ''}
-    ${request.budget ? `<div class="budget">Budget: ₦${escapeHtml(request.budget.toString())}</div>` : ''}
-  
-    <div class="engagement-actions">
-      ${isOwner ? '' : `
-        <div class="contact-btn">
-          <a id="contact-link">
-            <button 
-              data-recipient-id="${request.user._id}" 
-              data-recipient-username="${request.user.firstName} ${request.user.lastName || 'Request Creator'}" 
-              data-profile-picture="${request.user.profilePicture || 'default-avatar.png'}"
-              id="contact-creator-link"
-            >
-              <i class="fas fa-paper-plane"></i> Send message
+        <div class="engagement-actions">
+          
+          <form class="like-form">
+            <button type="submit" class="like-btn ${isLiked ? 'liked' : ''}">
+              <i class="fa${isLiked ? 's' : 'r'} fa-heart"></i>
+              <span class="like-count">${request.likes.length} Likes</span>
             </button>
-          </a>
+          </form>
+          <button class="comment-btn">
+            <i class="far fa-comment-alt"></i>
+            <span class="comment-count">${request.comments.length} Comments</span>
+          </button>
         </div>
-      `}
-      <form class="like-form">
-        <button type="submit" class="like-btn ${isLiked ? 'liked' : ''}">
-          <i class="fa${isLiked ? 's' : 'r'} fa-heart"></i>
-          <span class="like-count">${request.likes.length}</span>
-        </button>
-      </form>
-      <button class="comment-btn">
-        <i class="far fa-comment-alt"></i>
-        <span class="comment-count">${request.comments.length}</span>
-      </button>
-    </div>
-  `;
-
-  // Add the dropdown functionality AFTER the card is created
-  setupDropdownMenu(requestCard, request._id, isOwner);
-
-  requestFeed.prepend(requestCard);
-      // ... create requestElement ...
-        window.requestsForMixing.push({
-            element: request,
-            timestamp: new Date(request.createdAt),
-            type: 'request'
-        });
-});
-
+      `;
+      
+      setupDropdownMenu(requestCard, request._id, isOwner);
+      requestFeed.prepend(requestCard);
+      console.log(`Prepended request ${request._id} created at ${request.createdAt}`);
+    }
   
 // Message sending functionality for multiple request creator buttons
 const sendMessageButtons = document.querySelectorAll("#contact-creator-link");
@@ -755,6 +756,12 @@ function timeAgo(date) {
 document.addEventListener('DOMContentLoaded', () => {
   // Get user ID from wherever you store it (localStorage, session, etc.)
   currentUserId = localStorage.getItem('userId') || null;
+  document.querySelectorAll('.category-btn').forEach(button => {
+    button.addEventListener('click', function () {
+        const selectedCategory = this.getAttribute('data-category');
+        fetchRequests(selectedCategory); // Corrected to fetchRequests
+    });
+});
   
   // Only fetch requests if we have a user ID
   if (currentUserId) {
