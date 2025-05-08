@@ -18,7 +18,7 @@ commentModal.innerHTML = `
     </div>
   </div>
 `;
-document.body.appendChild(commentModal);
+document.body.prepend(commentModal);
 
 // CSS for the modal
 const style = document.createElement('style');
@@ -171,29 +171,15 @@ style.textContent = `
     object-fit: cover;
   }
 
-  .timestamp {
-    color: #888;
-    font-size: 12px;
-    margin-top: -15px;
-  }
-
-  .request-bg {
-    margin-bottom: 10px;
-  }
 
   .text {
     margin-bottom: 10px;
     word-break: break-word;
   }
 
-  .location, .budget {
-    margin-bottom: 8px;
-    color: #555;
-  }
 
   .request-actions {
     display: flex;
-    border-top: 1px solid #eee;
     padding-top: 10px;
   }
 
@@ -212,9 +198,6 @@ style.textContent = `
     border-radius: 5px;
   }
 
-  .like-btn:hover {
-    background: #f0f2f5;
-  }
 
   .like-btn.liked {
     color: #4267B2;
@@ -230,9 +213,7 @@ style.textContent = `
     
   }
 
-  .comment-btn:hover {
-    background: #f0f2f5;
-  }
+ 
 
   .no-requests, .error-message {
     text-align: center;
@@ -241,12 +222,18 @@ style.textContent = `
   }
   .engagement-actions{
   display: flex;
-  margin-left: auto;
-  font-size: 14px;
-  border-top: solid 1px #28a745;
+  font-size: 15px;
+  align-items: center;
+  justify-content: center;
   width: 100%;
   }
-  
+  .request-details{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  margin
+  }
 `;
 document.head.appendChild(style);
 
@@ -484,8 +471,10 @@ async function fetchRequests(category = '') {
         <div class="request-bg">
           <div class="text">${escapeHtml(request.text)}</div>
         </div>
-        ${request.location ? `<div class="location"><i class="fas fa-map-marker-alt"></i> ${escapeHtml(request.location)}</div>` : ''}
+        <div class="request-details">
+        ${request.location ? `<div class="location">Location: ${escapeHtml(request.location)}</div>` : ''}
         ${request.budget ? `<div class="budget">Budget: ₦${escapeHtml(request.budget.toString())}</div>` : ''}
+        </div>
         ${isOwner ? '' : `
             <div class="contact-btn">
               <a id="contact-link">

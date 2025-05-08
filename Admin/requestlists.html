@@ -45,26 +45,7 @@
   <h2 class="head" style=" color:  #28a745; background-color: white; padding-top: 20px; padding-bottom: 20px;  margin-top: -0px; box-shadow: 0 0px 10px 0px #d3d3d3; border: solid; border-width: 1px; border-color: #fff; position: fixed;  z-index:1; width: 100vw; font-size: 19px; font-family: Poppins">Salmart</h2> 
   </div>
 
-<!-- Notification Permission Popup -->
-<div id="notification-popup" class="notification-modal" style="display: none;">
-  <div class="notification-modal-content">
-    <div class="notification-modal-header">
-      <h3>Enable Notifications</h3>
-    </div>
-    <div class="notification-modal-body">
-      <div class="notification-icon">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#28a745">
-          <path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/>
-        </svg>
-      </div>
-      <p>Stay updated with Salmart! Allow notifications to receive alerts about new deals, messages, and requests.</p>
-    </div>
-    <div class="notification-modal-footer">
-      <button id="notification-decline" class="secondary-button">Not Now</button>
-      <button id="notification-allow" class="primary-button">Allow</button>
-    </div>
-  </div>
-</div>
+
   <div style="text-align: center">
 
     <!-- Delete Confirmation Modal -->
@@ -251,7 +232,6 @@ window.onload = function() {
     margin-right: 20px;
 
   }
-  
 .profile-sec {
   width: 100%; /* Ensures it spans the entire width of the sidebar */
   border-bottom: 0.1px solid #fff; /* The line at the bottom */
@@ -280,115 +260,6 @@ window.onload = function() {
 }
 a .active {
   color: blue;
-}
-/* Notification Popup Styles */
-.notification-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 10000;
-  animation: fadeIn 0.3s ease-in-out;
-}
-
-.notification-modal-content {
-  background: #fff;
-  border-radius: 12px;
-  max-width: 400px;
-  width: 90%;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-  overflow: hidden;
-  font-family: 'Poppins', sans-serif;
-  animation: slideIn 0.3s ease-in-out;
-}
-
-.notification-modal-header {
-  padding: 15px 20px;
-  border-bottom: 1px solid #eee;
-}
-
-.notification-modal-header h3 {
-  margin: 0;
-  font-size: 18px;
-  color: #333;
-  font-weight: 600;
-}
-
-.notification-modal-body {
-  padding: 20px;
-  text-align: center;
-}
-
-.notification-icon {
-  margin-bottom: 15px;
-}
-
-.notification-icon svg {
-  width: 40px;
-  height: 40px;
-}
-
-.notification-modal-body p {
-  font-size: 14px;
-  color: #555;
-  line-height: 1.5;
-  margin: 0;
-}
-
-.notification-modal-footer {
-  padding: 15px 20px;
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  border-top: 1px solid #eee;
-}
-
-.primary-button {
-  background: #28a745;
-  color: #fff;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.2s ease;
-}
-
-.primary-button:hover {
-  background: #218838;
-}
-
-.secondary-button {
-  background: #f5f5f5;
-  color: #333;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.2s ease;
-}
-
-.secondary-button:hover {
-  background: #e0e0e0;
-}
-
-/* Animations */
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes slideIn {
-  from { transform: translateY(-20px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
 }
 /* Category Filter Styles */
 .category-filter {
@@ -554,7 +425,8 @@ a .active {
   padding: 10px;
   box-sizing: border-box;
   display: flex;
-  flex-direction: column;
+  margin-top: -16px;
+  flex-direction: column-reverse;
 }
 .request-feed {
   display: flex;
@@ -580,6 +452,7 @@ a .active {
   background-color: #28a745;
   border: 1px solid #fff;
   border-radius: 4px;
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -623,27 +496,24 @@ a .active {
 .request-card .budget {
   font-size: 14px;
   color: #777;
-  margin-top: 10px;
+  margin-top: -15px;
 
 }
 
 .contact-btn button{
-    width: 50%;
-    margin-right: 50px;
-    height: 30px;
-    margin-top: -10px;
-    display: inline-block;
+    width: 100%;
+    height: 34px;
+    margin-top: -15px;
     background-color: #fff;
     color: #28a745;
-    border: solid 1px #28a745;
-    border-radius: 8px;
-    margin-left: auto;
+    border: solid 1px #fff;
+    box-shadow: 0 0 10px #ddd;
+    border-radius: 4px;
   }
 
 .request-card .location {
-  display: flex;
-  align-items: center;
-  gap: 5px;
+  color: red;
+  font-weight: bold;
 }
 
 .request-card .location i {
@@ -654,14 +524,13 @@ a .active {
   font-size: 15px;
   color: #28a745;
   font-weight: bold;
-  margin-top: -13px;
 }
 /* Styling for the timestamp */
 .request-card .timestamp {
   font-size: 12px;
   color: #888;
-  margin-top: -16px;
-  margin-left: 45px;
+  margin-top: -30px;
+  margin-left: 46px;
 }
 
 @media (max-width: 768px) {
@@ -675,7 +544,7 @@ a .active {
   }
 
   .request-card .text {
-    font-size: 14px;
+    font-size: 16px;
   }
   .request-actions {
   display: flex;
@@ -701,9 +570,6 @@ a .active {
   transform: scale(1.1);
 }
 
-.like-btn i {
-  margin-right: 5px;
-}
   .request-card .location,
   .request-card .budget {
     font-size: 13px;
@@ -1109,30 +975,12 @@ document.addEventListener('DOMContentLoaded', function() {
   } catch (initErr) {
     console.error('❌ Firebase Messaging initialization failed:', initErr);
     showToast('Failed to initialize Firebase. Notifications unavailable.', '#e74c3c');
-    return;
   }
 
   // Fallback for showToast
   function showToast(message, color) {
-    const toast = document.getElementById("toast");
-    if (toast) {
-      toast.textContent = message;
-      toast.style.backgroundColor = color;
-      toast.style.display = "block";
-      setTimeout(() => {
-        toast.style.display = "none";
-      }, 3000);
-    } else {
-      console.log(`[Toast] ${message} (Color: ${color})`);
-    }
-  }
-
-  // Show or hide notification popup
-  function showNotificationPopup(show) {
-    const popup = document.getElementById('notification-popup');
-    if (popup) {
-      popup.style.display = show ? 'flex' : 'none';
-    }
+    console.log(`[Toast] ${message} (Color: ${color})`);
+    alert(message); // Temporary fallback
   }
 
   // Initialize notifications
@@ -1143,96 +991,125 @@ document.addEventListener('DOMContentLoaded', function() {
       return;
     }
 
-    // Check if user has already made a choice
-    const notificationChoice = localStorage.getItem('notificationChoice');
-    const permission = Notification.permission;
-    console.log('🔔 Current notification permission:', permission);
-    console.log('🔔 Notification choice:', notificationChoice);
+    console.log('🔍 Entering initializeNotifications...');
+    if (!('Notification' in window)) {
+      console.warn('⚠️ Notifications not supported in this browser');
+      showToast('Your browser does not support notifications. Please use Chrome.', '#e74c3c');
+      return;
+    }
+    console.log('✅ Notification API supported');
 
-    if (permission === 'granted') {
-      // Permission already granted, proceed to get token
-      await registerForPushNotifications();
-    } else if (permission === 'denied' || notificationChoice === 'declined') {
-      // Permission denied or user declined, do nothing
-      console.warn('⚠️ Notifications blocked or declined by user');
-      showToast('Notifications are disabled. Enable them in settings if needed.', '#e74c3c');
-    } else {
-      // Show custom popup for users who haven't decided
-      showNotificationPopup(true);
+    if (!('serviceWorker' in navigator)) {
+      console.warn('⚠️ Service workers not supported in this browser');
+      showToast('Your browser does not support service workers. Please use Chrome.', '#e74c3c');
+      return;
+    }
+    console.log('✅ Service Worker API supported');
 
-      // Handle popup buttons
-      const allowBtn = document.getElementById('notification-allow');
-      const declineBtn = document.getElementById('notification-decline');
+    try {
+      console.log('📡 Registering service worker at firebase-messaging-sw.js...');
+      const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+      console.log('✅ Service Worker registered with scope:', registration.scope);
 
-      allowBtn.addEventListener('click', async () => {
-        showNotificationPopup(false);
+      console.log('🔐 Requesting notification permission...');
+      const permission = await Notification.requestPermission();
+      console.log('ℹ️ Notification permission result:', permission);
+
+      if (permission === 'granted') {
+        console.log('✅ Notification permission granted');
+        showToast('Notification granted, generating FCM token', '#28a745');
         try {
-          const granted = await Notification.requestPermission();
-          if (granted === 'granted') {
-            console.log('✅ Notification permission granted');
-            localStorage.setItem('notificationChoice', 'allowed');
-            await registerForPushNotifications();
-          } else {
-            console.warn('⚠️ Notification permission denied');
-            localStorage.setItem('notificationChoice', 'declined');
-            showToast('Notifications were disabled.', '#e74c3c');
-          }
-        } catch (err) {
-          console.error('❌ Error requesting notification permission:', err);
-          localStorage.setItem('notificationChoice', 'declined');
-          showToast('Failed to request notifications.', '#e74c3c');
+          console.log('🔑 Generating FCM token...');
+          const token = await getToken(messaging, {
+            vapidKey: 'BCtAsyYJYCSfpg_kXL2aO59szQsPFE3DvmqqLOnW03JTVR88Jb435-jDnUgj0j0mL5VCWLiGGfErTuwQ-XUArho',
+            serviceWorkerRegistration: registration, // Pass service worker
+          });
+          console.log('🎉 FCM Token generated:', token);
+          await saveToken(token);
+        } catch (tokenErr) {
+          console.error('❌ Error generating FCM token:', tokenErr);
+          showToast('Failed to generate notification token.', '#e74c3c');
         }
-      });
-
-      declineBtn.addEventListener('click', () => {
-        showNotificationPopup(false);
-        localStorage.setItem('notificationChoice', 'declined');
-        console.log('⚠️ User declined notifications');
-        showToast('Notifications were declined.', '#e74c3c');
-      });
+      } else {
+        console.warn('⚠️ Notification permission denied:', permission);
+        showToast('Please enable notifications in your browser settings.', '#e74c3c');
+      }
+    } catch (err) {
+      console.error('❌ Error initializing notifications:', err);
+      showToast('Failed to initialize notifications.', '#e74c3c');
     }
   }
 
-  // Register for push notifications and get FCM token
-  async function registerForPushNotifications() {
-    try {
-      const token = await getToken(messaging, {
-        vapidKey: 'YOUR_VAPID_KEY', // Replace with your VAPID key
-      });
-      console.log('✅ FCM Token:', token);
+  // Save FCM token to server
+  async function saveToken(token) {
+    console.log('💾 Attempting to save FCM token:', token);
+    const userId = localStorage.getItem('userId');
+    const jwt = localStorage.getItem('authToken');
+    console.log('ℹ️ User ID:', userId, 'JWT:', jwt ? '[Present]' : '[Missing]');
 
-      // Send token to your backend (optional)
-      await sendTokenToBackend(token);
-    } catch (err) {
-      console.error('❌ Error getting FCM token:', err);
-      showToast(' Kafailed to enable notifications.', '#e74c3c');
-    }
-  }
-
-  // Send token to backend (implement as needed)
-  async function sendTokenToBackend(token) {
-    try {
-      const response = await fetch(`${API_BASE_URL}/subscribe`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, userId: localStorage.getItem('userId') }),
-      });
-      if (!response.ok) throw new Error('Failed to save token');
-      console.log('✅ Token sent to backend');
-    } catch (err) {
-      console.error('❌ Error sending token to backend:', err);
+    if (userId && jwt) {
+      try {
+        console.log('📤 Sending token to server:', `${API_BASE_URL}/api/save-fcm-token`);
+        const response = await fetch(`${API_BASE_URL}/api/save-fcm-token`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${jwt}`,
+          },
+          body: JSON.stringify({ userId, token }),
+        });
+        if (response.ok) {
+          console.log('✅ Token saved to server');
+          showToast('Notifications enabled successfully!', '#28a745');
+        } else {
+          console.error('❌ Failed to save token:', response.status, await response.text());
+          showToast('Failed to enable notifications.', '#e74c3c');
+        }
+      } catch (err) {
+        console.error('❌ Error saving token:', err);
+        showToast('Error enabling notifications.', '#e74c3c');
+      }
+    } else {
+      console.warn('⚠️ No userId or JWT found:', { userId, jwt });
+      showToast('Please log in to enable notifications.', '#e74c3c');
     }
   }
 
   // Handle foreground messages
-  onMessage(messaging, (payload) => {
-    console.log('📩 Foreground message received:', payload);
-    const notification = payload.notification || {};
-    showToast(notification.body || 'New notification received', '#28a745');
-  });
+  if (messaging) {
+    onMessage(messaging, (payload) => {
+      console.log('📩 Foreground message received:', JSON.stringify(payload, null, 2));
+      if (Notification.permission === 'granted') {
+        const { title, body } = payload.notification || {};
+        const { type, postId, senderId } = payload.data || {};
+
+        console.log('🔔 Displaying foreground notification:', { title, body, type, postId, senderId });
+        const notification = new Notification(title, {
+          body,
+          icon: '/favicon.ico',
+          data: { type, postId, senderId },
+        });
+
+        notification.onclick = (event) => {
+          event.preventDefault();
+          const { type, postId, senderId } = event.target.data || {};
+          console.log('🖱️ Notification clicked:', { type, postId, senderId });
+          if (type === 'like' || type === 'comment') {
+            window.location.href = `post.html?postId=${postId}`;
+          } else if (type === 'message') {
+            window.location.href = `Messages.html?userId=${senderId}`;
+          }
+        };
+      }
+    });
+  }
 
   // Initialize notifications on page load
-  initializeNotifications();
+  console.log('🌐 Adding load event listener...');
+  window.addEventListener('load', () => {
+    console.log('🌐 Page loaded, initializing notifications...');
+    initializeNotifications();
+  });
 </script>
 <script>
 // Function to check for new content
