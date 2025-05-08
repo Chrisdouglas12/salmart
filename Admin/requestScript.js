@@ -232,7 +232,7 @@ style.textContent = `
   align-items: center;
   justify-content: center;
   gap: 20px;
-  margin
+  margin-top: 15px;
   }
 `;
 document.head.appendChild(style);
