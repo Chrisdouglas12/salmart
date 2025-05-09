@@ -426,7 +426,7 @@ a .active {
   box-sizing: border-box;
   display: flex;
   margin-top: -16px;
-  flex-direction: column-reverse;
+  margin-bottom: 50px;
 }
 .request-feed {
   display: flex;
@@ -507,8 +507,23 @@ a .active {
     background-color: #fff;
     color: #28a745;
     border: solid 1px #fff;
-    box-shadow: 0 0 10px #ddd;
-    border-radius: 4px;
+    box-shadow: 0 2px 0 rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+  }
+  .contact-btn button:hover{
+       transition: all 0.2s ease;
+&:hover { transform: scale(1.02); }
+background-color: #ccc
+  }
+  .request-tab button{
+    width: 100%;
+    height: 34px;
+    margin-top: -15px;
+    background-color: #fff;
+    color: #28a745;
+    border: solid 1px #fff;
+    box-shadow:  0 -2px 0 0 rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
   }
 
 .request-card .location {

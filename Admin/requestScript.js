@@ -468,6 +468,13 @@ async function fetchRequests(category = '') {
           </div>
         </div>
         <div class="timestamp">${timeAgo(new Date(request.createdAt))}</div>
+         <div class="request-tab">
+            
+                <button >
+                 #Request
+                </button>
+
+            </div>
         <div class="request-bg">
           <div class="text">${escapeHtml(request.text)}</div>
         </div>
@@ -505,7 +512,7 @@ async function fetchRequests(category = '') {
       `;
       
       setupDropdownMenu(requestCard, request._id, isOwner);
-      requestFeed.prepend(requestCard);
+      requestFeed.appendChild(requestCard);
       console.log(`Prepended request ${request._id} created at ${request.createdAt}`);
     }
   

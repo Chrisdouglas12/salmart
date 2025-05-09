@@ -1719,9 +1719,6 @@ app.get('/messages', async (req, res) => {
 
 // Route to fetch messages for a user
 
-
-
-
 app.get("/api/messages", async (req, res) => {
   const { userId } = req.query;
 
@@ -2909,37 +2906,30 @@ app.get('/search', async (req, res) => {
     res.status(500).json({ message: 'Server error while searching' });
   }
 });
-
-// GET all products (not sold)
+//get products
 app.get('/products', verifyToken, async (req, res) => {
   try {
-    const { sellerId } = req.query; // Get sellerId from query parameters
-
-    // Define the base query
+    const { sellerId } = req.query;
     const query = {
       price: { $exists: true, $ne: "" },
       productCondition: { $exists: true, $ne: "" },
       location: { $exists: true, $ne: "" },
       isSold: false
     };
-
-    // If sellerId is provided, filter products by the seller
     if (sellerId) {
-      query['createdBy.userId'] = sellerId; // Ensure this matches your schema
+      query['createdBy.userId'] = sellerId;
     }
-
-    // Fetch products based on the query
+    console.log('Fetching products with query:', query);
     const products = await Post.find(query)
-      .sort({ createdAt: -1 }) // Sort by latest first
-      .populate('createdBy.userId', 'firstName lastName profilePicture'); // Populate user info
-
+      .sort({ createdAt: -1 })
+      .populate('createdBy.userId', 'firstName lastName profilePicture');
+    console.log('Found products:', products.length);
     res.status(200).json(products);
   } catch (err) {
-    console.error('Error fetching products:', err);
+    console.error('Error fetching products:', err.message, err.stack);
     res.status(500).json({ error: 'Something went wrong' });
   }
 });
-
 // Backend route to update product price
 app.put('/posts/:postId/update-price', verifyToken, async (req, res) => {
   const { postId } = req.params;

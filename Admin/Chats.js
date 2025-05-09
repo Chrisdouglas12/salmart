@@ -330,55 +330,361 @@ socket.on('typing', data => {
     }
 });
 
+// Track accepted offers
+const acceptedOffers = new Set();
+
 bargainBtn.onclick = async () => {
-    document.getElementById('bargainModal').style.display = 'block';
-    try {
-        const res = await fetch(`${API_BASE_URL}/products?sellerId=${receiverId}`);
-        const products = await res.json();
-        const container = document.getElementById('bargainProductsContainer');
-        container.innerHTML = '';
-        if (!products.length) return container.innerHTML = '<p>No products available.</p>';
-        products.forEach(product => {
-            const card = document.createElement('div');
-            card.className = 'product-card';
-            card.innerHTML = `
-                <img src="${product.photo}" alt="">
-                <div>
-                    <strong>${product.description}</strong><br>
-                    ₦${Number(product.price).toLocaleString('en-NG')}<br>
-                    <input type="number" class="bargain-price-input" placeholder="Your Offer Price">
-                    <button class="confirm-bargain-btn">Send Offer</button>
-                </div>
-            `;
-            card.querySelector('.confirm-bargain-btn').onclick = () => {
-                const price = card.querySelector('.bargain-price-input').value;
-                if (price) {
-                    const message = {
-                        senderId: userId,
-                        receiverId,
-                        text: JSON.stringify({
-                            text: `My offer for "${product.description}" is ₦${Number(price).toLocaleString('en-NG')}`,
-                            offer: price,
-                            productId: product._id,
-                            productName: product.description,
-                            image: product.photo
-                        }),
-                        createdAt: new Date()
-                    };
-                    socket.emit('sendMessage', message);
-                    displayMessage(message);
-                    closeBargainModal();
-                }
-            };
-            container.appendChild(card);
-        });
-    } catch (e) {
-        document.getElementById('bargainProductsContainer').innerHTML = '<p>Error loading products.</p>';
+  const modal = document.getElementById('bargainModal');
+  if (!modal) {
+    console.error('Bargain modal with ID "bargainModal" not found.');
+    return;
+  }
+  modal.style.display = 'block';
+  try {
+    const res = await fetch(`${API_BASE_URL}/products?sellerId=${receiverId}`, {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+      }
+    });
+    if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
+    const products = await res.json();
+    const container = document.getElementById('bargainProductsContainer');
+    if (!container) {
+      console.error('Bargain products container not found.');
+      return;
     }
+    container.innerHTML = '';
+    if (!products.length) {
+      container.innerHTML = '<p>No products available.</p>';
+      return;
+    }
+    products.forEach(product => {
+      const card = document.createElement('div');
+      card.className = 'product-card';
+      card.innerHTML = `
+        <img src="${product.photo}" alt="${product.description}">
+        <div>
+          <strong>${product.description}</strong><br>
+          ₦${Number(product.price).toLocaleString('en-NG')}<br>
+          <input type="text" class="bargain-price-input" placeholder="Your Offer Price">
+          <button class="confirm-bargain-btn">Send Offer</button>
+        </div>
+      `;
+      const sendButton = card.querySelector('.confirm-bargain-btn');
+      const priceInput = card.querySelector('.bargain-price-input');
+
+      priceInput.addEventListener('beforeinput', (e) => {
+        if (e.data && !/^[0-9]$/.test(e.data)) {
+          e.preventDefault();
+        }
+      });
+      priceInput.addEventListener('input', (e) => {
+        const input = e.target;
+        const cursorPosition = input.selectionStart;
+        let value = input.value.replace(/[^0-9]/g, '');
+        if (value) {
+          const formattedValue = Number(value).toLocaleString('en-NG', { maximumFractionDigits: 0 });
+          input.value = formattedValue;
+          const commasBeforeCursor = (input.value.slice(0, cursorPosition).match(/,/g) || []).length;
+          const newCommasBeforeCursor = (formattedValue.slice(0, cursorPosition).match(/,/g) || []).length;
+          input.setSelectionRange(
+            cursorPosition + (newCommasBeforeCursor - commasBeforeCursor),
+            cursorPosition + (newCommasBeforeCursor - commasBeforeCursor)
+          );
+        } else {
+          input.value = '';
+        }
+      });
+
+      sendButton.onclick = () => {
+        let price = priceInput.value.replace(/,/g, '');
+        if (price && !isNaN(price) && Number(price) > 0) {
+          sendButton.disabled = true;
+          sendButton.textContent = 'Sending...';
+          const message = {
+            senderId: userId,
+            receiverId,
+            text: JSON.stringify({
+              text: `My offer for "${product.description}" is ₦${Number(price).toLocaleString('en-NG')}`,
+              offer: price,
+              productId: product._id,
+              productName: product.description,
+              image: product.photo
+            }),
+            createdAt: new Date(),
+            isRead: false
+          };
+          try {
+            closeBargainModal();
+            socket.emit('sendMessage', message);
+            displayMessage(message);
+            console.log('Offer sent and modal closed');
+          } catch (error) {
+            console.error('Error sending message:', error);
+            showToast('Failed to send offer', 'error');
+            sendButton.disabled = false;
+            sendButton.textContent = 'Send Offer';
+            return;
+          }
+          setTimeout(() => {
+            sendButton.disabled = false;
+            sendButton.textContent = 'Send Offer';
+          }, 2000);
+        } else {
+          showToast('Please enter a valid positive number', 'error');
+        }
+      };
+      container.appendChild(card);
+    });
+
+    const closeModalBtn = document.getElementById('closeBargainModalBtn');
+    if (closeModalBtn) {
+      closeModalBtn.onclick = () => {
+        console.log('Close button clicked, closing modal');
+        closeBargainModal();
+      };
+    } else {
+      console.warn('Close button with ID "closeBargainModalBtn" not found. Please verify modal HTML.');
+    }
+  } catch (e) {
+    console.error('Fetch error:', e);
+    document.getElementById('bargainProductsContainer').innerHTML = '<p>Error loading products.</p>';
+  }
 };
 
+function openLastPriceModal(productId, productName) {
+  lastPriceModal.style.display = 'block';
+  submitLastPriceBtn.onclick = () => {
+    const lastPrice = lastPriceInput.value.trim();
+    if (lastPrice && !isNaN(lastPrice) && Number(lastPrice) > 0) {
+      const message = {
+        senderId: userId,
+        receiverId: receiverId,
+        text: JSON.stringify({
+          text: `I can give you "${productName}" for ₦${Number(lastPrice).toLocaleString('en-NG')}`,
+          offer: lastPrice,
+          productId: productId,
+          productName: productName,
+          image: ''
+        }),
+        createdAt: new Date(),
+        isRead: false
+      };
+      try {
+        socket.emit('sendMessage', message);
+        displayMessage(message);
+        console.log('Last price sent:', message);
+        closeLastPriceModal();
+      } catch (error) {
+        console.error('Error sending last price:', error);
+        showToast('Failed to send last price', 'error');
+      }
+    } else {
+      showToast('Please enter a valid positive number', 'error');
+    }
+  };
+}
+
+function closeLastPriceModal() {
+  lastPriceModal.style.display = 'none';
+  lastPriceInput.value = '';
+}
+
 function closeBargainModal() {
-    document.getElementById('bargainModal').style.display = 'none';
+  const modal = document.getElementById('bargainModal');
+  if (modal) {
+    console.log('Closing bargain modal');
+    modal.style.display = 'none';
+  } else {
+    console.error('Bargain modal with ID "bargainModal" not found.');
+  }
+}
+
+function displayMessage(message) {
+  const messageDate = new Date(message.createdAt);
+  const formattedDate = formatMessageDate(messageDate);
+
+  if (formattedDate !== lastDisplayedDate) {
+    const dateSeparator = document.createElement('div');
+    dateSeparator.textContent = formattedDate;
+    dateSeparator.style.textAlign = 'center';
+    dateSeparator.style.margin = '10px 0';
+    dateSeparator.style.color = '#777';
+    dateSeparator.style.fontSize = '14px';
+    chatMessages.appendChild(dateSeparator);
+    lastDisplayedDate = formattedDate;
+  }
+
+  const msgDiv = document.createElement('div');
+  msgDiv.classList.add('message', message.senderId === userId ? 'sent' : 'received');
+  const time = message.createdAt ? new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+
+  let msg = message.text, img = null, parsed;
+  try {
+    parsed = JSON.parse(message.text);
+    msg = parsed.text;
+    img = parsed.image;
+  } catch {
+    msg = message.text;
+  }
+
+  msgDiv.innerHTML = `
+    <div>${msg}</div>
+    ${img ? `<img src="${img}" class="product-photo-preview">` : ''}
+    <div class="message-timestamp">${time} ${message.isRead ? '✔✔' : ''}</div>
+  `;
+
+  if (parsed && parsed.offer && message.receiverId === userId && !acceptedOffers.has(parsed.productId)) {
+    console.log('Adding offer buttons for product:', parsed.productId); // Debug
+    const acceptBtn = document.createElement('button');
+    acceptBtn.className = 'accept-offer-btn';
+    acceptBtn.textContent = 'Accept';
+    acceptBtn.onclick = async () => {
+      const productDetails = {
+        productId: parsed.productId,
+        productName: parsed.productName,
+        offer: Number(parsed.offer),
+        senderId: message.senderId
+      };
+      console.log('Accepting offer:', productDetails);
+      document.getElementById('confirmationMessage').textContent = 
+        `Are you sure you want to accept the offer of ₦${Number(parsed.offer).toLocaleString('en-NG')} for "${parsed.productName}"?`;
+      const acceptModal = document.getElementById('acceptConfirmationModal');
+      acceptModal.style.display = 'block';
+      document.getElementById('confirmAcceptBtn').onclick = async () => {
+        try {
+          const response = await fetch(`${API_BASE_URL}/posts/${productDetails.productId}/update-price`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+            },
+            body: JSON.stringify({ newPrice: productDetails.offer })
+          });
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to update price');
+          }
+          const updatedPost = await response.json();
+          console.log('Price updated:', updatedPost);
+
+          // Mark offer as accepted
+          acceptedOffers.add(productDetails.productId);
+          console.log('Offer accepted, productId added to acceptedOffers:', productDetails.productId);
+
+          const acceptanceMessage = {
+            senderId: userId,
+            receiverId: productDetails.senderId,
+            text: JSON.stringify({
+              text: `Your offer for "${productDetails.productName}" has been accepted. New price is ₦${Number(productDetails.offer).toLocaleString('en-NG')}`,
+              productId: productDetails.productId,
+              productName: parsed.productName,
+              offer: productDetails.offer,
+              payment: true
+            }),
+            createdAt: new Date(),
+            isRead: false
+          };
+          socket.emit('sendMessage', acceptanceMessage);
+          displayMessage(acceptanceMessage);
+          console.log('Acceptance message sent:', acceptanceMessage);
+
+          acceptModal.style.display = 'none';
+          showToast('Price updated successfully!', 'success');
+        } catch (error) {
+          console.error('Error accepting offer:', error.message);
+          showToast(`Failed to accept offer: ${error.message}`, 'error');
+          acceptModal.style.display = 'none';
+        }
+      };
+      document.getElementById('cancelAcceptBtn').onclick = () => {
+        acceptModal.style.display = 'none';
+      };
+    };
+
+    const declineBtn = document.createElement('button');
+    declineBtn.className = 'decline-offer-btn';
+    declineBtn.textContent = 'Decline';
+    declineBtn.onclick = () => {
+      openLastPriceModal(parsed.productId, parsed.productName);
+    };
+
+    msgDiv.appendChild(acceptBtn);
+    msgDiv.appendChild(declineBtn);
+  } else if (parsed && parsed.offer && message.receiverId === userId) {
+    console.log('Skipping offer buttons, offer accepted for product:', parsed.productId); // Debug
+  }
+
+  // Proceed to Payment button (buyer only)
+  if (parsed && parsed.payment && message.receiverId === userId) {
+    console.log('Adding payment button for buyer:', { messageId: message._id, receiverId: message.receiverId, userId });
+    const paymentBtn = document.createElement('button');
+    paymentBtn.className = 'proceed-to-payment-btn';
+    paymentBtn.textContent = 'Proceed to Payment';
+    const verifyPayment = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/payment-success?productId=${parsed.productId}&buyerId=${userId}`, {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` }
+        });
+        const result = await response.json();
+        if (result.paymentCompleted) {
+          paymentBtn.disabled = true;
+          paymentBtn.textContent = 'Payment Completed';
+          paymentBtn.style.backgroundColor = 'gray';
+          paymentBtn.style.cursor = 'not-allowed';
+          return true;
+        }
+        return false;
+      } catch (error) {
+        console.error('Payment verification error:', error);
+        return false;
+      }
+    };
+    verifyPayment().then(isPaid => {
+      if (!isPaid) {
+        paymentBtn.onclick = async () => {
+          const postId = parsed.productId;
+          const email = localStorage.getItem('email');
+          const buyerId = localStorage.getItem('userId');
+          if (!email || !buyerId) {
+            showToast('Please log in to make a payment', 'error');
+            return;
+          }
+          try {
+            paymentBtn.disabled = true;
+            paymentBtn.textContent = 'Processing...';
+            const response = await fetch(`${API_BASE_URL}/pay`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+              },
+              body: JSON.stringify({ email, postId, buyerId })
+            });
+            const result = await response.json();
+            if (result.success) {
+              window.location.href = result.url;
+            } else {
+              paymentBtn.disabled = false;
+              paymentBtn.textContent = 'Proceed to Payment';
+              showToast(`Payment initiation failed: ${result.message || 'Please try again'}`, 'error');
+            }
+          } catch (error) {
+            console.error('Payment error:', error);
+            paymentBtn.disabled = false;
+            paymentBtn.textContent = 'Proceed to Payment';
+            showToast('Payment processing error', 'error');
+          }
+        };
+      }
+    });
+    msgDiv.appendChild(paymentBtn);
+  } else if (parsed && parsed.payment) {
+    console.log('Payment button NOT added for sender:', { messageId: message._id, senderId: message.senderId, userId });
+  }
+
+  chatMessages.appendChild(msgDiv);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
 socket.on('priceUpdateResponse', data => {
