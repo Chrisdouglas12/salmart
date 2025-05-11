@@ -6,141 +6,7 @@
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <title>Document</title>
   <script src="https://cdn.jsdelivr.net/npm/jwt-decode@3.1.2/build/jwt-decode.min.js"></script>
-  <script>
-    document.getElementById("file-input").addEventListener("change", function (event) {
-    const files = event.target.files;
-    const previewContainer = document.getElementById("image-preview-container");
-    const mainImage = document.getElementById("preview");
-
-    if (files.length > 0) {
-        mainImage.src = URL.createObjectURL(files[0]); // Show first image as main
-        mainImage.style.display = "block"; // Make it visible
-        previewContainer.innerHTML = ""; // Clear previous thumbnails
-
-        for (let i = 1; i < files.length; i++) { // Start from second image
-            let img = document.createElement("img");
-            img.src = URL.createObjectURL(files[i]);
-            img.className = "thumbnail";
-            img.onclick = function () { openImageGallery(files, i); };
-            previewContainer.appendChild(img);
-        }
-    }
-});
-
-// Open image gallery when main image is clicked
-document.getElementById("preview").addEventListener("click", function () {
-    const files = document.getElementById("file-input").files;
-    if (files.length > 1) {
-        openImageGallery(files, 0);
-    }
-});
-
-function openImageGallery(files, startIndex) {
-    const galleryModal = document.getElementById("galleryModal");
-    const galleryContent = document.getElementById("galleryContent");
-    
-    galleryContent.innerHTML = ""; // Clear previous images
-
-    for (let i = 0; i < files.length; i++) {
-        let img = document.createElement("img");
-        img.src = URL.createObjectURL(files[i]);
-        img.className = "gallery-image";
-        galleryContent.appendChild(img);
-    }
-
-    galleryModal.style.display = "flex"; // Show modal
-}
-
-// Close gallery when clicking outside
-document.getElementById("galleryModal").addEventListener("click", function (event) {
-    if (event.target === this) {
-        this.style.display = "none";
-    }
-});
-
-
-  </script>
-  <script src="addPic.js"></script>
-</head>
-<body>
-  <div class="container">
-  <div class="form-bg" >
-    <div class="h2-bg">
-  <h4 style="font-size: 17px">Create an ad</h4><br>
-  <img src="default.png" id="profile-picture2">
-  </div>
-  <form id="dataForm" >
-  <div class="input-form">
-  <label>Enter product description</label>
-  <input id="description" type="text" class="input" placeholder="eg., Nexus deep freezer, 200 liters">
-  </div>
-  
-  <div class="input-form">
-    <label>Product Condition</label>
-  <input id="productCondition" type="text" class="input" placeholder="eg., New, Used"><br>
-  </div>
-  <div class="input-form">
-    <label>Product Price &#8358</label>
-  <input id="price" type="text" class="input" placeholder="Enter Price &#8358" ><br>
-  </div>
-  <div class="input-form">
-    <label>Location</label>
-  <input id="location" type="text" class="input" placeholder="Enter Location ">
-  </div>
-  
-  <div class="input-form">
-  <label>Product Category</label>
-  <select id="category" class="input" required>
-    <option value="" disabled selected>Select a category</option>
-    <option value="electronics">Electronics</option>
-    <option value="fashion">Fashion</option>
-    <option value="home">Home & Garden</option>
-    <option value="vehicles">Vehicles</option>
-    <option value="music">Music Gear</option>
-    <option value="others">Other</option>
-  </select>
-</div>
-  <br>
-  <div class="file-section">
-    <label for="fileInput">
-      Upload image
-    </label><br>
-    <div style="text-align: center">
-    <input class="media-input"type="file" id="file-input" name="photo" accept="image/*" multiple><br><br>
-    <div style="text-align: center">
-    <img id="preview">
-    </div>
-    </div>
-  <div style="text-align: center";>
-  <button type="submit" style="color: white; background-color:  #28a745; width: 80%; height: 35px; border: solid 0.1px green; border-radius: 50px; text-align: center; box-shadow: 0 0 10px 0 #fff">Publish ad</button>
-  </div>
-  </div>
-  <br>
-  <div>
-    <p style="font-size: 13px">By clicking the publish button, you hereby consent to our <a href="">Community Standards.</a> Your account will be banned if your posts are non business related.</p>
-  </div>
-  </form>
-<div id="toast" style="position: fixed; bottom: -10px; left: 50%; background-color: #28a745; color: white; border-radius: 5px; box-shadow: 0 0 10px rgba(0,0,0,0.2); display: none; z-index: 9999; text-align: center; transform: translate(-50%, -50%); font-size: 14px; padding: 10px; width: 60%"></div>
-  <!-- Toast container -->
-</div>
-<script>
-  function showToast(message, color = '#28a745') {
-    const toast = document.getElementById("toast");
-    toast.textContent = message;
-    toast.style.backgroundColor = color;
-    toast.style.display = "block";
-
-    setTimeout(() => {
-      toast.style.display = "none";
-    }, 3000);
-  }
-</script>
-</body>
-
-<script src="postScript.js"></script>
-
-</html>
-<style>
+  <style>
 * {
   margin: 0;
   padding: 0;
@@ -352,5 +218,141 @@ select option {
 select option[value=""][disabled] {
   color: #6c757d;
 }
+
 </style>
+  <script>
+    document.getElementById("file-input").addEventListener("change", function (event) {
+    const files = event.target.files;
+    const previewContainer = document.getElementById("image-preview-container");
+    const mainImage = document.getElementById("preview");
+
+    if (files.length > 0) {
+        mainImage.src = URL.createObjectURL(files[0]); // Show first image as main
+        mainImage.style.display = "block"; // Make it visible
+        previewContainer.innerHTML = ""; // Clear previous thumbnails
+
+        for (let i = 1; i < files.length; i++) { // Start from second image
+            let img = document.createElement("img");
+            img.src = URL.createObjectURL(files[i]);
+            img.className = "thumbnail";
+            img.onclick = function () { openImageGallery(files, i); };
+            previewContainer.appendChild(img);
+        }
+    }
+});
+
+// Open image gallery when main image is clicked
+document.getElementById("preview").addEventListener("click", function () {
+    const files = document.getElementById("file-input").files;
+    if (files.length > 1) {
+        openImageGallery(files, 0);
+    }
+});
+
+function openImageGallery(files, startIndex) {
+    const galleryModal = document.getElementById("galleryModal");
+    const galleryContent = document.getElementById("galleryContent");
+    
+    galleryContent.innerHTML = ""; // Clear previous images
+
+    for (let i = 0; i < files.length; i++) {
+        let img = document.createElement("img");
+        img.src = URL.createObjectURL(files[i]);
+        img.className = "gallery-image";
+        galleryContent.appendChild(img);
+    }
+
+    galleryModal.style.display = "flex"; // Show modal
+}
+
+// Close gallery when clicking outside
+document.getElementById("galleryModal").addEventListener("click", function (event) {
+    if (event.target === this) {
+        this.style.display = "none";
+    }
+});
+
+
+  </script>
+  <script src="addPic.js"></script>
+</head>
+<body>
+  <div class="container">
+  <div class="form-bg" >
+    <div class="h2-bg">
+  <h4 style="font-size: 17px">Create an ad</h4><br>
+  <img src="default.png" id="profile-picture2">
+  </div>
+  <form id="dataForm" >
+  <div class="input-form">
+  <label>Enter product description</label>
+  <input id="description" type="text" class="input" placeholder="eg., Nexus deep freezer, 200 liters">
+  </div>
+  
+  <div class="input-form">
+    <label>Product Condition</label>
+  <input id="productCondition" type="text" class="input" placeholder="eg., New, Used"><br>
+  </div>
+  <div class="input-form">
+    <label>Product Price &#8358</label>
+  <input id="price" type="text" class="input" placeholder="Enter Price &#8358" ><br>
+  </div>
+  <div class="input-form">
+    <label>Location</label>
+  <input id="location" type="text" class="input" placeholder="Enter Location ">
+  </div>
+  
+  <div class="input-form">
+  <label>Product Category</label>
+  <select id="category" class="input" required>
+    <option value="" disabled selected>Select a category</option>
+    <option value="electronics">Electronics</option>
+    <option value="fashion">Fashion</option>
+    <option value="home">Home & Garden</option>
+    <option value="vehicles">Vehicles</option>
+    <option value="music">Music Gear</option>
+    <option value="others">Other</option>
+  </select>
+</div>
+  <br>
+  <div class="file-section">
+    <label for="fileInput">
+      Upload image
+    </label><br>
+    <div style="text-align: center">
+    <input class="media-input"type="file" id="file-input" name="photo" accept="image/*" multiple><br><br>
+    <div style="text-align: center">
+    <img id="preview">
+    </div>
+    </div>
+  <div style="text-align: center";>
+  <button type="submit" style="color: white; background-color:  #28a745; width: 80%; height: 35px; border: solid 0.1px green; border-radius: 50px; text-align: center; box-shadow: 0 0 10px 0 #fff">Publish ad</button>
+  </div>
+  </div>
+  <br>
+  <div>
+    <p style="font-size: 13px">By clicking the publish button, you hereby consent to our <a href="">Community Standards.</a> Your account will be banned if your posts are non business related.</p>
+  </div>
+  </form>
+<div id="toast" style="position: fixed; bottom: -10px; left: 50%; background-color: #28a745; color: white; border-radius: 5px; box-shadow: 0 0 10px rgba(0,0,0,0.2); display: none; z-index: 9999; text-align: center; transform: translate(-50%, -50%); font-size: 14px; padding: 10px; width: 60%"></div>
+  <!-- Toast container -->
+</div>
+<script>
+  function showToast(message, color = '#28a745') {
+    const toast = document.getElementById("toast");
+    toast.textContent = message;
+    toast.style.backgroundColor = color;
+    toast.style.display = "block";
+
+    setTimeout(() => {
+      toast.style.display = "none";
+    }, 3000);
+  }
+</script>
+</body>
+
+<script src="postScript.js"></script>
+
+</html>
+
 </html> 

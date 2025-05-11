@@ -12,6 +12,7 @@ const Message = require('./messageSchema.js')
 const payOutLog = require('./payOut.js')
 const Escrow = require('./EscrowSchema.js') 
 const Transaction = require('./Transaction.js')
+const Review = require('./reviewSchema.js')
 const Notification = require('./notificationScript.js')
 const mongoose = require('mongoose')
 const bcrypt = require('bcryptjs')
@@ -972,6 +973,106 @@ app.get('/user-posts/:Id', async (req, res) => {
   }
 });
 
+// Submit a review
+app.post('/submit-review', verifyToken, async (req, res) => {
+  try {
+    const { reviewedUserId, rating, review } = req.body;
+    const reviewerId = req.user.userId; // From auth middleware
+
+    // Validate input
+    if (!reviewedUserId || !rating || !review) {
+      return res.status(400).json({ message: 'All fields are required' });
+    }
+
+    if (rating < 1 || rating > 5) {
+      return res.status(400).json({ message: 'Rating must be between 1 and 5' });
+    }
+
+    // Check if user is trying to review themselves
+    if (reviewerId === reviewedUserId) {
+      return res.status(400).json({ message: 'You cannot review yourself' });
+    }
+
+    // Check if reviewer has already reviewed this user
+    const existingReview = await Review.findOne({ 
+      reviewerId, 
+      reviewedUserId 
+    });
+
+    if (existingReview) {
+      return res.status(400).json({ message: 'You have already reviewed this user' });
+    }
+
+    // Create new review
+    const newReview = new Review({
+      reviewerId,
+      reviewedUserId,
+      rating,
+      review
+    });
+
+    await newReview.save();
+
+    res.status(201).json({ 
+      success: true,
+      message: 'Review submitted successfully',
+      review: newReview
+    });
+
+  } catch (error) {
+    console.error('Error submitting review:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Get reviews for a specific user
+app.get('/user-reviews/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const userReviews = await Review.find({ reviewedUserId: userId })
+      .populate('reviewerId', 'name profilePicture')
+      .sort({ createdAt: -1 });
+
+    if (!userReviews || userReviews.length === 0) {
+      return res.status(404).json({ message: 'No reviews found for this user' });
+    }
+
+    res.status(200).json(userReviews);
+  } catch (error) {
+    console.error('Error fetching user reviews:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Get average rating for a user
+app.get('/average-rating/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    const result = await Review.aggregate([
+      { $match: { reviewedUserId: mongoose.Types.ObjectId(userId) } },
+      { $group: { 
+        _id: null, 
+        averageRating: { $avg: "$rating" },
+        reviewCount: { $sum: 1 }
+      }}
+    ]);
+
+    const averageRating = result.length > 0 ? result[0].averageRating : 0;
+    const reviewCount = result.length > 0 ? result[0].reviewCount : 0;
+
+    res.status(200).json({ 
+      averageRating: parseFloat(averageRating.toFixed(1)),
+      reviewCount
+    });
+
+  } catch (error) {
+    console.error('Error calculating average rating:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 //Delete users
 app.delete('/users/:id', async (req, res) => {
   try {
@@ -1161,6 +1262,73 @@ app.post('/requests/comment/:id', verifyToken, async (req, res) => {
           profilePicture: newComment.user.profilePicture
         }
       }
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+//edit requests
+app.put('/requests/:id', verifyToken, async (req, res) => {
+  try {
+    const requestId = req.params.id;
+    const { title, description, status } = req.body;
+    const userId = req.user.userId;
+
+    const request = await Request.findOne({ _id: requestId, user: userId });
+    if (!request) return res.status(404).json({ message: 'Request not found or unauthorized' });
+
+    // Update the fields
+    if (title) request.title = title;
+    if (description) request.description = description;
+    if (status) request.status = status;
+
+    await request.save();
+    res.json({ success: true, message: 'Request updated successfully', request });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+//delete requests
+app.delete('/requests/:id', verifyToken, async (req, res) => {
+  try {
+    const requestId = req.params.id;
+    const userId = req.user.userId;
+
+    const request = await Request.findOneAndDelete({ _id: requestId, user: userId });
+    if (!request) return res.status(404).json({ message: 'Request not found or unauthorized' });
+
+    res.json({ success: true, message: 'Request deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+//report requests
+
+app.post('/requests/report/:id', verifyToken, async (req, res) => {
+  try {
+    const requestId = req.params.id;
+    const { reason } = req.body;
+    const reportedBy = req.user.userId;
+
+    // Find the request and its owner
+    const request = await Request.findById(requestId).populate('user');
+    if (!request) return res.status(404).json({ message: 'Request not found' });
+
+    const reportedUser = request.user._id;
+
+    // Create a new report
+    const newReport = new Report({
+      reportedUser,
+      reportedBy,
+      reason
+    });
+
+    await newReport.save();
+
+    res.json({ 
+      success: true, 
+      message: 'Request reported successfully', 
+      report: newReport 
     });
   } catch (err) {
     res.status(500).json({ error: err.message });

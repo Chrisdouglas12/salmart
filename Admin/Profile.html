@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="Style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 <script src="profilePostScript.js"></script>
+<script src="sideBar"></script>
   <script src="addPic.js"></script>
    <script src="upload.js"></script>
 
@@ -18,7 +19,7 @@
 </head>
 <body>
   <header style="background-color: white; padding: 20px: border: solid 2px #ccc; box-shadow: 0 0 10px #ddd; position: fixed; width: 100vw; z-index: 100">
-    <h1 id="profileHeaderUsr" style="font-size: 16px; padding: 20px;margin-top: -0px; color:  #28a745;margin-left: -2px">username</h1>
+    <h1 id="profileHeaderUsr" style="font-size: 16px; padding: 10px;margin-top: 10px; color:  #28a745;margin-left: -2px">username</h1>
   </header>
   <div class="menu-icon" style="z-index: 3000">
   <div></div>
@@ -104,14 +105,55 @@
       <p>Products</p>
       <h3 id="products-count">0</h3>
     </div>
+    <div class="stats-item">
+      <p>Rating</p>
+      <h3 id="average-rating">0.0</h3>
+    </div>
   </div>
 
   <div class="tabs">
-    <button class="tabs-active">Home</button>
-    <button>Reviews</button>
+    <button class="tab-btn active" data-tab="home">Home</button>
+    <button class="tab-btn" data-tab="reviews">Reviews</button>
   </div>
+  
+<!-- Home Tab Content -->
+<div id="home-tab" class="tab-content active">
   <div class="product-list" id="product-list"></div>
-  <div id="post-container"></div>
+  <div id="post-container"></div> <!-- Moved here -->
+</div>
+
+<!-- Reviews Tab Content -->
+<div id="reviews-tab" class="tab-content">
+  <div class="reviews-container">
+    <!-- Review Form -->
+    <div id="review-form-container" class="review-form-container">
+      <h3>Leave a Review</h3>
+      <form id="review-form">
+        <div class="rating-input">
+          <label>Rating:</label>
+          <div class="stars">
+            <i class="fas fa-star" data-rating="1"></i>
+            <i class="fas fa-star" data-rating="2"></i>
+            <i class="fas fa-star" data-rating="3"></i>
+            <i class="fas fa-star" data-rating="4"></i>
+            <i class="fas fa-star" data-rating="5"></i>
+          </div>
+          <input type="hidden" id="rating-value" name="rating" required>
+        </div>
+        <div class="form-group">
+          <label for="review-text">Your Review:</label>
+        <textarea id="review-text" name="review" rows="4" placeholder="Write your review here..." required></textarea>
+        </div>
+        <button type="submit" class="submit-review-btn">Submit Review</button>
+      </form>
+    </div>
+    
+    <!-- Reviews List -->
+    <div id="reviews-list" class="reviews-list">
+      <!-- Reviews will be loaded here dynamically -->
+    </div>
+  </div>
+</div>
 <!-- Slide-Up Bank Details Form -->
 <!-- Dimmed Overlay -->
 <div id="overlay" class="overlay"></div>
@@ -138,7 +180,7 @@
   </form>
 </div>
   
-  <!-- Add this to your HTML, preferably near the other modal -->
+  <!-- profile pic modal -->
 <div id="profile-pic-modal" class="modern-profile-modal">
   <div class="modal-content">
     <div class="modal-header">
@@ -157,17 +199,7 @@
           <i class="fas fa-image"></i> Choose from Gallery
         </button>
       </div>
-      <div class="edit-options">
-        <button id="crop-btn" class="edit-btn" disabled>
-          <i class="fas fa-crop"></i> Crop
-        </button>
-        <button id="rotate-btn" class="edit-btn" disabled>
-          <i class="fas fa-sync-alt"></i> Rotate
-        </button>
-        <button id="adjust-btn" class="edit-btn" disabled>
-          <i class="fas fa-sliders-h"></i> Adjust
-        </button>
-      </div>
+      
     </div>
     <div class="modal-footer">
       <button id="cancel-upload" class="secondary-button">Cancel</button>
@@ -179,476 +211,6 @@
   </div>
 </div>
 
-<style>
-/* Modern Profile Picture Modal Styles */
-.modern-profile-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.7);
-  display: none;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.modern-profile-modal.show {
-  display: flex;
-  opacity: 1;
-}
-
-.modern-profile-modal .modal-content {
-  background-color: white;
-  border-radius: 16px;
-  width: 90%;
-  max-width: 450px;
-  overflow: hidden;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-  transform: translateY(20px);
-  transition: transform 0.3s ease;
-}
-
-.modern-profile-modal.show .modal-content {
-  transform: translateY(0);
-}
-
-.modern-profile-modal .modal-header {
-  padding: 16px 20px;
-  border-bottom: 1px solid #f0f0f0;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.modern-profile-modal .modal-header h3 {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 600;
-  color: #333;
-}
-
-.modern-profile-modal .close-modal {
-  background: none;
-  border: none;
-  font-size: 24px;
-  cursor: pointer;
-  color: #888;
-  padding: 0;
-  line-height: 1;
-}
-
-.modern-profile-modal .modal-body {
-  padding: 20px;
-}
-
-.image-preview-container {
-  width: 200px;
-  height: 200px;
-  margin: 0 auto 20px;
-  border-radius: 50%;
-  border: 2px dashed #ddd;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  overflow: hidden;
-  position: relative;
-}
-
-#image-preview {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: cover;
-}
-
-.upload-options {
-  display: flex;
-  justify-content: center;
-  gap: 15px;
-  margin-bottom: 20px;
-}
-
-.option-btn {
-  background-color: #f8f9fa;
-  border: none;
-  border-radius: 8px;
-  padding: 10px 15px;
-  font-size: 14px;
-  color: #333;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: all 0.2s;
-}
-
-.option-btn:hover {
-  background-color: #e9ecef;
-}
-
-.option-btn i {
-  font-size: 16px;
-}
-
-.edit-options {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  margin-bottom: 20px;
-}
-
-.edit-btn {
-  background-color: transparent;
-  border: none;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-  color: #666;
-  transition: all 0.2s;
-}
-
-.edit-btn:hover {
-  background-color: #f0f0f0;
-  color: #333;
-}
-
-.edit-btn:disabled {
-  color: #ccc;
-  cursor: not-allowed;
-}
-
-.modern-profile-modal .modal-footer {
-  padding: 16px 20px;
-  border-top: 1px solid #f0f0f0;
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-}
-
-.secondary-button {
-  background-color: #f8f9fa;
-  border: none;
-  border-radius: 8px;
-  padding: 10px 20px;
-  font-size: 14px;
-  font-weight: 500;
-  color: #333;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.secondary-button:hover {
-  background-color: #e9ecef;
-}
-
-.primary-button {
-  background-color: #28a745;
-  border: none;
-  border-radius: 8px;
-  padding: 10px 20px;
-  font-size: 14px;
-  font-weight: 500;
-  color: white;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.primary-button:hover {
-  background-color: #218838;
-}
-
-.primary-button:disabled {
-  background-color: #b3d9bc;
-  cursor: not-allowed;
-}
-
-.button-loader {
-  display: none;
-  width: 16px;
-  height: 16px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-radius: 50%;
-  border-top-color: white;
-  animation: spin 1s ease-in-out infinite;
-  margin-right: 8px;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-/* When upload is in progress */
-.uploading .button-text {
-  display: none;
-}
-
-.uploading .button-loader {
-  display: inline-block;
-}
-</style>
-
-<!-- Add this to your HTML, preferably near the other modal -->
-<div id="profile-pic-modal" class="modern-profile-modal">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h3>Update Profile Picture</h3>
-      <button class="close-modal">&times;</button>
-    </div>
-    <div class="modal-body">
-      <div class="image-preview-container">
-        <img id="image-preview" src="default-avatar.png" alt="Preview">
-      </div>
-      <div class="upload-options">
-        <button id="take-photo-btn" class="option-btn">
-          <i class="fas fa-camera"></i> Take Photo
-        </button>
-        <button id="choose-photo-btn" class="option-btn">
-          <i class="fas fa-image"></i> Choose from Gallery
-        </button>
-      </div>
-      <div class="edit-options">
-        <button id="crop-btn" class="edit-btn" disabled>
-          <i class="fas fa-crop"></i> Crop
-        </button>
-        <button id="rotate-btn" class="edit-btn" disabled>
-          <i class="fas fa-sync-alt"></i> Rotate
-        </button>
-        <button id="adjust-btn" class="edit-btn" disabled>
-          <i class="fas fa-sliders-h"></i> Adjust
-        </button>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button id="cancel-upload" class="secondary-button">Cancel</button>
-      <button id="save-profile-pic" class="primary-button" disabled>
-        <span class="button-loader" id="upload-loader"></span>
-        <span class="button-text">Save Changes</span>
-      </button>
-    </div>
-  </div>
-</div>
-
-<style>
-/* Modern Profile Picture Modal Styles */
-.modern-profile-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.7);
-  display: none;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.modern-profile-modal.show {
-  display: flex;
-  opacity: 1;
-}
-
-.modern-profile-modal .modal-content {
-  background-color: white;
-  border-radius: 16px;
-  width: 90%;
-  max-width: 450px;
-  overflow: hidden;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-  transform: translateY(20px);
-  transition: transform 0.3s ease;
-}
-
-.modern-profile-modal.show .modal-content {
-  transform: translateY(0);
-}
-
-.modern-profile-modal .modal-header {
-  padding: 16px 20px;
-  border-bottom: 1px solid #f0f0f0;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.modern-profile-modal .modal-header h3 {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 600;
-  color: #333;
-}
-
-.modern-profile-modal .close-modal {
-  background: none;
-  border: none;
-  font-size: 24px;
-  cursor: pointer;
-  color: #888;
-  padding: 0;
-  line-height: 1;
-}
-
-.modern-profile-modal .modal-body {
-  padding: 20px;
-}
-
-.image-preview-container {
-  width: 200px;
-  height: 200px;
-  margin: 0 auto 20px;
-  border-radius: 50%;
-  border: 2px dashed #ddd;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  overflow: hidden;
-  position: relative;
-}
-
-#image-preview {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: cover;
-}
-
-.upload-options {
-  display: flex;
-  justify-content: center;
-  gap: 15px;
-  margin-bottom: 20px;
-}
-
-.option-btn {
-  background-color: #f8f9fa;
-  border: none;
-  border-radius: 8px;
-  padding: 10px 15px;
-  font-size: 14px;
-  color: #333;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: all 0.2s;
-}
-
-.option-btn:hover {
-  background-color: #e9ecef;
-}
-
-.option-btn i {
-  font-size: 16px;
-}
-
-.edit-options {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  margin-bottom: 20px;
-}
-
-.edit-btn {
-  background-color: transparent;
-  border: none;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-  color: #666;
-  transition: all 0.2s;
-}
-
-.edit-btn:hover {
-  background-color: #f0f0f0;
-  color: #333;
-}
-
-.edit-btn:disabled {
-  color: #ccc;
-  cursor: not-allowed;
-}
-
-.modern-profile-modal .modal-footer {
-  padding: 16px 20px;
-  border-top: 1px solid #f0f0f0;
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-}
-
-.secondary-button {
-  background-color: #f8f9fa;
-  border: none;
-  border-radius: 8px;
-  padding: 10px 20px;
-  font-size: 14px;
-  font-weight: 500;
-  color: #333;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.secondary-button:hover {
-  background-color: #e9ecef;
-}
-
-.primary-button {
-  background-color: #28a745;
-  border: none;
-  border-radius: 8px;
-  padding: 10px 20px;
-  font-size: 14px;
-  font-weight: 500;
-  color: white;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.primary-button:hover {
-  background-color: #218838;
-}
-
-.primary-button:disabled {
-  background-color: #b3d9bc;
-  cursor: not-allowed;
-}
-
-.button-loader {
-  display: none;
-  width: 16px;
-  height: 16px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-radius: 50%;
-  border-top-color: white;
-  animation: spin 1s ease-in-out infinite;
-  margin-right: 8px;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-/* When upload is in progress */
-.uploading .button-text {
-  display: none;
-}
-
-.uploading .button-loader {
-  display: inline-block;
-}
-</style>
 
 <script>
 document.addEventListener("DOMContentLoaded", function() {
@@ -831,369 +393,177 @@ document.addEventListener("DOMContentLoaded", function() {
     updateFollowButton();
 });
 </script>
-
-<style>
-*{
-  margin: 0;
-  padding: 0
-}
-body {
-  font-family: 'Poppins', sans-serif;
-  box-sizing: border-box;
-  font-size: 16px
-}
-
-.profile-picture-container {
-  position: position;
-  width: 120px;
-  height: 120px;
-  margin: 20px ;
-  margin-top: 20%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.profile-picture {
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  border: 2px solid #28a745;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-}
-
-.file-input-icon {
-  position: absolute;
-  bottom: 10px;
-  right: 10px;
-  background-color: white;
-  border: 1px solid #28a745;
-  border-radius: 150%;
-  padding: 5px ;
-  cursor: pointer;
-}
-
-.file-input-icon i {
-  color: #28a745;
-  font-size: 14px;
-}
-
-
-.upload-button {
-  background-color: #28a745;
-  color: white;
-  padding: 8px 16px;
-  border: none;
-  border-radius: 20px;
-  margin-top: 10px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-  display: none; /* Hidden by default */
-}
-
-.upload-button:hover {
-  background-color: #1e7a33;
-}
-h1 {
-  text-align: center;
-  font-size: 24px;
-  margin-top: -30px;
-}
-
-#upload-form {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.stats, .bio, .tabs, .product-list, footer {
-  margin: 0px;
-}
-
-.stats {
-  display: flex;
-  justify-content: space-around;
-  margin-top: 30px
-}
-
-.stats-item {
-  text-align: center;
-}
-
-.tabs {
-  display: flex;
-  justify-content: center;
-  margin-bottom: -10px;
-}
-
-.tabs button {
-  background-color: #f0f2f5;
-  border: none;
-  padding: 10px 20px;
-  margin: 0 10px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.tabs-active {
-  background-color: #28a745;
-  color: white;
-}
-
-.tabs button:hover {
-  background-color: #e0e2e5;
-}
-/* Overlay Background */
-.overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0,0,0,0.4);
-  display: none;
-  z-index: 99;
-}
-
-/* Bottom Sheet Container */
-.bottom-sheet {
-  position: fixed;
-  bottom: -100%;
-  width: 90%;
-  background: #fff;
-  padding: 20px;
-  border-radius: 16px 16px 0 0;
-  box-shadow: 0 -2px 10px rgba(0,0,0,0.2);
-  z-index: 100;
-  transition: bottom 0.3s ease-in-out;
-  
-}
-
-/* Bottom Sheet Header */
-.bottom-sheet-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15px;
-}
-
-.bottom-sheet-header h3 {
-  margin: 0;
-  font-size: 18px;
-}
-
-.close-sheet {
-  font-size: 22px;
-  cursor: pointer;
-}
-
-/* Input Fields */
-#bank-details-form label {
-  display: block;
-  margin-bottom: 5px;
-  font-size: 14px;
-}
-
-#bank-details-form input {
-  width: 100%;
-  padding: 8px;
-  margin-bottom: 15px;
-  border-radius: 5px;
-  border: 1px solid #ccc;
-  margin-left:-10px;
-  
-}
-input:focus{
-  border-color: green
-}
-
-/* Save Button */
-.submit-bank-btn {
-  width: 100%;
-  background-color: #28a745;
-  color: white;
-  padding: 10px;
-  font-weight: bold;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-.submit-bank-btn:hover {
-  background-color: #1e7a33;
-}
-button i{
-  font-size: 14px;
-  cursor: pointer;
-}
-
-
-.bank-button {
-  background-color: #fff;
-  color: #28a745;
-  width: 70%;
-  height: 35px;
-  border: solid 1px #28a745;
-  border-radius: 10px;
-  margin-top: 15px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.bank-button:hover {
-  background-color: #1e7a33;
-}
-
-.following {
-  background-color: #6c757d;
-}
-  .side-bar{
-    display: none;
-    position: fixed;
-    top: 0px;
-    left: 0;
-    z-index: 6;
-    background-color: #fff;
-    border: 1px #ddd solid;
-    box-shadow: 0 0 10px #ddd;
-    height: 100vh;
-    width: 70%;
-  }
-  h4{
-    margin: 20px 0px;
-    margin-left: 5px;
-    
-  }
-  .side-bar ul{
-    list-style: none;
-     margin: 0;
-     padding: 0;
-  padding-top: 20px;
-  margin-left: 5px;
-  
-  }
-  .side-bar li{
-    margin-bottom: 10px;
-    border: 0.1px solid #fff;
-    padding: 10px;
-    border-end-end-radius: 20px;
-    background-color:  #fff;
-    box-shadow: 0 0 10px #ddd;
-    margin-right: 3px;
-  }
-  .side-bar .active{
-    color:  #dd;
-  }
-  .side-bar a{
-    text-decoration: none;
-    color:  #28a745;
-    padding-right: 10%;
-    
-  }
-  .side-bar i{
-    margin-right: 20px;
-    
-  }
-.profile-sec {
-  width: 100%; /* Ensures it spans the entire width of the sidebar */
-  border-bottom: 0.1px solid #fff; /* The line at the bottom */
-  padding-bottom: 5px;
-  display: flex;
-  box-sizing: border-box;
-  box-shadow: 0 0 10px #ddd;
-}
-
-.profile-sec img {
-  border: solid 0.1px #fff;
-  box-shadow: 0 0 10px #ddd;
-  border-radius: 100%;
-  width: 45px; 
-  height: 45px;
-  margin-left: 5px;
-  margin-top: 10px;
-}
-  no-scroll {
-  overflow: hidden;
-  position: fixed;
-  width: 100%;
-}
-.menu-icon{
-  color: #28a745;
-}
-a .active {
-  color: blue;
-}
-</style>
 <script>
-  document.addEventListener("DOMContentLoaded", async function () {
-    // Get the API base URL
-    const API_BASE_URL = window.location.hostname === 'localhost' 
-        ? 'http://localhost:3000' 
-        : 'https://salmart-production.up.railway.app';
+     document.addEventListener("DOMContentLoaded", async function () {
+  // Initialize Eruda for debugging (remove in production)
+  if (typeof eruda !== 'undefined') {
+    eruda.init();
+  }
 
-    // Function to get the current user's ID from the token
-    function getLoggedInUserId() {
-        const token = localStorage.getItem("authToken");
-        if (!token) return null;
-        
-        try {
-            const decoded = jwt_decode(token);
-            return decoded.userId;
-        } catch (error) {
-            console.error("Error decoding token:", error);
-            return null;
-        }
+  // Set API base URL
+  const API_BASE_URL = window.location.hostname === 'localhost' 
+    ? 'http://localhost:3000' 
+    : 'https://salmart-production.up.railway.app';
+
+  // Function to decode JWT token and get user info
+  function getLoggedInUserInfo() {
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      console.log("No auth token found");
+      return null;
     }
-
-    // Get profile owner ID - first from URL, then fall back to logged-in user
-    const urlParams = new URLSearchParams(window.location.search);
-    let profileOwnerId = urlParams.get('userId');
-    
-    if (!profileOwnerId) {
-        profileOwnerId = getLoggedInUserId();
-        if (!profileOwnerId) {
-            // If no user is logged in and no userId provided, redirect to login
-            window.location.href = "SignIn.html";
-            return;
-        }
-    }
-
-    const followersCountEl = document.getElementById("followers");
-    const productsCountEl = document.getElementById("products-count");
-    
-    
     try {
-        // Fetch profile data
-        const response = await fetch(`${API_BASE_URL}/profile/${profileOwnerId}`);
-        const data = await response.json();
+      const decoded = jwt_decode(token);
+      console.log("Decoded token:", decoded);
+      return decoded;
+    } catch (error) {
+      console.error("Error decoding token:", error);
+      return null;
+    }
+  }
 
-        if (response.ok) {
-            // Update profile stats
-            followersCountEl.textContent = data.followersCount || "0";
-            productsCountEl.textContent = data.productsCount || "0";
-            
-            // Update profile info
-            if (usernameEl) usernameEl.textContent = data.name || "User";
-            if (profileHeaderEl) profileHeaderEl.textContent = data.name || "Profile";
-            if (profilePicEl) profilePicEl.src = data.profilePicture || "default-avatar.png";
+  // Get profile owner ID from URL or logged in user
+  const urlParams = new URLSearchParams(window.location.search);
+  let profileOwnerId = urlParams.get('userId');
+  const isOwnProfile = !profileOwnerId; // If no userId param, it's own profile
 
-            // Hide follow button if viewing own profile
-            const loggedInUserId = getLoggedInUserId();
-            const followButton = document.getElementById("follow-button");
-            if (followButton && profileOwnerId === loggedInUserId) {
-                followButton.style.display = "none";
-            }
-        } else {
-            console.error("Error fetching profile:", data.message);
-        }
-    } catch (err) {
-        console.error("Error fetching profile data:", err);
+  // Get logged in user info
+  const userInfo = getLoggedInUserInfo();
+  if (!userInfo && isOwnProfile) {
+    window.location.href = "SignIn.html";
+    return;
+  }
+
+  // If no profileOwnerId in URL, use logged in user's ID
+  if (!profileOwnerId && userInfo) {
+    profileOwnerId = userInfo.userId;
+  }
+
+  // DOM elements
+  const followersCountEl = document.getElementById("followers");
+  const productsCountEl = document.getElementById("products-count");
+  const usernameEls = [
+    document.getElementById("username"),
+    document.getElementById("username1"),
+    document.getElementById("profileHeaderUsr")
+  ];
+  const profilePicEls = [
+    document.getElementById("profile-picture"),
+    document.getElementById("profile-picture1")
+  ];
+
+  // Immediately populate with basic info from token
+  if (userInfo) {
+    const displayName = userInfo.name || userInfo.username || "User";
+    usernameEls.forEach(el => {
+      if (el) el.textContent = displayName;
+    });
+  }
+
+  // Fetch detailed profile data from server
+  try {
+    console.log(`Fetching profile for ID: ${profileOwnerId}`);
+    const response = await fetch(`${API_BASE_URL}/profile/${profileOwnerId}`);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    console.log("Profile data received:", data);
+
+    // Update counts
+    if (followersCountEl) followersCountEl.textContent = data.followersCount || "0";
+    if (productsCountEl) productsCountEl.textContent = data.productsCount || "0";
+
+    // Update name if different from token
+    if (data.name) {
+      usernameEls.forEach(el => {
+        if (el) el.textContent = data.name;
+      });
     }
 
+    // Update profile pictures
+    if (data.profilePicture) {
+      profilePicEls.forEach(el => {
+        if (el) {
+          el.onerror = function() {
+            this.src = "default-avatar.png";
+          };
+          el.src = data.profilePicture;
+        }
+      });
+    }
+
+    // Hide follow button if it's own profile
+    const followButton = document.getElementById("follow-button");
+    if (followButton && isOwnProfile) {
+      followButton.style.display = "none";
+    }
+
+  } catch (err) {
+    console.error("Error fetching profile data:", err);
+    // Fallback to token info if available
+    if (userInfo) {
+      usernameEls.forEach(el => {
+        if (el) el.textContent = userInfo.name || userInfo.username || "User";
+      });
+    }
+  }
+
+  // Force UI updates
+  if (followersCountEl) {
+    followersCountEl.style.display = 'none';
+    followersCountEl.offsetHeight; // Trigger reflow
+    followersCountEl.style.display = 'block';
+  }
+});
+</script>
+<script>
+    // Tab Switching Functionality
+    document.addEventListener("DOMContentLoaded", function() {
+      const tabBtns = document.querySelectorAll('.tab-btn');
+      const tabContents = document.querySelectorAll('.tab-content');
+      
+      tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          // Remove active class from all buttons and contents
+          tabBtns.forEach(b => b.classList.remove('active'));
+          tabContents.forEach(c => c.classList.remove('active'));
+          
+          // Add active class to clicked button and corresponding content
+          btn.classList.add('active');
+          const tabId = btn.getAttribute('data-tab');
+          document.getElementById(`${tabId}-tab`).classList.add('active');
+          
+          // Dispatch a custom event when reviews tab is clicked
+          if (tabId === 'reviews') {
+            document.dispatchEvent(new CustomEvent('reviewsTabActivated'));
+          }
+        });
+      });
+    });
+</script>
+<script>
+const menuIcon = document.querySelector('.menu-icon');
+const sideBar = document.querySelector('.side-bar');
+const body = document.body;
+
+menuIcon.addEventListener('click', () => {
+  sideBar.style.display = sideBar.style.display === 'block' ? 'none' : 'block';
+  body.classList.toggle('no-scroll');
+});
+
+document.body.addEventListener('click', (e) => {
+  if (sideBar.style.display === 'block' && !sideBar.contains(e.target) && !menuIcon.contains(e.target)) {
+    sideBar.style.display = 'none';
+    body.classList.remove('no-scroll');
+  }
+});
 
 </script>
 <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
 <script>eruda.init();</script>
-<script src="sideBar"></script>
 <script src="updateBankDetails.js"></script>
+<script src="reviews.js"></script>
 </html> 
