@@ -120,26 +120,27 @@ function displayMessage(message) {
 
     // Handle buyerAccept message from SELLER's perspective (receiver)
     if (message.messageType === 'buyerAccept' && message.receiverId === userId) {
-        const parsed = JSON.parse(message.text);
-        const sellerText = `Your bid for ${parsed.productName} at ₦${Number(parsed.offer).toLocaleString('en-NG')} has been accepted`;
-        chatMessages.appendChild(createSystemMessage(sellerText));
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-        return;
-    }
-
+    // This is the seller's view - show different message
+    const parsed = JSON.parse(message.text);
+    const sellerText = `Your bid for ${parsed.productName} at ₦${Number(parsed.offer).toLocaleString('en-NG')} has been accepted`;
+    chatMessages.appendChild(createSystemMessage(sellerText));
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+    return;
+}
     // Handle buyerAccept message from BUYER's perspective (sender)
     if (message.messageType === 'buyerAccept' && message.senderId === userId) {
-        const parsed = JSON.parse(message.text);
-        const buyerDiv = createSystemMessage(`You agreed to pay ₦${Number(parsed.offer).toLocaleString('en-NG')} for "${parsed.productName}"`);
+    // This is the buyer's view - show acceptance message
+    const parsed = JSON.parse(message.text);
+    const buyerDiv = createSystemMessage(`You agreed to pay ₦${Number(parsed.offer).toLocaleString('en-NG')} for "${parsed.productName}"`);
 
-        if (parsed.image) {
-            const imageContainer = document.createElement('div');
-            imageContainer.style.margin = '10px 0';
-            imageContainer.innerHTML = `
-                <img src="${parsed.image}" class="product-photo-preview" alt="${parsed.productName}" style="max-width: 200px; border-radius: 5px;">
-            `;
-            buyerDiv.appendChild(imageContainer);
-        }
+    if (parsed.image) {
+        const imageContainer = document.createElement('div');
+        imageContainer.style.margin = '10px 0';
+        imageContainer.innerHTML = `
+            <img src="${parsed.image}" class="product-photo-preview" alt="${parsed.productName}" style="max-width: 200px; border-radius: 5px;">
+        `;
+        buyerDiv.appendChild(imageContainer);
+    }
 
         const paymentBtn = document.createElement('button');
         paymentBtn.className = 'proceed-to-payment-btn';
