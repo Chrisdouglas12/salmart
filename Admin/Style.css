@@ -295,7 +295,7 @@ a .active {
 
 .post-image {
   width: 100%;
-  max-width: 100%;
+  max-width: 300px;
   margin-top: 10px;
   border-radius: 8px;
 }
