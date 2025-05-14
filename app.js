@@ -297,67 +297,189 @@ async function sendFCMNotification(userId, title, body, data = {}) {
   });
 
   socket.on('sendMessage', async (message) => {
-    try {
-      const { senderId, receiverId, text } = message;
-      if (!senderId || !receiverId || !text) {
-        console.error('Error: Missing senderId, receiverId, or text');
-        return;
-      }
-
-      const sender = await User.findById(senderId).select('firstName lastName profilePicture');
-      if (!sender) {
-        console.error(`Sender ${senderId} not found`);
-        return;
-      }
-
-      const newMessage = new Message({
-        senderId: new mongoose.Types.ObjectId(senderId),
-        receiverId: new mongoose.Types.ObjectId(receiverId),
-        text,
-        status: 'sent',
-        timestamp: new Date(),
-      });
-
-      await newMessage.save();
-
-      // Emit real-time message
+  try {
+    const { senderId, receiverId, text, messageType, offerDetails, attachment } = message;
     
-        io.to(`user_${receiverId}`).emit('receiveMessage', newMessage);
-      
+    // Validate required fields based on message type
+    if (!senderId || !receiverId) {
+      throw new Error('Missing senderId or receiverId');
+    }
 
-      // Send FCM push notification
+    if (messageType === 'text' && !text) {
+      throw new Error('Text messages require content');
+    }
+
+    if (['offer', 'counter-offer'].includes(messageType) && (!offerDetails || !offerDetails.proposedPrice)) {
+      throw new Error('Offer messages require price details');
+    }
+
+    // Get sender info
+    const sender = await User.findById(senderId).select('firstName lastName profilePicture role');
+    if (!sender) throw new Error('Sender not found');
+
+    // Prepare the message document
+    const newMessage = new Message({
+      senderId,
+      receiverId,
+      text,
+      messageType: messageType || 'text',
+      status: 'sent',
+      ...(offerDetails && { offerDetails }),
+      ...(attachment && { attachment }),
+      metadata: {
+        isSystemMessage: false,
+        actionRequired: ['offer', 'counter-offer'].includes(messageType)
+      }
+    });
+
+    const savedMessage = await newMessage.save();
+
+    // Special handling for offer acceptances
+    if (messageType === 'accept-offer') {
+      // Update product price if offer was accepted
+      if (offerDetails?.productId) {
+        await Product.findByIdAndUpdate(
+          offerDetails.productId,
+          { price: offerDetails.proposedPrice }
+        );
+      }
+
+      // Create system message for the accepting party
+      const systemMessage = new Message({
+        senderId: senderId,
+        receiverId: senderId, // Send to self as system message
+        messageType: 'system',
+        text: `You accepted the offer for ${offerDetails.productName} at ₦${offerDetails.proposedPrice}`,
+        metadata: {
+          isSystemMessage: true,
+          actionRequired: false
+        }
+      });
+      await systemMessage.save();
+    }
+
+    // Emit to recipient
+    io.to(`user_${receiverId}`).emit('receiveMessage', {
+      ...savedMessage.toObject(),
+      senderProfile: {
+        firstName: sender.firstName,
+        lastName: sender.lastName,
+        profilePicture: sender.profilePicture
+      }
+    });
+
+    // Send FCM notification if not a system message
+    if (!message.metadata?.isSystemMessage) {
       await sendFCMNotification(
         receiverId.toString(),
         'New Message',
-        `${sender.firstName} ${sender.lastName}: ${text}`,
-        { type: 'message', senderId: senderId.toString() }
+        `${sender.firstName} ${sender.lastName}: ${text || 'Sent you an offer'}`,
+        { 
+          type: 'message', 
+          senderId: senderId.toString(),
+          messageType: savedMessage.messageType
+        }
       );
-
-      await NotificationService.triggerCountUpdate(receiverId);
-    } catch (error) {
-      console.error('Error sending message:', error);
     }
-  });
 
-  socket.on('markAsSeen', async ({ senderId, receiverId }) => {
-    try {
-      if (!senderId || !receiverId) return;
-      const senderObjectId = new mongoose.Types.ObjectId(senderId);
-      const receiverObjectId = new mongoose.Types.ObjectId(receiverId);
-      await Message.updateMany(
-        { senderId: senderObjectId, receiverId: receiverObjectId, status: 'sent' },
-        { $set: { status: 'seen' } }
-      );
-      
-        io.to(`user_${senderId}`).emit('messagesSeen', { senderId: receiverId });
-      
-      await NotificationService.triggerCountUpdate(senderId);
-      await NotificationService.triggerCountUpdate(receiverId);
-    } catch (error) {
-      console.error('Error updating message status:', error);
+    await NotificationService.triggerCountUpdate(receiverId);
+
+  } catch (error) {
+    console.error('Error sending message:', error);
+    socket.emit('messageError', { error: error.message });
+  }
+});
+
+socket.on('markAsSeen', async ({ messageIds, senderId, receiverId }) => {
+  try {
+    if (!messageIds || !senderId || !receiverId) {
+      throw new Error('Missing required fields');
     }
-  });
 
+    // Convert string IDs to ObjectId
+    const messageObjectIds = messageIds.map(id => new mongoose.Types.ObjectId(id));
+
+    // Update messages to seen status
+    await Message.updateMany(
+      {
+        _id: { $in: messageObjectIds },
+        receiverId: new mongoose.Types.ObjectId(receiverId),
+        senderId: new mongoose.Types.ObjectId(senderId)
+      },
+      { $set: { status: 'seen', isRead: true } }
+    );
+
+    // Notify sender that messages were seen
+    io.to(`user_${senderId}`).emit('messagesSeen', { 
+      messageIds,
+      seenAt: new Date() 
+    });
+
+    // Update unread counts for both parties
+    await NotificationService.triggerCountUpdate(senderId);
+    await NotificationService.triggerCountUpdate(receiverId);
+
+  } catch (error) {
+    console.error('Error updating message status:', error);
+    socket.emit('markSeenError', { error: error.message });
+  }
+});
+
+// Handle offer acceptances specifically
+socket.on('acceptOffer', async ({ offerId, acceptorId }) => {
+  try {
+    // Get the original offer
+    const originalOffer = await Message.findById(offerId);
+    if (!originalOffer) throw new Error('Offer not found');
+
+    // Verify the acceptor has rights to accept
+    if (originalOffer.receiverId.toString() !== acceptorId) {
+      throw new Error('Not authorized to accept this offer');
+    }
+
+    // Create acceptance message for buyer
+    const buyerMessage = new Message({
+      senderId: acceptorId,
+      receiverId: originalOffer.senderId,
+      messageType: 'accept-offer',
+      offerDetails: {
+        ...originalOffer.offerDetails,
+        status: 'accepted'
+      },
+      metadata: {
+        isSystemMessage: false,
+        actionRequired: true // Buyer needs to proceed to payment
+      }
+    });
+    await buyerMessage.save();
+
+    // Create notification for seller
+    const sellerMessage = new Message({
+      senderId: originalOffer.senderId,
+      receiverId: acceptorId,
+      messageType: 'system',
+      text: `Your offer for ${originalOffer.offerDetails.productName} was accepted`,
+      metadata: {
+        isSystemMessage: true
+      }
+    });
+    await sellerMessage.save();
+
+    // Emit to both parties
+    io.to(`user_${originalOffer.senderId}`).emit('receiveMessage', buyerMessage);
+    io.to(`user_${acceptorId}`).emit('receiveMessage', sellerMessage);
+
+    // Update product price
+    await Product.findByIdAndUpdate(
+      originalOffer.offerDetails.productId,
+      { price: originalOffer.offerDetails.proposedPrice }
+    );
+
+  } catch (error) {
+    console.error('Error accepting offer:', error);
+    socket.emit('offerError', { error: error.message });
+  }
+});
   
   // Handle user disconnection
   
