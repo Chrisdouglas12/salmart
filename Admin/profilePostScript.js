@@ -3,6 +3,21 @@ document.addEventListener('DOMContentLoaded', async function () {
     const API_BASE_URL = window.location.hostname === 'localhost' 
         ? 'http://localhost:3000' 
         : 'https://salmart-production.up.railway.app';
+// Initialize Socket.IO (if available)
+    let socket = null;
+    if (typeof io !== 'undefined') {
+        socket = io(API_BASE_URL, {
+            auth: { token: localStorage.getItem('authToken') }
+        });
+        socket.on('connect', () => {
+            console.log('Connected to WebSocket');
+        });
+        socket.on('connect_error', (error) => {
+            console.error('WebSocket connection error:', error);
+        });
+    } else {
+        console.warn('Socket.IO not available; real-time updates disabled');
+    }
 
     // Function to format time (e.g., "2 hrs ago")
     function formatTime(timestamp) {

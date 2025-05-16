@@ -258,35 +258,41 @@ async function markMessagesAsRead() {
   }
 
   function generateMessageHTML(messages) {
-    const uniqueChats = {};
-    messages.forEach(msg => {
-      const chatPartnerId = msg.senderId === userId ? msg.receiverId : msg.senderId;
-      if (!uniqueChats[chatPartnerId] || new Date(msg.createdAt) > new Date(uniqueChats[chatPartnerId].createdAt)) {
-        uniqueChats[chatPartnerId] = msg;
-      }
-    });
+  const uniqueChats = {};
+  messages.forEach(msg => {
+    const chatPartnerId = msg.senderId === userId ? msg.receiverId : msg.senderId;
+    if (!uniqueChats[chatPartnerId] || new Date(msg.createdAt) > new Date(uniqueChats[chatPartnerId].createdAt)) {
+      uniqueChats[chatPartnerId] = msg;
+    }
+  });
 
-    return Object.values(uniqueChats).map(message => {
-      const chatPartnerId = message.senderId === userId ? message.receiverId : message.senderId;
-      //for self messages, consider read if unread is true
-      const isUnread = !message.isRead && (message.receiverId === userId || (message.senderId === userId && message.receiverId === userId));
-      const messagePreview = message.text.length > 30 ? 
-        `${message.text.slice(0, 30)}...` : message.text;
+  return Object.values(uniqueChats).map(message => {
+    const chatPartnerId = message.senderId === userId ? message.receiverId : message.senderId;
+    const isUnread = !message.isRead && (message.receiverId === userId || (message.senderId === userId && message.receiverId === userId));
 
-      return `
-        <div class="message-item ${isUnread ? 'unread' : ''}" 
-             onclick="handleMessageClick('${chatPartnerId}', '${escapeHTML(message.chatPartnerName)}', '${escapeHTML(message.chatPartnerProfilePicture)}')">
-          <img src="${escapeHTML(message.chatPartnerProfilePicture)}" alt="Profile">
-          <div class="info">
-            <h4>${escapeHTML(message.chatPartnerName)}</h4>
-            <p>${escapeHTML(messagePreview)}</p>
-          </div>
-          <div class="time">${formatTime(message.createdAt)}</div>
-          ${isUnread ? '<span class="unread-dot"></span>' : ''}
+    let messagePreview;
+    if (message.messageType === 'image') {
+      messagePreview = 'Photo';
+    } else if (message.isSystem) {
+      messagePreview = message.text || 'System notification';
+    } else {
+      messagePreview = message.text || 'No message'; // Rely on backend-cleaned text
+    }
+
+    return `
+      <div class="message-item ${isUnread ? 'unread' : ''}" 
+           onclick="handleMessageClick('${chatPartnerId}', '${escapeHTML(message.chatPartnerName)}', '${escapeHTML(message.chatPartnerProfilePicture)}')">
+        <img src="${escapeHTML(message.chatPartnerProfilePicture)}" alt="Profile">
+        <div class="info">
+          <h4>${escapeHTML(message.chatPartnerName)}</h4>
+          <p>${escapeHTML(messagePreview)}</p>
         </div>
-      `;
-    }).join('');
-  }
+        <div class="time">${formatTime(message.createdAt)}</div>
+        ${isUnread ? '<span class="unread-dot"></span>' : ''}
+      </div>
+    `;
+  }).join('');
+}
 
   async function handleMessageClick(partnerId, partnerName, partnerProfile) {
     try {

@@ -50,7 +50,9 @@ const data = await response.json();
             localStorage.setItem('tokenExpiry', decodedToken.exp * 1000);
             localStorage.setItem('userId', decodedToken.userId);
             localStorage.setItem('email', data.user.email);
-
+       localStorage.setItem('firstName', data.user.firstName),
+       localStorage.setItem('lastName', data.user.lastName),
+       
             successMsg.style.display = 'block';
             spinnerMsg.style.display = 'flex';
 

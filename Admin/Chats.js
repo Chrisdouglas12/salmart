@@ -167,8 +167,8 @@ function displayMessage(message) {
         bargainingSessions.delete(`${parsed.productId}-${message.senderId}`);
 
         const endText = message.senderId === userId
-            ? `This bargain for ${parsed.productName} was ended`
-            : `This bargain was ended by the buyer`;
+            ? `This bargain for ${parsed.productName} was ended by you`
+            : `This bargain for ${parsed.productName}was ended by ${recipientUsername}`;
 
         chatMessages.appendChild(createSystemMessage(endText));
         chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -389,14 +389,14 @@ if (message.messageType === 'buyerAccept' && message.receiverId === userId) {
                         senderId: userId,
                         receiverId: productDetails.senderId,
                         messageType: 'sellerAccept',
-                        text: JSON.stringify({
+                    
                             text: `Your offer for "${productDetails.productName}" has been accepted. New price is ₦${Number(productDetails.offer).toLocaleString('en-NG')}`,
                             productId: productDetails.productId,
                             productName: parsed.productName,
                             offer: productDetails.offer,
                             buyerName: localStorage.getItem('username') || 'Buyer',
                             image: parsed.image || productImage || ''
-                        }),
+                        ,
                         createdAt: new Date(),
                         isRead: false
                     };
@@ -521,7 +521,6 @@ if (message.messageType === 'buyerAccept' && message.receiverId === userId) {
         endBargainBtn.textContent = 'End Bargain';
         endBargainBtn.onclick = () => {
             const productDetails = {
-                productId: parsed.productId,
                 productName: parsed.productName
             };
 
@@ -540,10 +539,8 @@ if (message.messageType === 'buyerAccept' && message.receiverId === userId) {
                 senderId: userId,
                 receiverId: message.senderId,
                 messageType: 'end-bargain',
-                text: JSON.stringify({
-                    productId: productDetails.productId,
-                    productName: parsed.productName
-                }),
+                text: 'Bargain ended'
+                ,
                 createdAt: new Date(),
                 isRead: false
             };
@@ -648,13 +645,12 @@ function openLastPriceModal(productId, productName, productImage) {
                 senderId: userId,
                 receiverId: receiverId,
                 messageType: 'counter-offer',
-                text: JSON.stringify({
-                    text: `I can give you "${productName}" for ₦${Number(lastPrice).toLocaleString('en-NG')}`,
+                 text: `I can give you "${productName}" for ₦${Number(lastPrice).toLocaleString('en-NG')}`,
                     offer: lastPrice,
                     productId: productId,
                     productName: productName,
                     image: productImage || ''
-                }),
+                ,
                 offerDetails: {
                     productId,
                     productName,

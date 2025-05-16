@@ -1,46 +1,98 @@
+document.addEventListener("DOMContentLoaded", async function () {
+  // Set API base URL
+  const API_BASE_URL = window.location.hostname === 'localhost' 
+    ? 'http://localhost:3000' 
+    : 'https://salmart-production.up.railway.app';
+
+  // Function to decode JWT token and get user info
+  function getLoggedInUserInfo() {
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      console.log("No auth token found");
+      return null;
+    }
+    try {
+      const decoded = jwt_decode(token);
+      console.log("Decoded token:", decoded);
+      return decoded;
+    } catch (error) {
+      console.error("Error decoding token:", error);
+      return null;
+    }
+  }
+
+  // Get profile owner ID from URL or logged-in user
+  const urlParams = new URLSearchParams(window.location.search);
+  let profileOwnerId = urlParams.get('userId');
+  const userInfo = getLoggedInUserInfo();
+  const isOwnProfile = !profileOwnerId || (userInfo && profileOwnerId === userInfo.userId);
+
+  // If no profileOwnerId in URL, use logged-in user's ID
+  if (!profileOwnerId && userInfo) {
+    profileOwnerId = userInfo.userId;
+  }
+
+  // Create and append bank details button
   const openBtn = document.createElement("button");
   openBtn.textContent = "Update Bank Details";
   openBtn.className = "bank-button";
   openBtn.style.marginTop = "10px";
-  openBtn.type = "button"; // prevent form submit reload
-  document.getElementById("upload-form").appendChild(openBtn);
+  openBtn.type = "button"; // Prevent form submit reload
 
+  // Only append and show button for profile owner
+  const uploadForm = document.getElementById("upload-form");
+  if (uploadForm && isOwnProfile) {
+    uploadForm.appendChild(openBtn);
+  } else {
+    if (!uploadForm) {
+      console.warn('Upload form (#upload-form) not found in DOM');
+    }
+    if (!isOwnProfile) {
+      console.log('Hiding bank details button for non-owner profile');
+    }
+  }
+
+  // DOM elements for bottom sheet
   const overlay = document.getElementById("overlay");
   const bottomSheet = document.getElementById("bottom-sheet");
   const closeBtn = document.getElementById("close-sheet");
-
   const bankNameInput = document.getElementById("bankName");
   const bankCodeInput = document.getElementById("bankCode");
   const accountNumberInput = document.getElementById("accountNumber");
   const accountNameInput = document.getElementById("accountName");
-  const API_BASE_URL = window.location.hostname === 'localhost' 
-       ?
-      'http://localhost:3000' :
-      'https://salmart-production.up.railway.app'
+
+  // Verify DOM elements exist
+  if (!overlay || !bottomSheet || !closeBtn || !bankNameInput || !bankCodeInput || !accountNumberInput || !accountNameInput) {
+    console.error('One or more bottom sheet elements not found');
+    return;
+  }
 
   // Show bottom sheet and autofill form
   openBtn.addEventListener("click", async () => {
+    if (!isOwnProfile) {
+      console.warn('Non-owner attempted to access bank details form');
+      return;
+    }
+
     bottomSheet.style.bottom = "0";
     overlay.style.display = "block";
 
-    const token = localStorage.getItem("authToken"); // Get the token from localStorage
-
+    const token = localStorage.getItem("authToken");
     if (!token) {
-      alert("You are not logged in. Please log in to update bank details.");
+      showToast("You are not logged in. Please log in to update bank details.");
       return;
     }
 
     try {
-      const res = await fetch(`http://localhost:3000/get-bank-details`, {
+      const res = await fetch(`${API_BASE_URL}/get-bank-details`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}` // Include the token in the headers
+          "Authorization": `Bearer ${token}`
         }
       });
 
       const data = await res.json();
-
       if (res.ok && data.success && data.bankDetails) {
         bankNameInput.value = data.bankDetails.bankName || "";
         accountNumberInput.value = data.bankDetails.accountNumber || "";
@@ -49,10 +101,12 @@
       } else {
         bankNameInput.value = "";
         accountNumberInput.value = "";
+        bankCodeInput.value = "";
         accountNameInput.value = "";
       }
     } catch (err) {
       console.error("Error loading bank details:", err);
+      showToast("Error loading bank details: " + err.message);
     }
   });
 
@@ -69,10 +123,14 @@
   document.getElementById("bank-details-form").addEventListener("submit", async function (e) {
     e.preventDefault();
 
-    const token = localStorage.getItem("authToken"); // Get the token from localStorage
+    if (!isOwnProfile) {
+      console.warn('Non-owner attempted to submit bank details form');
+      return;
+    }
 
+    const token = localStorage.getItem("authToken");
     if (!token) {
-      alert("You are not logged in. Please log in to update bank details.");
+      showToast("You are not logged in. Please log in to update bank details.");
       return;
     }
 
@@ -86,20 +144,41 @@
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}` // Include the token in the headers
+          "Authorization": `Bearer ${token}`
         },
         body: JSON.stringify({ bankName, accountNumber, accountName, bankCode }),
       });
 
       const result = await res.json();
       if (res.ok && result.success) {
-        alert("Bank details updated successfully!");
+        showToast("Bank details updated successfully!", '#2ecc71');
         closeSheet();
       } else {
-        alert("Failed to update: " + result.message);
+        showToast("Failed to update: " + result.message, '#e74c3c');
       }
     } catch (err) {
-      console.error(err);
-      alert("Something went wrong!");
+      console.error("Error updating bank details:", err);
+      showToast("Something went wrong: " + err.message, '#e74c3c');
     }
   });
+
+  // Toast notification function (aligned with other scripts)
+  function showToast(message, bgColor = '#333') {
+    let toast = document.createElement("div");
+    toast.className = "toast-message show";
+    toast.style.backgroundColor = bgColor;
+    toast.innerText = message;
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+      toast.classList.remove("show");
+      setTimeout(() => toast.remove(), 500);
+    }, 3000);
+  }
+
+  // Debug review count (for integration with reviews.js)
+  const reviewsCountEl = document.getElementById("reviews-count");
+  if (reviewsCountEl) {
+    console.log('Initial reviews count element:', reviewsCountEl.textContent);
+  }
+});

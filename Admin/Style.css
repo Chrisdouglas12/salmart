@@ -208,6 +208,7 @@ a .active {
   display: flex;
   flex-direction: column-reverse;
   gap: 10px;
+  margin-bottom: 60px;
 }
 .post * {
   margin: 0;

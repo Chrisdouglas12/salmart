@@ -100,7 +100,7 @@ io.on('connection', (socket) => {
   });
 
 // Helper function to send FCM notification
-async function sendFCMNotification(userId, title, body, data = {}) {
+async function sendFCMNotification(userId, title, body, data = {}, imageUrl = null, profilePictureUrl = null) {
   try {
     console.log(`Fetching user from MongoDB: ${userId}`);
     const user = await User.findById(userId);
@@ -130,7 +130,8 @@ async function sendFCMNotification(userId, title, body, data = {}) {
       webpush: {
         headers: { Urgency: 'high' },
         notification: {
-          icon: 'https://salmart.vercel.app/favicon.ico', // Replace with your app icon
+          icon: profilePictureUrl || 'https://salmart.vercel.app/favicon.ico', // Use sender's profile picture as icon, fallback to app icon
+          image: imageUrl || null, // Use product image as the main notification image
           requireInteraction: true,
         },
       },
@@ -296,91 +297,115 @@ async function sendFCMNotification(userId, title, body, data = {}) {
     }
   });
 
-  socket.on('sendMessage', async (message) => {
+ socket.on('sendMessage', async (message) => {
   try {
     const { senderId, receiverId, text, messageType, offerDetails, attachment } = message;
-    
-    // Validate required fields based on message type
-    if (!senderId || !receiverId) {
-      throw new Error('Missing senderId or receiverId');
-    }
 
-    if (messageType === 'text' && !text) {
-      throw new Error('Text messages require content');
-    }
+    // Validate required fields based on message type  
+    if (!senderId || !receiverId) {  
+      throw new Error('Missing senderId or receiverId');  
+    }  
 
-    if (['offer', 'counter-offer'].includes(messageType) && (!offerDetails || !offerDetails.proposedPrice)) {
-      throw new Error('Offer messages require price details');
-    }
+    if (messageType === 'text' && !text) {  
+      throw new Error('Text messages require content');  
+    }  
 
-    // Get sender info
-    const sender = await User.findById(senderId).select('firstName lastName profilePicture role');
-    if (!sender) throw new Error('Sender not found');
+    if (['offer', 'counter-offer'].includes(messageType) && (!offerDetails || !offerDetails.proposedPrice)) {  
+      throw new Error('Offer messages require price details');  
+    }  
 
-    // Prepare the message document
-    const newMessage = new Message({
-      senderId,
-      receiverId,
-      text,
-      messageType: messageType || 'text',
-      status: 'sent',
-      ...(offerDetails && { offerDetails }),
-      ...(attachment && { attachment }),
-      metadata: {
-        isSystemMessage: false,
-        actionRequired: ['offer', 'counter-offer'].includes(messageType)
-      }
-    });
+    // Get sender info  
+    const sender = await User.findById(senderId).select('firstName lastName profilePicture role');  
+    if (!sender) throw new Error('Sender not found');  
 
-    const savedMessage = await newMessage.save();
+    // Prepare the message document  
+    const newMessage = new Message({  
+      senderId,  
+      receiverId,  
+      text,  
+      messageType: messageType || 'text',  
+      status: 'sent',  
+      ...(offerDetails && { offerDetails }),  
+      ...(attachment && { attachment }),  
+      metadata: {  
+        isSystemMessage: false,  
+        actionRequired: ['offer', 'counter-offer'].includes(messageType)  
+      }  
+    });  
 
-    // Special handling for offer acceptances
-    if (messageType === 'accept-offer') {
-      // Update product price if offer was accepted
-      if (offerDetails?.productId) {
-        await Product.findByIdAndUpdate(
-          offerDetails.productId,
-          { price: offerDetails.proposedPrice }
-        );
-      }
+    const savedMessage = await newMessage.save();  
 
-      // Create system message for the accepting party
-      const systemMessage = new Message({
-        senderId: senderId,
-        receiverId: senderId, // Send to self as system message
-        messageType: 'system',
-        text: `You accepted the offer for ${offerDetails.productName} at ₦${offerDetails.proposedPrice}`,
-        metadata: {
-          isSystemMessage: true,
-          actionRequired: false
-        }
-      });
-      await systemMessage.save();
-    }
+    // Special handling for offer acceptances  
+    if (messageType === 'accept-offer') {  
+      // Update product price if offer was accepted  
+      if (offerDetails?.productId) {  
+        await Product.findByIdAndUpdate(  
+          offerDetails.productId,  
+          { price: offerDetails.proposedPrice }  
+        );  
+      }  
 
-    // Emit to recipient
-    io.to(`user_${receiverId}`).emit('receiveMessage', {
-      ...savedMessage.toObject(),
-      senderProfile: {
-        firstName: sender.firstName,
-        lastName: sender.lastName,
-        profilePicture: sender.profilePicture
-      }
-    });
+      // Create system message for the accepting party  
+      const systemMessage = new Message({  
+        senderId: senderId,  
+        receiverId: senderId, // Send to self as system message  
+        messageType: 'system',  
+        text: `You accepted the offer for ${offerDetails.productName} at ₦${offerDetails.proposedPrice}`,  
+        metadata: {  
+          isSystemMessage: true,  
+          actionRequired: false  
+        }  
+      });  
+      await systemMessage.save();  
+    }  
 
-    // Send FCM notification if not a system message
-    if (!message.metadata?.isSystemMessage) {
-      await sendFCMNotification(
-        receiverId.toString(),
-        'New Message',
-        `${sender.firstName} ${sender.lastName}: ${text || 'Sent you an offer'}`,
-        { 
-          type: 'message', 
-          senderId: senderId.toString(),
-          messageType: savedMessage.messageType
-        }
-      );
-    }
+    // Emit to recipient  
+    io.to(`user_${receiverId}`).emit('receiveMessage', {  
+      ...savedMessage.toObject(),  
+      senderProfile: {  
+        firstName: sender.firstName,  
+        lastName: sender.lastName,  
+        profilePicture: sender.profilePicture  
+      }  
+    });  
+
+    // Send FCM notification if not a system message  
+    if (!message.metadata?.isSystemMessage) {  
+      let notificationText = text || 'Sent you an offer';  
+      let productImageUrl = null;
+      let senderProfilePictureUrl = sender.profilePicture || null; // Use sender's profile picture
+
+      // Enhance notification text with offer details if available  
+      if (offerDetails) {  
+        if (offerDetails.productName) {  
+          notificationText += ` Product: ${offerDetails.productName}`;  
+        }  
+        if (offerDetails.proposedPrice) {  
+          notificationText += ` Offer: ₦${Number(offerDetails.proposedPrice).toLocaleString('en-NG')}`;  
+        }  
+        // Extract product image URL for the notification  
+        productImageUrl = offerDetails.image || null;  
+      }  
+
+      // Truncate notification text to avoid FCM limits  
+      const maxLength = 80;  
+      if (notificationText.length > maxLength) {  
+        notificationText = notificationText.substring(0, maxLength - 3) + '...';  
+      }  
+
+      await sendFCMNotification(  
+        receiverId.toString(),  
+        'New Message',  
+        `${sender.firstName} ${sender.lastName}: ${notificationText}`,  
+        {   
+          type: 'message',   
+          senderId: senderId.toString(),  
+          messageType: savedMessage.messageType  
+        },  
+        productImageUrl, // Pass product image URL  
+        senderProfilePictureUrl // Pass sender's profile picture URL  
+      );  
+    }  
 
     await NotificationService.triggerCountUpdate(receiverId);
 
@@ -1095,6 +1120,7 @@ app.get('/user-posts/:Id', async (req, res) => {
   }
 });
 
+
 // Submit a review
 app.post('/submit-review', verifyToken, async (req, res) => {
   try {
@@ -1104,6 +1130,11 @@ app.post('/submit-review', verifyToken, async (req, res) => {
     // Validate input
     if (!reviewedUserId || !rating || !review) {
       return res.status(400).json({ message: 'All fields are required' });
+    }
+
+    // Validate ObjectId
+    if (!mongoose.Types.ObjectId.isValid(reviewedUserId)) {
+      return res.status(400).json({ message: 'Invalid reviewed user ID' });
     }
 
     if (rating < 1 || rating > 5) {
@@ -1130,19 +1161,78 @@ app.post('/submit-review', verifyToken, async (req, res) => {
       reviewerId,
       reviewedUserId,
       rating,
-      review
+      review,
+      createdAt: new Date() // Explicitly set timestamp
     });
 
     await newReview.save();
 
+    // Populate reviewerId in the response
+    const populatedReview = await Review.findById(newReview._id).populate('reviewerId', 'firstName lastName profilePicture');
+
     res.status(201).json({ 
       success: true,
       message: 'Review submitted successfully',
-      review: newReview
+      review: populatedReview
     });
-
   } catch (error) {
     console.error('Error submitting review:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Update an existing review
+app.patch('/update-review', verifyToken, async (req, res) => {
+  try {
+    const { reviewedUserId, rating, review } = req.body;
+    const reviewerId = req.user.userId; // From auth middleware
+
+    // Validate input
+    if (!reviewedUserId || !rating || !review) {
+      return res.status(400).json({ message: 'All fields are required' });
+    }
+
+    // Validate ObjectId
+    if (!mongoose.Types.ObjectId.isValid(reviewedUserId)) {
+      return res.status(400).json({ message: 'Invalid reviewed user ID' });
+    }
+
+    if (rating < 1 || rating > 5) {
+      return res.status(400).json({ message: 'Rating must be between 1 and 5' });
+    }
+
+    // Check if user is trying to update a review for themselves
+    if (reviewerId === reviewedUserId) {
+      return res.status(400).json({ message: 'You cannot review yourself' });
+    }
+
+    // Find existing review
+    const existingReview = await Review.findOne({ 
+      reviewerId, 
+      reviewedUserId 
+    });
+
+    if (!existingReview) {
+      return res.status(404).json({ message: 'No review found to update' });
+    }
+
+    // Update review fields
+    existingReview.rating = rating;
+    existingReview.review = review;
+    existingReview.createdAt = new Date(); // Update timestamp to reflect edit time
+
+    await existingReview.save();
+
+    // Populate reviewerId in the response
+    const populatedReview = await Review.findById(existingReview._id).populate('reviewerId', ' firstName lastName profilePicture');
+
+    res.status(200).json({ 
+      success: true,
+      message: 'Review updated successfully',
+      review: populatedReview
+    });
+  } catch (error) {
+    console.error('Error updating review:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -1153,7 +1243,7 @@ app.get('/user-reviews/:userId', async (req, res) => {
     const { userId } = req.params;
 
     const userReviews = await Review.find({ reviewedUserId: userId })
-      .populate('reviewerId', 'name profilePicture')
+      .populate('reviewerId', ' firstName lastName profilePicture')
       .sort({ createdAt: -1 });
 
     if (!userReviews || userReviews.length === 0) {
@@ -1172,8 +1262,13 @@ app.get('/average-rating/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
 
+    // Validate ObjectId
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ message: 'Invalid user ID' });
+    }
+
     const result = await Review.aggregate([
-      { $match: { reviewedUserId: mongoose.Types.ObjectId(userId) } },
+      { $match: { reviewedUserId: new mongoose.Types.ObjectId(userId) } },
       { $group: { 
         _id: null, 
         averageRating: { $avg: "$rating" },
@@ -1188,13 +1283,11 @@ app.get('/average-rating/:userId', async (req, res) => {
       averageRating: parseFloat(averageRating.toFixed(1)),
       reviewCount
     });
-
   } catch (error) {
     console.error('Error calculating average rating:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
-
 //Delete users
 app.delete('/users/:id', async (req, res) => {
   try {
@@ -2007,9 +2100,7 @@ app.get('/messages', async (req, res) => {
 });
 
 
-
-// Route to fetch messages for a user
-
+//get messages
 app.get("/api/messages", async (req, res) => {
   const { userId } = req.query;
 
@@ -2026,7 +2117,7 @@ app.get("/api/messages", async (req, res) => {
           $or: [{ senderId: userIdObjectId }, { receiverId: userIdObjectId }],
         },
       },
-      { $sort: { createdAt: -1 } }, // Sort messages by latest first
+      { $sort: { createdAt: -1 } },
       {
         $group: {
           _id: {
@@ -2035,22 +2126,79 @@ app.get("/api/messages", async (req, res) => {
               { senderId: "$senderId", receiverId: "$receiverId" },
               { senderId: "$receiverId", receiverId: "$senderId" },
             ],
-          }, // Group by conversation pair
-          latestMessage: { $first: "$$ROOT" }, // Take the first (latest) message
+          },
+          latestMessage: { $first: "$$ROOT" },
         },
       },
-      { $replaceRoot: { newRoot: "$latestMessage" } }, // Replace root with latest message
+      { $replaceRoot: { newRoot: "$latestMessage" } },
     ]);
 
-    // Fetch sender and receiver details for each message
+    const systemMessageTypes = [
+      'bargainStart',
+      'end-bargain',
+      'buyerAccept',
+      'sellerAccept',
+      'sellerDecline',
+      'buyerDeclineResponse',
+      'offer',
+      'counter-offer',
+    ];
+
     const populatedMessages = await Promise.all(
       latestMessages.map(async (msg) => {
         const sender = await User.findById(msg.senderId);
         const receiver = await User.findById(msg.receiverId);
 
-        // Determine chat partner (i.e., the other person in the conversation)
         const chatPartner =
           msg.senderId.toString() === userId ? receiver : sender;
+
+        const isSystem = systemMessageTypes.includes(msg.messageType);
+
+        let messageText = msg.text || '';
+        if (isSystem && (!messageText || messageText.trim() === '')) {
+          switch (msg.messageType) {
+            case 'bargainStart':
+              messageText = 'Bargain started';
+              break;
+            case 'end-bargain':
+              messageText =
+                msg.bargainStatus === 'accepted'
+                  ? 'Bargain ended - Accepted'
+                  : msg.bargainStatus === 'declined'
+                  ? 'Bargain ended - Declined'
+                  : 'Bargain ended';
+              break;
+            case 'buyerAccept':
+              messageText = 'Buyer accepted the offer';
+              break;
+            case 'sellerAccept':
+              messageText = 'Seller accepted the offer';
+              break;
+            case 'sellerDecline':
+              messageText = 'Seller declined the offer';
+              break;
+            case 'buyerDeclineResponse':
+              messageText = 'Buyer declined the offer';
+              break;
+            case 'offer':
+              messageText = 'New offer made';
+              break;
+            case 'counter-offer':
+              messageText = 'Counter-offer made';
+              break;
+            default:
+              messageText = 'System notification';
+          }
+        } else if (messageText.startsWith('{')) {
+          // Parse JSON-formatted text to extract the actual message
+          try {
+            const parsed = JSON.parse(messageText);
+            messageText = parsed.text || parsed.content || parsed.productId || 'No message';
+          } catch (e) {
+            // If parsing fails, use the raw text
+            messageText = messageText.substring(messageText.indexOf('}') + 1).trim() || 'No message';
+          }
+        }
 
         return {
           _id: msg._id,
@@ -2059,10 +2207,14 @@ app.get("/api/messages", async (req, res) => {
           chatPartnerId: chatPartner?._id || null,
           chatPartnerName: chatPartner
             ? `${chatPartner.firstName} ${chatPartner.lastName}`
-            : "Unknown",
-          chatPartnerProfilePicture: chatPartner?.profilePicture || "default.jpg",
-          text: msg.text,
+            : isSystem
+            ? 'System'
+            : 'Unknown',
+          chatPartnerProfilePicture: chatPartner?.profilePicture || 'default.jpg',
+          text: messageText,
           status: msg.status,
+          isSystem,
+          messageType: msg.messageType,
           createdAt: msg.createdAt.toISOString(),
         };
       })
@@ -2074,7 +2226,6 @@ app.get("/api/messages", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch messages", details: error.message });
   }
 });
-
 
 
 // Fetch notifications for the logged-in user
@@ -3221,15 +3372,31 @@ app.get('/products', verifyToken, async (req, res) => {
     res.status(500).json({ error: 'Something went wrong' });
   }
 });
-// Backend route to update product price
+
+//Update price
 app.put('/posts/:postId/update-price', verifyToken, async (req, res) => {
   const { postId } = req.params;
   const { newPrice } = req.body;
 
-  try {
-    // Find the post by ID
-    const post = await Post.findById(postId);
+  // Log the postId for debugging
+  console.log('Received postId:', postId);
 
+  // Validate postId
+  if (!postId || postId === 'undefined') {
+    return res.status(400).json({ message: 'Post ID is required' });
+  }
+  if (!mongoose.Types.ObjectId.isValid(postId)) {
+    return res.status(400).json({ message: 'Invalid Post ID format' });
+  }
+
+  // Validate newPrice
+  if (newPrice === undefined || isNaN(newPrice) || newPrice < 0) {
+    return res.status(400).json({ message: 'Invalid or missing price' });
+  }
+
+  try {
+    // Find and update the post
+    const post = await Post.findById(postId);
     if (!post) {
       return res.status(404).json({ message: 'Post not found' });
     }
@@ -3241,7 +3408,7 @@ app.put('/posts/:postId/update-price', verifyToken, async (req, res) => {
     res.status(200).json({ message: 'Price updated successfully', post });
   } catch (error) {
     console.error('Error updating price:', error);
-    res.status(500).json({ message: 'Failed to update price', error });
+    res.status(500).json({ message: 'Failed to update price', error: error.message });
   }
 });
 // resolve Account

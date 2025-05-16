@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <title>Profile Page</title>
+  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jwt-decode/build/jwt-decode.min.js"></script>
   <link rel="stylesheet" href="profile styles.css">
   <link rel="stylesheet" href="Style.css">
@@ -96,21 +97,26 @@
     </nav>
   </div>
 
-  <div class="stats">
-    <div class="stats-item">
-      <p>Followers</p>
-      <h3 id="followers">0</h3>
+  
+    <!-- Stats Section -->
+    <div class="stats">
+      <div class="stats-item">
+        <p>Followers</p>
+        <h3 id="followers">0</h3>
+      </div>
+      <div class="stats-item">
+        <p>Products</p>
+        <h3 id="products-count">0</h3>
+      </div>
+      <div class="stats-item">
+        <p>Rating</p>
+        <h3 id="average-rating">0.0</h3>
+      </div>
+      <div class="stats-item">
+        <p>Reviews</p>
+        <h3 id="reviews-count">0</h3>
+      </div>
     </div>
-    <div class="stats-item">
-      <p>Products</p>
-      <h3 id="products-count">0</h3>
-    </div>
-    <div class="stats-item">
-      <p>Rating</p>
-      <h3 id="average-rating">0.0</h3>
-    </div>
-  </div>
-
   <div class="tabs">
     <button class="tab-btn active" data-tab="home">Home</button>
     <button class="tab-btn" data-tab="reviews">Reviews</button>
@@ -118,16 +124,18 @@
   
 <!-- Home Tab Content -->
 <div id="home-tab" class="tab-content active">
-  <div class="product-list" id="product-list"></div>
-  <div id="post-container"></div> <!-- Moved here -->
+   <div id="posts-container" class="product-list"></div>
 </div>
 
 <!-- Reviews Tab Content -->
 <div id="reviews-tab" class="tab-content">
   <div class="reviews-container">
+    <!-- Stats Section -->
+
     <!-- Review Form -->
-    <div id="review-form-container" class="review-form-container">
+    <div id="review-form-container" class="review-form-container" style="display: none;">
       <h3>Leave a Review</h3>
+      <button id="edit-review-btn" style="display: none;">Edit Your Review</button>
       <form id="review-form">
         <div class="rating-input">
           <label>Rating:</label>
@@ -142,16 +150,13 @@
         </div>
         <div class="form-group">
           <label for="review-text">Your Review:</label>
-        <textarea id="review-text" name="review" rows="4" placeholder="Write your review here..." required></textarea>
+          <textarea id="review-text" name="review" rows="4" placeholder="Write your review here..." required></textarea>
         </div>
         <button type="submit" class="submit-review-btn">Submit Review</button>
       </form>
     </div>
-    
     <!-- Reviews List -->
-    <div id="reviews-list" class="reviews-list">
-      <!-- Reviews will be loaded here dynamically -->
-    </div>
+    <div id="reviews-list" class="reviews-list"></div>
   </div>
 </div>
 <!-- Slide-Up Bank Details Form -->
@@ -299,7 +304,6 @@ document.addEventListener("DOMContentLoaded", function() {
 });
 </script>
 </div>
-  <div id="posts-container" class="product-list"></div>
 </body>
 <script>
   document.addEventListener("DOMContentLoaded", async function () {
@@ -393,6 +397,7 @@ document.addEventListener("DOMContentLoaded", function() {
     updateFollowButton();
 });
 </script>
+<script src="updateBankDetails.js"></script>
 <script>
      document.addEventListener("DOMContentLoaded", async function () {
   // Initialize Eruda for debugging (remove in production)
@@ -496,9 +501,9 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     // Hide follow button if it's own profile
-    const followButton = document.getElementById("follow-button");
-    if (followButton && isOwnProfile) {
-      followButton.style.display = "none";
+    const bankButton = document.querySelector("bank-button");
+    if (bankButton && isOwnProfile) {
+      bankButton.style.display = "none";
     }
 
   } catch (err) {
@@ -564,6 +569,6 @@ document.body.addEventListener('click', (e) => {
 </script>
 <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
 <script>eruda.init();</script>
-<script src="updateBankDetails.js"></script>
+
 <script src="reviews.js"></script>
 </html> 
