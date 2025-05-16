@@ -10,24 +10,22 @@
   <link rel="stylesheet" href="profile styles.css">
   <link rel="stylesheet" href="Style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-<script src="profilePostScript.js"></script>
-<script src="sideBar"></script>
+  <script src="profilePostScript.js"></script>
+  <script src="sideBar"></script>
   <script src="addPic.js"></script>
-   <script src="upload.js"></script>
-
+  <script src="upload.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900&display=swap" rel="stylesheet">
-
 </head>
 <body style="background-color: #f3f8f1">
-  <header style="background-color: white; padding: 20px: border: solid 2px #ccc; box-shadow: 0 0 10px #ddd; position: fixed; width: 100vw; z-index: 100">
-    <h1 id="profileHeaderUsr" style="font-size: 16px; padding: 10px;margin-top: 10px; color:  #28a745;margin-left: -2px">username</h1>
+  <header style="background-color: white; border: solid 2px #ccc; box-shadow: 0 0 10px #ddd; position: fixed; width: 100vw; z-index: 100">
+    <h1 id="profileHeaderUsr" style="font-size: 16px; padding: 10px; margin-top: 10px; color: #28a745; margin-left: -2px">username</h1>
   </header>
   <div class="menu-icon" style="z-index: 3000">
-  <div></div>
-  <div></div>
-  <div></div>
-</div>
-    <div class="side-bar" style="z-index:3000">
+    <div></div>
+    <div></div>
+    <div></div>
+  </div>
+  <div class="side-bar" style="z-index: 3000">
     <div class="profile-sec">
       <img src="default-avatar.png" alt="pic" id="profile-picture1">
       <h4 id="username1">Username</h4>
@@ -36,54 +34,54 @@
       <li><a href="index.html" class="active"><i class="fas fa-store"></i>Market</a></li>
       <li><a href="Alerts.html"><i class="fas fa-bell"></i> Alerts</a></li>
       <li><a href="Messages.html"><i class="fas fa-comment"></i>Messages</a></li> 
-            <li><a href="Deals.html"><i class="fas fa-cart-plus"></i>Deals</a></li>
+      <li><a href="Deals.html"><i class="fas fa-cart-plus"></i>Deals</a></li>
       <li><a href="Profile.html"><i class="fas fa-user"></i> Profile</a></li>
-       <li><a href="Profile.html"><i class="fa-solid fa-user-tie"></i> Hire Skills</a></li>
-       <li><a href="Profile.html"><i class="fa-solid fa-receipt"></i> Generate Reciepts</a></li>
-        <li><a href="Profile.html"><i class="fa-solid fa-lock"></i> Privacy Policy</a></li>
-         <li><a href="Privacy.html"><i class="fa-solid fa-circle-info"></i> Community Standards</a></li>
-          <li><a href="SignIn.html"><i class="fas fa-sign-out-alt"></i><span id="logout text">Log out</span></a></li>
+      <li><a href="Profile.html"><i class="fa-solid fa-user-tie"></i> Hire Skills</a></li>
+      <li><a href="Profile.html"><i class="fa-solid fa-receipt"></i> Generate Receipts</a></li>
+      <li><a href="Profile.html"><i class="fa-solid fa-lock"></i> Privacy Policy</a></li>
+      <li><a href="Privacy.html"><i class="fa-solid fa-circle-info"></i> Community Standards</a></li>
+      <li><a href="SignIn.html"><i class="fas fa-sign-out-alt"></i><span id="logout text">Log out</span></a></li>
     </ul>
-    <pre style="font-size: 10px; text-align: center; margin-top: 40px; color: green">&copy;Salmart Technologies 2025</pre>
+    <pre style="font-size: 10px; text-align: center; margin-top: 40px; color: green">©Salmart Technologies 2025</pre>
   </div>
   <form id="upload-form">
     <div class="profile-picture-container">
-      <img src="default-avatar.png" id="profile-picture" class="profile-picture">
+      <div class="skeleton skeleton-profile-pic"></div>
+      <img src="default-avatar.png" id="profile-picture" class="profile-picture" style="display: none;">
       <input type="file" id="profile-picture-upload" accept="image/jpeg, image/png" style="display: none;">
       <label for="profile-picture-upload" class="file-input-icon">
         <i class="fas fa-camera"></i>
       </label>
       <button id="upload-button" class="upload-button" style="display: none;">Upload Profile Picture</button>
     </div>
-    <h1 id="username">Username</h1>
-    
-
+    <div class="skeleton skeleton-username"></div>
+    <h1 id="username" style="display: none;">Username</h1>
   </form>
 
-<div id="delete-modal" class="modern-modal">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h3>Confirm Deletion</h3>
-      <button class="close-modal">&times;</button>
-    </div>
-    <div class="modal-body">
-      <div class="modal-icon">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#e74c3c">
-          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
-        </svg>
+  <div id="delete-modal" class="modern-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Confirm Deletion</h3>
+        <button class="close-modal">×</button>
       </div>
-      <p>Are you sure you want to delete this Ad?</p>
-      <p class="secondary-text">This action cannot be undone and the Ad will be permanently removed.</p>
-    </div>
-    <div class="modal-footer">
-      <button id="cancel-delete" class="secondary-button">Cancel</button>
-      <button id="confirm-delete" class="danger-button">
-        <span class="button-loader" id="delete-loader"></span>
-        <span class="button-text">Delete</span>
-      </button>
+      <div class="modal-body">
+        <div class="modal-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#e74c3c">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+          </svg>
+        </div>
+        <p>Are you sure you want to delete this Ad?</p>
+        <p class="secondary-text">This action cannot be undone and the Ad will be permanently removed.</p>
+      </div>
+      <div class="modal-footer">
+        <button id="cancel-delete" class="secondary-button">Cancel</button>
+        <button id="confirm-delete" class="danger-button">
+          <span class="button-loader" id="delete-loader"></span>
+          <span class="button-text">Delete</span>
+        </button>
+      </div>
     </div>
   </div>
-</div>
 
   <div style="text-align: center">
     <nav id="navbar">
@@ -91,484 +89,472 @@
         <li class="active"><a href="index.html"><i class="fas fa-store"></i>Market</a></li>
         <li><a href="Alerts.html"><i class="fas fa-bell"></i>Alerts</a></li>
         <li><a href="Messages.html"><i class="fas fa-comments"></i>Messages</a></li>
-              <li><a href="Deals.html"><i class="fas fa-cart-plus"></i>Deals</a></li>
+        <li><a href="Deals.html"><i class="fas fa-cart-plus"></i>Deals</a></li>
         <li><a href="Profile.html"><i class="fas fa-user"></i>Profile</a></li>
       </ul>
     </nav>
   </div>
 
-  
-    <!-- Stats Section -->
-    <div class="stats">
-      <div class="stats-item">
-        <p>Followers</p>
-        <h3 id="followers">0</h3>
-      </div>
-      <div class="stats-item">
-        <p>Products</p>
-        <h3 id="products-count">0</h3>
-      </div>
-      <div class="stats-item">
-        <p>Rating</p>
-        <h3 id="average-rating">0.0</h3>
-      </div>
-      <div class="stats-item">
-        <p>Reviews</p>
-        <h3 id="reviews-count">0</h3>
-      </div>
+  <!-- Stats Section -->
+  <div class="stats">
+    <div class="stats-item">
+      <div class="skeleton skeleton-stats-text"></div>
+      <p style="display: none;">Followers</p>
+      <div class="skeleton skeleton-stats-number"></div>
+      <h3 id="followers" style="display: none;">0</h3>
     </div>
+    <div class="stats-item">
+      <div class="skeleton skeleton-stats-text"></div>
+      <p style="display: none;">Products</p>
+      <div class="skeleton skeleton-stats-number"></div>
+      <h3 id="products-count" style="display: none;">0</h3>
+    </div>
+    <div class="stats-item">
+      <div class="skeleton skeleton-stats-text"></div>
+      <p style="display: none;">Rating</p>
+      <div class="skeleton skeleton-stats-number"></div>
+      <h3 id="average-rating" style="display: none;">0.0</h3>
+    </div>
+    <div class="stats-item">
+      <div class="skeleton skeleton-stats-text"></div>
+      <p style="display: none;">Reviews</p>
+      <div class="skeleton skeleton-stats-number"></div>
+      <h3 id="reviews-count" style="display: none;">0</h3>
+    </div>
+  </div>
   <div class="tabs">
     <button class="tab-btn active" data-tab="home">Home</button>
     <button class="tab-btn" data-tab="reviews">Reviews</button>
   </div>
   
-<!-- Home Tab Content -->
-<div id="home-tab" class="tab-content active">
-   <div id="posts-container" class="product-list"></div>
-</div>
+  <!-- Home Tab Content -->
+  <div id="home-tab" class="tab-content active">
+    <div id="posts-container" class="product-list">
+      <!-- Skeleton for posts -->
+      <div class="skeleton skeleton-post"></div>
+      <div class="skeleton skeleton-post"></div>
+      <div class="skeleton skeleton-post"></div>
+    </div>
+  </div>
 
-<!-- Reviews Tab Content -->
-<div id="reviews-tab" class="tab-content">
-  <div class="reviews-container">
-    <!-- Stats Section -->
-
-    <!-- Review Form -->
-    <div id="review-form-container" class="review-form-container" style="display: none;">
-      <h3>Leave a Review</h3>
-      <button id="edit-review-btn" style="display: none;">Edit Your Review</button>
-      <form id="review-form">
-        <div class="rating-input">
-          <label>Rating:</label>
-          <div class="stars">
-            <i class="fas fa-star" data-rating="1"></i>
-            <i class="fas fa-star" data-rating="2"></i>
-            <i class="fas fa-star" data-rating="3"></i>
-            <i class="fas fa-star" data-rating="4"></i>
-            <i class="fas fa-star" data-rating="5"></i>
+  <!-- Reviews Tab Content -->
+  <div id="reviews-tab" class="tab-content">
+    <div class="reviews-container">
+      <div id="review-form-container" class="review-form-container" style="display: none;">
+        <h3>Leave a Review</h3>
+        <button id="edit-review-btn" style="display: none;">Edit Your Review</button>
+        <form id="review-form">
+          <div class="rating-input">
+            <label>Rating:</label>
+            <div class="stars">
+              <i class="fas fa-star" data-rating="1"></i>
+              <i class="fas fa-star" data-rating="2"></i>
+              <i class="fas fa-star" data-rating="3"></i>
+              <i class="fas fa-star" data-rating="4"></i>
+              <i class="fas fa-star" data-rating="5"></i>
+            </div>
+            <input type="hidden" id="rating-value" name="rating" required>
           </div>
-          <input type="hidden" id="rating-value" name="rating" required>
-        </div>
-        <div class="form-group">
-          <label for="review-text">Your Review:</label>
-          <textarea id="review-text" name="review" rows="4" placeholder="Write your review here..." required></textarea>
-        </div>
-        <button type="submit" class="submit-review-btn">Submit Review</button>
-      </form>
-    </div>
-    <!-- Reviews List -->
-    <div id="reviews-list" class="reviews-list"></div>
-  </div>
-</div>
-<!-- Slide-Up Bank Details Form -->
-<!-- Dimmed Overlay -->
-<div id="overlay" class="overlay"></div>
-
-<!-- Bottom Sheet Form -->
-<div id="bottom-sheet" class="bottom-sheet">
-  <div class="bottom-sheet-header">
-    <h3>Update Bank Details</h3>
-    <span id="close-sheet" class="close-sheet">&times;</span>
-  </div>
-  <form id="bank-details-form">
-    <label for="bankName">Bank Name:</label>
-    <input type="text" id="bankName" required>
-        <label for="bankCode">Bank Code:</label>
-    <input type="text" id="bankCode" required>
-
-    <label for="accountNumber">Account Number:</label>
-    <input type="number" id="accountNumber" required>
-
-    <label for="accountName">Account Name:</label>
-    <input type="text" id="accountName" required>
-
-    <button type="submit" class="submit-bank-btn">Save</button>
-  </form>
-</div>
-  
-  <!-- profile pic modal -->
-<div id="profile-pic-modal" class="modern-profile-modal">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h3>Update Profile Picture</h3>
-      <button class="close-modal">&times;</button>
-    </div>
-    <div class="modal-body">
-      <div class="image-preview-container">
-        <img id="image-preview" src="default-avatar.png" alt="Preview">
+          <div class="form-group">
+            <label for="review-text">Your Review:</label>
+            <textarea id="review-text" name="review" rows="4" placeholder="Write your review here..." required></textarea>
+          </div>
+          <button type="submit" class="submit-review-btn">Submit Review</button>
+        </form>
       </div>
-      <div class="upload-options">
-        <button id="take-photo-btn" class="option-btn">
-          <i class="fas fa-camera"></i> Take Photo
-        </button>
-        <button id="choose-photo-btn" class="option-btn">
-          <i class="fas fa-image"></i> Choose from Gallery
-        </button>
-      </div>
-      
-    </div>
-    <div class="modal-footer">
-      <button id="cancel-upload" class="secondary-button">Cancel</button>
-      <button id="save-profile-pic" class="primary-button" disabled>
-        <span class="button-loader" id="upload-loader"></span>
-        <span class="button-text">Save Changes</span>
-      </button>
+      <div id="reviews-list" class="reviews-list"></div>
     </div>
   </div>
-</div>
 
+  <!-- Slide-Up Bank Details Form -->
+  <div id="overlay" class="overlay"></div>
+  <div id="bottom-sheet" class="bottom-sheet">
+    <div class="bottom-sheet-header">
+      <h3>Update Bank Details</h3>
+      <span id="close-sheet" class="close-sheet">×</span>
+    </div>
+    <form id="bank-details-form">
+      <label for="bankName">Bank Name:</label>
+      <input type="text" id="bankName" required>
+      <label for="bankCode">Bank Code:</label>
+      <input type="text" id="bankCode" required>
+      <label for="accountNumber">Account Number:</label>
+      <input type="number" id="accountNumber" required>
+      <label for="accountName">Account Name:</label>
+      <input type="text" id="accountName" required>
+      <button type="submit" class="submit-bank-btn">Save</button>
+    </form>
+  </div>
+  
+  <!-- Profile Picture Modal -->
+  <div id="profile-pic-modal" class="modern-profile-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Update Profile Picture</h3>
+        <button class="close-modal">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="image-preview-container">
+          <img id="image-preview" src="default-avatar.png" alt="Preview">
+        </div>
+        <div class="upload-options">
+          <button id="take-photo-btn" class="option-btn">
+            <i class="fas fa-camera"></i> Take Photo
+          </button>
+          <button id="choose-photo-btn" class="option-btn">
+            <i class="fas fa-image"></i> Choose from Gallery
+          </button>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="cancel-upload" class="secondary-button">Cancel</button>
+        <button id="save-profile-pic" class="primary-button" disabled>
+          <span class="button-loader" id="upload-loader"></span>
+          <span class="button-text">Save Changes</span>
+        </button>
+      </div>
+    </div>
+  </div>
 
-<script>
-document.addEventListener("DOMContentLoaded", function() {
-  const modal = document.getElementById('profile-pic-modal');
-  const closeModalBtn = document.querySelector('#profile-pic-modal .close-modal');
-  const cancelBtn = document.getElementById('cancel-upload');
-  const saveBtn = document.getElementById('save-profile-pic');
-  const choosePhotoBtn = document.getElementById('choose-photo-btn');
-  const takePhotoBtn = document.getElementById('take-photo-btn');
-  const imagePreview = document.getElementById('image-preview');
-  const fileInput = document.getElementById('profile-picture-upload');
-  
-  // Open modal when clicking the camera icon
-  document.querySelector('.file-input-icon').addEventListener('click', function(e) {
-    e.preventDefault();
-    modal.classList.add('show');
-  });
-  
-  // Close modal handlers
-  function closeModal() {
-    modal.classList.remove('show');
-  }
-  
-  closeModalBtn.addEventListener('click', closeModal);
-  cancelBtn.addEventListener('click', closeModal);
-  
-  // Click on overlay closes modal
-  modal.addEventListener('click', function(e) {
-    if (e.target === modal) {
-      closeModal();
+  <!-- Inline Profile Picture Modal Script -->
+  <script>
+  document.addEventListener("DOMContentLoaded", function() {
+    function getLoggedInUserInfo() {
+      const token = localStorage.getItem("authToken");
+      if (!token) {
+        console.log("No auth token found");
+        return null;
+      }
+      try {
+        const decoded = jwt_decode(token);
+        console.log("Decoded token:", decoded);
+        return decoded;
+      } catch (error) {
+        console.error("Error decoding token:", error);
+        return null;
+      }
+    }
+
+    const urlParams = new URLSearchParams(window.location.search);
+    let profileOwnerId = urlParams.get('userId');
+    const userInfo = getLoggedInUserInfo();
+    const isOwnProfile = !profileOwnerId || (userInfo && profileOwnerId === userInfo.userId);
+
+    const fileInputIcon = document.querySelector('.file-input-icon');
+    if (fileInputIcon && isOwnProfile) {
+      fileInputIcon.classList.add('show');
+      console.log('Showing profile picture upload icon for owner profile');
+    } else if (!fileInputIcon) {
+      console.warn('File input icon (.file-input-icon) not found in DOM');
+    }
+
+    const modal = document.getElementById('profile-pic-modal');
+    const closeModalBtn = document.querySelector('#profile-pic-modal .close-modal');
+    const cancelBtn = document.getElementById('cancel-upload');
+    const saveBtn = document.getElementById('save-profile-pic');
+    const choosePhotoBtn = document.getElementById('choose-photo-btn');
+    const takePhotoBtn = document.getElementById('take-photo-btn');
+    const imagePreview = document.getElementById('image-preview');
+    const fileInput = document.getElementById('profile-picture-upload');
+
+    if (fileInputIcon && isOwnProfile) {
+      fileInputIcon.addEventListener('click', function(e) {
+        e.preventDefault();
+        modal.classList.add('show');
+      });
+    }
+
+    function closeModal() {
+      modal.classList.remove('show');
+    }
+
+    closeModalBtn.addEventListener('click', closeModal);
+    cancelBtn.addEventListener('click', closeModal);
+
+    modal.addEventListener('click', function(e) {
+      if (e.target === modal) {
+        closeModal();
+      }
+    });
+
+    choosePhotoBtn.addEventListener('click', function() {
+      fileInput.click();
+    });
+
+    fileInput.addEventListener('change', function(e) {
+      if (e.target.files && e.target.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          imagePreview.src = event.target.result;
+          document.querySelectorAll('.edit-btn').forEach(btn => {
+            btn.disabled = false;
+          });
+          saveBtn.disabled = false;
+        };
+        reader.readAsDataURL(e.target.files[0]);
+      }
+    });
+
+    takePhotoBtn.addEventListener('click', function() {
+      showToast('Camera functionality would be implemented here');
+    });
+
+    saveBtn.addEventListener('click', function() {
+      if (!isOwnProfile) {
+        console.warn('Non-owner attempted to save profile picture');
+        return;
+      }
+      saveBtn.classList.add('uploading');
+      setTimeout(function() {
+        saveBtn.classList.remove('uploading');
+        const profilePic = document.getElementById('profile-picture');
+        const profilePic1 = document.getElementById('profile-picture1');
+        if (profilePic) profilePic.src = imagePreview.src;
+        if (profilePic1) profilePic1.src = imagePreview.src;
+        closeModal();
+        showToast('Profile picture updated successfully!', '#2ecc71');
+      }, 1500);
+    });
+
+    function showToast(message, bgColor = '#333') {
+      let toast = document.createElement("div");
+      toast.className = "toast-message show";
+      toast.style.backgroundColor = bgColor;
+      toast.innerText = message;
+      document.body.appendChild(toast);
+      setTimeout(() => {
+        toast.classList.remove("show");
+        setTimeout(() => toast.remove(), 500);
+      }, 3000);
     }
   });
-  
-  // Choose photo handler
-  choosePhotoBtn.addEventListener('click', function() {
-    fileInput.click();
-  });
-  
-  // File input change handler
-  fileInput.addEventListener('change', function(e) {
-    if (e.target.files && e.target.files[0]) {
-      const reader = new FileReader();
-      
-      reader.onload = function(event) {
-        imagePreview.src = event.target.result;
-        // Enable editing buttons
-        document.querySelectorAll('.edit-btn').forEach(btn => {
-          btn.disabled = false;
-        });
-        saveBtn.disabled = false;
-      };
-      
-      reader.readAsDataURL(e.target.files[0]);
-    }
-  });
-  
-  // Take photo handler (would need more implementation for actual camera access)
-  takePhotoBtn.addEventListener('click', function() {
-    alert('Camera functionality would be implemented here');
-    // In a real implementation, you would access the device camera
-  });
-  
-  // Save button handler
-  saveBtn.addEventListener('click', function() {
-    // Show loading state
-    saveBtn.classList.add('uploading');
-    
-    // Simulate upload (replace with actual upload logic)
-    setTimeout(function() {
-      // Hide loading state
-      saveBtn.classList.remove('uploading');
-      
-      // Update profile picture
-      const profilePic = document.getElementById('profile-picture');
-      const profilePic1 = document.getElementById('profile-picture1');
-      if (profilePic) profilePic.src = imagePreview.src;
-      if (profilePic1) profilePic1.src = imagePreview.src;
-      
-      // Close modal
-      closeModal();
-      
-      // Show success message
-      alert('Profile picture updated successfully!');
-    }, 1500);
-  });
-});
-</script>
-</div>
-</body>
-<script>
+  </script>
+
+  <!-- Inline Follow Button Script (Remove if using profile.js follow logic) -->
+  <script>
   document.addEventListener("DOMContentLoaded", async function () {
     const followButton = document.getElementById("follow-button");
-
     if (!followButton) {
-        console.error("Follow button not found!");
-        return;
+      console.error("Follow button not found!");
+      return;
     }
-
     function getProfileOwnerId() {
-        const urlParams = new URLSearchParams(window.location.search);
-        return urlParams.get("userId") ? urlParams.get("userId").trim() : null;
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get("userId") ? urlParams.get("userId").trim() : null;
     }
-
     function getLoggedInUserId() {
-        const token = localStorage.getItem("authToken");
-        if (!token) return null;
-
-        try {
-            const decodedToken = jwt_decode(token);
-            return decodedToken.userId ? decodedToken.userId.toString().trim() : null;
-        } catch (error) {
-            console.error("Error decoding token:", error);
-            return null;
-        }
+      const token = localStorage.getItem("authToken");
+      if (!token) return null;
+      try {
+        const decodedToken = jwt_decode(token);
+        return decodedToken.userId ? decodedToken.userId.toString().trim() : null;
+      } catch (error) {
+        console.error("Error decoding token:", error);
+        return null;
+      }
     }
-
     const profileOwnerId = getProfileOwnerId();
     const loggedInUserId = getLoggedInUserId();
-
     if (profileOwnerId && loggedInUserId && profileOwnerId === loggedInUserId) {
-        followButton.style.display = "none";
-        return;
+      followButton.style.display = "none";
+      return;
     }
-
     async function updateFollowButton() {
-        try {
-          const API_BASE_URL = window.location.hostname === 'localhost' 
-       ?
-      'http://localhost:3000' :
-      'https://salmart-production.up.railway.app'
-            const response = await fetch(`${API_BASE_URL}/follow-status?followerId=${loggedInUserId}&followingId=${profileOwnerId}`);
-            const data = await response.json();
-
-            if (data.following) {
-                followButton.classList.add("following");
-                followButton.textContent = "Following";
-            } else {
-                followButton.classList.remove("following");
-                followButton.textContent = "Follow";
-            }
-        } catch (error) {
-            console.error("Error fetching follow status:", error);
+      try {
+        const API_BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart-production.up.railway.app';
+        const response = await fetch(`${API_BASE_URL}/follow-status?followerId=${loggedInUserId}&followingId=${profileOwnerId}`);
+        const data = await response.json();
+        if (data.following) {
+          followButton.classList.add("following");
+          followButton.textContent = "Following";
+        } else {
+          followButton.classList.remove("following");
+          followButton.textContent = "Follow";
         }
+      } catch (error) {
+        console.error("Error fetching follow status:", error);
+      }
     }
-
     followButton.addEventListener("click", async function () {
-        try {
-          const API_BASE_URL = window.location.hostname === 'localhost' 
-       ?
-      'http://localhost:3000' :
-      'https://salmart-production.up.railway.app'
-            const response = await fetch(`${API_BASE_URL}/api/follow`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    followerId: loggedInUserId,
-                    followingId: profileOwnerId
-                })
-            });
-
-            const data = await response.json();
-
-            if (data.success) {
-                if (followButton.classList.contains("following")) {
-                    followButton.classList.remove("following");
-                    followButton.textContent = "Follow";
-                } else {
-                    followButton.classList.add("following");
-                    followButton.textContent = "Following";
-                }
-            }
-        } catch (error) {
-            console.error("Error following/unfollowing user:", error);
+      try {
+        const API_BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart-production.up.railway.app';
+        const response = await fetch(`${API_BASE_URL}/api/follow`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            followerId: loggedInUserId,
+            followingId: profileOwnerId
+          })
+        });
+        const data = await response.json();
+        if (data.success) {
+          if (followButton.classList.contains("following")) {
+            followButton.classList.remove("following");
+            followButton.textContent = "Follow";
+          } else {
+            followButton.classList.add("following");
+            followButton.textContent = "Following";
+          }
         }
+      } catch (error) {
+        console.error("Error following/unfollowing user:", error);
+      }
     });
-
     updateFollowButton();
-});
-</script>
-<script src="updateBankDetails.js"></script>
-<script>
-     document.addEventListener("DOMContentLoaded", async function () {
-  // Initialize Eruda for debugging (remove in production)
-  if (typeof eruda !== 'undefined') {
-    eruda.init();
-  }
+  });
+  </script>
 
-  // Set API base URL
-  const API_BASE_URL = window.location.hostname === 'localhost' 
-    ? 'http://localhost:3000' 
-    : 'https://salmart-production.up.railway.app';
+  <script src="updateBankDetails.js"></script>
 
-  // Function to decode JWT token and get user info
-  function getLoggedInUserInfo() {
-    const token = localStorage.getItem("authToken");
-    if (!token) {
-      console.log("No auth token found");
-      return null;
+  <!-- profile.js -->
+  <script>
+  document.addEventListener("DOMContentLoaded", async function () {
+    if (typeof eruda !== 'undefined') {
+      eruda.init();
+    }
+    const API_BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart-production.up.railway.app';
+    function getLoggedInUserInfo() {
+      const token = localStorage.getItem("authToken");
+      if (!token) {
+        console.log("No auth token found");
+        return null;
+      }
+      try {
+        const decoded = jwt_decode(token);
+        console.log("Decoded token:", decoded);
+        return decoded;
+      } catch (error) {
+        console.error("Error decoding token:", error);
+        return null;
+      }
+    }
+    const urlParams = new URLSearchParams(window.location.search);
+    let profileOwnerId = urlParams.get('userId');
+    const isOwnProfile = !profileOwnerId;
+    const userInfo = getLoggedInUserInfo();
+    if (!userInfo && isOwnProfile) {
+      window.location.href = "SignIn.html";
+      return;
+    }
+    if (!profileOwnerId && userInfo) {
+      profileOwnerId = userInfo.userId;
+    }
+    const followersCountEl = document.getElementById("followers");
+    const productsCountEl = document.getElementById("products-count");
+    const usernameEls = [
+      document.getElementById("username"),
+      document.getElementById("username1"),
+      document.getElementById("profileHeaderUsr")
+    ];
+    const profilePicEls = [
+      document.getElementById("profile-picture"),
+      document.getElementById("profile-picture1")
+    ];
+    if (userInfo) {
+      const displayName = userInfo.name || userInfo.username || "User";
+      usernameEls.forEach(el => {
+        if (el) el.textContent = displayName;
+      });
     }
     try {
-      const decoded = jwt_decode(token);
-      console.log("Decoded token:", decoded);
-      return decoded;
-    } catch (error) {
-      console.error("Error decoding token:", error);
-      return null;
-    }
-  }
-
-  // Get profile owner ID from URL or logged in user
-  const urlParams = new URLSearchParams(window.location.search);
-  let profileOwnerId = urlParams.get('userId');
-  const isOwnProfile = !profileOwnerId; // If no userId param, it's own profile
-
-  // Get logged in user info
-  const userInfo = getLoggedInUserInfo();
-  if (!userInfo && isOwnProfile) {
-    window.location.href = "SignIn.html";
-    return;
-  }
-
-  // If no profileOwnerId in URL, use logged in user's ID
-  if (!profileOwnerId && userInfo) {
-    profileOwnerId = userInfo.userId;
-  }
-
-  // DOM elements
-  const followersCountEl = document.getElementById("followers");
-  const productsCountEl = document.getElementById("products-count");
-  const usernameEls = [
-    document.getElementById("username"),
-    document.getElementById("username1"),
-    document.getElementById("profileHeaderUsr")
-  ];
-  const profilePicEls = [
-    document.getElementById("profile-picture"),
-    document.getElementById("profile-picture1")
-  ];
-
-  // Immediately populate with basic info from token
-  if (userInfo) {
-    const displayName = userInfo.name || userInfo.username || "User";
-    usernameEls.forEach(el => {
-      if (el) el.textContent = displayName;
-    });
-  }
-
-  // Fetch detailed profile data from server
-  try {
-    console.log(`Fetching profile for ID: ${profileOwnerId}`);
-    const response = await fetch(`${API_BASE_URL}/profile/${profileOwnerId}`);
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    console.log("Profile data received:", data);
-
-    // Update counts
-    if (followersCountEl) followersCountEl.textContent = data.followersCount || "0";
-    if (productsCountEl) productsCountEl.textContent = data.productsCount || "0";
-
-    // Update name if different from token
-    if (data.name) {
-      usernameEls.forEach(el => {
-        if (el) el.textContent = data.name;
-      });
-    }
-
-    // Update profile pictures
-    if (data.profilePicture) {
-      profilePicEls.forEach(el => {
-        if (el) {
-          el.onerror = function() {
-            this.src = "default-avatar.png";
-          };
-          el.src = data.profilePicture;
-        }
-      });
-    }
-
-    // Hide follow button if it's own profile
-    const bankButton = document.querySelector("bank-button");
-    if (bankButton && isOwnProfile) {
-      bankButton.style.display = "none";
-    }
-
-  } catch (err) {
-    console.error("Error fetching profile data:", err);
-    // Fallback to token info if available
-    if (userInfo) {
-      usernameEls.forEach(el => {
-        if (el) el.textContent = userInfo.name || userInfo.username || "User";
-      });
-    }
-  }
-
-  // Force UI updates
-  if (followersCountEl) {
-    followersCountEl.style.display = 'none';
-    followersCountEl.offsetHeight; // Trigger reflow
-    followersCountEl.style.display = 'block';
-  }
-});
-</script>
-<script>
-    // Tab Switching Functionality
-    document.addEventListener("DOMContentLoaded", function() {
-      const tabBtns = document.querySelectorAll('.tab-btn');
-      const tabContents = document.querySelectorAll('.tab-content');
-      
-      tabBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-          // Remove active class from all buttons and contents
-          tabBtns.forEach(b => b.classList.remove('active'));
-          tabContents.forEach(c => c.classList.remove('active'));
-          
-          // Add active class to clicked button and corresponding content
-          btn.classList.add('active');
-          const tabId = btn.getAttribute('data-tab');
-          document.getElementById(`${tabId}-tab`).classList.add('active');
-          
-          // Dispatch a custom event when reviews tab is clicked
-          if (tabId === 'reviews') {
-            document.dispatchEvent(new CustomEvent('reviewsTabActivated'));
+      console.log(`Fetching profile for ID: ${profileOwnerId}`);
+      const response = await fetch(`${API_BASE_URL}/profile/${profileOwnerId}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      console.log("Profile data received:", data);
+      if (followersCountEl) followersCountEl.textContent = data.followersCount || "0";
+      if (productsCountEl) productsCountEl.textContent = data.productsCount || "0";
+      if (data.name) {
+        usernameEls.forEach(el => {
+          if (el) {
+            el.textContent = data.name;
+            el.style.display = 'block'; // Show username
           }
         });
+      }
+      if (data.profilePicture) {
+        profilePicEls.forEach(el => {
+          if (el) {
+            el.onerror = function() {
+              this.src = "default-avatar.png";
+            };
+            el.src = data.profilePicture;
+            el.style.display = 'block'; // Show profile picture
+          }
+        });
+      }
+      // Hide skeleton loaders
+      document.querySelectorAll('.skeleton-profile-pic').forEach(el => el.style.display = 'none');
+      document.querySelectorAll('.skeleton-username').forEach(el => el.style.display = 'none');
+      document.querySelectorAll('.skeleton-stats-text').forEach(el => el.style.display = 'none');
+      document.querySelectorAll('.skeleton-stats-number').forEach(el => el.style.display = 'none');
+      document.querySelectorAll('.stats-item p, .stats-item h3').forEach(el => el.style.display = 'block');
+    } catch (err) {
+      console.error("Error fetching profile data:", err);
+      if (userInfo) {
+        usernameEls.forEach(el => {
+          if (el) {
+            el.textContent = userInfo.name || userInfo.username || "User";
+            el.style.display = 'block';
+          }
+        });
+      }
+      document.querySelectorAll('.skeleton-profile-pic').forEach(el => el.style.display = 'none');
+      document.querySelectorAll('.skeleton-username').forEach(el => el.style.display = 'none');
+      document.querySelectorAll('.skeleton-stats-text').forEach(el => el.style.display = 'none');
+      document.querySelectorAll('.skeleton-stats-number').forEach(el => el.style.display = 'none');
+      document.querySelectorAll('.stats-item p, .stats-item h3').forEach(el => el.style.display = 'block');
+    }
+    if (followersCountEl) {
+      followersCountEl.style.display = 'none';
+      followersCountEl.offsetHeight; // Trigger reflow
+      followersCountEl.style.display = 'block';
+    }
+  });
+  </script>
+
+  <!-- Tab Switching -->
+  <script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const tabContents = document.querySelectorAll('.tab-content');
+    tabBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        tabBtns.forEach(b => b.classList.remove('active'));
+        tabContents.forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        const tabId = btn.getAttribute('data-tab');
+        document.getElementById(`${tabId}-tab`).classList.add('active');
+        if (tabId === 'reviews') {
+          document.dispatchEvent(new CustomEvent('reviewsTabActivated'));
+        }
       });
     });
-</script>
-<script>
-const menuIcon = document.querySelector('.menu-icon');
-const sideBar = document.querySelector('.side-bar');
-const body = document.body;
+  });
+  </script>
 
-menuIcon.addEventListener('click', () => {
-  sideBar.style.display = sideBar.style.display === 'block' ? 'none' : 'block';
-  body.classList.toggle('no-scroll');
-});
+  <!-- Sidebar Toggle -->
+  <script>
+  const menuIcon = document.querySelector('.menu-icon');
+  const sideBar = document.querySelector('.side-bar');
+  const body = document.body;
+  menuIcon.addEventListener('click', () => {
+    sideBar.style.display = sideBar.style.display === 'block' ? 'none' : 'block';
+    body.classList.toggle('no-scroll');
+  });
+  document.body.addEventListener('click', (e) => {
+    if (sideBar.style.display === 'block' && !sideBar.contains(e.target) && !menuIcon.contains(e.target)) {
+      sideBar.style.display = 'none';
+      body.classList.remove('no-scroll');
+    }
+  });
+  </script>
 
-document.body.addEventListener('click', (e) => {
-  if (sideBar.style.display === 'block' && !sideBar.contains(e.target) && !menuIcon.contains(e.target)) {
-    sideBar.style.display = 'none';
-    body.classList.remove('no-scroll');
-  }
-});
-
-</script>
-<script src="https://cdn.jsdelivr.net/npm/eruda"></script>
-<script>eruda.init();</script>
-
-<script src="reviews.js"></script>
-</html> 
+  <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+  <script>eruda.init();</script>
+  <script src="reviews.js"></script>
+</html>
