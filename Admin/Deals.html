@@ -314,6 +314,69 @@ a .active {
   outline: none;
   border-color: #28a745;
 }
+/* Skeleton Loader */
+.skeleton-card {
+  background: white;
+  margin: 10px;
+  border-radius: 10px;
+  padding: 15px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.05);
+}
+
+.skeleton-content {
+  display: flex;
+  align-items: center;
+}
+
+.skeleton-image {
+  width: 70px;
+  height: 70px;
+  border-radius: 5px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite;
+  margin-right: 10px;
+}
+
+.skeleton-details {
+  flex: 1;
+}
+
+.skeleton-line {
+  height: 12px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite;
+  margin-bottom: 8px;
+}
+
+.skeleton-line.short {
+  width: 60%;
+}
+
+.skeleton-line.badge {
+  width: 30%;
+  height: 20px;
+  border-radius: 20px;
+  margin-top: 5px;
+}
+
+.skeleton-line.button {
+  width: 40%;
+  height: 30px;
+  border-radius: 5px;
+  margin-top: 10px;
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
   </style>
 </head>
 <body>
@@ -412,6 +475,33 @@ const socket = io(`${API_BASE_URL}`);
 const userId = localStorage.getItem('userId');
 let currentTab = 'buying';
 
+// Function to create skeleton loader
+function createSkeletonLoader() {
+  const skeleton = document.createElement('div');
+  skeleton.className = 'skeleton-card';
+  skeleton.innerHTML = `
+    <div class="skeleton-content">
+      <div class="skeleton-image"></div>
+      <div class="skeleton-details">
+        <div class="skeleton-line"></div>
+        <div class="skeleton-line short"></div>
+        <div class="skeleton-line short"></div>
+        <div class="skeleton-line badge"></div>
+        ${currentTab === 'buying' ? '<div class="skeleton-line button"></div>' : ''}
+      </div>
+    </div>
+  `;
+  return skeleton;
+}
+
+// Function to show skeleton loaders
+function showSkeletonLoaders(container, count = 3) {
+  container.innerHTML = '';
+  for (let i = 0; i < count; i++) {
+    container.appendChild(createSkeletonLoader());
+  }
+}
+
 function updateDealsBadge(count) {
   const badge = document.getElementById('deals-badge-nav');
   if (!badge) return;
@@ -424,24 +514,31 @@ function updateDealsBadge(count) {
 }
 
 async function fetchTransactions() {
+  const list = document.getElementById('transaction-list');
+  const noTransactions = document.getElementById('no-transactions');
+
+  // Show skeleton loaders while fetching
+  showSkeletonLoaders(list);
+
   try {
     const res = await fetch(`${API_BASE_URL}/get-transactions/${userId}`);
+    if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
     const data = await res.json();
 
     const unReadCount = data.filter((d) => !d.viewed).length;
     updateDealsBadge(unReadCount);
 
-    const list = document.getElementById('transaction-list');
     list.innerHTML = '';
     const filtered = data.filter(
       (t) => (t[currentTab === 'buying' ? 'buyerId' : 'sellerId']?._id) === userId
     );
 
     if (filtered.length === 0) {
-      document.getElementById('no-transactions').style.display = 'block';
+      list.innerHTML = '';
+      noTransactions.style.display = 'block';
       return;
     } else {
-      document.getElementById('no-transactions').style.display = 'none';
+      noTransactions.style.display = 'none';
     }
 
     filtered.forEach((t) => {
@@ -458,11 +555,9 @@ async function fetchTransactions() {
       let refundBtn = '';
 
       if (currentTab === 'buying') {
-        // Only show Confirm Delivery button if status is pending and no refund has been requested
         if (t.status === 'pending' && !t.refundRequested) {
           confirmBtn = `<button class="confirm-btn" onclick="showConfirmationModal('${t._id}')">Confirm Delivery</button>`;
         }
-        // Only show Request Refund button if status is pending and delivery has not been confirmed
         if (t.status === 'pending' && !t.refundRequested) {
           refundBtn = `<button class="refund-btn" onclick="openRefundModal('${t._id}')">Request Refund</button>`;
         } else if (t.refundRequested) {
@@ -495,32 +590,33 @@ async function fetchTransactions() {
       `;
       list.prepend(card);
     });
-    markDealsAsViewed();
+    await markDealsAsViewed();
   } catch (err) {
     console.error('Error fetching transactions:', err);
+    list.innerHTML = '<p style="text-align: center; color: #777;">Failed to load transactions. Please try again.</p>';
+    noTransactions.style.display = 'none';
   }
 }
 
 async function markDealsAsViewed() {
   try {
     const token = localStorage.getItem('authToken');
-    await fetch(`${API_BASE_URL}/deals/mark-as-viewed`, {
+    const res = await fetch(`${API_BASE_URL}/deals/mark-as-viewed`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
     });
-    fetchTransactions(); // Refresh list
+    if (!res.ok) throw new Error('Failed to mark deals as viewed');
   } catch (err) {
     console.error('Error marking deals as viewed:', err);
   }
 }
 
-// Call when Deals page loads
 document.addEventListener('DOMContentLoaded', () => {
   if (window.location.pathname.includes('Deals.html')) {
-    markDealsAsViewed();
+    fetchTransactions();
   }
 });
 
@@ -625,7 +721,6 @@ async function submitRefund() {
   }
 }
 
-let pendingConfirmId = null;
 
 document.getElementById('confirmYes').addEventListener('click', function () {
   if (pendingConfirmId) {
@@ -645,7 +740,7 @@ function showConfirmationModal(transactionId) {
   document.getElementById('confirmationModal').style.display = 'block';
 }
 
-fetchTransactions();
+document.addEventListener('DOMContentLoaded', fetchTransactions);
 </script>
 
 <script>

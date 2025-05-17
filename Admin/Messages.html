@@ -151,7 +151,60 @@
       margin-top: -55px;
       border: solid 0.1px #ddd;
     }
-  
+    /* Skeleton Loader */
+.skeleton-wrapper {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  background-color: #ffffff;
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin-bottom: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  z-index: 1000;
+}
+
+.skeleton-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite;
+  margin-right: 12px;
+}
+
+.skeleton-content {
+  flex: 1;
+}
+
+.skeleton-line {
+  height: 12px;
+  width: 70%;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite;
+  margin-bottom: 8px;
+}
+
+.skeleton-line.short {
+  width: 60%;
+}
+
+.skeleton-line.time {
+  width: 30%;
+  height: 10px;
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
   </style>
 </head>
 <body>
@@ -185,79 +238,108 @@
 </body>
 <script>
   const userId = localStorage.getItem("userId");
-  let latestTimestamp = null;
-  let API_BASE_URL;
+let latestTimestamp = null;
+let API_BASE_URL;
 
-  if (!userId) {
-    window.location.href = "SignIn.html";
-  } else {
-    initialize();
+// Function to create skeleton loader
+function createSkeletonLoader() {
+  const skeleton = document.createElement('div');
+  skeleton.classList.add('skeleton-wrapper');
+  skeleton.innerHTML = `
+    <div class="skeleton-avatar"></div>
+    <div class="skeleton-content">
+      <div class="skeleton-line"></div>
+      <div class="skeleton-line short"></div>
+      <div class="skeleton-line time"></div>
+    </div>
+  `;
+  return skeleton;
+}
+
+// Function to show skeleton loaders
+function showSkeletonLoaders(container, count = 6) {
+  container.innerHTML = '';
+  for (let i = 0; i < count; i++) {
+    container.appendChild(createSkeletonLoader());
   }
+}
 
-  async function initialize() {
-    API_BASE_URL = window.location.hostname === 'localhost' 
-      ? 'http://localhost:3000' 
-      : 'https://salmart-production.up.railway.app';
+if (!userId) {
+  window.location.href = "SignIn.html";
+} else {
+  initialize();
+}
+
+async function initialize() {
+  API_BASE_URL = window.location.hostname === 'localhost' 
+    ? 'http://localhost:3000' 
+    : 'https://salmart-production.up.railway.app';
+  
+  await fetchMessages();
+  setInterval(fetchMessages, 5000);
+}
+
+async function fetchMessages() {
+  const messageListElement = document.getElementById("message-list");
+  const noMessagesElement = document.getElementById("no-messages");
+
+  // Show skeleton loaders while fetching
+  showSkeletonLoaders(messageListElement);
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/messages?userId=${userId}`);
+    if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
     
-    await fetchMessages();
-    setInterval(fetchMessages, 5000);
+    await markMessagesAsRead();
+    const messages = await response.json();
+    processMessages(messages);
+  } catch (error) {
+    console.error("Fetch error:", error);
+    messageListElement.innerHTML = "<p>Failed to load messages. Please try again later.</p>";
+    noMessagesElement.style.display = "none";
   }
-
-  async function fetchMessages() {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/messages?userId=${userId}`);
-      if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-      
-      await markMessagesAsRead()
-      const messages = await response.json();
-      processMessages(messages);
-    } catch (error) {
-      console.error("Fetch error:", error);
-      document.getElementById("message-list").innerHTML = 
-        "<p>Failed to load messages. Please try again later.</p>";
-    }
-  }
+}
 
 async function markMessagesAsRead() {
   try {
     await fetch(`${API_BASE_URL}/messages/mark-as-read`, {
       method: 'PUT',
-      headers:{'Authorization': `Bearer ${localStorage.getItem('authToken')}`}
-    })
-  }catch(error) {
-    console.error('Failed to mark messages as read')
+      headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` }
+    });
+  } catch (error) {
+    console.error('Failed to mark messages as read');
   }
 }
 
-  function processMessages(messages) {
-    unreadCount = messages.filter(msg => 
-      !msg.isRead && (msg.receiverId === userId || (msg.senderId === userId && msg.receiverId === userId ))
-    ).length;
-    
-    
-    messages.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-    
-    const messageListElement = document.getElementById("message-list");
-    const noMessagesElement = document.getElementById("no-messages");
-    
-    if (messages.length === 0) {
-      noMessagesElement.style.display = "block";
-      return;
-    }
-    noMessagesElement.style.display = "none";
-
-    if (shouldUpdateUI(messages)) {
-      latestTimestamp = messages[0].createdAt;
-      messageListElement.innerHTML = generateMessageHTML(messages);
-    }
+function processMessages(messages) {
+  unreadCount = messages.filter(msg => 
+    !msg.isRead && (msg.receiverId === userId || (msg.senderId === userId && msg.receiverId === userId))
+  ).length;
+  
+  messages.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  
+  const messageListElement = document.getElementById("message-list");
+  const noMessagesElement = document.getElementById("no-messages");
+  
+  if (messages.length === 0) {
+    messageListElement.innerHTML = '';
+    noMessagesElement.style.display = "block";
+    return;
   }
+  noMessagesElement.style.display = "none";
 
-  function shouldUpdateUI(messages) {
-    return !latestTimestamp || 
-      new Date(messages[0].createdAt) > new Date(latestTimestamp);
+  if (shouldUpdateUI(messages)) {
+    latestTimestamp = messages[0].createdAt;
+    messageListElement.innerHTML = generateMessageHTML(messages);
   }
+}
 
-  function generateMessageHTML(messages) {
+function shouldUpdateUI(messages) {
+  return !latestTimestamp || 
+    new Date(messages[0].createdAt) > new Date(latestTimestamp);
+}
+
+function generateMessageHTML(messages) {
   const uniqueChats = {};
   messages.forEach(msg => {
     const chatPartnerId = msg.senderId === userId ? msg.receiverId : msg.senderId;
@@ -276,7 +358,7 @@ async function markMessagesAsRead() {
     } else if (message.isSystem) {
       messagePreview = message.text || 'System notification';
     } else {
-      messagePreview = message.text || 'No message'; // Rely on backend-cleaned text
+      messagePreview = message.text || 'No message';
     }
 
     return `
@@ -294,51 +376,49 @@ async function markMessagesAsRead() {
   }).join('');
 }
 
-  async function handleMessageClick(partnerId, partnerName, partnerProfile) {
-    try {
-      const token = localStorage.getItem('authToken');
-      await fetch(`${API_BASE_URL}/messages/mark-as-viewed`, {
-        method: 'PUT',
-        headers: { 
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ 
-          userId,
-          partnerId 
-        })
-      });
-      //refresh the messaga list to update the UI imediately
-      await fetchMessages();
-      
-      window.location.href = `Chats.html?user_id=${userId}&recipient_id=${partnerId}&recipient_username=${partnerName}&recipient_profile_picture_url=${partnerProfile}`;
-    } catch (error) {
-      console.error('Message click error:', error);
-    }
+async function handleMessageClick(partnerId, partnerName, partnerProfile) {
+  try {
+    const token = localStorage.getItem('authToken');
+    await fetch(`${API_BASE_URL}/messages/mark-as-viewed`, {
+      method: 'PUT',
+      headers: { 
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ 
+        userId,
+        partnerId 
+      })
+    });
+    // Refresh the message list to update the UI immediately
+    await fetchMessages();
+    
+    window.location.href = `Chats.html?user_id=${userId}&recipient_id=${partnerId}&recipient_username=${partnerName}&recipient_profile_picture_url=${partnerProfile}`;
+  } catch (error) {
+    console.error('Message click error:', error);
   }
+}
 
-  function formatTime(timestamp) {
-    try {
-      const date = new Date(timestamp);
-      if (isNaN(date)) return '';
-      
-      const options = { hour: '2-digit', minute: '2-digit' };
-      return date.toDateString() === new Date().toDateString() 
-        ? date.toLocaleTimeString([], options)
-        : date.toLocaleDateString([], { month: 'short', day: 'numeric' });
-    } catch {
-      return '';
-    }
+function formatTime(timestamp) {
+  try {
+    const date = new Date(timestamp);
+    if (isNaN(date)) return '';
+    
+    const options = { hour: '2-digit', minute: '2-digit' };
+    return date.toDateString() === new Date().toDateString() 
+      ? date.toLocaleTimeString([], options)
+      : date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+  } catch {
+    return '';
   }
+}
 
-  
-
-  function escapeHTML(str) {
-    return str.replace(/&/g, '&amp;')
-             .replace(/</g, '&lt;')
-             .replace(/>/g, '&gt;')
-             .replace(/"/g, '&quot;')
-             .replace(/'/g, '&#039;');
-  }
+function escapeHTML(str) {
+  return str.replace(/&/g, '&amp;')
+           .replace(/</g, '&lt;')
+           .replace(/>/g, '&gt;')
+           .replace(/"/g, '&quot;')
+           .replace(/'/g, '&#39;');
+}
 </script>
 </html>
