@@ -27,24 +27,29 @@ try {
     const { type, postId, senderId } = data;
     
     const notificationOptions = {
-      body,
-      icon: '/images/icon-128x128.png',
-      badge: '/images/badge-128x128.png',
-      image: image || '/images/notification-banner.jpg',
-      vibrate: [100, 50, 100],
-      requireInteraction: true,
-      tag: `salmart-${type}-${postId || senderId || Date.now()}`,
-      data: {
-        type,
-        postId,
-        senderId,
-        url: getNotificationUrl(type, postId, senderId),
-      },
-      actions: [
-        { action: 'view', title: 'View' },
-        { action: 'dismiss', title: 'Dismiss' },
-      ],
-    };
+  body,
+  icon: '/images/icon-128x128.png',
+  badge: '/images/badge-128x128.png',
+  image: image || '/images/notification-banner.jpg',
+  vibrate: [100, 50, 100],
+  requireInteraction: true,
+  tag: `salmart-${type}-${postId || senderId || Date.now()}`,
+  data: {
+    type,
+    postId,
+    senderId,
+    url: getNotificationUrl(type, postId, senderId),
+  },
+  actions: [
+    { action: 'view', title: 'View' },
+    { action: 'dismiss', title: 'Dismiss' },
+  ],
+  priority: 'high',                 // <- High priority
+  renotify: true,                   // <- Keeps it at the top if updated
+  silent: false,                    // <- Play a sound
+  requireInteraction: true,         // <- Keeps it on screen until clicked
+  visibility: 'public',             // <- Public visibility for banner display
+};
     
     return self.registration.showNotification(title, notificationOptions);
   });

@@ -159,33 +159,16 @@ ${post.createdBy.userId !== loggedInUser ?
   </button>
 </a>
                     </div>
-                        <div class="post-actions">
-                            <button class="like-button">
-                                <i class="${post.likes.includes(loggedInUser) ? 'fas' : 'far'} fa-heart"></i>
-                                <span class="like-count">${post.likes.length}</span>
-                            </button>
-                            <button class="reply-button"><i class="far fa-comment"></i> <span class="comment-count">${post.comments ? post.comments.length : 0}</span></button>
-                            <button class="share-button"><i class="fas fa-share"></i></button>
-                        </div>
-                        <div class="comment-section" style="display: none;">
-                            <div class="comments-list">
-                                ${post.comments.map(comment => `
-                                    <div class="comment">
-                                        <img src="${comment.profilePicture || 'default-avatar.png'}" class="comment-avatar">
-                                        <div class="comment-info">
-                                            <strong>${comment.name}</strong>
-                                            <p>${comment.text}</p>
-                                            <span class="comment-time">${formatTime(comment.createdAt)}</span>
-                                        </div>
-                                    </div>
-                                `).join('')}
-                            </div>
-                            <div class="comment-input">
-                                <input type="text" placeholder="Write a comment..." class="comment-text">
-                                <button class="comment-submit" data-post-id="${post._id}">Post</button>
-                            </div>
-                        </div>
-                    `;
+  <div class="post-actions">
+                        <button class="like-button">
+                            <i class="${post.likes.includes(loggedInUser) ? 'fas' : 'far'} fa-heart"></i>
+                            <span class="like-count">${post.likes.length} </span><p>Likes</p>
+                        </button>
+                        <button class="reply-button"><i class="far fa-comment-alt"></i><span class="comment-count">${post.comments ? post.comments.length : 0}</span><p> Comments</p> </button>
+                        <button class="share-button"><i class="fas fa-share"></i></button>
+                    </div>
+                  
+                `;
                     postsContainer.prepend(postElement);
 
                     // Add event listeners for buttons (like, comment, follow, etc.)
@@ -233,57 +216,11 @@ ${post.createdBy.userId !== loggedInUser ?
                         }
                     });
 
-                    // Comment functionality
-                    const commentToggleButton = postElement.querySelector('.reply-button');
-                    const commentSection = postElement.querySelector('.comment-section');
-                    commentToggleButton.addEventListener('click', () => {
-                        commentSection.style.display = commentSection.style.display === "none" ? "block" : "none";
-                    });
-
-                    const commentButton = postElement.querySelector('.comment-submit');
-                    const commentInput = postElement.querySelector('.comment-text');
-                    commentButton.addEventListener('click', async () => {
-                        const commentText = commentInput.value.trim();
-                        if (!commentText) return;
-
-                        try {
-                            const response = await fetch(`${API_BASE_URL}/post/comment/${post._id}`, {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-                                },
-                                body: JSON.stringify({ text: commentText }),
-                            });
-
-                            if (!response.ok) throw new Error('Failed to post comment');
-
-                            const result = await response.json();
-                            const newComment = result.comment;
-
-                            const commentList = postElement.querySelector('.comments-list');
-                            const newCommentHTML = `
-                                <div class="comment">
-                                    <img src="${newComment.profilePicture || 'default-avatar.png'}" class="comment-avatar">
-                                    <div class="comment-info">
-                                        <strong>${newComment.name}</strong>
-                                        <p>${newComment.text}</p>
-                                        <span class="comment-time">${formatTime(newComment.createdAt)}</span>
-                                    </div>
-                                </div>
-                            `;
-                            commentList.insertAdjacentHTML('afterbegin', newCommentHTML);
-                            commentInput.value = "";
-
-                            const commentCountElement = postElement.querySelector('.comment-count');
-                            commentCountElement.textContent = parseInt(commentCountElement.textContent) + 1;
-
-                            showToast("Your comment has been submitted!");
-                        } catch (error) {
-                            console.error('Error posting comment:', error);
-                        }
-                    });
-
+                // Toggle comment section
+const commentToggleButton = postElement.querySelector('.reply-button');
+commentToggleButton.addEventListener('click', () => {
+    window.location.href = `posts-details.html?postId=${post._id}`;
+});
                     // Buy now functionality
                     const buyNowButton = postElement.querySelector('.buy-now-button');
                     buyNowButton.addEventListener('click', async () => {
@@ -427,61 +364,6 @@ function openAppOrWeb(appUrl, webUrl) {
     }, 500);
 }
 
- //Then update the follow button click handler:
-document.querySelectorAll('.follow-button').forEach(followButton => {
-       followButton.addEventListener('click', async () => {
-           const userIdToFollow = followButton.getAttribute('data-user-id');
-           const token = localStorage.getItem('authToken');
-
-           if (!token) {
-               showToast('Please log in to follow users');
-               return;
-           }
-
-           try {
-               const response = await fetch(`${API_BASE_URL}/follow/${userIdToFollow}`, {
-                   method: 'POST',
-                   headers: {
-                       'Content-Type': 'application/json',
-                       'Authorization': `Bearer ${token}`,
-                   },
-               });
-
-               // First check if there's any response at all
-               if (!response.ok) {
-                   throw new Error(`HTTP error! status: ${response.status}`);
-               }
-
-               // Check if response has content before parsing
-               const text = await response.text();
-               const result = text ? JSON.parse(text) : {};
-
-               // Update localStorage following list
-               let followingList = [];
-               try {
-                   followingList = JSON.parse(localStorage.getItem('followingList')) || [];
-               } catch (e) {
-                   console.error("Error parsing followingList:", e);
-               }
-
-               if (!followingList.includes(userIdToFollow)) {
-                   followingList.push(userIdToFollow);
-                   localStorage.setItem('followingList', JSON.stringify(followingList));
-               }
-
-               // Update all follow buttons for this user
-               document.querySelectorAll(`.follow-button[data-user-id="${userIdToFollow}"]`).forEach(button => {
-                   button.innerHTML = `<i class="fas fa-user-check"></i> Following`;
-                   button.style.backgroundColor = '#28a745'; // Visual feedback
-               });
-
-               showToast(`You are now following this user!`);
-           } catch (error) {
-               console.error('Error following user:', error);
-               showToast(error.message || 'Failed to follow user. Please try again.');
-           }
-       });
-   });
 // Update the showShareModal function to include Instagram:
 function showShareModal(post) {
     // Create modal element
@@ -592,6 +474,62 @@ async function copyToClipboard(text) {
         return false;
     }
 }
+ //Then update the follow button click handler:
+document.querySelectorAll('.follow-button').forEach(followButton => {
+       followButton.addEventListener('click', async () => {
+           const userIdToFollow = followButton.getAttribute('data-user-id');
+           const token = localStorage.getItem('authToken');
+
+           if (!token) {
+               showToast('Please log in to follow users');
+               return;
+           }
+
+           try {
+               const response = await fetch(`${API_BASE_URL}/follow/${userIdToFollow}`, {
+                   method: 'POST',
+                   headers: {
+                       'Content-Type': 'application/json',
+                       'Authorization': `Bearer ${token}`,
+                   },
+               });
+
+               // First check if there's any response at all
+               if (!response.ok) {
+                   throw new Error(`HTTP error! status: ${response.status}`);
+               }
+
+               // Check if response has content before parsing
+               const text = await response.text();
+               const result = text ? JSON.parse(text) : {};
+
+               // Update localStorage following list
+               let followingList = [];
+               try {
+                   followingList = JSON.parse(localStorage.getItem('followingList')) || [];
+               } catch (e) {
+                   console.error("Error parsing followingList:", e);
+               }
+
+               if (!followingList.includes(userIdToFollow)) {
+                   followingList.push(userIdToFollow);
+                   localStorage.setItem('followingList', JSON.stringify(followingList));
+               }
+
+               // Update all follow buttons for this user
+               document.querySelectorAll(`.follow-button[data-user-id="${userIdToFollow}"]`).forEach(button => {
+                   button.innerHTML = `<i class="fas fa-user-check"></i> Following`;
+                   button.style.backgroundColor = '#28a745'; // Visual feedback
+               });
+
+               showToast(`You are now following this user!`);
+           } catch (error) {
+               console.error('Error following user:', error);
+               showToast(error.message || 'Failed to follow user. Please try again.');
+           }
+       });
+   });
+
       
 // Report post functionality - Modern UI Modal Version
 const reportButton = postElement.querySelector('.report-post-button');
@@ -610,11 +548,11 @@ reportButton.addEventListener('click', async () => {
     reportModal.innerHTML = `
         <div class="report-modal-content">
             <div class="report-modal-header">
-                <h3>Report Post</h3>
+                <h3>Report Ad</h3>
                 <span class="close-modal">&times;</span>
             </div>
             <div class="report-modal-body">
-                <p>Please select the reason for reporting this post:</p>
+                <p>Please select the reason for reporting this ad:</p>
                 <div class="report-reasons">
                     <label class="report-reason">
                         <input type="radio" name="report-reason" value="Spam">

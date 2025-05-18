@@ -350,15 +350,9 @@
       if (res.ok) {
         // Store user data in localStorage
         localStorage.setItem('authToken', data.token);
-        localStorage.setItem('userId', data.user._id);
-        localStorage.setItem('userEmail', data.user.email);
-        localStorage.setItem('userFirstName', data.user.firstName);
-        localStorage.setItem('userLastName', data.user.lastName);
+        localStorage.setItem('userId', data.userId);
         
-        // Store bank details if available
-        if (data.user.bankDetails) {
-          localStorage.setItem('bankDetails', JSON.stringify(data.user.bankDetails));
-        }
+        
 
         // Show success modal with spinner
         document.getElementById('successModal').style.display = 'flex';
@@ -372,7 +366,6 @@
       }
     } catch (err) {
       console.error('Registration error:', err);
-      alert('Failed to connect to the server. Please try again later.');
     } finally {
       btnText.textContent = 'Register';
       btnSpinner.style.display = 'none';

@@ -155,9 +155,9 @@ ${post.createdBy.userId !== loggedInUser ?
                     <div class="post-actions">
                         <button class="like-button">
                             <i class="${post.likes.includes(loggedInUser) ? 'fas' : 'far'} fa-heart"></i>
-                            <span class="like-count">${post.likes.length} Likes</span>
+                            <span class="like-count">${post.likes.length} </span><p>Likes</p>
                         </button>
-                        <button class="reply-button"><i class="far fa-comment-alt"></i> <span class="comment-count">${post.comments ? post.comments.length : 0} Comments</span></button>
+                        <button class="reply-button"><i class="far fa-comment-alt"></i><span class="comment-count">${post.comments ? post.comments.length : 0}</span><p> Comments</p> </button>
                         <button class="share-button"><i class="fas fa-share"></i></button>
                     </div>
                   
@@ -224,7 +224,7 @@ likeButton.addEventListener('click', async () => {
     likeButton.disabled = true;
 
     // Optimistic UI update
-    likeCountElement.textContent = isCurrentlyLiked ? currentLikes - 1 : currentLikes + 1;
+    likeCountElement.textContent = isCurrentlyLiked ? currentLikes - 1 : currentLikes + 1 ;
     icon.classList.toggle('fas', !isCurrentlyLiked);
     icon.classList.toggle('far', isCurrentlyLiked);
 

@@ -662,7 +662,7 @@ a .active {
 /* Reviews Tab Styles */
 .tab-content {
   display: none;
-  padding: 15px;
+  padding: 10px;
   margin-top: 20px;
 }
 
@@ -967,4 +967,12 @@ a .active {
 /* Ensure real content is initially hidden */
 .profile-picture, #username, .stats-item p, .stats-item h3 {
   display: none;
+}
+/*Profile post wrapper*/
+
+.posts-wrapper {
+     background-color: #fff;
+     padding: 10px;
+     border-radius: 8px;
+     margin-bottom: 30px;
 }

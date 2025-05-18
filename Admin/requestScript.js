@@ -717,13 +717,13 @@ async function fetchRequests(category = '') {
           <form class="like-form">
             <button type="submit" class="like-btn ${isLiked ? 'liked' : ''}">
               <i class="fa${isLiked ? 's' : 'r'} fa-heart"></i>
-              <span class="like-count">${request.likes.length} Likes</span>
-            </button>
+              <span class="like-count">${request.likes.length} </span>
+                    <p style="color: #28a745">Likes</> </button>
           </form>
           <button class="comment-btn">
             <i class="far fa-comment-alt"></i>
-            <span class="comment-count">${request.comments.length} Comments</span>
-          </button>
+            <span class="comment-count">${request.comments.length}</span>
+         <p style="color: #28a745">Comments</> </button>
         </div>
       `;
 

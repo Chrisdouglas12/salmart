@@ -88,149 +88,149 @@
     .unread {
       font-weight: bold;
     }
-     /* Bottom Navigation Bar */
-#navbar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  background-color: white;
-  box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
-  z-index: 1000;
-}
 
-#navbar ul {
-  display: flex;
-  justify-content: space-around; /* Distributes items evenly */
-  align-items: center;
-  list-style: none;
-  padding: 10px 0;
-  margin: 0;
-}
+    /* Bottom Navigation Bar */
+    #navbar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background-color: white;
+      box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+      z-index: 1000;
+    }
 
-#navbar li {
-  flex: 1; /* Each item takes equal width */
-  text-align: center;
-}
+    #navbar ul {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      list-style: none;
+      padding: 10px 0;
+      margin: 0;
+    }
 
-#navbar a {
-  display: flex;
-  flex-direction: column; /* Stack icon, text, and badge vertically */
-  align-items: center; /* Center horizontally */
-  justify-content: center; /* Center vertically */
-  text-decoration: none;
-  color: #28a745;
-  font-size: 12px;
-  padding: 5px;
-}
+    #navbar li {
+      flex: 1;
+      text-align: center;
+    }
 
-#navbar a i {
-  font-size: 20px; /* Adjust icon size */
-  margin-bottom: 5px; /* Space between icon and text */
-}
+    #navbar a {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      color: #28a745;
+      font-size: 12px;
+      padding: 5px;
+    }
 
-#navbar a span.notification-badge {
-  position: absolute;
-  top: 0;
-  right: -10px;
-  background-color: #dc3545;
-  color: white;
-  border-radius: 50%;
-  padding: 2px 6px;
-  font-size: 10px;
-}
+    #navbar a i {
+      font-size: 20px;
+      margin-bottom: 5px;
+    }
 
-/* Ensure active state is styled if needed */
-#navbar a.active {
-  color: #218838; /* Darker green for active state */
-}
-    .profile-pic img{
+    #navbar a span.notification-badge {
+      position: absolute;
+      top: 0;
+      right: -10px;
+      background-color: #dc3545;
+      color: white;
+      border-radius: 50%;
+      padding: 2px 6px;
+      font-size: 10px;
+    }
+
+    #navbar a.active {
+      color: #218838;
+    }
+
+    .profile-pic img {
       position: fixed;
       z-index: 2;
       margin-left: 20px;
       margin-top: -55px;
       border: solid 0.1px #ddd;
     }
+
     /* Skeleton Loader */
-.skeleton-wrapper {
-  display: flex;
-  width: 100%;
-  align-items: center;
-  background-color: #ffffff;
-  border-radius: 12px;
-  padding: 12px 16px;
-  margin-bottom: 10px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  z-index: 1000;
-}
+    .skeleton-wrapper {
+      display: flex;
+      width: 100%;
+      align-items: center;
+      background-color: #ffffff;
+      border-radius: 12px;
+      padding: 12px 16px;
+      margin-bottom: 10px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      z-index: 1000;
+    }
 
-.skeleton-avatar {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-  background-size: 200% 100%;
-  animation: skeleton-loading 1.5s infinite;
-  margin-right: 12px;
-}
+    .skeleton-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+      background-size: 200% 100%;
+      animation: skeleton-loading 1.5s infinite;
+      margin-right: 12px;
+    }
 
-.skeleton-content {
-  flex: 1;
-}
+    .skeleton-content {
+      flex: 1;
+    }
 
-.skeleton-line {
-  height: 12px;
-  width: 70%;
-  border-radius: 4px;
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-  background-size: 200% 100%;
-  animation: skeleton-loading 1.5s infinite;
-  margin-bottom: 8px;
-}
+    .skeleton-line {
+      height: 12px;
+      width: 70%;
+      border-radius: 4px;
+      background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+      background-size: 200% 100%;
+      animation: skeleton-loading 1.5s infinite;
+      margin-bottom: 8px;
+    }
 
-.skeleton-line.short {
-  width: 60%;
-}
+    .skeleton-line.short {
+      width: 60%;
+    }
 
-.skeleton-line.time {
-  width: 30%;
-  height: 10px;
-}
+    .skeleton-line.time {
+      width: 30%;
+      height: 10px;
+    }
 
-@keyframes skeleton-loading {
-  0% {
-    background-position: 200% 0;
-  }
-  100% {
-    background-position: -200% 0;
-  }
-}
+    @keyframes skeleton-loading {
+      0% {
+        background-position: 200% 0;
+      }
+      100% {
+        background-position: -200% 0;
+      }
+    }
   </style>
 </head>
 <body>
- 
-</div>
-  <h3>Messages<div style="z-index: 3; position: fixed; margin-left: 80%; margin-top: -33px; font-size: 16px;">
-    <a href="">
-  <i class="fas fa-search" style="color:#28a745; border: 0.1px solid #fff; border-radius: 20px; padding: 8.5px; background-color:#fff; font-weight: light"></i>
-  
-  </a>
-  </div>
+  <h3>Messages
+    <div style="z-index: 3; position: fixed; margin-left: 80%; margin-top: -33px; font-size: 16px;">
+      <a href="">
+        <i class="fas fa-search" style="color:#28a745; border: 0.1px solid #fff; border-radius: 20px; padding: 8.5px; background-color:#fff; font-weight: light"></i>
+      </a>
+    </div>
   </h3>
-   <div class="profile-pic">
-  <img src="Default.png" alt="up" id="profile-picture5" width="40px" height="40px" style="border-radius: 50%">
+  <div class="profile-pic">
+    <img src="Default.png" alt="up" id="profile-picture5" width="40px" height="40px" style="border-radius: 50%">
   </div>
   
   <div style="text-align: center">
-  <nav id="navbar">
-    <ul>
-      <li class="active"><a href="index.html"><i class="fas fa-store"></i>Market</a></li>
-      <li><a href="Alerts.html"><i class="fas fa-bell"></i>Alerts</a></li>
-      <li><a href="Messages.html"><i class="fas fa-comments"></i>Messages</a></li> 
-            <li><a href="Deals.html"><i class="fas fa-cart-plus"></i>Deals</a></li>
-      <li><a href="Profile.html"><i class="fas fa-user"></i>Profile</a></li>
-    </ul>
-  </nav>
+    <nav id="navbar">
+      <ul>
+        <li class="active"><a href="index.html"><i class="fas fa-store"></i>Market</a></li>
+        <li><a href="Alerts.html"><i class="fas fa-bell"></i>Alerts</a></li>
+        <li><a href="Messages.html"><i class="fas fa-comments"></i>Messages</a></li> 
+        <li><a href="Deals.html"><i class="fas fa-cart-plus"></i>Deals</a></li>
+        <li><a href="Profile.html"><i class="fas fa-user"></i>Profile</a></li>
+      </ul>
+    </nav>
   </div>
 
   <div id="message-list"></div>
@@ -238,187 +238,192 @@
 </body>
 <script>
   const userId = localStorage.getItem("userId");
-let latestTimestamp = null;
-let API_BASE_URL;
+  let latestTimestamp = null;
+  let API_BASE_URL;
+  let isInitialLoad = true; // Flag to track initial load
 
-// Function to create skeleton loader
-function createSkeletonLoader() {
-  const skeleton = document.createElement('div');
-  skeleton.classList.add('skeleton-wrapper');
-  skeleton.innerHTML = `
-    <div class="skeleton-avatar"></div>
-    <div class="skeleton-content">
-      <div class="skeleton-line"></div>
-      <div class="skeleton-line short"></div>
-      <div class="skeleton-line time"></div>
-    </div>
-  `;
-  return skeleton;
-}
-
-// Function to show skeleton loaders
-function showSkeletonLoaders(container, count = 6) {
-  container.innerHTML = '';
-  for (let i = 0; i < count; i++) {
-    container.appendChild(createSkeletonLoader());
-  }
-}
-
-if (!userId) {
-  window.location.href = "SignIn.html";
-} else {
-  initialize();
-}
-
-async function initialize() {
-  API_BASE_URL = window.location.hostname === 'localhost' 
-    ? 'http://localhost:3000' 
-    : 'https://salmart-production.up.railway.app';
-  
-  await fetchMessages();
-  setInterval(fetchMessages, 5000);
-}
-
-async function fetchMessages() {
-  const messageListElement = document.getElementById("message-list");
-  const noMessagesElement = document.getElementById("no-messages");
-
-  // Show skeleton loaders while fetching
-  showSkeletonLoaders(messageListElement);
-
-  try {
-    const response = await fetch(`${API_BASE_URL}/api/messages?userId=${userId}`);
-    if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-    
-    await markMessagesAsRead();
-    const messages = await response.json();
-    processMessages(messages);
-  } catch (error) {
-    console.error("Fetch error:", error);
-    messageListElement.innerHTML = "<p>Failed to load messages. Please try again later.</p>";
-    noMessagesElement.style.display = "none";
-  }
-}
-
-async function markMessagesAsRead() {
-  try {
-    await fetch(`${API_BASE_URL}/messages/mark-as-read`, {
-      method: 'PUT',
-      headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` }
-    });
-  } catch (error) {
-    console.error('Failed to mark messages as read');
-  }
-}
-
-function processMessages(messages) {
-  unreadCount = messages.filter(msg => 
-    !msg.isRead && (msg.receiverId === userId || (msg.senderId === userId && msg.receiverId === userId))
-  ).length;
-  
-  messages.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-  
-  const messageListElement = document.getElementById("message-list");
-  const noMessagesElement = document.getElementById("no-messages");
-  
-  if (messages.length === 0) {
-    messageListElement.innerHTML = '';
-    noMessagesElement.style.display = "block";
-    return;
-  }
-  noMessagesElement.style.display = "none";
-
-  if (shouldUpdateUI(messages)) {
-    latestTimestamp = messages[0].createdAt;
-    messageListElement.innerHTML = generateMessageHTML(messages);
-  }
-}
-
-function shouldUpdateUI(messages) {
-  return !latestTimestamp || 
-    new Date(messages[0].createdAt) > new Date(latestTimestamp);
-}
-
-function generateMessageHTML(messages) {
-  const uniqueChats = {};
-  messages.forEach(msg => {
-    const chatPartnerId = msg.senderId === userId ? msg.receiverId : msg.senderId;
-    if (!uniqueChats[chatPartnerId] || new Date(msg.createdAt) > new Date(uniqueChats[chatPartnerId].createdAt)) {
-      uniqueChats[chatPartnerId] = msg;
-    }
-  });
-
-  return Object.values(uniqueChats).map(message => {
-    const chatPartnerId = message.senderId === userId ? message.receiverId : message.senderId;
-    const isUnread = !message.isRead && (message.receiverId === userId || (message.senderId === userId && message.receiverId === userId));
-
-    let messagePreview;
-    if (message.messageType === 'image') {
-      messagePreview = 'Photo';
-    } else if (message.isSystem) {
-      messagePreview = message.text || 'System notification';
-    } else {
-      messagePreview = message.text || 'No message';
-    }
-
-    return `
-      <div class="message-item ${isUnread ? 'unread' : ''}" 
-           onclick="handleMessageClick('${chatPartnerId}', '${escapeHTML(message.chatPartnerName)}', '${escapeHTML(message.chatPartnerProfilePicture)}')">
-        <img src="${escapeHTML(message.chatPartnerProfilePicture)}" alt="Profile">
-        <div class="info">
-          <h4>${escapeHTML(message.chatPartnerName)}</h4>
-          <p>${escapeHTML(messagePreview)}</p>
-        </div>
-        <div class="time">${formatTime(message.createdAt)}</div>
-        ${isUnread ? '<span class="unread-dot"></span>' : ''}
+  // Function to create skeleton loader
+  function createSkeletonLoader() {
+    const skeleton = document.createElement('div');
+    skeleton.classList.add('skeleton-wrapper');
+    skeleton.innerHTML = `
+      <div class="skeleton-avatar"></div>
+      <div class="skeleton-content">
+        <div class="skeleton-line"></div>
+        <div class="skeleton-line short"></div>
+        <div class="skeleton-line time"></div>
       </div>
     `;
-  }).join('');
-}
+    return skeleton;
+  }
 
-async function handleMessageClick(partnerId, partnerName, partnerProfile) {
-  try {
-    const token = localStorage.getItem('authToken');
-    await fetch(`${API_BASE_URL}/messages/mark-as-viewed`, {
-      method: 'PUT',
-      headers: { 
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ 
-        userId,
-        partnerId 
-      })
-    });
-    // Refresh the message list to update the UI immediately
+  // Function to show skeleton loaders
+  function showSkeletonLoaders(container, count = 6) {
+    container.innerHTML = '';
+    for (let i = 0; i < count; i++) {
+      container.appendChild(createSkeletonLoader());
+    }
+  }
+
+  if (!userId) {
+    window.location.href = "SignIn.html";
+  } else {
+    initialize();
+  }
+
+  async function initialize() {
+    API_BASE_URL = window.location.hostname === 'localhost' 
+      ? 'http://localhost:3000' 
+      : 'https://salmart-production.up.railway.app';
+    
     await fetchMessages();
-    
-    window.location.href = `Chats.html?user_id=${userId}&recipient_id=${partnerId}&recipient_username=${partnerName}&recipient_profile_picture_url=${partnerProfile}`;
-  } catch (error) {
-    console.error('Message click error:', error);
+    setInterval(fetchMessages, 5000);
   }
-}
 
-function formatTime(timestamp) {
-  try {
-    const date = new Date(timestamp);
-    if (isNaN(date)) return '';
-    
-    const options = { hour: '2-digit', minute: '2-digit' };
-    return date.toDateString() === new Date().toDateString() 
-      ? date.toLocaleTimeString([], options)
-      : date.toLocaleDateString([], { month: 'short', day: 'numeric' });
-  } catch {
-    return '';
+  async function fetchMessages() {
+    const messageListElement = document.getElementById("message-list");
+    const noMessagesElement = document.getElementById("no-messages");
+
+    // Show skeleton loaders only on initial load
+    if (isInitialLoad) {
+      showSkeletonLoaders(messageListElement);
+    }
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/messages?userId=${userId}`);
+      if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+      
+      await markMessagesAsRead();
+      const messages = await response.json();
+      processMessages(messages);
+      isInitialLoad = false; // Set to false after first successful fetch
+    } catch (error) {
+      console.error("Fetch error:", error);
+      messageListElement.innerHTML = "<p>Failed to load messages. Please try again later.</p>";
+      noMessagesElement.style.display = "none";
+      isInitialLoad = false; // Ensure no loaders on retry after error
+    }
   }
-}
 
-function escapeHTML(str) {
-  return str.replace(/&/g, '&amp;')
-           .replace(/</g, '&lt;')
-           .replace(/>/g, '&gt;')
-           .replace(/"/g, '&quot;')
-           .replace(/'/g, '&#39;');
-}
+  async function markMessagesAsRead() {
+    try {
+      await fetch(`${API_BASE_URL}/messages/mark-as-read`, {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` }
+      });
+    } catch (error) {
+      console.error('Failed to mark messages as read');
+    }
+  }
+
+  function processMessages(messages) {
+    unreadCount = messages.filter(msg => 
+      !msg.isRead && (msg.receiverId === userId || (msg.senderId === userId && msg.receiverId === userId))
+    ).length;
+    
+    messages.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    
+    const messageListElement = document.getElementById("message-list");
+    const noMessagesElement = document.getElementById("no-messages");
+    
+    if (messages.length === 0) {
+      messageListElement.innerHTML = '';
+      noMessagesElement.style.display = "block";
+      return;
+    }
+    noMessagesElement.style.display = "none";
+
+    if (shouldUpdateUI(messages)) {
+      latestTimestamp = messages[0].createdAt;
+      messageListElement.innerHTML = generateMessageHTML(messages);
+    }
+  }
+
+  function shouldUpdateUI(messages) {
+    return !latestTimestamp || 
+      new Date(messages[0].createdAt) > new Date(latestTimestamp);
+  }
+
+  function generateMessageHTML(messages) {
+    const uniqueChats = {};
+    messages.forEach(msg => {
+      const chatPartnerId = msg.senderId === userId ? msg.receiverId : msg.senderId;
+      if (!uniqueChats[chatPartnerId] || new Date(msg.createdAt) > new Date(uniqueChats[chatPartnerId].createdAt)) {
+        uniqueChats[chatPartnerId] = msg;
+      }
+    });
+
+    return Object.values(uniqueChats).map(message => {
+      const chatPartnerId = message.senderId === userId ? message.receiverId : message.senderId;
+      const isUnread = !message.isRead && (message.receiverId === userId || (message.senderId === userId && message.receiverId === userId));
+
+      let messagePreview;
+      if (message.messageType === 'image') {
+        messagePreview = 'Photo';
+      } else if (message.isSystem) {
+        messagePreview = message.text || 'System notification';
+      } else {
+        messagePreview = message.text || 'No message';
+      }
+
+      return `
+        <div class="message-item ${isUnread ? 'unread' : ''}" 
+             onclick="handleMessageClick('${chatPartnerId}', '${escapeHTML(message.chatPartnerName)}', '${escapeHTML(message.chatPartnerProfilePicture)}')">
+          <img src="${escapeHTML(message.chatPartnerProfilePicture)}" alt="Profile">
+          <div class="info">
+            <h4>${escapeHTML(message.chatPartnerName)}</h4>
+            <p>${escapeHTML(messagePreview)}</p>
+          </div>
+          <div class="time">${formatTime(message.createdAt)}</div>
+          ${isUnread ? '<span class="unread-dot"></span>' : ''}
+        </div>
+      `;
+    }).join('');
+  }
+
+  async function handleMessageClick(partnerId, partnerName, partnerProfile) {
+    try {
+      const token = localStorage.getItem('authToken');
+      await fetch(`${API_BASE_URL}/messages/mark-as-viewed`, {
+        method: 'PUT',
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ 
+          userId,
+          partnerId 
+        })
+      });
+      // Refresh the message list to update the UI immediately
+      await fetchMessages();
+      
+      window.location.href = `Chats.html?user_id=${userId}&recipient_id=${partnerId}&recipient_username=${partnerName}&recipient_profile_picture_url=${partnerProfile}`;
+    } catch (error) {
+      console.error('Message click error:', error);
+    }
+  }
+
+  function formatTime(timestamp) {
+    try {
+      const date = new Date(timestamp);
+      if (isNaN(date)) return '';
+      
+      const options = { hour: '2-digit', minute: '2-digit' };
+      return date.toDateString() === new Date().toDateString() 
+        ? date.toLocaleTimeString([], options)
+        : date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+    } catch {
+      return '';
+    }
+  }
+
+  function escapeHTML(str) {
+    return str.replace(/&/g, '&amp;')
+             .replace(/</g, '&lt;')
+             .replace(/>/g, '&gt;')
+             .replace(/"/g, '&quot;')
+             .replace(/'/g, '&#039;');
+  }
 </script>
 </html>

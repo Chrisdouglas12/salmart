@@ -18,6 +18,8 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  font-size: 14px;
+  font-weight: 800px
 }
 
 h3 {
@@ -30,6 +32,7 @@ h3 {
       top: 0;
       z-index: 1;
       margin-top: 0%;
+      
     } 
 
 #notifications-wrapper {
@@ -363,11 +366,11 @@ function displayNotifications(notifications) {
     } else if (notification.type === 'comment') {
       notificationText = `${notification.senderId.firstName} ${notification.senderId.lastName} commented on your ad`;
     } else if (notification.type === 'payment') {
-      notificationText = `<p style="color: #28a745; margin-left: -100%; margin-bottom: 10px; font-weight: 600;">Payment</p><strong>${notification.senderId.firstName} ${notification.senderId.lastName}</strong> payed for <strong>"${notification.payment}" kindly release delivery address"</strong>`;
+      notificationText = `<p style="color: #28a745; margin-left: -100%; margin-bottom: 10px; font-weight: 600;">Payment</p>${notification.senderId.firstName} ${notification.senderId.lastName} payed for "${notification.payment}" kindly release delivery address"`;
     } else if (notification.type === 'delivery') {
-      notificationText = `<p style="color: #28a745; margin-left: -100%; margin-bottom: 10px; font-weight: 600;">Funds Transfer</p><strong>${notification.senderId.firstName} ${notification.senderId.lastName}</strong> has confirmed your delivery of <strong>"${notification.payment}".</strong> Your funds have been released to your bank account.`;
+      notificationText = `<p style="color: #28a745; margin-left: -100%; margin-bottom: 10px; font-weight: 600;">Funds Transfer</p>${notification.senderId.firstName} ${notification.senderId.lastName}has confirmed your delivery of "${notification.payment}".Your funds have been released to your bank account.`;
     } else if (notification.type === 'warning') {
-      notificationText = `<p style="color: #28a745; margin-left: -100%; margin-bottom: 10px; font-weight: 600;">Bank Details</p>Please add your bank details to receive payment from <strong>${notification.senderId.firstName} ${notification.senderId.lastName}.</strong>`;
+      notificationText = `<p style="color: #28a745; margin-left: -100%; margin-bottom: 10px; font-weight: 600;">Bank Details</p>Please add your bank details to receive payment from ${notification.senderId.firstName} ${notification.senderId.lastName}.`;
     }
 
     notificationElement.innerHTML = `
