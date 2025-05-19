@@ -525,8 +525,10 @@ function displayMessage(message) {
                         receiverId: productDetails.senderId,
                         messageType: 'buyerAccept',
                         text: JSON.stringify({
+                             text: `Offer for`,
+                             productName: parsed.productName,
                             productId: productDetails.productId,
-                            productName: parsed.productName,
+                            
                             offer: productDetails.offer,
                             buyerName: localStorage.getItem('username') || 'Buyer',
                             image: parsed.image || productImage || ''
