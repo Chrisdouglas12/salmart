@@ -15,7 +15,7 @@ const messageSchema = new mongoose.Schema({
   proposedPrice: { type: Number, required: false },
   messageType: {
     type: String,
-    enum: ['text', 'image', 'file', 'bargainStart', 'end-bargain', 'buyerAccept', 'sellerAccept', 'sellerDecline', 'buyerDeclineResponse', 'offer', 'counter-offer'],
+    enum: ['text', 'image', 'file', 'bargainStart', 'end-bargain', 'buyerAccept', 'sellerAccept', 'sellerDecline', 'buyerDeclineResponse', 'offer', 'counter-offer', 'buyerAcceptConfirmation'],
     default: 'text',
 },
   bargainStatus: {

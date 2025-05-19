@@ -430,7 +430,6 @@ function displayMessage(message) {
                             productId: productDetails.productId,
                             productName: parsed.productName,
                             offer: productDetails.offer,
-                            buyerName: localStorage.getItem('username') || 'Buyer',
                             image: parsed.image || productImage || ''
                         }),
                         createdAt: new Date(),
@@ -445,7 +444,6 @@ function displayMessage(message) {
                         receiverId: userId, // Seller
                         messageType: 'buyerAccept',
                         text: JSON.stringify({
-                            productId: productDetails.productId,
                             productName: parsed.productName,
                             offer: productDetails.offer,
                             buyerName: localStorage.getItem('username') || 'Buyer',
