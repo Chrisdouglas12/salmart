@@ -518,17 +518,18 @@ function displayMessage(message) {
                             const buttons = msg.querySelectorAll('.accept-offer-btn, .end-bargain-btn');
                             buttons.forEach(btn => btn.remove());
                         }
-                    });
+                    }); 
+               
 
                     const acceptMessage = {
                         senderId: userId,
                         receiverId: productDetails.senderId,
                         messageType: 'buyerAccept',
                         text: JSON.stringify({
-                             text: `Offer for`,
-                             productName: parsed.productName,
+                             text: `Last price of ${productDetails.offer.toLocaleString('en-NG')} for ${parsed.productName} has been accepted`,
+                      productName: parsed.productName,
                             productId: productDetails.productId,
-                            
+
                             offer: productDetails.offer,
                             buyerName: localStorage.getItem('username') || 'Buyer',
                             image: parsed.image || productImage || ''
