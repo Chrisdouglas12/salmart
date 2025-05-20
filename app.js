@@ -2823,7 +2823,6 @@ app.get('/get-transactions/:userId', async (req, res) => {
     })
     .populate('buyerId sellerId productId');
     
-    console.log(JSON.stringify(transactions, null, 2));
 
     res.json(transactions); // ✅ return plain array
   } catch (err) {
@@ -2849,58 +2848,21 @@ app.post('/confirm-delivery/:transactionId', verifyToken, async (req, res) => {
       return res.status(404).json({ error: "Transaction not found" });
     }
 
-    // Log transaction details
-    console.log('[TRANSACTION FOUND]', {
-      transactionId: transaction._id,
-      buyer: transaction.buyerId?.firstName + ' ' + transaction.buyerId?.lastName,
-      seller: transaction.sellerId?.firstName + ' ' + transaction.sellerId?.lastName,
-      product: transaction.productId?.description,
-      currentStatus: transaction.status,
-    });
-
-    // Extract seller object
+    // Extract seller object and validate bank details
     const seller = transaction.sellerId;
-
-    // === Strict Validation: Check if seller has valid bank details ===
-    console.log('[SELLER BANK DETAILS]', seller.bankDetails);
-
-    if (
-      !seller.bankDetails ||
-      !seller.bankDetails.accountNumber || typeof seller.bankDetails.accountNumber !== 'string' || seller.bankDetails.accountNumber.trim() === '' ||
-      !seller.bankDetails.bankCode || typeof seller.bankDetails.bankCode !== 'string' || seller.bankDetails.bankCode.trim() === '' ||
-      !seller.bankDetails.bankName || typeof seller.bankDetails.bankName !== 'string' || seller.bankDetails.bankName.trim() === ''
-    ) {
-      console.warn('[BANK DETAILS MISSING OR INVALID] Payment halted.');
-
-      // Notify seller to update bank details
-      const bankNotify = new Notification({
-        userId: seller._id,
-        senderId: transaction.buyerId._id || seller._id,
-        postId: transaction.productId?._id || null,
-        type: 'warning',
-        payment: transaction.productId?.description || 'Payment',
-        message: `Payment could not be processed because your bank details are missing or invalid. Please update your account number and bank name.`,
-        createdAt: new Date()
-      });
-
-      await bankNotify.save();
-      io.to(seller._id.toString()).emit('notification', bankNotify);
-
+    if (!seller.bankDetails || !seller.bankDetails.accountNumber || !seller.bankDetails.bankCode) {
+      console.warn('[BANK DETAILS MISSING OR INVALID]');
       return res.status(400).json({
         error: "Seller has not added valid bank details. Payment cannot be processed until seller updates their account."
       });
     }
 
-    // === Proceed with payout ===
-
-    // Check if recipient code exists in DB
+    // === Check or create Paystack recipient ===
     let recipientCode = seller.paystackRecipientCode;
-
     if (!recipientCode) {
-      // Create Paystack recipient
       const recipientPayload = {
         type: 'nuban',
-        name: seller.firstName + ' ' + seller.lastName,
+        name: `${seller.firstName} ${seller.lastName}`,
         account_number: seller.bankDetails.accountNumber,
         bank_code: seller.bankDetails.bankCode,
         currency: 'NGN'
@@ -2913,20 +2875,17 @@ app.post('/confirm-delivery/:transactionId', verifyToken, async (req, res) => {
       );
 
       recipientCode = recipientResponse.data.data.recipient_code;
-
-      // Save to seller profile
       seller.paystackRecipientCode = recipientCode;
       await seller.save();
-
-      console.log('[PAYSTACK RECIPIENT CREATED]', recipientCode);
     }
 
-    // Calculate amount to transfer (minus platform commission)
+    // === Calculate amount to transfer ===
     const productPrice = transaction.productId?.price || 0;
     const commissionPercent = 2.5;
     const commission = Math.floor((commissionPercent / 100) * productPrice);
     const amountToTransfer = productPrice - commission;
 
+    // === Initiate Transfer ===
     const transferPayload = {
       source: 'balance',
       amount: amountToTransfer * 100,
@@ -2941,65 +2900,28 @@ app.post('/confirm-delivery/:transactionId', verifyToken, async (req, res) => {
     );
 
     console.log('[TRANSFER INITIATED]', transferResponse.data);
-
     const transferStatus = transferResponse.data.data.status;
 
-    // === Check if transfer was successfully initiated ===
-    if (transferStatus !== 'success' && transferStatus !== 'successfully-queued') {
-      console.warn('[TRANSFER FAILED OR QUEUED INVALIDLY] Payment not marked as released');
+    // === OTP Required Handling ===
+    if (transferStatus === 'otp') {
+      transaction.transferReference = transferResponse.data.data.transfer_code;
+      transaction.otpRequired = true;
+      await transaction.save();
 
-      return res.status(500).json({
-        error: "Transfer to seller failed or could not be completed. Please try again later.",
-        paystackStatus: transferStatus
+      console.log('[OTP REQUIRED FOR TRANSFER] Transfer Code:', transaction.transferReference);
+
+      return res.status(200).json({
+        message: "OTP is required to complete the transfer. Please enter the OTP to proceed.",
+        otpRequired: true,
+        transferReference: transaction.transferReference
       });
     }
 
-    // === Now mark transaction as released only after successful payout ===
+    // === Transfer Successful, update transaction ===
     transaction.status = 'released';
     await transaction.save();
+
     console.log('[TRANSACTION STATUS UPDATED TO "released"]');
-const buyerId = transaction.buyerId._id.toString()
-const sellerId = transaction.sellerId._id.toString()
-await NotificationService.triggerCountUpdate(buyerId)
-await NotificationService.triggerCountUpdate(sellerId)
-io.to(`user_${buyerId}`).emit('badge-update', {
-      type: 'deals',
-      count: await Transaction.countDocuments({ $or: [{ buyerId }, { sellerId: buyerId }], status: 'pending' }),
-      userId: buyerId
-    });
-    io.to(`user_${sellerId}`).emit('badge-update', {
-      type: 'deals',
-      count: await Transaction.countDocuments({ $or: [{ buyerId: sellerId }, { sellerId }], status: 'pending' }),
-      userId: sellerId
-    });
-    // Update escrow status
-    const escrowPostId = transaction.productId?._id;
-    const updatedEscrow = await Escrow.findOneAndUpdate(
-      { postId: escrowPostId },
-      { status: 'Released' },
-      { new: true }
-    );
-
-    if (!updatedEscrow) {
-      console.warn('[ESCROW WARNING] No escrow found for post ID:', escrowPostId);
-    } else {
-      console.log('[ESCROW UPDATED]', updatedEscrow);
-    }
-
-    // Notify seller about successful release
-    const notification = new Notification({
-      userId: transaction.sellerId._id,
-      senderId: transaction.buyerId._id,
-      type: 'delivery',
-      payment: transaction.productId?.description,
-      postId: transaction.productId._id,
-      message: `Buyer has confirmed delivery. You will now receive your payment.`,
-      createdAt: new Date()
-    });
-
-    await notification.save();
-    io.to(transaction.sellerId._id.toString()).emit('notification', notification);
-    console.log('[NOTIFICATION CREATED & EMITTED]');
 
     return res.status(200).json({
       message: "Delivery confirmed. Payment released to seller.",
@@ -3009,10 +2931,67 @@ io.to(`user_${buyerId}`).emit('badge-update', {
 
   } catch (err) {
     console.error('[CONFIRM DELIVERY SERVER ERROR]', err);
-    return res.status(500).json({
-      error: "Something went wrong.",
-      details: err.message || 'Unknown error'
-    });
+    return res.status(500).json({ error: "Something went wrong.", details: err.message || 'Unknown error' });
+  }
+});
+
+// Confirm OTP for Transfer
+app.post('/confirm-otp', verifyToken, async (req, res) => {
+  const { transactionId, otp } = req.body;
+  console.log(`[OTP SUBMISSION] TransactionID: ${transactionId}, OTP: ${otp}`);
+
+  try {
+    const transaction = await Transaction.findById(transactionId);
+    if (!transaction) {
+      console.error('[ERROR] Transaction not found');
+      return res.status(404).json({ error: "Transaction not found" });
+    }
+
+    if (!transaction.otpRequired || !transaction.transferReference) {
+      console.error('[ERROR] OTP not required or transfer reference missing', {
+        otpRequired: transaction.otpRequired,
+        transferReference: transaction.transferReference
+      });
+      return res.status(400).json({ error: "OTP is not required for this transaction." });
+    }
+
+    const otpPayload = {
+      transfer_code: transaction.transferReference,
+      otp
+    };
+
+    console.log('[OTP PAYLOAD SENT TO PAYSTACK]', otpPayload);
+
+    const otpResponse = await axios.post(
+      'https://api.paystack.co/transfer/finalize_transfer',
+      otpPayload,
+      { headers: { Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}` } }
+    );
+
+    console.log('[PAYSTACK OTP RESPONSE]', otpResponse.data);
+
+    if (otpResponse.data.status === true) {
+      transaction.status = 'released';
+      transaction.otpRequired = false;
+      await transaction.save();
+
+      console.log('[TRANSFER COMPLETED WITH OTP]');
+      return res.status(200).json({ message: "Transfer completed successfully." });
+    } else {
+      console.error('[OTP VALIDATION FAILED]', otpResponse.data.message);
+      return res.status(400).json({ error: otpResponse.data.message || "Invalid OTP. Please try again." });
+    }
+
+  } catch (err) {
+    if (err.response) {
+      // Paystack responded with an error
+      console.error('[PAYSTACK ERROR]', err.response.data);
+      return res.status(400).json({ error: err.response.data.message || "OTP confirmation failed." });
+    } else {
+      // Unexpected server error
+      console.error('[OTP CONFIRMATION ERROR]', err.message);
+      return res.status(500).json({ error: "Something went wrong during OTP confirmation." });
+    }
   }
 });
 

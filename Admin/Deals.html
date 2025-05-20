@@ -8,781 +8,155 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
   <script src="addPic.js"></script>
   <link rel="stylesheet" href="Style.css">
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: Poppins, sans-serif; background-color: #f8f8f8; padding-bottom: 80px; }
-    h3 {
-      background-color: white;
-      text-align: center;
-      padding: 20px;
-      font-size: 20px;
-      color: #28a745;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      position: sticky;
-      top: 0;
-      z-index: 2;
-    }
-    .tabs {
-      display: flex;
-      justify-content: center;
-      background-color: white;
-      border-bottom: 1px solid #ddd;
-      padding: 10px;
-    }
-    .tab {
-      padding: 10px 20px;
-      cursor: pointer;
-      border-radius: 20px;
-      margin: 0 5px;
-      font-weight: 500;
-      color: #28a745;
-      background-color: #e8f5e9;
-    }
-    .tab.active {
-      background-color: #28a745;
-      color: white;
-    }
-    .transaction-card {
-      background: white;
-      margin: 10px;
-      border-radius: 10px;
-      padding: 15px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.05);
-    }
-    .transaction-card img {
-      width: 70px;
-      height: 70px;
-      object-fit: cover;
-      border-radius: 5px;
-      margin-right: 10px;
-    }
-    .transaction-content {
-      display: flex;
-      align-items: center;
-    }
-    .transaction-details {
-      flex: 1;
-    }
-    .transaction-details h4 {
-      margin-bottom: 5px;
-      font-size: 16px;
-    }
-    .transaction-details p {
-      font-size: 14px;
-      color: #555;
-    }
-    .badge {
-      display: inline-block;
-      padding: 5px 10px;
-      border-radius: 20px;
-      font-size: 12px;
-      margin-top: 5px;
-    }
-    .badge.pending { background-color: #ffeeba; color: #856404; }
-    .badge.released { background-color: #d4edda; color: #155724; }
-    .badge.refund-requested { background-color: #f8d7da; color: #721c24; }
-    .confirm-btn, .refund-btn {
-      margin-top: 10px;
-      border: none;
-      padding: 8px 12px;
-      border-radius: 5px;
-      font-size: 14px;
-      cursor: pointer;
-    }
-    .confirm-btn { background-color: #28a745; color: white; }
-    .confirm-btn:hover { background-color: #218838; }
-    .refund-btn { background-color: #dc3545; color: white; }
-    .refund-btn:hover { background-color: #c82333; }
-
-    #no-transactions {
-      text-align: center;
-      padding: 20px;
-      color: #777;
-    }
-    .deal-user-info {
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      gap: 6px;
-      font-size: 13px;
-      margin-top: 10px;
-      color: #444;
-    }
-    *{
-  margin: 0;
-  padding: 0;
-}
-  .side-bar{
-    display: none;
-    position: fixed;
-    top: 0px;
-    left: 0;
-    z-index: 8;
-    background-color: #fff;
-    border: 1px #ddd solid;
-    box-shadow: 0 0 10px #ddd;
-    height: 100vh;
-    width: 70%;
-  }
-  h1{
-    margin: 20px 0px;
-    margin-left: 5px;
-    
-  }
-  .side-bar ul{
-    list-style: none;
-     margin: 0;
-     padding: 0;
-  padding-top: 20px;
-  margin-left: 5px;
-  
-  }
-  .side-bar li{
-    margin-bottom: 10px;
-    border: 0.1px solid #fff;
-    padding: 10px;
-    border-end-end-radius: 20px;
-    background-color:  #fff;
-    box-shadow: 0 0 10px #ddd;
-    margin-right: 3px;
-  }
-  .side-bar .active{
-    color:  #dd;
-  }
-  .side-bar a{
-    text-decoration: none;
-    color:  #28a745;
-    padding-right: 10%;
-    
-  }
-  .side-bar i{
-    margin-right: 20px;
-    
-  }
-.profile-sec {
-  width: 100%; /* Ensures it spans the entire width of the sidebar */
-  border-bottom: 0.1px solid #fff; /* The line at the bottom */
-  padding-bottom: 5px;
-  display: flex;
-  box-sizing: border-box;
-  box-shadow: 0 0 10px #ddd;
-}
-
-.profile-sec img {
-  border: solid 0.1px #fff;
-  box-shadow: 0 0 10px #ddd;
-  border-radius: 100%;
-  width: 45px; 
-  height: 45px;
-  margin-left: 5px;
-  margin-top: 10px;
-}
-  no-scroll {
-  overflow: hidden;
-  position: fixed;
-  width: 100%;
-}
-.menu-icon{
-  color: #28a745;
-}
-a .active {
-  color: blue;
-}
-.toast {
-  visibility: hidden;
-  min-width: 200px;
-  background-color: #4BB543;
-  color: white;
-  text-align: center;
-  border-radius: 8px;
-  padding: 12px 16px;
-  position: fixed;
-  z-index: 1000;
-  left: 50%;
-  bottom: 30px;
-  transform: translateX(-50%);
-  font-family: Poppins, sans-serif;
-  font-size: 14px;
-  opacity: 0;
-  transition: opacity 0.5s ease, bottom 0.5s ease;
-}
-.toast.show {
-  visibility: visible;
-  opacity: 1;
-  bottom: 50px;
-}
-/* Bottom Navigation Bar */
-#navbar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  background-color: white;
-  box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
-  z-index: 1000;
-}
-
-#navbar ul {
-  display: flex;
-  justify-content: space-around; /* Distributes items evenly */
-  align-items: center;
-  list-style: none;
-  padding: 10px 0;
-  margin: 0;
-}
-
-#navbar li {
-  flex: 1; /* Each item takes equal width */
-  text-align: center;
-}
-
-#navbar a {
-  display: flex;
-  flex-direction: column; /* Stack icon, text, and badge vertically */
-  align-items: center; /* Center horizontally */
-  justify-content: center; /* Center vertically */
-  text-decoration: none;
-  color: #28a745;
-  font-size: 12px;
-  padding: 5px;
-}
-
-#navbar a i {
-  font-size: 20px; /* Adjust icon size */
-  margin-bottom: 5px; /* Space between icon and text */
-}
-
-#navbar a span.notification-badge {
-  position: absolute;
-  top: 0;
-  right: -10px;
-  background-color: #dc3545;
-  color: white;
-  border-radius: 50%;
-  padding: 2px 6px;
-  font-size: 10px;
-}
-
-/* Ensure active state is styled if needed */
-#navbar a.active {
-  color: #218838; /* Darker green for active state */
-}
-.snackbar {
-  visibility: hidden;
-  min-width: 220px;
-  background-color: #323232;
-  color: #fff;
-  text-align: center;
-  border-radius: 8px;
-  padding: 14px 24px;
-  position: fixed;
-  left: 50%;
-  bottom: 20px;
-  font-family: Poppins, sans-serif;
-  font-size: 14px;
-  z-index: 9999;
-  opacity: 0;
-  transition: all 0.4s ease;
-}
-
-.snackbar.show {
-  visibility: visible;
-  opacity: 1;
-  
-  .cancel-btn {
-  margin-top: 10px;
-  border: none;
-  padding: 8px 12px;
-  border-radius: 5px;
-  font-size: 14px;
-  cursor: pointer;
-  background-color: #6c757d;
-  color: white;
-}
-.cancel-btn:hover {
-  background-color: #5a6268;
-}
-
-#refundReason {
-  font-family: 'Poppins', sans-serif;
-  resize: vertical;
-  min-height: 100px;
-  max-height: 200px;
-}
-
-#refundReason:focus {
-  outline: none;
-  border-color: #28a745;
-}
-/* Skeleton Loader */
-.skeleton-card {
-  background: white;
-  margin: 10px;
-  border-radius: 10px;
-  padding: 15px;
-  box-shadow: 0 0 10px rgba(0,0,0,0.05);
-}
-
-.skeleton-content {
-  display: flex;
-  align-items: center;
-}
-
-.skeleton-image {
-  width: 70px;
-  height: 70px;
-  border-radius: 5px;
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-  background-size: 200% 100%;
-  animation: skeleton-loading 1.5s infinite;
-  margin-right: 10px;
-}
-
-.skeleton-details {
-  flex: 1;
-}
-
-.skeleton-line {
-  height: 12px;
-  border-radius: 4px;
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-  background-size: 200% 100%;
-  animation: skeleton-loading 1.5s infinite;
-  margin-bottom: 8px;
-}
-
-.skeleton-line.short {
-  width: 60%;
-}
-
-.skeleton-line.badge {
-  width: 30%;
-  height: 20px;
-  border-radius: 20px;
-  margin-top: 5px;
-}
-
-.skeleton-line.button {
-  width: 40%;
-  height: 30px;
-  border-radius: 5px;
-  margin-top: 10px;
-}
-
-@keyframes skeleton-loading {
-  0% {
-    background-position: 200% 0;
-  }
-  100% {
-    background-position: -200% 0;
-  }
-}
-  </style>
+  <link rel="stylesheet" href="Deals.css">
 </head>
 <body>
-
-<h3>Deals</h3>
-<div class="menu-icon" style="margin-top: -42px">
-  <div></div>
-  <div></div>
-  <div></div>
-</div>
+  <h3>Deals</h3>
+     <div class="profile-pic" style="margin-top: -54px; margin-left: 80%; box-shadow: 0 0 10px #ddd; border: solid 1px #fff;">
+      <img src="Default.png" alt="" id="profile-picture8" width="40px" height="40px" style="border-radius: 50%">
+    </div>
+  <div class="menu-icon" style="margin-top: -42px">
+    <div></div>
+    <div></div>
+    <div></div>
+  </div>
+   
   <div class="side-bar">
     <div class="profile-sec">
       <img src="default-avatar.png" alt="pic" id="profile-picture1">
-      <h1 id="username1">Username</h1>
+      <h1 id="username8">Username</h1>
     </div>
     <ul>
       <li><a href="index.html" class="active"><i class="fas fa-store"></i>Market</a></li>
       <li><a href="Alerts.html"><i class="fas fa-bell"></i> Alerts</a></li>
       <li><a href="Messages.html"><i class="fas fa-comment"></i>Messages</a></li> 
-            <li><a href="Deals.html"><i class="fas fa-cart-plus"></i>Deals</a></li>
+      <li><a href="Deals.html"><i class="fas fa-cart-plus"></i>Deals</a></li>
       <li><a href="Profile.html"><i class="fas fa-user"></i> Profile</a></li>
-       <li><a href="Profile.html"><i class="fa-solid fa-user-tie"></i> Hire Skills</a></li>
-       <li><a href="Profile.html"><i class="fa-solid fa-receipt"></i> Generate Reciepts</a></li>
-        <li><a href="Profile.html"><i class="fa-solid fa-lock"></i> Privacy Policy</a></li>
-         <li><a href="Privacy.html"><i class="fa-solid fa-circle-info"></i> Community Standards</a></li>
-          <li><a href="SignIn.html"><i class="fas fa-sign-out-alt"></i><span id="logout text">Log out</span></a></li>
+      <li><a href="Profile.html"><i class="fa-solid fa-user-tie"></i> Hire Skills</a></li>
+      <li><a href="Profile.html"><i class="fa-solid fa-receipt"></i> Generate Receipts</a></li>
+      <li><a href="Profile.html"><i class="fa-solid fa-lock"></i> Privacy Policy</a></li>
+      <li><a href="Privacy.html"><i class="fa-solid fa-circle-info"></i> Community Standards</a></li>
+      <li><a href="SignIn.html"><i class="fas fa-sign-out-alt"></i><span id="logout-text">Log out</span></a></li>
     </ul>
-    <pre style="font-size: 10px; text-align: center; margin-top: 40px; color: green">&copy;Salmart Technologies 2025</pre>
+    <pre style="font-size: 10px; text-align: center; margin-top: 40px; color: green">©Salmart Technologies 2025</pre>
   </div>
 
-<div class="tabs">
-  <div class="tab active" onclick="showTab('buying')">Buying</div>
-  <div class="tab" onclick="showTab('selling')">Selling</div>
-</div>
-
-<div id="transaction-list"></div>
-<p id="no-transactions" style="display:none;">No transactions yet. Check back later!</p>
-
-<!-- Navigation -->
-
-  
-
-<!-- Bottom Navigation Bar -->
-<nav id="navbar">
-  <ul>
-    <li><a href="index.html"><i class="fas fa-store"></i>Market <span id="market-badge-nav" class="notification-badge" style="display: none">0</span></a></li>
-    <li><a href="Alerts.html"><i class="fas fa-bell"></i>Alerts <span id="alerts-badge-nav" class="notification-badge" style="display: none">0</span></a></li>
-    <li><a href="Messages.html"><i class="fas fa-comments"></i>Messages <span id="messages-badge-nav" class="notification-badge" style="display: none">0</span></a></li>
-    <li><a href="Deals.html"><i class="fas fa-cart-plus"></i>Deals <span id="deals-badge-nav" class="notification-badge" style="display: none">0</span></a></li>
-    <li><a href="Profile.html"><i class="fas fa-user"></i>Profile <span id="profile-badge-nav" class="notification-badge" style="display: none">0</span></a></li>
-  </ul>
-</nav>
-<!-- Confirmation Modal -->
-<div id="confirmationModal" style="display: none; position: fixed; z-index: 999; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5);">
-  <div style="background: white; width: 90%; max-width: 400px; margin: 100px auto; padding: 20px; border-radius: 10px; text-align: center;">
-    <h4>Are you sure you want to confirm this delivery?</h4>
-    <p>This action cannot be undone.</p>
-    <button id="confirmYes" class="confirm-btn">Yes, Confirm</button>
-    <button id="confirmNo" class="refund-btn" style="margin-left: 10px;">Cancel</button>
+  <div class="tabs">
+    <div class="tab active" onclick="showTab('buying')">Buying</div>
+    <div class="tab" onclick="showTab('selling')">Selling</div>
   </div>
-</div>
-<!-- Refund Request Modal -->
-<div id="refundModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background-color: rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
-  <div style="background:white; padding:20px; border-radius:10px; width:90%; max-width:400px;">
-    <h4 style="margin-bottom:10px;">Request a Refund</h4>
 
-    <label for="reason">Select Reason</label>
-    <select id="reason" style="width:100%; padding:10px; margin-bottom:15px; border:1px solid #ccc; border-radius:5px;">
-      <option value="">-- Choose a reason --</option>
-      <option>Item not as described</option>
-      <option>Item was damaged</option>
-      <option>Didn’t receive the item</option>
-      <option>Seller didn’t respond</option>
-            <option>Suspicious or frudalent seller</option>
-      <option>Other</option>
-    </select>
+  <div id="transaction-list"></div>
+  <p id="no-transactions" style="display:none;">No transactions yet. Check back later!</p>
 
-    <label for="refundEvidence">Upload Evidence</label>
-    <input type="file" id="refundEvidence" accept="image/*,application/pdf" style="margin:10px 0;">
+  <!-- Bottom Navigation Bar -->
+  <nav id="navbar">
+    <ul>
+      <li><a href="index.html"><i class="fas fa-store"></i>Market <span id="market-badge-nav" class="notification-badge" style="display: none">0</span></a></li>
+      <li><a href="Alerts.html"><i class="fas fa-bell"></i>Alerts <span id="alerts-badge-nav" class="notification-badge" style="display: none">0</span></a></li>
+      <li><a href="Messages.html"><i class="fas fa-comments"></i>Messages <span id="messages-badge-nav" class="notification-badge" style="display: none">0</span></a></li>
+      <li><a href="Deals.html"><i class="fas fa-cart-plus"></i>Deals <span id="deals-badge-nav" class="notification-badge" style="display: none">0</span></a></li>
+      <li><a href="Profile.html"><i class="fas fa-user"></i>Profile <span id="profile-badge-nav" class="notification-badge" style="display: none">0</span></a></li>
+    </ul>
+  </nav>
 
-    <textarea id="refundNote" placeholder="Additional comments (optional)" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px;"></textarea>
-
-    <button onclick="submitRefund()" class="refund-btn" style="width:100%; margin-top:15px;">Submit Request</button>
-    <button onclick="closeRefundModal()" class="cancel-btn" style="width:100%; margin-top:10px;">Cancel</button>
-  </div>
-</div>
-<div id="snackbar" class="snackbar">Message goes here</div> 
-<div id="toast" class="toast">Message sent</div>
-<script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
-<script>
-  const API_BASE_URL =
-  window.location.hostname === 'localhost'
-    ? 'http://localhost:3000'
-    : 'https://salmart-production.up.railway.app';
-const socket = io(`${API_BASE_URL}`);
-const userId = localStorage.getItem('userId');
-let currentTab = 'buying';
-
-// Function to create skeleton loader
-function createSkeletonLoader() {
-  const skeleton = document.createElement('div');
-  skeleton.className = 'skeleton-card';
-  skeleton.innerHTML = `
-    <div class="skeleton-content">
-      <div class="skeleton-image"></div>
-      <div class="skeleton-details">
-        <div class="skeleton-line"></div>
-        <div class="skeleton-line short"></div>
-        <div class="skeleton-line short"></div>
-        <div class="skeleton-line badge"></div>
-        ${currentTab === 'buying' ? '<div class="skeleton-line button"></div>' : ''}
-      </div>
+  <!-- OTP Modal -->
+  <div id="otpModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background-color: rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
+    <div class="modal-content">
+      <h3>Enter OTP to Confirm Transfer</h3>
+      <input type="text" id="otpInput" placeholder="Enter OTP" />
+      <button onclick="submitOtp()">Submit OTP</button>
+      <button onclick="closeOtpModal()">Cancel</button>
     </div>
-  `;
-  return skeleton;
-}
+  </div>
+<!-- Success Modal -->
+<div id="successModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background-color: rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
+  <div class="modal-content success-modal">
+    <div class="success-icon">
+      <i class="fas fa-check-circle"></i>
+    </div>
+    <h3>Payment Successful!</h3>
+    <p>Your payment has been confirmed successfully.</p>
+    <button onclick="closeSuccessModal()" class="success-btn">Close</button>
+  </div>
+</div>
+  <!-- Refund Request Modal -->
+  <div id="refundModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background-color: rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
+    <div style="background:white; padding:20px; border-radius:10px; width:90%; max-width:400px;">
+      <h4 style="margin-bottom:10px;">Request a Refund</h4>
+      <label for="reason">Select Reason</label>
+      <select id="reason" style="width:100%; padding:10px; margin-bottom:15px; border:1px solid #ccc; border-radius:5px;">
+        <option value="">-- Choose a reason --</option>
+        <option>Item not as described</option>
+        <option>Item was damaged</option>
+        <option>Didn’t receive the item</option>
+        <option>Seller didn’t respond</option>
+        <option>Suspicious or fraudulent seller</option>
+        <option>Other</option>
+      </select>
+      <label for="refundEvidence">Upload Evidence</label>
+      <input type="file" id="refundEvidence" accept="image/*,application/pdf" style="margin:10px 0;">
+      <textarea id="refundNote" placeholder="Additional comments (optional)" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px;"></textarea>
+      <button onclick="submitRefund()" class="refund-btn" style="width:100%; margin-top:15px;">Submit Request</button>
+      <button onclick="closeRefundModal()" class="cancel-btn" style="width:100%; margin-top:10px;">Cancel</button>
+    </div>
+  </div>
 
-// Function to show skeleton loaders
-function showSkeletonLoaders(container, count = 3) {
-  container.innerHTML = '';
-  for (let i = 0; i < count; i++) {
-    container.appendChild(createSkeletonLoader());
-  }
-}
+  <div id="snackbar" class="snackbar">Message goes here</div> 
+  <div id="toast" class="toast">Message sent</div>
 
-function updateDealsBadge(count) {
-  const badge = document.getElementById('deals-badge-nav');
-  if (!badge) return;
-  if (count > 0) {
-    badge.style.display = 'inline-block';
-    badge.textContent = count > 9 ? '9+' : count;
-  } else {
-    badge.style.display = 'none';
-  }
-}
+  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+  <script src="Deals.js"></script>
 
-async function fetchTransactions() {
-  const list = document.getElementById('transaction-list');
-  const noTransactions = document.getElementById('no-transactions');
+  <script>
+    // Sidebar toggle
+    const menuIcon = document.querySelector('.menu-icon');
+    const sideBar = document.querySelector('.side-bar');
+    const body = document.body;
 
-  // Show skeleton loaders while fetching
-  showSkeletonLoaders(list);
+    menuIcon.addEventListener('click', () => {
+      sideBar.style.display = sideBar.style.display === 'block' ? 'none' : 'block';
+      body.classList.toggle('no-scroll');
+    });
 
-  try {
-    const res = await fetch(`${API_BASE_URL}/get-transactions/${userId}`);
-    if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
-    const data = await res.json();
-
-    const unReadCount = data.filter((d) => !d.viewed).length;
-    updateDealsBadge(unReadCount);
-
-    list.innerHTML = '';
-    const filtered = data.filter(
-      (t) => (t[currentTab === 'buying' ? 'buyerId' : 'sellerId']?._id) === userId
-    );
-
-    if (filtered.length === 0) {
-      list.innerHTML = '';
-      noTransactions.style.display = 'block';
-      return;
-    } else {
-      noTransactions.style.display = 'none';
-    }
-
-    filtered.forEach((t) => {
-      const card = document.createElement('div');
-      card.className = 'transaction-card';
-
-      const product = t.productId || {};
-      const productImage = product.photo || 'Default.png';
-      const productDescription = product.description || 'Product';
-      const amount = t.amount || '0';
-
-      const statusBadge = `<span class="badge ${t.status}">${t.status}</span>`;
-      let confirmBtn = '';
-      let refundBtn = '';
-
-      if (currentTab === 'buying') {
-        if (t.status === 'pending' && !t.refundRequested) {
-          confirmBtn = `<button class="confirm-btn" onclick="showConfirmationModal('${t._id}')">Confirm Delivery</button>`;
-        }
-        if (t.status === 'pending' && !t.refundRequested) {
-          refundBtn = `<button class="refund-btn" onclick="openRefundModal('${t._id}')">Request Refund</button>`;
-        } else if (t.refundRequested) {
-          refundBtn = `<span class="badge refund-requested">Refund Requested</span>`;
-        }
+    document.body.addEventListener('click', (e) => {
+      if (sideBar.style.display === 'block' && !sideBar.contains(e.target) && !menuIcon.contains(e.target)) {
+        sideBar.style.display = 'none';
+        body.classList.remove('no-scroll');
       }
-
-      const date = new Date(t.createdAt).toLocaleString();
-      const dealUser = currentTab === 'buying' ? t.sellerId : t.buyerId;
-      const dealUserPic = dealUser?.profilePicture || 'Default.png';
-      const dealUserName = `${dealUser?.firstName || ''} ${dealUser?.lastName || ''}`;
-
-      card.innerHTML = `
-        <div class="transaction-content">
-          <img src="${productImage}" alt="Product Image" />
-          <div class="transaction-details">
-            <h4>${productDescription}</h4>
-            <p>₦${Number(amount).toLocaleString('en-Ng')}</p>
-            <p>${date}</p>
-            ${statusBadge}
-            ${confirmBtn}
-            ${refundBtn}
-            <div class="deal-user-info">
-              <span>${currentTab === 'buying' ? 'Buying from:' : 'Selling to:'}</span>
-              <img src="${dealUserPic}" class="user-profile" style="width: 20px; height: 20px; border-radius: 50%;" />
-              <strong>${dealUserName}</strong>
-            </div>
-          </div>
-        </div>
-      `;
-      list.prepend(card);
     });
-    await markDealsAsViewed();
-  } catch (err) {
-    console.error('Error fetching transactions:', err);
-    list.innerHTML = '<p style="text-align: center; color: #777;">Failed to load transactions. Please try again.</p>';
-    noTransactions.style.display = 'none';
-  }
-}
-
-async function markDealsAsViewed() {
-  try {
-    const token = localStorage.getItem('authToken');
-    const res = await fetch(`${API_BASE_URL}/deals/mark-as-viewed`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    });
-    if (!res.ok) throw new Error('Failed to mark deals as viewed');
-  } catch (err) {
-    console.error('Error marking deals as viewed:', err);
-  }
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  if (window.location.pathname.includes('Deals.html')) {
-    fetchTransactions();
-  }
-});
-
-function showTab(tab) {
-  currentTab = tab;
-  document.querySelectorAll('.tab').forEach((tab) => tab.classList.remove('active'));
-  document
-    .querySelectorAll('.tab')
-    [tab === 'buying' ? 0 : 1].classList.add('active');
-  fetchTransactions();
-}
-
-async function confirmDelivery(transactionId) {
-  const token = localStorage.getItem('authToken');
-  try {
-    const res = await fetch(`${API_BASE_URL}/confirm-delivery/${transactionId}`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    });
-    const contentType = res.headers.get('content-type');
-    const data = contentType.includes('application/json')
-      ? await res.json()
-      : { message: await res.text() };
-    showToast(data.message || 'Delivery confirmed. Processing transfer to seller.');
-    if (res.ok) fetchTransactions();
-  } catch (err) {
-    showToast('Error confirming delivery.');
-  }
-}
-
-function showToast(message) {
-  const toast = document.getElementById('toast');
-  toast.textContent = message;
-  toast.className = 'toast show';
-  setTimeout(() => {
-    toast.className = 'toast';
-  }, 5000);
-}
-
-function showSnackbar(message) {
-  const snackbar = document.getElementById('snackbar');
-  snackbar.textContent = message;
-  snackbar.classList.add('show');
-  setTimeout(() => {
-    snackbar.classList.remove('show');
-  }, 3000);
-}
-
-let currentTransactionId = null;
-
-function openRefundModal(transactionId) {
-  currentTransactionId = transactionId;
-  document.getElementById('refundModal').style.display = 'flex';
-}
-
-function closeRefundModal() {
-  document.getElementById('refundModal').style.display = 'none';
-}
-
-async function submitRefund() {
-  const reason = document.getElementById('reason').value;
-  const note = document.getElementById('refundNote').value;
-  const file = document.getElementById('refundEvidence').files[0];
-  const token = localStorage.getItem('authToken');
-
-  if (!reason) {
-    alert('Please select a refund reason.');
+  </script>
+  <script>
+       function openSuccessModal() {
+  const successModal = document.getElementById('successModal');
+  if (!successModal) {
+    console.error('[OPEN SUCCESS MODAL ERROR] #successModal not found in DOM');
+    showToast('Error: Success modal not found.');
     return;
   }
-
-  const formData = new FormData();
-  formData.append('reason', reason);
-  if (note) formData.append('note', note);
-  if (file) formData.append('evidence', file);
-
-  try {
-    const res = await fetch(
-      `${API_BASE_URL}/request-refund/${currentTransactionId}`,
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
-      }
-    );
-
-    if (!res.ok) {
-      throw new Error(`HTTP error! status: ${res.status}`);
-    }
-
-    const data = await res.json();
-    showToast(data.message || 'Refund requested successfully.');
-    closeRefundModal();
-    fetchTransactions();
-  } catch (err) {
-    console.error('Refund request error:', err);
-    showToast(err.message || 'Error requesting refund. Please try again.');
-  }
+  successModal.style.display = 'flex';
+  successModal.style.opacity = '1';
+  successModal.style.visibility = 'visible';
+  successModal.style.zIndex = '10000';
+  console.log('[SUCCESS MODAL STYLES]', {
+    display: successModal.style.display,
+    opacity: successModal.style.opacity,
+    visibility: successModal.style.visibility,
+    zIndex: successModal.style.zIndex
+  });
+  // Force reflow to ensure rendering
+  successModal.offsetHeight;
 }
 
-
-document.getElementById('confirmYes').addEventListener('click', function () {
-  if (pendingConfirmId) {
-    confirmDelivery(pendingConfirmId);
-    pendingConfirmId = null;
+function closeSuccessModal() {
+  const successModal = document.getElementById('successModal');
+  if (successModal) {
+    successModal.style.display = 'none';
+    successModal.style.opacity = '0';
+    successModal.style.visibility = 'hidden';
+    console.log('[CLOSE SUCCESS MODAL]');
   }
-  document.getElementById('confirmationModal').style.display = 'none';
-});
-
-document.getElementById('confirmNo').addEventListener('click', function () {
-  pendingConfirmId = null;
-  document.getElementById('confirmationModal').style.display = 'none';
-});
-
-function showConfirmationModal(transactionId) {
-  pendingConfirmId = transactionId;
-  document.getElementById('confirmationModal').style.display = 'block';
 }
-
-document.addEventListener('DOMContentLoaded', fetchTransactions);
-</script>
-
-<script>
-const menuIcon = document.querySelector('.menu-icon');
-const sideBar = document.querySelector('.side-bar');
-const body = document.body;
-
-menuIcon.addEventListener('click', () => {
-  sideBar.style.display = sideBar.style.display === 'block' ? 'none' : 'block';
-  body.classList.toggle('no-scroll');
-});
-
-document.body.addEventListener('click', (e) => {
-  if (sideBar.style.display === 'block' && !sideBar.contains(e.target) && !menuIcon.contains(e.target)) {
-    sideBar.style.display = 'none';
-    body.classList.remove('no-scroll');
-  }
-});
-
-</script>
- <script>
-  let pendingConfirmId = null;
-
-// Confirmation modal event listeners
-document.getElementById('confirmYes').addEventListener('click', function() {
-  if (pendingConfirmId) {
-    confirmDelivery(pendingConfirmId);
-    pendingConfirmId = null;
-  }
-  document.getElementById('confirmationModal').style.display = 'none';
-});
-
-document.getElementById('confirmNo').addEventListener('click', function() {
-  pendingConfirmId = null;
-  document.getElementById('confirmationModal').style.display = 'none';
-});
-
-function showConfirmationModal(transactionId) {
-  pendingConfirmId = transactionId;
-  document.getElementById('confirmationModal').style.display = 'block';
-}
-</script>
-
+  </script>
 </body>
 </html>

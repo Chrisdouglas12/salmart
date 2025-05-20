@@ -10,7 +10,15 @@ const transactionSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
   refundRequested: { type: Boolean, default: false },
   refundReason: { type: String },
-  paymentReference: { type: String, required: true, unique: true } // Add this
+  paymentReference: { type: String, required: true, unique: true },
+  otpRequired: {
+  type: Boolean,
+  default: false,
+},
+transferReference: {
+  type: String,
+  default: null,
+}
 });
 
 module.exports = mongoose.model('Transaction', transactionSchema);

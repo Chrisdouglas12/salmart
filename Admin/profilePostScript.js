@@ -143,30 +143,69 @@ ${post.createdBy.userId !== loggedInUser ?
                                 </div>
                             </div>
                         </div>
-                        <p class="post-description"><b>Product:</b> ${post.description}</p>
-                        <p class="post-description"><b>Condition:</b> ${post.productCondition}</p>
-                        <p class="post-description"><b>Price:</b> ₦${Number(post.price).toLocaleString('en-Ng')}</p>
-                        <p class="post-description"><b>Location:</b> ${post.location}</p>
-                        <img src="${post.photo || 'default-image.png'}" class="post-image" onclick="openImage('${post.photo || 'default-image.png'}')">
-                        <div class="buy" style="text-align: center">
-          <button class="buy-now-button" data-post-id="${post._id}" ${post.isSold ? 'disabled' : ''}>${post.isSold ? 'Sold Out' : 'Buy Now'}</button>
-<a id="send-message-link">
-  <button class="buy-now-button" id="send-message-btn"
-    data-recipient-id="${post.createdBy.userId}"
-    data-product-image="${post.photo || 'default-image.png'}"
-    data-product-description="${post.description}">
-    ${post.isSold ? 'Unavailable': 'Check availabilty'}
+        <div class="product-container">
+  <div class="product-card">
+    <div class="product-info">
+      <span class="icon">📦</span>
+      <div>
+        <p class="label">Product</p>
+        <p class="value">${post.description}</p>
+      </div>
+    </div>
+    <div class="product-info">
+      <span class="icon">🔄</span>
+      <div>
+        <p class="label">Condition</p>
+        <p class="value">${post.productCondition}</p>
+      </div>
+    </div>
+    <div class="product-info-inline">
+      <div class="info-item">
+        <span class="icon">💵</span>
+        <div>
+          <p class="label">Price</p>
+          <p class="value price-value">₦${Number(post.price).toLocaleString('en-Ng')}</p>
+        </div>
+      </div>
+      <div class="info-item">
+        <span class="icon">📍</span>
+        <div>
+          <p class="label">Location</p>
+          <p class="value location-value">${post.location}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="image-card">
+    <img src="${post.photo || 'default-image.png'}" class="post-image" onclick="openImage('${post.photo || 'default-image.png'}')" alt="Product Image">
+  </div>
+</div>
+<div class="buy" style="text-align: center">
+  <button class="buy-now-button" data-post-id="${post._id}" ${post.isSold ? 'disabled' : ''}>
+    <i class="fas fa-shopping-cart"></i> ${post.isSold ? 'Sold Out' : 'Buy Now'}
   </button>
-</a>
-                    </div>
-  <div class="post-actions">
-                        <button class="like-button">
-                            <i class="${post.likes.includes(loggedInUser) ? 'fas' : 'far'} fa-heart"></i>
-                            <span class="like-count">${post.likes.length} </span><p>Likes</p>
-                        </button>
-                        <button class="reply-button"><i class="far fa-comment-alt"></i><span class="comment-count">${post.comments ? post.comments.length : 0}</span><p> Comments</p> </button>
-                        <button class="share-button"><i class="fas fa-share"></i></button>
-                    </div>
+  <a id="send-message-link">
+    <button class="buy-now-button" id="send-message-btn"
+      data-recipient-id="${post.createdBy.userId}"
+      data-product-image="${post.photo || 'default-image.png'}"
+      data-product-description="${post.description}">
+      <i class="fas fa-circle-dot"></i> ${post.isSold ? 'Unavailable' : 'Check Availability'}
+    </button>
+  </a>
+</div>
+<div class="post-actions">
+  <button class="action-button like-button">
+    <i class="${post.likes.includes(loggedInUser) ? 'fas' : 'far'} fa-heart"></i>
+    <span class="like-count">${post.likes.length}</span> <p>Likes</p>
+  </button>
+  <button class="action-button reply-button">
+    <i class="far fa-comment-alt"></i>
+    <span class="comment-count">${post.comments ? post.comments.length : 0}</span> <p>Comments</p>
+  </button>
+  <button class="action-button share-button">
+    <i class="fas fa-share"></i>
+  </button>
+</div>             
                   
                 `;
                     postsContainer.prepend(postElement);

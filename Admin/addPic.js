@@ -5,12 +5,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const profilePicture2 = document.getElementById('profile-picture');
     const profilePicture5 = document.getElementById('profile-picture5');
     const profilePicture6 = document.getElementById('profile-picture6');
+    const profilePicture8 = document.getElementById('profile-picture8');//for Deals.html
+    const username8 = document.getElementById('username8'); //for Deals.html
+    const username1 = document.getElementById('username1');
     const username = document.getElementById('username');
     const profileUsername = document.getElementById('profileHeaderUsr');
     const followers = document.getElementById('followers');
     const productsCount = document.getElementById('products-count');
-    const bio = document.getElementById('bio');
-
+  
     let userId = new URLSearchParams(window.location.search).get('userId') || localStorage.getItem('userId');
 
     if (!userId) {
@@ -91,6 +93,12 @@ const API_BASE_URL = window.location.hostname === 'localhost'
                 profilePicture6.src = imageUrl;
               }, 100);
             }
+            if(profilePicture8) {
+              profilePicture8.src = '';
+              setTimeout(() => {
+                profilePicture8.src = imageUrl;
+              }, 100);
+            }
             if (profilePicture) {
                 profilePicture.src = '';
                 setTimeout(() => {
@@ -100,6 +108,9 @@ const API_BASE_URL = window.location.hostname === 'localhost'
 
             // Set other profile details
             if (username) username.textContent = `${data.firstName} ${data.lastName}`;
+            if (username1) username1.textContent = `${data.firstName} ${data.lastName}`;
+                        // Set other profile details
+            if (username8) username8.textContent = `${data.firstName} ${data.lastName}`;
             if (profileUsername) profileUsername.textContent = `${data.firstName} ${data.lastName}`;
             if (productsCount) productsCount.textContent = data.products?.length || 0;
 

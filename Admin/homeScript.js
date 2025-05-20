@@ -136,30 +136,69 @@ ${post.createdBy.userId !== loggedInUser ?
                             </div>
                         </div>
                     </div>
-                    <p class="post-description"><b>Product:</b> ${post.description}</p>
-                    <p class="post-description"><b>Condition:</b> ${post.productCondition}</p>
-                    <p class="post-description"><b>Price:</b> &#8358;${Number(post.price).toLocaleString('en-Ng')}</p>
-                    <p class="post-description"><b>Location:</b> ${post.location}</p>
-                    <img src="${post.photo || 'default-image.png'}" class="post-image" onclick="openImage('${post.photo || 'default-image.png'}')">
-                        <div class="buy" style="text-align: center">
-          <button class="buy-now-button" data-post-id="${post._id}" ${post.isSold ? 'disabled' : ''}> <i class="fas fa-shopping-cart"></i> ${post.isSold ? 'Sold Out' : 'Buy Now'}</button>
-<a id="send-message-link">
-  <button class="buy-now-button" id="send-message-btn"
-    data-recipient-id="${post.createdBy.userId}"
-    data-product-image="${post.photo || 'default-image.png'}"
-    data-product-description="${post.description}">
-    <i class="fas fa-circle-dot"></i>   ${post.isSold ? 'Unavailable': 'Check availabilty'}
+<div class="product-container">
+  <div class="product-card">
+    <div class="product-info">
+      <span class="icon">📦</span>
+      <div>
+        <p class="label">Product</p>
+        <p class="value">${post.description}</p>
+      </div>
+    </div>
+    <div class="product-info">
+      <span class="icon">🔄</span>
+      <div>
+        <p class="label">Condition</p>
+        <p class="value">${post.productCondition}</p>
+      </div>
+    </div>
+    <div class="product-info-inline">
+      <div class="info-item">
+        <span class="icon">💵</span>
+        <div>
+          <p class="label">Price</p>
+          <p class="value price-value">₦${Number(post.price).toLocaleString('en-Ng')}</p>
+        </div>
+      </div>
+      <div class="info-item">
+        <span class="icon">📍</span>
+        <div>
+          <p class="label">Location</p>
+          <p class="value location-value">${post.location}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="image-card">
+    <img src="${post.photo || 'default-image.png'}" class="post-image" onclick="openImage('${post.photo || 'default-image.png'}')" alt="Product Image">
+  </div>
+</div>
+<div class="buy" style="text-align: center">
+  <button class="buy-now-button" data-post-id="${post._id}" ${post.isSold ? 'disabled' : ''}>
+    <i class="fas fa-shopping-cart"></i> ${post.isSold ? 'Sold Out' : 'Buy Now'}
   </button>
-</a>
-                    </div>
-                    <div class="post-actions">
-                        <button class="like-button">
-                            <i class="${post.likes.includes(loggedInUser) ? 'fas' : 'far'} fa-heart"></i>
-                            <span class="like-count">${post.likes.length} </span><p>Likes</p>
-                        </button>
-                        <button class="reply-button"><i class="far fa-comment-alt"></i><span class="comment-count">${post.comments ? post.comments.length : 0}</span><p> Comments</p> </button>
-                        <button class="share-button"><i class="fas fa-share"></i></button>
-                    </div>
+  <a id="send-message-link">
+    <button class="buy-now-button" id="send-message-btn"
+      data-recipient-id="${post.createdBy.userId}"
+      data-product-image="${post.photo || 'default-image.png'}"
+      data-product-description="${post.description}">
+      <i class="fas fa-circle-dot"></i> ${post.isSold ? 'Unavailable' : 'Check Availability'}
+    </button>
+  </a>
+</div>
+<div class="post-actions">
+  <button class="action-button like-button">
+    <i class="${post.likes.includes(loggedInUser) ? 'fas' : 'far'} fa-heart"></i>
+    <span class="like-count">${post.likes.length}</span> <p>Likes</p>
+  </button>
+  <button class="action-button reply-button">
+    <i class="far fa-comment-alt"></i>
+    <span class="comment-count">${post.comments ? post.comments.length : 0}</span> <p>Comments</p>
+  </button>
+  <button class="action-button share-button">
+    <i class="fas fa-share"></i>
+  </button>
+</div>
                   
                 `;
                 postsContainer.prepend(postElement);
@@ -627,35 +666,18 @@ reportButton.addEventListener('click', async () => {
     });
 });
 
-                // Delete post functionality
-                const deleteButton = postElement.querySelector('.delete-post-button');
-                if (deleteButton) {
-                    deleteButton.addEventListener('click', async () => {
-                        const postId = deleteButton.getAttribute('data-post-id');
-                        const authToken = localStorage.getItem('authToken');
+// Delete post functionality
+const deleteButton = postElement.querySelector('.delete-post-button');
+if (deleteButton) {
+    deleteButton.addEventListener('click', async () => {
+        const postId = deleteButton.getAttribute('data-post-id');
+        const authToken = localStorage.getItem('authToken');
 
-                        const confirmDelete = confirm("Are you sure you want to delete this post?");
-                        if (!confirmDelete) return;
+        // Show the delete confirmation modal
+        showDeleteConfirmationModal(postId, authToken, postElement);
+    });
+}
 
-                        try {
-                            const response = await fetch(`${API_BASE_URL}/post/delete/${postId}`, {
-                                method: 'DELETE',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'Authorization': `Bearer ${authToken}`,
-                                },
-                            });
-
-                            if (!response.ok) throw new Error('Failed to delete post');
-
-                            postElement.remove();
-                            showToast('Post deleted successfully!');
-                        } catch (error) {
-                            console.error('Error deleting post:', error);
-                            showToast('Error deleting post. Please try again.');
-                        }
-                    });
-                }
 
      // Function to check follow status on page load and hide buttons if already following
 async function checkFollowStatusOnLoad() {
@@ -760,7 +782,69 @@ document.querySelectorAll('.follow-button').forEach(followButton => {
             postsContainer.innerHTML = '<p style="text-align: center; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">No ads yet. Try again or create one!</p>';
         }
     }
+// Function to show the delete confirmation modal
+function showDeleteConfirmationModal(postId, authToken, postElement) {
+    // Create modal element
+    const deleteModal = document.createElement('div');
+    deleteModal.className = 'delete-confirmation-modal';
+    deleteModal.innerHTML = `
+        <div class="delete-modal-content">
+            <div class="delete-modal-header">
+                <h3>Confirm Delete</h3>
+                <span class="close-delete-modal">×</span>
+            </div>
+            <div class="delete-modal-body">
+                <p>Are you sure you want to delete this post? This action cannot be undone.</p>
+            </div>
+            <div class="delete-modal-footer">
+                <button class="cancel-delete">Cancel</button>
+                <button class="confirm-delete">Delete</button>
+            </div>
+        </div>
+    `;
 
+    document.body.appendChild(deleteModal);
+    document.body.style.overflow = 'hidden'; // Prevent scrolling
+
+    // Close modal handlers
+    const closeModal = () => {
+        document.body.removeChild(deleteModal);
+        document.body.style.overflow = '';
+    };
+
+    deleteModal.querySelector('.close-delete-modal').addEventListener('click', closeModal);
+    deleteModal.querySelector('.cancel-delete').addEventListener('click', closeModal);
+
+    // Click outside to close
+    deleteModal.addEventListener('click', (e) => {
+        if (e.target === deleteModal) {
+            closeModal();
+        }
+    });
+
+    // Confirm delete handler
+    deleteModal.querySelector('.confirm-delete').addEventListener('click', async () => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/post/delete/${postId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${authToken}`,
+                },
+            });
+
+            if (!response.ok) throw new Error('Failed to delete post');
+
+            postElement.remove();
+            showToast('Post deleted successfully!');
+            closeModal();
+        } catch (error) {
+            console.error('Error deleting post:', error);
+            showToast('Error deleting post. Please try again.');
+            closeModal();
+        }
+    });
+}
     // Function to show toast notifications
     function showToast(message) {
     let toast = document.createElement("div");

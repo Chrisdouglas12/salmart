@@ -4,483 +4,610 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
-  <script src="addPic.js"></script>
   <title>Alerts</title>
-<style>
-  body {
-  font-family: 'Poppins';
-  margin: 0;
-  padding: 0;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  font-size: 14px;
-  font-weight: 800px
-}
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+  <style>
+    :root {
+      --primary-color: #28a745;
+      --secondary-color: #218838;
+      --text-color: #333;
+      --light-gray: #f5f7fa;
+      --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      --border-radius: 12px;
+    }
 
-h3 {
-      color: #28a745;
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: var(--light-gray);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    /* Header */
+    header {
       background-color: white;
-      text-align: center;
-      box-shadow: 0 0 10px 0 #ddd;
-      padding: 20px;
-      position: sticky;
+      box-shadow: var(--shadow);
+      position: fixed;
       top: 0;
-      z-index: 1;
-      margin-top: 0%;
+      width: 100%;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      padding: 10px 15px;
+    }
+
+    header .profile-pic {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      overflow: hidden;
+      margin-right: 15px;
+    }
+
+    header .profile-pic img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    header h3 {
+      flex: 1;
+      color: var(--primary-color);
+      font-size: 18px;
+      font-weight: 600;
+      text-align: center;
+      margin: 0;
+    }
+
+    header .search-icon {
+      font-size: 18px;
+      color: var(--primary-color);
+      background-color: white;
+      border: 1px solid #ddd;
+      border-radius: 50%;
+      padding: 8px;
+      box-shadow: var(--shadow);
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    header .search-icon:hover {
+      background-color: #f0f0f0;
+    }
+
+    /* Notifications Wrapper */
+    #notifications-wrapper {
+      margin-top: 60px;
+      margin-bottom: 60px;
+      padding: 15px;
+      max-width: 680px;
+      margin-left: auto;
+      margin-right: auto;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    /* Notification Card */
+    .notification {
+      display: flex;
+      align-items: center;
+      background-color: white;
+      border-radius: var(--border-radius);
+      padding: 12px 16px;
+      margin-bottom: 10px;
+      box-shadow: var(--shadow);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      position: relative;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .notification:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    }
+
+    .notification.unread {
+      background-color: #e6f4ea;
+    }
+
+    .notification-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      margin-right: 12px;
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+
+    .notification-content {
+      flex: 1;
+    }
+
+    .notification-type {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--primary-color);
+      margin-bottom: 4px;
+    }
+
+    .notification-message {
+      font-size: 14px;
+      color: var(--text-color);
+      margin-bottom: 4px;
+    }
+
+    .notification-time {
+      font-size: 12px;
+      color: #888;
+    }
+
+    .notification-dismiss {
+      position: absolute;
+      right: 10px;
+      top: 10px;
+      background: none;
+      border: none;
+      color: #888;
+      cursor: pointer;
+      font-size: 16px;
+      transition: color 0.2s;
+    }
+
+    .notification-dismiss:hover {
+      color: var(--primary-color);
+    }
+
+    #no-alerts {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: #888;
+      font-size: 16px;
+      text-align: center;
+    }
+
+    /* Bottom Navbar */
+    #navbar {
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      background-color: white;
+      box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+      z-index: 1000;
+    }
+
+    #navbar ul {
+      display: flex;
+      justify-content: space-around;
+      padding: 10px 0;
+      list-style: none;
+    }
+
+    #navbar li {
+      flex: 1;
+      text-align: center;
+    }
+
+    #navbar a {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-decoration: none;
+      color: var(--primary-color);
+      font-size: 12px;
+      padding: 8px;
+      transition: color 0.2s;
+    }
+
+    #navbar a.active {
+      color: var(--secondary-color);
+      font-weight: 600;
+    }
+
+    #navbar a i {
+      font-size: 20px;
+      margin-bottom: 5px;
+    }
+
+    #navbar a span.notification-badge {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      background-color: #dc3545;
+      color: white;
+      border-radius: 50%;
+      padding: 2px 6px;
+      font-size: 10px;
+    }
+
+    /* Skeleton Loader */
+    .skeleton-wrapper {
+      display: flex;
+     
+      align-items: center;
+      background-color: white;
+      border-radius: var(--border-radius);
+      padding: 12px 16px;
+      margin-bottom: 10px;
+      box-shadow: var(--shadow);
+    }
+
+    .skeleton-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+      background-size: 200% 100%;
+      animation: skeleton-loading 1.5s infinite;
+      margin-right: 12px;
+    }
+
+    .skeleton-content {
+      flex: 1;
+    }
+
+    .skeleton-line {
+      height: 12px;
       
-    } 
+      border-radius: 4px;
+      background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+      width: 200% 100%;
+      animation: skeleton-loading 1.5s infinite;
+      margin-bottom: 8px;
+    }
 
-#notifications-wrapper {
-  position: absolute;
-  top: 65px; /* header height */
-  bottom: 60px; /* navbar height */
-  left: 0;
-  right: 0;
-  overflow-y: auto;
-  background: #f5f7fa;
-  padding: 15px;
-  box-sizing: border-box;
-  max-width: 680px;
-  display: flex;
-  margin: 0 auto;
-}
+    .skeleton-line.short {
+      width: 60%;
+    }
 
-/* Notification Card */
-.notification {
-  display: flex;
-  align-items: center;
-  background-color: #ffffff;
-  border-radius: 12px;
-  padding: 12px 16px;
-  margin-bottom: 10px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  transition: box-shadow 0.2s ease, transform 0.2s ease;
-  cursor: pointer;
-}
+    .skeleton-line.time {
+      width: 30%;
+      height: 10px;
+    }
 
-.notification:hover {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-  transform: translateY(-2px);
-}
+    /* Toast Notification */
+    .toast-message {
+      position: fixed;
+      bottom: 70px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: var(--primary-color);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      z-index: 2000;
+    }
 
-/* Avatar */
-.notification-avatar {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  margin-right: 12px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-color: #e2e8f0;
-  overflow: hidden;
-  flex-shrink: 0;
-}
+    .toast-message.show {
+      opacity: 1;
+    }
 
-/* Content */
-.notification-content {
-  flex: 1;
-  font-family: 'Poppins', sans-serif;
-  color: #333;
-}
+    /* Animations */
+    @keyframes skeleton-loading {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
 
-.notification-title {
-  font-weight: 600;
-  font-size: 14px;
-  margin-bottom: 4px;
-}
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
 
-.notification-message {
-  font-size: 13px;
-  color: #555;
-}
-
-.notification-time {
-  font-size: 12px;
-  color: #888;
-  margin-left: -90%;
-  margin-bottom: 10%;
-}
-
-.notification-content p {
-  margin: 0;
-  font-size: 14px;
-  color: #333;
-  
-}
-
-#no-alerts {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  text-align: center;
-  color: gray;
-  font-size: 16px;
-}
-
-/* Bottom Navigation Bar */
-#navbar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  background-color: white;
-  box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
-  z-index: 1000;
-}
-
-#navbar ul {
-  display: flex;
-  justify-content: space-around; /* Distributes items evenly */
-  align-items: center;
-  list-style: none;
-  padding: 10px 0;
-  margin: 0;
-}
-
-#navbar li {
-  flex: 1; /* Each item takes equal width */
-  text-align: center;
-}
-
-#navbar a {
-  display: flex;
-  flex-direction: column; /* Stack icon, text, and badge vertically */
-  align-items: center; /* Center horizontally */
-  justify-content: center; /* Center vertically */
-  text-decoration: none;
-  color: #28a745;
-  font-size: 12px;
-  padding: 5px;
-}
-
-#navbar a i {
-  font-size: 20px; /* Adjust icon size */
-  margin-bottom: 5px; /* Space between icon and text */
-}
-
-#navbar a span.notification-badge {
-  position: absolute;
-  top: 0;
-  right: -10px;
-  background-color: #dc3545;
-  color: white;
-  border-radius: 50%;
-  padding: 2px 6px;
-  font-size: 10px;
-}
-
-/* Ensure active state is styled if needed */
-#navbar a.active {
-  color: #218838; /* Darker green for active state */
-}
- .profile-pic img {
-    position: fixed;
-    z-index: 3;
-    margin-left: 20px;
-    margin-top: 10px;
-    border: solid 0.1px #ddd;
-  }
-  /* Skeleton Loader */
-.skeleton-wrapper {
-  display: flex;
-  width: 320%;
-  align-items: center;
-  background-color: #ffffff;
-  border-radius: 12px;
-  padding: 12px 16px;
-  margin-bottom: 10px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  z-index: 1000;
-}
-
-.skeleton-avatar {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-  background-size: 200% 100%;
-  animation: skeleton-loading 1.5s infinite;
-  margin-right: 12px;
-}
-
-.skeleton-content {
-  flex: 1;
-}
-
-.skeleton-line {
-  height: 12px;
-  width: 80%;
-  border-radius: 4px;
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-  background-size: 200% 100%;
-  animation: skeleton-loading 1.5s infinite;
-  margin-bottom: 8px;
-}
-
-.skeleton-line.short {
-  width: 60%;
-}
-
-.skeleton-line.time {
-  width: 30%;
-  height: 10px;
-}
-
-@keyframes skeleton-loading {
-  0% {
-    background-position: 200% 0;
-  }
-  100% {
-    background-position: -200% 0;
-  }
-}
-</style>
+    /* Responsive Design */
+    @media (max-width: 600px) {
+      #notifications-wrapper {
+        padding: 10px;
+      }
+      header h3 {
+        font-size: 16px;
+      }
+      #navbar a {
+        font-size: 10px;
+      }
+      #navbar a i {
+        font-size: 18px;
+      }
+    }
+  </style>
 </head>
 <body>
-   <div class="profile-pic">
-  <img src="Default.png" alt="up" id="profile-picture6" width="40px" height="40px" style="border-radius: 50%">
+  <header>
+    <div class="profile-pic">
+      <img src="default-avatar.png"  id="profile-picture6">
+    </div>
+    <h3>Alerts</h3>
+    <a href="search.html" class="search-icon" aria-label="Search">
+      <i class="fas fa-search"></i>
+    </a>
+  </header>
+
+  <div id="notifications-wrapper" role="region" aria-live="polite">
+    <div id="notifications"></div>
+    <p id="no-alerts" style="display: none;">No alerts for now, check later!</p>
   </div>
-  <div style="text-align:center">
-  <div style="z-index: 3; position: fixed; margin-left: 83%; margin-top: 16px; font-size: 16px;">
-    <a href="">
-  <i class="fas fa-search" style="color:#28a745; border: 0.1px solid #fff; border-radius: 20px; padding: 8.5px; background-color:#fff; box-shadow: 0 0 10px #ddd; font-weight: light"></i>
-  
-  </a>
-  </div>
-    <div style="text-align: center">
 
   <nav id="navbar">
     <ul>
-      <li class="active"><a href="index.html"><i class="fas fa-store"></i>Market</a></li>
-      <li><a href="Alerts.html"><i class="fas fa-bell"></i>Alerts</a></li>
-      <li><a href="Messages.html"><i class="fas fa-comments"></i>Messages</a></li> 
-            <li><a href="Deals.html"><i class="fas fa-cart-plus"></i>Deals</a></li>
+      <li><a href="index.html"><i class="fas fa-store"></i>Market</a></li>
+      <li><a href="Alerts.html" class="active"><i class="fas fa-bell"></i>Alerts</a></li>
+      <li><a href="Messages.html"><i class="fas fa-comments"></i>Messages</a></li>
+      <li><a href="Deals.html"><i class="fas fa-cart-plus"></i>Deals</a></li>
       <li><a href="Profile.html"><i class="fas fa-user"></i>Profile</a></li>
     </ul>
   </nav>
-  </div>
-<h3>Alerts</h3>
-<div id="notifications-wrapper">
-  <div id="notifications" ></div>
-  
-  <p id="no-alerts" style="display: none">No alerts for now, check later!</p>
-</div>
 
   <script>
-    const API_BASE_URL =
-  window.location.hostname === 'localhost'
-    ? 'http://localhost:3000'
-    : 'https://salmart-production.up.railway.app'
+    const API_BASE_URL = window.location.hostname === 'localhost' 
+      ? 'http://localhost:3000' 
+      : 'https://salmart-production.up.railway.app';
 
-const socket = io(`${API_BASE_URL}`);
-
-// Function to create skeleton loader
-function createSkeletonLoader() {
-  const skeleton = document.createElement('div');
-  skeleton.classList.add('skeleton-wrapper');
-  skeleton.innerHTML = `
-    <div class="skeleton-avatar"></div>
-    <div class="skeleton-content">
-      <div class="skeleton-line"></div>
-      <div class="skeleton-line short"></div>
-      <div class="skeleton-line time"></div>
-    </div>
-  `;
-  return skeleton;
-}
-
-// Function to show skeleton loaders
-function showSkeletonLoaders(container, count = 6) {
-  container.innerHTML = '';
-  for (let i = 0; i < count; i++) {
-    container.appendChild(createSkeletonLoader());
-  }
-}
-
-function formatTime(timestamp) {
-  const now = new Date();
-  const postDate = new Date(timestamp);
-  const diffInSeconds = Math.floor((now - postDate) / 1000);
-
-  if (diffInSeconds < 60) return "Just now";
-  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} min ago`;
-  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hrs ago`;
-  if (diffInSeconds < 172800) return "Yesterday";
-  return postDate.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
-}
-
-async function fetchNotifications() {
-  const notificationsContainer = document.getElementById('notifications');
-  const noAlertsMessage = document.getElementById('no-alerts');
-
-  // Show skeleton loaders while fetching
-  showSkeletonLoaders(notificationsContainer);
-
-  try {
-    const response = await fetch(`${API_BASE_URL}/notifications`, {
-      method: 'GET',
-      headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` }
+    const socket = io(API_BASE_URL, {
+      path: '/socket.io',
+      transports: ['websocket', 'polling']
     });
 
-    if (!response.ok) throw new Error('Failed to fetch notifications');
-
-    const notifications = await response.json();
-    displayNotifications(notifications);
-
-    // Mark notifications as read
-    await markNotificationsAsRead();
-  } catch (error) {
-    console.error('Error fetching notifications:', error);
-    notificationsContainer.innerHTML = '';
-    noAlertsMessage.style.display = 'block';
-  }
-}
-
-function displayNotifications(notifications) {
-  const notificationsContainer = document.getElementById('notifications');
-  const noAlertsMessage = document.getElementById('no-alerts');
-
-  notificationsContainer.innerHTML = '';
-
-  if (notifications.length === 0) {
-    noAlertsMessage.style.display = 'block';
-    return;
-  }
-
-  noAlertsMessage.style.display = 'none';
-
-  notifications.forEach(notification => {
-    const notificationElement = document.createElement('div');
-    notificationElement.classList.add('notification');
-
-    let notificationText = '';
-    if (notification.type === 'like') {
-      notificationText = `<p style="margin-top: %; margin-bottom: 0px; margin-left: 70%; color: #17a2b8; font-weight: 600;">Reactions</p>${notification.senderId.firstName} ${notification.senderId.lastName} liked your post.`;
-    } else if (notification.type === 'comment') {
-      notificationText = `${notification.senderId.firstName} ${notification.senderId.lastName} commented on your ad`;
-    } else if (notification.type === 'payment') {
-      notificationText = `<p style="color: #28a745; margin-left: -100%; margin-bottom: 10px; font-weight: 600;">Payment</p>${notification.senderId.firstName} ${notification.senderId.lastName} payed for "${notification.payment}" kindly release delivery address"`;
-    } else if (notification.type === 'delivery') {
-      notificationText = `<p style="color: #28a745; margin-left: -100%; margin-bottom: 10px; font-weight: 600;">Funds Transfer</p>${notification.senderId.firstName} ${notification.senderId.lastName}has confirmed your delivery of "${notification.payment}".Your funds have been released to your bank account.`;
-    } else if (notification.type === 'warning') {
-      notificationText = `<p style="color: #28a745; margin-left: -100%; margin-bottom: 10px; font-weight: 600;">Bank Details</p>Please add your bank details to receive payment from ${notification.senderId.firstName} ${notification.senderId.lastName}.`;
-    }
-
-    notificationElement.innerHTML = `
-      <img src="${notification.senderId.profilePicture || 'default-avatar.png'}" class="notification-avatar">
-      <div class="notification-content">
-        <p>
-          <a href="post-details.html?postId=${notification.postId}" style="text-decoration: none; color: inherit">${notificationText}</a>
-        </p>
-        <span class="notification-time">${formatTime(notification.createdAt)}</span>
-      </div>
-    `;
-
-    notificationsContainer.appendChild(notificationElement);
-  });
-}
-
-async function markNotificationsAsRead() {
-  try {
-    const token = localStorage.getItem('authToken');
-    if (!token) {
-      console.error('No auth token found. Please log in.');
-      return;
-    }
-
-    const response = await fetch(`${API_BASE_URL}/alerts/mark-as-viewed`, {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${token}` },
+    // Initialize Socket.IO
+    socket.on('connect', () => {
+      console.log('Connected to server');
+      const userId = localStorage.getItem('userId');
+      if (userId) {
+        socket.emit('joinRoom', userId);
+      }
     });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || 'Failed to mark notifications as read');
+    // Toast Notification
+    function showToast(message, bgColor = '#28a745') {
+      const toast = document.createElement('div');
+      toast.className = 'toast-message';
+      toast.style.backgroundColor = bgColor;
+      toast.textContent = message;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.classList.add('show'), 100);
+      setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
     }
 
-    console.log('Notifications marked as read successfully');
-  } catch (error) {
-    console.error('Error marking notifications as read:', error);
-  }
-}
+    // Skeleton Loader
+    function createSkeletonLoader() {
+      const skeleton = document.createElement('div');
+      skeleton.classList.add('skeleton-wrapper');
+      skeleton.innerHTML = `
+        <div class="skeleton-avatar"></div>
+        <div class="skeleton-content">
+          <div class="skeleton-line"></div>
+          <div class="skeleton-line short"></div>
+          <div class="skeleton-line time"></div>
+        </div>
+      `;
+      return skeleton;
+    }
 
-// Listen for real-time notifications
-socket.on('notification', (notification) => {
-  console.log('Received notification:', notification);
+    function showSkeletonLoaders(container, count = 6) {
+      container.innerHTML = '';
+      for (let i = 0; i < count; i++) {
+        container.appendChild(createSkeletonLoader());
+      }
+    }
 
-  const notificationElement = document.createElement('div');
-  notificationElement.classList.add('notification');
+    // Format Timestamp
+    function formatTime(timestamp) {
+      const now = new Date();
+      const postDate = new Date(timestamp);
+      const diffInSeconds = Math.floor((now - postDate) / 1000);
 
-  let notificationText = '';
-  if (notification.type === 'like') {
-    notificationText = `Someone liked your post.`;
-  } else if (notification.type === 'comment') {
-    notificationText = `Someone commented: "${notification.comment}"`;
-  }
+      if (diffInSeconds < 60) return 'Just now';
+      if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} min ago`;
+      if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hrs ago`;
+      if (diffInSeconds < 172800) return 'Yesterday';
+      return postDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    }
 
-  notificationElement.innerHTML = `
-    <img src="${notification.sender.profilePicture || 'default-avatar.png'}" class="notification-avatar">
-    <div class="notification-content">
-      <p>${notificationText}</p>
-      <span class="notification-time">Just now</span>
-    </div>
-  `;
+    // Fetch and Display Notifications
+    async function fetchNotifications() {
+      const notificationsContainer = document.getElementById('notifications');
+      const noAlertsMessage = document.getElementById('no-alerts');
 
-  const notificationsContainer = document.getElementById('notifications');
-  notificationsContainer.prepend(notificationElement);
+      showSkeletonLoaders(notificationsContainer);
 
-  document.getElementById('no-alerts').style.display = 'none';
-});
+      try {
+        const response = await fetch(`${API_BASE_URL}/notifications`, {
+          method: 'GET',
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` }
+        });
 
-document.addEventListener('DOMContentLoaded', fetchNotifications);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const notifications = await response.json();
+        displayNotifications(notifications);
+        await markNotificationsAsRead();
+      } catch (error) {
+        console.error('Error fetching notifications:', error);
+        notificationsContainer.innerHTML = '';
+        noAlertsMessage.style.display = 'block';
+        showToast('Failed to load notifications', '#dc3545');
+      }
+    }
+
+    function displayNotifications(notifications) {
+      const notificationsContainer = document.getElementById('notifications');
+      const noAlertsMessage = document.getElementById('no-alerts');
+      notificationsContainer.innerHTML = '';
+
+      if (notifications.length === 0) {
+        noAlertsMessage.style.display = 'block';
+        return;
+      }
+
+      noAlertsMessage.style.display = 'none';
+
+      notifications.forEach(notification => {
+        const notificationElement = document.createElement('div');
+        notificationElement.classList.add('notification');
+        if (!notification.read) {
+          notificationElement.classList.add('unread');
+        }
+
+        let notificationText = '';
+        let typeLabel = '';
+        if (notification.type === 'like') {
+          typeLabel = 'Reactions';
+          notificationText = `${notification.senderId.firstName} ${notification.senderId.lastName} liked your post.`;
+        } else if (notification.type === 'comment') {
+          typeLabel = 'Comment';
+          notificationText = `${notification.senderId.firstName} ${notification.senderId.lastName} commented on your ad.`;
+        } else if (notification.type === 'payment') {
+          typeLabel = 'Payment';
+          notificationText = `${notification.senderId.firstName} ${notification.senderId.lastName} paid for "${notification.payment}". Please release delivery address.`;
+        } else if (notification.type === 'delivery') {
+          typeLabel = 'Funds Transfer';
+          notificationText = `${notification.senderId.firstName} ${notification.senderId.lastName} confirmed delivery of "${notification.payment}". Funds released to your bank account.`;
+        } else if (notification.type === 'warning') {
+          typeLabel = 'Bank Details';
+          notificationText = `Please add your bank details to receive payment from ${notification.senderId.firstName} ${notification.senderId.lastName}.`;
+        }
+
+        notificationElement.innerHTML = `
+          <img src="${notification.senderId.profilePicture || 'default-avatar.png'}" class="notification-avatar" alt="User avatar" loading="lazy">
+          <div class="notification-content">
+            <div class="notification-type">${typeLabel}</div>
+            <div class="notification-message">
+              <a href="post-details.html?postId=${notification.postId}" style="text-decoration: none; color: inherit">${notificationText}</a>
+            </div>
+            <span class="notification-time">${formatTime(notification.createdAt)}</span>
+          </div>
+          <button class="notification-dismiss" aria-label="Dismiss notification">
+            <i class="fas fa-times"></i>
+          </button>
+        `;
+
+        // Add dismiss functionality
+        notificationElement.querySelector('.notification-dismiss').addEventListener('click', async (e) => {
+          e.stopPropagation();
+          await dismissNotification(notification._id);
+          notificationElement.remove();
+          if (!notificationsContainer.children.length) {
+            noAlertsMessage.style.display = 'block';
+          }
+        });
+
+        notificationsContainer.appendChild(notificationElement);
+      });
+    }
+
+    // Mark Notifications as Read
+    async function markNotificationsAsRead() {
+      try {
+        const token = localStorage.getItem('authToken');
+        if (!token) {
+          console.error('No auth token found. Please log in.');
+          return;
+        }
+
+        const response = await fetch(`${API_BASE_URL}/alerts/mark-as-viewed`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to mark notifications as read');
+        }
+
+        console.log('Notifications marked as read');
+      } catch (error) {
+        console.error('Error marking notifications as read:', error);
+      }
+    }
+
+    // Dismiss Notification
+    async function dismissNotification(notificationId) {
+      try {
+        const response = await fetch(`${API_BASE_URL}/notifications/${notificationId}/dismiss`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` }
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to dismiss notification');
+        }
+
+        showToast('Notification dismissed', '#28a745');
+      } catch (error) {
+        console.error('Error dismissing notification:', error);
+        showToast('Failed to dismiss notification', '#dc3545');
+      }
+    }
+
+    // Real-time Notifications
+    socket.on('notification', (notification) => {
+      console.log('Received notification:', notification);
+      const notificationsContainer = document.getElementById('notifications');
+      const noAlertsMessage = document.getElementById('no-alerts');
+
+      const notificationElement = document.createElement('div');
+      notificationElement.classList.add('notification', 'unread');
+
+      let notificationText = '';
+      let typeLabel = '';
+      if (notification.type === 'like') {
+        typeLabel = 'Reactions';
+        notificationText = `${notification.sender.firstName} ${notification.sender.lastName} liked your post.`;
+      } else if (notification.type === 'comment') {
+        typeLabel = 'Comment';
+        notificationText = `${notification.sender.firstName} ${notification.sender.lastName} commented: "${notification.comment}"`;
+      }
+
+      notificationElement.innerHTML = `
+        <img src="${notification.sender.profilePicture || 'default-avatar.png'}" class="notification-avatar" alt="User avatar" loading="lazy">
+        <div class="notification-content">
+          <div class="notification-type">${typeLabel}</div>
+          <div class="notification-message">${notificationText}</div>
+          <span class="notification-time">Just now</span>
+        </div>
+        <button class="notification-dismiss" aria-label="Dismiss notification">
+          <i class="fas fa-times"></i>
+        </button>
+      `;
+
+      notificationElement.querySelector('.notification-dismiss').addEventListener('click', async (e) => {
+        e.stopPropagation();
+        await dismissNotification(notification._id);
+        notificationElement.remove();
+        if (!notificationsContainer.children.length) {
+          noAlertsMessage.style.display = 'block';
+        }
+      });
+
+      notificationsContainer.prepend(notificationElement);
+      noAlertsMessage.style.display = 'none';
+      showToast(`${notification.sender.firstName} ${notification.sender.lastName} ${notification.type === 'like' ? 'liked' : 'commented on'} your post`, '#28a745');
+    });
+
+    // Handle New Messages
+    socket.on('receiveMessage', (message) => {
+      console.log('New message:', message);
+      showToast(`New message from ${message.senderId}`, '#28a745');
+    });
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', fetchNotifications);
   </script>
-  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
-<script>
-  const socket = io('https://salmart-production.up.railway.app', {
-    path: '/socket.io',
-    transports: ['websocket', 'polling']
-  });
-
-  socket.on('connect', () => {
-    console.log('Connected to server');
-    const userId = localStorage.getItem('userId');
-    if (userId) {
-      socket.emit('joinRoom', userId);
-    }
-  });
-
-  // Handle like and comment notifications
-  socket.on('notification', (data) => {
-    console.log('Received notification:', data);
-    showToast(`${data.sender.firstName} ${data.sender.lastName} ${data.type === 'like' ? 'liked' : 'commented on'} your post`, '#28a745');
-    // FCM handles the actual notification; toast is for in-app feedback
-  });
-
-  // Handle new messages
-  socket.on('receiveMessage', (message) => {
-    console.log('New message:', message);
-    showToast(`New message from ${message.senderId}`, '#28a745');
-    // FCM handles the notification
-  });
-
-  function likePost(postId, userId) {
-    socket.emit('likePost', { postId, userId });
-  }
-
-  function commentPost(postId, userId, comment) {
-    socket.emit('commentPost', { postId, userId, comment });
-  }
-
-  function sendMessage(senderId, receiverId, text) {
-    socket.emit('sendMessage', { senderId, receiverId, text });
-  }
-</script>
 </body>
 </html>
