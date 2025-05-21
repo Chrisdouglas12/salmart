@@ -41,6 +41,7 @@
     "saslprep": "^1.0.3",
     "socket.io": "^4.8.1",
     "uuid": "^11.0.5",
+    "whatwg-url": "^14.2.0",
     "winston": "^3.15.0"
   },
   "overrides": {
