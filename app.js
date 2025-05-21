@@ -30,13 +30,16 @@ console.log('Jimp imported:', typeof Jimp, 'read:', typeof Jimp.read);
 const ALIGN_CENTER = 1;
 const ALIGN_TOP = 2;
 
-const crypto = require('crypto');
-
-app.get('/csrf-token', (req, res) => {
-  const csrfToken = crypto.randomBytes(32).toString('hex');
-  req.session.csrfToken = csrfToken; // Store in session
-  res.json({ csrfToken });
+const winston = require('winston');
+const logger = winston.createLogger({
+  level: 'info',
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.json()
+  ),
+  transports: [new winston.transports.Console()]
 });
+logger.info('Starting application...');
 
 app.use(cors({
   origin:[ 'http://localhost:8158', 'https://labrighterlanguageservices.infinityfreeapp.com', 'https://salmart.vercel.app' ],// Allow Acode Preview
