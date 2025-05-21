@@ -553,14 +553,19 @@ app.use(cors({
      allowedHeaders: ['Content-Type', 'Authorization']
    }));
 app.use(express.json())
-// MongoDB Atlas connection string
- const uri = process.env.MONGO_URI
+// Force pure JavaScript MongoDB driver (bypasses native module issues)
+process.env.MONGODB_DRIVER_MODULE = 'mongodb-legacy';
 
-// Connect to MongoDB using Mongoose
-mongoose.connect(uri)
-  .then(() => console.log("Connected to MongoDB!"))
-  .catch(err => console.error("MongoDB connection error:", err));
-
+mongoose.connect(process.env.MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  serverSelectionTimeoutMS: 5000
+})
+.then(() => console.log("Connected to MongoDB (using legacy driver)"))
+.catch(err => {
+  console.error("MongoDB connection error:", err);
+  process.exit(1); // Exit in production if can't connect
+});
 
 // Check if in production
 const isProduction = process.env.NODE_ENV === 'production';
