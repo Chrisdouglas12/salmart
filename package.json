@@ -5,9 +5,8 @@
   "scripts": {
     "start": "node app.js",
     "dev": "nodemon app.js",
-    "build": "npm ci",
-    "generate-ssl": "mkdir -p ssl && openssl req -nodes -new -x509 -keyout ssl/key.pem -out ssl/cert.pem -subj '/CN=localhost'",
-    "postinstall": "npm rebuild mongodb --build-from-source"
+    "build": "npm install --legacy-peer-deps && npm rebuild mongodb --build-from-source",
+    "generate-ssl": "mkdir -p ssl && openssl req -nodes -new -x509 -keyout ssl/key.pem -out ssl/cert.pem -subj '/CN=localhost'"
   },
   "engines": {
     "node": "18.x",
@@ -31,7 +30,7 @@
     "html-to-image": "^1.11.13",
     "jimp": "^0.22.12",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "7.6.5",         
+    "mongoose": "7.6.5",
     "multer": "^1.4.5-lts.1",
     "multer-storage-cloudinary": "^4.0.0",
     "node-fetch": "^3.3.2",
