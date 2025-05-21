@@ -554,61 +554,13 @@ app.use(cors({
    }));
 app.use(express.json())
 // MongoDB Atlas connection string
- const uri = process.env.MONGO_URI;
+ const uri = process.env.MONGO_URI
 
-// Improved Mongoose connection with all recommended options
-mongoose.connect(uri, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-  serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
-  maxPoolSize: 10, // Maximum number of socket connections
-  socketTimeoutMS: 45000, // Close sockets after 45s of inactivity
-  family: 4, // Use IPv4, skip IPv6
-})
-.then(() => {
-  console.log("Connected to MongoDB!");
-  
-  // Optional: Verify connection by checking the readyState
-  if (mongoose.connection.readyState === 1) {
-    console.log("Mongoose connection is ready");
-  }
-})
-.catch(err => {
-  console.error("MongoDB connection error:", err);
-  
-  // For production - exit process if can't connect
-  if (process.env.NODE_ENV === 'production') {
-    process.exit(1);
-  }
-});
+// Connect to MongoDB using Mongoose
+mongoose.connect(uri)
+  .then(() => console.log("Connected to MongoDB!"))
+  .catch(err => console.error("MongoDB connection error:", err));
 
-// Handle connection events
-mongoose.connection.on('connected', () => {
-  console.log('Mongoose connected to DB');
-});
-
-mongoose.connection.on('error', (err) => {
-  console.error('Mongoose connection error:', err);
-});
-
-mongoose.connection.on('disconnected', () => {
-  console.log('Mongoose disconnected');
-});
-
-// For nodemon restarts
-process.once('SIGUSR2', () => {
-  mongoose.connection.close(() => {
-    process.kill(process.pid, 'SIGUSR2');
-  });
-});
-
-// For app termination
-process.on('SIGINT', () => {
-  mongoose.connection.close(() => {
-    console.log('Mongoose disconnected through app termination');
-    process.exit(0);
-  });
-});
 
 // Check if in production
 const isProduction = process.env.NODE_ENV === 'production';
