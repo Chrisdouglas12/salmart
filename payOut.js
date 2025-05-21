@@ -8,7 +8,7 @@ const payoutLogSchema = new mongoose.Schema({
   status: { type: String, enum: ['success', 'failed'], required: true },
   reason: { type: String },
   response: { type: Object },
-  createdAt: { type: Date, default: Date.now }
+  createdAt: { type: Date, default: Date.now },
 });
 
 module.exports = mongoose.model('PayoutLog', payoutLogSchema);
