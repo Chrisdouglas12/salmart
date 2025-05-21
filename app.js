@@ -1,3 +1,4 @@
+process.env.MONGODB_DRIVER_MODULE = 'mongodb-legacy';
 const express = require('express');
 const app = express();
 const mongoose = require('mongoose')
@@ -553,18 +554,15 @@ app.use(cors({
      allowedHeaders: ['Content-Type', 'Authorization']
    }));
 app.use(express.json())
-// Force pure JavaScript MongoDB driver (bypasses native module issues)
-process.env.MONGODB_DRIVER_MODULE = 'mongodb-legacy';
+
+
 
 mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
-  serverSelectionTimeoutMS: 5000
-})
-.then(() => console.log("Connected to MongoDB (using legacy driver)"))
-.catch(err => {
-  console.error("MongoDB connection error:", err);
-  process.exit(1); // Exit in production if can't connect
+  serverSelectionTimeoutMS: 5000,
+  socketTimeoutMS: 45000,
+  family: 4 // Force IPv4
 });
 
 // Check if in production

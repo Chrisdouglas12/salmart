@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "app.js",
   "scripts": {
-    "start": "node app.js",
+    "start": "node --dns-result-order=ipv4first app.js",
     "dev": "nodemon app.js",
     "build": "npm install --legacy-peer-deps && npm rebuild mongodb --build-from-source",
     "generate-ssl": "mkdir -p ssl && openssl req -nodes -new -x509 -keyout ssl/key.pem -out ssl/cert.pem -subj '/CN=localhost'"
