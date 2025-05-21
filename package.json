@@ -5,7 +5,7 @@
   "scripts": {
     "start": "node app.js",
     "dev": "nodemon app.js",
-    "build": "npm install --omit=dev && npm run generate-ssl",
+    "build": "npm ci && npm run generate-ssl",
     "generate-ssl": "mkdir -p ssl && openssl req -nodes -new -x509 -keyout ssl/key.pem -out ssl/cert.pem -subj '/CN=localhost'"
   },
   "engines": {
