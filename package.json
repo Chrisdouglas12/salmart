@@ -31,8 +31,7 @@
     "html-to-image": "^1.11.13",
     "jimp": "^0.22.12",
     "jsonwebtoken": "^9.0.2",
-    "mongodb": "^6.9.0",
-    "mongoose": "^8.7.0",
+    "mongoose": "7.6.5",         
     "multer": "^1.4.5-lts.1",
     "multer-storage-cloudinary": "^4.0.0",
     "node-fetch": "^3.3.2",
@@ -50,8 +49,6 @@
     "winston": "^3.15.0"
   },
   "overrides": {
-    "node-fetch": "^3.3.2",
-    "whatwg-url": "^14.0.0",
-    "mongodb": "^6.9.0"
+    "mongodb": "4.17.0"
   }
 }
