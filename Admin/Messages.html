@@ -222,15 +222,16 @@
   </div>
   
   <div style="text-align: center">
-    <nav id="navbar">
-      <ul>
-        <li class="active"><a href="index.html"><i class="fas fa-store"></i>Market</a></li>
-        <li><a href="Alerts.html"><i class="fas fa-bell"></i>Alerts</a></li>
-        <li><a href="Messages.html"><i class="fas fa-comments"></i>Messages</a></li> 
-        <li><a href="Deals.html"><i class="fas fa-cart-plus"></i>Deals</a></li>
-        <li><a href="Profile.html"><i class="fas fa-user"></i>Profile</a></li>
-      </ul>
-    </nav>
+        <nav id="navbar">
+        <ul>
+          <li class="active"><a href="index.html"><i class="fas fa-store"></i>Market</a></li>
+          <li class="active"><a href="requestlists.html"><i class="fas fa-clipboard-list"></i>Requests</a></li>
+          <li><a href="Alerts.html" onclick="clearBadge('alerts')"><i class="fas fa-bell"></i>Alerts <span class="notification-badge" id="alerts-badge"></span></a></li>
+          <li><a href="Messages.html" onclick="clearBadge('messages')"><i class="fas fa-comments"></i>Messages <span class="notification-badge" id="messages-badge"></span></a></li> 
+          <li><a href="Deals.html" onclick="clearBadge('deals')"><i class="fas fa-cart-plus"></i>Deals <span class="notification-badge" id="deals-badge"></span></a></li>
+          <li><a href="Profile.html"><i class="fas fa-user"></i>Profile</a></li>
+        </ul>
+      </nav>
   </div>
 
   <div id="message-list"></div>
@@ -426,4 +427,5 @@
              .replace(/'/g, '&#039;');
   }
 </script>
+    <script src="Badge.js"></script>
 </html>

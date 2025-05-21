@@ -6,6 +6,7 @@
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <title>Alerts</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <script src="addPic.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
   <style>
@@ -117,7 +118,7 @@
     }
 
     .notification.unread {
-      background-color: #e6f4ea;
+      background-color: #fff;
     }
 
     .notification-avatar {
@@ -340,15 +341,16 @@
     <p id="no-alerts" style="display: none;">No alerts for now, check later!</p>
   </div>
 
-  <nav id="navbar">
-    <ul>
-      <li><a href="index.html"><i class="fas fa-store"></i>Market</a></li>
-      <li><a href="Alerts.html" class="active"><i class="fas fa-bell"></i>Alerts</a></li>
-      <li><a href="Messages.html"><i class="fas fa-comments"></i>Messages</a></li>
-      <li><a href="Deals.html"><i class="fas fa-cart-plus"></i>Deals</a></li>
-      <li><a href="Profile.html"><i class="fas fa-user"></i>Profile</a></li>
-    </ul>
-  </nav>
+       <nav id="navbar">
+        <ul>
+          <li class="active"><a href="index.html"><i class="fas fa-store"></i>Market</a></li>
+          <li class="active"><a href="requestlists.html"><i class="fas fa-clipboard-list"></i>Requests</a></li>
+          <li><a href="Alerts.html" onclick="clearBadge('alerts')"><i class="fas fa-bell"></i>Alerts <span class="notification-badge" id="alerts-badge"></span></a></li>
+          <li><a href="Messages.html" onclick="clearBadge('messages')"><i class="fas fa-comments"></i>Messages <span class="notification-badge" id="messages-badge"></span></a></li> 
+          <li><a href="Deals.html" onclick="clearBadge('deals')"><i class="fas fa-cart-plus"></i>Deals <span class="notification-badge" id="deals-badge"></span></a></li>
+          <li><a href="Profile.html"><i class="fas fa-user"></i>Profile</a></li>
+        </ul>
+      </nav>
 
   <script>
     const API_BASE_URL = window.location.hostname === 'localhost' 
@@ -609,5 +611,6 @@
     // Initialize
     document.addEventListener('DOMContentLoaded', fetchNotifications);
   </script>
+      <script src="Badge.js"></script>
 </body>
 </html>

@@ -9,6 +9,7 @@
   <script src="https://cdn.jsdelivr.net/npm/jwt-decode/build/jwt-decode.min.js"></script>
   <link rel="stylesheet" href="profile styles.css">
   <link rel="stylesheet" href="Style.css">
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <script src="profilePostScript.js"></script>
   <script src="sideBar"></script>
@@ -84,15 +85,16 @@
   </div>
 
   <div style="text-align: center">
-    <nav id="navbar">
-      <ul>
-        <li class="active"><a href="index.html"><i class="fas fa-store"></i>Market</a></li>
-        <li><a href="Alerts.html"><i class="fas fa-bell"></i>Alerts</a></li>
-        <li><a href="Messages.html"><i class="fas fa-comments"></i>Messages</a></li>
-        <li><a href="Deals.html"><i class="fas fa-cart-plus"></i>Deals</a></li>
-        <li><a href="Profile.html"><i class="fas fa-user"></i>Profile</a></li>
-      </ul>
-    </nav>
+        <nav id="navbar">
+        <ul>
+          <li class="active"><a href="index.html"><i class="fas fa-store"></i>Market</a></li>
+          <li class="active"><a href="requestlists.html"><i class="fas fa-clipboard-list"></i>Requests</a></li>
+          <li><a href="Alerts.html" onclick="clearBadge('alerts')"><i class="fas fa-bell"></i>Alerts <span class="notification-badge" id="alerts-badge"></span></a></li>
+          <li><a href="Messages.html" onclick="clearBadge('messages')"><i class="fas fa-comments"></i>Messages <span class="notification-badge" id="messages-badge"></span></a></li> 
+          <li><a href="Deals.html" onclick="clearBadge('deals')"><i class="fas fa-cart-plus"></i>Deals <span class="notification-badge" id="deals-badge"></span></a></li>
+          <li><a href="Profile.html"><i class="fas fa-user"></i>Profile</a></li>
+        </ul>
+      </nav>
   </div>
 
   <!-- Stats Section -->
@@ -334,6 +336,14 @@
 
   <!-- Inline Follow Button Script (Remove if using profile.js follow logic) -->
   <script>
+       const API_BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart-production.up.railway.app';
+    const socket = io(`${API_BASE_URL}`, {
+      path: '/socket.io',
+      transports: ['websocket', 'polling']
+    });
+    socket.on('connect', () => {
+      console.log('Connected to server');
+    });
   document.addEventListener("DOMContentLoaded", async function () {
     const followButton = document.getElementById("follow-button");
     if (!followButton) {
@@ -363,7 +373,7 @@
     }
     async function updateFollowButton() {
       try {
-        const API_BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart-production.up.railway.app';
+        
         const response = await fetch(`${API_BASE_URL}/follow-status?followerId=${loggedInUserId}&followingId=${profileOwnerId}`);
         const data = await response.json();
         if (data.following) {
@@ -500,7 +510,7 @@
       if (userInfo) {
         usernameEls.forEach(el => {
           if (el) {
-            el.textContent = userInfo.name || userInfo.username ||;
+            el.textContent = userInfo.name || userInfo.username;
             el.style.display = 'block';
           }
         });
@@ -555,7 +565,7 @@
     }
   });
   </script>
-
+    <script src="Badge.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
   <script>eruda.init();</script>
   <script src="reviews.js"></script>

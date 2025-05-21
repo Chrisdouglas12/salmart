@@ -1802,44 +1802,53 @@ app.get('/payment-success', async (req, res) => {
                 const imagePath = path.join(receiptsDir, `${reference}.png`);
 
                 console.log('Starting Jimp image generation...');
-                const image = new Jimp(600, 800, 0xFFFFFFFF);
-                console.log('Jimp image created:', image.bitmap.width, image.bitmap.height);
+            const image = new Jimp(600, 800, 0xFFFFFFFF); // white background
 
-                const font = await Jimp.loadFont(Jimp.FONT_SANS_32_BLACK);
-                const fontLarge = await Jimp.loadFont(Jimp.FONT_SANS_64_BLACK);
-                console.log('Fonts loaded');
+// Load fonts
+const font = await Jimp.loadFont(Jimp.FONT_SANS_32_BLACK);
+const fontLarge = await Jimp.loadFont(Jimp.FONT_SANS_64_BLACK);
 
-                for (let x = 0; x < 600; x++) {
-                    for (let y = 0; y < 800; y++) {
-                        if (x < 15 || x > 585 || y < 15 || y > 785) {
-                            image.setPixelColor(Jimp.rgbaToInt(0, 123, 255, 255), x, y);
-                        }
-                    }
-                }
+// Draw blue border
+for (let x = 0; x < 600; x++) {
+    for (let y = 0; y < 800; y++) {
+        if (x < 10 || x > 590 || y < 10 || y > 790) {
+            image.setPixelColor(Jimp.rgbaToInt(0, 102, 204, 255), x, y); // soft blue
+        }
+    }
+}
 
-                const titleText = 'Payment Receipt';
-                const titleX = (600 - Jimp.measureText(fontLarge, titleText)) / 2;
-                image.print(fontLarge, titleX, 50, titleText);
+// Placeholder for logo
+image.print(font, 40, 20, 'Logo Here'); // replace this later with actual logo image
 
-                const details = [
-                    `Reference: ${reference || 'N/A'}`,
-                    `Amount Paid: ₦${Number(amountPaid || 0).toLocaleString('en-NG')}`,
-                    `Date: ${transactionDate || new Date().toISOString()}`,
-                    `Buyer: ${buyerName || 'Unknown'}`,
-                    `Email: ${email || 'N/A'}`,
-                    `Description: ${productDescription || 'Purchase'}`
-                ];
+// Add SALMART name and receipt title
+const brandName = 'SALMART';
+const brandX = (600 - Jimp.measureText(fontLarge, brandName)) / 2;
+image.print(fontLarge, brandX, 80, brandName);
 
-                let yPosition = 180;
-                details.forEach(line => {
-                    image.print(font, 40, yPosition, line);
-                    yPosition += 50;
-                });
+const titleText = 'Payment Receipt';
+const titleX = (600 - Jimp.measureText(font, titleText)) / 2;
+image.print(font, titleX, 160, titleText);
 
-                const footerText = 'Thank you for your payment!';
-                const footerX = (600 - Jimp.measureText(font, footerText)) / 2;
-                image.print(font, footerX, 700, footerText);
+// Receipt details
+const details = [
+    `Reference: ${reference || 'N/A'}`,
+    `Amount Paid: ₦${Number(amountPaid || 0).toLocaleString('en-NG')}`,
+    `Date: ${transactionDate || new Date().toISOString()}`,
+    `Buyer: ${buyerName || 'Unknown'}`,
+    `Email: ${email || 'N/A'}`,
+    `Description: ${productDescription || 'Purchase'}`
+];
 
+let yPosition = 240;
+details.forEach(line => {
+    image.print(font, 40, yPosition, line);
+    yPosition += 50;
+});
+
+// Footer message
+const footerText = 'Thank you for shopping with SALMART!';
+const footerX = (600 - Jimp.measureText(font, footerText)) / 2;
+image.print(font, footerX, 700, footerText);
                 await image.writeAsync(imagePath);
                 console.log('✅ Receipt image generated:', imagePath);
 

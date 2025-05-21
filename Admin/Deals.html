@@ -50,15 +50,16 @@
   <p id="no-transactions" style="display:none;">No transactions yet. Check back later!</p>
 
   <!-- Bottom Navigation Bar -->
-  <nav id="navbar">
-    <ul>
-      <li><a href="index.html"><i class="fas fa-store"></i>Market <span id="market-badge-nav" class="notification-badge" style="display: none">0</span></a></li>
-      <li><a href="Alerts.html"><i class="fas fa-bell"></i>Alerts <span id="alerts-badge-nav" class="notification-badge" style="display: none">0</span></a></li>
-      <li><a href="Messages.html"><i class="fas fa-comments"></i>Messages <span id="messages-badge-nav" class="notification-badge" style="display: none">0</span></a></li>
-      <li><a href="Deals.html"><i class="fas fa-cart-plus"></i>Deals <span id="deals-badge-nav" class="notification-badge" style="display: none">0</span></a></li>
-      <li><a href="Profile.html"><i class="fas fa-user"></i>Profile <span id="profile-badge-nav" class="notification-badge" style="display: none">0</span></a></li>
-    </ul>
-  </nav>
+      <nav id="navbar">
+        <ul>
+          <li class="active"><a href="index.html"><i class="fas fa-store"></i>Market</a></li>
+          <li class="active"><a href="requestlists.html"><i class="fas fa-clipboard-list"></i>Requests</a></li>
+          <li><a href="Alerts.html" onclick="clearBadge('alerts')"><i class="fas fa-bell"></i>Alerts <span class="notification-badge" id="alerts-badge"></span></a></li>
+          <li><a href="Messages.html" onclick="clearBadge('messages')"><i class="fas fa-comments"></i>Messages <span class="notification-badge" id="messages-badge"></span></a></li> 
+          <li><a href="Deals.html" onclick="clearBadge('deals')"><i class="fas fa-cart-plus"></i>Deals <span class="notification-badge" id="deals-badge"></span></a></li>
+          <li><a href="Profile.html"><i class="fas fa-user"></i>Profile</a></li>
+        </ul>
+      </nav>
 
   <!-- OTP Modal -->
   <div id="otpModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background-color: rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
@@ -158,5 +159,6 @@ function closeSuccessModal() {
   }
 }
   </script>
+      <script src="Badge.js"></script>
 </body>
 </html>
