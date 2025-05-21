@@ -1,5 +1,6 @@
 const express = require('express');
 const app = express();
+const mongoose = require('mongoose')
 const multer = require('multer')
 const User = require('./Schema.js');
 const Post  = require('./postSchema.js')
@@ -14,7 +15,6 @@ const Escrow = require('./EscrowSchema.js')
 const Transaction = require('./Transaction.js')
 const Review = require('./reviewSchema.js')
 const Notification = require('./notificationScript.js')
-const mongoose = require('mongoose')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const cors = require('cors')
