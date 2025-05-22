@@ -1950,7 +1950,7 @@ image.print(font, footerX, 700, footerText);
                     <script>
                         const API_BASE_URL = window.location.hostname === 'localhost' 
                             ? 'http://localhost:3000' 
-                : 'https://salmart.vercel.app';
+                : 'https://salmart.onrender.com';
                         async function shareReceipt() {
                             try {
                                 const payload = {

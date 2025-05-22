@@ -1,7 +1,7 @@
 const API_BASE_URL =
   window.location.hostname === 'localhost'
     ? 'http://localhost:3000'
-    : 'https://salmart-production.up.railway.app';
+    : 'https://salmart.onrender.com';
 const socket = io(`${API_BASE_URL}`);
 const userId = localStorage.getItem('userId');
 let currentTab = 'buying';

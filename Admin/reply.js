@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', async () => {
-    const API_BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart-production.up.railway.app';
+    const API_BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart.onrender.com';
     const commentDetailsContainer = document.querySelector('.comment-details-container');
     const replyInput = document.getElementById('reply-input');
     const replySubmit = document.getElementById('reply-submit');

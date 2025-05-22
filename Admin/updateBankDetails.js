@@ -2,7 +2,7 @@ document.addEventListener("DOMContentLoaded", async function () {
   // Set API base URL
   const API_BASE_URL = window.location.hostname === 'localhost' 
     ? 'http://localhost:3000' 
-    : 'https://salmart-production.up.railway.app';
+    : 'https://salmart.onrender.com';
 
   // Function to decode JWT token and get user info
   function getLoggedInUserInfo() {

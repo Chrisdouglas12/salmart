@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     let loggedInUser = null; // Define loggedInUser variable
     const API_BASE_URL = window.location.hostname === 'localhost' 
         ? 'http://localhost:3000' 
-        : 'https://salmart-production.up.railway.app';
+        : 'https://salmart.onrender.com';
 // Initialize Socket.IO (if available)
     let socket = null;
     if (typeof io !== 'undefined') {

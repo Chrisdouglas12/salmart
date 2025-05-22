@@ -2,7 +2,7 @@ document.addEventListener("DOMContentLoaded", function() {
   // Set API base URL
   const API_BASE_URL = window.location.hostname === 'localhost' 
     ? 'http://localhost:3000' 
-    : 'https://salmart-production.up.railway.app';
+    : 'https://salmart.onrender.com';
 
   // Get user IDs
   const getProfileOwnerId = () => {

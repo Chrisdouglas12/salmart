@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded', function() {
 const API_BASE_URL = window.location.hostname === 'localhost' 
        ?
       'http://localhost:3000' :
-      'https://salmart-production.up.railway.app'
+      'https://salmart.onrender.com'
 
         fetch(`${API_BASE_URL}/users-profile/${userId}`, {
             method: 'GET',
