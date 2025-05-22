@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', async function () {
       window.location.hostname === 'localhost'
       ? 'http://localhost:3000'
       :
-'https://salmart-production.up.railway.app'
+'https://salmart.onrender.com'
 
 
     // Function to format time (e.g., "2 hrs ago")

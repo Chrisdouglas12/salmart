@@ -345,7 +345,7 @@
     </script>
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
     <script>
-    const API_BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart-production.up.railway.app';
+    const API_BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart.onrender.com';
     const socket = io(`${API_BASE_URL}`, {
       path: '/socket.io',
       transports: ['websocket', 'polling']

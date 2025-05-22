@@ -43,7 +43,7 @@ const logger = winston.createLogger({
 logger.info('Starting application...');
 
 app.use(cors({
-  origin:[ 'http://localhost:8158', 'https://labrighterlanguageservices.infinityfreeapp.com', 'https://salmart.vercel.app' ],// Allow Acode Preview
+  origin:[ 'http://localhost:8158', 'https://salmart.vercel.app' ],// Allow Acode Preview
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
   credentials: true
 }));
@@ -64,7 +64,7 @@ const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin:[ 'https://cfdouglas.rf.gd','http://localhost:8158',   'https://labrighterlanguageservices.infinityfreeapp.com', 'https://salmart.vercel.app'], 
+    origin:[ 'http://localhost:8158', 'https://salmart.vercel.app'], 
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization']
@@ -544,10 +544,7 @@ if (!fs.existsSync(uploadDir)) {
 app.use(cors({
      origin: [
        'http://localhost:8158', 
-       'https://labrighterlanguageservices.infinityfreeapp.com',
-       'https://cfdouglas.rf.gd', // Add your frontend domain
-       'https://salmart-production.up.railway.app', 'https://salmart.vercel.app',
-       // Add your Railway domain
+       'https://salmart.onrender.com', 'https://salmart.vercel.app'
      ],
      methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
      credentials: true,
@@ -563,6 +560,12 @@ mongoose.connect(process.env.MONGO_URI, {
   serverSelectionTimeoutMS: 5000,
   socketTimeoutMS: 45000,
   family: 4 // Force IPv4
+})
+.then(() => {
+  console.log('✅ Mongoose connected successfully!');
+})
+.catch((err) => {
+  console.error('❌ Mongoose connection error:', err);
 });
 
 // Check if in production
@@ -1947,7 +1950,7 @@ image.print(font, footerX, 700, footerText);
                     <script>
                         const API_BASE_URL = window.location.hostname === 'localhost' 
                             ? 'http://localhost:3000' 
-                            : 'https://salmart-production.up.railway.app';
+                : 'https://salmart.vercel.app';
                         async function shareReceipt() {
                             try {
                                 const payload = {

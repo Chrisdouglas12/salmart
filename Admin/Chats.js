@@ -1,7 +1,7 @@
 // API base URL configuration for local and production environments
 const API_BASE_URL = window.location.hostname === 'localhost'
     ? 'http://localhost:3000'
-    : 'https://salmart-production.up.railway.app';
+    : 'https://salmart.onrender.com';
 
 // Initialize Socket.IO connection with WebSocket and polling transports
 const socket = io(API_BASE_URL, {
