@@ -205,7 +205,7 @@ ${post.createdBy.userId !== loggedInUser ?
                 
                
           
-// Check availability functionality
+
 const sendMessageBtn = postElement.querySelector("#send-message-btn");
 if (post.isSold) {
     sendMessageBtn.disabled = true;
@@ -216,8 +216,15 @@ sendMessageBtn.addEventListener('click', (e) => {
     const recipientId = sendMessageBtn.dataset.recipientId;
     const recipientUsername = post.createdBy.name;
     const recipientProfilePictureUrl = post.profilePicture || 'default-avatar.png';
-    const productImage = sendMessageBtn.dataset.productImage;
-    const productDescription = sendMessageBtn.dataset.productDescription;
+    let productImage = sendMessageBtn.dataset.productImage || '';
+    const productDescription = sendMessageBtn.dataset.productDescription || '';
+
+    // Normalize productImage URL
+    if (productImage && !productImage.match(/^https?:\/\//)) {
+        productImage = productImage.startsWith('/') ? `${API_BASE_URL}${productImage}` : `${API_BASE_URL}/${productImage}`;
+    }
+
+    console.log('Sending productImage:', productImage); // Debug productImage value
 
     // Construct the predefined message
     const message = `Is this item still available?\n\nProduct: ${productDescription}`;
@@ -228,9 +235,10 @@ sendMessageBtn.addEventListener('click', (e) => {
     const encodedProductImage = encodeURIComponent(productImage);
     const encodedRecipientUsername = encodeURIComponent(recipientUsername);
     const encodedRecipientProfilePictureUrl = encodeURIComponent(recipientProfilePictureUrl);
+    const encodedProductDescription = encodeURIComponent(productDescription);
 
     // Redirect to the chat page with all necessary parameters
-    sendMessageLink.href = `Chats.html?user_id=${userId}&recipient_id=${recipientId}&recipient_username=${encodedRecipientUsername}&recipient_profile_picture_url=${encodedRecipientProfilePictureUrl}&message=${encodedMessage}&product_image=${encodedProductImage}`;
+    sendMessageLink.href = `Chats.html?user_id=${userId}&recipient_id=${recipientId}&recipient_username=${encodedRecipientUsername}&recipient_profile_picture_url=${encodedRecipientProfilePictureUrl}&message=${encodedMessage}&product_image=${encodedProductImage}&product_id=${post._id}&product_name=${encodedProductDescription}`;
     window.location.href = sendMessageLink.href;
 });
   
@@ -310,37 +318,51 @@ likeButton.addEventListener('click', async () => {
 
                 
 
+// Buy now functionality
+const buyNowButton = postElement.querySelector('.buy-now-button');
+buyNowButton.addEventListener('click', async () => {
+    const postId = buyNowButton.getAttribute('data-post-id').trim();
+    const email = localStorage.getItem('email');
+    const buyerId = localStorage.getItem('userId');
 
-                // Buy now functionality
-                const buyNowButton = postElement.querySelector('.buy-now-button');
-                buyNowButton.addEventListener('click', async () => {
-                    const postId = buyNowButton.getAttribute('data-post-id').trim();
-                    const email = localStorage.getItem('email');
-                    const buyerId = localStorage.getItem('userId');
+    if (!email || !buyerId || !postId) {
+        alert("Missing required information. Please ensure you are logged in and try again.");
+        console.error("Missing data:", { email, buyerId, postId });
+        return;
+    }
 
-                    if (!email || !buyerId) {
-                        alert("No email or user ID found in localStorage. Please log in.");
-                        return;
-                    }
+    try {
+        const response = await fetch(`${API_BASE_URL}/pay`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                email,
+                postId,
+                buyerId,
+                currency: 'NGN', // Monnify supports NGN
+            }),
+        });
 
-                    try {
-                        const response = await fetch(`${API_BASE_URL}/pay`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ email, postId, buyerId }),
-                        });
+        const result = await response.json();
 
-                        const result = await response.json();
-                        if (result.success) {
-                            window.location.href = result.url;
-                        } else {
-                            alert("Payment failed!");
-                        }
-                    } catch (error) {
-                        console.error("Error processing payment:", error);
-                        alert("Payment error!");
-                    }
-                });
+        if (response.ok && result.success && result.url) {
+            console.log('Redirecting to Monnify payment page:', result.url);
+            window.location.href = result.url; // Redirect to Monnify's hosted payment page
+        } else {
+            console.error('Payment initiation failed:', result.message || 'Unknown error');
+            alert(`Payment initiation failed: ${result.message || 'Please try again.'}`);
+        }
+    } catch (error) {
+        console.error('Error processing payment:', {
+            message: error.message,
+            stack: error.stack,
+        });
+        alert('An error occurred while processing your payment. Please try again later.');
+    }
+});
+
 if (post.createdBy.userId === loggedInUser) {
     const buyDiv = postElement.querySelector('.buy');
     if (buyDiv) {

@@ -1,0 +1,170 @@
+{"level":"info","message":"✅ Server running on port 3000","timestamp":"2025-05-25T22:21:28.697Z"}
+{"level":"info","message":"✅ MongoDB connected successfully","timestamp":"2025-05-25T22:21:34.962Z"}
+{"level":"info","message":"Socket connected: RTIx8brXWzTfM2koAAAB","timestamp":"2025-05-25T22:21:56.106Z"}
+{"level":"info","message":"[2025-05-25T22:21:56.334Z] GET /users-profile/67d845b5c9add2113fc80789","timestamp":"2025-05-25T22:21:56.334Z"}
+{"level":"info","message":"[2025-05-25T22:21:56.528Z] GET /notification-counts?userId=67d845b5c9add2113fc80789","timestamp":"2025-05-25T22:21:56.528Z"}
+{"level":"info","message":"[2025-05-25T22:21:56.563Z] GET /verify-token","timestamp":"2025-05-25T22:21:56.564Z"}
+{"level":"info","message":"[2025-05-25T22:21:59.235Z] GET /notification-counts?userId=67d845b5c9add2113fc80789","timestamp":"2025-05-25T22:21:59.235Z"}
+{"level":"info","message":"[2025-05-25T22:21:59.292Z] GET /post?category=","timestamp":"2025-05-25T22:21:59.293Z"}
+{"level":"info","message":"[2025-05-25T22:22:11.510Z] POST /post/like/683084e19dfdbac733a908d6","timestamp":"2025-05-25T22:22:11.511Z"}
+{"level":"info","message":"Socket disconnected: RTIx8brXWzTfM2koAAAB","timestamp":"2025-05-25T22:22:15.155Z"}
+{"level":"info","message":"Socket connected: i324FX6iH65gBAULAAAD","timestamp":"2025-05-25T22:22:38.163Z"}
+{"level":"info","message":"Socket disconnected: i324FX6iH65gBAULAAAD","timestamp":"2025-05-25T22:22:38.305Z"}
+{"level":"info","message":"Socket connected: 9WzkoZRv4eODEkBkAAAF","timestamp":"2025-05-25T22:22:42.830Z"}
+{"level":"info","message":"[2025-05-25T22:22:43.128Z] GET /users-profile/67d845b5c9add2113fc80789","timestamp":"2025-05-25T22:22:43.128Z"}
+{"level":"info","message":"[2025-05-25T22:22:43.136Z] GET /notification-counts?userId=67d845b5c9add2113fc80789","timestamp":"2025-05-25T22:22:43.136Z"}
+{"level":"info","message":"[2025-05-25T22:22:43.141Z] GET /verify-token","timestamp":"2025-05-25T22:22:43.141Z"}
+{"level":"info","message":"[2025-05-25T22:22:48.350Z] GET /notification-counts?userId=67d845b5c9add2113fc80789","timestamp":"2025-05-25T22:22:48.350Z"}
+{"level":"info","message":"[2025-05-25T22:22:48.652Z] GET /post?category=","timestamp":"2025-05-25T22:22:48.653Z"}
+{"level":"info","message":"Socket disconnected: 9WzkoZRv4eODEkBkAAAF","timestamp":"2025-05-25T22:22:59.421Z"}
+{"level":"info","message":"[2025-05-25T22:22:59.457Z] POST /alerts/mark-as-viewed","timestamp":"2025-05-25T22:22:59.457Z"}
+{"level":"info","message":"[2025-05-25T22:22:59.953Z] GET /notification-counts?userId=67d845b5c9add2113fc80789","timestamp":"2025-05-25T22:22:59.953Z"}
+{"level":"info","message":"[2025-05-25T22:23:00.656Z] GET /notification-counts?userId=67d845b5c9add2113fc80789","timestamp":"2025-05-25T22:23:00.657Z"}
+{"level":"info","message":"[2025-05-25T22:23:00.663Z] GET /users-profile/67d845b5c9add2113fc80789","timestamp":"2025-05-25T22:23:00.663Z"}
+{"level":"info","message":"Socket connected: OKqhCCdDPhuwuv5GAAAH","timestamp":"2025-05-25T22:23:00.683Z"}
+{"level":"info","message":"[2025-05-25T22:23:00.723Z] GET /notifications","timestamp":"2025-05-25T22:23:00.723Z"}
+{"level":"info","message":"[2025-05-25T22:23:03.707Z] GET /notification-counts?userId=67d845b5c9add2113fc80789","timestamp":"2025-05-25T22:23:03.707Z"}
+{"level":"info","message":"Socket disconnected: OKqhCCdDPhuwuv5GAAAH","timestamp":"2025-05-25T22:23:22.683Z"}
+{"level":"info","message":"[2025-05-25T22:23:22.713Z] POST /messages/mark-as-viewed","timestamp":"2025-05-25T22:23:22.713Z"}
+{"level":"info","message":"[2025-05-25T22:23:23.501Z] GET /api/messages?userId=67d845b5c9add2113fc80789","timestamp":"2025-05-25T22:23:23.501Z"}
+{"level":"info","message":"Socket connected: INDv2v9T08oamNuhAAAJ","timestamp":"2025-05-25T22:23:23.555Z"}
+{"level":"info","message":"[2025-05-25T22:23:23.568Z] GET /notification-counts?userId=67d845b5c9add2113fc80789","timestamp":"2025-05-25T22:23:23.568Z"}
+{"level":"info","message":"[2025-05-25T22:23:23.693Z] GET /users-profile/67d845b5c9add2113fc80789","timestamp":"2025-05-25T22:23:23.693Z"}
+{"level":"info","message":"[2025-05-25T22:23:37.980Z] GET /notification-counts?userId=67d845b5c9add2113fc80789","timestamp":"2025-05-25T22:23:37.980Z"}
+{"level":"info","message":"[2025-05-25T22:23:42.185Z] PUT /messages/mark-as-viewed","timestamp":"2025-05-25T22:23:42.185Z"}
+{"level":"info","message":"Socket disconnected: INDv2v9T08oamNuhAAAJ","timestamp":"2025-05-25T22:23:44.175Z"}
+{"level":"info","message":"Socket connected: MZS8YRRuzPPFlykOAAAL","timestamp":"2025-05-25T22:23:45.414Z"}
+{"level":"info","message":"[2025-05-25T22:23:45.633Z] GET /users-profile/67d845b5c9add2113fc80789","timestamp":"2025-05-25T22:23:45.633Z"}
+{"level":"info","message":"[2025-05-25T22:23:45.675Z] GET /requests?category=&sort=-createdAt","timestamp":"2025-05-25T22:23:45.675Z"}
+{"level":"info","message":"[2025-05-25T22:23:45.681Z] GET /notification-counts?userId=67d845b5c9add2113fc80789","timestamp":"2025-05-25T22:23:45.681Z"}
+{"level":"info","message":"[2025-05-25T22:23:46.019Z] GET /notification-counts?userId=67d845b5c9add2113fc80789","timestamp":"2025-05-25T22:23:46.019Z"}
+{"level":"info","message":"Socket disconnected: MZS8YRRuzPPFlykOAAAL","timestamp":"2025-05-25T22:23:50.741Z"}
+{"level":"info","message":"[2025-05-25T22:23:50.749Z] POST /alerts/mark-as-viewed","timestamp":"2025-05-25T22:23:50.749Z"}
+{"level":"info","message":"[2025-05-25T22:23:51.569Z] GET /notification-counts?userId=67d845b5c9add2113fc80789","timestamp":"2025-05-25T22:23:51.569Z"}
+{"level":"info","message":"[2025-05-25T22:23:51.577Z] GET /notifications","timestamp":"2025-05-25T22:23:51.578Z"}
+{"level":"info","message":"[2025-05-25T22:23:51.595Z] GET /users-profile/67d845b5c9add2113fc80789","timestamp":"2025-05-25T22:23:51.595Z"}
+{"level":"info","message":"Socket connected: KhUXEYxKLsgHaMYmAAAN","timestamp":"2025-05-25T22:23:51.665Z"}
+{"level":"info","message":"[2025-05-25T22:23:51.826Z] GET /notification-counts?userId=67d845b5c9add2113fc80789","timestamp":"2025-05-25T22:23:51.827Z"}
+{"level":"info","message":"[2025-05-25T22:23:54.174Z] POST /alerts/mark-as-viewed","timestamp":"2025-05-25T22:23:54.175Z"}
+{"level":"info","message":"Socket disconnected: KhUXEYxKLsgHaMYmAAAN","timestamp":"2025-05-25T22:23:58.710Z"}
+{"level":"info","message":"[2025-05-25T22:23:59.752Z] GET /verify-token","timestamp":"2025-05-25T22:23:59.752Z"}
+{"level":"info","message":"[2025-05-25T22:24:00.632Z] GET /verify-token","timestamp":"2025-05-25T22:24:00.632Z"}
+{"level":"info","message":"[2025-05-25T22:24:00.666Z] GET /post/682ecaa3953d3f1c21b95c7f","timestamp":"2025-05-25T22:24:00.666Z"}
+{"level":"info","message":"[2025-05-25T22:24:04.584Z] POST /post/like/682ecaa3953d3f1c21b95c7f","timestamp":"2025-05-25T22:24:04.584Z"}
+{"level":"info","message":"[2025-05-25T22:24:13.097Z] POST /post/comment/682ecaa3953d3f1c21b95c7f","timestamp":"2025-05-25T22:24:13.097Z"}
+{"level":"info","message":"[2025-05-25T22:24:14.004Z] GET /post/682ecaa3953d3f1c21b95c7f","timestamp":"2025-05-25T22:24:14.004Z"}
+{"level":"info","message":"Socket connected: ZSHanM90UirqqhPcAAAP","timestamp":"2025-05-25T22:24:20.764Z"}
+{"level":"info","message":"[2025-05-25T22:24:21.154Z] POST /alerts/mark-as-viewed","timestamp":"2025-05-25T22:24:21.154Z"}
+{"level":"info","message":"Socket disconnected: ZSHanM90UirqqhPcAAAP","timestamp":"2025-05-25T22:24:28.345Z"}
+{"level":"info","message":"Socket connected: zRSzQWsw9t_ghvYPAAAR","timestamp":"2025-05-25T22:24:29.740Z"}
+{"level":"info","message":"[2025-05-25T22:24:29.911Z] GET /users-profile/67d845b5c9add2113fc80789","timestamp":"2025-05-25T22:24:29.911Z"}
+{"level":"info","message":"[2025-05-25T22:24:29.931Z] GET /notification-counts?userId=67d845b5c9add2113fc80789","timestamp":"2025-05-25T22:24:29.931Z"}
+{"level":"info","message":"[2025-05-25T22:24:29.936Z] GET /verify-token","timestamp":"2025-05-25T22:24:29.937Z"}
+{"level":"info","message":"[2025-05-25T22:24:30.191Z] GET /post?category=","timestamp":"2025-05-25T22:24:30.191Z"}
+{"level":"info","message":"[2025-05-25T22:24:30.216Z] GET /notification-counts?userId=67d845b5c9add2113fc80789","timestamp":"2025-05-25T22:24:30.216Z"}
+{"level":"info","message":"[2025-05-25T22:24:41.341Z] POST /post/like/683084e19dfdbac733a908d6","timestamp":"2025-05-25T22:24:41.342Z"}
+{"level":"info","message":"[2025-05-25T22:24:59.845Z] GET /notification-counts?userId=67d845b5c9add2113fc80789","timestamp":"2025-05-25T22:24:59.845Z"}
+{"level":"info","message":"[2025-05-25T22:25:00.122Z] GET /notification-counts?userId=67d845b5c9add2113fc80789","timestamp":"2025-05-25T22:25:00.123Z"}
+{"level":"info","message":"[2025-05-25T22:25:29.794Z] GET /notification-counts?userId=67d845b5c9add2113fc80789","timestamp":"2025-05-25T22:25:29.794Z"}
+{"level":"info","message":"[2025-05-25T22:25:31.205Z] GET /notification-counts?userId=67d845b5c9add2113fc80789","timestamp":"2025-05-25T22:25:31.205Z"}
+{"level":"info","message":"Socket disconnected: zRSzQWsw9t_ghvYPAAAR","timestamp":"2025-05-25T22:25:53.945Z"}
+{"level":"info","message":"[2025-05-25T22:25:55.392Z] GET /messages?user1=67d845b5c9add2113fc80789&user2=67b6fbdedfb7a20620fcb1d1","timestamp":"2025-05-25T22:25:55.392Z"}
+{"level":"info","message":"Socket connected: GotnCWXueZyrAwEqAAAT","timestamp":"2025-05-25T22:25:55.454Z"}
+{"level":"info","message":"✅ Server running on port 3000","timestamp":"2025-05-25T22:26:46.353Z"}
+{"level":"error","message":"❌ MongoDB connection error: Could not connect to any servers in your MongoDB Atlas cluster. One common reason is that you're trying to access the database from an IP that isn't whitelisted. Make sure your current IP address is on your Atlas cluster's IP whitelist: https://www.mongodb.com/docs/atlas/security-whitelist/","timestamp":"2025-05-25T22:27:00.442Z"}
+{"level":"info","message":"✅ Server running on port 3000","timestamp":"2025-05-25T22:28:10.884Z"}
+{"level":"error","message":"❌ MongoDB connection error: Server selection timed out after 5000 ms","timestamp":"2025-05-25T22:28:16.446Z"}
+{"level":"info","message":"[2025-05-25T22:28:36.213Z] GET /notification-counts?userId=67d845b5c9add2113fc80789","timestamp":"2025-05-25T22:28:36.214Z"}
+{"level":"info","message":"Socket connected: p-3f5cnoUeWNiTNQAAAB","timestamp":"2025-05-25T22:28:36.644Z"}
+{"level":"info","message":"[2025-05-25T22:28:36.715Z] GET /notification-counts?userId=67d845b5c9add2113fc80789","timestamp":"2025-05-25T22:28:36.715Z"}
+{"level":"info","message":"[2025-05-25T22:28:36.750Z] GET /notification-counts?userId=67d845b5c9add2113fc80789","timestamp":"2025-05-25T22:28:36.750Z"}
+{"level":"info","message":"[2025-05-25T22:28:37.098Z] POST /alerts/mark-as-viewed","timestamp":"2025-05-25T22:28:37.098Z"}
+{"level":"info","message":"Socket disconnected: p-3f5cnoUeWNiTNQAAAB","timestamp":"2025-05-25T22:28:37.548Z"}
+{"level":"info","message":"Socket connected: VAmIF_6Qwpj-5a4SAAAD","timestamp":"2025-05-25T22:28:38.586Z"}
+{"level":"info","message":"Socket disconnected: VAmIF_6Qwpj-5a4SAAAD","timestamp":"2025-05-25T22:28:38.625Z"}
+{"level":"info","message":"✅ Server running on port 3000","timestamp":"2025-05-25T22:45:44.082Z"}
+{"level":"info","message":"✅ MongoDB connected successfully","timestamp":"2025-05-25T22:45:48.941Z"}
+{"level":"info","message":"Socket connected: YAt_T7a9Oq7mZCWxAAAB","timestamp":"2025-05-25T22:46:16.232Z"}
+{"level":"info","message":"[2025-05-25T22:46:16.454Z] GET /users-profile/67d845b5c9add2113fc80789","timestamp":"2025-05-25T22:46:16.454Z"}
+{"level":"info","message":"[2025-05-25T22:46:16.662Z] GET /notification-counts?userId=67d845b5c9add2113fc80789","timestamp":"2025-05-25T22:46:16.662Z"}
+{"level":"info","message":"[2025-05-25T22:46:16.756Z] GET /verify-token","timestamp":"2025-05-25T22:46:16.756Z"}
+{"level":"info","message":"[2025-05-25T22:46:16.789Z] GET /notification-counts?userId=67d845b5c9add2113fc80789","timestamp":"2025-05-25T22:46:16.789Z"}
+{"level":"info","message":"[2025-05-25T22:46:17.049Z] GET /post?category=","timestamp":"2025-05-25T22:46:17.050Z"}
+{"level":"info","message":"[2025-05-25T22:46:45.594Z] GET /notification-counts?userId=67d845b5c9add2113fc80789","timestamp":"2025-05-25T22:46:45.594Z"}
+{"level":"info","message":"[2025-05-25T22:46:45.634Z] GET /notification-counts?userId=67d845b5c9add2113fc80789","timestamp":"2025-05-25T22:46:45.634Z"}
+{"level":"info","message":"Socket disconnected: YAt_T7a9Oq7mZCWxAAAB","timestamp":"2025-05-25T22:47:25.627Z"}
+{"level":"info","message":"✅ Server running on port 3000","timestamp":"2025-05-25T22:59:02.432Z"}
+{"level":"info","message":"✅ MongoDB connected successfully","timestamp":"2025-05-25T22:59:07.801Z"}
+{"level":"info","message":"Socket connected: SmvHPSJKh5qWZn_fAAAB","timestamp":"2025-05-25T22:59:24.632Z"}
+{"level":"info","message":"[2025-05-25T22:59:24.887Z] GET /users-profile/67d845b5c9add2113fc80789","timestamp":"2025-05-25T22:59:24.887Z"}
+{"level":"info","message":"[2025-05-25T22:59:24.923Z] GET /notification-counts?userId=67d845b5c9add2113fc80789","timestamp":"2025-05-25T22:59:24.923Z"}
+{"level":"info","message":"✅ Server running on port 3000","timestamp":"2025-05-25T23:02:28.470Z"}
+{"level":"error","message":"❌ MongoDB connection error: Could not connect to any servers in your MongoDB Atlas cluster. One common reason is that you're trying to access the database from an IP that isn't whitelisted. Make sure your current IP address is on your Atlas cluster's IP whitelist: https://www.mongodb.com/docs/atlas/security-whitelist/","timestamp":"2025-05-25T23:02:34.188Z"}
+{"level":"info","message":"✅ Server running on port 3000","timestamp":"2025-05-25T23:02:55.731Z"}
+{"level":"info","message":"✅ MongoDB connected successfully","timestamp":"2025-05-25T23:02:58.359Z"}
+{"level":"info","message":"Socket connected: Ik3Kj3mNYTGofbkmAAAB","timestamp":"2025-05-25T23:04:12.695Z"}
+{"level":"info","message":"[2025-05-25T23:04:12.906Z] GET /users-profile/67d845b5c9add2113fc80789","timestamp":"2025-05-25T23:04:12.907Z"}
+{"level":"info","message":"[2025-05-25T23:04:13.190Z] GET /notification-counts?userId=67d845b5c9add2113fc80789","timestamp":"2025-05-25T23:04:13.190Z"}
+{"level":"info","message":"[2025-05-25T23:04:13.304Z] GET /verify-token","timestamp":"2025-05-25T23:04:13.305Z"}
+{"level":"info","message":"[2025-05-25T23:04:13.338Z] GET /notification-counts?userId=67d845b5c9add2113fc80789","timestamp":"2025-05-25T23:04:13.338Z"}
+{"level":"info","message":"Socket disconnected: Ik3Kj3mNYTGofbkmAAAB","timestamp":"2025-05-25T23:04:56.987Z"}
+{"level":"info","message":"Socket connected: C96sUWozdLMSNXYJAAAD","timestamp":"2025-05-25T23:05:01.129Z"}
+{"level":"info","message":"Socket disconnected: C96sUWozdLMSNXYJAAAD","timestamp":"2025-05-25T23:05:30.757Z"}
+{"level":"info","message":"✅ Server running on port 3000","timestamp":"2025-05-25T23:08:41.399Z"}
+{"level":"error","message":"❌ MongoDB connection error: Could not connect to any servers in your MongoDB Atlas cluster. One common reason is that you're trying to access the database from an IP that isn't whitelisted. Make sure your current IP address is on your Atlas cluster's IP whitelist: https://www.mongodb.com/docs/atlas/security-whitelist/","timestamp":"2025-05-25T23:08:47.180Z"}
+{"level":"info","message":"✅ Server running on port 3000","timestamp":"2025-05-25T23:09:10.384Z"}
+{"level":"error","message":"❌ MongoDB connection error: Could not connect to any servers in your MongoDB Atlas cluster. One common reason is that you're trying to access the database from an IP that isn't whitelisted. Make sure your current IP address is on your Atlas cluster's IP whitelist: https://www.mongodb.com/docs/atlas/security-whitelist/","timestamp":"2025-05-25T23:09:15.854Z"}
+{"level":"info","message":"✅ Server running on port 3000","timestamp":"2025-05-25T23:09:41.990Z"}
+{"level":"error","message":"❌ MongoDB connection error: Could not connect to any servers in your MongoDB Atlas cluster. One common reason is that you're trying to access the database from an IP that isn't whitelisted. Make sure your current IP address is on your Atlas cluster's IP whitelist: https://www.mongodb.com/docs/atlas/security-whitelist/","timestamp":"2025-05-25T23:09:47.554Z"}
+{"level":"info","message":"✅ Server running on port 3000","timestamp":"2025-05-25T23:20:41.214Z"}
+{"level":"error","message":"❌ MongoDB connection error: Server selection timed out after 5000 ms","timestamp":"2025-05-25T23:20:46.817Z"}
+{"level":"info","message":"✅ Server running on port 3000","timestamp":"2025-05-25T23:21:10.655Z"}
+{"level":"error","message":"❌ MongoDB connection error: Could not connect to any servers in your MongoDB Atlas cluster. One common reason is that you're trying to access the database from an IP that isn't whitelisted. Make sure your current IP address is on your Atlas cluster's IP whitelist: https://www.mongodb.com/docs/atlas/security-whitelist/","timestamp":"2025-05-25T23:21:23.260Z"}
+{"level":"info","message":"✅ Server running on port 3000","timestamp":"2025-05-25T23:23:12.950Z"}
+{"level":"info","message":"✅ MongoDB connected successfully","timestamp":"2025-05-25T23:23:18.325Z"}
+{"level":"info","message":"Socket connected: 9Qqoxwjp3KHIPJfaAAAB","timestamp":"2025-05-25T23:25:07.183Z"}
+{"level":"info","message":"[2025-05-25T23:25:07.366Z] GET /users-profile/67d845b5c9add2113fc80789","timestamp":"2025-05-25T23:25:07.366Z"}
+{"level":"info","message":"[2025-05-25T23:25:07.591Z] GET /notification-counts?userId=67d845b5c9add2113fc80789","timestamp":"2025-05-25T23:25:07.591Z"}
+{"level":"info","message":"[2025-05-25T23:25:07.672Z] GET /verify-token","timestamp":"2025-05-25T23:25:07.673Z"}
+{"level":"info","message":"[2025-05-25T23:25:07.967Z] GET /notification-counts?userId=67d845b5c9add2113fc80789","timestamp":"2025-05-25T23:25:07.967Z"}
+{"level":"info","message":"[2025-05-25T23:25:08.048Z] GET /post?category=","timestamp":"2025-05-25T23:25:08.049Z"}
+{"level":"info","message":"Socket disconnected: 9Qqoxwjp3KHIPJfaAAAB","timestamp":"2025-05-25T23:26:16.494Z"}
+{"level":"info","message":"Socket connected: zHyNrh4huPAa_3FAAAAD","timestamp":"2025-05-25T23:27:27.835Z"}
+{"level":"info","message":"Socket disconnected: zHyNrh4huPAa_3FAAAAD","timestamp":"2025-05-25T23:27:31.732Z"}
+{"level":"info","message":"[2025-05-25T23:27:32.965Z] GET /notification-counts?userId=67d845b5c9add2113fc80789","timestamp":"2025-05-25T23:27:32.965Z"}
+{"level":"info","message":"Socket connected: Hyrk4_wefy1atKa8AAAF","timestamp":"2025-05-25T23:27:32.978Z"}
+{"level":"info","message":"[2025-05-25T23:27:33.213Z] GET /users-profile/67d845b5c9add2113fc80789","timestamp":"2025-05-25T23:27:33.213Z"}
+{"level":"info","message":"[2025-05-25T23:27:33.450Z] GET /notifications","timestamp":"2025-05-25T23:27:33.450Z"}
+{"level":"info","message":"[2025-05-25T23:27:35.897Z] GET /notification-counts?userId=67d845b5c9add2113fc80789","timestamp":"2025-05-25T23:27:35.897Z"}
+{"level":"info","message":"[2025-05-25T23:27:36.302Z] POST /alerts/mark-as-viewed","timestamp":"2025-05-25T23:27:36.302Z"}
+{"level":"info","message":"Socket disconnected: Hyrk4_wefy1atKa8AAAF","timestamp":"2025-05-25T23:27:42.548Z"}
+{"level":"info","message":"Socket connected: GaktlAJcjhjH08h5AAAH","timestamp":"2025-05-25T23:27:44.018Z"}
+{"level":"info","message":"[2025-05-25T23:27:44.200Z] GET /users-profile/67d845b5c9add2113fc80789","timestamp":"2025-05-25T23:27:44.200Z"}
+{"level":"info","message":"[2025-05-25T23:27:44.481Z] GET /notification-counts?userId=67d845b5c9add2113fc80789","timestamp":"2025-05-25T23:27:44.481Z"}
+{"level":"info","message":"[2025-05-25T23:27:44.760Z] GET /verify-token","timestamp":"2025-05-25T23:27:44.760Z"}
+{"level":"info","message":"[2025-05-25T23:27:44.962Z] GET /notification-counts?userId=67d845b5c9add2113fc80789","timestamp":"2025-05-25T23:27:44.963Z"}
+{"level":"info","message":"[2025-05-25T23:27:45.204Z] GET /post?category=","timestamp":"2025-05-25T23:27:45.204Z"}
+{"level":"info","message":"[2025-05-25T23:27:54.751Z] POST /post/like/68333db1f347d36ae35c50d3","timestamp":"2025-05-25T23:27:54.751Z"}
+{"level":"info","message":"[2025-05-25T23:28:02.957Z] POST /post/like/683084e19dfdbac733a908d6","timestamp":"2025-05-25T23:28:02.958Z"}
+{"level":"info","message":"Socket disconnected: GaktlAJcjhjH08h5AAAH","timestamp":"2025-05-25T23:28:06.505Z"}
+{"level":"info","message":"[2025-05-25T23:28:06.532Z] POST /deals/mark-as-viewed","timestamp":"2025-05-25T23:28:06.532Z"}
+{"level":"info","message":"[2025-05-25T23:28:06.874Z] GET /notification-counts?userId=67d845b5c9add2113fc80789","timestamp":"2025-05-25T23:28:06.874Z"}
+{"level":"info","message":"[2025-05-25T23:28:08.069Z] GET /notification-counts?userId=67d845b5c9add2113fc80789","timestamp":"2025-05-25T23:28:08.069Z"}
+{"level":"info","message":"[2025-05-25T23:28:08.103Z] GET /users-profile/67d845b5c9add2113fc80789","timestamp":"2025-05-25T23:28:08.103Z"}
+{"level":"info","message":"Socket connected: nvYvU32O_C7FTL6fAAAJ","timestamp":"2025-05-25T23:28:08.154Z"}
+{"level":"info","message":"[2025-05-25T23:28:08.158Z] GET /get-transactions/67d845b5c9add2113fc80789","timestamp":"2025-05-25T23:28:08.158Z"}
+{"level":"info","message":"[2025-05-25T23:28:08.270Z] GET /notification-counts?userId=67d845b5c9add2113fc80789","timestamp":"2025-05-25T23:28:08.270Z"}
+{"level":"info","message":"[2025-05-25T23:28:09.412Z] POST /deals/mark-as-viewed","timestamp":"2025-05-25T23:28:09.412Z"}
+{"level":"info","message":"Socket disconnected: nvYvU32O_C7FTL6fAAAJ","timestamp":"2025-05-25T23:28:12.208Z"}
+{"level":"info","message":"Socket connected: PvFwVO9cEGLXH4DrAAAL","timestamp":"2025-05-25T23:28:13.898Z"}
+{"level":"info","message":"[2025-05-25T23:28:14.044Z] GET /users-profile/67d845b5c9add2113fc80789","timestamp":"2025-05-25T23:28:14.045Z"}
+{"level":"info","message":"[2025-05-25T23:28:14.071Z] GET /notification-counts?userId=67d845b5c9add2113fc80789","timestamp":"2025-05-25T23:28:14.071Z"}
+{"level":"info","message":"[2025-05-25T23:28:14.098Z] GET /verify-token","timestamp":"2025-05-25T23:28:14.098Z"}
+{"level":"info","message":"[2025-05-25T23:28:14.327Z] GET /notification-counts?userId=67d845b5c9add2113fc80789","timestamp":"2025-05-25T23:28:14.327Z"}
+{"level":"info","message":"[2025-05-25T23:28:14.384Z] GET /post?category=","timestamp":"2025-05-25T23:28:14.384Z"}
+{"level":"info","message":"[2025-05-25T23:28:23.949Z] POST /post/like/68333db1f347d36ae35c50d3","timestamp":"2025-05-25T23:28:23.950Z"}
+{"level":"info","message":"[2025-05-25T23:28:57.905Z] GET /notification-counts?userId=67d845b5c9add2113fc80789","timestamp":"2025-05-25T23:28:57.905Z"}
+{"level":"info","message":"[2025-05-25T23:28:58.163Z] GET /notification-counts?userId=67d845b5c9add2113fc80789","timestamp":"2025-05-25T23:28:58.163Z"}
+{"level":"info","message":"Socket disconnected: PvFwVO9cEGLXH4DrAAAL","timestamp":"2025-05-25T23:28:58.286Z"}
+{"level":"info","message":"Socket connected: 7GpAX65CqmCOTSK1AAAN","timestamp":"2025-05-25T23:28:59.626Z"}
+{"level":"info","message":"[2025-05-25T23:29:13.292Z] GET /notification-counts?userId=67d845b5c9add2113fc80789","timestamp":"2025-05-25T23:29:13.292Z"}

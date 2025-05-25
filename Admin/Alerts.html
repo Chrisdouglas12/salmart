@@ -71,20 +71,27 @@
     }
 
     header .search-icon {
-      font-size: 18px;
-      color: var(--primary-color);
-      background-color: white;
-      border: 1px solid #ddd;
-      border-radius: 50%;
-      padding: 8px;
-      box-shadow: var(--shadow);
-      cursor: pointer;
-      transition: background-color 0.2s;
-    }
-
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 35px;
+  height: 35px;
+  font-size: 18px;
+  color: var(--primary-color);
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 50%;
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  transition: background-color 0.2s;
+  vertical-align: middle; /* fixes baseline gap */
+}
     header .search-icon:hover {
       background-color: #f0f0f0;
     }
+    header .search-icon {
+  text-decoration: none;
+}
 
     /* Notifications Wrapper */
     #notifications-wrapper {
@@ -221,16 +228,30 @@
       margin-bottom: 5px;
     }
 
-    #navbar a span.notification-badge {
-      position: absolute;
-      top: -5px;
-      right: -5px;
-      background-color: #dc3545;
-      color: white;
-      border-radius: 50%;
-      padding: 2px 6px;
-      font-size: 10px;
-    }
+     .icon-badge-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.notification-badge {
+  position: absolute;
+  top: -5px;
+  right: -10px;
+  background-color: red;
+  color: white;
+  font-size: 10px;
+  width: 18px;
+  height: 18px;
+  line-height: 18px;
+  border-radius: 50%;
+  text-align: center;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  overflow: hidden;
+}
 
     /* Skeleton Loader */
     .skeleton-wrapper {
@@ -343,12 +364,48 @@
 
        <nav id="navbar">
         <ul>
-          <li class="active"><a href="index.html"><i class="fas fa-store"></i>Market</a></li>
-          <li class="active"><a href="requestlists.html"><i class="fas fa-clipboard-list"></i>Requests</a></li>
-          <li><a href="Alerts.html" onclick="clearBadge('alerts')"><i class="fas fa-bell"></i>Alerts <span class="notification-badge" id="alerts-badge"></span></a></li>
-          <li><a href="Messages.html" onclick="clearBadge('messages')"><i class="fas fa-comments"></i>Messages <span class="notification-badge" id="messages-badge"></span></a></li> 
-          <li><a href="Deals.html" onclick="clearBadge('deals')"><i class="fas fa-cart-plus"></i>Deals <span class="notification-badge" id="deals-badge"></span></a></li>
-          <li><a href="Profile.html"><i class="fas fa-user"></i>Profile</a></li>
+                <li class="active">
+  <a href="index.html">
+    <i class="fas fa-store"></i> Market
+  </a>
+</li>
+<li class="active">
+  <a href="requestlists.html">
+    <i class="fas fa-clipboard-list"></i> Requests
+  </a>
+</li>
+<li>
+  <a href="Alerts.html" onclick="clearBadge('alerts')">
+    <span class="icon-badge-wrapper">
+      <i class="fas fa-bell"></i>
+      <span class="notification-badge" id="alerts-badge"></span>
+    </span>
+    Alerts
+  </a>
+</li>
+<li>
+  <a href="Messages.html" onclick="clearBadge('messages')">
+    <span class="icon-badge-wrapper">
+      <i class="fas fa-comments"></i>
+      <span class="notification-badge" id="messages-badge"></span>
+    </span>
+    Messages
+  </a>
+</li>
+<li>
+  <a href="Deals.html" onclick="clearBadge('deals')">
+    <span class="icon-badge-wrapper">
+      <i class="fas fa-cart-plus"></i>
+      <span class="notification-badge" id="deals-badge"></span>
+    </span>
+    Deals
+  </a>
+</li>
+<li>
+  <a href="Profile.html">
+    <i class="fas fa-user"></i> Profile
+  </a>
+</li>
         </ul>
       </nav>
 

@@ -24,15 +24,24 @@ const chatDropdown = document.getElementById('chat-dropdown');
 
 // Parse URL parameters for chat context
 const urlParams = new URLSearchParams(window.location.search);
-const userId = urlParams.get('user_id');
-const receiverId = urlParams.get('recipient_id');
-const recipientUsername = urlParams.get('recipient_username') || 'User';
-const recipientProfilePictureUrl = urlParams.get('recipient_profile_picture_url') || '/default-avatar.png';
+const userId = urlParams.get('user_id') || '';
+const receiverId = urlParams.get('recipient_id') || '';
+const recipientUsername = urlParams.get('recipient_username') ? decodeURIComponent(urlParams.get('recipient_username')) : 'User';
+const recipientProfilePictureUrl = urlParams.get('recipient_profile_picture_url') ? decodeURIComponent(urlParams.get('recipient_profile_picture_url')) : '/default-avatar.png';
 const predefinedMessage = urlParams.get('message') ? decodeURIComponent(urlParams.get('message')) : '';
 const productImage = urlParams.get('product_image') ? decodeURIComponent(urlParams.get('product_image')) : '';
-const productId = urlParams.get('product_id');
+const productId = urlParams.get('product_id') || '';
 const productName = urlParams.get('product_name') ? decodeURIComponent(urlParams.get('product_name')) : '';
 const originalPrice = urlParams.get('original_price') ? parseFloat(urlParams.get('original_price')) : null;
+
+console.log('Product Image URL:', productImage); // Debug productImage value
+console.log('Predefined Message:', JSON.stringify(predefinedMessage)); // Debug predefinedMessage
+
+// Validate required URL parameters
+if (!userId || !receiverId) {
+    showToast('Missing user or recipient ID. Please try again.', 'error');
+    window.location.href = 'index.html';
+}
 
 // Set recipient info in the UI
 document.getElementById('chats-userName').textContent = recipientUsername;
@@ -41,32 +50,41 @@ document.getElementById('chatspic').src = recipientProfilePictureUrl;
 // Pre-fill chat input with predefined message if provided
 if (predefinedMessage) {
     typeSection.value = predefinedMessage;
+} else {
+    typeSection.value = '';
 }
 
-// Display product image preview above chat
-if (productImage && productName) {
-    const previewContainer = document.createElement('div');
-    previewContainer.id = 'product-preview';
-    previewContainer.style.margin = '10px';
-    previewContainer.style.textAlign = 'center';
-    previewContainer.innerHTML = `
-        <p style="font-size: 14px; color: #777;">Product Preview: ${productName}</p>
-        <img src="${productImage}" class="product-photo-preview" alt="Product Preview" style="max-width: 200px; border-radius: 5px;">
-    `;
-    chatMessages.insertAdjacentElement('beforebegin', previewContainer);
+// Track ended bargains, counter-offers, displayed messages, and initial message status
+const endedBargains = new Set();
+const bargainingSessions = new Set();
+const acceptedOffers = new Set();
+const sentCounterOffers = new Set();
+const displayedMessages = new Set();
+let isInitialMessageSent = localStorage.getItem(`initialMessageSent_${productId}_${receiverId}`) === 'true';
+
+// Function to render product preview
+function renderProductPreview() {
+    if (productImage && productName && !isInitialMessageSent) {
+        const previewContainer = document.createElement('div');
+        previewContainer.id = 'product-preview';
+        previewContainer.style.margin = '10px';
+        previewContainer.style.textAlign = 'center';
+        const isValidImageUrl = productImage.startsWith('http://') || productImage.startsWith('https://');
+        previewContainer.innerHTML = `
+            <p style="font-size: 14px; color: #777;">Product Preview: ${productName}</p>
+            ${isValidImageUrl
+                ? `<img src="${productImage}" class="product-photo-preview" alt="Product Preview" style="max-width: 200px; border-radius: 5px;" onerror="this.style.display='none';this.nextElementSibling.style.display='block';">
+                   <p style="display:none;color:red;">Failed to load product image.</p>`
+                : `<p style="color:red;">No product image available.</p>`}
+        `;
+        chatMessages.insertAdjacentElement('beforebegin', previewContainer);
+    }
 }
 
 // Join chat room if userId and receiverId are available
 if (userId && receiverId) socket.emit('joinRoom', userId);
 
 let lastDisplayedDate = null;
-
-// Track ended bargains, counter-offers, and displayed messages
-const endedBargains = new Set();
-const bargainingSessions = new Set();
-const acceptedOffers = new Set();
-const sentCounterOffers = new Set(); // Track product IDs with seller's counter-offers
-const displayedMessages = new Set(); // Track message IDs to prevent duplicates
 
 // Helper: create a persistent system message div
 function createSystemMessage(text) {
@@ -76,9 +94,8 @@ function createSystemMessage(text) {
     return div;
 }
 
-// Display a message in the chat, including offer/payment buttons and bargaining start message
+// Display a message in the chat
 function displayMessage(message) {
-    // Prevent duplicate display
     if (message._id && displayedMessages.has(message._id)) {
         return;
     }
@@ -89,13 +106,11 @@ function displayMessage(message) {
     const messageDate = new Date(message.createdAt);
     const formattedDate = formatMessageDate(messageDate);
 
-    // Insert date separator if needed
     if (formattedDate !== lastDisplayedDate) {
         chatMessages.appendChild(createSystemMessage(formattedDate));
         lastDisplayedDate = formattedDate;
     }
 
-    // Update bargaining state from offerDetails
     if (message.offerDetails && message.offerDetails.productId) {
         if (['accepted', 'rejected', 'completed'].includes(message.offerDetails.status)) {
             acceptedOffers.add(message.offerDetails.productId);
@@ -106,7 +121,6 @@ function displayMessage(message) {
         }
     }
 
-    // Handle back-end system messages
     if (message.metadata?.isSystemMessage) {
         let systemText = message.text;
         switch (message.messageType) {
@@ -132,7 +146,6 @@ function displayMessage(message) {
         return;
     }
 
-    // Handle image messages (e.g., receipts)
     if (message.messageType === 'image' || (message.attachment && message.attachment.type === 'image')) {
         const imageUrl = message.attachment?.url || message.content;
         if (imageUrl) {
@@ -141,7 +154,8 @@ function displayMessage(message) {
             const time = message.createdAt ? new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
             msgDiv.innerHTML = `
                 ${message.text ? `<div>${message.text}</div>` : ''}
-                <img src="${imageUrl}" class="product-photo-preview" alt="Receipt">
+                <img src="${imageUrl}" class="product-photo-preview" alt="Receipt" style="max-width: 200px; border-radius: 5px;" onerror="this.style.display='none';this.nextElementSibling.style.display='block';">
+                <p style="display:none;color:red;">Failed to load image.</p>
                 <div class="message-timestamp">${time} ${message.status === 'seen' ? '✔✔' : ''}</div>
             `;
             chatMessages.appendChild(msgDiv);
@@ -150,14 +164,14 @@ function displayMessage(message) {
         }
     }
 
-    // Handle payment-completed with receipt
     if (message.messageType === 'payment-completed' && message.attachment?.type === 'receipt') {
         const msgDiv = document.createElement('div');
         msgDiv.classList.add('message', message.senderId === userId ? 'sent' : 'received');
         const time = new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         msgDiv.innerHTML = `
             <div>Payment completed for ${message.offerDetails.productName}</div>
-            <img src="${message.attachment.url}" class="product-photo-preview" alt="Receipt" style="max-width: 200px;">
+            <img src="${message.attachment.url}" class="product-photo-preview" alt="Receipt" style="max-width: 200px; border-radius: 5px;" onerror="this.style.display='none';this.nextElementSibling.style.display='block';">
+            <p style="display:none;color:red;">Failed to load receipt image.</p>
             <div class="message-timestamp">${time} ${message.status === 'seen' ? '✔✔' : ''}</div>
         `;
         chatMessages.appendChild(msgDiv);
@@ -165,7 +179,6 @@ function displayMessage(message) {
         return;
     }
 
-    // Handle bargain end message
     if (message.messageType === 'endBargain' || message.messageType === 'end-bargain') {
         let parsed;
         try {
@@ -186,7 +199,6 @@ function displayMessage(message) {
         return;
     }
 
-    // Handle buyerAccept message from BUYER's perspective (sender)
     if (message.messageType === 'buyerAccept' && message.senderId === userId) {
         let parsed;
         try {
@@ -201,7 +213,8 @@ function displayMessage(message) {
             const imageContainer = document.createElement('div');
             imageContainer.style.margin = '10px 0';
             imageContainer.innerHTML = `
-                <img src="${parsed.image}" class="product-photo-preview" alt="${parsed.productName || 'Product'}" style="max-width: 200px; border-radius: 5px;">
+                <img src="${parsed.image}" class="product-photo-preview" alt="${parsed.productName || 'Product'}" style="max-width: 200px; border-radius: 5px;" onerror="this.style.display='none';this.nextElementSibling.style.display='block';">
+                <p style="display:none;color:red;">Failed to load product image.</p>
             `;
             buyerDiv.appendChild(imageContainer);
         }
@@ -284,7 +297,6 @@ function displayMessage(message) {
         return;
     }
 
-    // Handle sellerAccept message
     if (message.messageType === 'sellerAccept') {
         let parsed;
         try {
@@ -303,18 +315,18 @@ function displayMessage(message) {
         return;
     }
 
-    // Parse message text and extract relevant data
     let msg = message.text, img = null, parsed = {};
+    console.log('Processing message:', { messageType: message.messageType, text: message.text }); // Debug
     if (['offer', 'counter-offer', 'buyerAccept', 'sellerAccept'].includes(message.messageType)) {
         try {
             parsed = JSON.parse(message.text);
             msg = parsed.text || message.text;
             img = parsed.image || null;
-            // Ensure parsed has required fields
             parsed.offer = parsed.offer || (message.offerDetails?.proposedPrice) || 0;
             parsed.productId = parsed.productId || (message.offerDetails?.productId) || '';
             parsed.productName = parsed.productName || (message.offerDetails?.productName) || 'Product';
             parsed.image = parsed.image || (message.offerDetails?.image) || '';
+            console.log('Parsed special message:', parsed, 'Image:', img); // Debug
         } catch (e) {
             console.warn(`Failed to parse ${message.messageType} message text:`, message.text, e);
             msg = message.text;
@@ -325,17 +337,35 @@ function displayMessage(message) {
                 image: (message.offerDetails?.image) || ''
             };
         }
-    } else {
-        msg = message.text;
+    } else if (message.messageType === 'text') {
+        if (message.text.startsWith('{')) {
+            try {
+                parsed = JSON.parse(message.text);
+                msg = parsed.text || message.text;
+                img = parsed.image || null;
+                console.log('Parsed text message:', parsed, 'Image:', img); // Debug
+                // Validate image URL
+                if (img && !img.match(/^https?:\/\//)) {
+                    console.warn('Invalid image URL, attempting to fix:', img);
+                    img = img.startsWith('/') ? `${API_BASE_URL}${img}` : img;
+                }
+            } catch (e) {
+                console.warn('Failed to parse text message as JSON:', message.text, e);
+                msg = message.text;
+                img = null;
+            }
+        } else {
+            msg = message.text;
+            img = null;
+            console.log('Plain text message:', msg, 'Image:', img); // Debug
+        }
     }
 
-    // Track counter-offers sent by the seller
     if (message.messageType === 'counter-offer' && message.senderId === userId && parsed.productId) {
         sentCounterOffers.add(parsed.productId);
         console.log(`Added to sentCounterOffers: ${parsed.productId}`, sentCounterOffers);
     }
 
-    // Insert bargain start message for new offer messages, skip if bargain ended
     if (parsed?.offer && !bargainingSessions.has(`${parsed.productId}-${message.senderId}`) && !endedBargains.has(parsed.productId)) {
         bargainingSessions.add(`${parsed.productId}-${message.senderId}`);
         const startText = message.senderId === userId
@@ -344,12 +374,10 @@ function displayMessage(message) {
         chatMessages.appendChild(createSystemMessage(startText));
     }
 
-    // Create regular message div
     const msgDiv = document.createElement('div');
     msgDiv.classList.add('message', message.senderId === userId ? 'sent' : 'received');
     const time = message.createdAt ? new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
 
-    // Set data attributes for counter-offer messages
     if (message.messageType === 'counter-offer' && parsed.productId) {
         msgDiv.setAttribute('data-product-id', parsed.productId);
         msgDiv.setAttribute('data-message-type', 'counter-offer');
@@ -357,16 +385,14 @@ function displayMessage(message) {
 
     msgDiv.innerHTML = `
         <div>${msg}</div>
-        ${img ? `<img src="${img}" class="product-photo-preview" alt="Product Image">` : ''}
+        ${img ? `<img src="${img}" class="product-photo-preview" alt="Product Image" style="max-width: 200px; border-radius: 5px;" onerror="this.style.display='none';this.nextElementSibling.style.display='block';"><p style="display:none;color:red;">Failed to load product image.</p>` : ''}
         <div class="message-timestamp">${time} ${message.status === 'seen' ? '✔✔' : ''}</div>
     `;
 
-    // Check if offer accepted or bargain ended
     const isOfferAccepted = parsed.productId && acceptedOffers.has(parsed.productId);
     const isBargainEnded = parsed.productId && endedBargains.has(parsed.productId);
 
-    // Log state for debugging
-    console.log(`Processing message:`, {
+    console.log(`Rendering message:`, {
         messageType: message.messageType,
         receiverId: message.receiverId,
         userId,
@@ -375,10 +401,10 @@ function displayMessage(message) {
         isOfferAccepted,
         isBargainEnded,
         productId: parsed.productId,
-        hasCounterOffer: sentCounterOffers.has(parsed.productId)
+        hasCounterOffer: sentCounterOffers.has(parsed.productId),
+        image: img
     });
 
-    // Add Accept/Decline buttons for seller on buyer's initial offer
     if (message.messageType === 'offer' && parsed.offer && message.receiverId === userId && !isOfferAccepted && !isBargainEnded && message.senderId !== userId) {
         const acceptBtn = document.createElement('button');
         acceptBtn.className = 'accept-offer-btn';
@@ -412,7 +438,6 @@ function displayMessage(message) {
 
                     acceptedOffers.add(productDetails.productId);
 
-                    // Remove Accept/Decline buttons from all offer messages for this product
                     const offerMessages = document.querySelectorAll(`.message.received`);
                     offerMessages.forEach(msg => {
                         if (msg.innerHTML.includes(parsed.productId)) {
@@ -438,10 +463,9 @@ function displayMessage(message) {
                     socket.emit('sendMessage', acceptanceMessage);
                     displayMessage(acceptanceMessage);
 
-                    // Emit buyerAccept for buyer
                     const buyerAcceptMessage = {
-                        senderId: productDetails.senderId, // Buyer
-                        receiverId: userId, // Seller
+                        senderId: productDetails.senderId,
+                        receiverId: userId,
                         messageType: 'buyerAccept',
                         text: JSON.stringify({
                             productName: parsed.productName,
@@ -477,7 +501,6 @@ function displayMessage(message) {
         msgDiv.appendChild(declineBtn);
     }
 
-    // Add Accept/End Bargain buttons for buyer on seller's counteroffer
     if (message.messageType === 'counter-offer' && parsed.offer && message.receiverId === userId && !isOfferAccepted && !isBargainEnded && message.senderId === receiverId) {
         const acceptBtn = document.createElement('button');
         acceptBtn.className = 'accept-offer-btn';
@@ -511,25 +534,22 @@ function displayMessage(message) {
 
                     acceptedOffers.add(productDetails.productId);
 
-                    // Remove Accept/End Bargain buttons from the counteroffer message
                     const offerMessages = document.querySelectorAll(`.message.received`);
                     offerMessages.forEach(msg => {
                         if (msg.innerHTML.includes(parsed.productId)) {
                             const buttons = msg.querySelectorAll('.accept-offer-btn, .end-bargain-btn');
                             buttons.forEach(btn => btn.remove());
                         }
-                    }); 
-               
+                    });
 
                     const acceptMessage = {
                         senderId: userId,
                         receiverId: productDetails.senderId,
                         messageType: 'buyerAccept',
                         text: JSON.stringify({
-                             text: `Last price of ${productDetails.offer.toLocaleString('en-NG')} for ${parsed.productName} has been accepted`,
-                      productName: parsed.productName,
+                            text: `Last price of ${productDetails.offer.toLocaleString('en-NG')} for ${parsed.productName} has been accepted`,
+                            productName: parsed.productName,
                             productId: productDetails.productId,
-
                             offer: productDetails.offer,
                             buyerName: localStorage.getItem('username') || 'Buyer',
                             image: parsed.image || productImage || ''
@@ -563,7 +583,6 @@ function displayMessage(message) {
 
             endedBargains.add(productDetails.productId);
 
-            // Remove Accept/End Bargain buttons from the counteroffer message
             const offerMessages = document.querySelectorAll(`.message.received`);
             offerMessages.forEach(msg => {
                 if (msg.innerHTML.includes(parsed.productId)) {
@@ -593,7 +612,6 @@ function displayMessage(message) {
         msgDiv.appendChild(endBargainBtn);
     }
 
-    // Add Proceed to Payment button for buyer after seller's acceptance
     if (parsed.payment && message.receiverId === userId) {
         const paymentBtn = document.createElement('button');
         paymentBtn.className = 'proceed-to-payment-btn';
@@ -674,7 +692,7 @@ function displayMessage(message) {
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
-// Open modal for seller to send a counteroffer with product image
+// Open modal for seller to send a counteroffer
 function openLastPriceModal(productId, productName, productImage) {
     lastPriceModal.style.display = 'block';
     submitLastPriceBtn.onclick = () => {
@@ -716,13 +734,13 @@ function openLastPriceModal(productId, productName, productImage) {
     };
 }
 
-// Close the last price modal and reset input
+// Close the last price modal
 function closeLastPriceModal() {
     lastPriceModal.style.display = 'none';
     lastPriceInput.value = '';
 }
 
-// Handle bargain button click to open product selection modal
+// Handle bargain button click
 bargainBtn.onclick = async () => {
     const modal = document.getElementById('bargainModal');
     if (!modal) {
@@ -752,7 +770,8 @@ bargainBtn.onclick = async () => {
             const card = document.createElement('div');
             card.className = 'product-card';
             card.innerHTML = `
-                <img src="${product.photo}" alt="${product.description}">
+                <img src="${product.photo}" alt="${product.description}" style="max-width: 200px; border-radius: 5px;" onerror="this.style.display='none';this.nextElementSibling.style.display='block';">
+                <p style="display:none;color:red;">Failed to load product image.</p>
                 <div>
                     <strong>${product.description}</strong><br>
                     ₦${Number(product.price).toLocaleString('en-NG')}<br>
@@ -763,13 +782,12 @@ bargainBtn.onclick = async () => {
             const sendButton = card.querySelector('.confirm-bargain-btn');
             const priceInput = card.querySelector('.bargain-price-input');
 
-            // Restrict input to numbers only
             priceInput.addEventListener('beforeinput', (e) => {
                 if (e.data && !/^[0-9]$/.test(e.data)) {
                     e.preventDefault();
                 }
             });
-            // Format input as currency
+
             priceInput.addEventListener('input', (e) => {
                 const input = e.target;
                 const cursorPosition = input.selectionStart;
@@ -788,7 +806,6 @@ bargainBtn.onclick = async () => {
                 }
             });
 
-            // Send offer message with product image
             sendButton.onclick = () => {
                 let price = priceInput.value.replace(/,/g, '');
                 if (price && !isNaN(price) && Number(price) > 0) {
@@ -838,7 +855,6 @@ bargainBtn.onclick = async () => {
             container.appendChild(card);
         });
 
-        // Close bargain modal
         const closeModalBtn = document.getElementById('closeBargainModalBtn');
         if (closeModalBtn) {
             closeModalBtn.onclick = () => {
@@ -846,7 +862,7 @@ bargainBtn.onclick = async () => {
                 closeBargainModal();
             };
         } else {
-            console.warn('Close button with ID "closeBargainModalBtn" not found. Please verify modal HTML.');
+            console.warn('Close button with ID "closeBargainModalBtn" not found.');
         }
     } catch (e) {
         console.error('Fetch error:', e);
@@ -868,22 +884,50 @@ function closeBargainModal() {
 // Send a new message from the chat input
 sendBtn.onclick = () => {
     const text = typeSection.value.trim();
-    if (text) {
-        const message = {
-            senderId: userId,
-            receiverId,
-            text: productImage ? JSON.stringify({
-                text,
-                image: productImage
-            }) : text,
-            messageType: 'text',
-            createdAt: new Date(),
-            isRead: false
-        };
-        socket.emit('sendMessage', message);
-        displayMessage({ ...message, status: 'sent' });
-        typeSection.value = '';
-        // Remove product preview after sending the message
+    if (!text) {
+        console.log('Empty message not sent');
+        showToast('Please enter a message', 'error');
+        return;
+    }
+
+    // Normalize text and predefinedMessage to handle newlines and whitespace
+    const normalizedText = text.replace(/\s+/g, ' ').trim();
+    const normalizedPredefined = predefinedMessage.replace(/\s+/g, ' ').trim();
+    const isInitialMessage = !isInitialMessageSent && predefinedMessage && productImage;
+
+    console.log('Message comparison:', {
+        inputText: text,
+        normalizedText,
+        predefinedMessage: predefinedMessage,
+        normalizedPredefined,
+        isInitialMessage,
+        isInitialMessageSent
+    }); // Debug
+
+    const message = {
+        senderId: userId,
+        receiverId,
+        text: isInitialMessage ? JSON.stringify({ text, image: productImage }) : text,
+        messageType: 'text',
+        createdAt: new Date(),
+        isRead: false
+    };
+
+    console.log('Sending message:', {
+        text: message.text,
+        isJson: message.text.startsWith('{'),
+        parsed: message.text.startsWith('{') ? JSON.parse(message.text) : null,
+        isInitialMessage,
+        isInitialMessageSent
+    }); // Debug
+
+    socket.emit('sendMessage', message);
+    displayMessage({ ...message, status: 'sent' });
+    typeSection.value = '';
+
+    if (isInitialMessage) {
+        isInitialMessageSent = true;
+        localStorage.setItem(`initialMessageSent_${productId}_${receiverId}`, 'true');
         const previewContainer = document.getElementById('product-preview');
         if (previewContainer) {
             previewContainer.remove();
@@ -893,7 +937,6 @@ sendBtn.onclick = () => {
 
 // Handle incoming messages
 socket.on('receiveMessage', message => {
-    // Only process messages relevant to this chat
     if (!((message.senderId === userId && message.receiverId === receiverId) ||
           (message.senderId === receiverId && message.receiverId === userId))) {
         return;
@@ -909,14 +952,10 @@ socket.on('receiveMessage', message => {
         }
     }
 
-    // Handle buyerAccept messages
     if (message.messageType === 'buyerAccept') {
-        // Buyer perspective: Always display for the buyer (sender)
         if (message.senderId === userId) {
             displayMessage(message);
-        }
-        // Seller perspective: Only display if a counter-offer was sent
-        else if (message.receiverId === userId) {
+        } else if (message.receiverId === userId) {
             if (sentCounterOffers.has(parsed.productId)) {
                 const sellerText = `Your last price for "${parsed.productName || 'Product'}" has been accepted by ${recipientUsername}. You shall be notified when payment is completed.`;
                 chatMessages.appendChild(createSystemMessage(sellerText));
@@ -932,11 +971,9 @@ socket.on('receiveMessage', message => {
             }
         }
     } else {
-        // Display all other messages
         displayMessage(message);
     }
 
-    // Mark as seen if the user is the receiver
     if (message.receiverId === userId && message.status !== 'seen') {
         socket.emit('markAsSeen', {
             messageIds: [message._id],
@@ -948,7 +985,7 @@ socket.on('receiveMessage', message => {
     showToast(`New message from ${recipientUsername}`, 'success');
 });
 
-// Load chat history from server
+// Load chat history and check for initial message
 async function loadChatHistory() {
     try {
         const res = await fetch(`${API_BASE_URL}/messages?user1=${userId}&user2=${receiverId}`, {
@@ -958,7 +995,6 @@ async function loadChatHistory() {
             throw new Error(`Failed to fetch messages: ${res.status} ${res.statusText}`);
         }
 
-        // Get raw text to debug
         const rawText = await res.text();
         let messages;
         try {
@@ -969,20 +1005,17 @@ async function loadChatHistory() {
             messages = [];
         }
 
-        // Validate messages array
         if (!Array.isArray(messages)) {
             console.warn('Response is not an array:', messages);
             showToast('Invalid chat history format.', 'error');
             return;
         }
 
-        // Filter out invalid messages
         const validMessages = messages.filter((msg, index) => {
             if (!msg || typeof msg !== 'object' || !msg.text || !msg.messageType) {
                 console.warn(`Skipping invalid message at index ${index}:`, msg);
                 return false;
             }
-            // Additional validation for JSON text fields
             if (['offer', 'counter-offer', 'buyerAccept', 'sellerAccept', 'end-bargain'].includes(msg.messageType)) {
                 try {
                     JSON.parse(msg.text);
@@ -996,22 +1029,44 @@ async function loadChatHistory() {
             return true;
         });
 
+        // Check if initial message was sent
+        const initialMessageExists = validMessages.some(msg => {
+            if (msg.senderId === userId && msg.messageType === 'text' && msg.text.startsWith('{')) {
+                try {
+                    const parsed = JSON.parse(msg.text);
+                    return parsed.image === productImage && parsed.text === predefinedMessage;
+                } catch (e) {
+                    return false;
+                }
+            }
+            return false;
+        });
+
+        if (initialMessageExists) {
+            isInitialMessageSent = true;
+            localStorage.setItem(`initialMessageSent_${productId}_${receiverId}`, 'true');
+        }
+
+        // Render product preview if initial message not sent
+        renderProductPreview();
+
         lastDisplayedDate = null;
         validMessages.forEach(displayMessage);
     } catch (error) {
         console.error('Error loading chat history:', error);
         showToast(`Failed to load messages: ${error.message}`, 'error');
+        renderProductPreview(); // Fallback to render preview
     }
 }
 
 loadChatHistory();
 
-// Send typing signal to server
+// Send typing signal
 function sendTypingSignal() {
     socket.emit('typing', { senderId: userId, receiverId });
 }
 
-// Display typing indicator for recipient
+// Display typing indicator
 socket.on('typing', data => {
     if (data.senderId === receiverId) {
         typingIndicator.textContent = `${recipientUsername} is typing...`;
@@ -1032,7 +1087,6 @@ socket.on('markSeenError', ({ error }) => {
     showToast(`Error marking message as seen: ${error}`, 'error');
 });
 
-// Handle messages seen
 socket.on('messagesSeen', ({ messageIds }) => {
     const messages = document.querySelectorAll('.message.sent .message-timestamp');
     messages.forEach((timestamp) => {
@@ -1042,7 +1096,6 @@ socket.on('messagesSeen', ({ messageIds }) => {
     });
 });
 
-// Handle socket connection
 socket.on('connect', () => {
     console.log('Connected to server');
     if (userId) {
@@ -1050,7 +1103,7 @@ socket.on('connect', () => {
     }
 });
 
-// Format message date for display
+// Format message date
 function formatMessageDate(date) {
     const today = new Date();
     const messageDate = new Date(date);
@@ -1065,19 +1118,18 @@ function formatMessageDate(date) {
     return messageDate.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
-// Toggle chat dropdown menu
+// Toggle chat dropdown
 ellipsisBtn.addEventListener('click', () => {
     chatDropdown.style.display = chatDropdown.style.display === 'block' ? 'none' : 'block';
 });
 
-// Close dropdown when clicking outside
 window.addEventListener('click', function (e) {
     if (!ellipsisBtn.contains(e.target) && !chatDropdown.contains(e.target)) {
         chatDropdown.style.display = 'none';
     }
 });
 
-// Display toast notifications
+// Show toast notifications
 function showToast(message, type = 'success') {
     const toast = document.getElementById('toast');
     if (toast.timeoutId) {

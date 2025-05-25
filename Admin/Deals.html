@@ -7,14 +7,84 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
   <script src="addPic.js"></script>
-  <link rel="stylesheet" href="Style.css">
   <link rel="stylesheet" href="Deals.css">
+  <link rel="stylesheet" href="Style.css">
+  <style>
+    /* Inline CSS for skeleton loaders to ensure visibility */
+
+    .skeleton-card {
+      background: #fff;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      font-family: 'Poppins', sans-serif;
+    }
+
+    .skeleton-content {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .skeleton-image {
+      width: 80px;
+      height: 80px;
+      background: #e0e0e0;
+      border-radius: 4px;
+      animation: shimmer 1.5s infinite linear;
+    }
+
+    .skeleton-details {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .skeleton-line {
+      height: 16px;
+      background: #e0e0e0;
+      border-radius: 4px;
+      animation: shimmer 1.5s infinite linear;
+    }
+
+    .skeleton-line.short {
+      width: 60%;
+    }
+
+    .skeleton-line.badge {
+      width: 40px;
+      height: 20px;
+    }
+
+    .skeleton-line.button {
+      width: 100px;
+      height: 32px;
+    }
+
+    .skeleton-loading {
+      opacity: 1 !important;
+      visibility: visible !important;
+    }
+
+    @keyframes shimmer {
+      0% {
+        background: linear-gradient(to right, #e0e0e0 0%, #f5f5f5 50%, #e0e0e0 100%);
+        background-size: 200% 100%;
+      }
+      100% {
+        background-position: 200% 0;
+      }
+    }
+  </style>
 </head>
 <body>
   <h3>Deals</h3>
-     <div class="profile-pic" style="margin-top: -54px; margin-left: 80%; box-shadow: 0 0 10px #ddd; border: solid 1px #fff;">
-      <img src="Default.png" alt="" id="profile-picture8" width="40px" height="40px" style="border-radius: 50%">
-    </div>
+  <div class="profile-pic" style="margin-top: -54px; margin-left: 80%; box-shadow: 0 0 10px #ddd; border: solid 1px #fff;">
+    <img src="Default.png" alt="" id="profile-picture8" width="40px" height="40px" style="border-radius: 50%">
+  </div>
   <div class="menu-icon" style="margin-top: -42px">
     <div></div>
     <div></div>
@@ -50,16 +120,52 @@
   <p id="no-transactions" style="display:none;">No transactions yet. Check back later!</p>
 
   <!-- Bottom Navigation Bar -->
-      <nav id="navbar">
-        <ul>
-          <li class="active"><a href="index.html"><i class="fas fa-store"></i>Market</a></li>
-          <li class="active"><a href="requestlists.html"><i class="fas fa-clipboard-list"></i>Requests</a></li>
-          <li><a href="Alerts.html" onclick="clearBadge('alerts')"><i class="fas fa-bell"></i>Alerts <span class="notification-badge" id="alerts-badge"></span></a></li>
-          <li><a href="Messages.html" onclick="clearBadge('messages')"><i class="fas fa-comments"></i>Messages <span class="notification-badge" id="messages-badge"></span></a></li> 
-          <li><a href="Deals.html" onclick="clearBadge('deals')"><i class="fas fa-cart-plus"></i>Deals <span class="notification-badge" id="deals-badge"></span></a></li>
-          <li><a href="Profile.html"><i class="fas fa-user"></i>Profile</a></li>
-        </ul>
-      </nav>
+  <nav id="navbar">
+    <ul>
+      <li class="active">
+        <a href="index.html">
+          <i class="fas fa-store"></i> Market
+        </a>
+      </li>
+      <li class="active">
+        <a href="requestlists.html">
+          <i class="fas fa-clipboard-list"></i> Requests
+        </a>
+      </li>
+      <li>
+        <a href="Alerts.html" onclick="clearBadge('alerts')">
+          <span class="icon-badge-wrapper">
+            <i class="fas fa-bell"></i>
+            <span class="notification-badge" id="alerts-badge"></span>
+          </span>
+          Alerts
+        </a>
+      </li>
+      <li>
+        <a href="Messages.html" onclick="clearBadge('messages')">
+          <span class="icon-badge-wrapper">
+            <i class="fas fa-comments"></i>
+            <span class="notification-badge" id="messages-badge"></span>
+          </span>
+          Messages
+        </a>
+      </li>
+      <li>
+        <a href="Deals.html" onclick="clearBadge('deals')">
+          <span class="icon-badge-wrapper">
+            <i class="fas fa-cart-plus"></i>
+            <span class="notification-badge" id="deals-badge"></span>
+          </span>
+          Deals
+        </a>
+      </li>
+      <li>
+        <a href="Profile.html">
+          <i class="fas fa-user"></i> Profile
+        </a>
+      </li>
+    </ul>
+  </nav>
 
   <!-- OTP Modal -->
   <div id="otpModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background-color: rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
@@ -70,17 +176,19 @@
       <button onclick="closeOtpModal()">Cancel</button>
     </div>
   </div>
-<!-- Success Modal -->
-<div id="successModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background-color: rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
-  <div class="modal-content success-modal">
-    <div class="success-icon">
-      <i class="fas fa-check-circle"></i>
+
+  <!-- Success Modal -->
+  <div id="successModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background-color: rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
+    <div class="modal-content success-modal">
+      <div class="success-icon">
+        <i class="fas fa-check-circle"></i>
+      </div>
+      <h3>Payment Successful!</h3>
+      <p>Your payment has been confirmed successfully.</p>
+      <button onclick="closeSuccessModal()" class="success-btn">Close</button>
     </div>
-    <h3>Payment Successful!</h3>
-    <p>Your payment has been confirmed successfully.</p>
-    <button onclick="closeSuccessModal()" class="success-btn">Close</button>
   </div>
-</div>
+
   <!-- Refund Request Modal -->
   <div id="refundModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background-color: rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
     <div style="background:white; padding:20px; border-radius:10px; width:90%; max-width:400px;">
@@ -108,7 +216,6 @@
 
   <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
   <script src="Deals.js"></script>
-
   <script>
     // Sidebar toggle
     const menuIcon = document.querySelector('.menu-icon');
@@ -127,38 +234,6 @@
       }
     });
   </script>
-  <script>
-       function openSuccessModal() {
-  const successModal = document.getElementById('successModal');
-  if (!successModal) {
-    console.error('[OPEN SUCCESS MODAL ERROR] #successModal not found in DOM');
-    showToast('Error: Success modal not found.');
-    return;
-  }
-  successModal.style.display = 'flex';
-  successModal.style.opacity = '1';
-  successModal.style.visibility = 'visible';
-  successModal.style.zIndex = '10000';
-  console.log('[SUCCESS MODAL STYLES]', {
-    display: successModal.style.display,
-    opacity: successModal.style.opacity,
-    visibility: successModal.style.visibility,
-    zIndex: successModal.style.zIndex
-  });
-  // Force reflow to ensure rendering
-  successModal.offsetHeight;
-}
-
-function closeSuccessModal() {
-  const successModal = document.getElementById('successModal');
-  if (successModal) {
-    successModal.style.display = 'none';
-    successModal.style.opacity = '0';
-    successModal.style.visibility = 'hidden';
-    console.log('[CLOSE SUCCESS MODAL]');
-  }
-}
-  </script>
-      <script src="Badge.js"></script>
+  <script src="Badge.js"></script>
 </body>
 </html>

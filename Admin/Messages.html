@@ -6,8 +6,8 @@
   <title>Messages</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js"></script>
   <script src="addPic.js"></script>
-  
   <style>
     * { padding: 0; margin: 0; box-sizing: border-box; }
     body { font-family: Poppins; background-color: #fff; }
@@ -38,9 +38,8 @@
       display: flex;
       align-items: center;
       gap: 5px;
-      width: 100vw;
+      width: 100%;
       position: relative;
-      margin-left: -3%
     }
 
     .message-item:hover { background-color: #f1f1f1; }
@@ -89,11 +88,18 @@
       font-weight: bold;
     }
 
-    /* Bottom Navigation Bar */
+    .message-item.new {
+      animation: fadeIn 0.5s ease-in;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    /* Bottom Navbar */
     #navbar {
       position: fixed;
       bottom: 0;
-      left: 0;
       width: 100%;
       background-color: white;
       box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
@@ -103,10 +109,8 @@
     #navbar ul {
       display: flex;
       justify-content: space-around;
-      align-items: center;
-      list-style: none;
       padding: 10px 0;
-      margin: 0;
+      list-style: none;
     }
 
     #navbar li {
@@ -118,33 +122,46 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
       text-decoration: none;
       color: #28a745;
       font-size: 12px;
-      padding: 5px;
+      padding: 8px;
+      transition: color 0.2s;
+    }
+
+    #navbar a.active {
+      color: var(--secondary-color);
+      font-weight: 600;
     }
 
     #navbar a i {
       font-size: 20px;
       margin-bottom: 5px;
     }
+  .icon-badge-wrapper {
+  position: relative;
+  display: inline-block;
+}
 
-    #navbar a span.notification-badge {
-      position: absolute;
-      top: 0;
-      right: -10px;
-      background-color: #dc3545;
-      color: white;
-      border-radius: 50%;
-      padding: 2px 6px;
-      font-size: 10px;
-    }
-
-    #navbar a.active {
-      color: #218838;
-    }
-
+.notification-badge {
+  position: absolute;
+  top: -5px;
+  right: -10px;
+  background-color: red;
+  color: white;
+  font-size: 10px;
+  width: 18px;
+  height: 18px;
+  line-height: 18px;
+  border-radius: 50%;
+  text-align: center;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  overflow: hidden;
+}
     .profile-pic img {
       position: fixed;
       z-index: 2;
@@ -153,7 +170,6 @@
       border: solid 0.1px #ddd;
     }
 
-    /* Skeleton Loader */
     .skeleton-wrapper {
       display: flex;
       width: 100%;
@@ -200,12 +216,8 @@
     }
 
     @keyframes skeleton-loading {
-      0% {
-        background-position: 200% 0;
-      }
-      100% {
-        background-position: -200% 0;
-      }
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
     }
   </style>
 </head>
@@ -222,210 +234,303 @@
   </div>
   
   <div style="text-align: center">
-        <nav id="navbar">
-        <ul>
-          <li class="active"><a href="index.html"><i class="fas fa-store"></i>Market</a></li>
-          <li class="active"><a href="requestlists.html"><i class="fas fa-clipboard-list"></i>Requests</a></li>
-          <li><a href="Alerts.html" onclick="clearBadge('alerts')"><i class="fas fa-bell"></i>Alerts <span class="notification-badge" id="alerts-badge"></span></a></li>
-          <li><a href="Messages.html" onclick="clearBadge('messages')"><i class="fas fa-comments"></i>Messages <span class="notification-badge" id="messages-badge"></span></a></li> 
-          <li><a href="Deals.html" onclick="clearBadge('deals')"><i class="fas fa-cart-plus"></i>Deals <span class="notification-badge" id="deals-badge"></span></a></li>
-          <li><a href="Profile.html"><i class="fas fa-user"></i>Profile</a></li>
-        </ul>
-      </nav>
+    <nav id="navbar">
+      <ul>
+        <li class="active">
+          <a href="index.html">
+            <i class="fas fa-store"></i> Market
+          </a>
+        </li>
+        <li class="active">
+          <a href="requestlists.html">
+            <i class="fas fa-clipboard-list"></i> Requests
+          </a>
+        </li>
+        <li>
+          <a href="Alerts.html" onclick="clearBadge('alerts')">
+            <span class="icon-badge-wrapper">
+              <i class="fas fa-bell"></i>
+              <span class="notification-badge" id="alerts-badge"></span>
+            </span>
+            Alerts
+          </a>
+        </li>
+        <li>
+          <a href="Messages.html" onclick="clearBadge('messages')">
+            <span class="icon-badge-wrapper">
+              <i class="fas fa-comments"></i>
+              <span class="notification-badge" id="messages-badge"></span>
+            </span>
+            Messages
+          </a>
+        </li>
+        <li>
+          <a href="Deals.html" onclick="clearBadge('deals')">
+            <span class="icon-badge-wrapper">
+              <i class="fas fa-cart-plus"></i>
+              <span class="notification-badge" id="deals-badge"></span>
+            </span>
+            Deals
+          </a>
+        </li>
+        <li>
+          <a href="Profile.html">
+            <i class="fas fa-user"></i> Profile
+          </a>
+        </li>
+      </ul>
+    </nav>
   </div>
 
   <div id="message-list"></div>
   <p id="no-messages" style="display:none;">No messages yet, check back later!</p>
-</body>
-<script>
-  const userId = localStorage.getItem("userId");
-  let latestTimestamp = null;
-  let API_BASE_URL;
-  let isInitialLoad = true; // Flag to track initial load
 
-  // Function to create skeleton loader
-  function createSkeletonLoader() {
-    const skeleton = document.createElement('div');
-    skeleton.classList.add('skeleton-wrapper');
-    skeleton.innerHTML = `
-      <div class="skeleton-avatar"></div>
-      <div class="skeleton-content">
-        <div class="skeleton-line"></div>
-        <div class="skeleton-line short"></div>
-        <div class="skeleton-line time"></div>
-      </div>
-    `;
-    return skeleton;
-  }
+  <script>
+    const userId = localStorage.getItem("userId");
+    let API_BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart.onrender.com';
+    let socket = null;
+    let isInitialLoad = true;
+    let isClickProcessing = false;
+    let messages = []; // Store messages locally to manage duplicates and sorting
 
-  // Function to show skeleton loaders
-  function showSkeletonLoaders(container, count = 6) {
-    container.innerHTML = '';
-    for (let i = 0; i < count; i++) {
-      container.appendChild(createSkeletonLoader());
-    }
-  }
-
-  if (!userId) {
-    window.location.href = "SignIn.html";
-  } else {
-    initialize();
-  }
-
-  async function initialize() {
-    API_BASE_URL = window.location.hostname === 'localhost' 
-      ? 'http://localhost:3000' 
-      : 'https://salmart.onrender.com';
-    
-    await fetchMessages();
-    setInterval(fetchMessages, 5000);
-  }
-
-  async function fetchMessages() {
-    const messageListElement = document.getElementById("message-list");
-    const noMessagesElement = document.getElementById("no-messages");
-
-    // Show skeleton loaders only on initial load
-    if (isInitialLoad) {
-      showSkeletonLoaders(messageListElement);
-    }
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/messages?userId=${userId}`);
-      if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-      
-      await markMessagesAsRead();
-      const messages = await response.json();
-      processMessages(messages);
-      isInitialLoad = false; // Set to false after first successful fetch
-    } catch (error) {
-      console.error("Fetch error:", error);
-      messageListElement.innerHTML = "<p>Failed to load messages. Please try again later.</p>";
-      noMessagesElement.style.display = "none";
-      isInitialLoad = false; // Ensure no loaders on retry after error
-    }
-  }
-
-  async function markMessagesAsRead() {
-    try {
-      await fetch(`${API_BASE_URL}/messages/mark-as-read`, {
-        method: 'PUT',
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` }
-      });
-    } catch (error) {
-      console.error('Failed to mark messages as read');
-    }
-  }
-
-  function processMessages(messages) {
-    unreadCount = messages.filter(msg => 
-      !msg.isRead && (msg.receiverId === userId || (msg.senderId === userId && msg.receiverId === userId))
-    ).length;
-    
-    messages.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-    
-    const messageListElement = document.getElementById("message-list");
-    const noMessagesElement = document.getElementById("no-messages");
-    
-    if (messages.length === 0) {
-      messageListElement.innerHTML = '';
-      noMessagesElement.style.display = "block";
-      return;
-    }
-    noMessagesElement.style.display = "none";
-
-    if (shouldUpdateUI(messages)) {
-      latestTimestamp = messages[0].createdAt;
-      messageListElement.innerHTML = generateMessageHTML(messages);
-    }
-  }
-
-  function shouldUpdateUI(messages) {
-    return !latestTimestamp || 
-      new Date(messages[0].createdAt) > new Date(latestTimestamp);
-  }
-
-  function generateMessageHTML(messages) {
-    const uniqueChats = {};
-    messages.forEach(msg => {
-      const chatPartnerId = msg.senderId === userId ? msg.receiverId : msg.senderId;
-      if (!uniqueChats[chatPartnerId] || new Date(msg.createdAt) > new Date(uniqueChats[chatPartnerId].createdAt)) {
-        uniqueChats[chatPartnerId] = msg;
-      }
-    });
-
-    return Object.values(uniqueChats).map(message => {
-      const chatPartnerId = message.senderId === userId ? message.receiverId : message.senderId;
-      const isUnread = !message.isRead && (message.receiverId === userId || (message.senderId === userId && message.receiverId === userId));
-
-      let messagePreview;
-      if (message.messageType === 'image') {
-        messagePreview = 'Photo';
-      } else if (message.isSystem) {
-        messagePreview = message.text || 'System notification';
-      } else {
-        messagePreview = message.text || 'No message';
-      }
-
-      return `
-        <div class="message-item ${isUnread ? 'unread' : ''}" 
-             onclick="handleMessageClick('${chatPartnerId}', '${escapeHTML(message.chatPartnerName)}', '${escapeHTML(message.chatPartnerProfilePicture)}')">
-          <img src="${escapeHTML(message.chatPartnerProfilePicture)}" alt="Profile">
-          <div class="info">
-            <h4>${escapeHTML(message.chatPartnerName)}</h4>
-            <p>${escapeHTML(messagePreview)}</p>
-          </div>
-          <div class="time">${formatTime(message.createdAt)}</div>
-          ${isUnread ? '<span class="unread-dot"></span>' : ''}
+    // Function to create skeleton loader
+    function createSkeletonLoader() {
+      const skeleton = document.createElement('div');
+      skeleton.classList.add('skeleton-wrapper');
+      skeleton.innerHTML = `
+        <div class="skeleton-avatar"></div>
+        <div class="skeleton-content">
+          <div class="skeleton-line"></div>
+          <div class="skeleton-line short"></div>
+          <div class="skeleton-line time"></div>
         </div>
       `;
-    }).join('');
-  }
+      return skeleton;
+    }
 
-  async function handleMessageClick(partnerId, partnerName, partnerProfile) {
-    try {
-      const token = localStorage.getItem('authToken');
-      await fetch(`${API_BASE_URL}/messages/mark-as-viewed`, {
-        method: 'PUT',
-        headers: { 
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ 
-          userId,
-          partnerId 
-        })
-      });
-      // Refresh the message list to update the UI immediately
+    // Function to show skeleton loaders
+    function showSkeletonLoaders(container, count = 6) {
+      container.innerHTML = '';
+      for (let i = 0; i < count; i++) {
+        container.appendChild(createSkeletonLoader());
+      }
+    }
+
+    if (!userId) {
+      console.error('No userId found, redirecting to SignIn');
+      window.location.href = "SignIn.html";
+    } else {
+      initialize();
+    }
+
+    async function initialize() {
+      console.log('Initializing Messages page...');
+      setupSocketIO();
       await fetchMessages();
-      
-      window.location.href = `Chats.html?user_id=${userId}&recipient_id=${partnerId}&recipient_username=${partnerName}&recipient_profile_picture_url=${partnerProfile}`;
-    } catch (error) {
-      console.error('Message click error:', error);
     }
-  }
 
-  function formatTime(timestamp) {
-    try {
-      const date = new Date(timestamp);
-      if (isNaN(date)) return '';
-      
-      const options = { hour: '2-digit', minute: '2-digit' };
-      return date.toDateString() === new Date().toDateString() 
-        ? date.toLocaleTimeString([], options)
-        : date.toLocaleDateString([], { month: 'short', day: 'numeric' });
-    } catch {
-      return '';
+    function setupSocketIO() {
+      console.log('Setting up Socket.IO...');
+      socket = io(API_BASE_URL, {
+        auth: {
+          userId,
+          token: localStorage.getItem('authToken')
+        },
+        path: '/socket.io',
+        transports: ['websocket', 'polling'],
+        reconnection: true,
+        reconnectionAttempts: Infinity,
+        reconnectionDelay: 5000
+      });
+
+      socket.on('connect', () => {
+        console.log('Socket.IO connected, joining room for user:', userId);
+        socket.emit('joinRoom', userId);
+      });
+
+      socket.on('newMessage', (newMessage) => {
+        console.log('Received newMessage:', newMessage);
+        try {
+          // Check for duplicates
+          if (messages.some(msg => msg._id === newMessage._id)) {
+            console.log('Duplicate message skipped:', newMessage._id);
+            return;
+          }
+
+          // Add to local messages array
+          messages.unshift(newMessage); // Prepend to top
+          messages.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)); // Ensure sorted
+
+          // Update UI
+          renderMessages();
+          document.getElementById("message-list").scrollTop = 0;
+          document.getElementById("no-messages").style.display = "none";
+        } catch (error) {
+          console.error('Error handling newMessage:', error);
+          fetchMessages(); // Fallback to fetch
+        }
+      });
+
+      socket.on('messageError', (data) => {
+        console.error('Server message error:', data.error);
+        fetchMessages(); // Fallback to fetch
+      });
+
+      socket.on('connect_error', (error) => {
+        console.error('Socket.IO connection error:', error);
+        if (error.message === 'Authentication error') {
+          console.error('Authentication failed, redirecting to SignIn');
+          localStorage.removeItem('authToken');
+          window.location.href = 'SignIn.html';
+        }
+      });
+
+      socket.on('disconnect', () => {
+        console.log('Socket.IO disconnected');
+      });
     }
-  }
 
-  function escapeHTML(str) {
-    return str.replace(/&/g, '&amp;')
-             .replace(/</g, '&lt;')
-             .replace(/>/g, '&gt;')
-             .replace(/"/g, '&quot;')
-             .replace(/'/g, '&#039;');
-  }
-</script>
-    <script src="Badge.js"></script>
+    async function fetchMessages() {
+      const messageListElement = document.getElementById("message-list");
+      const noMessagesElement = document.getElementById("no-messages");
+
+      if (isInitialLoad) {
+        console.log('Showing skeleton loaders...');
+        showSkeletonLoaders(messageListElement);
+      }
+
+      try {
+        console.log('Fetching messages for user:', userId);
+        const response = await fetch(`${API_BASE_URL}/api/messages?userId=${userId}`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+          }
+        });
+        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+        
+        messages = await response.json();
+        console.log('Fetched messages:', messages);
+        renderMessages();
+        isInitialLoad = false;
+      } catch (error) {
+        console.error('Fetch messages error:', error);
+        messageListElement.innerHTML = "<p>Failed to load messages. Please try again later.</p>";
+        noMessagesElement.style.display = "none";
+        isInitialLoad = false;
+      }
+    }
+
+    function renderMessages() {
+      const messageListElement = document.getElementById("message-list");
+      const noMessagesElement = document.getElementById("no-messages");
+
+      if (messages.length === 0) {
+        console.log('No messages to display');
+        messageListElement.innerHTML = '';
+        noMessagesElement.style.display = "block";
+        return;
+      }
+
+      noMessagesElement.style.display = "none";
+      messageListElement.innerHTML = generateMessageHTML(messages);
+      messageListElement.scrollTop = 0;
+    }
+
+    function generateMessageHTML(messages) {
+      const uniqueChats = {};
+      messages.forEach(msg => {
+        const chatPartnerId = msg.senderId === userId ? msg.receiverId : msg.senderId;
+        if (!uniqueChats[chatPartnerId] || new Date(msg.createdAt) > new Date(uniqueChats[chatPartnerId].createdAt)) {
+          uniqueChats[chatPartnerId] = msg;
+        }
+      });
+
+      return Object.values(uniqueChats).map(message => {
+        const chatPartnerId = message.senderId === userId ? message.receiverId : message.senderId;
+        const isUnread = !message.isRead;
+        const isNew = messages.indexOf(message) === 0; // Mark newest message
+
+        let messagePreview;
+        if (message.messageType === 'image') {
+          messagePreview = 'Photo';
+        } else if (message.metadata?.isSystemMessage) {
+          messagePreview = message.text || 'System notification';
+        } else {
+          messagePreview = message.text || 'Bargain message';
+        }
+
+        return `
+          <div class="message-item ${isUnread ? 'unread' : ''} ${isNew ? 'new' : ''}" 
+               data-message-id="${message._id}" 
+               onclick="handleMessageClick('${chatPartnerId}', '${escapeHTML(message.chatPartnerName)}', '${escapeHTML(message.chatPartnerProfilePicture)}')">
+            <img src="${escapeHTML(message.chatPartnerProfilePicture) || 'Default.png'}" alt="Profile" onerror="this.src='Default.png'">
+            <div class="info">
+              <h4>${escapeHTML(message.chatPartnerName)}</h4>
+              <p>${escapeHTML(messagePreview)}</p>
+            </div>
+            <div class="time">${formatTime(message.createdAt)}</div>
+            ${isUnread ? '<span class="unread-dot"></span>' : ''}
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function handleMessageClick(partnerId, partnerName, partnerProfile) {
+      if (isClickProcessing) {
+        console.log('Click processing, ignoring...');
+        return;
+      }
+      isClickProcessing = true;
+      try {
+        console.log('Marking messages as viewed for partner:', partnerId);
+        const token = localStorage.getItem('authToken');
+        const response = await fetch(`${API_BASE_URL}/messages/mark-as-viewed`, {
+          method: 'PUT',
+          headers: { 
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ 
+            userId,
+            partnerId 
+          })
+        });
+        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+        await fetchMessages(); // Refresh to update unread dots
+        console.log('Navigating to chat with:', partnerId);
+        window.location.href = `Chats.html?user_id=${userId}&recipient_id=${partnerId}&recipient_username=${partnerName}&recipient_profile_picture_url=${partnerProfile}`;
+      } catch (error) {
+        console.error('Message click error:', error);
+      } finally {
+        isClickProcessing = false;
+      }
+    }
+
+    function formatTime(timestamp) {
+      try {
+        const date = new Date(timestamp);
+        if (isNaN(date)) {
+          console.warn('Invalid timestamp:', timestamp);
+          return '';
+        }
+        const options = { hour: '2-digit', minute: '2-digit' };
+        return date.toDateString() === new Date().toDateString() 
+          ? date.toLocaleTimeString([], options)
+          : date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+      } catch {
+        console.warn('Error formatting timestamp:', timestamp);
+        return '';
+      }
+    }
+
+    function escapeHTML(str) {
+      return str ? str.replace(/&/g, '&amp;')
+                     .replace(/</g, '&lt;')
+                     .replace(/>/g, '&gt;')
+                     .replace(/"/g, '&quot;')
+                     .replace(/'/g, '&#039;') : '';
+    }
+  </script>
+  <script src="Badge.js"></script>
+</body>
 </html>

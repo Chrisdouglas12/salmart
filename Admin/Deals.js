@@ -4,6 +4,8 @@ const API_BASE_URL =
     : 'https://salmart.onrender.com';
 const socket = io(`${API_BASE_URL}`);
 const userId = localStorage.getItem('userId');
+const authToken = localStorage.getItem('authToken');
+
 let currentTab = 'buying';
 
 // Function to create skeleton loader
@@ -33,6 +35,7 @@ function showSkeletonLoaders(container, count = 3) {
   }
 }
 
+// Function to update deals badge
 function updateDealsBadge(count) {
   const badge = document.getElementById('deals-badge-nav');
   if (!badge) return;
@@ -44,23 +47,61 @@ function updateDealsBadge(count) {
   }
 }
 
+// Function to fetch transactions
 async function fetchTransactions() {
   const list = document.getElementById('transaction-list');
   const noTransactions = document.getElementById('no-transactions');
 
+  // Validate userId and authToken
+  if (!userId || !authToken) {
+    console.error('Missing userId or authToken');
+    list.innerHTML = '<p style="text-align: center; color: #777;">Please log in to view transactions.</p>';
+    noTransactions.style.display = 'none';
+    updateDealsBadge(0);
+    return;
+  }
+
   showSkeletonLoaders(list);
 
   try {
-    const res = await fetch(`${API_BASE_URL}/get-transactions/${userId}`);
-    if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
-    const data = await res.json();
+    const res = await fetch(`${API_BASE_URL}/get-transactions/${userId}`, {
+      headers: {
+        Authorization: `Bearer ${authToken}`,
+      },
+    });
 
-    const unReadCount = data.filter((d) => !d.viewed).length;
+    if (!res.ok) {
+      try {
+        const errorBody = await res.json();
+        throw new Error(`HTTP error! Status: ${res.status}. Error: ${errorBody.message || JSON.stringify(errorBody)}`);
+      } catch (parseError) {
+        const errorBody = await res.text();
+        throw new Error(`HTTP error! Status: ${res.status}. Error: ${errorBody}`);
+      }
+    }
+
+    const data = await res.json();
+    console.log('API Response:', data); // Log response for debugging
+
+    // Check if data.transactions is an array
+    if (!data.transactions || !Array.isArray(data.transactions)) {
+      console.error('Expected data.transactions to be an array but received:', data);
+      list.innerHTML = '<p style="text-align: center; color: #777;">No transactions available.</p>';
+      noTransactions.style.display = 'block';
+      updateDealsBadge(0);
+      return;
+    }
+
+    // Use data.transactions instead of data
+    const transactions = data.transactions;
+
+    // Calculate unread count and update badge
+    const unReadCount = transactions.filter((d) => !d.viewed).length;
     updateDealsBadge(unReadCount);
 
     list.innerHTML = '';
-    const filtered = data.filter(
-      (t) => (t[currentTab === 'buying' ? 'buyerId' : 'sellerId']?._id) === userId
+    const filtered = transactions.filter(
+      (t) => (t[currentTab === 'buying' ? 'buyerId' : 'sellerId']?._id || '') === userId
     );
 
     if (filtered.length === 0) {
@@ -118,19 +159,22 @@ async function fetchTransactions() {
           </div>
         </div>
       `;
-      list.prepend(card);
+      list.append(card);
     });
     await markDealsAsViewed();
   } catch (err) {
     console.error('Error fetching transactions:', err);
     list.innerHTML = '<p style="text-align: center; color: #777;">Failed to load transactions. Please try again.</p>';
     noTransactions.style.display = 'none';
+    updateDealsBadge(0);
   }
 }
 
+// Function to mark deals as viewed
 async function markDealsAsViewed() {
   try {
     const token = localStorage.getItem('authToken');
+    if (!token) throw new Error('No auth token available');
     const res = await fetch(`${API_BASE_URL}/deals/mark-as-viewed`, {
       method: 'POST',
       headers: {
@@ -144,6 +188,7 @@ async function markDealsAsViewed() {
   }
 }
 
+// Function to switch tabs
 function showTab(tab) {
   currentTab = tab;
   document.querySelectorAll('.tab').forEach((tab) => tab.classList.remove('active'));
@@ -151,6 +196,7 @@ function showTab(tab) {
   fetchTransactions();
 }
 
+// Function to confirm delivery
 async function confirmDelivery(transactionId) {
   const token = localStorage.getItem('authToken');
   try {
@@ -174,9 +220,9 @@ async function confirmDelivery(transactionId) {
   }
 }
 
+// Function to handle confirm delivery
 async function handleConfirmDelivery(transactionId) {
   console.log('[CONFIRM DELIVERY] Clicked for transaction:', transactionId);
-  // Find the button and update its state
   const confirmButton = document.querySelector(`button[onclick="handleConfirmDelivery('${transactionId}')"]`);
   if (confirmButton) {
     confirmButton.textContent = 'Processing';
@@ -187,10 +233,9 @@ async function handleConfirmDelivery(transactionId) {
   try {
     const response = await confirmDelivery(transactionId);
     console.log('[CONFIRM DELIVERY RESPONSE]', response);
-    openOtpModal(transactionId, response.transferReference );
+    openOtpModal(transactionId, response.transferReference);
   } catch (err) {
     showToast(err.message || 'Failed to initiate delivery confirmation.');
-    // Revert button state on error
     if (confirmButton) {
       confirmButton.textContent = 'Confirm Delivery';
       confirmButton.classList.remove('processing-btn');
@@ -199,6 +244,7 @@ async function handleConfirmDelivery(transactionId) {
   }
 }
 
+// Function to submit OTP
 async function submitOtp() {
   const otp = document.getElementById('otpInput').value;
   const transactionId = localStorage.getItem('transactionId');
@@ -210,7 +256,6 @@ async function submitOtp() {
     return;
   }
 
-  // Update button to processing state
   if (submitButton) {
     submitButton.textContent = 'Processing';
     submitButton.classList.add('processing-btn');
@@ -218,7 +263,6 @@ async function submitOtp() {
   }
 
   try {
-    // Submit OTP to /confirm-otp
     console.log('[SUBMIT OTP] Sending to /confirm-otp:', { transactionId, otp, transferReference });
     const otpRes = await fetch(`${API_BASE_URL}/confirm-otp`, {
       method: 'POST',
@@ -234,6 +278,22 @@ async function submitOtp() {
     if (!otpRes.ok) {
       throw new Error(otpData.error || `OTP validation failed with status ${otpRes.status}`);
     }
+
+    closeOtpModal();
+    openSuccessModal();
+    fetchTransactions();
+  } catch (err) {
+    console.error('[OTP CONFIRMATION ERROR]', err.message);
+    showToast(err.message || 'Error confirming delivery. Please try again.');
+    if (submitButton) {
+      submitButton.textContent = 'Submit OTP';
+      submitButton.classList.remove('processing-btn');
+      submitButton.disabled = false;
+    }
+  }
+}
+
+// Function to open success modal
 function openSuccessModal() {
   const successModal = document.getElementById('successModal');
   if (!successModal) {
@@ -249,12 +309,12 @@ function openSuccessModal() {
     display: successModal.style.display,
     opacity: successModal.style.opacity,
     visibility: successModal.style.visibility,
-    zIndex: successModal.style.zIndex
+    zIndex: successModal.style.zIndex,
   });
-  // Force reflow to ensure rendering
-  successModal.offsetHeight;
+  successModal.offsetHeight; // Force reflow
 }
 
+// Function to close success modal
 function closeSuccessModal() {
   const successModal = document.getElementById('successModal');
   if (successModal) {
@@ -264,22 +324,8 @@ function closeSuccessModal() {
     console.log('[CLOSE SUCCESS MODAL]');
   }
 }
-    // Show success modal instead of toast
-    closeOtpModal();
-    openSuccessModal();
-    fetchTransactions(); // Refresh transaction list
-  } catch (err) {
-    console.error('[OTP CONFIRMATION ERROR]', err.message);
-    showToast(err.message || 'Error confirming delivery. Please try again.');
-    // Revert button state on error
-    if (submitButton) {
-      submitButton.textContent = 'Submit OTP';
-      submitButton.classList.remove('processing-btn');
-      submitButton.disabled = false;
-    }
-  }
-}
 
+// Function to show toast
 function showToast(message) {
   const toast = document.getElementById('toast');
   toast.textContent = message;
@@ -289,6 +335,7 @@ function showToast(message) {
   }, 5000);
 }
 
+// Function to show snackbar
 function showSnackbar(message) {
   const snackbar = document.getElementById('snackbar');
   snackbar.textContent = message;
@@ -298,19 +345,25 @@ function showSnackbar(message) {
   }, 3000);
 }
 
+// Function to open refund modal
 function openRefundModal(transactionId) {
   localStorage.setItem('refundTransactionId', transactionId);
   document.getElementById('refundModal').style.display = 'flex';
 }
 
+// Function to close refund modal
 function closeRefundModal() {
-  document.getElementById('refundModal').style.display = 'none';
-  document.getElementById('reason').value = '';
-  document.getElementById('refundNote').value = '';
-  document.getElementById('refundEvidence').value = '';
-  localStorage.removeItem('refundTransactionId');
+  const refundModal = document.getElementById('refundModal');
+  if (refundModal) {
+    refundModal.style.display = 'none';
+    document.getElementById('reason').value = '';
+    document.getElementById('refundNote').value = '';
+    document.getElementById('refundEvidence').value = '';
+    localStorage.removeItem('refundTransactionId');
+  }
 }
 
+// Function to submit refund
 async function submitRefund() {
   const reason = document.getElementById('reason').value;
   const note = document.getElementById('refundNote').value;
@@ -351,6 +404,7 @@ async function submitRefund() {
   }
 }
 
+// Function to open OTP modal
 function openOtpModal(transactionId, transferReference) {
   console.log('[OPEN OTP MODAL] Transaction:', transactionId, 'Transfer Reference:', transferReference);
   localStorage.setItem('transactionId', transactionId);
@@ -369,12 +423,12 @@ function openOtpModal(transactionId, transferReference) {
     display: otpModal.style.display,
     opacity: otpModal.style.opacity,
     visibility: otpModal.style.visibility,
-    zIndex: otpModal.style.zIndex
+    zIndex: otpModal.style.zIndex,
   });
-  // Force reflow to ensure rendering
-  otpModal.offsetHeight;
+  otpModal.offsetHeight; // Force reflow
 }
 
+// Function to close OTP modal
 function closeOtpModal() {
   const otpModal = document.getElementById('otpModal');
   if (otpModal) {
@@ -388,4 +442,5 @@ function closeOtpModal() {
   }
 }
 
+// Initialize on page load
 document.addEventListener('DOMContentLoaded', fetchTransactions);
