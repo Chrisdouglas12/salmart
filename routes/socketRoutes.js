@@ -5,7 +5,7 @@ const User = require('../models/userSchema.js');
 const Notification = require('../models/notificationSchema.js');
 const Post = require('../models/postSchema.js');
 const Message = require('../models/messageSchema.js');
-const NotificationService = require('../services/NotificationService.js');
+const NotificationService = require('../services/notificationService.js');
 const { sendFCMNotification } = require('../services/notificationUtils.js');
 const winston = require('winston');
 

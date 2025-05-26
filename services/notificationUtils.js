@@ -2,7 +2,7 @@
 const admin = require('firebase-admin');
 const User = require('../models/userSchema.js');
 const winston = require('winston');
-const NotificationService = require('./NotificationService.js');
+const NotificationService = require('./notificationService.js');
 const mongoose = require('mongoose')
 const logger = winston.createLogger({
   level: 'info',
