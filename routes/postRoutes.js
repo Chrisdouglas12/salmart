@@ -8,7 +8,7 @@ const Report = require('../models/reportSchema.js');
 const Notification = require('../models/notificationSchema.js');
 
 const verifyToken = require('../middleware/auths.js');
-const NotificationService = require('../services/NotificationService.js');
+const NotificationService = require('../services/notificationService.js');
 const { sendFCMNotification } = require('../services/notificationUtils.js');
 const multer = require('multer');
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
@@ -74,77 +74,102 @@ router.post('/upload', upload.single('image'), (req, res) => {
 });
 
 module.exports = (io) => {
-// Create Post
-router.post('/post', verifyToken, upload.single('photo'), async (req, res) => {
-  try {
-    const { description, productCondition, location, category, price } = req.body;
-    const userId = req.user.userId;
 
-    // Validate input
-    if (!description || !productCondition || !price || !location || !req.file || !category) {
-      logger.warn(`Missing fields in post creation by user ${userId}`);
-      return res.status(400).json({ message: 'All fields are required' });
-    }
+router.post(
+  '/post',
+  verifyToken,
+  upload.fields([{ name: 'photo', maxCount: 1 }, { name: 'video', maxCount: 1 }]),
+  async (req, res) => {
+    try {
+      const { description, productCondition, location, category, price, postType = 'regular' } = req.body;
+      const userId = req.user.userId;
 
-    const user = await User.findById(userId);
-    if (!user) {
-      logger.error(`User ${userId} not found`);
-      return res.status(404).json({ message: 'User not found' });
-    }
-
-    // Get image URL
-    const photoUrl = isProduction ? req.file.path : `${req.protocol}://${req.get('host')}/Uploads/${req.file.filename}`;
-
-    const newPost = new Post({
-      description,
-      productCondition,
-      price: Number(price),
-      location,
-      category,
-      photo: photoUrl,
-      profilePicture: user.profilePicture,
-      createdBy: {
-        userId: user._id,
-        name: `${user.firstName} ${user.lastName}`,
-      },
-      likes: [],
-      createdAt: Date.now(),
-    });
-
-    await newPost.save();
-    logger.info(`Post created by user ${userId}: ${newPost._id}`);
-
-    // Notify followers of new post
-    const followers = await Follow.find({ following: userId }).distinct('follower');
-    for (const followerId of followers) {
-      if (followerId.toString() !== userId.toString()) {
-        const notification = new Notification({
-          userId: followerId,
-          type: 'new_post',
-          senderId: userId,
-          postId: newPost._id,
-          message: `${user.firstName} ${user.lastName} created a new post`,
-          createdAt: new Date(),
-        });
-        await notification.save();
-        await sendFCMNotification(
-          followerId,
-          'New Post',
-          `${user.firstName} ${user.lastName} created a new post`,
-          { type: 'new_post', postId: newPost._id.toString() },
-          req.io
-        );
-        await NotificationService.triggerCountUpdate(followerId, req.io);
+      const user = await User.findById(userId);
+      if (!user) {
+        logger.error(`User ${userId} not found`);
+        return res.status(404).json({ message: 'User not found' });
       }
+
+      if (postType === 'video_ad') {
+        if (!description || !category || !req.files.video) {
+          logger.warn(`Missing fields in video ad creation by user ${userId}`);
+          return res.status(400).json({ message: 'Description, category and video are required for video ads' });
+        }
+      } else {
+        if (!description || !productCondition || !price || !location || !category || !req.files.photo) {
+          logger.warn(`Missing fields in regular post creation by user ${userId}`);
+          return res.status(400).json({ message: 'All fields are required for regular posts' });
+        }
+      }
+
+      const photoUrl = req.files.photo
+        ? isProduction
+          ? req.files.photo[0].path
+          : `${req.protocol}://${req.get('host')}/Uploads/${req.files.photo[0].filename}`
+        : null;
+
+      const videoUrl = req.files.video
+        ? isProduction
+          ? req.files.video[0].path
+          : `${req.protocol}://${req.get('host')}/Uploads/${req.files.video[0].filename}`
+        : null;
+
+      const newPost = new Post({
+        postType,
+        description,
+        category,
+        profilePicture: user.profilePicture,
+        createdBy: {
+          userId: user._id,
+          name: `${user.firstName} ${user.lastName}`,
+        },
+        createdAt: Date.now(),
+        likes: [],
+      });
+
+      if (postType === 'video_ad') {
+        newPost.video = videoUrl;
+      } else {
+        newPost.photo = photoUrl;
+        newPost.location = location;
+        newPost.productCondition = productCondition;
+        newPost.price = Number(price);
+      }
+
+      await newPost.save();
+      logger.info(`Post created by user ${userId}: ${newPost._id}`);
+
+      // Notify followers
+      const followers = await Follow.find({ following: userId }).distinct('follower');
+      for (const followerId of followers) {
+        if (followerId.toString() !== userId.toString()) {
+          const notification = new Notification({
+            userId: followerId,
+            type: 'new_post',
+            senderId: userId,
+            postId: newPost._id,
+            message: `${user.firstName} ${user.lastName} created a new post`,
+            createdAt: new Date(),
+          });
+          await notification.save();
+          await sendFCMNotification(
+            followerId,
+            'New Post',
+            `${user.firstName} ${user.lastName} created a new post`,
+            { type: 'new_post', postId: newPost._id.toString() },
+            req.io
+          );
+          await NotificationService.triggerCountUpdate(followerId, req.io);
+        }
+      }
+
+      res.status(201).json({ message: 'Post created successfully', post: newPost });
+    } catch (error) {
+      logger.error(`Post creation error for user ${req.user.userId}: ${error.message}`);
+      res.status(500).json({ message: 'Server error' });
     }
-
-    res.status(201).json({ message: 'Post created successfully', post: newPost });
-  } catch (error) {
-    logger.error(`Post creation error for user ${req.user.userId}: ${error.message}`);
-    res.status(500).json({ message: 'Server error' });
   }
-});
-
+);
 // Get Single Post
 router.get('/post/:postId', async (req, res) => {
   try {

@@ -1,358 +1,184 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>Document</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta http-equiv="X-UA-Compatible" content="ie=edge"/>
+  <title>Create Ad</title>
+  <link rel="stylesheet" href="Ads-Styles.css"/>
   <script src="https://cdn.jsdelivr.net/npm/jwt-decode@3.1.2/build/jwt-decode.min.js"></script>
-  <style>
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-body {
-  min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 20px;
-}
-.container {
-  width: 100%;
-  max-width: 600px;
-}
-p{
-  text-align: center;
-  font-size: 16px;
-}
-.text-area, .input-form input{
-  background-color: #fff;
-  border: 1px solid #ddd;
-}
-#input-form label{
-  color: #333;
-}
-a{
-  text-decoration: none;
-  color:  #28a745;
-}
-.container{
-  max-width: 600px;
-  margin: 0 auto;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 20px;
-},
-.input-form, input, button{
-  max-width: 400px;
-  width: 100%;
-}
-.h2-bg {
-  color:  #28a745;
-  border-bottom: solid 0.1px  #28a745;
-  padding-left: 10px;
-  margin-bottom: 30px;
-  display: flex;
-  justify-content: space-around;
-  padding: 10px;
-  margin-top: -20px;
-  width: 100%;
-}
-.h2-bg img{
-  margin-top: 10px;
-  border: 0.1px solid grey;
-  border-radius: 50px;
-  width: 40px;
-  height: 40px;
-  margin-left: 20px
-}
-h4{
-  margin-top: 20px;
-  margin-left: 0px
-}
-  .text-area {
-    width: 95%;
-    height: 120px;
-    border: solid 1px #ddd;
-    border-radius: 5px;
-    color: black;
-    margin-left: 10px;
-  }
-  .text-area::placeholder{
-    padding: 10px 10px;
-  }
-  input:focus{
-    outline: none;
-    border-color: #4CAF50;
-  }
-  .input-form input{
-    background-color: #fff;
-    border: solid 0.1px #4CAF50;
-    border-radius: 3px;
-    padding: 15px;
-    width: 100%;
-    
-  
-   
-
-  }
-  label{
-    margin-left: 0px;
-    font-weight: bold;
-    margin-top: 10px;
-    
-  }
-  #file-input{
-    padding-left: 20px;
-    
-  }
-  .input-form label{
-    margin-bottom: 2px;
-    display: block;
-  }
-  .form-bg{
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 10px;
-    border: solid 1px #fff;
-    box-shadow: 0 0 10px #ddd;
-    width: 110%;
-    padding-bottom: 30%;
-    padding-top: 10%;
-    margin-top: -20px;
-  border-radius: 8px;
-  }
-  @media (max-width: 480px) {
-    body{
-      padding: 10px;
-    }
-    .container{
-      padding: 15px;
-    }
-    h4{
-      font-size: 16px;
-    }
-  }
-  
-  
-  .media-input {
-    width: 100%;
-    height: 35px;
-    border: solid 1px #ddd;
-    padding: 10px 0 0px 0;
-    border-radius: 5px;
-    display: block;
-    margin-top: -10px;
-    margin-bottom: ;
-    
-  }
-  .file-section label{
-    display: flex;
-    margin-bottom: 0px;
-  
-  }
-  
-          #preview {
-            margin-left: 10px;
-            width: 100%;
-            max-width: 300px;
-            height: auto;
-            border-radius: 5px;
-            object-fit: cover;
-            border: 2px solid #ddd;
-            display: none;
-            box-shadow: 0 0 10px #ddd;
-        }
-        @media (min-width: 768px) {
-          .container{
-            min-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-          }
-        
-          .input-form input{
-            width: 100%;
-          }
-        
-        }
-        /* Category Dropdown Styles */
-select {
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
-  background-color: #fff;
-  border: solid 0.1px #4CAF50;
-  border-radius: 3px;
-  padding: 15px;
-  width: 100%;
-  font-family: inherit;
-  font-size: inherit;
-  color: inherit;
-  cursor: pointer;
-  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2328a745'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e");
-  background-repeat: no-repeat;
-  background-position: right 15px center;
-  background-size: 15px;
-}
-
-select:focus {
-  outline: none;
-  border-color: #28a745;
-  box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.2);
-}
-
-select:invalid {
-  color: #6c757d;
-}
-
-select option {
-  color: #333;
-}
-
-select option[value=""][disabled] {
-  color: #6c757d;
-}
-
-</style>
-  <script>
-    document.getElementById("file-input").addEventListener("change", function (event) {
-    const files = event.target.files;
-    const previewContainer = document.getElementById("image-preview-container");
-    const mainImage = document.getElementById("preview");
-
-    if (files.length > 0) {
-        mainImage.src = URL.createObjectURL(files[0]); // Show first image as main
-        mainImage.style.display = "block"; // Make it visible
-        previewContainer.innerHTML = ""; // Clear previous thumbnails
-
-        for (let i = 1; i < files.length; i++) { // Start from second image
-            let img = document.createElement("img");
-            img.src = URL.createObjectURL(files[i]);
-            img.className = "thumbnail";
-            img.onclick = function () { openImageGallery(files, i); };
-            previewContainer.appendChild(img);
-        }
-    }
-});
-
-// Open image gallery when main image is clicked
-document.getElementById("preview").addEventListener("click", function () {
-    const files = document.getElementById("file-input").files;
-    if (files.length > 1) {
-        openImageGallery(files, 0);
-    }
-});
-
-function openImageGallery(files, startIndex) {
-    const galleryModal = document.getElementById("galleryModal");
-    const galleryContent = document.getElementById("galleryContent");
-    
-    galleryContent.innerHTML = ""; // Clear previous images
-
-    for (let i = 0; i < files.length; i++) {
-        let img = document.createElement("img");
-        img.src = URL.createObjectURL(files[i]);
-        img.className = "gallery-image";
-        galleryContent.appendChild(img);
-    }
-
-    galleryModal.style.display = "flex"; // Show modal
-}
-
-// Close gallery when clicking outside
-document.getElementById("galleryModal").addEventListener("click", function (event) {
-    if (event.target === this) {
-        this.style.display = "none";
-    }
-});
-
-
-  </script>
-  <script src="addPic.js"></script>
 </head>
 <body>
   <div class="container">
-  <div class="form-bg" >
-    <div class="h2-bg">
-  <h4 style="font-size: 17px">Create an ad</h4><br>
-  <img src="default.png" id="profile-picture2">
-  </div>
-  <form id="dataForm" >
-  <div class="input-form">
-  <label>Enter product description</label>
-  <input id="description" type="text" class="input" placeholder="eg., Nexus deep freezer, 200 liters">
-  </div>
-  
-  <div class="input-form">
-    <label>Product Condition</label>
-  <input id="productCondition" type="text" class="input" placeholder="eg., New, Used"><br>
-  </div>
-  <div class="input-form">
-    <label>Product Price &#8358</label>
-  <input id="price" type="text" class="input" placeholder="Enter Price &#8358" ><br>
-  </div>
-  <div class="input-form">
-    <label>Location</label>
-  <input id="location" type="text" class="input" placeholder="Enter Location ">
-  </div>
-  
-  <div class="input-form">
-  <label>Product Category</label>
-  <select id="category" class="input" required>
-    <option value="" disabled selected>Select a category</option>
-    <option value="electronics">Electronics</option>
-    <option value="fashion">Fashion</option>
-    <option value="home">Home & Garden</option>
-    <option value="vehicles">Vehicles</option>
-    <option value="music">Music Gear</option>
-    <option value="others">Other</option>
-  </select>
-</div>
-  <br>
-  <div class="file-section">
-    <label for="fileInput">
-      Upload image
-    </label><br>
-    <div style="text-align: center">
-    <input class="media-input"type="file" id="file-input" name="photo" accept="image/*" multiple><br><br>
-    <div style="text-align: center">
-    <img id="preview">
-    </div>
-    </div>
-  <div style="text-align: center";>
-  <button type="submit" style="color: white; background-color:  #28a745; width: 80%; height: 35px; border: solid 0.1px green; border-radius: 50px; text-align: center; box-shadow: 0 0 10px 0 #fff">Publish ad</button>
-  </div>
-  </div>
-  <br>
-  <div>
-    <p style="font-size: 13px">By clicking the publish button, you hereby consent to our <a href="">Community Standards.</a> Your account will be banned if your posts are non business related.</p>
-  </div>
-  </form>
-<div id="toast" style="position: fixed; bottom: -10px; left: 50%; background-color: #28a745; color: white; border-radius: 5px; box-shadow: 0 0 10px rgba(0,0,0,0.2); display: none; z-index: 9999; text-align: center; transform: translate(-50%, -50%); font-size: 14px; padding: 10px; width: 60%"></div>
-  <!-- Toast container -->
-</div>
-<script>
-  function showToast(message, color = '#28a745') {
-    const toast = document.getElementById("toast");
-    toast.textContent = message;
-    toast.style.backgroundColor = color;
-    toast.style.display = "block";
+    <div class="form-bg">
+      <div class="h2-bg">
+        <h4 style="font-size: 17px">Create an ad</h4><br>
+        <img src="default.png" id="profile-picture2">
+      </div>
 
-    setTimeout(() => {
-      toast.style.display = "none";
-    }, 3000);
-  }
-</script>
+      <!-- Tab Controls -->
+      <div class="tab-header">
+        <button class="tab-button active" onclick="switchTab('normal')">Normal Ad</button>
+        <button class="tab-button" onclick="switchTab('video')">Video Ad</button>
+      </div>
+
+      <!-- Normal Ad Form -->
+      <form id="normal-ad-form" class="ad-form">
+        <div class="input-form">
+          <label>Enter product description</label>
+          <input id="description" type="text" class="input" placeholder="e.g. Nexus deep freezer, 200 liters" required>
+        </div>
+
+        <div class="input-form">
+          <label>Product Condition</label>
+          <input id="productCondition" type="text" class="input" placeholder="e.g. New, Used" required>
+        </div>
+
+        <div class="input-form">
+          <label>Product Price &#8358;</label>
+          <input id="price" type="text" class="input" placeholder="Enter Price" required>
+        </div>
+
+        <div class="input-form">
+          <label>Location</label>
+          <input id="location" type="text" class="input" placeholder="Enter Location" required>
+        </div>
+
+        <div class="input-form">
+          <label>Product Category</label>
+          <select id="category" class="input" required>
+            <option value="" disabled selected>Select a category</option>
+            <option value="electronics">Electronics</option>
+            <option value="fashion">Fashion</option>
+            <option value="home">Home & Garden</option>
+            <option value="vehicles">Vehicles</option>
+            <option value="music">Music Gear</option>
+            <option value="others">Other</option>
+          </select>
+        </div>
+
+        <div class="file-section">
+          <label for="file-input">Upload Images</label>
+          <input class="media-input" type="file" id="file-input" name="photo" accept="image/*" multiple>
+          <img id="preview" style="display: none;">
+          <div id="image-preview-container"></div>
+        </div>
+      </form>
+
+      <!-- Video Ad Form -->
+      <form id="video-ad-form" class="ad-form" style="display: none;">
+        <div class="input-form">
+          <label>Video Ad Title</label>
+          <input id="videoTitle" type="text" class="input" placeholder="e.g. Inverter for sale" required>
+        </div>
+
+        <div class="input-form">
+          <label>Video Description</label>
+          <textarea id="videoDescription" class="input" placeholder="Write a short pitch..." required></textarea>
+        </div>
+
+        <div class="file-section">
+          <label for="videoInput">Upload Video</label>
+          <input id="videoInput" type="file" class="media-input" accept="video/*" required>
+        </div>
+
+        <div class="file-section">
+          <label for="thumbnailInput">Upload Thumbnail Image</label>
+          <input id="thumbnailInput" type="file" class="media-input" accept="image/*" required>
+          <img id="thumbnailPreview" style="display: none;">
+        </div>
+      </form>
+
+      <div style="text-align: center; margin-top: 10px;">
+        <button onclick="submitAd()" style="color: white; background-color: #28a745; width: 80%; height: 35px; border: solid 0.1px green; border-radius: 50px; text-align: center; box-shadow: 0 0 10px 0 #fff">Publish ad</button>
+      </div>
+
+      <p style="font-size: 13px; margin-top: 10px;">By clicking the publish button, you consent to our <a href="">Community Standards</a>. Non-business posts may lead to account bans.</p>
+
+      <div id="toast" class="toast-message"></div>
+    </div>
+  </div>
+
+  <!-- Modal for image gallery -->
+  <div id="galleryModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center;">
+    <div id="galleryContent"></div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="addPic.js"></script>
+  <script src="postScript.js"></script>
+  <script>
+    function switchTab(type) {
+      document.getElementById("normal-ad-form").style.display = type === 'normal' ? "block" : "none";
+      document.getElementById("video-ad-form").style.display = type === 'video' ? "block" : "none";
+      
+      document.querySelectorAll(".tab-button").forEach(btn => btn.classList.remove("active"));
+      document.querySelectorAll(".tab-button")[type === 'normal' ? 0 : 1].classList.add("active");
+    }
+
+    function showToast(message, color = '#28a745') {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.style.backgroundColor = color;
+      toast.style.display = "block";
+      setTimeout(() => { toast.style.display = "none"; }, 3000);
+    }
+
+    function submitAd() {
+      const isNormalTab = document.getElementById("normal-ad-form").style.display === "block";
+      if (isNormalTab) {
+        // Submit normal ad logic
+        document.getElementById("dataForm").requestSubmit();
+      } else {
+        // Submit video ad logic (customize this in postScript.js or inline)
+        showToast("Video ad submitted successfully!");
+      }
+    }
+
+    // Preview thumbnail image
+    document.getElementById("thumbnailInput").addEventListener("change", function (e) {
+      const file = e.target.files[0];
+      if (file) {
+        const preview = document.getElementById("thumbnailPreview");
+        preview.src = URL.createObjectURL(file);
+        preview.style.display = "block";
+      }
+    });
+  </script>
+
+  <style>
+    .tab-header {
+      display: flex;
+      justify-content: center;
+      margin: 10px 0;
+    }
+    .tab-button {
+      flex: 1;
+      padding: 10px;
+      cursor: pointer;
+      border: none;
+      background: #eee;
+      font-weight: bold;
+    }
+    .tab-button.active {
+      background: #28a745;
+      color: white;
+    }
+    .toast-message {
+      position: fixed;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #28a745;
+      color: white;
+      border-radius: 5px;
+      padding: 10px;
+      display: none;
+      z-index: 9999;
+      text-align: center;
+      width: 60%;
+      font-size: 14px;
+    }
+  </style>
 </body>
-
-<script src="postScript.js"></script>
-
-</html>
-
-</html> 
+</html

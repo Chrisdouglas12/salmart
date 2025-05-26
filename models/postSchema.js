@@ -1,20 +1,71 @@
 const mongoose = require('mongoose');
 
 const postSchema = new mongoose.Schema({
-  description: { type: String, required: true, trim: true },
-  location: { type: String, required: true, trim: true },
-  productCondition: { type: String, required: true, trim: true },
-  price: { type: String, required: true },
-  photo: { type: String, required: true },
-  profilePicture: { type: String, required: false },
-  createdBy: {
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    name: { type: String, required: true },
+  postType: {
+    type: String,
+    enum: ['regular', 'video_ad'],
+    default: 'regular',
+  },
+  description: {
+    type: String,
+    required: true,
+    trim: true,
   },
   category: {
     type: String,
     required: true,
     enum: ['electronics', 'fashion', 'home', 'vehicles', 'music', 'others'],
+  },
+
+  // Video for video ads
+  video: {
+    type: String,
+    required: function () {
+      return this.postType === 'video_ad';
+    },
+  },
+
+  // Fields for regular posts
+  location: {
+    type: String,
+    required: function () {
+      return this.postType === 'regular';
+    },
+    trim: true,
+  },
+  productCondition: {
+    type: String,
+    required: function () {
+      return this.postType === 'regular';
+    },
+    trim: true,
+  },
+  price: {
+    type: String,
+    required: function () {
+      return this.postType === 'regular';
+    },
+  },
+  photo: {
+    type: String,
+    required: function () {
+      return this.postType === 'regular';
+    },
+  },
+
+  profilePicture: {
+    type: String,
+  },
+  createdBy: {
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+    },
+    name: {
+      type: String,
+      required: true,
+    },
   },
   reports: [
     {
@@ -28,9 +79,19 @@ const postSchema = new mongoose.Schema({
     enum: ['active', 'under_review', 'removed'],
     default: 'active',
   },
-  createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date },
-  likes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
+  updatedAt: {
+    type: Date,
+  },
+  likes: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+    },
+  ],
   comments: [
     {
       userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
