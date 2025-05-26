@@ -23,21 +23,29 @@ async function sendFCMNotification(userId, title, body, data = {}, io, imageUrl 
       return;
     }
     const user = await User.findById(userId);
+    if (!user) {
+      logger.error(`User ${userId} not found for FCM notification`);
+      return;
+    }
     const token = user?.fcmToken;
     if (!token) {
       logger.warn(`No FCM token for user ${userId}`);
       return;
     }
     logger.info(`Notification preferences for user ${userId}: ${JSON.stringify(user.notificationPreferences)}`);
-    // Temporarily bypass preference check for debugging
-    // if (data.type && !user.notificationPreferences[data.type]) {
-    //   logger.info(`User ${userId} has disabled ${data.type} notifications`);
-    //   return;
-    // }
+
+    // Check notification preferences
+    if (data.type && user.notificationPreferences && user.notificationPreferences[data.type] === false) {
+      logger.info(`User ${userId} has disabled ${data.type} notifications`);
+      return;
+    }
+
     const message = {
       token,
       notification: { title, body },
       data: { ...data, userId: userId.toString() },
+      android: { priority: 'high' }, // Ensure high priority for Android
+      apns: { headers: { 'apns-priority': '10' } }, // Ensure high priority for iOS
       webpush: {
         headers: { Urgency: 'high' },
         notification: {
@@ -48,8 +56,10 @@ async function sendFCMNotification(userId, title, body, data = {}, io, imageUrl 
       },
     };
     logger.info(`Preparing FCM message for user ${userId}: ${JSON.stringify(message)}`);
-    await admin.messaging().send(message);
-    logger.info(`FCM notification sent to user ${userId}: ${title}`);
+    const response = await admin.messaging().send(message);
+    logger.info(`FCM notification sent to user ${userId}: ${title}, Response: ${response}`);
+
+    // Update notification counts and emit badge-update
     const counts = await NotificationService.getNotificationCounts(userId);
     io.to(`user_${userId}`).emit('badge-update', {
       type: data.type || 'general',

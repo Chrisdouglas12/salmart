@@ -235,10 +235,13 @@ module.exports = (io) => {
         createdAt: message.createdAt,
       };
 
+      logger.info(`Emitting receiveMessage to user ${receiverId}: ${JSON.stringify(messageData)}`);
       io.to(`user_${receiverId}`).emit('receiveMessage', messageData);
+      logger.info(`Emitting newMessage to user ${senderId}: ${JSON.stringify(messageData)}`);
       io.to(`user_${senderId}`).emit('newMessage', messageData);
 
       // Send FCM notification
+      logger.info(`Sending FCM notification to user ${receiverId} for message ${message._id}`);
       await sendFCMNotification(
         receiverId,
         'New Message',
@@ -246,13 +249,15 @@ module.exports = (io) => {
         { type: 'message', messageId: message._id.toString() },
         io
       );
+      logger.info(`FCM notification sent to user ${receiverId}`);
 
       // Trigger badge update
+      logger.info(`Triggering badge update for user ${receiverId}`);
       await NotificationService.triggerCountUpdate(io, receiverId);
 
       res.status(201).json({ message: 'Message sent successfully', data: message });
     } catch (error) {
-      logger.error(`Error sending message from ${req.user.userId}: ${error.message}`);
+      logger.error(`Failed to send message from ${senderId} to ${receiverId}: ${error.message}`);
       res.status(500).json({ error: 'Server error' });
     }
   });

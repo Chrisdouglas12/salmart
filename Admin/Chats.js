@@ -936,7 +936,7 @@ sendBtn.onclick = () => {
 };
 
 // Handle incoming messages
-socket.on('receiveMessage', message => {
+socket.on('newMessage', message => {
     if (!((message.senderId === userId && message.receiverId === receiverId) ||
           (message.senderId === receiverId && message.receiverId === userId))) {
         return;
@@ -947,7 +947,7 @@ socket.on('receiveMessage', message => {
         try {
             parsed = JSON.parse(message.text);
         } catch (e) {
-            console.warn('Failed to parse buyerAccept message text in receiveMessage:', message.text, e);
+            console.warn('Failed to parse buyerAccept message text in newMessage:', message.text, e);
             return;
         }
     }
@@ -983,19 +983,57 @@ socket.on('receiveMessage', message => {
     }
 
     showToast(`New message from ${recipientUsername}`, 'success');
+
+    // Store in localStorage as a fallback
+    const storedMessages = JSON.parse(localStorage.getItem(`chat_${userId}_${receiverId}`) || '[]');
+    storedMessages.push(message);
+    localStorage.setItem(`chat_${userId}_${receiverId}`, JSON.stringify(storedMessages));
+});
+
+// Handle message synced event for persistence
+socket.on('messageSynced', (message) => {
+    if (!((message.senderId === userId && message.receiverId === receiverId) ||
+          (message.senderId === receiverId && message.receiverId === userId))) {
+        return;
+    }
+    console.log('Message synced:', message);
+    const storedMessages = JSON.parse(localStorage.getItem(`chat_${userId}_${receiverId}`) || '[]');
+    if (!storedMessages.some(msg => msg._id === message._id)) {
+        storedMessages.push(message);
+        localStorage.setItem(`chat_${userId}_${receiverId}`, JSON.stringify(storedMessages));
+    }
+});
+
+// Handle new message notifications
+socket.on('newMessageNotification', (notification) => {
+    console.log('Received new message notification:', notification);
+    showToast(`New message from ${notification.senderName}: ${notification.text}`, 'success');
 });
 
 // Load chat history and check for initial message
 async function loadChatHistory() {
     try {
+        // Check for auth token
+        const token = localStorage.getItem('authToken');
+        if (!token) {
+            showToast('Please log in to view messages', 'error');
+            window.location.href = 'login.html';
+            return;
+        }
+
+        console.log(`Fetching messages for user1=${userId}, user2=${receiverId}`);
         const res = await fetch(`${API_BASE_URL}/messages?user1=${userId}&user2=${receiverId}`, {
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` }
+            headers: { 'Authorization': `Bearer ${token}` }
         });
+        console.log(`Fetch response status: ${res.status}`);
         if (!res.ok) {
+            const errorText = await res.text();
+            console.error(`Failed to fetch messages: ${res.status} ${res.statusText}`, errorText);
             throw new Error(`Failed to fetch messages: ${res.status} ${res.statusText}`);
         }
 
         const rawText = await res.text();
+        console.log('Raw response:', rawText);
         let messages;
         try {
             messages = JSON.parse(rawText);
@@ -1008,8 +1046,10 @@ async function loadChatHistory() {
         if (!Array.isArray(messages)) {
             console.warn('Response is not an array:', messages);
             showToast('Invalid chat history format.', 'error');
-            return;
+            // Fallback to localStorage
+            messages = JSON.parse(localStorage.getItem(`chat_${userId}_${receiverId}`) || '[]');
         }
+        console.log(`Fetched ${messages.length} messages`);
 
         const validMessages = messages.filter((msg, index) => {
             if (!msg || typeof msg !== 'object' || !msg.text || !msg.messageType) {
@@ -1052,10 +1092,16 @@ async function loadChatHistory() {
 
         lastDisplayedDate = null;
         validMessages.forEach(displayMessage);
+
+        // Update localStorage with fetched messages
+        localStorage.setItem(`chat_${userId}_${receiverId}`, JSON.stringify(validMessages));
     } catch (error) {
         console.error('Error loading chat history:', error);
         showToast(`Failed to load messages: ${error.message}`, 'error');
-        renderProductPreview(); // Fallback to render preview
+        // Fallback to localStorage
+        const storedMessages = JSON.parse(localStorage.getItem(`chat_${userId}_${receiverId}`) || '[]');
+        storedMessages.forEach(displayMessage);
+        renderProductPreview();
     }
 }
 

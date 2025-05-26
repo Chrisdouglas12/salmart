@@ -27,14 +27,20 @@ const initializeSocket = (io) => {
 
     socket.on('joinRoom', async (userId) => {
       try {
+        logger.info(`JoinRoom event received for userId: ${userId}`);
         if (!mongoose.Types.ObjectId.isValid(userId)) {
           logger.warn(`Invalid userId in joinRoom: ${userId}`);
           return;
         }
-        await User.findByIdAndUpdate(userId, { socketId: socket.id }, { new: true });
+        const user = await User.findByIdAndUpdate(userId, { socketId: socket.id }, { new: true });
+        if (!user) {
+          logger.error(`User ${userId} not found in joinRoom`);
+          return;
+        }
         socket.join(`user_${userId}`);
         logger.info(`User ${userId} joined room user_${userId}`);
         await NotificationService.sendCountsToUser(io, userId);
+        logger.info(`Notification counts sent to user ${userId}`);
       } catch (err) {
         logger.error(`Error in joinRoom for user ${userId}: ${err.message}`);
       }
@@ -42,9 +48,11 @@ const initializeSocket = (io) => {
 
     socket.on('badge-update', async ({ type, count, userId }) => {
       try {
+        logger.info(`badge-update event received: type=${type}, count=${count}, userId=${userId}`);
         io.to(`user_${userId}`).emit('badge-update', { type, count, userId });
         logger.info(`Broadcasted badge-update for ${type} to user ${userId}`);
         await NotificationService.sendCountsToUser(io, userId);
+        logger.info(`Notification counts updated for user ${userId}`);
       } catch (error) {
         logger.error(`Error broadcasting badge-update for user ${userId}: ${error.message}`);
       }
@@ -52,6 +60,7 @@ const initializeSocket = (io) => {
 
     socket.on('followUser', async ({ followerId, followedId }) => {
       try {
+        logger.info(`followUser event received: followerId=${followerId}, followedId=${followedId}`);
         const follower = await User.findById(followerId).select('firstName lastName profilePicture');
         if (!follower) {
           logger.error(`Follower ${followerId} not found`);
@@ -81,8 +90,9 @@ const initializeSocket = (io) => {
           null,
           follower.profilePicture
         );
+        logger.info(`FCM notification sent for follow event from ${followerId} to ${followedId}`);
         await NotificationService.triggerCountUpdate(followedId, io);
-        logger.info(`Follow notification sent from ${followerId} to ${followedId}`);
+        logger.info(`Follow notification processed from ${followerId} to ${followedId}`);
       } catch (error) {
         logger.error(`Error handling followUser event for ${followerId} to ${followedId}: ${error.message}`);
       }
@@ -90,6 +100,7 @@ const initializeSocket = (io) => {
 
     socket.on('likePost', async ({ postId, userId }) => {
       try {
+        logger.info(`likePost event received: postId=${postId}, userId=${userId}`);
         if (!mongoose.Types.ObjectId.isValid(userId) || !mongoose.Types.ObjectId.isValid(postId)) {
           logger.warn(`Invalid userId ${userId} or postId ${postId}`);
           return;
@@ -131,9 +142,10 @@ const initializeSocket = (io) => {
             null,
             sender.profilePicture
           );
+          logger.info(`FCM notification sent for like event on post ${postId} by user ${userId}`);
           await NotificationService.triggerCountUpdate(post.createdBy.userId, io);
         }
-        logger.info(`Like notification sent for post ${postId} by user ${userId}`);
+        logger.info(`Like notification processed for post ${postId} by user ${userId}`);
       } catch (error) {
         logger.error(`Error handling likePost event for post ${postId} by user ${userId}: ${error.message}`);
       }
@@ -141,6 +153,7 @@ const initializeSocket = (io) => {
 
     socket.on('commentPost', async ({ postId, userId, comment }) => {
       try {
+        logger.info(`commentPost event received: postId=${postId}, userId=${userId}, comment=${comment}`);
         if (!mongoose.Types.ObjectId.isValid(userId) || !mongoose.Types.ObjectId.isValid(postId)) {
           logger.warn(`Invalid userId ${userId} or postId ${postId}`);
           return;
@@ -183,9 +196,10 @@ const initializeSocket = (io) => {
             null,
             sender.profilePicture
           );
+          logger.info(`FCM notification sent for comment event on post ${postId} by user ${userId}`);
           await NotificationService.triggerCountUpdate(post.createdBy.userId, io);
         }
-        logger.info(`Comment notification sent for post ${postId} by user ${userId}`);
+        logger.info(`Comment notification processed for post ${postId} by user ${userId}`);
       } catch (error) {
         logger.error(`Error handling commentPost event for post ${postId} by user ${userId}: ${error.message}`);
       }
@@ -193,48 +207,57 @@ const initializeSocket = (io) => {
 
     socket.on('sendMessage', async (message) => {
       try {
+        logger.info(`Received sendMessage event: ${JSON.stringify(message)}`);
         const { senderId, receiverId, text, messageType, offerDetails, attachment } = message;
         if (!senderId || !receiverId) {
+          logger.warn(`Missing senderId or receiverId: senderId=${senderId}, receiverId=${receiverId}`);
           throw new Error('Missing senderId or receiverId');
         }
         if (messageType === 'text' && !text) {
+          logger.warn(`Text message missing content: ${text}`);
           throw new Error('Text messages require content');
         }
         if (['offer', 'counter-offer'].includes(messageType) && (!offerDetails || !offerDetails.proposedPrice)) {
+          logger.warn(`Offer message missing price details: ${JSON.stringify(offerDetails)}`);
           throw new Error('Offer messages require price details');
         }
-        const sender = await User.findById(senderId).select('firstName lastName profilePicture role');
-        const receiver = await User.findById(receiverId).select('firstName lastName profilePicture');
+        logger.info(`Fetching sender ${senderId} and receiver ${receiverId}`);
+        const sender = await User.findById(senderId).select('firstName lastName profilePicture role fcmToken');
+        const receiver = await User.findById(receiverId).select('firstName lastName profilePicture fcmToken');
         if (!sender || !receiver) {
+          logger.error(`Sender or receiver not found: sender=${senderId}, receiver=${receiverId}`);
           throw new Error('Sender or receiver not found');
         }
+        logger.info(`Sender ${senderId} FCM token: ${sender.fcmToken || 'Not found'}, Receiver ${receiverId} FCM token: ${receiver.fcmToken || 'Not found'}`);
         let notificationText = text || 'Sent you a message';
         let productImageUrl = null;
         let senderProfilePictureUrl = sender.profilePicture || null;
-        if (text && text.startsWith('{')) {
-          try {
+        logger.info(`Processing notification text for message from ${senderId}`);
+        try {
+          if (text && text.startsWith('{')) {
             const parsedMessage = JSON.parse(text);
             notificationText = parsedMessage.text || text;
             productImageUrl = parsedMessage.image || null;
-          } catch (e) {
-            logger.warn(`Failed to parse message text as JSON for sender ${senderId}: ${text}`);
-            notificationText = text;
+          } else if (offerDetails && offerDetails.image) {
+            productImageUrl = offerDetails.image;
           }
-        } else if (offerDetails && offerDetails.image) {
-          productImageUrl = offerDetails.image;
-        }
-        if (offerDetails && !text.startsWith('{')) {
-          if (offerDetails.productName) {
-            notificationText += ` Product: ${offerDetails.productName}`;
+          if (offerDetails && !text.startsWith('{')) {
+            if (offerDetails.productName) {
+              notificationText += ` Product: ${offerDetails.productName}`;
+            }
+            if (offerDetails.proposedPrice) {
+              notificationText += ` Offer: ₦${Number(offerDetails.proposedPrice).toLocaleString('en-NG')}`;
+            }
           }
-          if (offerDetails.proposedPrice) {
-            notificationText += ` Offer: ₦${Number(offerDetails.proposedPrice).toLocaleString('en-NG')}`;
-          }
+        } catch (e) {
+          logger.error(`Error processing notification text for sender ${senderId}: ${e.message}`);
+          throw e;
         }
         const maxLength = 80;
         if (notificationText.length > maxLength) {
           notificationText = notificationText.substring(0, maxLength - 3) + '...';
         }
+        logger.info(`Creating new message from ${senderId} to ${receiverId} with text: ${notificationText}`);
         const newMessage = new Message({
           senderId,
           receiverId,
@@ -250,8 +273,14 @@ const initializeSocket = (io) => {
             actionRequired: ['offer', 'counter-offer'].includes(messageType),
           },
         });
-        const savedMessage = await newMessage.save();
-        logger.info(`Saved message from ${senderId} to ${receiverId}: ${savedMessage._id}`);
+        let savedMessage;
+        try {
+          savedMessage = await newMessage.save();
+          logger.info(`Successfully saved message from ${senderId} to ${receiverId}: ${savedMessage._id}`);
+        } catch (saveError) {
+          logger.error(`Failed to save message from ${senderId} to ${receiverId}: ${saveError.message}`);
+          throw new Error(`Failed to save message: ${saveError.message}`);
+        }
         const messageForSender = {
           ...savedMessage.toObject(),
           chatPartnerName: `${receiver.firstName} ${receiver.lastName}`,
@@ -264,7 +293,17 @@ const initializeSocket = (io) => {
         };
         io.to(`user_${senderId}`).emit('newMessage', messageForSender);
         io.to(`user_${receiverId}`).emit('newMessage', messageForReceiver);
+        io.to(`user_${receiverId}`).emit('newMessageNotification', {
+          senderId,
+          senderName: `${sender.firstName} ${sender.lastName}`,
+          senderProfilePicture: senderProfilePictureUrl,
+          text: notificationText,
+          createdAt: new Date(),
+          productImageUrl,
+        });
+        logger.info(`Emitted newMessage and newMessageNotification to user ${receiverId}`);
         if (!newMessage.metadata?.isSystemMessage) {
+          logger.info(`Attempting to send FCM notification to user ${receiverId}`);
           await sendFCMNotification(
             receiverId.toString(),
             'New Message',
@@ -278,9 +317,14 @@ const initializeSocket = (io) => {
             productImageUrl,
             senderProfilePictureUrl
           );
+          logger.info(`FCM notification attempt completed for user ${receiverId}`);
         }
         await NotificationService.triggerCountUpdate(receiverId, io);
-        logger.info(`Message sent from ${senderId} to ${receiverId}`);
+        logger.info(`Message sent and processed from ${senderId} to ${receiverId}`);
+        io.to(`user_${receiverId}`).emit('messageSynced', {
+          ...messageForReceiver,
+          syncedAt: new Date(),
+        });
       } catch (error) {
         logger.error(`Error sending message from ${message.senderId} to ${message.receiverId}: ${error.message}`);
         socket.emit('messageError', { error: error.message });
@@ -289,7 +333,9 @@ const initializeSocket = (io) => {
 
     socket.on('markAsSeen', async ({ messageIds, senderId, receiverId }) => {
       try {
+        logger.info(`markAsSeen event received: messageIds=${messageIds}, senderId=${senderId}, receiverId=${receiverId}`);
         if (!messageIds || !senderId || !receiverId) {
+          logger.warn(`Missing required fields in markAsSeen: messageIds=${messageIds}, senderId=${senderId}, receiverId=${receiverId}`);
           throw new Error('Missing required fields');
         }
         const messageObjectIds = messageIds.map(id => new mongoose.Types.ObjectId(id));
@@ -308,6 +354,7 @@ const initializeSocket = (io) => {
         });
         await NotificationService.triggerCountUpdate(senderId, io);
         await NotificationService.triggerCountUpdate(receiverId, io);
+        logger.info(`Mark as seen processed for sender ${senderId} and receiver ${receiverId}`);
       } catch (error) {
         logger.error(`Error updating message status for sender ${senderId} and receiver ${receiverId}: ${error.message}`);
         socket.emit('markSeenError', { error: error.message });
@@ -316,11 +363,14 @@ const initializeSocket = (io) => {
 
     socket.on('acceptOffer', async ({ offerId, acceptorId }) => {
       try {
+        logger.info(`acceptOffer event received: offerId=${offerId}, acceptorId=${acceptorId}`);
         const originalOffer = await Message.findById(offerId);
         if (!originalOffer) {
+          logger.error(`Offer ${offerId} not found`);
           throw new Error('Offer not found');
         }
         if (originalOffer.receiverId.toString() !== acceptorId) {
+          logger.warn(`Unauthorized accept attempt for offer ${offerId} by ${acceptorId}`);
           throw new Error('Not authorized to accept this offer');
         }
         const buyerMessage = new Message({
@@ -363,9 +413,10 @@ const initializeSocket = (io) => {
           io,
           originalOffer.offerDetails.image || null
         );
+        logger.info(`FCM notification sent for offer ${offerId} accepted by ${acceptorId}`);
         await NotificationService.triggerCountUpdate(originalOffer.senderId, io);
         await NotificationService.triggerCountUpdate(acceptorId, io);
-        logger.info(`Offer ${offerId} accepted by ${acceptorId}`);
+        logger.info(`Offer ${offerId} accepted and processed by ${acceptorId}`);
       } catch (error) {
         logger.error(`Error accepting offer ${offerId} by ${acceptorId}: ${error.message}`);
         socket.emit('offerError', { error: error.message });
