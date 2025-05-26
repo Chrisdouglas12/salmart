@@ -220,7 +220,7 @@ a .active {
   padding: 8px;
   display: flex;
   flex-direction: column-reverse;
-  gap: 10px;
+  gap: 0px;
   margin-bottom: 60px;
 }
 .post * {
@@ -233,7 +233,7 @@ a .active {
   background-color: #FFFFFF;
   border: none;
   margin-bottom: 5px;
-  height: 20%;
+  height: 10%;
  border-radius:12px ;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   padding: 15px;
@@ -1609,6 +1609,8 @@ a::hover{
     grid-template-columns: 1fr 1fr;
     gap: 10px;
     max-width: 800px;
+    max-height: 70%;
+    object-fit: cover;
     margin: 10px auto;
     font-family: 'Arial', sans-serif;
   }
@@ -1616,12 +1618,13 @@ a::hover{
   .product-card {
     background-color: #f9f9f9;
     border-radius: 10px;
-    padding: 20px;
+    padding: 10px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   }
 
   .product-info {
     display: flex;
+    line-height: 1.1fr;
     align-items: center;
     margin-bottom: 15px;
   }
@@ -1639,7 +1642,7 @@ a::hover{
   }
 
   .icon {
-    font-size: 24px;
+    font-size: 20px;
     margin-right: 10px;
     color: #28a745; /* Salmart green for icons */
   }
@@ -1655,6 +1658,7 @@ a::hover{
     font-size: 16px;
     color: #333; /* Darker text for values */
     margin: 0;
+    line-height: 1fr;
   }
 
   .price-value {
@@ -1665,19 +1669,31 @@ a::hover{
     color: #0288d1; /* Blue for location for contrast */
   }
 
-  .image-card {
-    border-radius: 10px;
-    overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  }
+.image-card {
+  width: 100%;
+  max-width: 100%;
+  margin: 5px 0;
+  padding: 8px;
+  border-radius: 14px;
+  background-color: #fff;
+  box-shadow: 0 0 10px ddd;
+  transition: box-shadow 0.2s ease;
+  box-sizing: border-box;
+}
 
-  .post-image {
-    width: 100%;
-    height: auto;
-    cursor: pointer;
-    border-radius: 10px;
-  }
+.image-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
 
+.post-image {
+  width: 100%;
+  max-height: 300px;
+  height: auto;
+  object-fit: cover;
+  cursor: pointer;
+  border-radius: 10px;
+  display: block;
+}
   @media (max-width: 600px) {
     .product-container {
       grid-template-columns: 1fr;

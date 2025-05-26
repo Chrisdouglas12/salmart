@@ -1,5 +1,3 @@
-const http = require('http');
-const socketIo = require('socket.io');
 const mongoose = require('mongoose');
 const User = require('../models/userSchema.js');
 const Notification = require('../models/notificationSchema.js');
@@ -21,21 +19,8 @@ const logger = winston.createLogger({
   ]
 });
 
-const initializeSocket = (app) => {
-  const server = http.createServer(app);
-  const io = socketIo(server, {
-    cors: {
-      origin: ['http://localhost:8158', 'https://salmart.vercel.app'],
-      methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-      credentials: true,
-      allowedHeaders: ['Content-Type', 'Authorization'],
-    },
-    path: '/socket.io',
-    transports: ['websocket', 'polling'],
-    pingTimeout: 60000,
-    pingInterval: 25000,
-    cookie: true,
-  });
+const initializeSocket = (io) => {
+  logger.info('Initializing Socket.IO event handlers');
 
   io.on('connection', (socket) => {
     logger.info(`New client connected: ${socket.id}`);
@@ -49,7 +34,7 @@ const initializeSocket = (app) => {
         await User.findByIdAndUpdate(userId, { socketId: socket.id }, { new: true });
         socket.join(`user_${userId}`);
         logger.info(`User ${userId} joined room user_${userId}`);
-        await NotificationService.sendCountsToUser(userId, io);
+        await NotificationService.sendCountsToUser(io, userId);
       } catch (err) {
         logger.error(`Error in joinRoom for user ${userId}: ${err.message}`);
       }
@@ -59,7 +44,7 @@ const initializeSocket = (app) => {
       try {
         io.to(`user_${userId}`).emit('badge-update', { type, count, userId });
         logger.info(`Broadcasted badge-update for ${type} to user ${userId}`);
-        await NotificationService.sendCountsToUser(userId, io);
+        await NotificationService.sendCountsToUser(io, userId);
       } catch (error) {
         logger.error(`Error broadcasting badge-update for user ${userId}: ${error.message}`);
       }
@@ -80,6 +65,7 @@ const initializeSocket = (app) => {
           createdAt: new Date(),
         });
         await notification.save();
+        logger.info(`Created follow notification for user ${followedId}`);
         io.to(`user_${followedId}`).emit('notification', {
           type: 'follow',
           userId: followerId,
@@ -128,6 +114,7 @@ const initializeSocket = (app) => {
             createdAt: new Date(),
           });
           await notification.save();
+          logger.info(`Created like notification for user ${post.createdBy.userId} for post ${postId}`);
           io.to(`user_${post.createdBy.userId}`).emit('notification', {
             type: 'like',
             postId,
@@ -178,6 +165,7 @@ const initializeSocket = (app) => {
             createdAt: new Date(),
           });
           await notification.save();
+          logger.info(`Created comment notification for user ${post.createdBy.userId} for post ${postId}`);
           io.to(`user_${post.createdBy.userId}`).emit('notification', {
             type: 'comment',
             postId,
@@ -263,6 +251,7 @@ const initializeSocket = (app) => {
           },
         });
         const savedMessage = await newMessage.save();
+        logger.info(`Saved message from ${senderId} to ${receiverId}: ${savedMessage._id}`);
         const messageForSender = {
           ...savedMessage.toObject(),
           chatPartnerName: `${receiver.firstName} ${receiver.lastName}`,
@@ -304,7 +293,7 @@ const initializeSocket = (app) => {
           throw new Error('Missing required fields');
         }
         const messageObjectIds = messageIds.map(id => new mongoose.Types.ObjectId(id));
-        await Message.updateMany(
+        const result = await Message.updateMany(
           {
             _id: { $in: messageObjectIds },
             receiverId: new mongoose.Types.ObjectId(receiverId),
@@ -312,13 +301,13 @@ const initializeSocket = (app) => {
           },
           { $set: { status: 'seen', isRead: true } }
         );
+        logger.info(`Marked ${result.modifiedCount} messages as seen for sender ${senderId} and receiver ${receiverId}`);
         io.to(`user_${senderId}`).emit('messagesSeen', {
           messageIds,
           seenAt: new Date(),
         });
         await NotificationService.triggerCountUpdate(senderId, io);
         await NotificationService.triggerCountUpdate(receiverId, io);
-        logger.info(`Messages marked as seen for sender ${senderId} and receiver ${receiverId}`);
       } catch (error) {
         logger.error(`Error updating message status for sender ${senderId} and receiver ${receiverId}: ${error.message}`);
         socket.emit('markSeenError', { error: error.message });
@@ -348,6 +337,7 @@ const initializeSocket = (app) => {
           },
         });
         await buyerMessage.save();
+        logger.info(`Created buyer accept-offer message ${buyerMessage._id} for offer ${offerId}`);
         const sellerMessage = new Message({
           senderId: originalOffer.senderId,
           receiverId: acceptorId,
@@ -358,6 +348,7 @@ const initializeSocket = (app) => {
           },
         });
         await sellerMessage.save();
+        logger.info(`Created seller system message ${sellerMessage._id} for offer ${offerId}`);
         io.to(`user_${originalOffer.senderId}`).emit('receiveMessage', buyerMessage);
         io.to(`user_${acceptorId}`).emit('receiveMessage', sellerMessage);
         await Post.findByIdAndUpdate(
@@ -392,7 +383,7 @@ const initializeSocket = (app) => {
     });
   });
 
-  return { io, server };
+  return io;
 };
 
 module.exports = initializeSocket;

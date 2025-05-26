@@ -96,3 +96,314 @@
 {"level":"info","message":"Fetching notification counts for user 67d845b5c9add2113fc80789","timestamp":"2025-05-25T23:28:58.173Z"}
 {"level":"info","message":"Notification counts retrieved for user 67d845b5c9add2113fc80789: {\"notificationCount\":0}","timestamp":"2025-05-25T23:28:58.417Z"}
 {"level":"info","message":"Fetching notification counts for user 67d845b5c9add2113fc80789","timestamp":"2025-05-25T23:29:13.300Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T09:36:37.362Z"}
+{"level":"info","message":"Fetching notification counts for user 67d845b5c9add2113fc80789","timestamp":"2025-05-26T09:36:37.372Z"}
+{"level":"info","message":"Notification counts sent to user 67d845b5c9add2113fc80789: {\"notificationCount\":0}","timestamp":"2025-05-26T09:36:37.670Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T09:38:32.994Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T09:38:35.785Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T09:38:35.844Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T09:38:35.934Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T09:38:35.979Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T09:38:36.041Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T09:38:36.073Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T09:38:36.373Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T09:38:36.406Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T09:38:37.948Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T09:49:10.085Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T09:49:17.053Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T09:49:48.615Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T09:49:50.646Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T09:49:50.705Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T09:49:50.791Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T09:49:50.829Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T09:49:50.883Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T09:49:50.911Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T09:49:51.172Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T09:49:51.201Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T09:49:52.552Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T09:50:59.980Z"}
+{"level":"info","message":"Fetching notifications for user 67d845b5c9add2113fc80789","timestamp":"2025-05-26T09:50:59.987Z"}
+{"level":"info","message":"Retrieved 202 notifications for user 67d845b5c9add2113fc80789","timestamp":"2025-05-26T09:51:01.017Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T09:51:01.516Z"}
+{"level":"info","message":"Marked 0 alerts as viewed for user 67d845b5c9add2113fc80789","timestamp":"2025-05-26T09:51:01.771Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T10:11:11.771Z"}
+{"level":"info","message":"Fetching notification counts for user 67d845b5c9add2113fc80789","timestamp":"2025-05-26T10:11:11.790Z"}
+{"level":"error","message":"Error fetching notification counts for user 67d845b5c9add2113fc80789: connection <monitor> to 65.62.31.3:27017 closed","timestamp":"2025-05-26T10:11:30.246Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:05:40.270Z"}
+{"level":"info","message":"Fetching notification counts for user 67d845b5c9add2113fc80789","timestamp":"2025-05-26T12:05:40.280Z"}
+{"level":"info","message":"Notification counts sent to user 67d845b5c9add2113fc80789: {\"notificationCount\":0,\"messagesCount\":0}","timestamp":"2025-05-26T12:05:40.972Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:05:56.391Z"}
+{"level":"info","message":"Fetching notification counts for user 67d845b5c9add2113fc80789","timestamp":"2025-05-26T12:05:56.407Z"}
+{"level":"info","message":"Notification counts sent to user 67d845b5c9add2113fc80789: {\"notificationCount\":0,\"messagesCount\":0}","timestamp":"2025-05-26T12:06:01.527Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:06:26.061Z"}
+{"level":"info","message":"Fetching notification counts for user 67d845b5c9add2113fc80789","timestamp":"2025-05-26T12:06:26.069Z"}
+{"level":"info","message":"Notification counts sent to user 67d845b5c9add2113fc80789: {\"notificationCount\":0,\"messagesCount\":0}","timestamp":"2025-05-26T12:06:26.521Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:06:32.379Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:06:36.325Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:06:36.392Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:06:36.523Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:06:36.584Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:06:36.688Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:06:36.739Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:06:37.186Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:06:37.232Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:06:39.033Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:07:30.740Z"}
+{"level":"info","message":"Fetching notification counts for user 67d845b5c9add2113fc80789","timestamp":"2025-05-26T12:07:30.756Z"}
+{"level":"info","message":"Notification counts sent to user 67d845b5c9add2113fc80789: {\"notificationCount\":0,\"messagesCount\":0}","timestamp":"2025-05-26T12:07:31.163Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:09:29.264Z"}
+{"level":"info","message":"Fetching notification counts for user 67d845b5c9add2113fc80789","timestamp":"2025-05-26T12:09:29.269Z"}
+{"level":"info","message":"Notification counts sent to user 67d845b5c9add2113fc80789: {\"notificationCount\":0,\"messagesCount\":0}","timestamp":"2025-05-26T12:09:31.973Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:09:46.539Z"}
+{"level":"info","message":"Fetching notification counts for user 67b6fbdedfb7a20620fcb1d1","timestamp":"2025-05-26T12:09:46.543Z"}
+{"level":"info","message":"Notification counts sent to user 67b6fbdedfb7a20620fcb1d1: {\"notificationCount\":0,\"messagesCount\":0}","timestamp":"2025-05-26T12:09:46.923Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:10:10.997Z"}
+{"level":"info","message":"Fetching notification counts for user 67b6fbdedfb7a20620fcb1d1","timestamp":"2025-05-26T12:10:11.001Z"}
+{"level":"info","message":"Notification counts sent to user 67b6fbdedfb7a20620fcb1d1: {\"notificationCount\":0,\"messagesCount\":0}","timestamp":"2025-05-26T12:10:11.434Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:11:10.684Z"}
+{"level":"info","message":"Fetching notification counts for user 67b6fbdedfb7a20620fcb1d1","timestamp":"2025-05-26T12:11:10.690Z"}
+{"level":"info","message":"Notification counts sent to user 67b6fbdedfb7a20620fcb1d1: {\"notificationCount\":0,\"messagesCount\":0}","timestamp":"2025-05-26T12:11:10.701Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:20:48.681Z"}
+{"level":"info","message":"Fetching notification counts for user 67b6fbdedfb7a20620fcb1d1","timestamp":"2025-05-26T12:20:48.700Z"}
+{"level":"info","message":"Notification counts sent to user 67b6fbdedfb7a20620fcb1d1: {\"notificationCount\":0,\"messagesCount\":0}","timestamp":"2025-05-26T12:20:52.004Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:32:47.329Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:32:47.369Z"}
+{"level":"info","message":"Fetching notification counts for user 67b6fbdedfb7a20620fcb1d1","timestamp":"2025-05-26T12:32:47.385Z"}
+{"level":"info","message":"Notification counts sent to user 67b6fbdedfb7a20620fcb1d1: {\"notificationCount\":0,\"messagesCount\":0}","timestamp":"2025-05-26T12:32:48.074Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:32:49.191Z"}
+{"level":"info","message":"Marked 0 deals as viewed for user 67b6fbdedfb7a20620fcb1d1","timestamp":"2025-05-26T12:32:49.466Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:33:16.767Z"}
+{"level":"info","message":"Fetching notification counts for user 67b6fbdedfb7a20620fcb1d1","timestamp":"2025-05-26T12:33:16.774Z"}
+{"level":"info","message":"Notification counts sent to user 67b6fbdedfb7a20620fcb1d1: {\"notificationCount\":0,\"messagesCount\":0}","timestamp":"2025-05-26T12:33:17.222Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:33:52.335Z"}
+{"level":"info","message":"Fetching notification counts for user 67b6fbdedfb7a20620fcb1d1","timestamp":"2025-05-26T12:33:52.344Z"}
+{"level":"info","message":"Notification counts sent to user 67b6fbdedfb7a20620fcb1d1: {\"notificationCount\":0,\"messagesCount\":0}","timestamp":"2025-05-26T12:33:52.741Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:34:15.340Z"}
+{"level":"info","message":"Fetching notification counts for user 67b6fbdedfb7a20620fcb1d1","timestamp":"2025-05-26T12:34:15.345Z"}
+{"level":"info","message":"Notification counts sent to user 67b6fbdedfb7a20620fcb1d1: {\"notificationCount\":0,\"messagesCount\":0}","timestamp":"2025-05-26T12:34:15.725Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:35:21.400Z"}
+{"level":"info","message":"Fetching notification counts for user 679d530c96d06fa5dfab1ded","timestamp":"2025-05-26T12:35:21.406Z"}
+{"level":"info","message":"Notification counts sent to user 679d530c96d06fa5dfab1ded: {\"notificationCount\":8,\"messagesCount\":0}","timestamp":"2025-05-26T12:35:21.833Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:35:28.806Z"}
+{"level":"info","message":"Fetching notification counts for user 679d530c96d06fa5dfab1ded","timestamp":"2025-05-26T12:35:28.811Z"}
+{"level":"info","message":"Notification counts sent to user 679d530c96d06fa5dfab1ded: {\"notificationCount\":8,\"messagesCount\":0}","timestamp":"2025-05-26T12:35:29.193Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:37:44.255Z"}
+{"level":"info","message":"Fetching notification counts for user 679d530c96d06fa5dfab1ded","timestamp":"2025-05-26T12:37:44.262Z"}
+{"level":"info","message":"Notification counts sent to user 679d530c96d06fa5dfab1ded: {\"notificationCount\":8,\"messagesCount\":0}","timestamp":"2025-05-26T12:37:44.822Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:37:44.851Z"}
+{"level":"info","message":"Fetching notification counts for user 679d530c96d06fa5dfab1ded","timestamp":"2025-05-26T12:37:44.856Z"}
+{"level":"info","message":"Notification counts sent to user 679d530c96d06fa5dfab1ded: {\"notificationCount\":8,\"messagesCount\":0}","timestamp":"2025-05-26T12:37:45.266Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:37:45.301Z"}
+{"level":"info","message":"Fetching notification counts for user 679d530c96d06fa5dfab1ded","timestamp":"2025-05-26T12:37:45.308Z"}
+{"level":"info","message":"Notification counts sent to user 679d530c96d06fa5dfab1ded: {\"notificationCount\":8,\"messagesCount\":0}","timestamp":"2025-05-26T12:37:45.705Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:37:45.727Z"}
+{"level":"info","message":"Fetching notification counts for user 679d530c96d06fa5dfab1ded","timestamp":"2025-05-26T12:37:45.732Z"}
+{"level":"info","message":"Notification counts sent to user 679d530c96d06fa5dfab1ded: {\"notificationCount\":8,\"messagesCount\":0}","timestamp":"2025-05-26T12:37:46.226Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:38:00.068Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:38:00.378Z"}
+{"level":"info","message":"Fetching notification counts for user 679d530c96d06fa5dfab1ded","timestamp":"2025-05-26T12:38:00.383Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:38:00.789Z"}
+{"level":"info","message":"Notification counts sent to user 679d530c96d06fa5dfab1ded: {\"notificationCount\":8,\"messagesCount\":0}","timestamp":"2025-05-26T12:38:00.875Z"}
+{"level":"info","message":"Marked 0 deals as viewed for user 679d530c96d06fa5dfab1ded","timestamp":"2025-05-26T12:38:00.997Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:38:08.578Z"}
+{"level":"info","message":"Fetching notification counts for user 679d530c96d06fa5dfab1ded","timestamp":"2025-05-26T12:38:08.584Z"}
+{"level":"info","message":"Notification counts sent to user 679d530c96d06fa5dfab1ded: {\"notificationCount\":8,\"messagesCount\":0}","timestamp":"2025-05-26T12:38:08.970Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:38:30.012Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:38:30.203Z"}
+{"level":"info","message":"Fetching notification counts for user 679d530c96d06fa5dfab1ded","timestamp":"2025-05-26T12:38:30.210Z"}
+{"level":"info","message":"Marked 8 alerts as viewed for user 679d530c96d06fa5dfab1ded","timestamp":"2025-05-26T12:38:30.254Z"}
+{"level":"info","message":"Notification counts sent to user 679d530c96d06fa5dfab1ded: {\"notificationCount\":0,\"messagesCount\":0}","timestamp":"2025-05-26T12:38:30.563Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:38:31.080Z"}
+{"level":"info","message":"Fetching notification counts for user 679d530c96d06fa5dfab1ded","timestamp":"2025-05-26T12:38:31.086Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:38:31.123Z"}
+{"level":"info","message":"Fetching notifications for user 679d530c96d06fa5dfab1ded","timestamp":"2025-05-26T12:38:31.131Z"}
+{"level":"info","message":"Notification counts sent to user 679d530c96d06fa5dfab1ded: {\"notificationCount\":0,\"messagesCount\":0}","timestamp":"2025-05-26T12:38:31.437Z"}
+{"level":"info","message":"Retrieved 104 notifications for user 679d530c96d06fa5dfab1ded","timestamp":"2025-05-26T12:38:32.116Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:38:32.596Z"}
+{"level":"info","message":"Marked 0 alerts as viewed for user 679d530c96d06fa5dfab1ded","timestamp":"2025-05-26T12:38:32.821Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:38:40.670Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:38:57.958Z"}
+{"level":"info","message":"Fetching notification counts for user 679d530c96d06fa5dfab1ded","timestamp":"2025-05-26T12:38:57.964Z"}
+{"level":"info","message":"Notification counts sent to user 679d530c96d06fa5dfab1ded: {\"notificationCount\":0,\"messagesCount\":0}","timestamp":"2025-05-26T12:38:58.335Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:39:05.565Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:39:05.745Z"}
+{"level":"info","message":"Fetching notification counts for user 679d530c96d06fa5dfab1ded","timestamp":"2025-05-26T12:39:05.749Z"}
+{"level":"info","message":"Marked 0 deals as viewed for user 679d530c96d06fa5dfab1ded","timestamp":"2025-05-26T12:39:05.783Z"}
+{"level":"info","message":"Notification counts sent to user 679d530c96d06fa5dfab1ded: {\"notificationCount\":0,\"messagesCount\":0}","timestamp":"2025-05-26T12:39:06.221Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:39:06.568Z"}
+{"level":"info","message":"Fetching notification counts for user 679d530c96d06fa5dfab1ded","timestamp":"2025-05-26T12:39:06.573Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:39:06.593Z"}
+{"level":"info","message":"Notification counts sent to user 679d530c96d06fa5dfab1ded: {\"notificationCount\":0,\"messagesCount\":0}","timestamp":"2025-05-26T12:39:06.917Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:39:07.384Z"}
+{"level":"info","message":"Marked 0 deals as viewed for user 679d530c96d06fa5dfab1ded","timestamp":"2025-05-26T12:39:07.579Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:39:17.481Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:40:41.691Z"}
+{"level":"info","message":"Fetching notification counts for user 679d530c96d06fa5dfab1ded","timestamp":"2025-05-26T12:40:41.703Z"}
+{"level":"info","message":"Notification counts sent to user 679d530c96d06fa5dfab1ded: {\"notificationCount\":0,\"messagesCount\":0}","timestamp":"2025-05-26T12:40:42.362Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:40:42.386Z"}
+{"level":"info","message":"Fetching notification counts for user 679d530c96d06fa5dfab1ded","timestamp":"2025-05-26T12:40:42.391Z"}
+{"level":"info","message":"Notification counts sent to user 679d530c96d06fa5dfab1ded: {\"notificationCount\":0,\"messagesCount\":0}","timestamp":"2025-05-26T12:40:42.808Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:40:42.835Z"}
+{"level":"info","message":"Fetching notification counts for user 679d530c96d06fa5dfab1ded","timestamp":"2025-05-26T12:40:42.840Z"}
+{"level":"info","message":"Notification counts sent to user 679d530c96d06fa5dfab1ded: {\"notificationCount\":0,\"messagesCount\":0}","timestamp":"2025-05-26T12:40:43.242Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:40:44.421Z"}
+{"level":"info","message":"Fetching notification counts for user 679d530c96d06fa5dfab1ded","timestamp":"2025-05-26T12:40:44.426Z"}
+{"level":"info","message":"Notification counts sent to user 679d530c96d06fa5dfab1ded: {\"notificationCount\":0,\"messagesCount\":0}","timestamp":"2025-05-26T12:40:44.792Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:40:44.824Z"}
+{"level":"info","message":"Fetching notification counts for user 679d530c96d06fa5dfab1ded","timestamp":"2025-05-26T12:40:44.828Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:40:45.098Z"}
+{"level":"info","message":"Notification counts sent to user 679d530c96d06fa5dfab1ded: {\"notificationCount\":0,\"messagesCount\":0}","timestamp":"2025-05-26T12:40:45.179Z"}
+{"level":"info","message":"Marked 0 alerts as viewed for user 679d530c96d06fa5dfab1ded","timestamp":"2025-05-26T12:40:45.300Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:40:46.858Z"}
+{"level":"info","message":"Marked 0 deals as viewed for user 679d530c96d06fa5dfab1ded","timestamp":"2025-05-26T12:40:47.108Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:46:07.244Z"}
+{"level":"info","message":"Fetching notification counts for user 679d530c96d06fa5dfab1ded","timestamp":"2025-05-26T12:46:07.257Z"}
+{"level":"info","message":"Notification counts sent to user 679d530c96d06fa5dfab1ded: {\"notificationCount\":0,\"messagesCount\":0}","timestamp":"2025-05-26T12:46:07.745Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:46:51.762Z"}
+{"level":"info","message":"Marked 0 deals as viewed for user 679d530c96d06fa5dfab1ded","timestamp":"2025-05-26T12:46:52.037Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:46:52.673Z"}
+{"level":"info","message":"Fetching notification counts for user 679d530c96d06fa5dfab1ded","timestamp":"2025-05-26T12:46:52.681Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:46:52.826Z"}
+{"level":"info","message":"Notification counts sent to user 679d530c96d06fa5dfab1ded: {\"notificationCount\":0,\"messagesCount\":0}","timestamp":"2025-05-26T12:46:53.133Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:46:54.030Z"}
+{"level":"info","message":"Marked 0 deals as viewed for user 679d530c96d06fa5dfab1ded","timestamp":"2025-05-26T12:46:54.242Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:47:00.808Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:47:01.601Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:47:02.405Z"}
+{"level":"info","message":"Marked 0 deals as viewed for user 679d530c96d06fa5dfab1ded","timestamp":"2025-05-26T12:47:02.691Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:47:07.670Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:47:20.133Z"}
+{"level":"info","message":"Fetching notification counts for user 679d530c96d06fa5dfab1ded","timestamp":"2025-05-26T12:47:20.138Z"}
+{"level":"info","message":"Notification counts sent to user 679d530c96d06fa5dfab1ded: {\"notificationCount\":0,\"messagesCount\":0}","timestamp":"2025-05-26T12:47:20.571Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:47:48.992Z"}
+{"level":"info","message":"Fetching notification counts for user 679d530c96d06fa5dfab1ded","timestamp":"2025-05-26T12:47:48.998Z"}
+{"level":"info","message":"Notification counts sent to user 679d530c96d06fa5dfab1ded: {\"notificationCount\":0,\"messagesCount\":0}","timestamp":"2025-05-26T12:47:49.389Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:49:13.014Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:49:15.222Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:49:15.345Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:49:15.381Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:49:15.640Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:49:15.683Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:49:15.709Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:49:15.765Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:49:15.934Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:49:15.978Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:49:16.027Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:49:16.548Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:49:16.580Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:49:16.636Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:49:16.816Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:49:17.599Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:49:18.134Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:49:18.215Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:49:18.923Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:49:19.200Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:49:19.231Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:52:43.010Z"}
+{"level":"info","message":"Fetching notification counts for user 67d845b5c9add2113fc80789","timestamp":"2025-05-26T12:52:43.015Z"}
+{"level":"info","message":"Notification counts sent to user 67d845b5c9add2113fc80789: {\"notificationCount\":2,\"messagesCount\":0}","timestamp":"2025-05-26T12:52:43.635Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:53:41.967Z"}
+{"level":"info","message":"Fetching notification counts for user 67d845b5c9add2113fc80789","timestamp":"2025-05-26T12:53:41.973Z"}
+{"level":"info","message":"Notification counts sent to user 67d845b5c9add2113fc80789: {\"notificationCount\":2,\"messagesCount\":0}","timestamp":"2025-05-26T12:53:42.533Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:54:11.028Z"}
+{"level":"info","message":"Fetching notification counts for user 67d845b5c9add2113fc80789","timestamp":"2025-05-26T12:54:11.032Z"}
+{"level":"info","message":"Notification counts sent to user 67d845b5c9add2113fc80789: {\"notificationCount\":2,\"messagesCount\":0}","timestamp":"2025-05-26T12:54:11.408Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:54:40.860Z"}
+{"level":"info","message":"Fetching notification counts for user 67d845b5c9add2113fc80789","timestamp":"2025-05-26T12:54:40.865Z"}
+{"level":"info","message":"Notification counts sent to user 67d845b5c9add2113fc80789: {\"notificationCount\":2,\"messagesCount\":0}","timestamp":"2025-05-26T12:54:41.248Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:55:34.045Z"}
+{"level":"info","message":"Fetching notification counts for user 67d845b5c9add2113fc80789","timestamp":"2025-05-26T12:55:34.050Z"}
+{"level":"info","message":"Notification counts sent to user 67d845b5c9add2113fc80789: {\"notificationCount\":2,\"messagesCount\":0}","timestamp":"2025-05-26T12:55:34.483Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:56:21.209Z"}
+{"level":"info","message":"Fetching notification counts for user 67d845b5c9add2113fc80789","timestamp":"2025-05-26T12:56:21.215Z"}
+{"level":"info","message":"Notification counts sent to user 67d845b5c9add2113fc80789: {\"notificationCount\":2,\"messagesCount\":0}","timestamp":"2025-05-26T12:56:21.591Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:58:30.537Z"}
+{"level":"info","message":"Fetching notification counts for user 67d845b5c9add2113fc80789","timestamp":"2025-05-26T12:58:30.542Z"}
+{"level":"info","message":"Notification counts sent to user 67d845b5c9add2113fc80789: {\"notificationCount\":2,\"messagesCount\":0}","timestamp":"2025-05-26T12:58:30.974Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:58:59.705Z"}
+{"level":"info","message":"Fetching notification counts for user 67d845b5c9add2113fc80789","timestamp":"2025-05-26T12:58:59.717Z"}
+{"level":"info","message":"Notification counts sent to user 67d845b5c9add2113fc80789: {\"notificationCount\":2,\"messagesCount\":0}","timestamp":"2025-05-26T12:59:00.297Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T12:59:29.069Z"}
+{"level":"info","message":"Fetching notification counts for user 67d845b5c9add2113fc80789","timestamp":"2025-05-26T12:59:29.074Z"}
+{"level":"info","message":"Notification counts sent to user 67d845b5c9add2113fc80789: {\"notificationCount\":2,\"messagesCount\":0}","timestamp":"2025-05-26T12:59:29.497Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T13:00:36.068Z"}
+{"level":"info","message":"Fetching notification counts for user 67d845b5c9add2113fc80789","timestamp":"2025-05-26T13:00:36.073Z"}
+{"level":"info","message":"Notification counts sent to user 67d845b5c9add2113fc80789: {\"notificationCount\":2,\"messagesCount\":0}","timestamp":"2025-05-26T13:00:36.464Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T13:01:05.183Z"}
+{"level":"info","message":"Fetching notification counts for user 67d845b5c9add2113fc80789","timestamp":"2025-05-26T13:01:05.189Z"}
+{"level":"info","message":"Notification counts sent to user 67d845b5c9add2113fc80789: {\"notificationCount\":2,\"messagesCount\":0}","timestamp":"2025-05-26T13:01:05.597Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T13:02:37.918Z"}
+{"level":"info","message":"Fetching notification counts for user 67d845b5c9add2113fc80789","timestamp":"2025-05-26T13:02:37.922Z"}
+{"level":"info","message":"Notification counts sent to user 67d845b5c9add2113fc80789: {\"notificationCount\":2,\"messagesCount\":0}","timestamp":"2025-05-26T13:02:38.368Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T13:03:07.020Z"}
+{"level":"info","message":"Fetching notification counts for user 67d845b5c9add2113fc80789","timestamp":"2025-05-26T13:03:07.027Z"}
+{"level":"info","message":"Notification counts sent to user 67d845b5c9add2113fc80789: {\"notificationCount\":2,\"messagesCount\":0}","timestamp":"2025-05-26T13:03:07.418Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T13:04:30.458Z"}
+{"level":"info","message":"Fetching notification counts for user 67d845b5c9add2113fc80789","timestamp":"2025-05-26T13:04:30.463Z"}
+{"level":"info","message":"Notification counts sent to user 67d845b5c9add2113fc80789: {\"notificationCount\":2,\"messagesCount\":0}","timestamp":"2025-05-26T13:04:30.965Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T13:04:59.665Z"}
+{"level":"info","message":"Fetching notification counts for user 67d845b5c9add2113fc80789","timestamp":"2025-05-26T13:04:59.671Z"}
+{"level":"info","message":"Notification counts sent to user 67d845b5c9add2113fc80789: {\"notificationCount\":2,\"messagesCount\":0}","timestamp":"2025-05-26T13:05:00.206Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T13:05:58.284Z"}
+{"level":"info","message":"Fetching notification counts for user 67d845b5c9add2113fc80789","timestamp":"2025-05-26T13:05:58.288Z"}
+{"level":"info","message":"Notification counts sent to user 67d845b5c9add2113fc80789: {\"notificationCount\":2,\"messagesCount\":0}","timestamp":"2025-05-26T13:05:58.686Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T13:06:27.301Z"}
+{"level":"info","message":"Fetching notification counts for user 67d845b5c9add2113fc80789","timestamp":"2025-05-26T13:06:27.305Z"}
+{"level":"info","message":"Notification counts sent to user 67d845b5c9add2113fc80789: {\"notificationCount\":2,\"messagesCount\":0}","timestamp":"2025-05-26T13:06:27.801Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T13:07:33.041Z"}
+{"level":"info","message":"Fetching notification counts for user 67d845b5c9add2113fc80789","timestamp":"2025-05-26T13:07:33.044Z"}
+{"level":"info","message":"Notification counts sent to user 67d845b5c9add2113fc80789: {\"notificationCount\":2,\"messagesCount\":0}","timestamp":"2025-05-26T13:07:33.416Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T13:08:02.322Z"}
+{"level":"info","message":"Fetching notification counts for user 67d845b5c9add2113fc80789","timestamp":"2025-05-26T13:08:02.329Z"}
+{"level":"info","message":"Notification counts sent to user 67d845b5c9add2113fc80789: {\"notificationCount\":2,\"messagesCount\":0}","timestamp":"2025-05-26T13:08:02.809Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T13:09:12.884Z"}
+{"level":"info","message":"Fetching notification counts for user 67d845b5c9add2113fc80789","timestamp":"2025-05-26T13:09:12.887Z"}
+{"level":"info","message":"Notification counts sent to user 67d845b5c9add2113fc80789: {\"notificationCount\":2,\"messagesCount\":0}","timestamp":"2025-05-26T13:09:13.303Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T13:09:59.102Z"}
+{"level":"info","message":"Fetching notification counts for user 67d845b5c9add2113fc80789","timestamp":"2025-05-26T13:09:59.107Z"}
+{"level":"info","message":"Notification counts sent to user 67d845b5c9add2113fc80789: {\"notificationCount\":2,\"messagesCount\":0}","timestamp":"2025-05-26T13:09:59.477Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T13:11:15.346Z"}
+{"level":"info","message":"Fetching notification counts for user 67d845b5c9add2113fc80789","timestamp":"2025-05-26T13:11:15.350Z"}
+{"level":"info","message":"Notification counts sent to user 67d845b5c9add2113fc80789: {\"notificationCount\":2,\"messagesCount\":0}","timestamp":"2025-05-26T13:11:15.717Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T13:11:44.555Z"}
+{"level":"info","message":"Fetching notification counts for user 67d845b5c9add2113fc80789","timestamp":"2025-05-26T13:11:44.560Z"}
+{"level":"info","message":"Notification counts sent to user 67d845b5c9add2113fc80789: {\"notificationCount\":2,\"messagesCount\":0}","timestamp":"2025-05-26T13:11:45.005Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T13:12:14.570Z"}
+{"level":"info","message":"Fetching notification counts for user 67d845b5c9add2113fc80789","timestamp":"2025-05-26T13:12:14.577Z"}
+{"level":"info","message":"Notification counts sent to user 67d845b5c9add2113fc80789: {\"notificationCount\":2,\"messagesCount\":0}","timestamp":"2025-05-26T13:12:15.036Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T13:14:37.910Z"}
+{"level":"info","message":"Fetching notification counts for user 67d845b5c9add2113fc80789","timestamp":"2025-05-26T13:14:37.914Z"}
+{"level":"info","message":"Notification counts sent to user 67d845b5c9add2113fc80789: {\"notificationCount\":2,\"messagesCount\":0}","timestamp":"2025-05-26T13:14:38.302Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T13:15:07.092Z"}
+{"level":"info","message":"Fetching notification counts for user 67d845b5c9add2113fc80789","timestamp":"2025-05-26T13:15:07.099Z"}
+{"level":"info","message":"Notification counts sent to user 67d845b5c9add2113fc80789: {\"notificationCount\":2,\"messagesCount\":0}","timestamp":"2025-05-26T13:15:07.591Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T13:17:29.435Z"}
+{"level":"info","message":"Fetching notification counts for user 67d845b5c9add2113fc80789","timestamp":"2025-05-26T13:17:29.440Z"}
+{"level":"info","message":"Notification counts sent to user 67d845b5c9add2113fc80789: {\"notificationCount\":2,\"messagesCount\":0}","timestamp":"2025-05-26T13:17:29.884Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T13:17:58.592Z"}
+{"level":"info","message":"Fetching notification counts for user 67d845b5c9add2113fc80789","timestamp":"2025-05-26T13:17:58.598Z"}
+{"level":"info","message":"Notification counts sent to user 67d845b5c9add2113fc80789: {\"notificationCount\":2,\"messagesCount\":0}","timestamp":"2025-05-26T13:17:59.012Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T13:19:50.902Z"}
+{"level":"info","message":"Fetching notification counts for user 67d845b5c9add2113fc80789","timestamp":"2025-05-26T13:19:50.907Z"}
+{"level":"info","message":"Notification counts sent to user 67d845b5c9add2113fc80789: {\"notificationCount\":2,\"messagesCount\":0}","timestamp":"2025-05-26T13:19:51.366Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T13:20:20.041Z"}
+{"level":"info","message":"Fetching notification counts for user 67d845b5c9add2113fc80789","timestamp":"2025-05-26T13:20:20.049Z"}
+{"level":"info","message":"Notification counts sent to user 67d845b5c9add2113fc80789: {\"notificationCount\":2,\"messagesCount\":0}","timestamp":"2025-05-26T13:20:20.506Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T13:21:23.765Z"}
+{"level":"info","message":"Fetching notification counts for user 67d845b5c9add2113fc80789","timestamp":"2025-05-26T13:21:23.769Z"}
+{"level":"info","message":"Notification counts sent to user 67d845b5c9add2113fc80789: {\"notificationCount\":2,\"messagesCount\":0}","timestamp":"2025-05-26T13:21:24.205Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T13:21:52.847Z"}
+{"level":"info","message":"Fetching notification counts for user 67d845b5c9add2113fc80789","timestamp":"2025-05-26T13:21:52.852Z"}
+{"level":"info","message":"Notification counts sent to user 67d845b5c9add2113fc80789: {\"notificationCount\":2,\"messagesCount\":0}","timestamp":"2025-05-26T13:21:53.356Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T13:22:58.373Z"}
+{"level":"info","message":"Fetching notification counts for user 67d845b5c9add2113fc80789","timestamp":"2025-05-26T13:22:58.378Z"}
+{"level":"info","message":"Notification counts sent to user 67d845b5c9add2113fc80789: {\"notificationCount\":2,\"messagesCount\":0}","timestamp":"2025-05-26T13:22:58.779Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T13:23:27.281Z"}
+{"level":"info","message":"Fetching notification counts for user 67d845b5c9add2113fc80789","timestamp":"2025-05-26T13:23:27.285Z"}
+{"level":"info","message":"Notification counts sent to user 67d845b5c9add2113fc80789: {\"notificationCount\":2,\"messagesCount\":0}","timestamp":"2025-05-26T13:23:27.792Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T13:23:57.285Z"}
+{"level":"info","message":"Fetching notification counts for user 67d845b5c9add2113fc80789","timestamp":"2025-05-26T13:23:57.289Z"}
+{"level":"info","message":"Notification counts sent to user 67d845b5c9add2113fc80789: {\"notificationCount\":2,\"messagesCount\":0}","timestamp":"2025-05-26T13:23:57.738Z"}
+{"level":"info","message":"Attached io to request object","timestamp":"2025-05-26T13:24:27.301Z"}
+{"level":"info","message":"Fetching notification counts for user 67d845b5c9add2113fc80789","timestamp":"2025-05-26T13:24:27.305Z"}
+{"level":"info","message":"Notification counts sent to user 67d845b5c9add2113fc80789: {\"notificationCount\":2,\"messagesCount\":0}","timestamp":"2025-05-26T13:24:27.860Z"}

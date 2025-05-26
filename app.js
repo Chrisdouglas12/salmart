@@ -9,7 +9,7 @@ const cloudinary = require('cloudinary').v2;
 const nodemailer = require('nodemailer');
 require('dotenv').config();
 
-// Models (only those used directly)
+// Models
 const User = require('./models/userSchema.js');
 const Post = require('./models/postSchema.js');
 const Notification = require('./models/notificationSchema.js');
@@ -38,12 +38,18 @@ const logger = winston.createLogger({
 });
 
 // Initialize Firebase Admin SDK
-const firebaseKey = Buffer.from(process.env.FIREBASE_ADMIN_KEY_BASE64, 'base64').toString('utf8');
-const serviceAccount = JSON.parse(firebaseKey);
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-  databaseURL: 'https://salmart-330ab.firebaseio.com'
-});
+try {
+  const firebaseKey = Buffer.from(process.env.FIREBASE_ADMIN_KEY_BASE64, 'base64').toString('utf8');
+  const serviceAccount = JSON.parse(firebaseKey);
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+    databaseURL: 'https://salmart-330ab.firebaseio.com'
+  });
+  logger.info('✅ Firebase Admin SDK initialized successfully');
+} catch (error) {
+  logger.error(`❌ Firebase Admin SDK initialization failed: ${error.message}`);
+  process.exit(1); // Exit if Firebase fails to initialize
+}
 
 // Initialize Express app
 const app = express();
@@ -74,7 +80,10 @@ mongoose.connect(process.env.MONGO_URI, {
   socketTimeoutMS: 45000,
 })
   .then(() => logger.info('✅ MongoDB connected successfully'))
-  .catch((err) => logger.error(`❌ MongoDB connection error: ${err.message}`));
+  .catch((err) => {
+    logger.error(`❌ MongoDB connection error: ${err.message}`);
+    process.exit(1); // Exit if MongoDB fails to connect
+  });
 
 // Initialize Socket.IO
 const server = require('http').createServer(app);
@@ -86,14 +95,17 @@ const io = new Server(server, {
   },
   path: '/socket.io',
 });
+logger.info('✅ Socket.IO initialized');
 
-// Socket.IO connection handling
+// Socket.IO connection handling (moved from socket.js)
 io.on('connection', (socket) => {
   logger.info(`Socket connected: ${socket.id}`);
   socket.on('join', (userId) => {
     if (mongoose.Types.ObjectId.isValid(userId)) {
       socket.join(`user_${userId}`);
       logger.info(`User ${userId} joined room user_${userId}`);
+    } else {
+      logger.warn(`Invalid userId in join event: ${userId}`);
     }
   });
   socket.on('disconnect', () => {
@@ -130,7 +142,7 @@ app.get('/search', async (req, res) => {
       }).populate('createdBy.userId', 'firstName lastName profilePicture'),
     ]);
 
-    logger.info(`Search executed for query: ${q}`);
+    logger.info(`Search executed for query: ${q}, found ${users.length} users, ${posts.length} posts`);
     res.status(200).json({ success: true, users, posts });
   } catch (error) {
     logger.error(`Search error: ${error.message}`);
@@ -151,6 +163,7 @@ const transporter = nodemailer.createTransport({
     pass: process.env.EMAIL_PASS,
   },
 });
+logger.info('✅ Nodemailer configured');
 
 // Cloudinary Configuration
 cloudinary.config({
@@ -158,6 +171,7 @@ cloudinary.config({
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
+logger.info('✅ Cloudinary configured');
 
 // Start Server
 const PORT = process.env.PORT || 3000;

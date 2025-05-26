@@ -1,9 +1,9 @@
-// services/notificationUtils.js
 const admin = require('firebase-admin');
 const User = require('../models/userSchema.js');
 const winston = require('winston');
 const NotificationService = require('./notificationService.js');
-const mongoose = require('mongoose')
+const mongoose = require('mongoose');
+
 const logger = winston.createLogger({
   level: 'info',
   format: winston.format.combine(
@@ -18,6 +18,10 @@ const logger = winston.createLogger({
 
 async function sendFCMNotification(userId, title, body, data = {}, io, imageUrl = null, profilePictureUrl = null) {
   try {
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      logger.warn(`Invalid userId in sendFCMNotification: ${userId}`);
+      return;
+    }
     const user = await User.findById(userId);
     const token = user?.fcmToken;
     if (!token) {
@@ -25,10 +29,11 @@ async function sendFCMNotification(userId, title, body, data = {}, io, imageUrl 
       return;
     }
     logger.info(`Notification preferences for user ${userId}: ${JSON.stringify(user.notificationPreferences)}`);
-    if (data.type && !user.notificationPreferences[data.type]) {
-      logger.info(`User ${userId} has disabled ${data.type} notifications`);
-      return;
-    }
+    // Temporarily bypass preference check for debugging
+    // if (data.type && !user.notificationPreferences[data.type]) {
+    //   logger.info(`User ${userId} has disabled ${data.type} notifications`);
+    //   return;
+    // }
     const message = {
       token,
       notification: { title, body },
@@ -42,13 +47,16 @@ async function sendFCMNotification(userId, title, body, data = {}, io, imageUrl 
         },
       },
     };
+    logger.info(`Preparing FCM message for user ${userId}: ${JSON.stringify(message)}`);
     await admin.messaging().send(message);
     logger.info(`FCM notification sent to user ${userId}: ${title}`);
+    const counts = await NotificationService.getNotificationCounts(userId);
     io.to(`user_${userId}`).emit('badge-update', {
       type: data.type || 'general',
-      count: await NotificationService.getNotificationCounts(userId, io),
+      count: counts.notificationCount,
       userId
     });
+    logger.info(`Emitted badge-update for user ${userId}: type=${data.type}, count=${counts.notificationCount}`);
   } catch (err) {
     logger.error(`Error sending FCM notification to user ${userId}: ${err.message}`);
     if (err.code === 'messaging/registration-token-not-registered') {

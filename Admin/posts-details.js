@@ -120,15 +120,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     </button>
                     <button class="share-button"><i class="fas fa-share"></i></button>
                 </div>
-                <button class="buy" data-post-id="${post._id}" ${post.isSold ? 'disabled' : ''}>${post.isSold ? 'Sold Out' : 'Buy Now'}</button>
-                <a id="send-message-link">
-                    <button class="buy" id="send-message-btn"
-                        data-recipient-id="${post.createdBy.userId}"
-                        data-product-image="${post.photo || 'default-image.png'}"
-                        data-product-description="${post.description}">
-                        ${post.isSold ? 'Unavailable' : 'Check availability'}
-                    </button>
-                </a>
+            
                 <div class="comments-list">
                     ${comments.length > 0 ? comments.map(comment => `
                         <div class="comment" data-comment-id="${comment._id}">

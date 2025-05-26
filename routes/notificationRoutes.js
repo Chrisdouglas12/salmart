@@ -4,7 +4,6 @@ const admin = require('firebase-admin');
 const User = require('../models/userSchema.js');
 const Notification = require('../models/notificationSchema.js');
 const Post = require('../models/postSchema.js');
-
 const Transaction = require('../models/transactionSchema.js');
 const Message = require('../models/messageSchema.js');
 const verifyToken = require('../middleware/auths.js');
@@ -13,7 +12,6 @@ const { sendFCMNotification } = require('../services/notificationUtils.js');
 const winston = require('winston');
 const mongoose = require('mongoose');
 
-// Configure Winston logger
 const logger = winston.createLogger({
   level: 'info',
   format: winston.format.combine(
@@ -27,13 +25,20 @@ const logger = winston.createLogger({
 });
 
 module.exports = (io) => {
+  // Middleware to attach io to req
+  router.use((req, res, next) => {
+    req.io = io;
+    logger.info('Attached io to request object');
+    next();
+  });
+
   // Update Notification Preferences
   router.patch('/user/notification-preferences', verifyToken, async (req, res) => {
     try {
       const userId = req.user.userId;
       const preferences = req.body;
       await User.findByIdAndUpdate(userId, { notificationPreferences: preferences });
-      logger.info(`Notification preferences updated for user ${userId}`);
+      logger.info(`Notification preferences updated for user ${userId}: ${JSON.stringify(preferences)}`);
       res.json({ success: true, message: 'Notification preferences updated' });
     } catch (error) {
       const userId = req.user?.userId || 'unknown';
@@ -57,7 +62,7 @@ module.exports = (io) => {
         fcmToken: token,
         notificationEnabled: true
       });
-      logger.info(`FCM token saved for user ${userId}`);
+      logger.info(`FCM token saved for user ${userId}: ${token}`);
       res.json({ success: true });
     } catch (error) {
       const userId = req.user?.userId || 'unknown';
@@ -71,7 +76,7 @@ module.exports = (io) => {
     try {
       const userId = req.user.userId;
       const user = await User.findById(userId);
-      logger.info(`Checked FCM token for user ${userId}: ${user?.fcmToken}`);
+      logger.info(`Checked FCM token for user ${userId}: ${user?.fcmToken || 'none'}, notificationEnabled: ${user?.notificationEnabled}`);
       res.json({ fcmToken: user?.fcmToken, notificationEnabled: user?.notificationEnabled });
     } catch (error) {
       const userId = req.user?.userId || 'unknown';
@@ -81,10 +86,10 @@ module.exports = (io) => {
   });
 
   // Manual Notification Test Endpoint
-  router.post('/send-notification', async (req, res) => {
+  router.post('/send-notification', verifyToken, async (req, res) => {
     const { userId, title, body, type } = req.body;
 
-    logger.info('Received request to send notification:', { userId, title, body, type });
+    logger.info(`Received request to send notification: userId=${userId}, title=${title}, type=${type}`);
 
     try {
       if (!mongoose.Types.ObjectId.isValid(userId)) {
@@ -93,7 +98,6 @@ module.exports = (io) => {
       }
 
       const user = await User.findById(userId);
-
       if (!user) {
         logger.error(`User with ID ${userId} not found in MongoDB`);
         return res.status(404).send('User not found');
@@ -104,7 +108,8 @@ module.exports = (io) => {
         return res.status(404).send('User token not found');
       }
 
-      await sendFCMNotification(userId, title, body, { type }, io);
+      logger.info(`Sending FCM notification to user ${userId}`);
+      await sendFCMNotification(userId, title, body, { type }, req.io);
       logger.info(`Notification successfully sent to user ${userId}`);
       res.status(200).send('Notification sent');
     } catch (error) {
@@ -118,16 +123,16 @@ module.exports = (io) => {
     try {
       const userId = req.query.userId || req.user.userId;
       if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
-        logger.warn('Invalid or missing user ID in notification-counts request');
+        logger.warn(`Invalid or missing user ID in notification-counts request: ${userId}`);
         return res.status(400).json({ error: 'Valid user ID is required' });
       }
       logger.info(`Fetching notification counts for user ${userId}`);
       const counts = await NotificationService.getNotificationCounts(userId);
-      await NotificationService.sendCountsToUser(io, userId, counts);
-      logger.info(`Notification counts retrieved for user ${userId}: ${JSON.stringify(counts)}`);
+      await NotificationService.sendCountsToUser(req.io, userId, counts);
+      logger.info(`Notification counts sent to user ${userId}: ${JSON.stringify(counts)}`);
       res.json(counts);
     } catch (error) {
-      const userId = req.query.userId || req.user?.userId || 'unknown'; // Safely access userId
+      const userId = req.query.userId || req.user?.userId || 'unknown';
       logger.error(`Error fetching notification counts for user ${userId}: ${error.message}`);
       res.status(500).json({ error: 'Error fetching notification counts' });
     }
@@ -143,8 +148,8 @@ module.exports = (io) => {
       );
       logger.info(`Marked ${result.modifiedCount} alerts as viewed for user ${userId}`);
       if (result.modifiedCount > 0) {
-        io.to(`user_${userId}`).emit('badge-update', { type: 'alerts', count: 0, userId });
-        await NotificationService.triggerCountUpdate(io, userId);
+        req.io.to(`user_${userId}`).emit('badge-update', { type: 'alerts', count: 0, userId });
+        await NotificationService.triggerCountUpdate(req.io, userId);
         res.json({ success: true, message: 'Alerts marked as viewed', updated: result.modifiedCount });
       } else {
         res.json({ success: true, message: 'No unread alerts to mark as viewed' });
@@ -166,8 +171,8 @@ module.exports = (io) => {
       );
       logger.info(`Marked ${result.modifiedCount} messages as viewed for user ${userId}`);
       if (result.modifiedCount > 0) {
-        io.to(`user_${userId}`).emit('badge-update', { type: 'messages', count: 0, userId });
-        await NotificationService.triggerCountUpdate(io, userId);
+        req.io.to(`user_${userId}`).emit('badge-update', { type: 'messages', count: 0, userId });
+        await NotificationService.triggerCountUpdate(req.io, userId);
         res.json({ success: true, message: 'Messages marked as viewed', updated: result.modifiedCount });
       } else {
         res.json({ success: true, message: 'No unread messages to mark as viewed' });
@@ -198,8 +203,8 @@ module.exports = (io) => {
           status: 'pending',
           viewed: false
         });
-        io.to(`user_${userId}`).emit('badge-update', { type: 'deals', count, userId });
-        await NotificationService.triggerCountUpdate(io, userId);
+        req.io.to(`user_${userId}`).emit('badge-update', { type: 'deals', count, userId });
+        await NotificationService.triggerCountUpdate(req.io, userId);
         res.json({ success: true, message: 'Deals marked as viewed', updated: result.modifiedCount });
       } else {
         res.json({ success: true, message: 'No unviewed pending deals to mark' });
