@@ -34,8 +34,8 @@ const productId = urlParams.get('product_id') || '';
 const productName = urlParams.get('product_name') ? decodeURIComponent(urlParams.get('product_name')) : '';
 const originalPrice = urlParams.get('original_price') ? parseFloat(urlParams.get('original_price')) : null;
 
-console.log('Product Image URL:', productImage); // Debug productImage value
-console.log('Predefined Message:', JSON.stringify(predefinedMessage)); // Debug predefinedMessage
+console.log('Product Image URL:', productImage);
+console.log('Predefined Message:', JSON.stringify(predefinedMessage));
 
 // Validate required URL parameters
 if (!userId || !receiverId) {
@@ -95,7 +95,7 @@ function createSystemMessage(text) {
 }
 
 // Display a message in the chat
-function displayMessage(message) {
+function displayMessage(message, isOptimistic = false) { // Added isOptimistic parameter
     if (message._id && displayedMessages.has(message._id)) {
         return;
     }
@@ -151,12 +151,13 @@ function displayMessage(message) {
         if (imageUrl) {
             const msgDiv = document.createElement('div');
             msgDiv.classList.add('message', message.senderId === userId ? 'sent' : 'received');
+            msgDiv.dataset.messageId = message._id || `temp_${Date.now()}`; // Temp ID for optimistic messages
             const time = message.createdAt ? new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
             msgDiv.innerHTML = `
                 ${message.text ? `<div>${message.text}</div>` : ''}
                 <img src="${imageUrl}" class="product-photo-preview" alt="Receipt" style="max-width: 200px; border-radius: 5px;" onerror="this.style.display='none';this.nextElementSibling.style.display='block';">
                 <p style="display:none;color:red;">Failed to load image.</p>
-                <div class="message-timestamp">${time} ${message.status === 'seen' ? '✔✔' : ''}</div>
+                <div class="message-timestamp">${time} ${message.status === 'seen' ? '✔✔' : isOptimistic ? '' : '✔'}</div>
             `;
             chatMessages.appendChild(msgDiv);
             chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -167,12 +168,13 @@ function displayMessage(message) {
     if (message.messageType === 'payment-completed' && message.attachment?.type === 'receipt') {
         const msgDiv = document.createElement('div');
         msgDiv.classList.add('message', message.senderId === userId ? 'sent' : 'received');
+        msgDiv.dataset.messageId = message._id || `temp_${Date.now()}`;
         const time = new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         msgDiv.innerHTML = `
             <div>Payment completed for ${message.offerDetails.productName}</div>
             <img src="${message.attachment.url}" class="product-photo-preview" alt="Receipt" style="max-width: 200px; border-radius: 5px;" onerror="this.style.display='none';this.nextElementSibling.style.display='block';">
             <p style="display:none;color:red;">Failed to load receipt image.</p>
-            <div class="message-timestamp">${time} ${message.status === 'seen' ? '✔✔' : ''}</div>
+            <div class="message-timestamp">${time} ${message.status === 'seen' ? '✔✔' : isOptimistic ? '' : '✔'}</div>
         `;
         chatMessages.appendChild(msgDiv);
         chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -316,7 +318,7 @@ function displayMessage(message) {
     }
 
     let msg = message.text, img = null, parsed = {};
-    console.log('Processing message:', { messageType: message.messageType, text: message.text }); // Debug
+    console.log('Processing message:', { messageType: message.messageType, text: message.text });
     if (['offer', 'counter-offer', 'buyerAccept', 'sellerAccept'].includes(message.messageType)) {
         try {
             parsed = JSON.parse(message.text);
@@ -326,7 +328,7 @@ function displayMessage(message) {
             parsed.productId = parsed.productId || (message.offerDetails?.productId) || '';
             parsed.productName = parsed.productName || (message.offerDetails?.productName) || 'Product';
             parsed.image = parsed.image || (message.offerDetails?.image) || '';
-            console.log('Parsed special message:', parsed, 'Image:', img); // Debug
+            console.log('Parsed special message:', parsed, 'Image:', img);
         } catch (e) {
             console.warn(`Failed to parse ${message.messageType} message text:`, message.text, e);
             msg = message.text;
@@ -343,8 +345,7 @@ function displayMessage(message) {
                 parsed = JSON.parse(message.text);
                 msg = parsed.text || message.text;
                 img = parsed.image || null;
-                console.log('Parsed text message:', parsed, 'Image:', img); // Debug
-                // Validate image URL
+                console.log('Parsed text message:', parsed, 'Image:', img);
                 if (img && !img.match(/^https?:\/\//)) {
                     console.warn('Invalid image URL, attempting to fix:', img);
                     img = img.startsWith('/') ? `${API_BASE_URL}${img}` : img;
@@ -357,7 +358,7 @@ function displayMessage(message) {
         } else {
             msg = message.text;
             img = null;
-            console.log('Plain text message:', msg, 'Image:', img); // Debug
+            console.log('Plain text message:', msg, 'Image:', img);
         }
     }
 
@@ -376,6 +377,7 @@ function displayMessage(message) {
 
     const msgDiv = document.createElement('div');
     msgDiv.classList.add('message', message.senderId === userId ? 'sent' : 'received');
+    msgDiv.dataset.messageId = message._id || `temp_${Date.now()}`; // Temp ID for optimistic messages
     const time = message.createdAt ? new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
 
     if (message.messageType === 'counter-offer' && parsed.productId) {
@@ -386,7 +388,7 @@ function displayMessage(message) {
     msgDiv.innerHTML = `
         <div>${msg}</div>
         ${img ? `<img src="${img}" class="product-photo-preview" alt="Product Image" style="max-width: 200px; border-radius: 5px;" onerror="this.style.display='none';this.nextElementSibling.style.display='block';"><p style="display:none;color:red;">Failed to load product image.</p>` : ''}
-        <div class="message-timestamp">${time} ${message.status === 'seen' ? '✔✔' : ''}</div>
+        <div class="message-timestamp">${time} ${message.status === 'seen' ? '✔✔' : isOptimistic ? '' : '✔'}</div>
     `;
 
     const isOfferAccepted = parsed.productId && acceptedOffers.has(parsed.productId);
@@ -422,11 +424,13 @@ function displayMessage(message) {
             acceptModal.style.display = 'block';
             document.getElementById('confirmAcceptBtn').onclick = async () => {
                 try {
+                    const token = localStorage.getItem('authToken');
+                    if (!token) throw new Error('No auth token found');
                     const response = await fetch(`${API_BASE_URL}/posts/${productDetails.productId}/update-price`, {
                         method: 'PUT',
                         headers: {
                             'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                            'Authorization': `Bearer ${token}`
                         },
                         body: JSON.stringify({ newPrice: productDetails.offer })
                     });
@@ -447,7 +451,6 @@ function displayMessage(message) {
                     });
 
                     const acceptanceMessage = {
-                        senderId: userId,
                         receiverId: productDetails.senderId,
                         messageType: 'sellerAccept',
                         text: JSON.stringify({
@@ -457,32 +460,88 @@ function displayMessage(message) {
                             offer: productDetails.offer,
                             image: parsed.image || productImage || ''
                         }),
+                        offerDetails: { // Added offerDetails for consistency
+                            productId: productDetails.productId,
+                            productName: parsed.productName,
+                            proposedPrice: productDetails.offer,
+                            image: parsed.image || productImage || '',
+                            status: 'accepted'
+                        },
                         createdAt: new Date(),
                         isRead: false
                     };
-                    socket.emit('sendMessage', acceptanceMessage);
-                    displayMessage(acceptanceMessage);
+
+                    // Optimistic display
+                    const optimisticAcceptance = { ...acceptanceMessage, senderId: userId, status: 'sent' };
+                    displayMessage(optimisticAcceptance, true);
+
+                    // Send via HTTP
+                    const acceptResponse = await fetch(`${API_BASE_URL}/send`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify(acceptanceMessage)
+                    });
+                    const acceptData = await acceptResponse.json();
+                    if (!acceptResponse.ok) throw new Error(acceptData.error || `HTTP error ${acceptResponse.status}`);
+                    const lastSentAccept = chatMessages.querySelector('.message.sent:last-child');
+                    if (lastSentAccept && acceptData.data?._id) {
+                        lastSentAccept.dataset.messageId = acceptData.data._id;
+                        displayedMessages.add(acceptData.data._id);
+                    }
 
                     const buyerAcceptMessage = {
-                        senderId: productDetails.senderId,
                         receiverId: userId,
                         messageType: 'buyerAccept',
                         text: JSON.stringify({
                             productName: parsed.productName,
                             offer: productDetails.offer,
                             buyerName: localStorage.getItem('username') || 'Buyer',
-                            image: parsed.image || productImage || ''
+                            image: parsed.image || productImage || '',
+                            productId: productDetails.productId
                         }),
+                        offerDetails: {
+                            productId: productDetails.productId,
+                            productName: parsed.productName,
+                            proposedPrice: productDetails.offer,
+                            image: parsed.image || productImage || '',
+                            status: 'accepted'
+                        },
                         createdAt: new Date(),
                         isRead: false
                     };
-                    socket.emit('sendMessage', buyerAcceptMessage);
+
+                    // Optimistic display
+                    const optimisticBuyerAccept = { ...buyerAcceptMessage, senderId: userId, status: 'sent' };
+                    displayMessage(optimisticBuyerAccept, true);
+
+                    // Send via HTTP
+                    const buyerResponse = await fetch(`${API_BASE_URL}/send`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify(buyerAcceptMessage)
+                    });
+                    const buyerData = await buyerResponse.json();
+                    if (!buyerResponse.ok) throw new Error(buyerData.error || `HTTP error ${buyerResponse.status}`);
+                    const lastSentBuyer = chatMessages.querySelector('.message.sent:last-child');
+                    if (lastSentBuyer && buyerData.data?._id) {
+                        lastSentBuyer.dataset.messageId = buyerData.data._id;
+                        displayedMessages.add(buyerData.data._id);
+                    }
 
                     acceptModal.style.display = 'none';
                     showToast('Price updated successfully!', 'success');
                 } catch (error) {
+                    console.error('Failed to accept offer:', error);
                     showToast(`Failed to accept offer: ${error.message}`, 'error');
                     acceptModal.style.display = 'none';
+                    const lastSent = chatMessages.querySelectorAll('.message.sent:last-child');
+                    lastSent.forEach(msg => msg.remove());
                 }
             };
             document.getElementById('cancelAcceptBtn').onclick = () => {
@@ -518,11 +577,13 @@ function displayMessage(message) {
             acceptModal.style.display = 'block';
             document.getElementById('confirmAcceptBtn').onclick = async () => {
                 try {
+                    const token = localStorage.getItem('authToken');
+                    if (!token) throw new Error('No auth token found');
                     const response = await fetch(`${API_BASE_URL}/posts/${productDetails.productId}/update-price`, {
                         method: 'PUT',
                         headers: {
                             'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                            'Authorization': `Bearer ${token}`
                         },
                         body: JSON.stringify({ newPrice: productDetails.offer })
                     });
@@ -543,8 +604,7 @@ function displayMessage(message) {
                     });
 
                     const acceptMessage = {
-                        senderId: userId,
-                        receiverId: productDetails.senderId,
+                        receiverId: userId,
                         messageType: 'buyerAccept',
                         text: JSON.stringify({
                             text: `Last price of ${productDetails.offer.toLocaleString('en-NG')} for ${parsed.productName} has been accepted`,
@@ -554,17 +614,46 @@ function displayMessage(message) {
                             buyerName: localStorage.getItem('username') || 'Buyer',
                             image: parsed.image || productImage || ''
                         }),
+                        offerDetails: {
+                            productId: productDetails.productId,
+                            productName: parsed.productName,
+                            proposedPrice: productDetails.offer,
+                            image: parsed.image || productImage || '',
+                            status: 'accepted'
+                        },
                         createdAt: new Date(),
                         isRead: false
                     };
-                    socket.emit('sendMessage', acceptMessage);
-                    displayMessage(acceptMessage);
+
+                    // Optimistic display
+                    const optimisticAccept = { ...acceptMessage, senderId: userId, status: 'sent' };
+                    displayMessage(optimisticAccept, true);
+
+                    // Send via HTTP
+                    const acceptResponse = await fetch(`${API_BASE_URL}/send`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify(acceptMessage)
+                    });
+                    const acceptData = await acceptResponse.json();
+                    if (!acceptResponse.ok) throw new Error(acceptData.error || `HTTP error ${acceptResponse.status}`);
+                    const lastSent = chatMessages.querySelector('.message.sent:last-child');
+                    if (lastSent && acceptData.data?._id) {
+                        lastSent.dataset.messageId = acceptData.data._id;
+                        displayedMessages.add(acceptData.data._id);
+                    }
 
                     acceptModal.style.display = 'none';
                     showToast('Offer accepted successfully!', 'success');
                 } catch (error) {
+                    console.error('Failed to accept counter-offer:', error);
                     showToast(`Failed to accept offer: ${error.message}`, 'error');
                     acceptModal.style.display = 'none';
+                    const lastSent = chatMessages.querySelector('.message.sent:last-child');
+                    if (lastSent) lastSent.remove();
                 }
             };
             document.getElementById('cancelAcceptBtn').onclick = () => {
@@ -575,37 +664,69 @@ function displayMessage(message) {
         const endBargainBtn = document.createElement('button');
         endBargainBtn.className = 'end-bargain-btn';
         endBargainBtn.textContent = 'End Bargain';
-        endBargainBtn.onclick = () => {
+        endBargainBtn.onclick = async () => {
             const productDetails = {
                 productId: parsed.productId,
                 productName: parsed.productName
             };
 
-            endedBargains.add(productDetails.productId);
+            try {
+                const token = localStorage.getItem('authToken');
+                if (!token) throw new Error('No auth token found');
+                endedBargains.add(productDetails.productId);
 
-            const offerMessages = document.querySelectorAll(`.message.received`);
-            offerMessages.forEach(msg => {
-                if (msg.innerHTML.includes(parsed.productId)) {
-                    const buttons = msg.querySelectorAll('.accept-offer-btn, .end-bargain-btn');
-                    buttons.forEach(btn => btn.remove());
+                const offerMessages = document.querySelectorAll(`.message.received`);
+                offerMessages.forEach(msg => {
+                    if (msg.innerHTML.includes(parsed.productId)) {
+                        const buttons = msg.querySelectorAll('.accept-offer-btn, .end-bargain-btn');
+                        buttons.forEach(btn => btn.remove());
+                    }
+                });
+
+                const endBargainMessage = {
+                    receiverId: message.senderId,
+                    messageType: 'end-bargain',
+                    text: JSON.stringify({
+                        productId: productDetails.productId,
+                        productName: productDetails.productName
+                    }),
+                    offerDetails: {
+                        productId: parsed.productId,
+                        productName: parsed.productName,
+                        status: 'rejected'
+                    },
+                    createdAt: new Date(),
+                    isRead: false
+                };
+
+                // Optimistic display
+                const optimisticEnd = { ...endBargainMessage, senderId: userId, status: 'sent' };
+                displayMessage(optimisticEnd, true);
+
+                // Send via HTTP
+                const endResponse = await fetch(`${API_BASE_URL}/send`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(endBargainMessage)
+                });
+                const endData = await endResponse.json();
+                if (!endResponse.ok) throw new Error(endData.error || `HTTP error ${endResponse.status}`);
+                const lastSent = chatMessages.querySelector('.message.sent:last-child');
+                if (lastSent && endData.data?._id) {
+                    lastSent.dataset.messageId = endData.data._id;
+                    displayedMessages.add(endData.data._id);
                 }
-            });
 
-            const endBargainMessage = {
-                senderId: userId,
-                receiverId: message.senderId,
-                messageType: 'end-bargain',
-                text: JSON.stringify({
-                    productId: productDetails.productId,
-                    productName: productDetails.productName
-                }),
-                createdAt: new Date(),
-                isRead: false
-            };
-            socket.emit('sendMessage', endBargainMessage);
-            displayMessage(endBargainMessage);
-
-            showToast('Bargain ended successfully!', 'success');
+                showToast('Bargain ended successfully!', 'success');
+            } catch (error) {
+                console.error('Failed to end bargain:', error);
+                showToast(`Failed to end bargain: ${error.message}`, 'error');
+                const lastSent = chatMessages.querySelector('.message.sent:last-child');
+                if (lastSent) lastSent.remove();
+            }
         };
 
         msgDiv.appendChild(acceptBtn);
@@ -695,11 +816,10 @@ function displayMessage(message) {
 // Open modal for seller to send a counteroffer
 function openLastPriceModal(productId, productName, productImage) {
     lastPriceModal.style.display = 'block';
-    submitLastPriceBtn.onclick = () => {
+    submitLastPriceBtn.onclick = async () => { // Changed to async
         const lastPrice = lastPriceInput.value.trim();
         if (lastPrice && !isNaN(lastPrice) && Number(lastPrice) > 0) {
             const message = {
-                senderId: userId,
                 receiverId: receiverId,
                 messageType: 'counter-offer',
                 text: JSON.stringify({
@@ -719,14 +839,36 @@ function openLastPriceModal(productId, productName, productImage) {
                 createdAt: new Date(),
                 isRead: false
             };
+
+            // Optimistic display
+            const optimisticMessage = { ...message, senderId: userId, status: 'sent' };
+            displayMessage(optimisticMessage, true);
+
             try {
-                socket.emit('sendMessage', message);
-                displayMessage(message);
-                console.log('Last price sent:', message);
+                const token = localStorage.getItem('authToken');
+                if (!token) throw new Error('No auth token found');
+                const response = await fetch(`${API_BASE_URL}/send`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(message)
+                });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.error || `HTTP error ${response.status}`);
+                const lastSent = chatMessages.querySelector('.message.sent:last-child');
+                if (lastSent && data.data?._id) {
+                    lastSent.dataset.messageId = data.data._id;
+                    displayedMessages.add(data.data._id);
+                }
+                console.log('Last price sent:', data);
                 closeLastPriceModal();
             } catch (error) {
                 console.error('Error sending last price:', error);
-                showToast('Failed to send last price', 'error');
+                showToast(`Failed to send last price: ${error.message}`, 'error');
+                const lastSent = chatMessages.querySelector('.message.sent:last-child');
+                if (lastSent) lastSent.remove();
             }
         } else {
             showToast('Please enter a valid positive number', 'error');
@@ -806,13 +948,12 @@ bargainBtn.onclick = async () => {
                 }
             });
 
-            sendButton.onclick = () => {
+            sendButton.onclick = async () => { // Changed to async
                 let price = priceInput.value.replace(/,/g, '');
                 if (price && !isNaN(price) && Number(price) > 0) {
                     sendButton.disabled = true;
                     sendButton.textContent = 'Sending...';
                     const message = {
-                        senderId: userId,
                         receiverId,
                         messageType: 'offer',
                         text: JSON.stringify({
@@ -832,22 +973,40 @@ bargainBtn.onclick = async () => {
                         createdAt: new Date(),
                         isRead: false
                     };
+
+                    // Optimistic display
+                    const optimisticMessage = { ...message, senderId: userId, status: 'sent' };
+                    displayMessage(optimisticMessage, true);
+
                     try {
+                        const token = localStorage.getItem('authToken');
+                        if (!token) throw new Error('No auth token found');
+                        const response = await fetch(`${API_BASE_URL}/send`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${token}`
+                            },
+                            body: JSON.stringify(message)
+                        });
+                        const data = await response.json();
+                        if (!response.ok) throw new Error(data.error || `HTTP error ${response.status}`);
+                        const lastSent = chatMessages.querySelector('.message.sent:last-child');
+                        if (lastSent && data.data?._id) {
+                            lastSent.dataset.messageId = data.data._id;
+                            displayedMessages.add(data.data._id);
+                        }
+                        console.log('Offer sent:', data);
                         closeBargainModal();
-                        socket.emit('sendMessage', message);
-                        displayMessage(message);
-                        console.log('Offer sent and modal closed');
                     } catch (error) {
-                        console.error('Error sending message:', error);
-                        showToast('Failed to send offer', 'error');
+                        console.error('Error sending offer:', error);
+                        showToast(`Failed to send offer: ${error.message}`, 'error');
+                        const lastSent = chatMessages.querySelector('.message.sent:last-child');
+                        if (lastSent) lastSent.remove();
+                    } finally {
                         sendButton.disabled = false;
                         sendButton.textContent = 'Send Offer';
-                        return;
                     }
-                    setTimeout(() => {
-                        sendButton.disabled = false;
-                        sendButton.textContent = 'Send Offer';
-                    }, 2000);
                 } else {
                     showToast('Please enter a valid positive number', 'error');
                 }
@@ -882,7 +1041,8 @@ function closeBargainModal() {
 }
 
 // Send a new message from the chat input
-sendBtn.onclick = () => {
+
+sendBtn.onclick = async () => {
     const text = typeSection.value.trim();
     if (!text) {
         console.log('Empty message not sent');
@@ -902,10 +1062,9 @@ sendBtn.onclick = () => {
         normalizedPredefined,
         isInitialMessage,
         isInitialMessageSent
-    }); // Debug
+    });
 
     const message = {
-        senderId: userId,
         receiverId,
         text: isInitialMessage ? JSON.stringify({ text, image: productImage }) : text,
         messageType: 'text',
@@ -919,12 +1078,16 @@ sendBtn.onclick = () => {
         parsed: message.text.startsWith('{') ? JSON.parse(message.text) : null,
         isInitialMessage,
         isInitialMessageSent
-    }); // Debug
+    });
 
-    socket.emit('sendMessage', message);
-    displayMessage({ ...message, status: 'sent' });
+    // Optimistic display
+    const optimisticMessage = { ...message, senderId: userId, status: 'sent' };
+    displayMessage(optimisticMessage, true);
+
+    // Clear input immediately
     typeSection.value = '';
 
+    // Handle initial message preview removal
     if (isInitialMessage) {
         isInitialMessageSent = true;
         localStorage.setItem(`initialMessageSent_${productId}_${receiverId}`, 'true');
@@ -933,8 +1096,32 @@ sendBtn.onclick = () => {
             previewContainer.remove();
         }
     }
-};
 
+    try {
+        const token = localStorage.getItem('authToken');
+        if (!token) throw new Error('No auth token found');
+        const response = await fetch(`${API_BASE_URL}/send`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(message)
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || `HTTP error ${response.status}`);
+        const lastSent = chatMessages.querySelector('.message.sent:last-child');
+        if (lastSent && data.data?._id) {
+            lastSent.dataset.messageId = data.data._id;
+            displayedMessages.add(data.data._id);
+        }
+    } catch (error) {
+        console.error('Error sending message:', error);
+        showToast(`Failed to send message: ${error.message}`, 'error');
+        const lastSent = chatMessages.querySelector('.message.sent:last-child');
+        if (lastSent) lastSent.remove();
+    }
+};
 // Handle incoming messages
 socket.on('newMessage', message => {
     if (!((message.senderId === userId && message.receiverId === receiverId) ||
@@ -1092,7 +1279,6 @@ async function loadChatHistory() {
 
         lastDisplayedDate = null;
         validMessages.forEach(displayMessage);
-
         // Update localStorage with fetched messages
         localStorage.setItem(`chat_${userId}_${receiverId}`, JSON.stringify(validMessages));
     } catch (error) {

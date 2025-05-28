@@ -240,87 +240,104 @@ router.post('/request-refund/:transactionId', verifyToken, async (req, res) => {
   }
 });
 
-// Confirm Delivery
+// Confirm delivery and release payment to seller
 router.post('/confirm-delivery/:transactionId', verifyToken, async (req, res) => {
+  const transactionId = req.params.transactionId;
+  console.log('\n[CONFIRM DELIVERY INITIATED] Transaction ID:', transactionId);
+
   try {
-    const transactionId = req.params.transactionId;
-    const userId = req.user.userId;
-
+    // Fetch transaction and populate buyer, seller, product
     const transaction = await Transaction.findById(transactionId).populate('buyerId sellerId productId');
+
     if (!transaction) {
-      return res.status(404).json({ success: false, message: 'Transaction not found' });
+      console.log('[ERROR] Transaction not found');
+      return res.status(404).json({ error: "Transaction not found" });
     }
 
-    if (transaction.buyerId._id.toString() !== userId) {
-      return res.status(403).json({ success: false, message: 'Unauthorized' });
-    }
-
+    // Extract seller object and validate bank details
     const seller = transaction.sellerId;
-    if (!seller.bankDetails?.accountNumber || !seller.bankDetails?.bankCode) {
-      return res.status(400).json({ success: false, message: 'Seller bank details missing' });
+    if (!seller.bankDetails || !seller.bankDetails.accountNumber || !seller.bankDetails.bankCode) {
+      console.warn('[BANK DETAILS MISSING OR INVALID]');
+      return res.status(400).json({
+        error: "Seller has not added valid bank details. Payment cannot be processed until seller updates their account."
+      });
     }
 
-    let beneficiaryId = seller.flutterwaveBeneficiaryId;
-    if (!beneficiaryId) {
-      const beneficiaryPayload = {
+    // === Check or create Paystack recipient ===
+    let recipientCode = seller.paystackRecipientCode;
+    if (!recipientCode) {
+      const recipientPayload = {
+        type: 'nuban',
+        name: `${seller.firstName} ${seller.lastName}`,
         account_number: seller.bankDetails.accountNumber,
-        account_bank: seller.bankDetails.bankCode,
-        account_name: `${seller.firstName} ${seller.lastName}`,
-        currency: 'NGN',
+        bank_code: seller.bankDetails.bankCode,
+        currency: 'NGN'
       };
-      const beneficiaryResponse = await axios.post(
-        'https://api.flutterwave.com/v3/beneficiaries',
-        beneficiaryPayload,
-        { headers: { Authorization: `Bearer ${process.env.FLUTTERWAVE_SECRET_KEY}` } }
+
+      const recipientResponse = await axios.post(
+        'https://api.paystack.co/transferrecipient',
+        recipientPayload,
+        { headers: { Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}` } }
       );
 
-      if (beneficiaryResponse.data.status !== 'success') {
-        return res.status(400).json({ success: false, message: 'Failed to create beneficiary' });
-      }
-
-      beneficiaryId = beneficiaryResponse.data.data.id;
-      seller.flutterwaveBeneficiaryId = beneficiaryId;
-      seller.account_number = seller.bankDetails.accountNumber;
-      seller.bank_code = seller.bankDetails.bankCode;
+      recipientCode = recipientResponse.data.data.recipient_code;
+      seller.paystackRecipientCode = recipientCode;
       await seller.save();
     }
 
+    // === Calculate amount to transfer ===
     const productPrice = transaction.productId?.price || 0;
-    const commission = (2.5 / 100) * productPrice;
+    const commissionPercent = 2.5;
+    const commission = Math.floor((commissionPercent / 100) * productPrice);
     const amountToTransfer = productPrice - commission;
 
+    // === Initiate Transfer ===
     const transferPayload = {
-      account_bank: seller.bankDetails.bankCode,
-      account_number: seller.bankDetails.accountNumber,
-      amount: amountToTransfer,
-      currency: 'NGN',
-      narration: `Payment for product: ${transaction.productId?.description}`,
-      beneficiary: beneficiaryId,
+      source: 'balance',
+      amount: amountToTransfer * 100,
+      recipient: recipientCode,
+      reason: `Payment for product: ${transaction.productId?.description}`
     };
 
     const transferResponse = await axios.post(
-      'https://api.flutterwave.com/v3/transfers',
+      'https://api.paystack.co/transfer',
       transferPayload,
-      { headers: { Authorization: `Bearer ${process.env.FLUTTERWAVE_SECRET_KEY}` } }
+      { headers: { Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}` } }
     );
 
-    if (transferResponse.data.status !== 'success') {
-      return res.status(400).json({ success: false, message: 'Transfer failed' });
+    console.log('[TRANSFER INITIATED]', transferResponse.data);
+    const transferStatus = transferResponse.data.data.status;
+
+    // === OTP Required Handling ===
+    if (transferStatus === 'otp') {
+      transaction.transferReference = transferResponse.data.data.transfer_code;
+      transaction.otpRequired = true;
+      await transaction.save();
+
+      console.log('[OTP REQUIRED FOR TRANSFER] Transfer Code:', transaction.transferReference);
+
+      return res.status(200).json({
+        message: "OTP is required to complete the transfer. Please enter the OTP to proceed.",
+        otpRequired: true,
+        transferReference: transaction.transferReference
+      });
     }
 
+    // === Transfer Successful, update transaction ===
     transaction.status = 'released';
     await transaction.save();
-    await Post.findByIdAndUpdate(transaction.productId._id, { isSold: true });
 
-    res.status(200).json({
-      success: true,
-      message: 'Delivery confirmed. Payment released to seller.',
+    console.log('[TRANSACTION STATUS UPDATED TO "released"]');
+
+    return res.status(200).json({
+      message: "Delivery confirmed. Payment released to seller.",
       transferReference: transferResponse.data.data.reference,
-      amountTransferred: amountToTransfer,
+      amountTransferred: amountToTransfer
     });
-  } catch (error) {
-    console.error('Confirm delivery error:', error.message);
-    res.status(500).json({ success: false, message: 'Server error' });
+
+  } catch (err) {
+    console.error('[CONFIRM DELIVERY SERVER ERROR]', err);
+    return res.status(500).json({ error: "Something went wrong.", details: err.message || 'Unknown error' });
   }
 });
 
