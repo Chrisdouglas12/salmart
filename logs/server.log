@@ -1462,3 +1462,9 @@
 {"level":"info","message":"Socket connected: uDVeqfp4q3ibDHrPAAAO","timestamp":"2025-05-29T18:11:34.228Z"}
 {"level":"info","message":"[2025-05-29T18:11:59.608Z] GET /notification-counts?userId=67b6fbdedfb7a20620fcb1d1","timestamp":"2025-05-29T18:11:59.608Z"}
 {"level":"info","message":"[2025-05-29T18:12:29.619Z] GET /notification-counts?userId=67b6fbdedfb7a20620fcb1d1","timestamp":"2025-05-29T18:12:29.619Z"}
+{"level":"info","message":"✅ Firebase Admin SDK initialized successfully","timestamp":"2025-05-29T19:48:51.906Z"}
+{"level":"info","message":"✅ Socket.IO initialized","timestamp":"2025-05-29T19:48:52.134Z"}
+{"level":"info","message":"✅ Nodemailer configured","timestamp":"2025-05-29T19:48:52.225Z"}
+{"level":"info","message":"✅ Cloudinary configured","timestamp":"2025-05-29T19:48:52.228Z"}
+{"level":"info","message":"✅ Server running on port 3000","timestamp":"2025-05-29T19:48:52.281Z"}
+{"level":"info","message":"✅ MongoDB connected successfully","timestamp":"2025-05-29T19:48:55.952Z"}
