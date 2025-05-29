@@ -3,6 +3,7 @@ const router = express.Router();
 const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 const path = require('path');
+const fs = require('fs');
 const Post = require('../models/postSchema.js');
 const User = require('../models/userSchema.js');
 const Report = require('../models/reportSchema.js');
@@ -13,67 +14,118 @@ const { sendFCMNotification } = require('../services/notificationUtils.js');
 const multer = require('multer');
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const cloudinary = require('cloudinary').v2;
+const ffmpeg = require('fluent-ffmpeg');
+const ffprobePath = '/data/data/com.termux/files/usr/bin/ffprobe';
+ffmpeg.setFfprobePath(ffprobePath);
+
+const sanitizeHtml = require('sanitize-html');
 const winston = require('winston');
-const admin = require('firebase-admin');
 
 const logger = winston.createLogger({
   level: 'info',
-  format: winston.format.combine(
-    winston.format.timestamp(),
-    winston.format.json()
-  ),
+  format: winston.format.combine(winston.format.timestamp(), winston.format.json()),
   transports: [
     new winston.transports.File({ filename: 'logs/postRoutes.log' }),
-    new winston.transports.Console()
-  ]
+    new winston.transports.Console(),
+  ],
 });
 
+// Cloudinary configuration
 cloudinary.config({
   cloud_name: process.env.CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET
+  api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 logger.info('✅ Cloudinary configured in postRoutes');
 
 const isProduction = process.env.NODE_ENV === 'production';
+
+// Multer storage config
 let storage;
 if (isProduction) {
   storage = new CloudinaryStorage({
     cloudinary: cloudinary,
     params: {
       folder: 'Uploads',
-      allowed_formats: ['jpg', 'png', 'jpeg']
-    }
+      resource_type: 'auto',
+      allowed_formats: ['jpg', 'png', 'jpeg', 'mp4'],
+    },
   });
 } else {
   const uploadDir = path.join(__dirname, '../Uploads/');
-  if (!require('fs').existsSync(uploadDir)) require('fs').mkdirSync(uploadDir, { recursive: true });
+  if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+
   storage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, uploadDir),
     filename: (req, file, cb) => {
-      const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1E9)}`;
+      const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
       const fileExt = path.extname(file.originalname);
       cb(null, `${uniqueSuffix}${fileExt}`);
-    }
+    },
   });
 }
-const upload = multer({ storage });
+
+const upload = multer({
+  storage,
+  limits: { fileSize: 6 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const filetypes = /jpeg|jpg|png|mp4/;
+    const mimetype = filetypes.test(file.mimetype);
+    const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+    if (mimetype && extname) return cb(null, true);
+    cb(new Error('Invalid file type. Only JPEG, PNG, and MP4 are allowed.'));
+  },
+});
+
+const getVideoDuration = (filePath) => {
+  return new Promise((resolve, reject) => {
+    ffmpeg.ffprobe(filePath, (err, metadata) => {
+      if (err) return reject(err);
+      resolve(metadata.format.duration);
+    });
+  });
+};
+
+const compressVideo = (inputPath, outputPath) => {
+  return new Promise((resolve, reject) => {
+    ffmpeg(inputPath)
+      .videoCodec('libx264')
+      .audioCodec('aac')
+      .outputOptions(['-crf 23', '-preset fast', '-movflags +faststart', '-maxrate 1M', '-bufsize 2M'])
+      .on('end', () => resolve(outputPath))
+      .on('error', (err) => reject(err))
+      .save(outputPath);
+  });
+};
+
+const generateThumbnail = (videoPath, outputPath) => {
+  return new Promise((resolve, reject) => {
+    ffmpeg(videoPath)
+      .screenshots({
+        count: 1,
+        folder: path.dirname(outputPath),
+        filename: path.basename(outputPath),
+        size: '320x240',
+      })
+      .on('end', () => resolve(outputPath))
+      .on('error', (err) => reject(err));
+  });
+};
+
+const uploadToCloudinary = (filePath, resourceType = 'auto') => {
+  return new Promise((resolve, reject) => {
+    cloudinary.uploader.upload(filePath, { resource_type: resourceType }, (error, result) => {
+      if (error) return reject(error);
+      resolve(result.secure_url);
+    });
+  });
+};
 
 module.exports = (io) => {
   router.use((req, res, next) => {
     req.io = io;
     logger.info('Attached io to request object in postRoutes');
     next();
-  });
-
-  router.post('/upload', upload.single('image'), (req, res) => {
-    if (!req.file) {
-      logger.warn('No file uploaded in /upload');
-      return res.status(400).json({ error: 'No file uploaded' });
-    }
-    const imageUrl = isProduction ? req.file.path : `${req.protocol}://${req.get('host')}/Uploads/${req.file.filename}`;
-    logger.info(`File uploaded: ${imageUrl}`);
-    res.json({ imageUrl });
   });
 
   router.post(
@@ -91,33 +143,76 @@ module.exports = (io) => {
           return res.status(404).json({ message: 'User not found' });
         }
 
+        const validCategories = ['electronics', 'fashion', 'home', 'vehicles', 'music', 'others'];
+        if (!validCategories.includes(category)) {
+          logger.warn(`Invalid category ${category} by user ${userId}`);
+          return res.status(400).json({ message: 'Invalid category' });
+        }
+
+        const sanitizedDescription = sanitizeHtml(description, {
+          allowedTags: [],
+          allowedAttributes: {},
+        });
+
+        let photoUrl = null;
+        let videoUrl = null;
+        let thumbnailUrl = null;
+
         if (postType === 'video_ad') {
-          if (!description || !category || !req.files.video) {
+          if (!description || !category || !req.files?.video?.[0]) {
             logger.warn(`Missing fields in video ad creation by user ${userId}`);
-            return res.status(400).json({ message: 'Description, category and video are required for video ads' });
+            return res.status(400).json({ message: 'Description, category, and video are required for video ads' });
           }
-        } else {
-          if (!description || !productCondition || !price || !location || !category || !req.files.photo) {
+
+          const videoPath = isProduction ? req.files.video[0].path : req.files.video[0].path;
+          const duration = await getVideoDuration(videoPath);
+          if (duration > 60) {
+            logger.warn(`Video duration ${duration}s exceeds 60s limit for user ${userId}`);
+            return res.status(400).json({ message: 'Video duration cannot exceed 60 seconds' });
+          }
+
+          const uploadDir = path.join(__dirname, '../Uploads/');
+          if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+
+          const compressedFilename = `compressed-${Date.now()}-${req.files.video[0].filename}`;
+          const compressedPath = path.join(uploadDir, compressedFilename);
+          await compressVideo(videoPath, compressedPath);
+
+          const thumbnailFilename = `thumb-${Date.now()}-${req.files.video[0].filename.replace(/\.mp4$/, '.jpg')}`;
+          const thumbnailPath = path.join(uploadDir, thumbnailFilename);
+          await generateThumbnail(compressedPath, thumbnailPath);
+
+          if (isProduction) {
+            videoUrl = await uploadToCloudinary(compressedPath, 'video');
+            thumbnailUrl = await uploadToCloudinary(thumbnailPath, 'image');
+            fs.unlinkSync(compressedPath);
+            fs.unlinkSync(thumbnailPath);
+            if (!isProduction) fs.unlinkSync(videoPath);
+          } else {
+            videoUrl = `${req.protocol}://${req.get('host')}/Uploads/${compressedFilename}`;
+            thumbnailUrl = `${req.protocol}://${req.get('host')}/Uploads/${thumbnailFilename}`;
+          }
+        } else if (postType === 'regular') {
+          if (!description || !productCondition || !price || !location || !category || !req.files?.photo?.[0]) {
             logger.warn(`Missing fields in regular post creation by user ${userId}`);
             return res.status(400).json({ message: 'All fields are required for regular posts' });
           }
-        }
+          if (isNaN(price) || Number(price) < 0) {
+            logger.warn(`Invalid price ${price} by user ${userId}`);
+            return res.status(400).json({ message: 'Price must be a valid non-negative number' });
+          }
 
-        const photoUrl = req.files.photo
-          ? isProduction
+          photoUrl = isProduction
             ? req.files.photo[0].path
-            : `${req.protocol}://${req.get('host')}/Uploads/${req.files.photo[0].filename}`
-          : null;
-
-        const videoUrl = req.files.video
-          ? isProduction
-            ? req.files.video[0].path
-            : `${req.protocol}://${req.get('host')}/Uploads/${req.files.video[0].filename}`
-          : null;
+            : `${req.protocol}://${req.get('host')}/Uploads/${req.files.photo[0].filename}`;
+        } else {
+          logger.warn(`Invalid postType ${postType} by user ${userId}`);
+          return res.status(400).json({ message: 'Invalid post type' });
+        }
 
         const newPost = new Post({
           postType,
-          description,
+          description: sanitizedDescription,
           category,
           profilePicture: user.profilePicture || 'default.jpg',
           createdBy: {
@@ -126,52 +221,116 @@ module.exports = (io) => {
           },
           createdAt: new Date(),
           likes: [],
+          ...(postType === 'video_ad' ? { video: videoUrl, thumbnail: thumbnailUrl } : { photo: photoUrl, location, productCondition, price: Number(price) }),
         });
-
-        if (postType === 'video_ad') {
-          newPost.video = videoUrl;
-        } else {
-          newPost.photo = photoUrl;
-          newPost.location = location;
-          newPost.productCondition = productCondition;
-          newPost.price = Number(price);
-        }
 
         await newPost.save();
         logger.info(`Post created by user ${userId}: ${newPost._id}`);
 
-        const followers = await Follow.find({ following: userId }).distinct('follower');
-        logger.info(`Found ${followers.length} followers for user ${userId}`);
-        for (const followerId of followers) {
-          if (followerId.toString() !== userId.toString()) {
-            const notification = new Notification({
-              userId: followerId,
-              type: 'new_post',
-              senderId: userId,
-              postId: newPost._id,
-              message: `${user.firstName} ${user.lastName} created a new post`,
-              createdAt: new Date(),
-            });
-            await notification.save();
-            logger.info(`Created notification for follower ${followerId} for post ${newPost._id}`);
-            await sendFCMNotification(
-              followerId,
-              'New Post',
-              `${user.firstName} ${user.lastName} created a new post`,
-              { type: 'new_post', postId: newPost._id.toString() },
-              req.io
-            );
-            await NotificationService.triggerCountUpdate(req.io, followerId);
-          }
-        }
+        const followers = user.followers || [];
+        const notificationPromises = followers
+          .filter((followerId) => followerId.toString() !== userId.toString())
+          .map(async (followerId) => {
+            try {
+              const follower = await User.findById(followerId).select('notificationPreferences fcmToken blockedUsers').lean();
+              if (follower.blockedUsers?.includes(userId)) {
+                logger.info(`Skipping notification for blocked user ${followerId}`);
+                return;
+              }
+
+              if (follower.notificationPreferences?.posts !== false) {
+                const notification = new Notification({
+                  userId: followerId,
+                  type: 'new_post',
+                  senderId: userId,
+                  postId: newPost._id,
+                  message: `${user.firstName} ${user.lastName} created a new post`,
+                  createdAt: new Date(),
+                });
+                await notification.save();
+                logger.info(`Created notification for follower ${followerId} for post ${newPost._id}`);
+
+                if (follower.fcmToken && follower.notificationEnabled !== false) {
+                  await sendFCMNotification(
+                    followerId,
+                    'New Post',
+                    `${user.firstName} ${user.lastName} created a new post`,
+                    { type: 'new_post', postId: newPost._id.toString() },
+                    req.io
+                  );
+                }
+
+                await NotificationService.triggerCountUpdate(req.io, followerId);
+              }
+            } catch (notifError) {
+              logger.error(`Notification error for user ${followerId}: ${notifError.message}`);
+            }
+          });
+
+        await Promise.all(notificationPromises);
 
         res.status(201).json({ message: 'Post created successfully', post: newPost });
       } catch (error) {
         logger.error(`Post creation error for user ${req.user.userId}: ${error.message}`);
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).json({ message: `Server error: ${error.message}` });
       }
     }
   );
+
+  router.get('/post', async (req, res) => {
+  try {
+    let loggedInUserId = null;
+    const { category } = req.query;
+
+    // Build optional category filter
+    const validCategories = ['electronics', 'fashion', 'home', 'vehicles', 'music', 'others'];
+    const categoryFilter = category && validCategories.includes(category)
+      ? { category }
+      : {};
+
+    // Fetch all post types (photo and video_ad), sorted by creation time
+    const posts = await Post.find(categoryFilter).sort({ createdAt: -1 });
+    if (!posts || posts.length === 0) {
+      logger.info(`No posts found for query: ${JSON.stringify(categoryFilter)}`);
+      return res.status(404).json({ message: 'No posts found' });
+    }
+
+    // Get the list of users the logged-in user is following
+    const following = loggedInUserId
+      ? await User.findById(loggedInUserId).select('following').lean().then((u) => u?.following || [])
+      : [];
+
+    // Populate posts with user info and appropriate media
+    const populatedPosts = await Promise.all(
+      posts.map(async (post) => {
+        const user = await User.findById(post.createdBy.userId).select('profilePicture firstName lastName').lean();
+        const isFollowing = following.some(
+          (followedId) => followedId.toString() === post.createdBy.userId.toString()
+        );
+
+        return {
+          ...post.toObject(),
+          profilePicture: user?.profilePicture || 'default-avatar.png',
+          createdBy: {
+            ...post.createdBy,
+            name: user ? `${user.firstName} ${user.lastName}` : post.createdBy.name,
+          },
+          isFollowing,
+          postType: post.postType,
+          media: post.postType === 'video_ad'
+            ? { video: post.video, thumbnail: post.thumbnail }
+            : { photo: post.photo },
+        };
+      })
+    );
+
+    logger.info(`Fetched ${populatedPosts.length} posts for user ${loggedInUserId || 'anonymous'}`);
+    res.status(200).json(populatedPosts);
+  } catch (error) {
+    logger.error(`Error fetching posts: ${error.message}`);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
 
   router.get('/post/:postId', async (req, res) => {
     try {
@@ -204,11 +363,11 @@ module.exports = (io) => {
         createdBy: {
           userId: post.createdBy.userId._id,
           name: `${post.createdBy.userId.firstName} ${post.createdBy.userId.lastName}`,
-          profilePicture: post.createdBy.userId.profilePicture || 'default-avatar.png'
+          profilePicture: post.createdBy.userId.profilePicture || 'default-avatar.png',
         },
         likes: post.likes || [],
         comments: post.comments || [],
-        isLiked: loggedInUserId ? post.likes.includes(loggedInUserId) : false
+        isLiked: loggedInUserId ? post.likes.includes(loggedInUserId) : false,
       };
 
       delete postData.createdBy.userId._id;
@@ -217,55 +376,6 @@ module.exports = (io) => {
     } catch (error) {
       logger.error(`Error fetching post ${req.params.postId}: ${error.message}`);
       res.status(500).json({ success: false, message: 'Server error' });
-    }
-  });
-
-  router.get('/post', async (req, res) => {
-    try {
-      let loggedInUserId = null;
-      const { category } = req.query;
-
-      const authHeader = req.headers['authorization'];
-      if (authHeader && authHeader.startsWith('Bearer ')) {
-        const token = authHeader.split(' ')[1];
-        try {
-          const decoded = jwt.verify(token, process.env.JWT_SECRET);
-          loggedInUserId = decoded.userId;
-        } catch (err) {
-          logger.warn(`Invalid token in get posts: ${err.message}`);
-        }
-      }
-
-      const query = {};
-      if (category && ['electronics', 'fashion', 'home', 'vehicles', 'music', 'others'].includes(category)) {
-        query.category = category;
-      }
-
-      const posts = await Post.find(query).sort({ createdAt: -1 });
-      if (!posts || posts.length === 0) {
-        logger.info(`No posts found for query: ${JSON.stringify(query)}`);
-        return res.status(404).json({ message: 'No posts found' });
-      }
-
-      const following = loggedInUserId
-        ? await Follow.find({ follower: loggedInUserId }).distinct('following')
-        : [];
-
-      const populatedPosts = await Promise.all(posts.map(async (post) => {
-        const user = await User.findById(post.createdBy.userId);
-        const isFollowing = following.includes(post.createdBy.userId);
-        return {
-          ...post.toObject(),
-          profilePicture: user?.profilePicture || '',
-          isFollowing
-        };
-      }));
-
-      logger.info(`Fetched ${populatedPosts.length} posts for user ${loggedInUserId || 'anonymous'}`);
-      res.status(200).json(populatedPosts);
-    } catch (error) {
-      logger.error(`Error fetching posts: ${error.message}`);
-      res.status(500).json({ message: 'Server error' });
     }
   });
 
@@ -296,14 +406,14 @@ module.exports = (io) => {
         return res.status(404).json({ success: false, message: 'Post not found' });
       }
 
-      const userIndex = post.likes.findIndex(id => id.toString() === userId.toString());
+      const userIndex = post.likes.findIndex((id) => id.toString() === userId.toString());
       const alreadyLiked = userIndex !== -1;
 
       if (alreadyLiked) {
         post.likes.splice(userIndex, 1);
         logger.info(`User ${userId} unliked post ${postId}`);
       } else {
-        if (!post.likes.some(id => id.toString() === userId.toString())) {
+        if (!post.likes.some((id) => id.toString() === userId.toString())) {
           post.likes.push(userId);
           logger.info(`User ${userId} liked post ${postId}`);
           if (post.createdBy.userId.toString() !== userId.toString()) {
@@ -325,7 +435,6 @@ module.exports = (io) => {
               { type: 'like', postId: postId.toString() },
               req.io
             );
-            // Fix: Pass userId as string
             await NotificationService.triggerCountUpdate(req.io, post.createdBy.userId.toString());
           }
         }
@@ -337,7 +446,7 @@ module.exports = (io) => {
         likes: updatedPost.likes,
         likeCount: updatedPost.likes.length,
         isLiked: !alreadyLiked,
-        message: alreadyLiked ? 'Post unliked successfully' : 'Post liked successfully'
+        message: alreadyLiked ? 'Post unliked successfully' : 'Post liked successfully',
       });
     } catch (error) {
       logger.error(`Error in like/unlike for post ${req.params.id} by user ${req.user.userId}: ${error.message}`);
@@ -542,7 +651,7 @@ module.exports = (io) => {
       const existingReport = await Report.findOne({
         reportedUser: post.createdBy.userId,
         reportedBy: reporterId,
-        relatedPost: postId
+        relatedPost: postId,
       });
 
       if (existingReport) {
@@ -555,19 +664,19 @@ module.exports = (io) => {
         reportedBy: reporterId,
         reason: reason.trim(),
         relatedPost: postId,
-        status: 'pending'
+        status: 'pending',
       });
       await newReport.save();
 
       post.reports.push({
         reportId: newReport._id,
         reason: reason.trim(),
-        reportedAt: new Date()
+        reportedAt: new Date(),
       });
 
       const reportCount = await Report.countDocuments({
         reportedUser: post.createdBy.userId,
-        status: 'pending'
+        status: 'pending',
       });
 
       if (reportCount >= 3) {

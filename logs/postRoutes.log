@@ -719,3 +719,209 @@
 {"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-28T18:16:17.108Z"}
 {"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-28T18:16:18.678Z"}
 {"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-28T18:16:21.920Z"}
+{"level":"info","message":"✅ Cloudinary configured in postRoutes","timestamp":"2025-05-29T05:40:55.038Z"}
+{"level":"info","message":"✅ Cloudinary configured in postRoutes","timestamp":"2025-05-29T06:20:30.020Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T06:22:00.878Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T06:22:01.292Z"}
+{"level":"info","message":"Fetched 80 posts for user anonymous","timestamp":"2025-05-29T06:22:06.291Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T06:30:25.031Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T06:30:29.383Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T06:32:10.860Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T06:32:20.290Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T06:32:20.901Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T06:32:21.523Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T06:32:22.952Z"}
+{"level":"error","message":"Post creation error for user 67d845b5c9add2113fc80789: Cannot find ffprobe","timestamp":"2025-05-29T06:33:01.945Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T06:43:01.852Z"}
+{"level":"error","message":"Post creation error for user 67d845b5c9add2113fc80789: Cannot find ffprobe","timestamp":"2025-05-29T06:43:40.620Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T06:50:59.366Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T06:50:59.783Z"}
+{"level":"info","message":"Fetched 80 posts for user anonymous","timestamp":"2025-05-29T06:51:07.362Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T06:51:28.554Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T06:51:59.978Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T06:52:26.524Z"}
+{"level":"error","message":"Post creation error for user 67d845b5c9add2113fc80789: Cannot find ffprobe","timestamp":"2025-05-29T06:53:27.373Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T06:53:49.252Z"}
+{"level":"info","message":"Fetched 80 posts for user anonymous","timestamp":"2025-05-29T06:53:56.636Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T06:58:41.953Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T07:02:14.796Z"}
+{"level":"error","message":"Post creation error for user 67d845b5c9add2113fc80789: Cannot find ffprobe","timestamp":"2025-05-29T07:03:34.764Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T07:07:19.832Z"}
+{"level":"info","message":"Post created by user 67d845b5c9add2113fc80789: 683807acc40d4d9c64d2e9ce","timestamp":"2025-05-29T07:07:24.801Z"}
+{"level":"error","message":"Post creation error for user 67d845b5c9add2113fc80789: Follow is not defined","timestamp":"2025-05-29T07:07:24.805Z"}
+{"level":"info","message":"✅ Cloudinary configured in postRoutes","timestamp":"2025-05-29T07:18:30.670Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T07:19:39.871Z"}
+{"level":"info","message":"Post created by user 67d845b5c9add2113fc80789: 68380a8f1a319eba8f50ee50","timestamp":"2025-05-29T07:19:44.260Z"}
+{"level":"info","message":"Found 6 followers for user 67d845b5c9add2113fc80789","timestamp":"2025-05-29T07:19:44.512Z"}
+{"level":"error","message":"Notification error for user 679d530c96d06fa5dfab1ded: Notification validation failed: type: `new_post` is not a valid enum value for path `type`.","timestamp":"2025-05-29T07:19:44.871Z"}
+{"level":"error","message":"Notification error for user 679d530c96d06fa5dfab1ded: Notification validation failed: type: `new_post` is not a valid enum value for path `type`.","timestamp":"2025-05-29T07:19:44.908Z"}
+{"level":"error","message":"Notification error for user 679d530c96d06fa5dfab1ded: Notification validation failed: type: `new_post` is not a valid enum value for path `type`.","timestamp":"2025-05-29T07:19:44.932Z"}
+{"level":"error","message":"Notification error for user 679d530c96d06fa5dfab1ded: Notification validation failed: type: `new_post` is not a valid enum value for path `type`.","timestamp":"2025-05-29T07:19:44.957Z"}
+{"level":"error","message":"Notification error for user 679d530c96d06fa5dfab1ded: Notification validation failed: type: `new_post` is not a valid enum value for path `type`.","timestamp":"2025-05-29T07:19:44.979Z"}
+{"level":"error","message":"Notification error for user 67b6fbdedfb7a20620fcb1d1: Notification validation failed: type: `new_post` is not a valid enum value for path `type`.","timestamp":"2025-05-29T07:19:47.581Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T07:19:51.048Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T07:19:51.347Z"}
+{"level":"info","message":"Fetched 82 posts for user anonymous","timestamp":"2025-05-29T07:19:55.956Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T07:20:09.632Z"}
+{"level":"info","message":"User 67d845b5c9add2113fc80789 liked post 68380a8f1a319eba8f50ee50","timestamp":"2025-05-29T07:20:14.773Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T07:20:20.148Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T07:20:24.089Z"}
+{"level":"info","message":"User 67d845b5c9add2113fc80789 liked post 683807acc40d4d9c64d2e9ce","timestamp":"2025-05-29T07:20:24.318Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T07:20:50.134Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T07:21:23.070Z"}
+{"level":"error","message":"Post creation error for user 67d845b5c9add2113fc80789: Cannot find ffprobe","timestamp":"2025-05-29T07:21:36.009Z"}
+{"level":"info","message":"✅ Cloudinary configured in postRoutes","timestamp":"2025-05-29T07:27:45.557Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T07:28:43.516Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T07:28:43.905Z"}
+{"level":"info","message":"Fetched 82 posts for user anonymous","timestamp":"2025-05-29T07:28:49.091Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T07:29:08.783Z"}
+{"level":"error","message":"Post creation error for user 67d845b5c9add2113fc80789: ffmpeg exited with code 234: Error opening output file Uploads/compressed-1748503774776-Uploads/ch8pennusg72ckxrxcqj.\nError opening output files: Invalid argument\n","timestamp":"2025-05-29T07:29:43.436Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T07:31:39.793Z"}
+{"level":"info","message":"Fetched 82 posts for user anonymous","timestamp":"2025-05-29T07:31:47.723Z"}
+{"level":"info","message":"✅ Cloudinary configured in postRoutes","timestamp":"2025-05-29T07:44:45.723Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T07:46:06.145Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T07:46:06.467Z"}
+{"level":"info","message":"Fetched 82 posts for user anonymous","timestamp":"2025-05-29T07:46:11.952Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T07:53:27.577Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T07:53:27.918Z"}
+{"level":"info","message":"Fetched 82 posts for user anonymous","timestamp":"2025-05-29T07:53:35.020Z"}
+{"level":"info","message":"✅ Cloudinary configured in postRoutes","timestamp":"2025-05-29T08:00:23.512Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T08:01:17.970Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T08:01:18.338Z"}
+{"level":"info","message":"Fetched 82 posts for user anonymous","timestamp":"2025-05-29T08:01:24.540Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T08:08:38.892Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T08:08:39.160Z"}
+{"level":"info","message":"Fetched 82 posts for user anonymous","timestamp":"2025-05-29T08:08:47.016Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T08:09:07.879Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T08:15:14.434Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T08:15:14.720Z"}
+{"level":"info","message":"Fetched 82 posts for user anonymous","timestamp":"2025-05-29T08:15:22.012Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T08:16:48.058Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T08:16:48.352Z"}
+{"level":"info","message":"Fetched 82 posts for user anonymous","timestamp":"2025-05-29T08:16:55.691Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T08:17:15.663Z"}
+{"level":"info","message":"Fetched 82 posts for user anonymous","timestamp":"2025-05-29T08:17:18.291Z"}
+{"level":"info","message":"✅ Cloudinary configured in postRoutes","timestamp":"2025-05-29T08:25:40.322Z"}
+{"level":"info","message":"✅ Cloudinary configured in postRoutes","timestamp":"2025-05-29T08:27:36.040Z"}
+{"level":"info","message":"✅ Cloudinary configured in postRoutes","timestamp":"2025-05-29T08:35:10.753Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T08:35:37.274Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T08:35:37.760Z"}
+{"level":"info","message":"Fetched 82 posts for user anonymous","timestamp":"2025-05-29T08:35:43.429Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T08:36:06.121Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T08:38:06.217Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T08:38:06.629Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T08:38:07.075Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T08:38:16.326Z"}
+{"level":"info","message":"Fetched 37 posts for user anonymous","timestamp":"2025-05-29T08:38:23.814Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T08:38:23.852Z"}
+{"level":"info","message":"Fetched 37 posts for user anonymous","timestamp":"2025-05-29T08:38:26.150Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T08:38:26.878Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T08:38:27.220Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T08:38:28.504Z"}
+{"level":"info","message":"Fetched 82 posts for user anonymous","timestamp":"2025-05-29T08:38:29.934Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T08:38:29.970Z"}
+{"level":"info","message":"Fetched 10 posts for user anonymous","timestamp":"2025-05-29T08:38:30.197Z"}
+{"level":"info","message":"Fetched 82 posts for user anonymous","timestamp":"2025-05-29T08:38:33.158Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T08:38:34.372Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T08:38:36.088Z"}
+{"level":"info","message":"Fetched 37 posts for user anonymous","timestamp":"2025-05-29T08:38:36.323Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T08:38:36.356Z"}
+{"level":"info","message":"Fetched 37 posts for user anonymous","timestamp":"2025-05-29T08:38:38.582Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T08:38:38.617Z"}
+{"level":"info","message":"Fetched 37 posts for user anonymous","timestamp":"2025-05-29T08:38:40.865Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T08:38:53.138Z"}
+{"level":"info","message":"Fetched 82 posts for user anonymous","timestamp":"2025-05-29T08:38:56.539Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T08:39:02.248Z"}
+{"level":"info","message":"Fetched 10 posts for user anonymous","timestamp":"2025-05-29T08:39:02.744Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T08:39:03.908Z"}
+{"level":"info","message":"Fetched 19 posts for user anonymous","timestamp":"2025-05-29T08:39:04.675Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T08:39:23.345Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T08:39:23.653Z"}
+{"level":"info","message":"Fetched 82 posts for user anonymous","timestamp":"2025-05-29T08:39:29.833Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T08:50:13.804Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T08:50:14.099Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T08:50:14.195Z"}
+{"level":"info","message":"Fetched 82 posts for user anonymous","timestamp":"2025-05-29T08:50:18.723Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T08:50:42.969Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T08:52:46.505Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T08:52:46.984Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T08:52:47.391Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T08:52:47.845Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T09:05:02.947Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T09:05:31.775Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T09:09:25.102Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T09:10:29.671Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T09:11:44.929Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T09:11:45.356Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T09:12:53.777Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T09:12:54.135Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T09:12:58.671Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T09:13:28.762Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T09:13:58.778Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T09:18:07.424Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T09:18:08.015Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T09:18:26.125Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T09:18:56.507Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T09:18:56.793Z"}
+{"level":"info","message":"Fetched 82 posts for user anonymous","timestamp":"2025-05-29T09:19:04.146Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T09:19:09.638Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T09:20:35.104Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T09:20:35.368Z"}
+{"level":"info","message":"Fetched 82 posts for user anonymous","timestamp":"2025-05-29T09:20:41.490Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T09:20:44.854Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T09:20:45.159Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T09:20:45.231Z"}
+{"level":"info","message":"Fetched 82 posts for user anonymous","timestamp":"2025-05-29T09:20:47.881Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T09:21:02.709Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T09:21:02.872Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T09:21:04.772Z"}
+{"level":"info","message":"Fetched 82 posts for user anonymous","timestamp":"2025-05-29T09:21:05.556Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T09:21:17.718Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T09:28:39.173Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T09:29:08.352Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T09:29:38.311Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T09:30:08.338Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T09:35:06.064Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T09:39:38.090Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T09:39:38.554Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T09:39:40.112Z"}
+{"level":"info","message":"Fetched 82 posts for user anonymous","timestamp":"2025-05-29T09:39:43.071Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T09:41:07.926Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T09:41:08.117Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T09:41:09.882Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T09:41:10.178Z"}
+{"level":"info","message":"Fetched 82 posts for user anonymous","timestamp":"2025-05-29T09:41:12.118Z"}
+{"level":"info","message":"Fetched 82 posts for user anonymous","timestamp":"2025-05-29T09:41:12.645Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T09:42:59.857Z"}
+{"level":"info","message":"Fetched 82 posts for user anonymous","timestamp":"2025-05-29T09:43:11.451Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T09:43:20.934Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T09:43:21.454Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T09:43:21.529Z"}
+{"level":"info","message":"Fetched 82 posts for user anonymous","timestamp":"2025-05-29T09:43:24.881Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T09:45:11.623Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T09:45:11.871Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T09:45:11.901Z"}
+{"level":"info","message":"Fetched 82 posts for user anonymous","timestamp":"2025-05-29T09:45:30.987Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T09:45:40.792Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T09:50:37.370Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T09:50:37.694Z"}
+{"level":"info","message":"Fetched 82 posts for user anonymous","timestamp":"2025-05-29T09:50:43.476Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T09:51:00.773Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T09:51:01.064Z"}
+{"level":"info","message":"Fetched 82 posts for user anonymous","timestamp":"2025-05-29T09:51:03.513Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T09:51:30.064Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T09:51:44.498Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T09:51:44.953Z"}
+{"level":"info","message":"Fetched 82 posts for user anonymous","timestamp":"2025-05-29T09:51:51.013Z"}
+{"level":"info","message":"✅ Cloudinary configured in postRoutes","timestamp":"2025-05-29T09:55:49.649Z"}
+{"level":"info","message":"✅ Cloudinary configured in postRoutes","timestamp":"2025-05-29T09:56:23.502Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T09:56:38.006Z"}
+{"level":"info","message":"Fetched 82 posts for user anonymous","timestamp":"2025-05-29T09:56:43.295Z"}
+{"level":"info","message":"✅ Cloudinary configured in postRoutes","timestamp":"2025-05-29T10:05:37.568Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T10:29:29.805Z"}
+{"level":"info","message":"Fetched 82 posts for user anonymous","timestamp":"2025-05-29T10:29:37.132Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T10:29:57.625Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T10:29:58.216Z"}
+{"level":"info","message":"Fetched 82 posts for user anonymous","timestamp":"2025-05-29T10:30:06.177Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T10:30:20.409Z"}
+{"level":"error","message":"Post creation error for user 679d530c96d06fa5dfab1ded: ffmpeg exited with code 234: Error opening output file /storage/emulated/0/Download/My web/Backend/Uploads/compressed-1748514642161-Uploads/wawgossbqgxmwg5apxhw.\nError opening output files: Invalid argument\n","timestamp":"2025-05-29T10:30:51.023Z"}

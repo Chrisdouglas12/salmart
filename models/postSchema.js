@@ -16,16 +16,12 @@ const postSchema = new mongoose.Schema({
     required: true,
     enum: ['electronics', 'fashion', 'home', 'vehicles', 'music', 'others'],
   },
-
-  // Video for video ads
   video: {
     type: String,
     required: function () {
       return this.postType === 'video_ad';
     },
   },
-
-  // Fields for regular posts
   location: {
     type: String,
     required: function () {
@@ -41,10 +37,11 @@ const postSchema = new mongoose.Schema({
     trim: true,
   },
   price: {
-    type: String,
+    type: Number, // Changed to Number for consistency
     required: function () {
       return this.postType === 'regular';
     },
+    min: [0, 'Price cannot be negative'],
   },
   photo: {
     type: String,
@@ -52,7 +49,6 @@ const postSchema = new mongoose.Schema({
       return this.postType === 'regular';
     },
   },
-
   profilePicture: {
     type: String,
   },
@@ -85,6 +81,7 @@ const postSchema = new mongoose.Schema({
   },
   updatedAt: {
     type: Date,
+    default: Date.now,
   },
   likes: [
     {
@@ -114,6 +111,21 @@ const postSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+});
+
+// TTL index for video_ad posts (delete after 24 hours = 86400 seconds)
+postSchema.index(
+  { createdAt: 1 },
+  {
+    expireAfterSeconds: 86400,
+    partialFilterExpression: { postType: 'video_ad' },
+  }
+);
+
+// Update updatedAt on save
+postSchema.pre('save', function (next) {
+  this.updatedAt = new Date();
+  next();
 });
 
 module.exports = mongoose.model('Post', postSchema);

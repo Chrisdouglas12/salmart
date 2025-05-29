@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
         return postDate.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
     }
-    
+
 let followingList = [];
    try {
        followingList = JSON.parse(localStorage.getItem('followingList')) || [];
@@ -43,7 +43,7 @@ let followingList = [];
         }
 
         try {
-          
+
             const response = await fetch(`${API_BASE_URL}/verify-token`, {
                 method: 'GET',
                 headers: { 'Authorization': `Bearer ${token}` },
@@ -81,48 +81,113 @@ document.querySelectorAll('.category-btn').forEach(button => {
         usernameContainer.textContent = 'Please log in';
     }
 
-    // Function to fetch and display posts
-    async function fetchPosts(category = '') {
-    const postsContainer = document.getElementById('posts-container');
-    try {
-        
-        const response = await fetch(`${API_BASE_URL}/post?category=${encodeURIComponent(category)}`);
+async function fetchPosts(category = '') {
+        const postsContainer = document.getElementById('posts-container');
+        try {
+            const response = await fetch(`${API_BASE_URL}/post?category=${encodeURIComponent(category)}`);
             if (!response.ok) throw new Error('Failed to fetch posts');
 
             const posts = await response.json();
-            postsContainer.innerHTML = ""; // Clear existing posts
+            postsContainer.innerHTML = "";
 
-            // First, update the post creation code to properly handle follow status
-posts.forEach(post => {
-    const postElement = document.createElement('div');
-    postElement.classList.add('post');
-    postElement.dataset.createdAt = post.createdAt;
-    // Check if the current user is already following this post's author
-    const isFollowing = post.isFollowing || false;
-    
-    postElement.innerHTML = `
-        <div class="post-header">
-            <a href="Profile.html?userId=${post.createdBy.userId}">
-                <img src="${post.profilePicture || 'default-avatar.png'}" class="post-avatar">
-            </a>
-            <div class="post-user-info">
-                <a href="Profile.html?userId=${post.createdBy.userId}">
-                    <h4 class="post-user-name">${post.createdBy.name}</h4>
-                </a>
-                <p class="post-time">${formatTime(post.createdAt)}</p>
-            </div>
+            posts.forEach(post => {
+                const postElement = document.createElement('div');
+                postElement.classList.add('post');
+                postElement.dataset.createdAt = post.createdAt;
 
+                const isFollowing = post.isFollowing || followingList.includes(post.createdBy.userId);
 
-${post.createdBy.userId !== loggedInUser ?
-    followingList.includes(post.createdBy.userId) ?
-        `<button class="follow-button" data-user-id="${post.createdBy.userId}" 
-            style="display:none">
-            <i class="fas fa-user-check"></i> Following
-        </button>` :
-        `<button class="follow-button" data-user-id="${post.createdBy.userId}">
-            <i class="fas fa-user-plus"></i> Follow
-        </button>`
-    : ''}
+                let mediaContent = '';
+                let productDetails = '';
+                let buyButtonContent = post.postType === 'regular'
+                    ? `<button class="buy-now-button" data-post-id="${post._id}" ${post.isSold ? 'disabled' : ''}>
+                        <i class="fas fa-shopping-cart"></i> ${post.isSold ? 'Sold Out' : 'Buy Now'}
+                    </button>`
+                    : '';
+
+                const productImageForChat = post.postType === 'video_ad' ? post.thumbnail || 'default-video-poster.png' : post.photo || 'default-image.png';
+
+                if (post.postType === 'video_ad') {
+                    mediaContent = `
+                        <video class="post-video" controls preload="metadata" poster="${post.thumbnail || 'default-video-poster.png'}">
+                            <source src="${post.video || ''}" type="video/mp4" />
+                            Your browser does not support the video tag.
+                        </video>
+                    `;
+                    productDetails = `
+                        <div class="product-info">
+                            <span class="icon">📦</span>
+                            <div>
+                                <p class="label">Product</p>
+                                <p class="value">${post.description}</p>
+                            </div>
+                        </div>
+                        <div class="product-info">
+                            <span class="icon">🏷️</span>
+                            <div>
+                                <p class="label">Category</p>
+                                <p class="value">${post.category || 'N/A'}</p>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    mediaContent = `
+                        <img src="${post.photo || 'default-image.png'}" class="post-image" onclick="openImage('${post.photo || 'default-image.png'}')" alt="Product Image">
+                    `;
+                    productDetails = `
+                        <div class="product-info">
+                            <span class="icon">📦</span>
+                            <div>
+                                <p class="label">Product</p>
+                                <p class="value">${post.description}</p>
+                            </div>
+                        </div>
+                        <div class="product-info">
+                            <span class="icon">🔄</span>
+                            <div>
+                                <p class="label">Condition</p>
+                                <p class="value">${post.productCondition || 'N/A'}</p>
+                            </div>
+                        </div>
+                        <div class="product-info-inline">
+                            <div class="info-item">
+                                <span class="icon">💵</span>
+                                <div>
+                                    <p class="label">Price</p>
+                                    <p class="value price-value">${post.price ? '₦' + Number(post.price).toLocaleString('en-Ng') : 'Price not specified'}</p>
+                                </div>
+                            </div>
+                            <div class="info-item">
+                                <span class="icon">📍</span>
+                                <div>
+                                    <p class="label">Location</p>
+                                    <p class="value location-value">${post.location || 'N/A'}</p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                postElement.innerHTML = `
+                    <div class="post-header">
+                        <a href="Profile.html?userId=${post.createdBy.userId}">
+                            <img src="${post.profilePicture || 'default-avatar.png'}" class="post-avatar">
+                        </a>
+                        <div class="post-user-info">
+                            <a href="Profile.html?userId=${post.createdBy.userId}">
+                                <h4 class="post-user-name">${post.createdBy.name}</h4>
+                            </a>
+                            <p class="post-time">${formatTime(post.createdAt)}</p>
+                        </div>
+                        ${post.createdBy.userId !== loggedInUser ?
+                            (followingList.includes(post.createdBy.userId) ?
+                                `<button class="follow-button" data-user-id="${post.createdBy.userId}" style="background-color: #28a745;">
+                                    <i class="fas fa-user-check"></i> Following
+                                </button>` :
+                                `<button class="follow-button" data-user-id="${post.createdBy.userId}">
+                                    <i class="fas fa-user-plus"></i> Follow
+                                </button>`)
+                            : ''}
                         <div class="post-options">
                             <button class="post-options-button"><i class="fas fa-ellipsis-h"></i></button>
                             <div class="post-options-menu">
@@ -136,76 +201,44 @@ ${post.createdBy.userId !== loggedInUser ?
                             </div>
                         </div>
                     </div>
-<div class="product-container">
-  <div class="product-card">
-    <div class="product-info">
-      <span class="icon">📦</span>
-      <div>
-        <p class="label">Product</p>
-        <p class="value">${post.description}</p>
-      </div>
-    </div>
-    <div class="product-info">
-      <span class="icon">🔄</span>
-      <div>
-        <p class="label">Condition</p>
-        <p class="value">${post.productCondition}</p>
-      </div>
-    </div>
-    <div class="product-info-inline">
-      <div class="info-item">
-        <span class="icon">💵</span>
-        <div>
-          <p class="label">Price</p>
-          <p class="value price-value">₦${Number(post.price).toLocaleString('en-Ng')}</p>
-        </div>
-      </div>
-      <div class="info-item">
-        <span class="icon">📍</span>
-        <div>
-          <p class="label">Location</p>
-          <p class="value location-value">${post.location}</p>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="image-card">
-    <img src="${post.photo || 'default-image.png'}" class="post-image" onclick="openImage('${post.photo || 'default-image.png'}')" alt="Product Image">
-  </div>
-</div>
-<div class="buy" style="text-align: center">
-  <button class="buy-now-button" data-post-id="${post._id}" ${post.isSold ? 'disabled' : ''}>
-    <i class="fas fa-shopping-cart"></i> ${post.isSold ? 'Sold Out' : 'Buy Now'}
-  </button>
-  <a id="send-message-link">
-    <button class="buy-now-button" id="send-message-btn"
-      data-recipient-id="${post.createdBy.userId}"
-      data-product-image="${post.photo || 'default-image.png'}"
-      data-product-description="${post.description}">
-      <i class="fas fa-circle-dot"></i> ${post.isSold ? 'Unavailable' : 'Check Availability'}
-    </button>
-  </a>
-</div>
-<div class="post-actions">
-  <button class="action-button like-button">
-    <i class="${post.likes.includes(loggedInUser) ? 'fas' : 'far'} fa-heart"></i>
-    <span class="like-count">${post.likes.length}</span> <p>Likes</p>
-  </button>
-  <button class="action-button reply-button">
-    <i class="far fa-comment-alt"></i>
-    <span class="comment-count">${post.comments ? post.comments.length : 0}</span> <p>Comments</p>
-  </button>
-  <button class="action-button share-button">
-    <i class="fas fa-share"></i>
-  </button>
-</div>
-                  
-                `;
-                postsContainer.prepend(postElement);
-                
-               
-          
 
+                    <div class="product-container">
+                        <div class="product-card">
+                            ${productDetails}
+                        </div>
+                        <div class="media-card">
+                            ${mediaContent}
+                        </div>
+                    </div>
+
+                    <div class="buy" style="text-align: center">
+                        ${buyButtonContent}
+                        <a id="send-message-link">
+                            <button class="buy-now-button" id="send-message-btn"
+                                data-recipient-id="${post.createdBy.userId}"
+                                data-product-image="${productImageForChat}"
+                                data-product-description="${post.description}">
+                                <i class="fas fa-circle-dot"></i> ${post.isSold ? 'Unavailable' : 'Check Availability'}
+                            </button>
+                        </a>
+                    </div>
+
+                    <div class="post-actions">
+                        <button class="action-button like-button">
+                            <i class="${post.likes.includes(loggedInUser) ? 'fas' : 'far'} fa-heart"></i>
+                            <span class="like-count">${post.likes.length}</span> <p>Likes</p>
+                        </button>
+                        <button class="action-button reply-button">
+                            <i class="far fa-comment-alt"></i>
+                            <span class="comment-count">${post.comments ? post.comments.length : 0}</span> <p>Comments</p>
+                        </button>
+                        <button class="action-button share-button">
+                            <i class="fas fa-share"></i>
+                        </button>
+                    </div>
+                `;
+
+                postsContainer.prepend(postElement);
 const sendMessageBtn = postElement.querySelector("#send-message-btn");
 if (post.isSold) {
     sendMessageBtn.disabled = true;
@@ -241,7 +274,7 @@ sendMessageBtn.addEventListener('click', (e) => {
     sendMessageLink.href = `Chats.html?user_id=${userId}&recipient_id=${recipientId}&recipient_username=${encodedRecipientUsername}&recipient_profile_picture_url=${encodedRecipientProfilePictureUrl}&message=${encodedMessage}&product_image=${encodedProductImage}&product_id=${post._id}&product_name=${encodedProductDescription}`;
     window.location.href = sendMessageLink.href;
 });
-  
+
                 // Toggle post options menu
                 const optionsButton = postElement.querySelector('.post-options-button');
                 const optionsMenu = postElement.querySelector('.post-options-menu');
@@ -253,8 +286,8 @@ sendMessageBtn.addEventListener('click', (e) => {
                     });
                     optionsMenu.classList.toggle('show');
                 });
-                
-        
+
+
 
   // Like functionality
 const likeButton = postElement.querySelector('.like-button');
@@ -262,7 +295,7 @@ likeButton.addEventListener('click', async () => {
     const likeCountElement = likeButton.querySelector('.like-count');
     const icon = likeButton.querySelector('i');
     const postId = post._id;
-    
+
     // Get current state from DOM
     const isCurrentlyLiked = icon.classList.contains('fas');
     let currentLikes = parseInt(likeCountElement.textContent, 10);
@@ -291,10 +324,10 @@ likeButton.addEventListener('click', async () => {
         }
 
         const data = await response.json();
-        
+
         // Always use server response as the source of truth
         likeCountElement.textContent = data.likes.length;
-        
+
         // Determine if current user still likes the post
         const userStillLikes = data.likes.includes(loggedInUser);
         icon.classList.toggle('fas', userStillLikes);
@@ -316,7 +349,7 @@ likeButton.addEventListener('click', async () => {
     }
 });
 
-                
+
 
 // Buy now functionality
 const buyNowButton = postElement.querySelector('.buy-now-button');
@@ -374,7 +407,7 @@ const commentToggleButton = postElement.querySelector('.reply-button');
 commentToggleButton.addEventListener('click', () => {
     window.location.href = `posts-details.html?postId=${post._id}`;
 });
-                
+
   //share ad functionality
 const shareButton = postElement.querySelector('.share-button');
 shareButton.addEventListener('click', (e) => {
@@ -384,41 +417,41 @@ shareButton.addEventListener('click', (e) => {
 // share ads function
 function sharePost(post, postLink, platform) {
     const shareText = `Check out this product: ${post.description} - ${post.price ? '₦' + Number(post.price).toLocaleString('en-Ng') : 'Price not specified'}`;
-    
+
     switch(platform) {
         case 'copy':
             copyToClipboard(postLink);
             showToast('Link copied to clipboard!');
             break;
-            
+
         case 'whatsapp':
             // Try WhatsApp app first, then fall back to web
             const whatsappUrl = `whatsapp://send?text=${encodeURIComponent(shareText + '\n' + postLink)}`;
             const whatsappWebUrl = `https://wa.me/?text=${encodeURIComponent(shareText + '\n' + postLink)}`;
             openAppOrWeb(whatsappUrl, whatsappWebUrl);
             break;
-            
+
         case 'facebook':
             // Facebook app deep link
             const facebookUrl = `fb://sharer.php?u=${encodeURIComponent(postLink)}`;
             const facebookWebUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(postLink)}`;
             openAppOrWeb(facebookUrl, facebookWebUrl);
             break;
-            
+
         case 'twitter':
             // Twitter app deep link
             const twitterUrl = `twitter://post?message=${encodeURIComponent(shareText)}&url=${encodeURIComponent(postLink)}`;
             const twitterWebUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(postLink)}`;
             openAppOrWeb(twitterUrl, twitterWebUrl);
             break;
-            
+
         case 'telegram':
             // Telegram app deep link
             const telegramUrl = `tg://msg_url?url=${encodeURIComponent(postLink)}&text=${encodeURIComponent(shareText)}`;
             const telegramWebUrl = `https://t.me/share/url?url=${encodeURIComponent(postLink)}&text=${encodeURIComponent(shareText)}`;
             openAppOrWeb(telegramUrl, telegramWebUrl);
             break;
-            
+
         case 'instagram':
             // Instagram doesn't support direct sharing, but we can open the app
             const instagramUrl = `instagram://library?AssetPath=${encodeURIComponent(postLink)}`;
@@ -431,7 +464,7 @@ function sharePost(post, postLink, platform) {
 function openAppOrWeb(appUrl, webUrl) {
     // Try to open the app
     window.location.href = appUrl;
-    
+
     // If the app doesn't open, fall back to web after a delay
     setTimeout(() => {
         if (!document.hidden) {
@@ -445,10 +478,10 @@ function showShareModal(post) {
     // Create modal element
     const shareModal = document.createElement('div');
     shareModal.className = 'share-modal';
-    
+
     // Generate the post link
     const postLink = `${window.location.origin}/index.html?id=${post._id}`;
-    
+
     // Modal content with Instagram option
     shareModal.innerHTML = `
         <div class="share-modal-content">
@@ -550,13 +583,13 @@ async function copyToClipboard(text) {
         return false;
     }
 }
-      
+
 // Report post functionality - Modern UI Modal Version
 const reportButton = postElement.querySelector('.report-post-button');
 reportButton.addEventListener('click', async () => {
     const postId = reportButton.getAttribute('data-post-id');
     const authToken = localStorage.getItem('authToken');
-    
+
     if (!authToken) {
         showToast("Please log in to report posts");
         return;
@@ -613,7 +646,7 @@ reportButton.addEventListener('click', async () => {
     const radioButtons = reportModal.querySelectorAll('input[type="radio"]');
     const otherReasonContainer = reportModal.querySelector('.other-reason-container');
     const submitButton = reportModal.querySelector('.submit-report');
-    
+
     radioButtons.forEach(radio => {
         radio.addEventListener('change', () => {
             submitButton.disabled = false;
@@ -645,7 +678,7 @@ reportButton.addEventListener('click', async () => {
     submitButton.addEventListener('click', async () => {
         const selectedReason = reportModal.querySelector('input[name="report-reason"]:checked').value;
         let reportDetails = selectedReason;
-        
+
         if (selectedReason === 'Other') {
             const otherDetails = reportModal.querySelector('#other-reason').value.trim();
             if (!otherDetails) {
@@ -669,7 +702,7 @@ reportButton.addEventListener('click', async () => {
             });
 
             const result = await response.json();
-            
+
             if (!response.ok) {
                 throw new Error(result.message || 'Failed to report post');
             }
@@ -678,7 +711,7 @@ reportButton.addEventListener('click', async () => {
             reportButton.innerHTML = '<i class="fas fa-flag"></i> Reported';
             reportButton.disabled = true;
             reportButton.style.color = '#ff0000';
-            
+
             showToast(result.message || 'Post reported successfully! Admin will review it shortly.');
             closeModal();
         } catch (error) {
@@ -778,8 +811,8 @@ document.querySelectorAll('.follow-button').forEach(followButton => {
            }
        });
    });
-        
- 
+
+
                 // Edit post functionality
                 const editButton = postElement.querySelector('.edit-post-button');
                 if (editButton) {
@@ -789,7 +822,7 @@ document.querySelectorAll('.follow-button').forEach(followButton => {
                     });
                 }
             });
-            
+
 
             // Close menu if user clicks outside
             document.addEventListener('click', () => {
@@ -798,7 +831,7 @@ document.querySelectorAll('.follow-button').forEach(followButton => {
                 });
             });
 
-          
+
         } catch (error) {
             console.error('Error fetching posts:', error);
             postsContainer.innerHTML = '<p style="text-align: center; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">No ads yet. Try again or create one!</p>';
@@ -882,6 +915,5 @@ function showDeleteConfirmationModal(postId, authToken, postElement) {
 
     // Check login status when the page loads
     checkLoginStatus();
-    
-});
 
+});

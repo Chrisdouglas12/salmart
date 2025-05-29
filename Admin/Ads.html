@@ -2,150 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <meta http-equiv="X-UA-Compatible" content="ie=edge"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="X-UA-Compatible" content="ie=edge" />
   <title>Create Ad</title>
-  <link rel="stylesheet" href="Ads-Styles.css"/>
+  <link rel="stylesheet" href="Ads-Styles.css" />
   <script src="https://cdn.jsdelivr.net/npm/jwt-decode@3.1.2/build/jwt-decode.min.js"></script>
-</head>
-<body>
-  <div class="container">
-    <div class="form-bg">
-      <div class="h2-bg">
-        <h4 style="font-size: 17px">Create an ad</h4><br>
-        <img src="default.png" id="profile-picture2">
-      </div>
-
-      <!-- Tab Controls -->
-      <div class="tab-header">
-        <button class="tab-button active" onclick="switchTab('normal')">Normal Ad</button>
-        <button class="tab-button" onclick="switchTab('video')">Video Ad</button>
-      </div>
-
-      <!-- Normal Ad Form -->
-      <form id="normal-ad-form" class="ad-form">
-        <div class="input-form">
-          <label>Enter product description</label>
-          <input id="description" type="text" class="input" placeholder="e.g. Nexus deep freezer, 200 liters" required>
-        </div>
-
-        <div class="input-form">
-          <label>Product Condition</label>
-          <input id="productCondition" type="text" class="input" placeholder="e.g. New, Used" required>
-        </div>
-
-        <div class="input-form">
-          <label>Product Price &#8358;</label>
-          <input id="price" type="text" class="input" placeholder="Enter Price" required>
-        </div>
-
-        <div class="input-form">
-          <label>Location</label>
-          <input id="location" type="text" class="input" placeholder="Enter Location" required>
-        </div>
-
-        <div class="input-form">
-          <label>Product Category</label>
-          <select id="category" class="input" required>
-            <option value="" disabled selected>Select a category</option>
-            <option value="electronics">Electronics</option>
-            <option value="fashion">Fashion</option>
-            <option value="home">Home & Garden</option>
-            <option value="vehicles">Vehicles</option>
-            <option value="music">Music Gear</option>
-            <option value="others">Other</option>
-          </select>
-        </div>
-
-        <div class="file-section">
-          <label for="file-input">Upload Images</label>
-          <input class="media-input" type="file" id="file-input" name="photo" accept="image/*" multiple>
-          <img id="preview" style="display: none;">
-          <div id="image-preview-container"></div>
-        </div>
-      </form>
-
-      <!-- Video Ad Form -->
-      <form id="video-ad-form" class="ad-form" style="display: none;">
-        <div class="input-form">
-          <label>Video Ad Title</label>
-          <input id="videoTitle" type="text" class="input" placeholder="e.g. Inverter for sale" required>
-        </div>
-
-        <div class="input-form">
-          <label>Video Description</label>
-          <textarea id="videoDescription" class="input" placeholder="Write a short pitch..." required></textarea>
-        </div>
-
-        <div class="file-section">
-          <label for="videoInput">Upload Video</label>
-          <input id="videoInput" type="file" class="media-input" accept="video/*" required>
-        </div>
-
-        <div class="file-section">
-          <label for="thumbnailInput">Upload Thumbnail Image</label>
-          <input id="thumbnailInput" type="file" class="media-input" accept="image/*" required>
-          <img id="thumbnailPreview" style="display: none;">
-        </div>
-      </form>
-
-      <div style="text-align: center; margin-top: 10px;">
-        <button onclick="submitAd()" style="color: white; background-color: #28a745; width: 80%; height: 35px; border: solid 0.1px green; border-radius: 50px; text-align: center; box-shadow: 0 0 10px 0 #fff">Publish ad</button>
-      </div>
-
-      <p style="font-size: 13px; margin-top: 10px;">By clicking the publish button, you consent to our <a href="">Community Standards</a>. Non-business posts may lead to account bans.</p>
-
-      <div id="toast" class="toast-message"></div>
-    </div>
-  </div>
-
-  <!-- Modal for image gallery -->
-  <div id="galleryModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center;">
-    <div id="galleryContent"></div>
-  </div>
-
-  <!-- Scripts -->
-  <script src="addPic.js"></script>
-  <script src="postScript.js"></script>
-  <script>
-    function switchTab(type) {
-      document.getElementById("normal-ad-form").style.display = type === 'normal' ? "block" : "none";
-      document.getElementById("video-ad-form").style.display = type === 'video' ? "block" : "none";
-      
-      document.querySelectorAll(".tab-button").forEach(btn => btn.classList.remove("active"));
-      document.querySelectorAll(".tab-button")[type === 'normal' ? 0 : 1].classList.add("active");
-    }
-
-    function showToast(message, color = '#28a745') {
-      const toast = document.getElementById("toast");
-      toast.textContent = message;
-      toast.style.backgroundColor = color;
-      toast.style.display = "block";
-      setTimeout(() => { toast.style.display = "none"; }, 3000);
-    }
-
-    function submitAd() {
-      const isNormalTab = document.getElementById("normal-ad-form").style.display === "block";
-      if (isNormalTab) {
-        // Submit normal ad logic
-        document.getElementById("dataForm").requestSubmit();
-      } else {
-        // Submit video ad logic (customize this in postScript.js or inline)
-        showToast("Video ad submitted successfully!");
-      }
-    }
-
-    // Preview thumbnail image
-    document.getElementById("thumbnailInput").addEventListener("change", function (e) {
-      const file = e.target.files[0];
-      if (file) {
-        const preview = document.getElementById("thumbnailPreview");
-        preview.src = URL.createObjectURL(file);
-        preview.style.display = "block";
-      }
-    });
-  </script>
-
   <style>
     .tab-header {
       display: flex;
@@ -159,10 +20,15 @@
       border: none;
       background: #eee;
       font-weight: bold;
+      transition: background-color 0.3s, color 0.3s;
     }
     .tab-button.active {
       background: #28a745;
       color: white;
+    }
+    .tab-button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
     }
     .toast-message {
       position: fixed;
@@ -179,6 +45,463 @@
       width: 60%;
       font-size: 14px;
     }
+    .preview-container img,
+    .preview-container video {
+      max-width: 100%;
+      max-height: 200px;
+      margin-top: 10px;
+      display: block;
+    }
+    .error {
+      color: red;
+      font-size: 14px;
+      margin-top: 5px;
+      display: none;
+    }
+    .publish-button {
+      color: white;
+      background-color: #28a745;
+      width: 80%;
+      height: 35px;
+      border: solid 0.1px green;
+      border-radius: 50px;
+      text-align: center;
+      box-shadow: 0 0 10px 0 #fff;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    .publish-button:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
   </style>
+</head>
+<body>
+  <div class="container">
+    <div class="form-bg">
+      <div class="h2-bg">
+        <h4 style="font-size: 17px">Create an ad</h4><br />
+        <img src="default.png" id="profile-picture2" alt="Profile Picture" />
+      </div>
+
+      <!-- Tab Controls -->
+      <div class="tab-header">
+        <button class="tab-button active" id="normal-tab" type="button">Normal Ad</button>
+        <button class="tab-button" id="video-tab" type="button">Video Ad</button>
+      </div>
+
+      <!-- Normal Ad Form -->
+      <form id="normal-ad-form" class="ad-form" enctype="multipart/form-data" novalidate>
+        <div class="input-form">
+          <label for="description">Enter product description</label>
+          <input id="description" name="description" type="text" class="input" placeholder="e.g. Nexus deep freezer, 200 liters" required maxlength="500" />
+          <div class="error" id="normal-description-error"></div>
+        </div>
+
+        <div class="input-form">
+          <label for="productCondition">Product Condition</label>
+          <input id="productCondition" name="productCondition" type="text" class="input" placeholder="e.g. New, Used" required maxlength="100" />
+          <div class="error" id="normal-condition-error"></div>
+        </div>
+
+        <div class="input-form">
+          <label for="price-display">Product Price ₦</label>
+          <input id="price-display" type="text" class="input" placeholder="Enter Price" autocomplete="off" required />
+          <input id="price" name="price" type="hidden" />
+          <div class="error" id="normal-price-error"></div>
+        </div>
+
+        <div class="input-form">
+          <label for="location">Location</label>
+          <input id="location" name="location" type="text" class="input" placeholder="Enter Location" required maxlength="100" />
+          <div class="error" id="normal-location-error"></div>
+        </div>
+
+        <div class="input-form">
+          <label for="category">Product Category</label>
+          <select id="category" name="category" class="input" required>
+            <option value="" disabled selected>Select a category</option>
+            <option value="electronics">Electronics</option>
+            <option value="fashion">Fashion</option>
+            <option value="home">Home & Garden</option>
+            <option value="vehicles">Vehicles</option>
+            <option value="music">Music Gear</option>
+            <option value="others">Other</option>
+          </select>
+          <div class="error" id="normal-category-error"></div>
+        </div>
+
+        <div class="file-section">
+          <label for="photo-input">Upload Image (Max 6MB)</label>
+          <input class="media-input" type="file" id="photo-input" name="photo" accept="image/jpeg,image/png" />
+          <div class="error" id="normal-photo-error"></div>
+          <div id="photo-preview-container" class="preview-container"></div>
+        </div>
+
+        <input type="hidden" name="postType" value="regular" />
+      </form>
+
+      <!-- Video Ad Form -->
+      <form id="video-ad-form" class="ad-form" enctype="multipart/form-data" style="display: none;" novalidate>
+        <div class="input-form">
+          <label for="video-description">Video Description</label>
+          <textarea id="video-description" name="description" class="input" placeholder="Write a short pitch..." required maxlength="500"></textarea>
+          <div class="error" id="video-description-error"></div>
+        </div>
+
+        <div class="input-form">
+          <label for="video-category">Product Category</label>
+          <select id="video-category" name="category" class="input" required>
+            <option value="" disabled selected>Select a category</option>
+            <option value="electronics">Electronics</option>
+            <option value="fashion">Fashion</option>
+            <option value="home">Home & Garden</option>
+            <option value="vehicles">Vehicles</option>
+            <option value="music">Music Gear</option>
+            <option value="others">Other</option>
+          </select>
+          <div class="error" id="video-category-error"></div>
+        </div>
+
+        <div class="file-section">
+          <label for="video-input">Upload Video (Max 6MB, 60s)</label>
+          <input id="video-input" type="file" class="media-input" name="video" accept="video/mp4" required />
+          <div class="error" id="video-error"></div>
+          <div id="video-preview-container" class="preview-container"></div>
+        </div>
+
+        <input type="hidden" name="postType" value="video_ad" />
+      </form>
+
+      <div style="text-align: center; margin-top: 10px;">
+        <button class="publish-button" id="publish-button" type="button">Publish ad</button>
+      </div>
+
+      <p style="font-size: 13px; margin-top: 10px;">
+        By clicking the publish button, you consent to our <a href="">Community Standards</a>. Non-business posts may lead to account bans.
+      </p>
+
+      <div id="toast" class="toast-message"></div>
+    </div>
+  </div>
+
+  <!-- Modal for image gallery (unused for now) -->
+  <div id="galleryModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center;">
+    <div id="galleryContent"></div>
+  </div>
+
+  <script>
+    const MAX_FILE_SIZE = 6 * 1024 * 1024; // 6MB
+    const MAX_DESCRIPTION_LENGTH = 500;
+    const MAX_TEXT_LENGTH = 100;
+    const API_BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart.onrender.com';
+
+    // DOM references
+    const normalForm = document.getElementById('normal-ad-form');
+    const videoForm = document.getElementById('video-ad-form');
+    const normalTab = document.getElementById('normal-tab');
+    const videoTab = document.getElementById('video-tab');
+    const publishButton = document.getElementById('publish-button');
+    const priceDisplay = document.getElementById('price-display');
+    const priceHidden = document.getElementById('price');
+
+    // Track active tab
+    let activeTab = 'normal';
+
+    // Show toast notification
+    function showToast(message, color = '#28a745') {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.style.backgroundColor = color;
+      toast.style.display = 'block';
+      setTimeout(() => {
+        toast.style.display = 'none';
+      }, 3000);
+    }
+
+    // Reset buttons and enable tabs
+    function resetButtons() {
+      publishButton.disabled = false;
+      publishButton.textContent = 'Publish ad';
+      normalTab.disabled = false;
+      videoTab.disabled = false;
+    }
+
+    // Format price input with thousand separators and decimals
+    function formatPriceInput(value) {
+      let cleanValue = value.replace(/[^\d.]/g, '');
+
+      const parts = cleanValue.split('.');
+      let integerPart = parts[0];
+      let decimalPart = parts[1] || '';
+
+      if (decimalPart.length > 2) {
+        decimalPart = decimalPart.substring(0, 2);
+      }
+
+      integerPart = integerPart.replace(/^0+(?=\d)/, '');
+
+      integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+
+      return decimalPart.length > 0 ? `${integerPart}.${decimalPart}` : integerPart;
+    }
+
+    // Parse formatted price string to float
+    function parsePrice(value) {
+      if (!value) return NaN;
+      const numStr = value.replace(/,/g, '');
+      return parseFloat(numStr);
+    }
+
+    // Price input event: format and update hidden input
+    priceDisplay.addEventListener('input', (e) => {
+      const cursorPosition = e.target.selectionStart;
+      const oldLength = e.target.value.length;
+
+      let formatted = formatPriceInput(e.target.value);
+      e.target.value = formatted;
+
+      const newLength = formatted.length;
+      const diff = newLength - oldLength;
+      e.target.selectionEnd = cursorPosition + diff;
+
+      const numericValue = parsePrice(formatted);
+      if (!isNaN(numericValue)) {
+        priceHidden.value = numericValue.toFixed(2);
+      } else {
+        priceHidden.value = '';
+      }
+    });
+
+    // Photo preview and validation
+    document.getElementById('photo-input').addEventListener('change', function (e) {
+      const photoError = document.getElementById('normal-photo-error');
+      const previewContainer = document.getElementById('photo-preview-container');
+      previewContainer.innerHTML = '';
+      photoError.style.display = 'none';
+
+      const file = e.target.files[0];
+      if (file) {
+        if (!['image/jpeg', 'image/png'].includes(file.type)) {
+          photoError.textContent = 'Only JPEG or PNG images are allowed';
+          photoError.style.display = 'block';
+          this.value = '';
+          return;
+        }
+        if (file.size > MAX_FILE_SIZE) {
+          photoError.textContent = 'Image size cannot exceed 6MB';
+          photoError.style.display = 'block';
+          this.value = '';
+          return;
+        }
+        const img = document.createElement('img');
+        img.src = URL.createObjectURL(file);
+        img.alt = 'Image Preview';
+        previewContainer.appendChild(img);
+      }
+    });
+
+    // Video preview and validation
+    document.getElementById('video-input').addEventListener('change', function (e) {
+      const videoError = document.getElementById('video-error');
+      const previewContainer = document.getElementById('video-preview-container');
+      previewContainer.innerHTML = '';
+      videoError.style.display = 'none';
+
+      const file = e.target.files[0];
+      if (file) {
+        if (file.type !== 'video/mp4') {
+          videoError.textContent = 'Only MP4 videos are allowed';
+          videoError.style.display = 'block';
+          this.value = '';
+          return;
+        }
+        if (file.size > MAX_FILE_SIZE) {
+          videoError.textContent = 'Video size cannot exceed 6MB';
+          videoError.style.display = 'block';
+          this.value = '';
+          return;
+        }
+        const video = document.createElement('video');
+        video.src = URL.createObjectURL(file);
+        video.controls = true;
+        previewContainer.appendChild(video);
+
+        video.onloadedmetadata = () => {
+          if (video.duration > 60) {
+            videoError.textContent = 'Video duration cannot exceed 60 seconds';
+            videoError.style.display = 'block';
+            this.value = '';
+            previewContainer.innerHTML = '';
+          }
+        };
+      }
+    });
+
+    // Switch tabs and update activeTab variable
+    function switchTab(type) {
+      if (publishButton.disabled) return; // Prevent switching while processing
+
+      activeTab = type;
+
+      if (type === 'normal') {
+        normalForm.style.display = 'block';
+        videoForm.style.display = 'none';
+        normalTab.classList.add('active');
+        videoTab.classList.remove('active');
+      } else {
+        normalForm.style.display = 'none';
+        videoForm.style.display = 'block';
+        normalTab.classList.remove('active');
+        videoTab.classList.add('active');
+      }
+
+      document.getElementById('photo-preview-container').innerHTML = '';
+      document.getElementById('video-preview-container').innerHTML = '';
+      document.querySelectorAll('.error').forEach(err => err.style.display = 'none');
+    }
+
+    // Submit ad with validation
+    async function submitAd() {
+      const isNormalTab = activeTab === 'normal';
+      const form = isNormalTab ? normalForm : videoForm;
+
+      // Clear previous errors
+      document.querySelectorAll('.error').forEach(err => err.style.display = 'none');
+
+      // Get auth token
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        showToast('Please log in to create an ad', '#dc3545');
+        resetButtons();
+        return;
+      }
+
+      // Disable buttons to prevent multiple submissions
+      publishButton.disabled = true;
+      publishButton.textContent = 'Processing...';
+      normalTab.disabled = true;
+      videoTab.disabled = true;
+
+      // Validation for Normal Ad
+      if (isNormalTab) {
+        const description = form.querySelector('#description').value.trim();
+        const productCondition = form.querySelector('#productCondition').value.trim();
+        const price = form.querySelector('#price').value;
+        const location = form.querySelector('#location').value.trim();
+        const category = form.querySelector('#category').value;
+        const photo = form.querySelector('#photo-input').files[0];
+
+        if (!description) {
+          showFieldError('normal-description-error', 'Description is required');
+          return resetAfterError();
+        }
+        if (description.length > MAX_DESCRIPTION_LENGTH) {
+          showFieldError('normal-description-error', `Description cannot exceed ${MAX_DESCRIPTION_LENGTH} characters`);
+          return resetAfterError();
+        }
+        if (!productCondition) {
+          showFieldError('normal-condition-error', 'Product condition is required');
+          return resetAfterError();
+        }
+        if (productCondition.length > MAX_TEXT_LENGTH) {
+          showFieldError('normal-condition-error', `Product condition cannot exceed ${MAX_TEXT_LENGTH} characters`);
+          return resetAfterError();
+        }
+        if (!price || isNaN(price) || Number(price) < 0) {
+          showFieldError('normal-price-error', 'Valid price is required');
+          return resetAfterError();
+        }
+        if (!location) {
+          showFieldError('normal-location-error', 'Location is required');
+          return resetAfterError();
+        }
+        if (location.length > MAX_TEXT_LENGTH) {
+          showFieldError('normal-location-error', `Location cannot exceed ${MAX_TEXT_LENGTH} characters`);
+          return resetAfterError();
+        }
+        if (!category) {
+          showFieldError('normal-category-error', 'Category is required');
+          return resetAfterError();
+        }
+        if (!photo) {
+          showFieldError('normal-photo-error', 'Image is required');
+          return resetAfterError();
+        }
+      } else {
+        // Validation for Video Ad
+        const description = form.querySelector('#video-description').value.trim();
+        const category = form.querySelector('#video-category').value;
+        const video = form.querySelector('#video-input').files[0];
+
+        if (!description) {
+          showFieldError('video-description-error', 'Description is required');
+          return resetAfterError();
+        }
+        if (description.length > MAX_DESCRIPTION_LENGTH) {
+          showFieldError('video-description-error', `Description cannot exceed ${MAX_DESCRIPTION_LENGTH} characters`);
+          return resetAfterError();
+        }
+        if (!category) {
+          showFieldError('video-category-error', 'Category is required');
+          return resetAfterError();
+        }
+        if (!video) {
+          showFieldError('video-error', 'Video is required');
+          return resetAfterError();
+        }
+      }
+
+      // Helper functions to show error and reset buttons
+      function showFieldError(id, message) {
+        const el = document.getElementById(id);
+        el.textContent = message;
+        el.style.display = 'block';
+      }
+      function resetAfterError() {
+        resetButtons();
+        return;
+      }
+
+      try {
+        const formData = new FormData(form);
+
+        const response = await fetch(`${API_BASE_URL}/post`, {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+          showToast('Ad created successfully!', '#28a745');
+          form.reset();
+          document.getElementById('photo-preview-container').innerHTML = '';
+          document.getElementById('video-preview-container').innerHTML = '';
+          switchTab('normal'); // Reset to normal tab after submission
+          resetButtons();
+          setTimeout(() => {
+            window.location.href = 'index.html';
+          }, 1000);
+        } else {
+          showToast(result.message || 'Failed to create ad', '#dc3545');
+          resetButtons();
+        }
+      } catch (error) {
+        console.error('Submission error:', error);
+        showToast('Server error. Please try again later.', '#dc3545');
+        resetButtons();
+      }
+    }
+
+    // Event listeners
+    normalTab.addEventListener('click', () => switchTab('normal'));
+    videoTab.addEventListener('click', () => switchTab('video'));
+    publishButton.addEventListener('click', submitAd);
+  </script>
 </body>
-</html
+</html>
