@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 const path = require('path');
 const fs = require('fs');
+const os = require('os');
 const Post = require('../models/postSchema.js');
 const User = require('../models/userSchema.js');
 const Report = require('../models/reportSchema.js');
@@ -15,15 +16,27 @@ const multer = require('multer');
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const cloudinary = require('cloudinary').v2;
 const ffmpeg = require('fluent-ffmpeg');
-const ffprobePath = '/data/data/com.termux/files/usr/bin/ffprobe';
-ffmpeg.setFfprobePath(ffprobePath);
-
 const sanitizeHtml = require('sanitize-html');
 const winston = require('winston');
 
+// Configure FFmpeg paths for Termux
+const isTermux = process.env.TERMUX_VERSION !== undefined;
+const ffmpegPath = isTermux 
+  ? '/data/data/com.termux/files/usr/bin/ffmpeg' 
+  : 'ffmpeg';
+const ffprobePath = isTermux 
+  ? '/data/data/com.termux/files/usr/bin/ffprobe' 
+  : 'ffprobe';
+
+ffmpeg.setFfmpegPath(ffmpegPath);
+ffmpeg.setFfprobePath(ffprobePath);
+
 const logger = winston.createLogger({
   level: 'info',
-  format: winston.format.combine(winston.format.timestamp(), winston.format.json()),
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.json()
+  ),
   transports: [
     new winston.transports.File({ filename: 'logs/postRoutes.log' }),
     new winston.transports.Console(),
@@ -52,8 +65,13 @@ if (isProduction) {
     },
   });
 } else {
-  const uploadDir = path.join(__dirname, '../Uploads/');
-  if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+  const uploadDir = isTermux
+    ? '/data/data/com.termux/files/home/storage/shared/Uploads'
+    : path.join(__dirname, '../Uploads/');
+
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+  }
 
   storage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, uploadDir),
@@ -67,7 +85,7 @@ if (isProduction) {
 
 const upload = multer({
   storage,
-  limits: { fileSize: 6 * 1024 * 1024 },
+  limits: { fileSize: 6 * 1024 * 1024 }, // 6MB
   fileFilter: (req, file, cb) => {
     const filetypes = /jpeg|jpg|png|mp4/;
     const mimetype = filetypes.test(file.mimetype);
@@ -77,10 +95,15 @@ const upload = multer({
   },
 });
 
+// Helper functions for video processing
 const getVideoDuration = (filePath) => {
   return new Promise((resolve, reject) => {
+    logger.info(`Getting duration for video: ${filePath}`);
     ffmpeg.ffprobe(filePath, (err, metadata) => {
-      if (err) return reject(err);
+      if (err) {
+        logger.error(`FFprobe error for ${filePath}: ${err.message}`);
+        return reject(err);
+      }
       resolve(metadata.format.duration);
     });
   });
@@ -88,18 +111,35 @@ const getVideoDuration = (filePath) => {
 
 const compressVideo = (inputPath, outputPath) => {
   return new Promise((resolve, reject) => {
+    logger.info(`Compressing video from ${inputPath} to ${outputPath}`);
+    
     ffmpeg(inputPath)
       .videoCodec('libx264')
       .audioCodec('aac')
-      .outputOptions(['-crf 23', '-preset fast', '-movflags +faststart', '-maxrate 1M', '-bufsize 2M'])
-      .on('end', () => resolve(outputPath))
-      .on('error', (err) => reject(err))
+      .outputOptions([
+        '-crf 23',
+        '-preset fast',
+        '-movflags +faststart',
+        '-maxrate 1M',
+        '-bufsize 2M'
+      ])
+      .on('start', (cmd) => logger.debug(`FFmpeg command: ${cmd}`))
+      .on('error', (err) => {
+        logger.error(`Compression error: ${err.message}`);
+        reject(new Error(`Video compression failed: ${err.message}`));
+      })
+      .on('end', () => {
+        logger.info(`Successfully compressed video to ${outputPath}`);
+        resolve(outputPath);
+      })
       .save(outputPath);
   });
 };
 
 const generateThumbnail = (videoPath, outputPath) => {
   return new Promise((resolve, reject) => {
+    logger.info(`Generating thumbnail for ${videoPath}`);
+    
     ffmpeg(videoPath)
       .screenshots({
         count: 1,
@@ -107,17 +147,44 @@ const generateThumbnail = (videoPath, outputPath) => {
         filename: path.basename(outputPath),
         size: '320x240',
       })
-      .on('end', () => resolve(outputPath))
-      .on('error', (err) => reject(err));
+      .on('error', (err) => {
+        logger.error(`Thumbnail generation error: ${err.message}`);
+        reject(new Error(`Thumbnail generation failed: ${err.message}`));
+      })
+      .on('end', () => {
+        logger.info(`Successfully generated thumbnail at ${outputPath}`);
+        resolve(outputPath);
+      });
   });
 };
 
 const uploadToCloudinary = (filePath, resourceType = 'auto') => {
   return new Promise((resolve, reject) => {
-    cloudinary.uploader.upload(filePath, { resource_type: resourceType }, (error, result) => {
-      if (error) return reject(error);
-      resolve(result.secure_url);
-    });
+    logger.info(`Uploading to Cloudinary: ${filePath}`);
+    cloudinary.uploader.upload(
+      filePath,
+      { resource_type: resourceType },
+      (error, result) => {
+        if (error) {
+          logger.error(`Cloudinary upload error: ${error.message}`);
+          return reject(error);
+        }
+        resolve(result.secure_url);
+      }
+    );
+  });
+};
+
+const cleanupFiles = (filePaths) => {
+  filePaths.forEach(filePath => {
+    if (fs.existsSync(filePath)) {
+      try {
+        fs.unlinkSync(filePath);
+        logger.info(`Cleaned up file: ${filePath}`);
+      } catch (err) {
+        logger.error(`Error cleaning up file ${filePath}: ${err.message}`);
+      }
+    }
   });
 };
 
@@ -133,9 +200,12 @@ module.exports = (io) => {
     verifyToken,
     upload.fields([{ name: 'photo', maxCount: 1 }, { name: 'video', maxCount: 1 }]),
     async (req, res) => {
+      let tempFiles = [];
       try {
         const { description, productCondition, location, category, price, postType = 'regular' } = req.body;
         const userId = req.user.userId;
+
+        logger.info(`Starting post creation for user ${userId}, type: ${postType}`);
 
         const user = await User.findById(userId);
         if (!user) {
@@ -158,53 +228,54 @@ module.exports = (io) => {
         let videoUrl = null;
         let thumbnailUrl = null;
 
-        if (postType === 'video_ad') {
-          if (!description || !category || !req.files?.video?.[0]) {
-            logger.warn(`Missing fields in video ad creation by user ${userId}`);
-            return res.status(400).json({ message: 'Description, category, and video are required for video ads' });
-          }
+        // In your post creation route, modify the video processing logic:
+if (postType === 'video_ad') {
+  if (!description || !category || !req.files?.video?.[0]) {
+    return res.status(400).json({ message: 'Description, category, and video are required' });
+  }
 
-          const videoPath = isProduction ? req.files.video[0].path : req.files.video[0].path;
-          const duration = await getVideoDuration(videoPath);
-          if (duration > 60) {
-            logger.warn(`Video duration ${duration}s exceeds 60s limit for user ${userId}`);
-            return res.status(400).json({ message: 'Video duration cannot exceed 60 seconds' });
-          }
-
-          const uploadDir = path.join(__dirname, '../Uploads/');
-          if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
-
-          const compressedFilename = `compressed-${Date.now()}-${req.files.video[0].filename}`;
-          const compressedPath = path.join(uploadDir, compressedFilename);
-          await compressVideo(videoPath, compressedPath);
-
-          const thumbnailFilename = `thumb-${Date.now()}-${req.files.video[0].filename.replace(/\.mp4$/, '.jpg')}`;
-          const thumbnailPath = path.join(uploadDir, thumbnailFilename);
-          await generateThumbnail(compressedPath, thumbnailPath);
-
-          if (isProduction) {
-            videoUrl = await uploadToCloudinary(compressedPath, 'video');
-            thumbnailUrl = await uploadToCloudinary(thumbnailPath, 'image');
-            fs.unlinkSync(compressedPath);
-            fs.unlinkSync(thumbnailPath);
-            if (!isProduction) fs.unlinkSync(videoPath);
-          } else {
-            videoUrl = `${req.protocol}://${req.get('host')}/Uploads/${compressedFilename}`;
-            thumbnailUrl = `${req.protocol}://${req.get('host')}/Uploads/${thumbnailFilename}`;
-          }
-        } else if (postType === 'regular') {
+  const videoFile = req.files.video[0];
+  
+  if (isProduction) {
+    // Directly upload to Cloudinary - no local compression needed
+    videoUrl = await uploadToCloudinary(videoFile.path, 'video');
+    
+    // Generate thumbnail from the original file before upload
+    const thumbnailFilename = `thumb-${Date.now()}.jpg`;
+    const thumbnailPath = path.join(os.tmpdir(), thumbnailFilename);
+    await generateThumbnail(videoFile.path, thumbnailPath);
+    thumbnailUrl = await uploadToCloudinary(thumbnailPath, 'image');
+    cleanupFiles([thumbnailPath]);
+  } else {
+    // Development - use original file (with 6MB limit)
+    videoUrl = `${req.protocol}://${req.get('host')}/Uploads/${videoFile.filename}`;
+    
+    // Generate thumbnail
+    const thumbnailFilename = `thumb-${videoFile.filename.replace(/\.[^/.]+$/, '.jpg')}`;
+    const thumbnailPath = path.join(path.dirname(videoFile.path), thumbnailFilename);
+    await generateThumbnail(videoFile.path, thumbnailPath);
+    thumbnailUrl = `${req.protocol}://${req.get('host')}/Uploads/${thumbnailFilename}`;
+  }
+} else if (postType === 'regular') {
           if (!description || !productCondition || !price || !location || !category || !req.files?.photo?.[0]) {
             logger.warn(`Missing fields in regular post creation by user ${userId}`);
-            return res.status(400).json({ message: 'All fields are required for regular posts' });
-          }
-          if (isNaN(price) || Number(price) < 0) {
-            logger.warn(`Invalid price ${price} by user ${userId}`);
-            return res.status(400).json({ message: 'Price must be a valid non-negative number' });
+            return res.status(400).json({ 
+              message: 'All fields are required for regular posts' 
+            });
           }
 
-          photoUrl = isProduction
-            ? req.files.photo[0].path
-            : `${req.protocol}://${req.get('host')}/Uploads/${req.files.photo[0].filename}`;
+          if (isNaN(price) || Number(price) < 0) {
+            logger.warn(`Invalid price ${price} by user ${userId}`);
+            return res.status(400).json({ 
+              message: 'Price must be a valid non-negative number' 
+            });
+          }
+
+          if (isProduction) {
+            photoUrl = await uploadToCloudinary(req.files.photo[0].path, 'image');
+          } else {
+            photoUrl = `${req.protocol}://${req.get('host')}/Uploads/${req.files.photo[0].filename}`;
+          }
         } else {
           logger.warn(`Invalid postType ${postType} by user ${userId}`);
           return res.status(400).json({ message: 'Invalid post type' });
@@ -221,18 +292,30 @@ module.exports = (io) => {
           },
           createdAt: new Date(),
           likes: [],
-          ...(postType === 'video_ad' ? { video: videoUrl, thumbnail: thumbnailUrl } : { photo: photoUrl, location, productCondition, price: Number(price) }),
+          ...(postType === 'video_ad' 
+            ? { video: videoUrl, thumbnail: thumbnailUrl } 
+            : { 
+                photo: photoUrl, 
+                location, 
+                productCondition, 
+                price: Number(price) 
+              }
+          ),
         });
 
         await newPost.save();
         logger.info(`Post created by user ${userId}: ${newPost._id}`);
 
+        // Notification logic remains the same as your original code
         const followers = user.followers || [];
         const notificationPromises = followers
           .filter((followerId) => followerId.toString() !== userId.toString())
           .map(async (followerId) => {
             try {
-              const follower = await User.findById(followerId).select('notificationPreferences fcmToken blockedUsers').lean();
+              const follower = await User.findById(followerId)
+                .select('notificationPreferences fcmToken blockedUsers')
+                .lean();
+              
               if (follower.blockedUsers?.includes(userId)) {
                 logger.info(`Skipping notification for blocked user ${followerId}`);
                 return;
@@ -269,15 +352,24 @@ module.exports = (io) => {
 
         await Promise.all(notificationPromises);
 
-        res.status(201).json({ message: 'Post created successfully', post: newPost });
+        res.status(201).json({ 
+          message: 'Post created successfully', 
+          post: newPost 
+        });
       } catch (error) {
-        logger.error(`Post creation error for user ${req.user.userId}: ${error.message}`);
-        res.status(500).json({ message: `Server error: ${error.message}` });
+        logger.error(`Post creation error for user ${req.user?.userId}: ${error.message}`);
+        res.status(500).json({ 
+          message: `Server error: ${error.message}` 
+        });
+      } finally {
+        if (!isProduction) {
+          cleanupFiles(tempFiles);
+        }
       }
     }
   );
 
-  router.get('/post', async (req, res) => {
+router.get('/post', async (req, res) => {
   try {
     let loggedInUserId = null;
     const { category } = req.query;

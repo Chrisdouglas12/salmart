@@ -925,3 +925,123 @@
 {"level":"info","message":"Fetched 82 posts for user anonymous","timestamp":"2025-05-29T10:30:06.177Z"}
 {"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T10:30:20.409Z"}
 {"level":"error","message":"Post creation error for user 679d530c96d06fa5dfab1ded: ffmpeg exited with code 234: Error opening output file /storage/emulated/0/Download/My web/Backend/Uploads/compressed-1748514642161-Uploads/wawgossbqgxmwg5apxhw.\nError opening output files: Invalid argument\n","timestamp":"2025-05-29T10:30:51.023Z"}
+{"level":"info","message":"✅ Cloudinary configured in postRoutes","timestamp":"2025-05-29T10:41:12.498Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T10:42:01.144Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T10:42:01.562Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T10:42:31.175Z"}
+{"level":"info","message":"Starting post creation for user 679d530c96d06fa5dfab1ded, type: video_ad","timestamp":"2025-05-29T10:42:38.893Z"}
+{"level":"info","message":"Processing video at https://res.cloudinary.com/dp7shydjh/video/upload/v1748515358/Uploads/t8lgzcnvb5hhzqvitbxo.mp4","timestamp":"2025-05-29T10:42:39.156Z"}
+{"level":"info","message":"Getting duration for video: https://res.cloudinary.com/dp7shydjh/video/upload/v1748515358/Uploads/t8lgzcnvb5hhzqvitbxo.mp4","timestamp":"2025-05-29T10:42:39.161Z"}
+{"level":"info","message":"Compressing video from https://res.cloudinary.com/dp7shydjh/video/upload/v1748515358/Uploads/t8lgzcnvb5hhzqvitbxo.mp4 to https:/res.cloudinary.com/dp7shydjh/video/upload/v1748515358/Uploads/compressed-1748515371894.mp4","timestamp":"2025-05-29T10:42:51.897Z"}
+{"level":"error","message":"Compression error: ffmpeg exited with code 234: Conversion failed!\n","timestamp":"2025-05-29T10:43:03.704Z"}
+{"level":"error","message":"Post creation error for user 679d530c96d06fa5dfab1ded: Video compression failed: ffmpeg exited with code 234: Conversion failed!\n","timestamp":"2025-05-29T10:43:03.709Z"}
+{"level":"info","message":"✅ Cloudinary configured in postRoutes","timestamp":"2025-05-29T10:50:20.369Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T10:53:52.869Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T10:53:53.237Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T10:54:14.371Z"}
+{"level":"info","message":"Starting post creation for user 679d530c96d06fa5dfab1ded, type: video_ad","timestamp":"2025-05-29T10:54:28.494Z"}
+{"level":"info","message":"Uploading to Cloudinary: https://res.cloudinary.com/dp7shydjh/video/upload/v1748516067/Uploads/mjkga7jfapdmgqlpzae3.mp4","timestamp":"2025-05-29T10:54:28.719Z"}
+{"level":"info","message":"Generating thumbnail for https://res.cloudinary.com/dp7shydjh/video/upload/v1748516067/Uploads/mjkga7jfapdmgqlpzae3.mp4","timestamp":"2025-05-29T10:54:30.436Z"}
+{"level":"info","message":"Successfully generated thumbnail at /data/data/com.termux/files/usr/tmp/thumb-1748516070427.jpg","timestamp":"2025-05-29T10:54:53.277Z"}
+{"level":"info","message":"Uploading to Cloudinary: /data/data/com.termux/files/usr/tmp/thumb-1748516070427.jpg","timestamp":"2025-05-29T10:54:53.282Z"}
+{"level":"info","message":"Cleaned up file: /data/data/com.termux/files/usr/tmp/thumb-1748516070427.jpg","timestamp":"2025-05-29T10:54:56.225Z"}
+{"level":"info","message":"Post created by user 679d530c96d06fa5dfab1ded: 68383d00f75badca110c19e3","timestamp":"2025-05-29T10:54:56.855Z"}
+{"level":"error","message":"Notification error for user 679d53b096d06fa5dfab1e09: Notification validation failed: type: `new_post` is not a valid enum value for path `type`.","timestamp":"2025-05-29T10:54:57.402Z"}
+{"level":"error","message":"Notification error for user 67d845b5c9add2113fc80789: Notification validation failed: type: `new_post` is not a valid enum value for path `type`.","timestamp":"2025-05-29T10:54:57.430Z"}
+{"level":"error","message":"Notification error for user 67b6fbdedfb7a20620fcb1d1: Notification validation failed: type: `new_post` is not a valid enum value for path `type`.","timestamp":"2025-05-29T10:54:57.451Z"}
+{"level":"error","message":"Notification error for user 67b6fbdedfb7a20620fcb1d1: Notification validation failed: type: `new_post` is not a valid enum value for path `type`.","timestamp":"2025-05-29T10:54:57.472Z"}
+{"level":"error","message":"Notification error for user 67d845b5c9add2113fc80789: Notification validation failed: type: `new_post` is not a valid enum value for path `type`.","timestamp":"2025-05-29T10:54:57.489Z"}
+{"level":"error","message":"Notification error for user 67b6fbdedfb7a20620fcb1d1: Notification validation failed: type: `new_post` is not a valid enum value for path `type`.","timestamp":"2025-05-29T10:54:57.534Z"}
+{"level":"error","message":"Notification error for user 67b6fbdedfb7a20620fcb1d1: Notification validation failed: type: `new_post` is not a valid enum value for path `type`.","timestamp":"2025-05-29T10:54:57.603Z"}
+{"level":"error","message":"Notification error for user 67b6fbdedfb7a20620fcb1d1: Notification validation failed: type: `new_post` is not a valid enum value for path `type`.","timestamp":"2025-05-29T10:54:57.627Z"}
+{"level":"error","message":"Notification error for user 67b6fbdedfb7a20620fcb1d1: Notification validation failed: type: `new_post` is not a valid enum value for path `type`.","timestamp":"2025-05-29T10:54:57.678Z"}
+{"level":"error","message":"Notification error for user 67b6fbdedfb7a20620fcb1d1: Notification validation failed: type: `new_post` is not a valid enum value for path `type`.","timestamp":"2025-05-29T10:54:57.694Z"}
+{"level":"error","message":"Notification error for user 67b6fbdedfb7a20620fcb1d1: Notification validation failed: type: `new_post` is not a valid enum value for path `type`.","timestamp":"2025-05-29T10:54:57.710Z"}
+{"level":"error","message":"Notification error for user 67b6fbdedfb7a20620fcb1d1: Notification validation failed: type: `new_post` is not a valid enum value for path `type`.","timestamp":"2025-05-29T10:54:57.756Z"}
+{"level":"error","message":"Notification error for user 67b6fbdedfb7a20620fcb1d1: Notification validation failed: type: `new_post` is not a valid enum value for path `type`.","timestamp":"2025-05-29T10:54:57.772Z"}
+{"level":"error","message":"Notification error for user 67b6fbdedfb7a20620fcb1d1: Notification validation failed: type: `new_post` is not a valid enum value for path `type`.","timestamp":"2025-05-29T10:54:57.834Z"}
+{"level":"error","message":"Notification error for user 67b6fbdedfb7a20620fcb1d1: Notification validation failed: type: `new_post` is not a valid enum value for path `type`.","timestamp":"2025-05-29T10:54:57.852Z"}
+{"level":"error","message":"Notification error for user 67b6fbdedfb7a20620fcb1d1: Notification validation failed: type: `new_post` is not a valid enum value for path `type`.","timestamp":"2025-05-29T10:54:57.908Z"}
+{"level":"error","message":"Notification error for user 67b6fbdedfb7a20620fcb1d1: Notification validation failed: type: `new_post` is not a valid enum value for path `type`.","timestamp":"2025-05-29T10:54:57.926Z"}
+{"level":"error","message":"Notification error for user 67b6fbdedfb7a20620fcb1d1: Notification validation failed: type: `new_post` is not a valid enum value for path `type`.","timestamp":"2025-05-29T10:54:57.945Z"}
+{"level":"error","message":"Notification error for user 67b6fbdedfb7a20620fcb1d1: Notification validation failed: type: `new_post` is not a valid enum value for path `type`.","timestamp":"2025-05-29T10:54:58.001Z"}
+{"level":"error","message":"Notification error for user 67b6fbdedfb7a20620fcb1d1: Notification validation failed: type: `new_post` is not a valid enum value for path `type`.","timestamp":"2025-05-29T10:54:58.026Z"}
+{"level":"error","message":"Notification error for user 67b6fbdedfb7a20620fcb1d1: Notification validation failed: type: `new_post` is not a valid enum value for path `type`.","timestamp":"2025-05-29T10:54:58.062Z"}
+{"level":"error","message":"Notification error for user 67b6fbdedfb7a20620fcb1d1: Notification validation failed: type: `new_post` is not a valid enum value for path `type`.","timestamp":"2025-05-29T10:54:58.082Z"}
+{"level":"error","message":"Notification error for user 67b6fbdedfb7a20620fcb1d1: Notification validation failed: type: `new_post` is not a valid enum value for path `type`.","timestamp":"2025-05-29T10:54:58.142Z"}
+{"level":"error","message":"Notification error for user 67b6fbdedfb7a20620fcb1d1: Notification validation failed: type: `new_post` is not a valid enum value for path `type`.","timestamp":"2025-05-29T10:54:58.173Z"}
+{"level":"error","message":"Notification error for user 67b6fbdedfb7a20620fcb1d1: Notification validation failed: type: `new_post` is not a valid enum value for path `type`.","timestamp":"2025-05-29T10:54:58.220Z"}
+{"level":"error","message":"Notification error for user 67b6fbdedfb7a20620fcb1d1: Notification validation failed: type: `new_post` is not a valid enum value for path `type`.","timestamp":"2025-05-29T10:54:58.256Z"}
+{"level":"error","message":"Notification error for user 67b6fbdedfb7a20620fcb1d1: Notification validation failed: type: `new_post` is not a valid enum value for path `type`.","timestamp":"2025-05-29T10:54:58.271Z"}
+{"level":"error","message":"Notification error for user 67b6fbdedfb7a20620fcb1d1: Notification validation failed: type: `new_post` is not a valid enum value for path `type`.","timestamp":"2025-05-29T10:54:58.298Z"}
+{"level":"error","message":"Notification error for user 67b6fbdedfb7a20620fcb1d1: Notification validation failed: type: `new_post` is not a valid enum value for path `type`.","timestamp":"2025-05-29T10:54:58.332Z"}
+{"level":"error","message":"Notification error for user 67b6fbdedfb7a20620fcb1d1: Notification validation failed: type: `new_post` is not a valid enum value for path `type`.","timestamp":"2025-05-29T10:54:58.407Z"}
+{"level":"error","message":"Notification error for user 67b6fbdedfb7a20620fcb1d1: Notification validation failed: type: `new_post` is not a valid enum value for path `type`.","timestamp":"2025-05-29T10:54:58.435Z"}
+{"level":"error","message":"Notification error for user 67b6fbdedfb7a20620fcb1d1: Notification validation failed: type: `new_post` is not a valid enum value for path `type`.","timestamp":"2025-05-29T10:54:58.446Z"}
+{"level":"error","message":"Notification error for user 67b6fbdedfb7a20620fcb1d1: Notification validation failed: type: `new_post` is not a valid enum value for path `type`.","timestamp":"2025-05-29T10:54:58.477Z"}
+{"level":"error","message":"Notification error for user 67b6fbdedfb7a20620fcb1d1: Notification validation failed: type: `new_post` is not a valid enum value for path `type`.","timestamp":"2025-05-29T10:54:58.488Z"}
+{"level":"error","message":"Notification error for user 67b6fbdedfb7a20620fcb1d1: Notification validation failed: type: `new_post` is not a valid enum value for path `type`.","timestamp":"2025-05-29T10:54:58.582Z"}
+{"level":"error","message":"Notification error for user 67b6fbdedfb7a20620fcb1d1: Notification validation failed: type: `new_post` is not a valid enum value for path `type`.","timestamp":"2025-05-29T10:54:58.621Z"}
+{"level":"error","message":"Notification error for user 67b6fbdedfb7a20620fcb1d1: Notification validation failed: type: `new_post` is not a valid enum value for path `type`.","timestamp":"2025-05-29T10:54:58.639Z"}
+{"level":"error","message":"Notification error for user 67b6fbdedfb7a20620fcb1d1: Notification validation failed: type: `new_post` is not a valid enum value for path `type`.","timestamp":"2025-05-29T10:54:58.653Z"}
+{"level":"error","message":"Notification error for user 67b6fbdedfb7a20620fcb1d1: Notification validation failed: type: `new_post` is not a valid enum value for path `type`.","timestamp":"2025-05-29T10:54:58.664Z"}
+{"level":"error","message":"Notification error for user 67b6fbdedfb7a20620fcb1d1: Notification validation failed: type: `new_post` is not a valid enum value for path `type`.","timestamp":"2025-05-29T10:54:58.745Z"}
+{"level":"error","message":"Notification error for user 67b6fbdedfb7a20620fcb1d1: Notification validation failed: type: `new_post` is not a valid enum value for path `type`.","timestamp":"2025-05-29T10:54:58.804Z"}
+{"level":"error","message":"Notification error for user 67b6fbdedfb7a20620fcb1d1: Notification validation failed: type: `new_post` is not a valid enum value for path `type`.","timestamp":"2025-05-29T10:54:58.825Z"}
+{"level":"error","message":"Notification error for user 67b6fbdedfb7a20620fcb1d1: Notification validation failed: type: `new_post` is not a valid enum value for path `type`.","timestamp":"2025-05-29T10:54:58.839Z"}
+{"level":"error","message":"Notification error for user 67b6fbdedfb7a20620fcb1d1: Notification validation failed: type: `new_post` is not a valid enum value for path `type`.","timestamp":"2025-05-29T10:54:58.853Z"}
+{"level":"error","message":"Notification error for user 67b6fbdedfb7a20620fcb1d1: Notification validation failed: type: `new_post` is not a valid enum value for path `type`.","timestamp":"2025-05-29T10:54:58.922Z"}
+{"level":"error","message":"Notification error for user 67b6fbdedfb7a20620fcb1d1: Notification validation failed: type: `new_post` is not a valid enum value for path `type`.","timestamp":"2025-05-29T10:54:58.956Z"}
+{"level":"error","message":"Notification error for user 67b6fbdedfb7a20620fcb1d1: Notification validation failed: type: `new_post` is not a valid enum value for path `type`.","timestamp":"2025-05-29T10:54:59.003Z"}
+{"level":"error","message":"Notification error for user 67b6fbdedfb7a20620fcb1d1: Notification validation failed: type: `new_post` is not a valid enum value for path `type`.","timestamp":"2025-05-29T10:54:59.023Z"}
+{"level":"error","message":"Notification error for user 67b6fbdedfb7a20620fcb1d1: Notification validation failed: type: `new_post` is not a valid enum value for path `type`.","timestamp":"2025-05-29T10:54:59.037Z"}
+{"level":"error","message":"Notification error for user 67b6fbdedfb7a20620fcb1d1: Notification validation failed: type: `new_post` is not a valid enum value for path `type`.","timestamp":"2025-05-29T10:54:59.048Z"}
+{"level":"error","message":"Notification error for user 67b6fbdedfb7a20620fcb1d1: Notification validation failed: type: `new_post` is not a valid enum value for path `type`.","timestamp":"2025-05-29T10:54:59.091Z"}
+{"level":"error","message":"Notification error for user 67b6fbdedfb7a20620fcb1d1: Notification validation failed: type: `new_post` is not a valid enum value for path `type`.","timestamp":"2025-05-29T10:54:59.115Z"}
+{"level":"error","message":"Notification error for user 67b6fbdedfb7a20620fcb1d1: Notification validation failed: type: `new_post` is not a valid enum value for path `type`.","timestamp":"2025-05-29T10:54:59.160Z"}
+{"level":"error","message":"Notification error for user 67b6fbdedfb7a20620fcb1d1: Notification validation failed: type: `new_post` is not a valid enum value for path `type`.","timestamp":"2025-05-29T10:54:59.189Z"}
+{"level":"error","message":"Notification error for user 67b6fbdedfb7a20620fcb1d1: Notification validation failed: type: `new_post` is not a valid enum value for path `type`.","timestamp":"2025-05-29T10:54:59.224Z"}
+{"level":"error","message":"Notification error for user 67b6fbdedfb7a20620fcb1d1: Notification validation failed: type: `new_post` is not a valid enum value for path `type`.","timestamp":"2025-05-29T10:54:59.236Z"}
+{"level":"error","message":"Notification error for user 67b6fbdedfb7a20620fcb1d1: Notification validation failed: type: `new_post` is not a valid enum value for path `type`.","timestamp":"2025-05-29T10:54:59.327Z"}
+{"level":"error","message":"Notification error for user 67b6fbdedfb7a20620fcb1d1: Notification validation failed: type: `new_post` is not a valid enum value for path `type`.","timestamp":"2025-05-29T10:55:00.075Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T10:55:02.968Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T10:55:03.309Z"}
+{"level":"info","message":"✅ Cloudinary configured in postRoutes","timestamp":"2025-05-29T10:58:31.752Z"}
+{"level":"info","message":"✅ Cloudinary configured in postRoutes","timestamp":"2025-05-29T10:59:33.707Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T11:00:24.699Z"}
+{"level":"info","message":"Fetched 83 posts for user anonymous","timestamp":"2025-05-29T11:00:29.445Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T11:00:50.800Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T11:00:51.212Z"}
+{"level":"info","message":"Fetched 83 posts for user anonymous","timestamp":"2025-05-29T11:00:55.520Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T11:01:19.633Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T11:01:49.638Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T11:01:59.910Z"}
+{"level":"info","message":"User 679d530c96d06fa5dfab1ded liked post 68383d00f75badca110c19e3","timestamp":"2025-05-29T11:02:00.156Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T11:02:19.601Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T11:07:11.503Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T11:07:11.783Z"}
+{"level":"info","message":"Fetched 83 posts for user anonymous","timestamp":"2025-05-29T11:07:19.538Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T11:07:40.539Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T11:08:04.951Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T11:08:05.221Z"}
+{"level":"info","message":"Fetched 83 posts for user anonymous","timestamp":"2025-05-29T11:08:07.933Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T11:08:34.090Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T11:09:57.285Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T11:09:57.591Z"}
+{"level":"info","message":"Fetched 83 posts for user anonymous","timestamp":"2025-05-29T11:10:07.832Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T11:10:26.163Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T11:12:24.346Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T11:12:24.805Z"}
+{"level":"info","message":"Fetched 83 posts for user anonymous","timestamp":"2025-05-29T11:12:32.310Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T11:12:53.439Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T11:13:48.055Z"}
+{"level":"info","message":"✅ Cloudinary configured in postRoutes","timestamp":"2025-05-29T11:14:25.035Z"}
+{"level":"info","message":"✅ Cloudinary configured in postRoutes","timestamp":"2025-05-29T11:23:27.252Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T11:24:09.982Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T11:34:24.671Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T11:34:24.803Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T11:34:25.020Z"}
+{"level":"info","message":"Fetched 83 posts for user anonymous","timestamp":"2025-05-29T11:34:31.463Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T11:34:38.438Z"}
+{"level":"info","message":"Fetched 83 posts for user anonymous","timestamp":"2025-05-29T11:34:42.321Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-05-29T11:35:07.624Z"}
