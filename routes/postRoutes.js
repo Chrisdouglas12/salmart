@@ -112,7 +112,7 @@ const getVideoDuration = (filePath) => {
 const compressVideo = (inputPath, outputPath) => {
   return new Promise((resolve, reject) => {
     logger.info(`Compressing video from ${inputPath} to ${outputPath}`);
-    
+
     ffmpeg(inputPath)
       .videoCodec('libx264')
       .audioCodec('aac')
@@ -139,7 +139,7 @@ const compressVideo = (inputPath, outputPath) => {
 const generateThumbnail = (videoPath, outputPath) => {
   return new Promise((resolve, reject) => {
     logger.info(`Generating thumbnail for ${videoPath}`);
-    
+
     ffmpeg(videoPath)
       .screenshots({
         count: 1,
@@ -235,11 +235,11 @@ if (postType === 'video_ad') {
   }
 
   const videoFile = req.files.video[0];
-  
+
   if (isProduction) {
     // Directly upload to Cloudinary - no local compression needed
     videoUrl = await uploadToCloudinary(videoFile.path, 'video');
-    
+
     // Generate thumbnail from the original file before upload
     const thumbnailFilename = `thumb-${Date.now()}.jpg`;
     const thumbnailPath = path.join(os.tmpdir(), thumbnailFilename);
@@ -249,7 +249,7 @@ if (postType === 'video_ad') {
   } else {
     // Development - use original file (with 6MB limit)
     videoUrl = `${req.protocol}://${req.get('host')}/Uploads/${videoFile.filename}`;
-    
+
     // Generate thumbnail
     const thumbnailFilename = `thumb-${videoFile.filename.replace(/\.[^/.]+$/, '.jpg')}`;
     const thumbnailPath = path.join(path.dirname(videoFile.path), thumbnailFilename);
@@ -315,7 +315,7 @@ if (postType === 'video_ad') {
               const follower = await User.findById(followerId)
                 .select('notificationPreferences fcmToken blockedUsers')
                 .lean();
-              
+
               if (follower.blockedUsers?.includes(userId)) {
                 logger.info(`Skipping notification for blocked user ${followerId}`);
                 return;

@@ -364,13 +364,6 @@ document.addEventListener('DOMContentLoaded', async function () {
                                 <p class="value">${post.description}</p>
                             </div>
                         </div>
-                        <div class="product-info">
-                            <span class="icon">🏷️</span>
-                            <div>
-                                <p class="label">Category</p>
-                                <p class="value">${post.category || 'N/A'}</p>
-                            </div>
-                        </div>
                     `;
                 } else {
                     mediaContent = `
