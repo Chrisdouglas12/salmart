@@ -1116,3 +1116,26 @@
 {"level":"info","message":"[2025-05-29T15:11:44.900Z] GET /users-profile/679d530c96d06fa5dfab1ded","timestamp":"2025-05-29T15:11:44.900Z"}
 {"level":"info","message":"[2025-05-29T15:11:44.905Z] GET /api/following","timestamp":"2025-05-29T15:11:44.905Z"}
 {"level":"info","message":"[2025-05-29T15:11:44.979Z] GET /verify-token","timestamp":"2025-05-29T15:11:44.980Z"}
+{"level":"info","message":"✅ Firebase Admin SDK initialized successfully","timestamp":"2025-05-29T15:14:49.840Z"}
+{"level":"info","message":"✅ Socket.IO initialized","timestamp":"2025-05-29T15:14:50.125Z"}
+{"level":"info","message":"✅ Nodemailer configured","timestamp":"2025-05-29T15:14:50.213Z"}
+{"level":"info","message":"✅ Cloudinary configured","timestamp":"2025-05-29T15:14:50.215Z"}
+{"level":"info","message":"✅ Server running on port 3000","timestamp":"2025-05-29T15:14:50.266Z"}
+{"level":"info","message":"✅ MongoDB connected successfully","timestamp":"2025-05-29T15:14:56.489Z"}
+{"level":"info","message":"[2025-05-29T15:15:46.358Z] GET /notification-counts?userId=679d530c96d06fa5dfab1ded","timestamp":"2025-05-29T15:15:46.359Z"}
+{"level":"info","message":"Socket connected: IHfsUehtTO-BPJQOAAAB","timestamp":"2025-05-29T15:16:40.101Z"}
+{"level":"info","message":"[2025-05-29T15:16:40.182Z] GET /users-profile/679d530c96d06fa5dfab1ded","timestamp":"2025-05-29T15:16:40.182Z"}
+{"level":"info","message":"[2025-05-29T15:16:40.314Z] GET /verify-token","timestamp":"2025-05-29T15:16:40.315Z"}
+{"level":"info","message":"[2025-05-29T15:16:40.354Z] GET /notification-counts?userId=679d530c96d06fa5dfab1ded","timestamp":"2025-05-29T15:16:40.354Z"}
+{"level":"info","message":"[2025-05-29T15:16:40.360Z] GET /api/following","timestamp":"2025-05-29T15:16:40.360Z"}
+{"level":"info","message":"[2025-05-29T15:16:40.627Z] GET /post?category=","timestamp":"2025-05-29T15:16:40.627Z"}
+{"level":"info","message":"[2025-05-29T15:17:09.442Z] GET /notification-counts?userId=679d530c96d06fa5dfab1ded","timestamp":"2025-05-29T15:17:09.442Z"}
+{"level":"info","message":"[2025-05-29T15:17:39.434Z] GET /notification-counts?userId=679d530c96d06fa5dfab1ded","timestamp":"2025-05-29T15:17:39.434Z"}
+{"level":"info","message":"Socket disconnected: IHfsUehtTO-BPJQOAAAB","timestamp":"2025-05-29T15:17:41.855Z"}
+{"level":"info","message":"Socket connected: vULa9via-hMI3kRoAAAD","timestamp":"2025-05-29T15:18:34.623Z"}
+{"level":"info","message":"[2025-05-29T15:18:35.268Z] GET /users-profile/679d530c96d06fa5dfab1ded","timestamp":"2025-05-29T15:18:35.268Z"}
+{"level":"info","message":"[2025-05-29T15:18:35.323Z] GET /notification-counts?userId=679d530c96d06fa5dfab1ded","timestamp":"2025-05-29T15:18:35.323Z"}
+{"level":"info","message":"[2025-05-29T15:18:35.328Z] GET /api/following","timestamp":"2025-05-29T15:18:35.328Z"}
+{"level":"info","message":"[2025-05-29T15:18:35.368Z] GET /verify-token","timestamp":"2025-05-29T15:18:35.369Z"}
+{"level":"info","message":"[2025-05-29T15:18:35.641Z] GET /post?category=","timestamp":"2025-05-29T15:18:35.641Z"}
+{"level":"info","message":"[2025-05-29T15:19:04.448Z] GET /notification-counts?userId=679d530c96d06fa5dfab1ded","timestamp":"2025-05-29T15:19:04.449Z"}
