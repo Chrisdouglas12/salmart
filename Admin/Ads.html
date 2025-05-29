@@ -7,6 +7,7 @@
   <title>Create Ad</title>
   <link rel="stylesheet" href="Ads-Styles.css" />
   <script src="https://cdn.jsdelivr.net/npm/jwt-decode@3.1.2/build/jwt-decode.min.js"></script>
+  <script src="addPic.js"></script>
   <style>
     .tab-header {
       display: flex;
@@ -74,6 +75,39 @@
     .publish-button:disabled {
       background-color: #ccc;
       cursor: not-allowed;
+    }
+    /* Loading Modal Styles */
+    .loading-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 10000;
+      align-items: center;
+      justify-content: center;
+    }
+    .loading-content {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    }
+    .spinner {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #28a745;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 10px;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
   </style>
 </head>
@@ -164,6 +198,12 @@
           <div class="error" id="video-category-error"></div>
         </div>
 
+        <div class="input-form">
+          <label for="product-link">Salmart Product Link</label>
+          <input id="product-link" name="productLink" type="url" class="input" placeholder="e.g. https://salmart.onrender.com/product/123" required />
+          <div class="error" id="product-link-error"></div>
+        </div>
+
         <div class="file-section">
           <label for="video-input">Upload Video (Max 6MB, 60s)</label>
           <input id="video-input" type="file" class="media-input" name="video" accept="video/mp4" required />
@@ -186,6 +226,14 @@
     </div>
   </div>
 
+  <!-- Loading Modal -->
+  <div id="loading-modal" class="loading-modal">
+    <div class="loading-content">
+      <div class="spinner"></div>
+      <p>Uploading your ad...</p>
+    </div>
+  </div>
+
   <!-- Modal for image gallery (unused for now) -->
   <div id="galleryModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center;">
     <div id="galleryContent"></div>
@@ -196,6 +244,7 @@
     const MAX_DESCRIPTION_LENGTH = 500;
     const MAX_TEXT_LENGTH = 100;
     const API_BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart.onrender.com';
+    const VALID_DOMAIN = 'salmart.onrender.com';
 
     // DOM references
     const normalForm = document.getElementById('normal-ad-form');
@@ -205,6 +254,7 @@
     const publishButton = document.getElementById('publish-button');
     const priceDisplay = document.getElementById('price-display');
     const priceHidden = document.getElementById('price');
+    const loadingModal = document.getElementById('loading-modal');
 
     // Track active tab
     let activeTab = 'normal';
@@ -220,30 +270,34 @@
       }, 3000);
     }
 
+    // Show/hide loading modal
+    function showLoadingModal() {
+      loadingModal.style.display = 'flex';
+    }
+    function hideLoadingModal() {
+      loadingModal.style.display = 'none';
+    }
+
     // Reset buttons and enable tabs
     function resetButtons() {
       publishButton.disabled = false;
       publishButton.textContent = 'Publish ad';
       normalTab.disabled = false;
       videoTab.disabled = false;
+      hideLoadingModal();
     }
 
     // Format price input with thousand separators and decimals
     function formatPriceInput(value) {
       let cleanValue = value.replace(/[^\d.]/g, '');
-
       const parts = cleanValue.split('.');
       let integerPart = parts[0];
       let decimalPart = parts[1] || '';
-
       if (decimalPart.length > 2) {
         decimalPart = decimalPart.substring(0, 2);
       }
-
       integerPart = integerPart.replace(/^0+(?=\d)/, '');
-
       integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-
       return decimalPart.length > 0 ? `${integerPart}.${decimalPart}` : integerPart;
     }
 
@@ -258,14 +312,11 @@
     priceDisplay.addEventListener('input', (e) => {
       const cursorPosition = e.target.selectionStart;
       const oldLength = e.target.value.length;
-
       let formatted = formatPriceInput(e.target.value);
       e.target.value = formatted;
-
       const newLength = formatted.length;
       const diff = newLength - oldLength;
       e.target.selectionEnd = cursorPosition + diff;
-
       const numericValue = parsePrice(formatted);
       if (!isNaN(numericValue)) {
         priceHidden.value = numericValue.toFixed(2);
@@ -280,7 +331,6 @@
       const previewContainer = document.getElementById('photo-preview-container');
       previewContainer.innerHTML = '';
       photoError.style.display = 'none';
-
       const file = e.target.files[0];
       if (file) {
         if (!['image/jpeg', 'image/png'].includes(file.type)) {
@@ -308,7 +358,6 @@
       const previewContainer = document.getElementById('video-preview-container');
       previewContainer.innerHTML = '';
       videoError.style.display = 'none';
-
       const file = e.target.files[0];
       if (file) {
         if (file.type !== 'video/mp4') {
@@ -327,7 +376,6 @@
         video.src = URL.createObjectURL(file);
         video.controls = true;
         previewContainer.appendChild(video);
-
         video.onloadedmetadata = () => {
           if (video.duration > 60) {
             videoError.textContent = 'Video duration cannot exceed 60 seconds';
@@ -339,12 +387,20 @@
       }
     });
 
+    // Validate product link
+    function isValidSalmartLink(link) {
+      try {
+        const url = new URL(link);
+        return url.hostname === VALID_DOMAIN || (window.location.hostname === 'localhost' && url.hostname === 'localhost');
+      } catch (e) {
+        return false;
+      }
+    }
+
     // Switch tabs and update activeTab variable
     function switchTab(type) {
-      if (publishButton.disabled) return; // Prevent switching while processing
-
+      if (publishButton.disabled) return;
       activeTab = type;
-
       if (type === 'normal') {
         normalForm.style.display = 'block';
         videoForm.style.display = 'none';
@@ -356,7 +412,6 @@
         normalTab.classList.remove('active');
         videoTab.classList.add('active');
       }
-
       document.getElementById('photo-preview-container').innerHTML = '';
       document.getElementById('video-preview-container').innerHTML = '';
       document.querySelectorAll('.error').forEach(err => err.style.display = 'none');
@@ -377,6 +432,9 @@
         resetButtons();
         return;
       }
+
+      // Show loading modal
+      showLoadingModal();
 
       // Disable buttons to prevent multiple submissions
       publishButton.disabled = true;
@@ -434,6 +492,7 @@
         const description = form.querySelector('#video-description').value.trim();
         const category = form.querySelector('#video-category').value;
         const video = form.querySelector('#video-input').files[0];
+        const productLink = form.querySelector('#product-link').value.trim();
 
         if (!description) {
           showFieldError('video-description-error', 'Description is required');
@@ -449,6 +508,14 @@
         }
         if (!video) {
           showFieldError('video-error', 'Video is required');
+          return resetAfterError();
+        }
+        if (!productLink) {
+          showFieldError('product-link-error', 'Product link is required');
+          return resetAfterError();
+        }
+        if (!isValidSalmartLink(productLink)) {
+          showFieldError('product-link-error', 'Link must be a valid Salmart URL (e.g., https://salmart.onrender.com/product/123)');
           return resetAfterError();
         }
       }
@@ -482,7 +549,7 @@
           form.reset();
           document.getElementById('photo-preview-container').innerHTML = '';
           document.getElementById('video-preview-container').innerHTML = '';
-          switchTab('normal'); // Reset to normal tab after submission
+          switchTab('normal');
           resetButtons();
           setTimeout(() => {
             window.location.href = 'index.html';

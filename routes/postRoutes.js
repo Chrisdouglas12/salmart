@@ -196,178 +196,193 @@ module.exports = (io) => {
   });
 
   router.post(
-    '/post',
-    verifyToken,
-    upload.fields([{ name: 'photo', maxCount: 1 }, { name: 'video', maxCount: 1 }]),
-    async (req, res) => {
-      let tempFiles = [];
-      try {
-        const { description, productCondition, location, category, price, postType = 'regular' } = req.body;
-        const userId = req.user.userId;
+  '/post',
+  verifyToken,
+  upload.fields([{ name: 'photo', maxCount: 1 }, { name: 'video', maxCount: 1 }]),
+  async (req, res) => {
+    let tempFiles = [];
+    try {
+      const { description, productCondition, location, category, price, postType = 'regular', productLink } = req.body;
+      const userId = req.user.userId;
 
-        logger.info(`Starting post creation for user ${userId}, type: ${postType}`);
+      logger.info(`Starting post creation for user ${userId}, type: ${postType}`);
 
-        const user = await User.findById(userId);
-        if (!user) {
-          logger.error(`User ${userId} not found`);
-          return res.status(404).json({ message: 'User not found' });
+      const user = await User.findById(userId);
+      if (!user) {
+        logger.error(`User ${userId} not found`);
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      const validCategories = ['electronics', 'fashion', 'home', 'vehicles', 'music', 'others'];
+      if (!validCategories.includes(category)) {
+        logger.warn(`Invalid category ${category} by user ${userId}`);
+        return res.status(400).json({ message: 'Invalid category' });
+      }
+
+      const sanitizedDescription = sanitizeHtml(description, {
+        allowedTags: [],
+        allowedAttributes: {},
+      });
+
+      let photoUrl = null;
+      let videoUrl = null;
+      let thumbnailUrl = null;
+
+      // Validate productLink for video ads
+      const isProduction = process.env.NODE_ENV === 'production';
+      const validDomain = isProduction ? 'salmart.onrender.com' : 'localhost';
+      const isValidSalmartLink = (link) => {
+        try {
+          const url = new URL(link);
+          return url.hostname === validDomain;
+        } catch (e) {
+          return false;
         }
+      };
 
-        const validCategories = ['electronics', 'fashion', 'home', 'vehicles', 'music', 'others'];
-        if (!validCategories.includes(category)) {
-          logger.warn(`Invalid category ${category} by user ${userId}`);
-          return res.status(400).json({ message: 'Invalid category' });
-        }
-
-        const sanitizedDescription = sanitizeHtml(description, {
-          allowedTags: [],
-          allowedAttributes: {},
-        });
-
-        let photoUrl = null;
-        let videoUrl = null;
-        let thumbnailUrl = null;
-
-        // In your post creation route, modify the video processing logic:
-if (postType === 'video_ad') {
-  if (!description || !category || !req.files?.video?.[0]) {
-    return res.status(400).json({ message: 'Description, category, and video are required' });
-  }
-
-  const videoFile = req.files.video[0];
-
-  if (isProduction) {
-    // Directly upload to Cloudinary - no local compression needed
-    videoUrl = await uploadToCloudinary(videoFile.path, 'video');
-
-    // Generate thumbnail from the original file before upload
-    const thumbnailFilename = `thumb-${Date.now()}.jpg`;
-    const thumbnailPath = path.join(os.tmpdir(), thumbnailFilename);
-    await generateThumbnail(videoFile.path, thumbnailPath);
-    thumbnailUrl = await uploadToCloudinary(thumbnailPath, 'image');
-    cleanupFiles([thumbnailPath]);
-  } else {
-    // Development - use original file (with 6MB limit)
-    videoUrl = `${req.protocol}://${req.get('host')}/Uploads/${videoFile.filename}`;
-
-    // Generate thumbnail
-    const thumbnailFilename = `thumb-${videoFile.filename.replace(/\.[^/.]+$/, '.jpg')}`;
-    const thumbnailPath = path.join(path.dirname(videoFile.path), thumbnailFilename);
-    await generateThumbnail(videoFile.path, thumbnailPath);
-    thumbnailUrl = `${req.protocol}://${req.get('host')}/Uploads/${thumbnailFilename}`;
-  }
-} else if (postType === 'regular') {
-          if (!description || !productCondition || !price || !location || !category || !req.files?.photo?.[0]) {
-            logger.warn(`Missing fields in regular post creation by user ${userId}`);
-            return res.status(400).json({ 
-              message: 'All fields are required for regular posts' 
-            });
-          }
-
-          if (isNaN(price) || Number(price) < 0) {
-            logger.warn(`Invalid price ${price} by user ${userId}`);
-            return res.status(400).json({ 
-              message: 'Price must be a valid non-negative number' 
-            });
-          }
-
-          if (isProduction) {
-            photoUrl = await uploadToCloudinary(req.files.photo[0].path, 'image');
-          } else {
-            photoUrl = `${req.protocol}://${req.get('host')}/Uploads/${req.files.photo[0].filename}`;
-          }
-        } else {
-          logger.warn(`Invalid postType ${postType} by user ${userId}`);
-          return res.status(400).json({ message: 'Invalid post type' });
-        }
-
-        const newPost = new Post({
-          postType,
-          description: sanitizedDescription,
-          category,
-          profilePicture: user.profilePicture || 'default.jpg',
-          createdBy: {
-            userId: user._id,
-            name: `${user.firstName} ${user.lastName}`,
-          },
-          createdAt: new Date(),
-          likes: [],
-          ...(postType === 'video_ad' 
-            ? { video: videoUrl, thumbnail: thumbnailUrl } 
-            : { 
-                photo: photoUrl, 
-                location, 
-                productCondition, 
-                price: Number(price) 
-              }
-          ),
-        });
-
-        await newPost.save();
-        logger.info(`Post created by user ${userId}: ${newPost._id}`);
-
-        // Notification logic remains the same as your original code
-        const followers = user.followers || [];
-        const notificationPromises = followers
-          .filter((followerId) => followerId.toString() !== userId.toString())
-          .map(async (followerId) => {
-            try {
-              const follower = await User.findById(followerId)
-                .select('notificationPreferences fcmToken blockedUsers')
-                .lean();
-
-              if (follower.blockedUsers?.includes(userId)) {
-                logger.info(`Skipping notification for blocked user ${followerId}`);
-                return;
-              }
-
-              if (follower.notificationPreferences?.posts !== false) {
-                const notification = new Notification({
-                  userId: followerId,
-                  type: 'new_post',
-                  senderId: userId,
-                  postId: newPost._id,
-                  message: `${user.firstName} ${user.lastName} created a new post`,
-                  createdAt: new Date(),
-                });
-                await notification.save();
-                logger.info(`Created notification for follower ${followerId} for post ${newPost._id}`);
-
-                if (follower.fcmToken && follower.notificationEnabled !== false) {
-                  await sendFCMNotification(
-                    followerId,
-                    'New Post',
-                    `${user.firstName} ${user.lastName} created a new post`,
-                    { type: 'new_post', postId: newPost._id.toString() },
-                    req.io
-                  );
-                }
-
-                await NotificationService.triggerCountUpdate(req.io, followerId);
-              }
-            } catch (notifError) {
-              logger.error(`Notification error for user ${followerId}: ${notifError.message}`);
-            }
+      if (postType === 'video_ad') {
+        if (!description || !category || !req.files?.video?.[0] || !productLink) {
+          logger.warn(`Missing fields in video ad post creation by user ${userId}`);
+          return res.status(400).json({ 
+            message: 'Description, category, video, and product link are required' 
           });
-
-        await Promise.all(notificationPromises);
-
-        res.status(201).json({ 
-          message: 'Post created successfully', 
-          post: newPost 
-        });
-      } catch (error) {
-        logger.error(`Post creation error for user ${req.user?.userId}: ${error.message}`);
-        res.status(500).json({ 
-          message: `Server error: ${error.message}` 
-        });
-      } finally {
-        if (!isProduction) {
-          cleanupFiles(tempFiles);
         }
+
+        if (!isValidSalmartLink(productLink)) {
+          logger.warn(`Invalid product link ${productLink} by user ${userId}`);
+          return res.status(400).json({ 
+            message: 'Product link must be a valid Salmart URL (e.g., https://salmart.onrender.com/product/123)' 
+          });
+        }
+
+        const videoFile = req.files.video[0];
+
+        if (isProduction) {
+          videoUrl = await uploadToCloudinary(videoFile.path, 'video');
+          const thumbnailFilename = `thumb-${Date.now()}.jpg`;
+          const thumbnailPath = path.join(os.tmpdir(), thumbnailFilename);
+          await generateThumbnail(videoFile.path, thumbnailPath);
+          thumbnailUrl = await uploadToCloudinary(thumbnailPath, 'image');
+          cleanupFiles([thumbnailPath]);
+        } else {
+          videoUrl = `${req.protocol}://${req.get('host')}/Uploads/${videoFile.filename}`;
+          const thumbnailFilename = `thumb-${videoFile.filename.replace(/\.[^/.]+$/, '.jpg')}`;
+          const thumbnailPath = path.join(path.dirname(videoFile.path), thumbnailFilename);
+          await generateThumbnail(videoFile.path, thumbnailPath);
+          thumbnailUrl = `${req.protocol}://${req.get('host')}/Uploads/${thumbnailFilename}`;
+        }
+      } else if (postType === 'regular') {
+        if (!description || !productCondition || !price || !location || !category || !req.files?.photo?.[0]) {
+          logger.warn(`Missing fields in regular post creation by user ${userId}`);
+          return res.status(400).json({ 
+            message: 'All fields are required for regular posts' 
+          });
+        }
+
+        if (isNaN(price) || Number(price) < 0) {
+          logger.warn(`Invalid price ${price} by user ${userId}`);
+          return res.status(400).json({ 
+            message: 'Price must be a valid non-negative number' 
+          });
+        }
+
+        if (isProduction) {
+          photoUrl = await uploadToCloudinary(req.files.photo[0].path, 'image');
+        } else {
+          photoUrl = `${req.protocol}://${req.get('host')}/Uploads/${req.files.photo[0].filename}`;
+        }
+      } else {
+        logger.warn(`Invalid postType ${postType} by user ${userId}`);
+        return res.status(400).json({ message: 'Invalid post type' });
+      }
+
+      const newPost = new Post({
+        postType,
+        description: sanitizedDescription,
+        category,
+        profilePicture: user.profilePicture || 'default.jpg',
+        createdBy: {
+          userId: user._id,
+          name: `${user.firstName} ${user.lastName}`,
+        },
+        createdAt: new Date(),
+        likes: [],
+        ...(postType === 'video_ad' 
+          ? { video: videoUrl, thumbnail: thumbnailUrl, productLink } 
+          : { 
+              photo: photoUrl, 
+              location, 
+              productCondition, 
+              price: Number(price) 
+            }
+        ),
+      });
+
+      await newPost.save();
+      logger.info(`Post created by user ${userId}: ${newPost._id}`);
+
+      // Notification logic (unchanged)
+      const followers = user.followers || [];
+      const notificationPromises = followers
+        .filter((followerId) => followerId.toString() !== userId.toString())
+        .map(async (followerId) => {
+          try {
+            const follower = await User.findById(followerId)
+              .select('notificationPreferences fcmToken blockedUsers')
+              .lean();
+
+            if (follower.blockedUsers?.includes(userId)) {
+              logger.info(`Skipping notification for blocked user ${followerId}`);
+              return;
+            }
+
+            if (follower.notificationPreferences?.posts !== false) {
+              const notification = new Notification({
+                userId: followerId,
+                type: 'new_post',
+                senderId: userId,
+                postId: newPost._id,
+                message: `${user.firstName} ${user.lastName} created a new post`,
+                createdAt: new Date(),
+              });
+              await notification.save();
+              logger.info(`Created notification for follower ${followerId} for post ${newPost._id}`);
+
+              if (follower.fcmToken && follower.notificationEnabled !== false) {
+                await sendFCMNotification(
+                  followerId,
+                  'New Post',
+                  `${user.firstName} ${user.lastName} created a new post`,
+                  { type: 'new_post', postId: newPost._id.toString() },
+                  req.io
+                );
+              }
+
+              await NotificationService.triggerCountUpdate(req.io, followerId);
+            }
+          } catch (notifError) {
+            logger.error(`Notification error for user ${followerId}: ${notifError.message}`);
+          }
+        });
+
+      await Promise.all(notificationPromises);
+
+      res.status(201).json({ 
+        message: 'Post created successfully', 
+        post: newPost 
+      });
+    } catch (error) {
+      logger.error(`Post creation error for user ${req.user?.userId}: ${error.message}`);
+      res.status(500).json({ 
+        message: `Server error: ${error.message}` 
+      });
+    } finally {
+      if (!isProduction) {
+        cleanupFiles(tempFiles);
       }
     }
-  );
+  }
+);
 
 router.get('/post', async (req, res) => {
   try {

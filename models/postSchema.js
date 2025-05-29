@@ -22,6 +22,32 @@ const postSchema = new mongoose.Schema({
       return this.postType === 'video_ad';
     },
   },
+  thumbnail: { // Added to match backend route
+    type: String,
+    required: function () {
+      return this.postType === 'video_ad';
+    },
+  },
+  productLink: {
+    type: String,
+    required: function () {
+      return this.postType === 'video_ad';
+    },
+    trim: true,
+    validate: {
+      validator: function (value) {
+        if (this.postType !== 'video_ad') return true; // Skip validation for non-video ads
+        try {
+          const url = new URL(value);
+          const validDomain = process.env.NODE_ENV === 'production' ? 'salmart.onrender.com' : 'localhost';
+          return url.hostname === validDomain;
+        } catch (e) {
+          return false;
+        }
+      },
+      message: 'Product link must be a valid Salmart URL (e.g., https://salmart.onrender.com/product/123)',
+    },
+  },
   location: {
     type: String,
     required: function () {
@@ -37,7 +63,7 @@ const postSchema = new mongoose.Schema({
     trim: true,
   },
   price: {
-    type: Number, // Changed to Number for consistency
+    type: Number,
     required: function () {
       return this.postType === 'regular';
     },

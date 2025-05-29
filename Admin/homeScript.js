@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 const userData = await response.json();
                 profilePictureContainer.src = userData.profilePicture || 'default-avatar.png';
                 homeProfilePicture.src = userData.profilePicture || 'default-avatar.png';
-                usernameContainer.textContent = `Welcome, ${userData.firstName}`;
+                usernameContainer.textContent = `Welcome, ${userData.firstName || 'User'}`;
                 loggedInUser = userData.userId;
                 fetchPosts();
 
@@ -84,6 +84,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             if (response.ok) {
                 const { following } = await response.json();
                 localStorage.setItem('followingList', JSON.stringify(following));
+                followingList = following;
             }
         } catch (error) {
             console.error('Error checking follow status:', error);
@@ -91,10 +92,10 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 
     function showToast(message, bgColor = '#333') {
-        let toast = document.createElement("div");
+        const toast = document.createElement("div");
         toast.className = "toast-message show";
         toast.style.backgroundColor = bgColor;
-        toast.innerText = message;
+        toast.textContent = message;
         document.body.appendChild(toast);
 
         setTimeout(() => {
@@ -133,7 +134,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 
     function sharePost(post, postLink, platform) {
-        const shareText = `Check out this product: ${post.description} - ${post.price ? '₦' + Number(post.price).toLocaleString('en-Ng') : 'Price not specified'}`;
+        const shareText = `Check out this product: ${post.description || 'No description'} - ${post.price ? '₦' + Number(post.price).toLocaleString('en-Ng') : 'Price not specified'}`;
 
         switch (platform) {
             case 'copy':
@@ -206,7 +207,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                         </button>
                     </div>
                     <div class="share-link-container">
-                        <input type="text" value="${postLink}" readonly class="share-link-input">
+                        <input type="text" value="${postLink}" readonly class="share-link">
                         <button class="copy-link-button">
                             <i class="fas fa-copy"></i>
                         </button>
@@ -244,39 +245,39 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 
     function showDeleteConfirmationModal(postId, authToken, postElement) {
-        const deleteModal = document.createElement('div');
-        deleteModal.className = 'delete-confirmation-modal';
-        deleteModal.innerHTML = `
-            <div class="delete-modal-content">
-                <div class="delete-modal-header">
-                    <h3>Confirm Delete</h3>
+        const modal = document.createElement('div');
+        modal.className = 'delete-confirmation-modal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Delete Product</h3>
                     <span class="close-delete-modal">×</span>
                 </div>
-                <div class="delete-modal-body">
-                    <p>Are you sure you want to delete this post? This action cannot be undone.</p>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete this product? This action cannot be undone.</p>
                 </div>
-                <div class="delete-modal-footer">
+                <div class="modal-footer">
                     <button class="cancel-delete">Cancel</button>
                     <button class="confirm-delete">Delete</button>
                 </div>
             </div>
         `;
 
-        document.body.appendChild(deleteModal);
+        document.body.appendChild(modal);
         document.body.style.overflow = 'hidden';
 
         const closeModal = () => {
-            document.body.removeChild(deleteModal);
+            document.body.removeChild(modal);
             document.body.style.overflow = '';
         };
 
-        deleteModal.querySelector('.close-delete-modal').addEventListener('click', closeModal);
-        deleteModal.querySelector('.cancel-delete').addEventListener('click', closeModal);
-        deleteModal.addEventListener('click', (e) => {
-            if (e.target === deleteModal) closeModal();
+        modal.querySelector('.close-delete-modal').addEventListener('click', closeModal);
+        modal.querySelector('.cancel-delete').addEventListener('click', closeModal);
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeModal();
         });
 
-        deleteModal.querySelector('.confirm-delete').addEventListener('click', async () => {
+        modal.querySelector('.confirm-delete').addEventListener('click', async () => {
             try {
                 const response = await fetch(`${API_BASE_URL}/post/delete/${postId}`, {
                     method: 'DELETE',
@@ -289,11 +290,11 @@ document.addEventListener('DOMContentLoaded', async function () {
                 if (!response.ok) throw new Error('Failed to delete post');
 
                 postElement.remove();
-                showToast('Post deleted successfully!');
+                showToast('Post deleted successfully!', '#28a745');
                 closeModal();
             } catch (error) {
                 console.error('Error deleting post:', error);
-                showToast('Error deleting post. Please try again.');
+                showToast('Error deleting post. Please try again.', '#dc3545');
                 closeModal();
             }
         });
@@ -306,29 +307,26 @@ document.addEventListener('DOMContentLoaded', async function () {
             if (!response.ok) throw new Error('Failed to fetch posts');
 
             const posts = await response.json();
-            postsContainer.innerHTML = "";
+            postsContainer.innerHTML = '';
 
             posts.forEach(post => {
                 const postElement = document.createElement('div');
                 postElement.classList.add('post');
-                postElement.dataset.createdAt = post.createdAt;
+                postElement.dataset.createdAt = post.createdAt || new Date().toISOString();
+                postElement.dataset.postId = post._id || '';
 
-                const isFollowing = post.isFollowing || followingList.includes(post.createdBy.userId);
+                const isFollowing = post.isFollowing || (post.createdBy && followingList.includes(post.createdBy.userId));
 
                 let mediaContent = '';
                 let productDetails = '';
-                let buyButtonContent = post.postType === 'regular'
-                    ? `<button class="buy-now-button" data-post-id="${post._id}" ${post.isSold ? 'disabled' : ''}>
-                        <i class="fas fa-shopping-cart"></i> ${post.isSold ? 'Sold Out' : 'Buy Now'}
-                    </button>`
-                    : '';
+                let buttonContent = '';
 
-                const productImageForChat = post.postType === 'video_ad' ? post.thumbnail || 'default-video-poster.png' : post.photo || 'default-image.png';
+                const productImageForChat = post.postType === 'video_ad' ? (post.thumbnail || 'default-video-poster.png') : (post.photo || 'default-image.png');
 
                 if (post.postType === 'video_ad') {
                     mediaContent = `
                         <div class="post-video-container">
-                            <video class="post-video" preload="metadata" aria-label="Video ad for ${post.description}">
+                            <video class="post-video" preload="metadata" aria-label="Video ad for ${post.description || 'product'}">
                                 <source src="${post.video || ''}" type="video/mp4" />
                                 <source src="${post.video ? post.video.replace('.mp4', '.webm') : ''}" type="video/webm" />
                                 <source src="${post.video ? post.video.replace('.mp4', '.ogg') : ''}" type="video/ogg" />
@@ -375,20 +373,25 @@ document.addEventListener('DOMContentLoaded', async function () {
                             <span class="icon">📦</span>
                             <div>
                                 <p class="label">Product</p>
-                                <p class="value">${post.description}</p>
+                                <p class="value">${post.description || 'No description'}</p>
                             </div>
                         </div>
                     `;
+                    buttonContent = `
+                        <a href="${post.productLink || '#'}" class="buy-now-button checkout-product-button" aria-label="Check out product ${post.description || 'product'}" ${!post.productLink ? 'disabled' : ''}>
+                            <i class="fas fa-shopping-cart"></i> Check Out Product
+                        </a>
+                    `;
                 } else {
                     mediaContent = `
-                        <img src="${post.photo || 'default-image.png'}" class="post-image" onclick="openImage('${post.photo || 'default-image.png'}')" alt="Product Image">
+                        <img src="${productImageForChat}" class="post-image" onclick="openImage('${productImageForChat}')" alt="Product Image">
                     `;
                     productDetails = `
                         <div class="product-info">
                             <span class="icon">📦</span>
                             <div>
                                 <p class="label">Product</p>
-                                <p class="value">${post.description}</p>
+                                <p class="value">${post.description || 'No description'}</p>
                             </div>
                         </div>
                         <div class="product-info">
@@ -415,21 +418,34 @@ document.addEventListener('DOMContentLoaded', async function () {
                             </div>
                         </div>
                     `;
+                    buttonContent = `
+                        <button class="buy-now-button" data-post-id="${post._id || ''}" ${post.isSold ? 'disabled' : ''}>
+                            <i class="fas fa-shopping-cart"></i> ${post.isSold ? 'Sold Out' : 'Buy Now'}
+                        </button>
+                        <button class="buy-now-button send-message-btn" id="send-message-btn"
+                            data-recipient-id="${post.createdBy ? post.createdBy.userId : ''}"
+                            data-product-image="${productImageForChat}"
+                            data-product-description="${post.description || ''}"
+                            data-post-id="${post._id || ''}"
+                            ${post.isSold ? 'disabled' : ''}>
+                            <i class="fas fa-circle-dot"></i> ${post.isSold ? 'Unavailable' : 'Check Availability'}
+                        </button>
+                    `;
                 }
 
                 postElement.innerHTML = `
                     <div class="post-header">
-                        <a href="Profile.html?userId=${post.createdBy.userId}">
+                        <a href="Profile.html?userId=${post.createdBy ? post.createdBy.userId : ''}">
                             <img src="${post.profilePicture || 'default-avatar.png'}" class="post-avatar">
                         </a>
                         <div class="post-user-info">
-                            <a href="Profile.html?userId=${post.createdBy.userId}">
-                                <h4 class="post-user-name">${post.createdBy.name}</h4>
+                            <a href="Profile.html?userId=${post.createdBy ? post.createdBy.userId : ''}">
+                                <h4 class="post-user-name">${post.createdBy ? post.createdBy.name : 'Unknown'}</h4>
                             </a>
-                            <p class="post-time">${formatTime(post.createdAt)}</p>
+                            <p class="post-time">${formatTime(post.createdAt || new Date())}</p>
                         </div>
-                        ${post.createdBy.userId !== loggedInUser ?
-                            (followingList.includes(post.createdBy.userId) ?
+                        ${post.createdBy && post.createdBy.userId !== loggedInUser ?
+                            (isFollowing ?
                                 `<button class="follow-button" data-user-id="${post.createdBy.userId}" style="background-color: #28a745;">
                                     <i class="fas fa-user-check"></i> Following
                                 </button>` :
@@ -441,11 +457,11 @@ document.addEventListener('DOMContentLoaded', async function () {
                             <button class="post-options-button"><i class="fas fa-ellipsis-h"></i></button>
                             <div class="post-options-menu">
                                 <ul>
-                                    ${post.createdBy.userId === loggedInUser ? `
-                                        <li><button class="delete-post-button" data-post-id="${post._id}">Delete Post</button></li>
-                                        <li><button class="edit-post-button" data-post-id="${post._id}">Edit Post</button></li>
+                                    ${post.createdBy && post.createdBy.userId === loggedInUser ? `
+                                        <li><button class="delete-post-button" data-post-id="${post._id || ''}">Delete Post</button></li>
+                                        <li><button class="edit-post-button" data-post-id="${post._id || ''}">Edit Post</button></li>
                                     ` : ''}
-                                    <li><button class="report-post-button" data-post-id="${post._id}">Report Post</button></li>
+                                    <li><button class="report-post-button" data-post-id="${post._id || ''}">Report Post</button></li>
                                 </ul>
                             </div>
                         </div>
@@ -461,21 +477,13 @@ document.addEventListener('DOMContentLoaded', async function () {
                     </div>
 
                     <div class="buy" style="text-align: center">
-                        ${buyButtonContent}
-                        <a id="send-message-link">
-                            <button class="buy-now-button" id="send-message-btn"
-                                data-recipient-id="${post.createdBy.userId}"
-                                data-product-image="${productImageForChat}"
-                                data-product-description="${post.description}">
-                                <i class="fas fa-circle-dot"></i> ${post.isSold ? 'Unavailable' : 'Check Availability'}
-                            </button>
-                        </a>
+                        ${post.createdBy && post.createdBy.userId !== loggedInUser ? buttonContent : ''}
                     </div>
 
                     <div class="post-actions">
                         <button class="action-button like-button">
-                            <i class="${post.likes.includes(loggedInUser) ? 'fas' : 'far'} fa-heart"></i>
-                            <span class="like-count">${post.likes.length}</span> <p>Likes</p>
+                            <i class="${post.likes && post.likes.includes(loggedInUser) ? 'fas' : 'far'} fa-heart"></i>
+                            <span class="like-count">${post.likes ? post.likes.length : 0}</span> <p>Likes</p>
                         </button>
                         <button class="action-button reply-button">
                             <i class="far fa-comment-alt"></i>
@@ -488,19 +496,25 @@ document.addEventListener('DOMContentLoaded', async function () {
                 `;
 
                 postsContainer.prepend(postElement);
+                initializeVideoControls(postElement);
+            });
 
-                const sendMessageBtn = postElement.querySelector("#send-message-btn");
-                if (post.isSold) {
-                    sendMessageBtn.disabled = true;
-                }
-                const sendMessageLink = postElement.querySelector("#send-message-link");
-                sendMessageBtn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    const recipientId = sendMessageBtn.dataset.recipientId;
-                    const recipientUsername = post.createdBy.name;
-                    const recipientProfilePictureUrl = post.profilePicture || 'default-avatar.png';
-                    let productImage = sendMessageBtn.dataset.productImage || '';
-                    const productDescription = sendMessageBtn.dataset.productDescription || '';
+            // Event delegation for all button clicks
+            postsContainer.addEventListener('click', async (event) => {
+                const target = event.target.closest('button');
+                if (!target) return;
+
+                const postElement = target.closest('.post');
+                const postId = postElement.dataset.postId;
+                const authToken = localStorage.getItem('authToken');
+
+                if (target.classList.contains('send-message-btn')) {
+                    event.preventDefault();
+                    const recipientId = target.dataset.recipientId;
+                    const recipientUsername = postElement.querySelector('.post-user-name')?.textContent || 'Unknown';
+                    const recipientProfilePictureUrl = postElement.querySelector('.post-avatar')?.src || 'default-avatar.png';
+                    let productImage = target.dataset.productImage || '';
+                    const productDescription = target.dataset.productDescription || '';
 
                     if (productImage && !productImage.match(/^https?:\/\//)) {
                         productImage = productImage.startsWith('/') ? `${API_BASE_URL}${productImage}` : `${API_BASE_URL}/${productImage}`;
@@ -515,31 +529,56 @@ document.addEventListener('DOMContentLoaded', async function () {
                     const encodedRecipientProfilePictureUrl = encodeURIComponent(recipientProfilePictureUrl);
                     const encodedProductDescription = encodeURIComponent(productDescription);
 
-                    sendMessageLink.href = `Chats.html?user_id=${userId}&recipient_id=${recipientId}&recipient_username=${encodedRecipientUsername}&recipient_profile_picture_url=${encodedRecipientProfilePictureUrl}&message=${encodedMessage}&product_image=${encodedProductImage}&product_id=${post._id}&product_name=${encodedProductDescription}`;
-                    window.location.href = sendMessageLink.href;
-                });
+                    const chatUrl = `Chats.html?user_id=${userId}&recipient_id=${recipientId}&recipient_username=${encodedRecipientUsername}&recipient_profile_picture_url=${encodedRecipientProfilePictureUrl}&message=${encodedMessage}&product_image=${encodedProductImage}&product_id=${postId}&product_name=${encodedProductDescription}`;
+                    window.location.href = chatUrl;
 
-                const optionsButton = postElement.querySelector('.post-options-button');
-                const optionsMenu = postElement.querySelector('.post-options-menu');
-                optionsButton.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    document.querySelectorAll('.post-options-menu.show').forEach(menu => {
-                        if (menu !== optionsMenu) menu.classList.remove('show');
-                    });
-                    optionsMenu.classList.toggle('show');
-                });
+                } else if (target.classList.contains('buy-now-button') && target.dataset.postId) {
+                    const email = localStorage.getItem('email');
+                    const buyerId = localStorage.getItem('userId');
 
-                const likeButton = postElement.querySelector('.like-button');
-                likeButton.addEventListener('click', async () => {
-                    const likeCountElement = likeButton.querySelector('.like-count');
-                    const icon = likeButton.querySelector('i');
-                    const postId = post._id;
+                    if (!email || !buyerId || !postId) {
+                        showToast("Please log in to make a purchase.", '#dc3545');
+                        return;
+                    }
 
+                    try {
+                        const response = await fetch(`${API_BASE_URL}/pay`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                email,
+                                postId,
+                                buyerId,
+                                currency: 'NGN',
+                            }),
+                        });
+
+                        const result = await response.json();
+
+                        if (response.ok && result.success && result.url) {
+                            window.location.href = result.url;
+                        } else {
+                            showToast(`Payment failed: ${result.message || 'Please try again.'}`, '#dc3545');
+                        }
+                    } catch (error) {
+                        console.error('Payment error:', error);
+                        showToast('Failed to process payment. Please try again.', '#dc3545');
+                    }
+
+                } else if (target.classList.contains('like-button')) {
+                    if (!authToken) {
+                        showToast('Please log in to like posts.', '#dc3545');
+                        return;
+                    }
+
+                    const likeCountElement = target.querySelector('.like-count');
+                    const icon = target.querySelector('i');
                     const isCurrentlyLiked = icon.classList.contains('fas');
                     let currentLikes = parseInt(likeCountElement.textContent, 10);
 
-                    likeButton.disabled = true;
-
+                    target.disabled = true;
                     likeCountElement.textContent = isCurrentlyLiked ? currentLikes - 1 : currentLikes + 1;
                     icon.classList.toggle('fas', !isCurrentlyLiked);
                     icon.classList.toggle('far', isCurrentlyLiked);
@@ -548,7 +587,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                         const response = await fetch(`${API_BASE_URL}/post/like/${postId}`, {
                             method: 'POST',
                             headers: {
-                                'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+                                'Authorization': `Bearer ${authToken}`,
                                 'Content-Type': 'application/json',
                             },
                             body: JSON.stringify({ action: isCurrentlyLiked ? 'unlike' : 'like' }),
@@ -561,93 +600,77 @@ document.addEventListener('DOMContentLoaded', async function () {
 
                         const data = await response.json();
                         likeCountElement.textContent = data.likes.length;
-                        const userStillLikes = data.likes.includes(loggedInUser);
-                        icon.classList.toggle('fas', userStillLikes);
-                        icon.classList.toggle('far', !userStillLikes);
+                        const userLikes = data.likes.includes(loggedInUser);
+                        icon.classList.toggle('fas', userLikes);
+                        icon.classList.toggle('far', !userLikes);
 
-                        if (userStillLikes && !isCurrentlyLiked) {
-                            socket.emit('likePost', { postId, userId: loggedInUser });
+                        if (userLikes && !isCurrentlyLiked) {
+                            socket.emit('like', { postId, userId: loggedInUser });
                         }
                     } catch (error) {
-                        console.error('Error:', error);
+                        console.error('Like error:', error);
                         likeCountElement.textContent = currentLikes;
                         icon.classList.toggle('fas', isCurrentlyLiked);
                         icon.classList.toggle('far', !isCurrentlyLiked);
-                        showToast(error.message || 'Action failed. Please try again.', '#dc3545');
+                        showToast(error.message || 'Failed to like/unlike post.', '#dc3545');
                     } finally {
-                        likeButton.disabled = false;
+                        target.disabled = false;
                     }
-                });
 
-                const buyNowButton = postElement.querySelector('.buy-now-button');
-                if (buyNowButton) {
-                    buyNowButton.addEventListener('click', async () => {
-                        const postId = buyNowButton.getAttribute('data-post-id').trim();
-                        const email = localStorage.getItem('email');
-                        const buyerId = localStorage.getItem('userId');
+                } else if (target.classList.contains('reply-button')) {
+                    window.location.href = `posts-details.html?postId=${postId}`;
 
-                        if (!email || !buyerId || !postId) {
-                            alert("Missing required information. Please ensure you are logged in and try again.");
-                            console.error("Missing data:", { email, buyerId, postId });
-                            return;
-                        }
+                } else if (target.classList.contains('share-button')) {
+                    const postData = {
+                        _id: postId,
+                        description: postElement.querySelector('.product-info .value')?.textContent || '',
+                        price: parseFloat(postElement.querySelector('.price-value')?.textContent?.replace('₦', '').replace(/,/g, '')) || null,
+                    };
+                    showShareModal(postData);
 
-                        try {
-                            const response = await fetch(`${API_BASE_URL}/pay`, {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                },
-                                body: JSON.stringify({
-                                    email,
-                                    postId,
-                                    buyerId,
-                                    currency: 'NGN',
-                                }),
-                            });
-
-                            const result = await response.json();
-
-                            if (response.ok && result.success && result.url) {
-                                console.log('Redirecting to Monnify payment page:', result.url);
-                                window.location.href = result.url;
-                            } else {
-                                console.error('Payment initiation failed:', result.message || 'Unknown error');
-                                alert(`Payment initiation failed: ${result.message || 'Please try again.'}`);
-                            }
-                        } catch (error) {
-                            console.error('Error processing payment:', {
-                                message: error.message,
-                                stack: error.stack,
-                            });
-                            alert('An error occurred while processing your payment. Please try again later.');
-                        }
-                    });
-                }
-
-                if (post.createdBy.userId === loggedInUser) {
-                    const buyDiv = postElement.querySelector('.buy');
-                    if (buyDiv) buyDiv.remove();
-                }
-
-                const commentToggleButton = postElement.querySelector('.reply-button');
-                commentToggleButton.addEventListener('click', () => {
-                    window.location.href = `posts-details.html?postId=${post._id}`;
-                });
-
-                const shareButton = postElement.querySelector('.share-button');
-                shareButton.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    showShareModal(post);
-                });
-
-                const reportButton = postElement.querySelector('.report-post-button');
-                reportButton.addEventListener('click', async () => {
-                    const postId = reportButton.getAttribute('data-post-id');
-                    const authToken = localStorage.getItem('authToken');
-
+                } else if (target.classList.contains('follow-button')) {
+                    const userId = target.dataset.userId;
                     if (!authToken) {
-                        showToast("Please log in to report posts");
+                        showToast('Please log in to follow users.', '#dc3545');
+                        return;
+                    }
+
+                    try {
+                        const response = await fetch(`${API_BASE_URL}/follow/${userId}`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${authToken}`,
+                            },
+                        });
+
+                        if (!response.ok) throw new Error('Failed to follow user');
+
+                        if (!followingList.includes(userId)) {
+                            followingList.push(userId);
+                            localStorage.setItem('followingList', JSON.stringify(followingList));
+                        }
+
+                        document.querySelectorAll(`.follow-button[data-user-id="${userId}"]`).forEach(btn => {
+                            btn.innerHTML = '<i class="fas fa-user-check"></i> Following';
+                            btn.style.backgroundColor = '#28a745';
+                        });
+
+                        showToast('You are now following this user!', '#28a745');
+                    } catch (error) {
+                        console.error('Follow error:', error);
+                        showToast(error.message || 'Failed to follow user.', '#dc3545');
+                    }
+
+                } else if (target.classList.contains('delete-post-button')) {
+                    showDeleteConfirmationModal(postId, authToken, postElement);
+
+                } else if (target.classList.contains('edit-post-button')) {
+                    window.location.href = `Ads.html?edit=true&postId=${postId}`;
+
+                } else if (target.classList.contains('report-post-button')) {
+                    if (!authToken) {
+                        showToast('Please log in to report posts.', '#dc3545');
                         return;
                     }
 
@@ -683,13 +706,13 @@ document.addEventListener('DOMContentLoaded', async function () {
                                         <span>Other (please specify)</span>
                                     </label>
                                 </div>
-                                <div class="other-reason-container" style="display: none;">
+                                <div class="other-reason" style="display: none;">
                                     <textarea id="other-reason" placeholder="Please provide details..." rows="3"></textarea>
                                 </div>
                             </div>
                             <div class="report-modal-footer">
                                 <button class="cancel-report">Cancel</button>
-                                <button class="submit-report" disabled>Submit Report</button>
+                                <button class="submit-report" disabled>Submit</button>
                             </div>
                         </div>
                     `;
@@ -698,17 +721,13 @@ document.addEventListener('DOMContentLoaded', async function () {
                     document.body.style.overflow = 'hidden';
 
                     const radioButtons = reportModal.querySelectorAll('input[type="radio"]');
-                    const otherReasonContainer = reportModal.querySelector('.other-reason-container');
+                    const otherReasonContainer = reportModal.querySelector('.other-reason');
                     const submitButton = reportModal.querySelector('.submit-report');
 
                     radioButtons.forEach(radio => {
                         radio.addEventListener('change', () => {
                             submitButton.disabled = false;
-                            if (radio.value === 'Other') {
-                                otherReasonContainer.style.display = 'block';
-                            } else {
-                                otherReasonContainer.style.display = 'none';
-                            }
+                            otherReasonContainer.style.display = radio.value === 'Other' ? 'block' : 'none';
                         });
                     });
 
@@ -724,13 +743,17 @@ document.addEventListener('DOMContentLoaded', async function () {
                     });
 
                     submitButton.addEventListener('click', async () => {
-                        const selectedReason = reportModal.querySelector('input[name="report-reason"]:checked').value;
-                        let reportDetails = selectedReason;
+                        const selectedReason = reportModal.querySelector('input[name="report-reason"]:checked')?.value;
+                        if (!selectedReason) {
+                            showToast("Please select a reason.", '#dc3545');
+                            return;
+                        }
 
+                        let reportDetails = selectedReason;
                         if (selectedReason === 'Other') {
                             const otherDetails = reportModal.querySelector('#other-reason').value.trim();
                             if (!otherDetails) {
-                                showToast("Please provide details for your report");
+                                showToast("Please specify details.", '#dc3545');
                                 return;
                             }
                             reportDetails += `: ${otherDetails}`;
@@ -745,101 +768,84 @@ document.addEventListener('DOMContentLoaded', async function () {
                                 },
                                 body: JSON.stringify({
                                     reason: reportDetails,
-                                    postDescription: post.description,
+                                    postDescription: postElement.querySelector('.product-info .value')?.textContent || '',
                                 }),
                             });
 
                             const result = await response.json();
+                            if (!response.ok) throw new Error(result.message || 'Failed to report post');
 
-                            if (!response.ok) {
-                                throw new Error(result.message || 'Failed to report post');
-                            }
-
-                            reportButton.innerHTML = '<i class="fas fa-flag"></i> Reported';
-                            reportButton.disabled = true;
-                            reportButton.style.color = '#ff0000';
-                            showToast(result.message || 'Post reported successfully! Admin will review it shortly.');
+                            target.innerHTML = '<i class="fas fa-flag"></i> Reported';
+                            target.disabled = true;
+                            target.style.backgroundColor = '#ff0000';
+                            showToast(result.message || 'Post reported successfully!', '#28a745');
                             closeModal();
                         } catch (error) {
-                            console.error('Error reporting post:', error);
-                            showToast(error.message || 'Error reporting post. Please try again.');
+                            console.error('Report error:', error);
+                            showToast(error.message || 'Error reporting post.', '#dc3545');
                         }
                     });
-                });
 
-                const deleteButton = postElement.querySelector('.delete-post-button');
-                if (deleteButton) {
-                    deleteButton.addEventListener('click', async () => {
-                        const postId = deleteButton.getAttribute('data-post-id');
-                        const authToken = localStorage.getItem('authToken');
-                        showDeleteConfirmationModal(postId, authToken, postElement);
+                } else if (target.classList.contains('post-options-button')) {
+                    event.preventDefault();
+                    const optionsMenu = target.nextElementSibling;
+                    document.querySelectorAll('.post-options-menu.show').forEach(menu => {
+                        if (menu !== optionsMenu) menu.classList.remove('show');
                     });
+                    optionsMenu.classList.toggle('show');
+                }
+            });
+
+            // Close post-options menu on outside click
+            document.addEventListener('click', (event) => {
+                if (!event.target.closest('.post-options-button') && !event.target.closest('.post-options-menu')) {
+                    document.querySelectorAll('.post-options-menu.show').forEach(menu => menu.classList.remove('show'));
+                }
+            });
+
+            // Follow button handler (global)
+            postsContainer.addEventListener('click', async (event) => {
+                const target = event.target.closest('.follow-button');
+                if (!target) return;
+
+                const userId = target.dataset.userId;
+                const authToken = localStorage.getItem('authToken');
+                if (!authToken) {
+                    showToast('Please log in to follow users.', '#dc3545');
+                    return;
                 }
 
-                const editButton = postElement.querySelector('.edit-post-button');
-                if (editButton) {
-                    editButton.addEventListener('click', () => {
-                        const postId = editButton.getAttribute('data-post-id');
-                        window.location.href = `Ads.html?edit=true&postId=${postId}`;
+                try {
+                    const response = await fetch(`${API_BASE_URL}/follow/${userId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${authToken}`,
+                        },
                     });
+
+                    if (!response.ok) throw new Error('Failed to follow user');
+
+                    if (!followingList.includes(userId)) {
+                        followingList.push(userId);
+                        localStorage.setItem('followingList', JSON.stringify(followingList));
+                    }
+
+                    document.querySelectorAll(`.follow-button[data-user-id="${userId}"]`).forEach(btn => {
+                        btn.innerHTML = '<i class="fas fa-user-check"></i> Following';
+                        btn.style.backgroundColor = '#28a745';
+                    });
+
+                    showToast('You are now following this user!', '#28a745');
+                } catch (error) {
+                    console.error('Follow error:', error);
+                    showToast(error.message || 'Failed to follow user.', '#dc3545');
                 }
-
-                initializeVideoControls(postElement);
             });
 
-            document.addEventListener('click', () => {
-                document.querySelectorAll('.post-options-menu.show').forEach(menu => {
-                    menu.classList.remove('show');
-                });
-            });
-
-            document.querySelectorAll('.follow-button').forEach(followButton => {
-                followButton.addEventListener('click', async () => {
-                    const userIdToFollow = followButton.getAttribute('data-user-id');
-                    const token = localStorage.getItem('authToken');
-
-                    if (!token) {
-                        showToast('Please log in to follow users');
-                        return;
-                    }
-
-                    try {
-                        const response = await fetch(`${API_BASE_URL}/follow/${userIdToFollow}`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${token}`,
-                            },
-                        });
-
-                        if (!response.ok) {
-                            throw new Error(`HTTP error! status: ${response.status}`);
-                        }
-
-                        const text = await response.text();
-                        const result = text ? JSON.parse(text) : {};
-
-                        let followingList = JSON.parse(localStorage.getItem('followingList')) || [];
-                        if (!followingList.includes(userIdToFollow)) {
-                            followingList.push(userIdToFollow);
-                            localStorage.setItem('followingList', JSON.stringify(followingList));
-                        }
-
-                        document.querySelectorAll(`.follow-button[data-user-id="${userIdToFollow}"]`).forEach(button => {
-                            button.innerHTML = `<i class="fas fa-user-check"></i> Following`;
-                            button.style.backgroundColor = '#28a745';
-                        });
-
-                        showToast(`You are now following this user!`);
-                    } catch (error) {
-                        console.error('Error following user:', error);
-                        showToast(error.message || 'Failed to follow user. Please try again.');
-                    }
-                });
-            });
         } catch (error) {
             console.error('Error fetching posts:', error);
-            postsContainer.innerHTML = '<p style="text-align: center; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">No ads yet. Try again or create one!</p>';
+            postsContainer.innerHTML = '<p style="text-align: center; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">No posts yet. Try again or create one!</p>';
         }
     }
 
@@ -863,14 +869,12 @@ document.addEventListener('DOMContentLoaded', async function () {
         const currentTimeDisplay = container.querySelector('.current-time');
         const durationDisplay = container.querySelector('.duration');
 
-        // Video compatibility
         video.setAttribute('playsinline', '');
         video.setAttribute('webkit-playsinline', '');
         video.setAttribute('crossorigin', 'anonymous');
 
-        // Generate thumbnail from video frame
         video.addEventListener('loadedmetadata', () => {
-            video.currentTime = 2; // Capture frame at 2 seconds
+            video.currentTime = 2;
         });
 
         video.addEventListener('seeked', () => {
@@ -878,21 +882,19 @@ document.addEventListener('DOMContentLoaded', async function () {
                 const ctx = thumbnailCanvas.getContext('2d');
                 thumbnailCanvas.width = video.videoWidth;
                 thumbnailCanvas.height = video.videoHeight;
-                ctx.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
+                ctx.drawImage(video, 0, 0, thumbnailCanvas.width, thumbnailCanvas.height);
                 video.poster = thumbnailCanvas.toDataURL('image/jpeg');
                 video.dataset.thumbnailGenerated = 'true';
                 video.currentTime = 0;
             }
         });
 
-        // Format time for display
         function formatVideoTime(seconds) {
             const mins = Math.floor(seconds / 60);
             const secs = Math.floor(seconds % 60);
             return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
         }
 
-        // Update time display
         video.addEventListener('loadedmetadata', () => {
             durationDisplay.textContent = formatVideoTime(video.duration);
         });
@@ -903,7 +905,6 @@ document.addEventListener('DOMContentLoaded', async function () {
             progressBar.setAttribute('aria-valuenow', progress);
             currentTimeDisplay.textContent = formatVideoTime(video.currentTime);
 
-            // Update buffered bar
             if (video.buffered.length > 0) {
                 const bufferedEnd = video.buffered.end(video.buffered.length - 1);
                 const bufferedPercent = (bufferedEnd / video.duration) * 100;
@@ -911,7 +912,6 @@ document.addEventListener('DOMContentLoaded', async function () {
             }
         });
 
-        // Loading indicator
         playPauseBtn.addEventListener('click', () => {
             if (video.paused) {
                 loadingSpinner.style.display = 'block';
@@ -920,7 +920,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                     playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
                 }).catch(e => {
                     loadingSpinner.style.display = 'none';
-                    showToast('Error playing video. Please try again.', '#dc3545');
+                    showToast('Error playing video.', '#dc3545');
                     console.error('Play error:', e);
                 });
             } else {
@@ -933,26 +933,22 @@ document.addEventListener('DOMContentLoaded', async function () {
             loadingSpinner.style.display = 'none';
         });
 
-        // Mute/Unmute
         muteBtn.addEventListener('click', () => {
             video.muted = !video.muted;
             muteBtn.innerHTML = video.muted ? '<i class="fas fa-volume-mute"></i>' : '<i class="fas fa-volume-up"></i>';
             volumeSlider.value = video.muted ? 0 : video.volume * 100;
         });
 
-        // Volume control
         volumeSlider.addEventListener('input', () => {
             video.volume = volumeSlider.value / 100;
             video.muted = volumeSlider.value == 0;
             muteBtn.innerHTML = video.muted ? '<i class="fas fa-volume-mute"></i>' : '<i class="fas fa-volume-up"></i>';
         });
 
-        // Playback speed
         playbackSpeed.addEventListener('change', () => {
             video.playbackRate = parseFloat(playbackSpeed.value);
         });
 
-        // Fullscreen
         fullscreenBtn.addEventListener('click', () => {
             if (!document.fullscreenElement && !document.webkitFullscreenElement) {
                 const elem = container;
@@ -977,13 +973,13 @@ document.addEventListener('DOMContentLoaded', async function () {
                 fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>';
             }
         });
+
         document.addEventListener('webkitfullscreenchange', () => {
             if (!document.fullscreenElement && !document.webkitFullscreenElement) {
                 fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>';
             }
         });
 
-        // Slidable Progress Bar with Seek Preview
         let isDragging = false;
 
         const updateProgress = (e, isTouch = false) => {
@@ -997,15 +993,14 @@ document.addEventListener('DOMContentLoaded', async function () {
             progressBar.style.width = `${progress * 100}%`;
             progressBar.setAttribute('aria-valuenow', progress * 100);
 
-            // Update seek preview
             seekPreview.style.left = `${posX}px`;
-            const ctx = seekPreviewCanvas.getContext('2d');
             seekPreviewCanvas.width = 120;
             seekPreviewCanvas.height = 68;
-            video.currentTime = seekTime; // Temporarily seek for preview
+            video.currentTime = seekTime;
             setTimeout(() => {
+                const ctx = seekPreviewCanvas.getContext('2d');
                 ctx.drawImage(video, 0, 0, seekPreviewCanvas.width, seekPreviewCanvas.height);
-                video.currentTime = seekTime; // Restore seek position
+                video.currentTime = seekTime;
             }, 100);
         };
 
@@ -1015,9 +1010,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         });
 
         document.addEventListener('mousemove', (e) => {
-            if (isDragging) {
-                updateProgress(e);
-            }
+            if (isDragging) updateProgress(e);
         });
 
         document.addEventListener('mouseup', () => {
@@ -1035,13 +1028,13 @@ document.addEventListener('DOMContentLoaded', async function () {
                 const seekTime = progress * video.duration;
                 seekPreview.style.display = 'block';
                 seekPreview.style.left = `${posX}px`;
-                const ctx = seekPreviewCanvas.getContext('2d');
                 seekPreviewCanvas.width = 120;
                 seekPreviewCanvas.height = 68;
                 video.currentTime = seekTime;
                 setTimeout(() => {
+                    const ctx = seekPreviewCanvas.getContext('2d');
                     ctx.drawImage(video, 0, 0, seekPreviewCanvas.width, seekPreviewCanvas.height);
-                    video.currentTime = video.currentTime; // Restore
+                    video.currentTime = video.currentTime;
                 }, 100);
             }
         });
@@ -1054,16 +1047,13 @@ document.addEventListener('DOMContentLoaded', async function () {
             updateProgress(e);
         });
 
-        // Touch support
         progressContainer.addEventListener('touchstart', (e) => {
             isDragging = true;
             updateProgress(e, true);
         });
 
         document.addEventListener('touchmove', (e) => {
-            if (isDragging) {
-                updateProgress(e, true);
-            }
+            if (isDragging) updateProgress(e, true);
         });
 
         document.addEventListener('touchend', () => {
@@ -1071,7 +1061,6 @@ document.addEventListener('DOMContentLoaded', async function () {
             seekPreview.style.display = 'none';
         });
 
-        // Keyboard shortcuts
         postElement.addEventListener('keydown', (e) => {
             if (e.target === video || e.target === container) {
                 switch (e.key) {
@@ -1089,9 +1078,8 @@ document.addEventListener('DOMContentLoaded', async function () {
             }
         });
 
-        // Video error handling
         video.addEventListener('error', () => {
-            showToast('Failed to load video. Please try again later.', '#dc3545');
+            showToast('Failed to load video.', '#dc3545');
             loadingSpinner.style.display = 'none';
         });
 
