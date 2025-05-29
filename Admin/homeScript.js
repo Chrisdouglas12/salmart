@@ -364,6 +364,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                                 <p class="value">${post.description}</p>
                             </div>
                         </div>
+
                     `;
                 } else {
                     mediaContent = `
