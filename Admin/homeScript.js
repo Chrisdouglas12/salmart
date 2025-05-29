@@ -2,10 +2,9 @@ document.addEventListener('DOMContentLoaded', async function () {
     const profilePictureContainer = document.getElementById('profile-picture1');
     const homeProfilePicture = document.getElementById('profile-picture3');
     const usernameContainer = document.getElementById('username1');
-    let loggedInUser = null; // Define loggedInUser variable
+    let loggedInUser = null;
     const API_BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart.onrender.com';
 
-    // Function to format time (e.g., "2 hrs ago")
     function formatTime(timestamp) {
         const now = new Date();
         const postDate = new Date(timestamp);
@@ -27,7 +26,6 @@ document.addEventListener('DOMContentLoaded', async function () {
         followingList = [];
     }
 
-    // Function to check login status
     async function checkLoginStatus() {
         const token = localStorage.getItem('authToken');
         const tokenExpiry = localStorage.getItem('tokenExpiry');
@@ -49,10 +47,9 @@ document.addEventListener('DOMContentLoaded', async function () {
                 profilePictureContainer.src = userData.profilePicture || 'default-avatar.png';
                 homeProfilePicture.src = userData.profilePicture || 'default-avatar.png';
                 usernameContainer.textContent = `Welcome, ${userData.firstName}`;
-                loggedInUser = userData.userId; // Set loggedInUser to the current user's ID
-                fetchPosts(); // Load all posts initially
+                loggedInUser = userData.userId;
+                fetchPosts();
 
-                // Add event listeners for category buttons
                 document.querySelectorAll('.category-btn').forEach(button => {
                     button.addEventListener('click', function () {
                         const selectedCategory = this.getAttribute('data-category');
@@ -68,14 +65,12 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
     }
 
-    // Function to show login option if user is not logged in
     function showLoginOption() {
         profilePictureContainer.src = 'default-avatar.png';
         homeProfilePicture.src = 'default-avatar.png';
         usernameContainer.textContent = 'Please log in';
     }
 
-    // Function to check follow status on page load
     async function checkFollowStatusOnLoad() {
         const token = localStorage.getItem('authToken');
         if (!token) return;
@@ -95,7 +90,6 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
     }
 
-    // Function to show toast notifications
     function showToast(message, bgColor = '#333') {
         let toast = document.createElement("div");
         toast.className = "toast-message show";
@@ -109,7 +103,6 @@ document.addEventListener('DOMContentLoaded', async function () {
         }, 3000);
     }
 
-    // Copy to clipboard function
     async function copyToClipboard(text) {
         try {
             if (navigator.clipboard && window.isSecureContext) {
@@ -130,7 +123,6 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
     }
 
-    // Function to open app or web
     function openAppOrWeb(appUrl, webUrl) {
         window.location.href = appUrl;
         setTimeout(() => {
@@ -140,7 +132,6 @@ document.addEventListener('DOMContentLoaded', async function () {
         }, 500);
     }
 
-    // Share post function
     function sharePost(post, postLink, platform) {
         const shareText = `Check out this product: ${post.description} - ${post.price ? '₦' + Number(post.price).toLocaleString('en-Ng') : 'Price not specified'}`;
 
@@ -176,7 +167,6 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
     }
 
-    // Show share modal function
     function showShareModal(post) {
         const shareModal = document.createElement('div');
         shareModal.className = 'share-modal';
@@ -253,7 +243,6 @@ document.addEventListener('DOMContentLoaded', async function () {
         });
     }
 
-    // Show delete confirmation modal
     function showDeleteConfirmationModal(postId, authToken, postElement) {
         const deleteModal = document.createElement('div');
         deleteModal.className = 'delete-confirmation-modal';
@@ -340,7 +329,9 @@ document.addEventListener('DOMContentLoaded', async function () {
                     mediaContent = `
                         <div class="post-video-container">
                             <video class="post-video" preload="metadata" poster="${post.thumbnail || 'default-video-poster.png'}" aria-label="Video ad for ${post.description}">
-                                <source src="${post.video || ''}" type="video/mp4" loading="lazy" />
+                                <source src="${post.video || ''}" type="video/mp4" />
+                                <source src="${post.video ? post.video.replace('.mp4', '.webm') : ''}" type="video/webm" />
+                                <source src="${post.video ? post.video.replace('.mp4', '.ogg') : ''}" type="video/ogg" />
                                 Your browser does not support the video tag.
                             </video>
                             <div class="custom-controls">
@@ -348,10 +339,13 @@ document.addEventListener('DOMContentLoaded', async function () {
                                     <i class="fas fa-play"></i>
                                 </button>
                                 <div class="progress-container">
-                                    <div class="progress-bar"></div>
+                                    <div class="progress-bar" role="slider" aria-label="Video progress" aria-valuemin="0" aria-valuemax="100"></div>
                                 </div>
                                 <button class="control-button mute-button" aria-label="Mute or unmute video">
                                     <i class="fas fa-volume-up"></i>
+                                </button>
+                                <button class="control-button fullscreen-button" aria-label="Toggle fullscreen">
+                                    <i class="fas fa-expand"></i>
                                 </button>
                             </div>
                         </div>
@@ -364,7 +358,6 @@ document.addEventListener('DOMContentLoaded', async function () {
                                 <p class="value">${post.description}</p>
                             </div>
                         </div>
-
                     `;
                 } else {
                     mediaContent = `
@@ -476,7 +469,6 @@ document.addEventListener('DOMContentLoaded', async function () {
 
                 postsContainer.prepend(postElement);
 
-                // Send message functionality
                 const sendMessageBtn = postElement.querySelector("#send-message-btn");
                 if (post.isSold) {
                     sendMessageBtn.disabled = true;
@@ -494,8 +486,6 @@ document.addEventListener('DOMContentLoaded', async function () {
                         productImage = productImage.startsWith('/') ? `${API_BASE_URL}${productImage}` : `${API_BASE_URL}/${productImage}`;
                     }
 
-                    console.log('Sending productImage:', productImage);
-
                     const message = `Is this item still available?\n\nProduct: ${productDescription}`;
                     const userId = localStorage.getItem("userId");
 
@@ -509,7 +499,6 @@ document.addEventListener('DOMContentLoaded', async function () {
                     window.location.href = sendMessageLink.href;
                 });
 
-                // Toggle post options menu
                 const optionsButton = postElement.querySelector('.post-options-button');
                 const optionsMenu = postElement.querySelector('.post-options-menu');
                 optionsButton.addEventListener('click', (e) => {
@@ -520,7 +509,6 @@ document.addEventListener('DOMContentLoaded', async function () {
                     optionsMenu.classList.toggle('show');
                 });
 
-                // Like functionality
                 const likeButton = postElement.querySelector('.like-button');
                 likeButton.addEventListener('click', async () => {
                     const likeCountElement = likeButton.querySelector('.like-count');
@@ -571,7 +559,6 @@ document.addEventListener('DOMContentLoaded', async function () {
                     }
                 });
 
-                // Buy now functionality
                 const buyNowButton = postElement.querySelector('.buy-now-button');
                 if (buyNowButton) {
                     buyNowButton.addEventListener('click', async () => {
@@ -618,26 +605,22 @@ document.addEventListener('DOMContentLoaded', async function () {
                     });
                 }
 
-                // Remove buy div for post owner
                 if (post.createdBy.userId === loggedInUser) {
                     const buyDiv = postElement.querySelector('.buy');
                     if (buyDiv) buyDiv.remove();
                 }
 
-                // Toggle comment section
                 const commentToggleButton = postElement.querySelector('.reply-button');
                 commentToggleButton.addEventListener('click', () => {
                     window.location.href = `posts-details.html?postId=${post._id}`;
                 });
 
-                // Share ad functionality
                 const shareButton = postElement.querySelector('.share-button');
                 shareButton.addEventListener('click', (e) => {
                     e.stopPropagation();
                     showShareModal(post);
                 });
 
-                // Report post functionality
                 const reportButton = postElement.querySelector('.report-post-button');
                 reportButton.addEventListener('click', async () => {
                     const postId = reportButton.getAttribute('data-post-id');
@@ -764,7 +747,6 @@ document.addEventListener('DOMContentLoaded', async function () {
                     });
                 });
 
-                // Delete post functionality
                 const deleteButton = postElement.querySelector('.delete-post-button');
                 if (deleteButton) {
                     deleteButton.addEventListener('click', async () => {
@@ -774,7 +756,6 @@ document.addEventListener('DOMContentLoaded', async function () {
                     });
                 }
 
-                // Edit post functionality
                 const editButton = postElement.querySelector('.edit-post-button');
                 if (editButton) {
                     editButton.addEventListener('click', () => {
@@ -783,18 +764,15 @@ document.addEventListener('DOMContentLoaded', async function () {
                     });
                 }
 
-                // Initialize custom video controls
-                initializeVideoControls();
+                initializeVideoControls(postElement);
             });
 
-            // Close menu if user clicks outside
             document.addEventListener('click', () => {
                 document.querySelectorAll('.post-options-menu.show').forEach(menu => {
                     menu.classList.remove('show');
                 });
             });
 
-            // Follow button handler
             document.querySelectorAll('.follow-button').forEach(followButton => {
                 followButton.addEventListener('click', async () => {
                     const userIdToFollow = followButton.getAttribute('data-user-id');
@@ -841,54 +819,140 @@ document.addEventListener('DOMContentLoaded', async function () {
             });
         } catch (error) {
             console.error('Error fetching posts:', error);
-            postsContainer.innerHTML = '<p style="text-align: center; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">No ads yet. Try again or create one!</p>';
+            postsContainer.innerHTML = Ishikawa
+                '<p style="text-align: center; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">No ads yet. Try again or create one!</p>';
         }
     }
 
-    // Function to initialize custom video controls
-    function initializeVideoControls() {
-        document.querySelectorAll('.post-video-container').forEach(container => {
-            const video = container.querySelector('.post-video');
-            const playPauseBtn = container.querySelector('.play-pause');
-            const muteBtn = container.querySelector('.mute-button');
-            const progressBar = container.querySelector('.progress-bar');
+    function initializeVideoControls(postElement) {
+        const container = postElement.querySelector('.post-video-container');
+        if (!container) return;
 
-            playPauseBtn.addEventListener('click', () => {
-                if (video.paused) {
-                    video.play();
-                    playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
-                } else {
-                    video.pause();
-                    playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
-                }
-            });
+        const video = container.querySelector('.post-video');
+        const playPauseBtn = container.querySelector('.play-pause');
+        const muteBtn = container.querySelector('.mute-button');
+        const fullscreenBtn = container.querySelector('.fullscreen-button');
+        const progressBar = container.querySelector('.progress-bar');
+        const progressContainer = container.querySelector('.progress-container');
 
-            muteBtn.addEventListener('click', () => {
-                video.muted = !video.muted;
-                muteBtn.innerHTML = video.muted ? '<i class="fas fa-volume-mute"></i>' : '<i class="fas fa-volume-up"></i>';
-            });
+        // Ensure video compatibility
+        video.setAttribute('playsinline', ''); // Prevent auto-fullscreen on iOS
+        video.setAttribute('webkit-playsinline', ''); // For older iOS versions
+        video.setAttribute('crossorigin', 'anonymous'); // Support for CORS
 
-            video.addEventListener('timeupdate', () => {
-                const progress = (video.currentTime / video.duration) * 100;
-                progressBar.style.width = `${progress}%`;
-            });
-
-            const progressContainer = container.querySelector('.progress-container');
-            progressContainer.addEventListener('click', (e) => {
-                const rect = progressContainer.getBoundingClientRect();
-                const clickX = e.clientX - rect.left;
-                const width = rect.width;
-                const seekTime = (clickX / width) * video.duration;
-                video.currentTime = seekTime;
-            });
-
-            video.addEventListener('ended', () => {
+        // Play/Pause
+        playPauseBtn.addEventListener('click', () => {
+            if (video.paused) {
+                video.play().catch(e => console.error('Play error:', e));
+                playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
+            } else {
+                video.pause();
                 playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
-            });
+            }
         });
+
+        // Mute/Unmute
+        muteBtn.addEventListener('click', () => {
+            video.muted = !video.muted;
+            muteBtn.innerHTML = video.muted ? '<i class="fas fa-volume-mute"></i>' : '<i class="fas fa-volume-up"></i>';
+        });
+
+        // Fullscreen
+        fullscreenBtn.addEventListener('click', () => {
+            if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+                const elem = container;
+                if (elem.requestFullscreen) {
+                    elem.requestFullscreen().catch(e => console.error('Fullscreen error:', e));
+                } else if (elem.webkitRequestFullscreen) {
+                    elem.webkitRequestFullscreen();
+                }
+                fullscreenBtn.innerHTML = '<i class="fas fa-compress"></i>';
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen().catch(e => console.error('Exit fullscreen error:', e));
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                }
+                fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>';
+            }
+        });
+
+        // Progress Bar Update
+        video.addEventListener('timeupdate', () => {
+            const progress = (video.currentTime / video.duration) * 100;
+            progressBar.style.width = `${progress}%`;
+            progressBar.setAttribute('aria-valuenow', progress);
+        });
+
+        // Slidable Progress Bar
+        let isDragging = false;
+
+        const updateProgress = (e) => {
+            const rect = progressContainer.getBoundingClientRect();
+            const posX = e.clientX - rect.left;
+            const width = rect.width;
+            let progress = posX / width;
+            progress = Math.max(0, Math.min(1, progress));
+            const seekTime = progress * video.duration;
+            video.currentTime = seekTime;
+            progressBar.style.width = `${progress * 100}%`;
+            progressBar.setAttribute('aria-valuenow', progress * 100);
+        };
+
+        progressContainer.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            updateProgress(e);
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (isDragging) {
+                updateProgress(e);
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
+
+        progressContainer.addEventListener('click', (e) => {
+            updateProgress(e);
+        });
+
+        // Touch support for mobile
+        progressContainer.addEventListener('touchstart', (e) => {
+            isDragging = true;
+            updateProgress(e.touches[0]);
+        });
+
+        document.addEventListener('touchmove', (e) => {
+            if (isDragging) {
+                updateProgress(e.touches[0]);
+            }
+        });
+
+        document.addEventListener('touchend', () => {
+            isDragging = false;
+        });
+
+        // Handle video end
+        video.addEventListener('ended', () => {
+            playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+            video.currentTime = 0;
+            progressBar.style.width = '0%';
+            progressBar.setAttribute('aria-valuenow', 0);
+        });
+
+        // Fullscreen change event
+        const fullscreenChange = () => {
+            if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+                fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>';
+            }
+        };
+
+        document.addEventListener('fullscreenchange', fullscreenChange);
+        document.addEventListener('webkitfullscreenchange', fullscreenChange);
     }
 
-    // Check login status and follow status on page load
     checkLoginStatus();
     checkFollowStatusOnLoad();
 });

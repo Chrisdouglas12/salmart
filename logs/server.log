@@ -1070,3 +1070,49 @@
 {"level":"info","message":"[2025-05-29T14:28:47.235Z] GET /post?category=","timestamp":"2025-05-29T14:28:47.236Z"}
 {"level":"info","message":"[2025-05-29T14:29:15.951Z] GET /notification-counts?userId=679d530c96d06fa5dfab1ded","timestamp":"2025-05-29T14:29:15.952Z"}
 {"level":"info","message":"Socket disconnected: 417-w8HN6dHUnGOYAAAF","timestamp":"2025-05-29T14:29:55.905Z"}
+{"level":"info","message":"✅ Firebase Admin SDK initialized successfully","timestamp":"2025-05-29T14:31:55.589Z"}
+{"level":"info","message":"✅ Socket.IO initialized","timestamp":"2025-05-29T14:31:55.811Z"}
+{"level":"info","message":"✅ Nodemailer configured","timestamp":"2025-05-29T14:31:55.908Z"}
+{"level":"info","message":"✅ Cloudinary configured","timestamp":"2025-05-29T14:31:55.910Z"}
+{"level":"info","message":"✅ Server running on port 3000","timestamp":"2025-05-29T14:31:55.966Z"}
+{"level":"error","message":"❌ MongoDB connection error: Could not connect to any servers in your MongoDB Atlas cluster. One common reason is that you're trying to access the database from an IP that isn't whitelisted. Make sure your current IP address is on your Atlas cluster's IP whitelist: https://www.mongodb.com/docs/atlas/security-whitelist/","timestamp":"2025-05-29T14:32:01.501Z"}
+{"level":"info","message":"✅ Firebase Admin SDK initialized successfully","timestamp":"2025-05-29T14:41:12.288Z"}
+{"level":"info","message":"✅ Socket.IO initialized","timestamp":"2025-05-29T14:41:12.461Z"}
+{"level":"info","message":"✅ Nodemailer configured","timestamp":"2025-05-29T14:41:12.535Z"}
+{"level":"info","message":"✅ Cloudinary configured","timestamp":"2025-05-29T14:41:12.538Z"}
+{"level":"info","message":"✅ Server running on port 3000","timestamp":"2025-05-29T14:41:12.579Z"}
+{"level":"info","message":"✅ MongoDB connected successfully","timestamp":"2025-05-29T14:41:17.454Z"}
+{"level":"info","message":"Socket connected: sRN2HArIe9PuB9c8AAAB","timestamp":"2025-05-29T14:57:53.791Z"}
+{"level":"info","message":"[2025-05-29T14:57:53.943Z] GET /users-profile/679d530c96d06fa5dfab1ded","timestamp":"2025-05-29T14:57:53.943Z"}
+{"level":"info","message":"[2025-05-29T14:57:54.246Z] GET /notification-counts?userId=679d530c96d06fa5dfab1ded","timestamp":"2025-05-29T14:57:54.246Z"}
+{"level":"info","message":"[2025-05-29T14:57:54.260Z] GET /api/following","timestamp":"2025-05-29T14:57:54.260Z"}
+{"level":"info","message":"[2025-05-29T14:57:54.272Z] GET /verify-token","timestamp":"2025-05-29T14:57:54.272Z"}
+{"level":"info","message":"[2025-05-29T14:57:54.673Z] GET /post?category=","timestamp":"2025-05-29T14:57:54.674Z"}
+{"level":"info","message":"[2025-05-29T14:58:22.955Z] GET /notification-counts?userId=679d530c96d06fa5dfab1ded","timestamp":"2025-05-29T14:58:22.955Z"}
+{"level":"info","message":"[2025-05-29T14:58:52.958Z] GET /notification-counts?userId=679d530c96d06fa5dfab1ded","timestamp":"2025-05-29T14:58:52.958Z"}
+{"level":"info","message":"[2025-05-29T14:59:22.956Z] GET /notification-counts?userId=679d530c96d06fa5dfab1ded","timestamp":"2025-05-29T14:59:22.957Z"}
+{"level":"info","message":"Socket disconnected: sRN2HArIe9PuB9c8AAAB","timestamp":"2025-05-29T14:59:27.983Z"}
+{"level":"info","message":"Socket connected: tqNt_UoxNesKWyN8AAAD","timestamp":"2025-05-29T15:00:08.037Z"}
+{"level":"info","message":"[2025-05-29T15:00:08.240Z] GET /users-profile/679d530c96d06fa5dfab1ded","timestamp":"2025-05-29T15:00:08.241Z"}
+{"level":"info","message":"[2025-05-29T15:00:08.290Z] GET /notification-counts?userId=679d530c96d06fa5dfab1ded","timestamp":"2025-05-29T15:00:08.290Z"}
+{"level":"info","message":"[2025-05-29T15:00:08.359Z] GET /verify-token","timestamp":"2025-05-29T15:00:08.359Z"}
+{"level":"info","message":"[2025-05-29T15:00:08.366Z] GET /api/following","timestamp":"2025-05-29T15:00:08.366Z"}
+{"level":"info","message":"[2025-05-29T15:00:14.236Z] GET /post?category=","timestamp":"2025-05-29T15:00:14.236Z"}
+{"level":"info","message":"[2025-05-29T15:00:37.492Z] GET /notification-counts?userId=679d530c96d06fa5dfab1ded","timestamp":"2025-05-29T15:00:37.493Z"}
+{"level":"info","message":"[2025-05-29T15:01:07.449Z] GET /notification-counts?userId=679d530c96d06fa5dfab1ded","timestamp":"2025-05-29T15:01:07.450Z"}
+{"level":"info","message":"Socket disconnected: tqNt_UoxNesKWyN8AAAD","timestamp":"2025-05-29T15:01:13.039Z"}
+{"level":"info","message":"Socket connected: 219hTGa8IkYcoCN_AAAF","timestamp":"2025-05-29T15:09:52.709Z"}
+{"level":"info","message":"[2025-05-29T15:09:52.916Z] GET /users-profile/679d530c96d06fa5dfab1ded","timestamp":"2025-05-29T15:09:52.916Z"}
+{"level":"info","message":"[2025-05-29T15:09:52.993Z] GET /notification-counts?userId=679d530c96d06fa5dfab1ded","timestamp":"2025-05-29T15:09:52.993Z"}
+{"level":"info","message":"[2025-05-29T15:09:52.999Z] GET /api/following","timestamp":"2025-05-29T15:09:52.999Z"}
+{"level":"info","message":"[2025-05-29T15:09:53.032Z] GET /verify-token","timestamp":"2025-05-29T15:09:53.032Z"}
+{"level":"info","message":"[2025-05-29T15:09:53.280Z] GET /post?category=","timestamp":"2025-05-29T15:09:53.280Z"}
+{"level":"info","message":"[2025-05-29T15:10:22.316Z] GET /notification-counts?userId=679d530c96d06fa5dfab1ded","timestamp":"2025-05-29T15:10:22.326Z"}
+{"level":"info","message":"[2025-05-29T15:11:12.061Z] GET /notification-counts?userId=679d530c96d06fa5dfab1ded","timestamp":"2025-05-29T15:11:12.062Z"}
+{"level":"info","message":"[2025-05-29T15:11:22.123Z] GET /notification-counts?userId=679d530c96d06fa5dfab1ded","timestamp":"2025-05-29T15:11:22.123Z"}
+{"level":"info","message":"Socket disconnected: 219hTGa8IkYcoCN_AAAF","timestamp":"2025-05-29T15:11:30.312Z"}
+{"level":"info","message":"Socket connected: G81kSeoI0Gc0P7UaAAAH","timestamp":"2025-05-29T15:11:44.693Z"}
+{"level":"info","message":"[2025-05-29T15:11:44.893Z] GET /notification-counts?userId=679d530c96d06fa5dfab1ded","timestamp":"2025-05-29T15:11:44.894Z"}
+{"level":"info","message":"[2025-05-29T15:11:44.900Z] GET /users-profile/679d530c96d06fa5dfab1ded","timestamp":"2025-05-29T15:11:44.900Z"}
+{"level":"info","message":"[2025-05-29T15:11:44.905Z] GET /api/following","timestamp":"2025-05-29T15:11:44.905Z"}
+{"level":"info","message":"[2025-05-29T15:11:44.979Z] GET /verify-token","timestamp":"2025-05-29T15:11:44.980Z"}

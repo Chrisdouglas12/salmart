@@ -1864,13 +1864,6 @@ a::hover{
   controls: none; /* Ensure no default controls */
 }
 
-/* Thumbnail (poster) */
-.post-video[poster] {
-  background-image: url('/images/default-video-poster.png');
-  background-size: cover;
-  background-position: center;
-  background-color: #000;
-}
 
 /* Custom controls container */
 .custom-controls {

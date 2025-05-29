@@ -998,3 +998,45 @@
 {"level":"info","message":"Fetched counts for user 679d530c96d06fa5dfab1ded: {\"notificationCount\":2,\"messagesCount\":0}","messagesCount":0,"notificationCount":2,"timestamp":"2025-05-29T14:29:18.232Z"}
 {"level":"info","message":"Emitting countsUpdate to user 679d530c96d06fa5dfab1ded: {\"notificationCount\":2,\"messagesCount\":0}","messagesCount":0,"notificationCount":2,"timestamp":"2025-05-29T14:29:18.234Z","userId":"679d530c96d06fa5dfab1ded"}
 {"level":"info","message":"Emitted countsUpdate to user 679d530c96d06fa5dfab1ded","timestamp":"2025-05-29T14:29:18.237Z"}
+{"level":"info","message":"Fetched counts for user 679d530c96d06fa5dfab1ded: {\"notificationCount\":2,\"messagesCount\":0}","messagesCount":0,"notificationCount":2,"timestamp":"2025-05-29T14:57:54.782Z"}
+{"level":"info","message":"Emitting countsUpdate to user 679d530c96d06fa5dfab1ded: {\"notificationCount\":2,\"messagesCount\":0}","messagesCount":0,"notificationCount":2,"timestamp":"2025-05-29T14:57:54.788Z","userId":"679d530c96d06fa5dfab1ded"}
+{"level":"info","message":"Emitted countsUpdate to user 679d530c96d06fa5dfab1ded","timestamp":"2025-05-29T14:57:54.802Z"}
+{"level":"error","message":"MongoDB not connected: readyState=0","timestamp":"2025-05-29T14:58:22.967Z"}
+{"level":"error","message":"Error fetching notification counts for user 679d530c96d06fa5dfab1ded: Database connection lost","timestamp":"2025-05-29T14:58:22.969Z"}
+{"level":"info","message":"Emitting countsUpdate to user 679d530c96d06fa5dfab1ded: {\"notificationCount\":0,\"messagesCount\":0}","messagesCount":0,"notificationCount":0,"timestamp":"2025-05-29T14:58:22.973Z","userId":"679d530c96d06fa5dfab1ded"}
+{"level":"info","message":"Emitted countsUpdate to user 679d530c96d06fa5dfab1ded","timestamp":"2025-05-29T14:58:22.974Z"}
+{"level":"info","message":"Fetched counts for user 679d530c96d06fa5dfab1ded: {\"notificationCount\":2,\"messagesCount\":0}","messagesCount":0,"notificationCount":2,"timestamp":"2025-05-29T14:58:53.379Z"}
+{"level":"info","message":"Emitting countsUpdate to user 679d530c96d06fa5dfab1ded: {\"notificationCount\":2,\"messagesCount\":0}","messagesCount":0,"notificationCount":2,"timestamp":"2025-05-29T14:58:53.382Z","userId":"679d530c96d06fa5dfab1ded"}
+{"level":"info","message":"Emitted countsUpdate to user 679d530c96d06fa5dfab1ded","timestamp":"2025-05-29T14:58:53.386Z"}
+{"level":"info","message":"Fetched counts for user 679d530c96d06fa5dfab1ded: {\"notificationCount\":2,\"messagesCount\":0}","messagesCount":0,"notificationCount":2,"timestamp":"2025-05-29T14:59:32.964Z"}
+{"level":"info","message":"Emitting countsUpdate to user 679d530c96d06fa5dfab1ded: {\"notificationCount\":2,\"messagesCount\":0}","messagesCount":0,"notificationCount":2,"timestamp":"2025-05-29T14:59:32.966Z","userId":"679d530c96d06fa5dfab1ded"}
+{"level":"info","message":"Emitted countsUpdate to user 679d530c96d06fa5dfab1ded","timestamp":"2025-05-29T14:59:32.967Z"}
+{"level":"info","message":"Fetched counts for user 679d530c96d06fa5dfab1ded: {\"notificationCount\":2,\"messagesCount\":0}","messagesCount":0,"notificationCount":2,"timestamp":"2025-05-29T15:00:16.542Z"}
+{"level":"info","message":"Emitting countsUpdate to user 679d530c96d06fa5dfab1ded: {\"notificationCount\":2,\"messagesCount\":0}","messagesCount":0,"notificationCount":2,"timestamp":"2025-05-29T15:00:16.543Z","userId":"679d530c96d06fa5dfab1ded"}
+{"level":"info","message":"Emitted countsUpdate to user 679d530c96d06fa5dfab1ded","timestamp":"2025-05-29T15:00:16.546Z"}
+{"level":"info","message":"Fetched counts for user 679d530c96d06fa5dfab1ded: {\"notificationCount\":2,\"messagesCount\":0}","messagesCount":0,"notificationCount":2,"timestamp":"2025-05-29T15:00:39.674Z"}
+{"level":"info","message":"Emitting countsUpdate to user 679d530c96d06fa5dfab1ded: {\"notificationCount\":2,\"messagesCount\":0}","messagesCount":0,"notificationCount":2,"timestamp":"2025-05-29T15:00:39.684Z","userId":"679d530c96d06fa5dfab1ded"}
+{"level":"info","message":"Emitted countsUpdate to user 679d530c96d06fa5dfab1ded","timestamp":"2025-05-29T15:00:39.694Z"}
+{"level":"info","message":"Fetched counts for user 679d530c96d06fa5dfab1ded: {\"notificationCount\":2,\"messagesCount\":0}","messagesCount":0,"notificationCount":2,"timestamp":"2025-05-29T15:01:07.860Z"}
+{"level":"info","message":"Emitting countsUpdate to user 679d530c96d06fa5dfab1ded: {\"notificationCount\":2,\"messagesCount\":0}","messagesCount":0,"notificationCount":2,"timestamp":"2025-05-29T15:01:07.861Z","userId":"679d530c96d06fa5dfab1ded"}
+{"level":"info","message":"Emitted countsUpdate to user 679d530c96d06fa5dfab1ded","timestamp":"2025-05-29T15:01:07.863Z"}
+{"level":"info","message":"Fetched counts for user 679d530c96d06fa5dfab1ded: {\"notificationCount\":2,\"messagesCount\":0}","messagesCount":0,"notificationCount":2,"timestamp":"2025-05-29T15:09:53.343Z"}
+{"level":"info","message":"Emitting countsUpdate to user 679d530c96d06fa5dfab1ded: {\"notificationCount\":2,\"messagesCount\":0}","messagesCount":0,"notificationCount":2,"timestamp":"2025-05-29T15:09:53.345Z","userId":"679d530c96d06fa5dfab1ded"}
+{"level":"info","message":"Emitted countsUpdate to user 679d530c96d06fa5dfab1ded","timestamp":"2025-05-29T15:09:53.348Z"}
+{"level":"error","message":"MongoDB not connected: readyState=0","timestamp":"2025-05-29T15:11:12.086Z"}
+{"level":"error","message":"Error fetching notification counts for user 679d530c96d06fa5dfab1ded: Database connection lost","timestamp":"2025-05-29T15:11:12.089Z"}
+{"level":"info","message":"Emitting countsUpdate to user 679d530c96d06fa5dfab1ded: {\"notificationCount\":0,\"messagesCount\":0}","messagesCount":0,"notificationCount":0,"timestamp":"2025-05-29T15:11:12.091Z","userId":"679d530c96d06fa5dfab1ded"}
+{"level":"info","message":"Emitted countsUpdate to user 679d530c96d06fa5dfab1ded","timestamp":"2025-05-29T15:11:12.099Z"}
+{"level":"error","message":"MongoDB query error for notifications: connection <monitor> to 65.62.31.3:27017 closed","timestamp":"2025-05-29T15:11:12.442Z"}
+{"level":"error","message":"MongoDB query error for messages: connection timed out","timestamp":"2025-05-29T15:11:17.454Z"}
+{"level":"info","message":"Fetched counts for user 679d530c96d06fa5dfab1ded: {\"notificationCount\":0,\"messagesCount\":0}","messagesCount":0,"notificationCount":0,"timestamp":"2025-05-29T15:11:17.457Z"}
+{"level":"info","message":"Emitting countsUpdate to user 679d530c96d06fa5dfab1ded: {\"notificationCount\":0,\"messagesCount\":0}","messagesCount":0,"notificationCount":0,"timestamp":"2025-05-29T15:11:17.462Z","userId":"679d530c96d06fa5dfab1ded"}
+{"level":"info","message":"Emitted countsUpdate to user 679d530c96d06fa5dfab1ded","timestamp":"2025-05-29T15:11:17.466Z"}
+{"level":"error","message":"MongoDB not connected: readyState=0","timestamp":"2025-05-29T15:11:22.139Z"}
+{"level":"error","message":"Error fetching notification counts for user 679d530c96d06fa5dfab1ded: Database connection lost","timestamp":"2025-05-29T15:11:22.141Z"}
+{"level":"info","message":"Emitting countsUpdate to user 679d530c96d06fa5dfab1ded: {\"notificationCount\":0,\"messagesCount\":0}","messagesCount":0,"notificationCount":0,"timestamp":"2025-05-29T15:11:22.143Z","userId":"679d530c96d06fa5dfab1ded"}
+{"level":"info","message":"Emitted countsUpdate to user 679d530c96d06fa5dfab1ded","timestamp":"2025-05-29T15:11:22.147Z"}
+{"level":"error","message":"MongoDB not connected: readyState=0","timestamp":"2025-05-29T15:11:44.918Z"}
+{"level":"error","message":"Error fetching notification counts for user 679d530c96d06fa5dfab1ded: Database connection lost","timestamp":"2025-05-29T15:11:44.921Z"}
+{"level":"info","message":"Emitting countsUpdate to user 679d530c96d06fa5dfab1ded: {\"notificationCount\":0,\"messagesCount\":0}","messagesCount":0,"notificationCount":0,"timestamp":"2025-05-29T15:11:44.924Z","userId":"679d530c96d06fa5dfab1ded"}
+{"level":"info","message":"Emitted countsUpdate to user 679d530c96d06fa5dfab1ded","timestamp":"2025-05-29T15:11:44.927Z"}
