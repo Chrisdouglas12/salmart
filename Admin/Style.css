@@ -1916,63 +1916,7 @@ a::hover{
   transition: width 0.1s linear;
 }
 
-/* Post container */
-.post {
-  background: #fff;
-  border-radius: 12px;
-  margin: 15px 0;
-  padding: 15px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
 
-/* Post header */
-.post-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 10px;
-}
-
-.post-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
-.post-user-info {
-  flex: 1;
-}
-
-.post-user-name {
-  margin: 0;
-  font-size: 16px;
-  font-weight: bold;
-}
-
-.post-time {
-  margin: 0;
-  font-size: 12px;
-  color: #666;
-}
-
-/* Follow button */
-.follow-button {
-  background: #007bff;
-  color: #fff;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 20px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 14px;
-}
-
-.follow-button:hover {
-  background: #0056b3;
-}
 
 /* Post options */
 .post-options {
@@ -2082,7 +2026,8 @@ a::hover{
 
 
 .buy-now-button:disabled {
-  background: #ccc;
+  background: #28a745;
+  color: #fff;
   cursor: not-allowed;
 }
 

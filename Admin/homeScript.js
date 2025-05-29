@@ -328,22 +328,42 @@ document.addEventListener('DOMContentLoaded', async function () {
                 if (post.postType === 'video_ad') {
                     mediaContent = `
                         <div class="post-video-container">
-                            <video class="post-video" preload="metadata" poster="${post.thumbnail || 'default-video-poster.png'}" aria-label="Video ad for ${post.description}">
+                            <video class="post-video" preload="metadata" aria-label="Video ad for ${post.description}">
                                 <source src="${post.video || ''}" type="video/mp4" />
                                 <source src="${post.video ? post.video.replace('.mp4', '.webm') : ''}" type="video/webm" />
                                 <source src="${post.video ? post.video.replace('.mp4', '.ogg') : ''}" type="video/ogg" />
                                 Your browser does not support the video tag.
                             </video>
+                            <canvas class="video-thumbnail" style="display: none;"></canvas>
+                            <div class="loading-spinner" style="display: none;">
+                                <i class="fas fa-spinner fa-spin"></i>
+                            </div>
                             <div class="custom-controls">
                                 <button class="control-button play-pause" aria-label="Play or pause video">
                                     <i class="fas fa-play"></i>
                                 </button>
                                 <div class="progress-container">
+                                    <div class="buffered-bar"></div>
                                     <div class="progress-bar" role="slider" aria-label="Video progress" aria-valuemin="0" aria-valuemax="100"></div>
+                                    <div class="seek-preview" style="display: none;">
+                                        <canvas class="seek-preview-canvas"></canvas>
+                                    </div>
+                                </div>
+                                <div class="time-display">
+                                    <span class="current-time">0:00</span> / <span class="duration">0:00</span>
                                 </div>
                                 <button class="control-button mute-button" aria-label="Mute or unmute video">
                                     <i class="fas fa-volume-up"></i>
                                 </button>
+                                <div class="volume-control">
+                                    <input type="range" class="volume-slider" min="0" max="100" value="100" aria-label="Volume control">
+                                </div>
+                                <select class="playback-speed" aria-label="Playback speed">
+                                    <option value="0.5">0.5x</option>
+                                    <option value="1" selected>1x</option>
+                                    <option value="1.5">1.5x</option>
+                                    <option value="2">2x</option>
+                                </select>
                                 <button class="control-button fullscreen-button" aria-label="Toggle fullscreen">
                                     <i class="fas fa-expand"></i>
                                 </button>
@@ -819,8 +839,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             });
         } catch (error) {
             console.error('Error fetching posts:', error);
-            postsContainer.innerHTML = Ishikawa
-                '<p style="text-align: center; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">No ads yet. Try again or create one!</p>';
+            postsContainer.innerHTML = '<p style="text-align: center; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">No ads yet. Try again or create one!</p>';
         }
     }
 
@@ -829,32 +848,108 @@ document.addEventListener('DOMContentLoaded', async function () {
         if (!container) return;
 
         const video = container.querySelector('.post-video');
+        const thumbnailCanvas = container.querySelector('.video-thumbnail');
+        const loadingSpinner = container.querySelector('.loading-spinner');
         const playPauseBtn = container.querySelector('.play-pause');
         const muteBtn = container.querySelector('.mute-button');
         const fullscreenBtn = container.querySelector('.fullscreen-button');
         const progressBar = container.querySelector('.progress-bar');
+        const bufferedBar = container.querySelector('.buffered-bar');
         const progressContainer = container.querySelector('.progress-container');
+        const seekPreview = container.querySelector('.seek-preview');
+        const seekPreviewCanvas = container.querySelector('.seek-preview-canvas');
+        const volumeSlider = container.querySelector('.volume-slider');
+        const playbackSpeed = container.querySelector('.playback-speed');
+        const currentTimeDisplay = container.querySelector('.current-time');
+        const durationDisplay = container.querySelector('.duration');
 
-        // Ensure video compatibility
-        video.setAttribute('playsinline', ''); // Prevent auto-fullscreen on iOS
-        video.setAttribute('webkit-playsinline', ''); // For older iOS versions
-        video.setAttribute('crossorigin', 'anonymous'); // Support for CORS
+        // Video compatibility
+        video.setAttribute('playsinline', '');
+        video.setAttribute('webkit-playsinline', '');
+        video.setAttribute('crossorigin', 'anonymous');
 
-        // Play/Pause
+        // Generate thumbnail from video frame
+        video.addEventListener('loadedmetadata', () => {
+            video.currentTime = 2; // Capture frame at 2 seconds
+        });
+
+        video.addEventListener('seeked', () => {
+            if (video.currentTime === 2 && !video.dataset.thumbnailGenerated) {
+                const ctx = thumbnailCanvas.getContext('2d');
+                thumbnailCanvas.width = video.videoWidth;
+                thumbnailCanvas.height = video.videoHeight;
+                ctx.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
+                video.poster = thumbnailCanvas.toDataURL('image/jpeg');
+                video.dataset.thumbnailGenerated = 'true';
+                video.currentTime = 0;
+            }
+        });
+
+        // Format time for display
+        function formatVideoTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+        }
+
+        // Update time display
+        video.addEventListener('loadedmetadata', () => {
+            durationDisplay.textContent = formatVideoTime(video.duration);
+        });
+
+        video.addEventListener('timeupdate', () => {
+            const progress = (video.currentTime / video.duration) * 100;
+            progressBar.style.width = `${progress}%`;
+            progressBar.setAttribute('aria-valuenow', progress);
+            currentTimeDisplay.textContent = formatVideoTime(video.currentTime);
+
+            // Update buffered bar
+            if (video.buffered.length > 0) {
+                const bufferedEnd = video.buffered.end(video.buffered.length - 1);
+                const bufferedPercent = (bufferedEnd / video.duration) * 100;
+                bufferedBar.style.width = `${bufferedPercent}%`;
+            }
+        });
+
+        // Loading indicator
         playPauseBtn.addEventListener('click', () => {
             if (video.paused) {
-                video.play().catch(e => console.error('Play error:', e));
-                playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
+                loadingSpinner.style.display = 'block';
+                video.play().then(() => {
+                    loadingSpinner.style.display = 'none';
+                    playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
+                }).catch(e => {
+                    loadingSpinner.style.display = 'none';
+                    showToast('Error playing video. Please try again.', '#dc3545');
+                    console.error('Play error:', e);
+                });
             } else {
                 video.pause();
                 playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
             }
         });
 
+        video.addEventListener('canplay', () => {
+            loadingSpinner.style.display = 'none';
+        });
+
         // Mute/Unmute
         muteBtn.addEventListener('click', () => {
             video.muted = !video.muted;
             muteBtn.innerHTML = video.muted ? '<i class="fas fa-volume-mute"></i>' : '<i class="fas fa-volume-up"></i>';
+            volumeSlider.value = video.muted ? 0 : video.volume * 100;
+        });
+
+        // Volume control
+        volumeSlider.addEventListener('input', () => {
+            video.volume = volumeSlider.value / 100;
+            video.muted = volumeSlider.value == 0;
+            muteBtn.innerHTML = video.muted ? '<i class="fas fa-volume-mute"></i>' : '<i class="fas fa-volume-up"></i>';
+        });
+
+        // Playback speed
+        playbackSpeed.addEventListener('change', () => {
+            video.playbackRate = parseFloat(playbackSpeed.value);
         });
 
         // Fullscreen
@@ -877,19 +972,23 @@ document.addEventListener('DOMContentLoaded', async function () {
             }
         });
 
-        // Progress Bar Update
-        video.addEventListener('timeupdate', () => {
-            const progress = (video.currentTime / video.duration) * 100;
-            progressBar.style.width = `${progress}%`;
-            progressBar.setAttribute('aria-valuenow', progress);
+        document.addEventListener('fullscreenchange', () => {
+            if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+                fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>';
+            }
+        });
+        document.addEventListener('webkitfullscreenchange', () => {
+            if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+                fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>';
+            }
         });
 
-        // Slidable Progress Bar
+        // Slidable Progress Bar with Seek Preview
         let isDragging = false;
 
-        const updateProgress = (e) => {
+        const updateProgress = (e, isTouch = false) => {
             const rect = progressContainer.getBoundingClientRect();
-            const posX = e.clientX - rect.left;
+            const posX = isTouch ? e.touches[0].clientX - rect.left : e.clientX - rect.left;
             const width = rect.width;
             let progress = posX / width;
             progress = Math.max(0, Math.min(1, progress));
@@ -897,6 +996,17 @@ document.addEventListener('DOMContentLoaded', async function () {
             video.currentTime = seekTime;
             progressBar.style.width = `${progress * 100}%`;
             progressBar.setAttribute('aria-valuenow', progress * 100);
+
+            // Update seek preview
+            seekPreview.style.left = `${posX}px`;
+            const ctx = seekPreviewCanvas.getContext('2d');
+            seekPreviewCanvas.width = 120;
+            seekPreviewCanvas.height = 68;
+            video.currentTime = seekTime; // Temporarily seek for preview
+            setTimeout(() => {
+                ctx.drawImage(video, 0, 0, seekPreviewCanvas.width, seekPreviewCanvas.height);
+                video.currentTime = seekTime; // Restore seek position
+            }, 100);
         };
 
         progressContainer.addEventListener('mousedown', (e) => {
@@ -912,45 +1022,85 @@ document.addEventListener('DOMContentLoaded', async function () {
 
         document.addEventListener('mouseup', () => {
             isDragging = false;
+            seekPreview.style.display = 'none';
+        });
+
+        progressContainer.addEventListener('mousemove', (e) => {
+            if (!isDragging) {
+                const rect = progressContainer.getBoundingClientRect();
+                const posX = e.clientX - rect.left;
+                const width = rect.width;
+                let progress = posX / width;
+                progress = Math.max(0, Math.min(1, progress));
+                const seekTime = progress * video.duration;
+                seekPreview.style.display = 'block';
+                seekPreview.style.left = `${posX}px`;
+                const ctx = seekPreviewCanvas.getContext('2d');
+                seekPreviewCanvas.width = 120;
+                seekPreviewCanvas.height = 68;
+                video.currentTime = seekTime;
+                setTimeout(() => {
+                    ctx.drawImage(video, 0, 0, seekPreviewCanvas.width, seekPreviewCanvas.height);
+                    video.currentTime = video.currentTime; // Restore
+                }, 100);
+            }
+        });
+
+        progressContainer.addEventListener('mouseleave', () => {
+            if (!isDragging) seekPreview.style.display = 'none';
         });
 
         progressContainer.addEventListener('click', (e) => {
             updateProgress(e);
         });
 
-        // Touch support for mobile
+        // Touch support
         progressContainer.addEventListener('touchstart', (e) => {
             isDragging = true;
-            updateProgress(e.touches[0]);
+            updateProgress(e, true);
         });
 
         document.addEventListener('touchmove', (e) => {
             if (isDragging) {
-                updateProgress(e.touches[0]);
+                updateProgress(e, true);
             }
         });
 
         document.addEventListener('touchend', () => {
             isDragging = false;
+            seekPreview.style.display = 'none';
         });
 
-        // Handle video end
+        // Keyboard shortcuts
+        postElement.addEventListener('keydown', (e) => {
+            if (e.target === video || e.target === container) {
+                switch (e.key) {
+                    case ' ':
+                        e.preventDefault();
+                        playPauseBtn.click();
+                        break;
+                    case 'm':
+                        muteBtn.click();
+                        break;
+                    case 'f':
+                        fullscreenBtn.click();
+                        break;
+                }
+            }
+        });
+
+        // Video error handling
+        video.addEventListener('error', () => {
+            showToast('Failed to load video. Please try again later.', '#dc3545');
+            loadingSpinner.style.display = 'none';
+        });
+
         video.addEventListener('ended', () => {
             playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
             video.currentTime = 0;
             progressBar.style.width = '0%';
             progressBar.setAttribute('aria-valuenow', 0);
         });
-
-        // Fullscreen change event
-        const fullscreenChange = () => {
-            if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-                fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>';
-            }
-        };
-
-        document.addEventListener('fullscreenchange', fullscreenChange);
-        document.addEventListener('webkitfullscreenchange', fullscreenChange);
     }
 
     checkLoginStatus();
