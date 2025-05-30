@@ -202,7 +202,7 @@ module.exports = (io) => {
   async (req, res) => {
     let tempFiles = [];
     try {
-      const { description, productCondition, location, category, price, postType = 'regular', productLink } = req.body;
+      const { description, title, productCondition, location, category, price, postType = 'regular', productLink } = req.body;
       const userId = req.user.userId;
 
       logger.info(`Starting post creation for user ${userId}, type: ${postType}`);
@@ -223,6 +223,11 @@ module.exports = (io) => {
         allowedTags: [],
         allowedAttributes: {},
       });
+      const sanitizedTitle = sanitizeHtml(title, {
+        allowedTags: [],
+        allowedAttributes: {},
+      });
+
 
       let photoUrl = null;
       let videoUrl = null;
@@ -230,7 +235,7 @@ module.exports = (io) => {
 
       // Validate productLink for video ads
       const isProduction = process.env.NODE_ENV === 'production';
-      const validDomain = isProduction ? 'salmart.onrender.com' : 'localhost';
+      const validDomain = isProduction ? 'salmart.vercel.app' : 'localhost';
       const isValidSalmartLink = (link) => {
         try {
           const url = new URL(link);
@@ -251,7 +256,7 @@ module.exports = (io) => {
         if (!isValidSalmartLink(productLink)) {
           logger.warn(`Invalid product link ${productLink} by user ${userId}`);
           return res.status(400).json({ 
-            message: 'Product link must be a valid Salmart URL (e.g., https://salmart.onrender.com/product/123)' 
+            message: 'Product link must be a valid Salmart URL (e.g., https://salmart.vercel.app/posts/123)' 
           });
         }
 
@@ -272,7 +277,7 @@ module.exports = (io) => {
           thumbnailUrl = `${req.protocol}://${req.get('host')}/Uploads/${thumbnailFilename}`;
         }
       } else if (postType === 'regular') {
-        if (!description || !productCondition || !price || !location || !category || !req.files?.photo?.[0]) {
+        if (!title || !productCondition || !price || !location || !category || !req.files?.photo?.[0]) {
           logger.warn(`Missing fields in regular post creation by user ${userId}`);
           return res.status(400).json({ 
             message: 'All fields are required for regular posts' 
@@ -298,6 +303,7 @@ module.exports = (io) => {
 
       const newPost = new Post({
         postType,
+        title: sanitizedTitle,
         description: sanitizedDescription,
         category,
         profilePicture: user.profilePicture || 'default.jpg',

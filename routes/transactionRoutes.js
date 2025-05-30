@@ -157,21 +157,99 @@ router.post('/create-recipient', verifyToken, async (req, res) => {
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
-//Get products for bargain
+
+// Get products for bargain
 router.get('/products', verifyToken, async (req, res) => {
   try {
     const { sellerId } = req.query;
-    const query = { price: { $exists: true, $ne: '' }, productCondition: { $exists: true, $ne: '' }, location: { $exists: true, $ne: '' }, isSold: false };
+    console.log('Request received for /products', { sellerId, user: req.user });
+
+    // Build the query
+    const query = { 
+      price: { $exists: true, $ne: '' }, 
+      productCondition: { $exists: true, $ne: '' }, 
+      location: { $exists: true, $ne: '' }, 
+      isSold: false 
+    };
     if (sellerId) query['createdBy.userId'] = sellerId;
 
-    const products = await Post.find(query).sort({ createdAt: -1 }).populate('createdBy.userId', 'firstName lastName profilePicture');
+    console.log('Query constructed:', query);
+
+    // Fetch products
+    const products = await Post.find(query)
+      .sort({ createdAt: -1 })
+      .populate('createdBy.userId', 'firstName lastName profilePicture');
+    
+    console.log('Products fetched:', { 
+      productCount: products.length, 
+      products: products.map(p => ({
+        id: p._id,
+        title: p.title, // Assuming a title field exists
+        price: p.price,
+        createdBy: p.createdBy?.userId?._id
+      }))
+    });
+
+    // Check if products array is empty
+    if (!products || products.length === 0) {
+      console.log('No products found matching the query');
+      return res.status(200).json({ success: true, products: [], message: 'No products found' });
+    }
+
     res.status(200).json({ success: true, products });
   } catch (error) {
-    console.error('Fetch products error:', error.message);
-    res.status(500).json({ success: false, message: 'Server error' });
+    console.error('Fetch products error:', { 
+      message: error.message, 
+      stack: error.stack 
+    });
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
+  }
+});// Get products for bargain
+router.get('/products', verifyToken, async (req, res) => {
+  try {
+    const { sellerId } = req.query;
+    console.log('Request received for /products', { sellerId, user: req.user });
+
+    const query = { 
+      price: { $exists: true, $ne: '' }, 
+      productCondition: { $exists: true, $ne: '' }, 
+      location: { $exists: true, $ne: '' }, 
+      isSold: false,
+      // title is required in schema, so no need for $exists check
+    };
+    if (sellerId) query['createdBy.userId'] = sellerId;
+
+    console.log('Query constructed:', query);
+
+    const products = await Post.find(query)
+      .select('title price productCondition location createdBy photo') // Include title
+      .sort({ createdAt: -1 })
+      .populate('createdBy.userId', 'firstName lastName profilePicture');
+    
+    console.log('Products fetched:', { 
+      productCount: products.length, 
+      products: products.map(p => ({
+        id: p._id,
+        title: p.title || 'No Title', // Fallback for logging
+        price: p.price,
+        createdBy: p.createdBy?.userId?._id,
+      }))
+    });
+
+    if (!products || products.length === 0) {
+      console.log('No products found matching the query');
+      return res.status(200).json({ success: true, products: [], message: 'No products found' });
+    }
+
+    res.status(200).json({ success: true, products });
+  } catch (error) {
+    console.error('Fetch products error:', { 
+      message: error.message, 
+      stack: error.stack 
+    });
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
 });
-
 //Update price after successful bargain
 router.put('/posts/:postId/update-price', verifyToken, async (req, res) => {
   try {

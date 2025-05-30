@@ -201,121 +201,123 @@ function displayMessage(message, isOptimistic = false) { // Added isOptimistic p
         return;
     }
 
-    if (message.messageType === 'buyerAccept' && message.senderId === userId) {
-        let parsed;
+    if (message.messageType === 'buyerAccept' && message.receiverId === userId) {
+    let parsed;
+    try {
+        parsed = JSON.parse(message.text);
+    } catch (e) {
+        console.warn('Failed to parse buyerAccept message text:', message.text, e);
+        parsed = {};
+    }
+    const buyerDiv = createSystemMessage(`You can proceed to pay ₦${Number(parsed.offer || 0).toLocaleString('en-NG')} for "${parsed.productName || 'Product'}"`);
+
+    if (parsed.image) {
+        const imageContainer = document.createElement('div');
+        imageContainer.style.margin = '10px 0';
+        imageContainer.innerHTML = `
+            <img src="${parsed.image}" class="product-photo-preview" alt="${parsed.productName || 'Product'}" style="max-width: 200px; border-radius: 5px;" onerror="this.style.display='none';this.nextElementSibling.style.display='block';">
+            <p style="display:none;color:red;">Failed to load product image.</p>
+        `;
+        buyerDiv.appendChild(imageContainer);
+    }
+
+    const paymentBtn = document.createElement('button');
+    paymentBtn.className = 'proceed-to-payment-btn';
+    paymentBtn.textContent = 'Proceed to Payment';
+
+    const verifyPayment = async () => {
         try {
-            parsed = JSON.parse(message.text);
-        } catch (e) {
-            console.warn('Failed to parse buyerAccept message text:', message.text, e);
-            parsed = {};
-        }
-        const buyerDiv = createSystemMessage(`You can proceed to pay ₦${Number(parsed.offer || 0).toLocaleString('en-NG')} for "${parsed.productName || 'Product'}"`);
-
-        if (parsed.image) {
-            const imageContainer = document.createElement('div');
-            imageContainer.style.margin = '10px 0';
-            imageContainer.innerHTML = `
-                <img src="${parsed.image}" class="product-photo-preview" alt="${parsed.productName || 'Product'}" style="max-width: 200px; border-radius: 5px;" onerror="this.style.display='none';this.nextElementSibling.style.display='block';">
-                <p style="display:none;color:red;">Failed to load product image.</p>
-            `;
-            buyerDiv.appendChild(imageContainer);
-        }
-
-        const paymentBtn = document.createElement('button');
-        paymentBtn.className = 'proceed-to-payment-btn';
-        paymentBtn.textContent = 'Proceed to Payment';
-
-        const verifyPayment = async () => {
-            try {
-                const token = localStorage.getItem('authToken');
-                if (!token) {
-                    showToast('Please log in to verify payment', 'error');
-                    return false;
-                }
-                const response = await fetch(`${API_BASE_URL}/payment-success?productId=${parsed.productId}&buyerId=${userId}&format=json`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({ error: 'Server error' }));
-                    showToast(`Payment verification failed: ${errorData.error || 'Server error'}`, 'error');
-                    return false;
-                }
-                const result = await response.json();
-                if (result.paymentCompleted) {
-                    paymentBtn.disabled = true;
-                    paymentBtn.textContent = 'Payment Completed';
-                    paymentBtn.style.backgroundColor = 'gray';
-                    paymentBtn.style.cursor = 'not-allowed';
-                    return true;
-                }
-                return false;
-            } catch (error) {
-                showToast('Error verifying payment. Please try again.', 'error');
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                showToast('Please log in to verify payment', 'error');
                 return false;
             }
-        };
+            const response = await fetch(`${API_BASE_URL}/payment-success?productId=${parsed.productId}&buyerId=${userId}&format=json`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({ error: 'Server error' }));
+                showToast(`Payment verification failed: ${errorData.error || 'Server error'}`, 'error');
+                return false;
+            }
+            const result = await response.json();
+            if (result.paymentCompleted) {
+                paymentBtn.disabled = true;
+                paymentBtn.textContent = 'Payment Completed';
+                paymentBtn.style.backgroundColor = 'gray';
+                paymentBtn.style.cursor = 'not-allowed';
+                return true;
+            }
+            return false;
+        } catch (error) {
+            showToast('Error verifying payment. Please try again.', 'error');
+            return false;
+        }
+    };
 
-        verifyPayment().then(isPaid => {
-            if (!isPaid) {
-                paymentBtn.onclick = async () => {
-                    const postId = parsed.productId;
-                    const email = localStorage.getItem('email');
-                    const buyerId = localStorage.getItem('userId');
-                    if (!email || !buyerId) {
-                        showToast('Please log in to make a payment', 'error');
-                        return;
-                    }
-                    try {
-                        paymentBtn.disabled = true;
-                        paymentBtn.textContent = 'Processing...';
-                        const response = await fetch(`${API_BASE_URL}/pay`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-                            },
-                            body: JSON.stringify({ email, postId, buyerId })
-                        });
-                        const result = await response.json();
-                        if (result.success) {
-                            window.location.href = result.url;
-                        } else {
-                            paymentBtn.disabled = false;
-                            paymentBtn.textContent = 'Proceed to Payment';
-                            showToast(`Payment initiation failed: ${result.message || 'Please try again'}`, 'error');
-                        }
-                    } catch (error) {
+    verifyPayment().then(isPaid => {
+        if (!isPaid) {
+            paymentBtn.onclick = async () => {
+                const postId = parsed.productId;
+                const email = localStorage.getItem('email');
+                const buyerId = localStorage.getItem('userId');
+                if (!email || !buyerId) {
+                    showToast('Please log in to make a payment', 'error');
+                    return;
+                }
+                try {
+                    paymentBtn.disabled = true;
+                    paymentBtn.textContent = 'Processing...';
+                    const response = await fetch(`${API_BASE_URL}/pay`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                        },
+                        body: JSON.stringify({ email, postId, buyerId })
+                    });
+                    const result = await response.json();
+                    if (result.success) {
+                        window.location.href = result.url;
+                    } else {
                         paymentBtn.disabled = false;
                         paymentBtn.textContent = 'Proceed to Payment';
-                        showToast('Payment processing error', 'error');
+                        showToast(`Payment initiation failed: ${result.message || 'Please try again'}`, 'error');
                     }
-                };
-            }
-        });
+                } catch (error) {
+                    paymentBtn.disabled = false;
+                    paymentBtn.textContent = 'Proceed to Payment';
+                    showToast('Payment processing error', 'error');
+                }
+            };
+        }
+    });
 
-        buyerDiv.appendChild(paymentBtn);
-        chatMessages.appendChild(buyerDiv);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-        return;
-    }
+    buyerDiv.appendChild(paymentBtn);
+    chatMessages.appendChild(buyerDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+    return;
+}
 
     if (message.messageType === 'sellerAccept') {
-        let parsed;
-        try {
-            parsed = JSON.parse(message.text);
-        } catch (e) {
-            console.warn('Failed to parse sellerAccept message text:', message.text, e);
-            parsed = {};
-        }
-        const sellerAcceptText = message.senderId === userId
-            ? `You have accepted the offer of ₦${Number(parsed.offer || 0).toLocaleString('en-NG')} for "${parsed.productName || 'Product'}". You shall be notified as soon as ${recipientUsername} makes payment.`
-            : `${recipientUsername} accepted your offer of ₦${Number(parsed.offer || 0).toLocaleString('en-NG')} for "${parsed.productName || 'Product'}"`;
-        chatMessages.appendChild(createSystemMessage(sellerAcceptText));
-        acceptedOffers.add(parsed.productId);
-        bargainingSessions.delete(`${parsed.productId}-${message.senderId}`);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
+    if (message.senderId !== userId) {
+        // Skip displaying for non-seller (buyer)
         return;
     }
+    let parsed;
+    try {
+        parsed = JSON.parse(message.text);
+    } catch (e) {
+        console.warn('Failed to parse sellerAccept message text:', message.text, e);
+        parsed = {};
+    }
+    const sellerAcceptText = `You have accepted the offer of ₦${Number(parsed.offer || 0).toLocaleString('en-NG')} for "${parsed.productName || 'Product'}". You shall be notified as soon as ${recipientUsername} makes payment.`;
+    chatMessages.appendChild(createSystemMessage(sellerAcceptText));
+    acceptedOffers.add(parsed.productId);
+    bargainingSessions.delete(`${parsed.productId}-${message.senderId}`);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+    return;
+}
 
     let msg = message.text, img = null, parsed = {};
     console.log('Processing message:', { messageType: message.messageType, text: message.text });
@@ -492,26 +494,26 @@ function displayMessage(message, isOptimistic = false) { // Added isOptimistic p
                         displayedMessages.add(acceptData.data._id);
                     }
 
-                    const buyerAcceptMessage = {
-                        receiverId: userId,
-                        messageType: 'buyerAccept',
-                        text: JSON.stringify({
-                            productName: parsed.productName,
-                            offer: productDetails.offer,
-                            buyerName: localStorage.getItem('username') || 'Buyer',
-                            image: parsed.image || productImage || '',
-                            productId: productDetails.productId
-                        }),
-                        offerDetails: {
-                            productId: productDetails.productId,
-                            productName: parsed.productName,
-                            proposedPrice: productDetails.offer,
-                            image: parsed.image || productImage || '',
-                            status: 'accepted'
-                        },
-                        createdAt: new Date(),
-                        isRead: false
-                    };
+              const buyerAcceptMessage = {
+    receiverId: message.senderId, // Send to the buyer
+    messageType: 'buyerAccept',
+    text: JSON.stringify({
+        productName: parsed.productName,
+        offer: productDetails.offer,
+        buyerName: localStorage.getItem('username') || 'Buyer',
+        image: parsed.image || productImage || '',
+        productId: productDetails.productId
+    }),
+    offerDetails: {
+        productId: productDetails.productId,
+        productName: parsed.productName,
+        proposedPrice: productDetails.offer,
+        image: parsed.image || productImage || '',
+        status: 'accepted'
+    },
+    createdAt: new Date(),
+    isRead: false
+};      
 
                     // Optimistic display
                     const optimisticBuyerAccept = { ...buyerAcceptMessage, senderId: userId, status: 'sent' };
@@ -887,35 +889,49 @@ bargainBtn.onclick = async () => {
     const modal = document.getElementById('bargainModal');
     if (!modal) {
         console.error('Bargain modal with ID "bargainModal" not found.');
+        showToast('Bargain modal not found', 'error');
         return;
     }
     modal.style.display = 'block';
     try {
+        const token = localStorage.getItem('authToken');
+        if (!token) {
+            throw new Error('No auth token found');
+        }
         const res = await fetch(`${API_BASE_URL}/products?sellerId=${receiverId}`, {
             headers: {
-                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                'Authorization': `Bearer ${token}`
             }
         });
-        if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
-        const products = await res.json();
+        if (!res.ok) {
+            throw new Error(`HTTP error! Status: ${res.status}`);
+        }
+        const data = await res.json();
+        console.log('Products API response:', data); // Log the full response
+
         const container = document.getElementById('bargainProductsContainer');
         if (!container) {
             console.error('Bargain products container not found.');
+            showToast('Products container not found', 'error');
             return;
         }
         container.innerHTML = '';
-        if (!products.length) {
+
+        if (!data.success || !data.products || data.products.length === 0) {
+            console.log('No products found in response:', data);
             container.innerHTML = '<p>No products available.</p>';
             return;
         }
-        products.forEach(product => {
+
+        data.products.forEach(product => {
+            console.log('Rendering product:', product); // Log each product
             const card = document.createElement('div');
             card.className = 'product-card';
             card.innerHTML = `
-                <img src="${product.photo}" alt="${product.description}" style="max-width: 200px; border-radius: 5px;" onerror="this.style.display='none';this.nextElementSibling.style.display='block';">
+                <img src="${product.photo || '/default-image.png'}" alt="${product.title || 'Product'}" style="max-width: 200px; border-radius: 5px;" onerror="this.style.display='none';this.nextElementSibling.style.display='block';">
                 <p style="display:none;color:red;">Failed to load product image.</p>
                 <div>
-                    <strong>${product.description}</strong><br>
+                    <strong>${product.title || 'No Title'}</strong><br>
                     ₦${Number(product.price).toLocaleString('en-NG')}<br>
                     <input type="text" class="bargain-price-input" placeholder="Your Offer Price">
                     <button class="confirm-bargain-btn">Send Offer</button>
@@ -948,7 +964,7 @@ bargainBtn.onclick = async () => {
                 }
             });
 
-            sendButton.onclick = async () => { // Changed to async
+            sendButton.onclick = async () => {
                 let price = priceInput.value.replace(/,/g, '');
                 if (price && !isNaN(price) && Number(price) > 0) {
                     sendButton.disabled = true;
@@ -957,18 +973,18 @@ bargainBtn.onclick = async () => {
                         receiverId,
                         messageType: 'offer',
                         text: JSON.stringify({
-                            text: `My offer for "${product.description}" is ₦${Number(price).toLocaleString('en-NG')}`,
+                            text: `My offer for "${product.title}" is ₦${Number(price).toLocaleString('en-NG')}`, // Use title
                             offer: Number(price),
                             productId: product._id,
-                            productName: product.description,
-                            image: product.photo
+                            productName: product.title,
+                            image: product.photo || ''
                         }),
                         offerDetails: {
                             productId: product._id,
-                            productName: product.description,
+                            productName: product.title,
                             proposedPrice: Number(price),
                             originalPrice: product.price,
-                            image: product.photo
+                            image: product.photo || ''
                         },
                         createdAt: new Date(),
                         isRead: false
@@ -1025,6 +1041,7 @@ bargainBtn.onclick = async () => {
         }
     } catch (e) {
         console.error('Fetch error:', e);
+        showToast(`Error loading products: ${e.message}`, 'error');
         document.getElementById('bargainProductsContainer').innerHTML = '<p>Error loading products.</p>';
     }
 };
@@ -1129,33 +1146,25 @@ socket.on('newMessage', message => {
         return;
     }
 
-    let parsed;
     if (message.messageType === 'buyerAccept') {
+        let parsed;
         try {
             parsed = JSON.parse(message.text);
         } catch (e) {
             console.warn('Failed to parse buyerAccept message text in newMessage:', message.text, e);
             return;
         }
-    }
 
-    if (message.messageType === 'buyerAccept') {
-        if (message.senderId === userId) {
+        // Only display for the buyer (receiver of the buyerAccept message)
+        if (message.receiverId === userId) {
             displayMessage(message);
-        } else if (message.receiverId === userId) {
-            if (sentCounterOffers.has(parsed.productId)) {
-                const sellerText = `Your last price for "${parsed.productName || 'Product'}" has been accepted by ${recipientUsername}. You shall be notified when payment is completed.`;
-                chatMessages.appendChild(createSystemMessage(sellerText));
-                acceptedOffers.add(parsed.productId);
-                bargainingSessions.delete(`${parsed.productId}-${message.senderId}`);
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-            } else {
-                console.log(`Skipping buyerAccept message for seller (no counter-offer):`, {
-                    productId: parsed.productId,
-                    sentCounterOffers: Array.from(sentCounterOffers)
-                });
-                return;
-            }
+        } else {
+            console.log('Skipping buyerAccept message for non-buyer:', {
+                productId: parsed.productId,
+                userId,
+                receiverId: message.receiverId
+            });
+            return;
         }
     } else {
         displayMessage(message);
@@ -1176,7 +1185,6 @@ socket.on('newMessage', message => {
     storedMessages.push(message);
     localStorage.setItem(`chat_${userId}_${receiverId}`, JSON.stringify(storedMessages));
 });
-
 // Handle message synced event for persistence
 socket.on('messageSynced', (message) => {
     if (!((message.senderId === userId && message.receiverId === receiverId) ||

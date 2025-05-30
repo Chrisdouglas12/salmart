@@ -8,8 +8,13 @@ const postSchema = new mongoose.Schema({
   },
   description: {
     type: String,
-    required: true,
     trim: true,
+  },
+  title:{
+type: String,
+required: true,
+trim: true,
+
   },
   category: {
     type: String,
@@ -24,9 +29,7 @@ const postSchema = new mongoose.Schema({
   },
   thumbnail: { // Added to match backend route
     type: String,
-    required: function () {
-      return this.postType === 'video_ad';
-    },
+    required: false,
   },
   productLink: {
     type: String,
@@ -45,7 +48,7 @@ const postSchema = new mongoose.Schema({
           return false;
         }
       },
-      message: 'Product link must be a valid Salmart URL (e.g., https://salmart.onrender.com/product/123)',
+      message: 'Product link must be a valid Salmart URL (e.g., https://salmart.vercel.app/posts/123)',
     },
   },
   location: {

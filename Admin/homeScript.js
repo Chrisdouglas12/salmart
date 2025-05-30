@@ -373,7 +373,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                             <span class="icon">📦</span>
                             <div>
                                 <p class="label">Product</p>
-                                <p class="value">${post.description || 'No description'}</p>
+                                <p class="value">${post.description || 'No descript'}</p>
                             </div>
                         </div>
                     `;
@@ -391,7 +391,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                             <span class="icon">📦</span>
                             <div>
                                 <p class="label">Product</p>
-                                <p class="value">${post.description || 'No description'}</p>
+                                <p class="value">${post.title || 'No description'}</p>
                             </div>
                         </div>
                         <div class="product-info">
@@ -425,7 +425,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                         <button class="buy-now-button send-message-btn" id="send-message-btn"
                             data-recipient-id="${post.createdBy ? post.createdBy.userId : ''}"
                             data-product-image="${productImageForChat}"
-                            data-product-description="${post.description || ''}"
+                            data-product-description="${post.title || ''}"
                             data-post-id="${post._id || ''}"
                             ${post.isSold ? 'disabled' : ''}>
                             <i class="fas fa-circle-dot"></i> ${post.isSold ? 'Unavailable' : 'Check Availability'}

@@ -128,8 +128,14 @@
       <!-- Normal Ad Form -->
       <form id="normal-ad-form" class="ad-form" enctype="multipart/form-data" novalidate>
         <div class="input-form">
+          <label for="title">Enter product title</label>
+    <input id="title" name="title" type="text" class="input" placeholder="e.g. Nexus deep freezer, 200 liters" maxlength="500" required />
+          <div class="error" id="normal-title-error"></div>
+        </div>
+          <div class="input-form">
           <label for="description">Enter product description</label>
-          <input id="description" name="description" type="text" class="input" placeholder="e.g. Nexus deep freezer, 200 liters" required maxlength="500" />
+          <input id="description" name="description" type="text" class="input" 
+          placeholder="e.g. Alice violin strings, nylon core. Good for Advanced players..." maxlength="1500" />
           <div class="error" id="normal-description-error"></div>
         </div>
 
@@ -244,7 +250,7 @@
     const MAX_DESCRIPTION_LENGTH = 500;
     const MAX_TEXT_LENGTH = 100;
     const API_BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart.onrender.com';
-    const VALID_DOMAIN = 'salmart.onrender.com';
+    const VALID_DOMAIN = 'https://salmart.vercel.app';
 
     // DOM references
     const normalForm = document.getElementById('normal-ad-form');
@@ -444,6 +450,8 @@
 
       // Validation for Normal Ad
       if (isNormalTab) {
+           const title = form.querySelector('#title').value.trim();
+        
         const description = form.querySelector('#description').value.trim();
         const productCondition = form.querySelector('#productCondition').value.trim();
         const price = form.querySelector('#price').value;
@@ -451,8 +459,8 @@
         const category = form.querySelector('#category').value;
         const photo = form.querySelector('#photo-input').files[0];
 
-        if (!description) {
-          showFieldError('normal-description-error', 'Description is required');
+        if (!title) {
+          showFieldError('normal-title-error', 'Titl is required');
           return resetAfterError();
         }
         if (description.length > MAX_DESCRIPTION_LENGTH) {
@@ -515,7 +523,7 @@
           return resetAfterError();
         }
         if (!isValidSalmartLink(productLink)) {
-          showFieldError('product-link-error', 'Link must be a valid Salmart URL (e.g., https://salmart.onrender.com/product/123)');
+          showFieldError('product-link-error', 'Link must be a valid Salmart URL (e.g., https://salmart.vercel.app/posts/123)');
           return resetAfterError();
         }
       }
