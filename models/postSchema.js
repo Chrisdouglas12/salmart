@@ -42,7 +42,7 @@ trim: true,
         if (this.postType !== 'video_ad') return true; // Skip validation for non-video ads
         try {
           const url = new URL(value);
-          const validDomain = process.env.NODE_ENV === 'production' ? 'salmart.onrender.com' : 'localhost';
+          const validDomain = process.env.NODE_ENV === 'production' ? 'salmart.vercel.app' : 'localhost';
           return url.hostname === validDomain;
         } catch (e) {
           return false;

@@ -235,7 +235,7 @@ module.exports = (io) => {
 
       // Validate productLink for video ads
       const isProduction = process.env.NODE_ENV === 'production';
-      const validDomain = isProduction ? 'https://salmart.vercel.app' : 'localhost';
+      const validDomain = isProduction ? 'salmart.vercel.app' : 'localhost';
       const isValidSalmartLink = (link) => {
         try {
           const url = new URL(link);

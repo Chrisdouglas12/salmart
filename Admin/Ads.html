@@ -6,12 +6,9 @@
   <meta http-equiv="X-UA-Compatible" content="ie=edge" />
   <title>Create Ad</title>
   <script src="https://cdn.jsdelivr.net/npm/jwt-decode@3.1.2/build/jwt-decode.min.js"></script>
-  <!-- Updated FFmpeg script to reliable CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/umd/ffmpeg.min.js"></script>
   <link rel="stylesheet" href="Ads-Styles.css" />
   <script src="addPic.js"></script>
   <style>
-    /* Existing CSS unchanged for brevity; only key mobile optimizations added */
     .tab-header {
       display: flex;
       justify-content: center;
@@ -20,13 +17,13 @@
     }
     .tab-button {
       flex: 1;
-      padding: 12px; /* Slightly larger padding for touch */
+      padding: 12px;
       cursor: pointer;
       border: none;
       background: #eee;
       font-weight: bold;
       transition: background-color 0.3s, color 0.3s;
-      font-size: 16px; /* Larger font for mobile readability */
+      font-size: 16px;
     }
     .tab-button.active {
       background: #28a745;
@@ -48,7 +45,7 @@
       display: none;
       z-index: 9999;
       text-align: center;
-      width: 80%; /* Wider for mobile */
+      width: 80%;
       font-size: 14px;
     }
     .preview-container img,
@@ -68,7 +65,7 @@
       color: white;
       background-color: #28a745;
       width: 200px;
-      height: 40px; /* Larger button for touch */
+      height: 40px;
       border: solid 0.1px green;
       border-radius: 50px;
       text-align: center;
@@ -76,7 +73,7 @@
       font-weight: bold;
       cursor: pointer;
       transition: background-color 0.3s;
-      font-size: 16px; /* Larger font */
+      font-size: 16px;
     }
     .publish-button:disabled {
       background-color: #ccc;
@@ -115,12 +112,100 @@
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
-    /* Ensure inputs are touch-friendly */
     .input, select, textarea {
-      font-size: 16px; /* Larger font for mobile */
+      font-size: 16px;
       padding: 10px;
       width: 100%;
       box-sizing: border-box;
+    }
+    /* Full-screen video editor styles */
+    .video-editor-modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.9);
+      z-index: 10001;
+      overflow-y: auto;
+    }
+    .video-editor-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      padding: 20px;
+      color: white;
+    }
+    .video-editor-content video {
+      max-width: 100%;
+      max-height: 50vh;
+      border: 2px solid #28a745;
+      border-radius: 8px;
+    }
+    .timeline {
+      width: 100%;
+      margin: 20px 0;
+      position: relative;
+    }
+    .thumbnail-strip {
+      display: flex;
+      overflow-x: auto;
+      background: #333;
+      padding: 5px;
+      border-radius: 5px;
+    }
+    .thumbnail-strip canvas {
+      width: 60px;
+      height: 40px;
+      margin-right: 5px;
+      border: 1px solid #555;
+    }
+    .range-slider {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      margin: 10px 0;
+    }
+    .range-slider input[type="range"] {
+      flex: 1;
+      margin: 0 10px;
+      -webkit-appearance: none;
+      background: #555;
+      height: 8px;
+      border-radius: 4px;
+    }
+    .range-slider input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 20px;
+      height: 20px;
+      background: #28a745;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+    .editor-controls {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      margin-top: 20px;
+    }
+    .editor-controls button {
+      padding: 12px 24px;
+      font-size: 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      border: none;
+    }
+    .editor-controls .confirm {
+      background: #28a745;
+      color: white;
+    }
+    .editor-controls .cancel {
+      background: #dc3545;
+      color: white;
+    }
+    .editor-info {
+      margin: 10px 0;
+      font-size: 14px;
     }
   </style>
 </head>
@@ -194,7 +279,7 @@
       <form id="video-ad-form" class="ad-form" enctype="multipart/form-data" style="display: none;" novalidate>
         <div class="input-form">
           <label for="video-description">Video Description</label>
-          <textarea id="video-description" name="description" class="input" placeholder="Write a short pitch..." required maxlength="500" style="width: 100%; height: 60px; border: 0.1px #28a745 solid; border-radius: 4px;"></textarea>
+          <textarea id="video-title" name="title" class="input" placeholder="Write a short pitch..." required maxlength="500" style="width: 100%; height: 60px; border: 0.1px #28a745 solid; border-radius: 4px;"></textarea>
           <div class="error" id="video-description-error"></div>
         </div>
         <div class="input-form">
@@ -245,6 +330,30 @@
     </div>
   </div>
 
+  <!-- Video Editor Modal -->
+  <div id="video-editor-modal" class="video-editor-modal">
+    <div class="video-editor-content">
+      <video id="editor-video" controls></video>
+      <div class="timeline">
+        <div id="thumbnail-strip" class="thumbnail-strip"></div>
+        <div class="range-slider">
+          <span id="start-time">0:00</span>
+          <input type="range" id="trim-start" min="0" max="100" value="0" step="0.1" />
+          <input type="range" id="trim-end" min="0" max="100" value="100" step="0.1" />
+          <span id="end-time">0:00</span>
+        </div>
+      </div>
+      <div class="editor-info">
+        <p id="trim-duration">Duration: 0s</p>
+        <p id="trim-size">Size: Calculating...</p>
+      </div>
+      <div class="editor-controls">
+        <button type="button" class="confirm" id="confirm-trim">Confirm</button>
+        <button type="button" class="cancel" id="cancel-trim">Cancel</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Modal for image gallery (unused for now) -->
   <div id="galleryModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center;">
     <div id="galleryContent"></div>
@@ -259,32 +368,6 @@
     const VALID_BASE_DOMAIN = 'salmart.vercel.app';
     const VALID_LOCALHOST = 'localhost';
 
-    // Initialize FFmpeg
-    let ffmpeg;
-    let ffmpegLoaded = false;
-
-    async function loadFFmpeg() {
-      if (!ffmpegLoaded) {
-        try {
-          const { createFFmpeg, fetchFile } = FFmpeg;
-          if (!createFFmpeg || !fetchFile) {
-            throw new Error('FFmpeg library not properly loaded');
-          }
-          console.log('[FFMPEG] Loading from: https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/umd/ffmpeg-core.js');
-          ffmpeg = createFFmpeg({ 
-            log: true,
-            corePath: 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/umd/ffmpeg-core.js'
-          });
-          await ffmpeg.load();
-          ffmpegLoaded = true;
-          console.log('[FFMPEG] Loaded successfully');
-        } catch (error) {
-          console.error('[FFMPEG] Failed to load:', error);
-          showToast('Video processing unavailable. Please use a pre-compressed video under 6MB.', '#dc3545');
-        }
-      }
-    }
-
     // DOM references
     const normalForm = document.getElementById('normal-ad-form');
     const videoForm = document.getElementById('video-ad-form');
@@ -294,20 +377,33 @@
     const priceDisplay = document.getElementById('price-display');
     const priceHidden = document.getElementById('price');
     const loadingModal = document.getElementById('loading-modal');
+    const videoInput = document.getElementById('video-input');
+    const videoEditorModal = document.getElementById('video-editor-modal');
+    const editorVideo = document.getElementById('editor-video');
+    const trimStart = document.getElementById('trim-start');
+    const trimEnd = document.getElementById('trim-end');
+    const startTime = document.getElementById('start-time');
+    const endTime = document.getElementById('end-time');
+    const trimDuration = document.getElementById('trim-duration');
+    const trimSize = document.getElementById('trim-size');
+    const confirmTrim = document.getElementById('confirm-trim');
+    const cancelTrim = document.getElementById('cancel-trim');
+    const thumbnailStrip = document.getElementById('thumbnail-strip');
 
-    // Track active tab
+    // Track state
     let activeTab = 'normal';
+    let originalVideoFile = null;
+    let trimmedVideoFile = null;
+    let videoDuration = 0;
 
-    // Show toast notification
+    // Show toast
     function showToast(message, color = '#28a745') {
       const toast = document.getElementById('toast');
       if (toast) {
         toast.textContent = message;
         toast.style.backgroundColor = color;
         toast.style.display = 'block';
-        setTimeout(() => {
-          toast.style.display = 'none';
-        }, 3000);
+        setTimeout(() => toast.style.display = 'none', 3000);
       }
     }
 
@@ -319,7 +415,7 @@
       if (loadingModal) loadingModal.style.display = 'none';
     }
 
-    // Reset buttons and enable tabs
+    // Reset buttons
     function resetButtons() {
       if (publishButton) {
         publishButton.disabled = false;
@@ -330,7 +426,7 @@
       hideLoadingModal();
     }
 
-    // Format price input with thousand separators and decimals
+    // Format price input
     function formatPriceInput(value) {
       let cleanValue = value.replace(/[^\d.]/g, '');
       const parts = cleanValue.split('.');
@@ -342,14 +438,14 @@
       return decimalPart.length > 0 ? `${integerPart}.${decimalPart}` : integerPart;
     }
 
-    // Parse formatted price string to float
+    // Parse price
     function parsePrice(value) {
       if (!value) return NaN;
       const numStr = value.replace(/,/g, '');
       return parseFloat(numStr);
     }
 
-    // Price input event: format and update hidden input
+    // Price input event
     if (priceDisplay) {
       priceDisplay.addEventListener('input', (e) => {
         const cursorPosition = e.target.selectionStart;
@@ -398,141 +494,214 @@
       });
     }
 
-    // Compress and trim video
-    async function processVideo(file) {
-      if (!ffmpegLoaded) {
-        showToast('Video processing unavailable. Please use a pre-compressed video under 6MB.', '#dc3545');
-        throw new Error('Video processing unavailable');
-      }
-
-      const inputName = 'input.mp4';
-      const outputName = 'output.mp4';
-
-      // Write input file to FFmpeg's virtual filesystem
-      await ffmpeg.FS('writeFile', inputName, await FFmpeg.fetchFile(file));
-
-      // Check video duration
-      let duration = 0;
-      const video = document.createElement('video');
-      video.src = URL.createObjectURL(file);
-      await new Promise((resolve) => {
-        video.onloadedmetadata = () => {
-          duration = video.duration;
-          resolve();
-        };
-      });
-
-      // Build FFmpeg command
-      let command = ['-i', inputName];
-
-      // Trim if duration exceeds 60 seconds
-      if (duration > MAX_DURATION) {
-        showToast('Video exceeds 60 seconds and will be trimmed to 1 minute.', '#ffc107');
-        command.push('-t', MAX_DURATION.toString());
-      }
-
-      // Compress video (optimized for mobile)
-      command.push(
-        '-vcodec', 'libx264',
-        '-crf', '30', // Higher CRF for smaller file size
-        '-preset', 'ultrafast', // Faster encoding
-        '-vf', 'scale=640:360', // Downscale to 360p
-        '-acodec', 'aac',
-        '-b:a', '96k', // Lower audio bitrate
-        outputName
-      );
-
-      // Run FFmpeg command
-      await ffmpeg.run(...command);
-
-      // Read the output file
-      const data = ffmpeg.FS('readFile', outputName);
-      const compressedFile = new File([data.buffer], file.name, { type: 'video/mp4' });
-
-      // Verify output file size
-      if (compressedFile.size > MAX_FILE_SIZE) {
-        throw new Error('Compressed video exceeds 6MB');
-      }
-
-      // Clean up
-      try {
-        if (ffmpeg.FS('readdir', '/').includes(inputName)) ffmpeg.FS('unlink', inputName);
-        if (ffmpeg.FS('readdir', '/').includes(outputName)) ffmpeg.FS('unlink', outputName);
-      } catch (e) {
-        console.warn('[FFMPEG] Cleanup error:', e);
-      }
-
-      return compressedFile;
+    // Format time
+    function formatTime(seconds) {
+      const min = Math.floor(seconds / 60);
+      const sec = Math.floor(seconds % 60);
+      return `${min}:${sec.toString().padStart(2, '0')}`;
     }
 
-    // Video preview and validation
-    const videoInput = document.getElementById('video-input');
+    // Generate thumbnails
+    async function generateThumbnails(video, duration) {
+      thumbnailStrip.innerHTML = '';
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = 60;
+      canvas.height = 40;
+      const interval = duration / 5; // 5 thumbnails
+      for (let i = 0; i < 5; i++) {
+        const time = i * interval;
+        video.currentTime = time;
+        await new Promise(resolve => video.onseeked = resolve);
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const thumb = document.createElement('canvas');
+        thumb.width = canvas.width;
+        thumb.height = canvas.height;
+        thumb.getContext('2d').drawImage(canvas, 0, 0);
+        thumbnailStrip.appendChild(thumb);
+      }
+    }
+
+    // Trim video
+    async function trimVideo(file, startTime, endTime) {
+      return new Promise((resolve, reject) => {
+        const video = document.createElement('video');
+        video.src = URL.createObjectURL(file);
+        video.onloadedmetadata = () => {
+          const duration = endTime - startTime;
+          if (duration > MAX_DURATION) {
+            reject(new Error('Trimmed duration exceeds 60 seconds'));
+            return;
+          }
+
+          video.currentTime = startTime;
+          video.play();
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+
+          const stream = canvas.captureStream();
+          const recorder = new MediaRecorder(stream, { mimeType: 'video/mp4' });
+          const chunks = [];
+
+          recorder.ondataavailable = e => chunks.push(e.data);
+          recorder.onstop = () => {
+            const blob = new Blob(chunks, { type: 'video/mp4' });
+            if (blob.size > MAX_FILE_SIZE) {
+              reject(new Error('Trimmed video exceeds 6MB'));
+              return;
+            }
+            const mp4File = new File([blob], 'trimmed-video.mp4', { type: 'video/mp4' });
+            resolve(mp4File);
+          };
+
+          recorder.start();
+          const drawFrame = () => {
+            if (video.currentTime >= endTime) {
+              recorder.stop();
+              video.pause();
+              return;
+            }
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            requestAnimationFrame(drawFrame);
+          };
+          drawFrame();
+        };
+        video.onerror = () => reject(new Error('Invalid video file'));
+      });
+    }
+
+    // Video preview and editor
     if (videoInput) {
       videoInput.addEventListener('change', async function (e) {
         const videoError = document.getElementById('video-error');
         const previewContainer = document.getElementById('video-preview-container');
         previewContainer.innerHTML = '';
         videoError.style.display = 'none';
-        const file = e.target.files[0];
-        if (file) {
-          if (file.type !== 'video/mp4') {
+        videoEditorModal.style.display = 'none';
+        originalVideoFile = e.target.files[0];
+        trimmedVideoFile = null;
+
+        if (originalVideoFile) {
+          if (originalVideoFile.type !== 'video/mp4') {
             videoError.textContent = 'Only MP4 videos are allowed';
             videoError.style.display = 'block';
             this.value = '';
             return;
           }
-          if (file.size > MAX_FILE_SIZE) {
+          if (originalVideoFile.size > MAX_FILE_SIZE) {
             videoError.textContent = 'Video size cannot exceed 6MB';
             videoError.style.display = 'block';
             this.value = '';
             return;
           }
 
-          // Validate duration without FFmpeg
           const video = document.createElement('video');
-          video.src = URL.createObjectURL(file);
+          video.src = URL.createObjectURL(originalVideoFile);
           await new Promise((resolve) => {
             video.onloadedmetadata = () => {
+              videoDuration = video.duration;
               if (video.duration > MAX_DURATION) {
-                videoError.textContent = 'Video duration cannot exceed 60 seconds';
-                videoError.style.display = 'block';
-                this.value = '';
-                previewContainer.innerHTML = '';
+                videoEditorModal.style.display = 'flex';
+                editorVideo.src = video.src;
+                trimStart.max = video.duration;
+                trimEnd.max = video.duration;
+                trimEnd.value = Math.min(video.duration, MAX_DURATION);
+                startTime.textContent = formatTime(0);
+                endTime.textContent = formatTime(Math.min(video.duration, MAX_DURATION));
+                trimDuration.textContent = `Duration: ${Math.min(video.duration, MAX_DURATION).toFixed(1)}s`;
+                trimSize.textContent = `Size: ${(originalVideoFile.size / 1024 / 1024).toFixed(2)} MB`;
+                generateThumbnails(video, video.duration);
                 resolve();
-                return;
+              } else {
+                video.controls = true;
+                previewContainer.appendChild(video);
+                trimmedVideoFile = originalVideoFile;
+                resolve();
               }
-              // Create preview
-              video.controls = true;
-              previewContainer.appendChild(video);
-              resolve();
             };
             video.onerror = () => {
               videoError.textContent = 'Invalid video file';
               videoError.style.display = 'block';
               this.value = '';
-              previewContainer.innerHTML = '';
               resolve();
             };
           });
-
-          // Attempt FFmpeg processing if loaded
-          if (ffmpegLoaded) {
-            try {
-              showToast('Processing video, please wait...', '#28a745');
-              const processedFile = await processVideo(file);
-              const dataTransfer = new DataTransfer();
-              dataTransfer.items.add(processedFile);
-              this.files = dataTransfer.files;
-              video.src = URL.createObjectURL(processedFile);
-            } catch (error) {
-              console.error('[VIDEO PROCESSING ERROR]', error);
-              videoError.textContent = error.message || 'Failed to process video';
-              videoError.style.display = 'block';
-              this.value = '';
-              previewContainer.innerHTML = '';
-            }
-          }
         }
+      });
+    }
+
+    // Editor controls
+    if (trimStart && trimEnd) {
+      trimStart.addEventListener('input', () => {
+        const start = parseFloat(trimStart.value);
+        const end = parseFloat(trimEnd.value);
+        if (start >= end) trimStart.value = end - 0.1;
+        startTime.textContent = formatTime(start);
+        const duration = end - start;
+        trimDuration.textContent = `Duration: ${duration.toFixed(1)}s`;
+        // Size estimation assumes original bitrate, actual size checked after trimming
+        trimSize.textContent = `Size: Calculating...`;
+        editorVideo.currentTime = start;
+      });
+      trimEnd.addEventListener('input', () => {
+        const start = parseFloat(trimStart.value);
+        const end = parseFloat(trimEnd.value);
+        if (end <= start) trimEnd.value = start + 0.1;
+        endTime.textContent = formatTime(end);
+        const duration = end - start;
+        trimDuration.textContent = `Duration: ${duration.toFixed(1)}s`;
+        trimSize.textContent = `Size: Calculating...`;
+      });
+    }
+
+    if (confirmTrim) {
+      confirmTrim.addEventListener('click', async () => {
+        const videoError = document.getElementById('video-error');
+        const previewContainer = document.getElementById('video-preview-container');
+        videoError.style.display = 'none';
+        const start = parseFloat(trimStart.value);
+        const end = parseFloat(trimEnd.value);
+        const duration = end - start;
+
+        if (duration > MAX_DURATION) {
+          videoError.textContent = 'Selected duration cannot exceed 60 seconds';
+          videoError.style.display = 'block';
+          return;
+        }
+
+        showToast('Trimming video, please wait...', '#28a745');
+        try {
+          trimmedVideoFile = await trimVideo(originalVideoFile, start, end);
+          videoEditorModal.style.display = 'none';
+          const video = document.createElement('video');
+          video.src = URL.createObjectURL(trimmedVideoFile);
+          video.controls = true;
+          previewContainer.innerHTML = '';
+          previewContainer.appendChild(video);
+          const dataTransfer = new DataTransfer();
+          dataTransfer.items.add(trimmedVideoFile);
+          videoInput.files = dataTransfer.files;
+          showToast('Video trimmed successfully!', '#28a745');
+          trimSize.textContent = `Size: ${(trimmedVideoFile.size / 1024 / 1024).toFixed(2)} MB`;
+        } catch (error) {
+          videoError.textContent = error.message || 'Failed to trim video';
+          videoError.style.display = 'block';
+          videoEditorModal.style.display = 'none';
+          videoInput.value = '';
+          previewContainer.innerHTML = '';
+          showToast('Video trimming failed. Please try again.', '#dc3545');
+        }
+      });
+    }
+
+    if (cancelTrim) {
+      cancelTrim.addEventListener('click', () => {
+        videoEditorModal.style.display = 'none';
+        videoInput.value = '';
+        document.getElementById('video-preview-container').innerHTML = '';
+        showToast('Video selection cancelled.', '#dc3545');
       });
     }
 
@@ -561,7 +730,7 @@
       }
     }
 
-    // Switch tabs and update activeTab variable
+    // Switch tabs
     function switchTab(type) {
       if (publishButton.disabled) return;
       activeTab = type;
@@ -579,17 +748,16 @@
       document.querySelectorAll('.error').forEach(err => err.style.display = 'none');
       document.getElementById('photo-preview-container').innerHTML = '';
       document.getElementById('video-preview-container').innerHTML = '';
+      videoEditorModal.style.display = 'none';
     }
 
-    // Submit ad with validation
+    // Submit ad
     async function submitAd() {
       const isNormalTab = activeTab === 'normal';
       const form = isNormalTab ? normalForm : videoForm;
 
-      // Clear previous errors
       document.querySelectorAll('.error').forEach(err => err.style.display = 'none');
 
-      // Get auth token
       const token = localStorage.getItem('authToken');
       if (!token) {
         showToast('Please log in to create an ad', '#dc3545');
@@ -603,7 +771,6 @@
       normalTab.disabled = true;
       videoTab.disabled = true;
 
-      // Validation for Normal Ad
       if (isNormalTab) {
         const title = form.querySelector('#title').value.trim();
         const description = form.querySelector('#description').value.trim();
@@ -650,10 +817,9 @@
           return resetAfterError();
         }
       } else {
-        // Validation for Video Ad
         const description = form.querySelector('#video-description').value.trim();
         const category = form.querySelector('#video-category').value;
-        const video = form.querySelector('#video-input').files[0];
+        const video = trimmedVideoFile || form.querySelector('#video-input').files[0];
         const productLink = form.querySelector('#product-link').value.trim();
 
         if (!description) {
@@ -695,6 +861,9 @@
 
       try {
         const formData = new FormData(form);
+        if (!isNormalTab && trimmedVideoFile) {
+          formData.set('video', trimmedVideoFile);
+        }
         const response = await fetch(`${API_BASE_URL}/post`, {
           method: 'POST',
           headers: {
@@ -705,10 +874,11 @@
         const result = await response.json();
 
         if (response.ok) {
-          showToast('Ad created successfully!', '#28a745');
+          showToast('Ad created successfully! Video will be compressed on the server.', '#28a745');
           form.reset();
           document.getElementById('photo-preview-container').innerHTML = '';
           document.getElementById('video-preview-container').innerHTML = '';
+          videoEditorModal.style.display = 'none';
           switchTab('normal');
           resetButtons();
           setTimeout(() => {
@@ -730,19 +900,16 @@
     if (videoTab) videoTab.addEventListener('click', () => switchTab('video'));
     if (publishButton) publishButton.addEventListener('click', submitAd);
 
-    // Global error handler for unhandled promise rejections
+    // Global error handler
     window.addEventListener('unhandledrejection', event => {
       console.error('[UNHANDLED PROMISE REJECTION]', event.reason);
       showToast('An unexpected error occurred. Please try again.', '#dc3545');
     });
 
-    // Initialize FFmpeg on load
-    loadFFmpeg();
-
     // Check userId for profile fetch
     const userId = localStorage.getItem('userId');
     if (!userId) {
-      console.warn('[PROFILE FETCH] No userId found in localStorage. User may not be logged in.');
+      console.warn('[PROFILE FETCH] No userId found in localStorage');
       showToast('Please log in to access all features.', '#ffc107');
     } else {
       console.log('[PROFILE FETCH] Fetching profile for userId:', userId);

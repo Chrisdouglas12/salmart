@@ -2754,3 +2754,34 @@
 {"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-02T05:03:42.110Z"}
 {"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-02T05:03:42.391Z"}
 {"level":"info","message":"Fetched 89 posts for user anonymous","timestamp":"2025-06-02T05:03:47.602Z"}
+{"level":"info","message":"✅ Cloudinary configured in postRoutes","timestamp":"2025-06-02T05:16:24.632Z"}
+{"level":"info","message":"✅ Cloudinary configured in postRoutes","timestamp":"2025-06-02T05:52:10.324Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-02T05:53:08.225Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-02T05:53:08.277Z"}
+{"level":"info","message":"✅ Cloudinary configured in postRoutes","timestamp":"2025-06-02T06:08:13.873Z"}
+{"level":"info","message":"✅ Cloudinary configured in postRoutes","timestamp":"2025-06-02T06:10:41.078Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-02T06:12:05.542Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-02T06:12:05.608Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-02T06:12:05.898Z"}
+{"level":"info","message":"Fetched 89 posts for user anonymous","timestamp":"2025-06-02T06:12:12.025Z"}
+{"level":"info","message":"✅ Cloudinary configured in postRoutes","timestamp":"2025-06-02T06:34:55.592Z"}
+{"level":"info","message":"✅ Cloudinary configured in postRoutes","timestamp":"2025-06-02T06:35:28.716Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-02T06:36:55.994Z"}
+{"level":"info","message":"✅ Cloudinary configured in postRoutes","timestamp":"2025-06-02T06:39:39.813Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-02T06:41:59.176Z"}
+{"level":"info","message":"Starting post creation for user 679d530c96d06fa5dfab1ded, type: video_ad","timestamp":"2025-06-02T06:42:05.294Z"}
+{"level":"info","message":"Uploading to Cloudinary: https://res.cloudinary.com/dp7shydjh/video/upload/v1748846525/Uploads/qbiz4qpxnugc1zjb7dcb.mp4","timestamp":"2025-06-02T06:42:05.540Z"}
+{"level":"info","message":"Generating thumbnail for https://res.cloudinary.com/dp7shydjh/video/upload/v1748846525/Uploads/qbiz4qpxnugc1zjb7dcb.mp4","timestamp":"2025-06-02T06:42:06.946Z"}
+{"level":"info","message":"Successfully generated thumbnail at /data/data/com.termux/files/usr/tmp/thumb-1748846526943.jpg","timestamp":"2025-06-02T06:42:26.784Z"}
+{"level":"info","message":"Uploading to Cloudinary: /data/data/com.termux/files/usr/tmp/thumb-1748846526943.jpg","timestamp":"2025-06-02T06:42:26.786Z"}
+{"level":"info","message":"Cleaned up file: /data/data/com.termux/files/usr/tmp/thumb-1748846526943.jpg","timestamp":"2025-06-02T06:42:28.974Z"}
+{"level":"error","message":"Post creation error for user 679d530c96d06fa5dfab1ded: Post validation failed: title: Path `title` is required.","timestamp":"2025-06-02T06:42:29.189Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-02T06:48:01.869Z"}
+{"level":"info","message":"Starting post creation for user 679d530c96d06fa5dfab1ded, type: video_ad","timestamp":"2025-06-02T06:48:20.504Z"}
+{"level":"warn","message":"Missing fields in video ad post creation by user 679d530c96d06fa5dfab1ded","timestamp":"2025-06-02T06:48:23.597Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-02T06:48:30.565Z"}
+{"level":"info","message":"Starting post creation for user 679d530c96d06fa5dfab1ded, type: video_ad","timestamp":"2025-06-02T06:48:42.484Z"}
+{"level":"warn","message":"Missing fields in video ad post creation by user 679d530c96d06fa5dfab1ded","timestamp":"2025-06-02T06:48:43.912Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-02T06:52:24.534Z"}
+{"level":"info","message":"Starting post creation for user 679d530c96d06fa5dfab1ded, type: regular","timestamp":"2025-06-02T06:52:53.341Z"}
+{"level":"error","message":"Post creation error for user 679d530c96d06fa5dfab1ded: getaddrinfo ENOTFOUND ac-78e8zxz-shard-00-01.bfiorya.mongodb.net","timestamp":"2025-06-02T06:54:13.681Z"}
