@@ -397,7 +397,7 @@
         const isLocalhost = window.location.hostname === 'localhost' && url.hostname === 'localhost';
         const isSalmartDomain = url.hostname === VALID_BASE_DOMAIN || url.hostname.endsWith(`.${VALID_BASE_DOMAIN}`);
         const isSecure = url.protocol === 'https:' || (isLocalhost && url.protocol === 'http:');
-        const productPathRegex = /^\/product\/[a-zA-Z0-9]+$/;
+        const productPathRegex = /^\/product?[a-zA-Z0-9]=[a-zA-Z0-9]+$/;
         const path = url.pathname;
 
         if (!(isLocalhost || isSalmartDomain)) {
