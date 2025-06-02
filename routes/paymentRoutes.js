@@ -32,6 +32,12 @@ const logger = winston.createLogger({
   ]
 });
 
+module.exports = (io) => {
+  router.use((req, res, next) => {
+    req.io = io;
+    logger.info('Attached io to request object in postRoutes');
+    next();
+  });
 //process buy orders
 router.post('/pay', async (req, res) => {
     try {
@@ -60,6 +66,7 @@ router.post('/pay', async (req, res) => {
 
         console.log("Seller ID from post:", sellerId); // Debugging log
    
+
 const protocol = req.secure ? 'https' : 'http';
 const host = req.get('host');
 const API_BASE_URL = `${protocol}://${host}`;
@@ -84,135 +91,112 @@ const API_BASE_URL = `${protocol}://${host}`;
 });
 
 
-// Payment Success Callback
 router.get('/payment-success', async (req, res) => {
   const logMeta = { route: '/payment-success', requestId: `SUCCESS_${Date.now()}` };
   const { reference, postId, buyerId, format = 'html' } = req.query;
 
-  try {
-    logger.debug('Payment success callback received', { ...logMeta, query: req.query });
+    try {
+        console.log("🔍 Verifying Payment with reference:", reference);
 
-    if (!reference || !postId || !buyerId) {
-      logger.warn('Missing required parameters', { ...logMeta, reference, postId, buyerId });
-      return res.status(400).json({ success: false, message: 'Missing reference, postId, or buyerId' });
-    }
+        const paystackSecretKey = process.env.PAYSTACK_SECRET_KEY || "your_test_secret_key";
 
-    if (format === 'json') {
-      const transaction = await Transaction.findOne({ postId, buyerId });
-      if (!transaction) {
-        logger.error('Transaction not found', { ...logMeta, postId, buyerId });
-        return res.status(404).json({ success: false, paymentCompleted: false, message: 'Transaction not found' });
-      }
-      logger.info('JSON response for transaction status', { ...logMeta, paymentReference: transaction.paymentReference, status: transaction.status });
-      return res.status(200).json({ success: true, paymentCompleted: transaction.status === 'completed', reference: transaction.paymentReference });
-    }
+        const response = await fetch(`https://api.paystack.co/transaction/verify/${reference}`, {
+            method: "GET",
+            headers: {
+                Authorization: `Bearer ${paystackSecretKey}`,
+                "Content-Type": "application/json"
+            }
+        });
 
-    logger.debug('Verifying transaction with Paystack', {
-      ...logMeta,
-      endpoint: `https://api.paystack.co/transaction/verify/${reference}`
-    });
+        const data = await response.json();
+        console.log("✅ Paystack Response:", JSON.stringify(data, null, 2));
 
-    const paystackRes = await axios.get(
-      `https://api.paystack.co/transaction/verify/${reference}`,
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+        if (!data.status) {
+            throw new Error(data.message || "Failed to verify payment");
+        }
 
-    logger.debug('Paystack verification response', {
-      ...logMeta,
-      status: paystackRes.status,
-      response: paystackRes.data
-    });
+        if (data.data.status === 'success') {
+            console.log("🎉 Payment Verified Successfully!");
 
-    const data = paystackRes.data;
-    if (!data.status || data.data.status !== 'success') {
-      logger.error('Payment verification failed', { ...logMeta, response: data });
-      return res.status(400).json({ success: false, message: data.message || 'Payment verification failed' });
-    }
+// Save escrow record
+            const post = await Post.findById(postId);
+            if (!post) {
+                console.log("⚠️ Post not found!");
+                return res.status(404).send("Post not found.");
+            }
 
-    const post = await Post.findById(postId);
-    if (!post) {
-      logger.error('Post not found', { ...logMeta, postId });
-      return res.status(404).json({ success: false, message: 'Post not found' });
-    }
+            const email = data.data.customer.email;
+            const buyer = await User.findOne({ email });
+            const seller = await User.findById(post.createdBy.userId); // Get seller
 
-    const buyer = await User.findById(buyerId);
-    if (!buyer) {
-      logger.error('Buyer not found', { ...logMeta, buyerId });
-      return res.status(404).json({ success: false, message: 'Buyer not found' });
-    }
+            if (!seller) {
+                console.log("⚠️ Seller not found!");
+                return res.status(404).send("Seller not found.");
+            }
 
-    const seller = await User.findById(post.createdBy?.userId || post.createdBy);
-    if (!seller) {
-      logger.error('Seller not found', { ...logMeta, sellerId: post.createdBy?.userId });
-      return res.status(404).json({ success: false, message: 'Seller not found' });
-    }
+            // ✅ Extract required data
+            const buyerId = buyer ? buyer._id.toString() : null;
+            const buyerName = `${buyer.firstName || ''} ${buyer.lastName || ''}`.trim()
+            if(!buyer) {
+              console.log('buyer not found');
+              res.status(404).json({message: 'buyer not found'})
+            }
+            const amountPaid = data.data.amount / 100;
+            
+            const transactionDate = new Date(data.data.paid_at).toLocaleString();
+          
+            const productTitle = post.title || "No description available.";
+            const sellerId = seller._id.toString();
+            const sellerName = `${seller.firstName} ${seller.lastName}`;
+            const sellerProfilePic = seller.profilePicture || "default.jpg";
+            
+            const COMMISSION_PERCENT = 2; // Platform earns 2%
 
-    const buyerName = `${buyer.firstName || ''} ${buyer.lastName || ''}`.trim();
-    const amountPaid = data.data.amount / 100; // Convert from kobo to naira
-    const transactionDate = new Date(data.data.transaction_date).toLocaleString();
-    const productDescription = post.description || 'No description available.';
-    const sellerId = seller._id.toString();
-    const commission = amountPaid * 0.02;
-    const sellerShare = amountPaid - commission;
+const totalAmount = amountPaid; // Already calculated
+const commission = (COMMISSION_PERCENT / 100) * totalAmount;
+const sellerShare = totalAmount - commission;
+            
+            const notification = new Notification({
+  userId: sellerId,       // Who should receive the notification (the seller)
+  senderId: buyerId, // Who triggered the notification (the buyer)
+  type: 'payment',  
+  postId: postId,// New notification type
+  payment: post.title,     
+  message: `${buyer.firstName} ${buyer.lastName} just paid for your product: "${post.description}"`,
+  createdAt: new Date()
+  
+});
+const escrow = new Escrow({
+  product : postId,
+  buyer: buyerId,
+  seller: sellerId,
+  amount: amountPaid,
+  commission,
+  sellerShare,
+  paymentReference: reference,
+  status: 'In Escrow'
+});
 
-    const transaction = await Transaction.findOne({ paymentReference: data.data.reference });
-    if (transaction && transaction.status === 'completed') {
-      logger.info('Duplicate callback', { ...logMeta, paymentReference: data.data.reference });
-      return res.status(200).json({ success: true, message: 'Transaction already processed' });
-    }
+await escrow.save();
 
-    await Transaction.findOneAndUpdate(
-      { paymentReference: data.data.reference },
-      { status: 'completed', amount: amountPaid, paystackRef: data.data.reference, commission, sellerShare },
-      { new: true }
-    );
-
-    const escrow = new Escrow({
-      product: postId,
-      buyer: buyer._id,
-      seller: sellerId,
-      amount: amountPaid,
-      commission,
-      sellerShare,
-      paymentReference: data.data.reference,
-      status: 'In Escrow', // Simulated escrow
-    });
-
-    const notification = new Notification({
-      userId: sellerId,
-      senderId: buyer._id,
-      type: 'payment',
-      postId,
-      message: `${buyerName} paid for your product: "${productDescription}"`,
-      createdAt: new Date(),
-    });
-
-    await Promise.all([
-      escrow.save(),
-      notification.save(),
-      Post.findByIdAndUpdate(postId, { isSold: true }),
-    ]);
-
-    logger.info('Escrow and notification created', { ...logMeta, paymentReference: data.data.reference, escrowId: escrow._id });
-
-    req.io.to(`user_${sellerId}`).emit('notification', {
-      type: 'payment',
-      postId,
-      userId: buyer._id,
-      message: notification.message,
-      sender: { firstName: buyer.firstName, lastName: buyer.lastName, profilePicture: buyer.profilePicture },
-      createdAt: new Date(),
-    });
+const transaction = new Transaction({
+  buyerId,
+  sellerId,
+  productId: postId,
+  amount: amountPaid ,
+  status: 'pending', 
+  viewed: false,
+  paymentReference: reference,
+});
+await transaction.save();
+console.log("✅ Transaction record saved.");
+post.isSold = true;
+await post.save();
 
     await sendFCMNotification(
       sellerId,
       'Payment Received',
-      `${buyerName} paid for your product: "${productDescription}"`,
+      `${buyerName} paid for your product: "${productTitle}"`,
       { type: 'payment', postId: postId.toString() },
       req.io,
       post.photo,
@@ -220,127 +204,289 @@ router.get('/payment-success', async (req, res) => {
     );
 
     await NotificationService.triggerCountUpdate(sellerId, req.io);
+    
 
+console.log("✅ Escrow record saved.");
+
+await notification.save();
+console.log('notification sent')
+// Send real-time notification via Socket.IO
+req.io.to(sellerId.toString()).emit('notification', notification);
     let receiptImageUrl = '';
-    try {
-      const receiptsDir = path.join(__dirname, '../receipts');
-      await fs.mkdir(receiptsDir, { recursive: true });
-      const imagePath = path.join(receiptsDir, `${data.data.reference}.png`);
-      const image = new Jimp(600, 800, 0xFFFFFFFF);
-      const font = await Jimp.loadFont(Jimp.FONT_SANS_32_BLACK);
-      const fontLarge = await Jimp.loadFont(Jimp.FONT_SANS_64_BLACK);
+try {
+    const receiptsDir = path.join(__dirname, 'receipts');
+    if (!fs.existsSync(receiptsDir)) {
+        fs.mkdirSync(receiptsDir, { recursive: true });
+        console.log('Created receipts directory:', receiptsDir);
+    }
+    const imagePath = path.join(receiptsDir, `${reference}.png`);
 
-      for (let x = 0; x < 600; x++) {
+    console.log('Starting Jimp image generation...');
+
+    // Create image - synchronous constructor
+    console.log('Jimp constructor:', Jimp);
+    const image = new Jimp(600, 800, 0xFFFFFFFF); // White background
+    console.log('Jimp image created:', image.bitmap.width, image.bitmap.height);
+
+    // Load fonts
+    const font = await Jimp.loadFont(Jimp.FONT_SANS_32_BLACK);
+    const fontLarge = await Jimp.loadFont(Jimp.FONT_SANS_64_BLACK);
+    console.log('Fonts loaded');
+
+    // Draw border
+    for (let x = 0; x < 600; x++) {
         for (let y = 0; y < 800; y++) {
-          if (x < 10 || x > 590 || y < 10 || y > 790) {
-            image.setPixelColor(Jimp.rgbaToInt(0, 102, 204, 255), x, y);
-          }
+            if (x < 15 || x > 585 || y < 15 || y > 785) {
+                image.setPixelColor(Jimp.rgbaToInt(0, 123, 255, 255), x, y);
+            }
         }
-      }
-
-      image.print(font, 40, 20, 'Salmart');
-      const brandName = 'SALMART';
-      const brandX = (600 - Jimp.measureText(fontLarge, brandName)) / 2;
-      image.print(fontLarge, brandX, 80, brandName);
-      const titleText = 'Payment Receipt';
-      const titleX = (600 - Jimp.measureText(font, titleText)) / 2;
-      image.print(font, titleX, 160, titleText);
-
-      const details = [
-        `Reference: ${data.data.reference}`,
-        `Amount: ₦${Number(amountPaid).toLocaleString('en-NG')}`,
-        `Date: ${transactionDate}`,
-        `Buyer: ${buyerName}`,
-        `Email: ${buyer.email}`,
-        `Description: ${productDescription}`,
-      ];
-
-      let yPosition = 240;
-      details.forEach((line) => {
-        image.print(font, 40, yPosition, line);
-        yPosition += 50;
-      });
-
-      const footerText = 'Thank you for shopping with SALMART!';
-      const footerX = (600 - Jimp.measureText(font, footerText)) / 2;
-      image.print(font, footerX, 700, footerText);
-      await image.writeAsync(imagePath);
-
-      const cloudinaryResponse = await cloudinary.uploader.upload(imagePath, {
-        public_id: `receipts/${data.data.reference}`,
-        folder: 'salmart_receipts',
-      });
-      receiptImageUrl = cloudinaryResponse.secure_url;
-      await fs.unlink(imagePath).catch((err) => logger.warn(`Failed to delete temp file ${imagePath}`, { ...logMeta, error: err.message }));
-    } catch (error) {
-      logger.error('Receipt generation error', { ...logMeta, error: error.message });
     }
 
-    await Transaction.findOneAndUpdate(
-      { paymentReference: data.data.reference },
-      { receiptUrl: receiptImageUrl }
-    );
+    // Title - centered
+    const titleText = 'Payment Receipt';
+    const titleX = (600 - Jimp.measureText(fontLarge, titleText)) / 2;
+    image.print(fontLarge, titleX, 50, titleText);
 
-    logger.info('Payment success processed', { ...logMeta, paymentReference: data.data.reference, receiptUrl: receiptImageUrl });
+    // Details with proper alignment
+    const details = [
+        `Reference: ${reference || 'N/A'}`,
+        `Amount Paid: ₦${Number(amountPaid || 0).toLocaleString('en-NG')}`,
+        `Date: ${transactionDate || new Date().toISOString()}`,
+        `Buyer: ${buyerName || 'Unknown'}`,
+        `Email: ${email || 'N/A'}`,
+        `Title: ${productTitle || 'Purchase'}`
+    ];
 
-    res.send(`
-      <!DOCTYPE html>
-      <html lang="en">
-      <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
+    let yPosition = 180;
+    details.forEach(line => {
+        image.print(font, 40, yPosition, line);
+        yPosition += 50;
+    });
+
+    // Footer
+    const footerText = 'Thank you for your payment!';
+    const footerX = (600 - Jimp.measureText(font, footerText)) / 2;
+    image.print(font, footerX, 700, footerText);
+
+    // Save image
+    await image.writeAsync(imagePath);
+    console.log('✅ Receipt image generated:', imagePath);
+
+    // Upload to Cloudinary
+    const cloudinaryResponse = await cloudinary.uploader.upload(imagePath, {
+        public_id: `receipts/${reference}`,
+        folder: 'salmart_receipts'
+    });
+    receiptImageUrl = cloudinaryResponse.secure_url;
+    console.log('✅ Receipt image uploaded to Cloudinary:', receiptImageUrl);
+
+    // Clean up
+    await fs.promises.unlink(imagePath);
+    console.log('Temporary image deleted:', imagePath);
+} catch (imageError) {
+    console.error('🚨 Error generating or uploading image:', imageError.message, imageError.stack);
+    receiptImageUrl = '';
+    console.warn('⚠️ Proceeding without receipt image');
+}
+const safeReceiptImageUrl = String(receiptImageUrl || '');
+
+// ✅ Send receipt page
+res.send(`
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Payment Receipt</title>
         <style>
-          body { font-family: Arial, sans-serif; background-color: #f8f8f8; text-align: center; padding: 20px; }
-          .receipt-container { max-width: 400px; margin: auto; padding: 20px; background: white; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); text-align: left; }
-          .header { text-align: center; padding-bottom: 10px; border-bottom: 2px solid #007bff; }
-          .header h2 { color: #007bff; margin: 5px 0; }
-          .status { text-align: center; font-size: 18px; padding: 10px; color: green; font-weight: bold; }
-          .details p { font-size: 14px; margin: 5px 0; }
-          .details span { font-weight: bold; }
-          .footer { text-align: center; font-size: 12px; color: gray; padding-top: 10px; border-top: 1px solid #ddd; }
+            body { font-family: Arial, sans-serif; background-color: #f8f8f8; text-align: center; padding: 20px; }
+            .receipt-container {
+                max-width: 400px;
+                margin: auto;
+                padding: 20px;
+                background: white;
+                border-radius: 10px;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                text-align: left;
+            }
+            .header {
+                text-align: center;
+                padding-bottom: 10px;
+                border-bottom: 2px solid #007bff;
+            }
+            .header img { width: 80px; }
+            .header h2 { color: #007bff; margin: 5px 0; }
+            .status { text-align: center; font-size: 18px; padding: 10px; color: green; font-weight: bold; }
+            .details p { font-size: 14px; margin: 5px 0; }
+            .details span { font-weight: bold; }
+            .footer {
+                text-align: center;
+                font-size: 12px;
+                color: gray;
+                padding-top: 10px;
+                border-top: 1px solid #ddd;
+            }
+            .share-button {
+                display: block;
+                width: 100%;
+                padding: 10px;
+                margin-top: 10px;
+                background: #28a745;
+                color: white;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+                text-align: center;
+            }
+            .share-button:hover { background: #218838; }
         </style>
-      </head>
-      <body>
+    </head>
+    <body>
         <div class="receipt-container">
-          <div class="header">
-            <h2>Payment Receipt</h2>
-          </div>
-          <p class="status">✅ Payment Successful</p>
-          <div class="details">
-            <p><span>Transaction Reference:</span> ${data.data.reference}</p>
-            <p><span>Amount Paid:</span> ₦${Number(amountPaid).toLocaleString('en-NG')}</p>
-            <p><span>Payment Date:</span> ${transactionDate}</p>
-            <p><span>Buyer Name:</span> ${buyerName}</p>
-            <p><span>Buyer Email:</span> ${buyer.email}</p>
-            <p><span>Description:</span> ${productDescription}</p>
-          </div>
-          <div class="footer">
-            <p>© 2025 Salmart Technologies. All rights reserved.</p>
-          </div>
+            <div class="header">
+                <h2>Payment Receipt</h2>
+            </div>
+
+            <p class="status">✅ Payment Successful</p>
+
+            <div class="details">
+                <p><span>Transaction Reference:</span> ${reference}</p>
+                <p><span>Amount Paid:</span> ₦${Number(amountPaid).toLocaleString('en-NG')}</p>
+                <p><span>Payment Date:</span> ${transactionDate}</p>
+                <p><span>Buyer Name:</span> ${buyerName}</p>
+                <p><span>Buyer Email:</span> ${email}</p>
+                <p><span>Title:</span> ${productTitle}</p>
+            </div>
+
+            <button class="share-button" onclick="shareReceipt()">📤 Share Receipt</button>
+
+            <div class="footer">
+                <p>© 2025 Salmart Technologies. All rights reserved.</p>
+            </div>
         </div>
-      </body>
-      </html>
-    `);
-  } catch (error) {
-    const errorDetails = {
-      message: error.message,
-      response: error.response ? {
-        status: error.response.status,
-        data: error.response.data,
-        headers: error.response.headers
-      } : null,
-      stack: error.stack
-    };
-    logger.error('Payment success error', { ...logMeta, error: errorDetails });
-    res.status(error.response?.status || 500).json({ success: false, message: 'Payment verification error' });
-  }
+           <script>
+            const API_BASE_URL = window.location.hostname === 'localhost' 
+                ? 'http://localhost:3000' 
+                : 'https://salmart.onrender.com';
+            async function shareReceipt() {
+                try {
+                    const payload = {
+                        reference: '${reference || ''}',
+                        buyerId: '${buyer._id || ''}',
+                        sellerId: '${seller._id || ''}',
+                        amountPaid: ${amountPaid || 0},
+                        transactionDate: '${transactionDate || ''}',
+                        buyerName: '${buyerName || ''}',
+                        email: '${buyer.email || ''}',
+                        productTitle: '${productTitle || ''}',
+                        receiptImageUrl: '${safeReceiptImageUrl}'
+                    };
+                    console.log('Sending /share-receipt payload:', payload);
+                    const response = await fetch(API_BASE_URL + '/share-receipt', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    const result = await response.json();
+                    if (result.success) {
+                        window.location.href = API_BASE_URL + '/Chats.html?recipient_id=${seller._id || ''}&recipient_usernarme=' + encodeURIComponent('${sellerName || ''}') + '&recipient_profile_picture_url=' + encodeURIComponent('${sellerProfilePic || ''}') + '&user_id=${buyer._id || ''}';
+                    } else {
+                        alert('Failed to share receipt: ' + result.message);
+                    }
+                } catch (error) {
+                    alert('Error sharing receipt: ' + error.message);
+                    console.error(error);
+                }
+            }
+        </script>  
+            </body>
+            </html>
+        `);
+        }
+    } catch (error) {
+        console.error('🚨 Error during payment verification:', error.message);
+        res.status(500).send(`An error occurred: ${error.message}`);
+    }
+});
+router.get('/Chats.html', (req, res) => {
+    console.log('Serving chat.html');
+    res.sendFile(path.join(__dirname, 'public', 'Chats.html'));
 });
 
-module.exports = (io) => {
-  router.use((req, res, next) => {
-    req.io = io;
-    next();
-  });
+
+
+
+const bodyParser = require('body-parser');
+router.post('/share-receipt', async (req, res) => {
+    try {
+        const {
+            reference,
+            buyerId,
+            sellerId,
+            amountPaid,
+            transactionDate,
+            buyerName,
+            email,
+            productTitle,
+            receiptImageUrl = ''
+        } = req.body;
+
+        console.log('Received /share-receipt request:', req.body);
+
+        const missingFields = [];
+        if (!reference) missingFields.push('reference');
+        if (!buyerId) missingFields.push('buyerId');
+        if (!sellerId) missingFields.push('sellerId');
+        if (amountPaid == null) missingFields.push('amountPaid');
+        if (!transactionDate) missingFields.push('transactionDate');
+        if (!buyerName) missingFields.push('buyerName');
+        if (!email) missingFields.push('email');
+        if (!productTitle) missingFields.push('productTitle');
+        if (!receiptImageUrl) missingFields.push('receiptImageUrl');
+
+        if (missingFields.length > 0) {
+            console.error('Missing required fields:', missingFields, req.body);
+            return res.status(400).json({
+                success: false,
+                message: `Missing required fields: ${missingFields.join(', ')}`,
+                missing: missingFields
+            });
+        }
+
+        const transaction = await Transaction.findOne({ paymentReference: reference });
+        if (!transaction) {
+            console.error('Transaction not found for paymentReference:', reference);
+            return res.status(400).json({ success: false, message: 'Invalid transaction reference' });
+        }
+
+        const message = new Message({
+            senderId: buyerId,
+            receiverId: sellerId,
+            messageType: 'image',
+            attachment: { url: receiptImageUrl },
+            text: `Receipt for ${productTitle}`,
+            status: 'sent',
+            timestamp: new Date()
+        });
+
+        await message.save();
+        console.log('Sending message', message)
+        io.to(`user_${sellerId}`).emit('receiveMessage', message.toObject());
+        await sendFCMNotification(
+            sellerId,
+            'New Receipt',
+            `${buyerName} shared a receipt for ${productTitle}`,
+            { type: 'message', senderId: buyerId, receiptImageUrl }
+        );
+
+        res.json({ success: true, message: 'Receipt shared successfully' });
+    } catch (error) {
+        console.error('Error sharing receipt:', error.message, error.stack);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
+
   return router;
 };

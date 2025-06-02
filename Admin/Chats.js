@@ -301,17 +301,17 @@ function displayMessage(message, isOptimistic = false) { // Added isOptimistic p
 
     if (message.messageType === 'sellerAccept') {
     if (message.senderId !== userId) {
-        // Skip displaying for non-seller (buyer)
+        // Skip for non-seller (buyer)
         return;
     }
     let parsed;
     try {
-        parsed = JSON.parse(message.text);
+        parsed = message.offerDetails || JSON.parse(message.text);
     } catch (e) {
-        console.warn('Failed to parse sellerAccept message text:', message.text, e);
+        console.warn('Failed to parse sellerAccept message:', message, e);
         parsed = {};
     }
-    const sellerAcceptText = `You have accepted the offer of ₦${Number(parsed.offer || 0).toLocaleString('en-NG')} for "${parsed.productName || 'Product'}". You shall be notified as soon as ${recipientUsername} makes payment.`;
+    const sellerAcceptText = `You have accepted the offer of ₦${Number(parsed.proposedPrice || 0).toLocaleString('en-NG')} for "${parsed.productName || 'Product'}". You shall be notified as soon as ${recipientUsername} makes payment.`;
     chatMessages.appendChild(createSystemMessage(sellerAcceptText));
     acceptedOffers.add(parsed.productId);
     bargainingSessions.delete(`${parsed.productId}-${message.senderId}`);
@@ -410,147 +410,132 @@ function displayMessage(message, isOptimistic = false) { // Added isOptimistic p
     });
 
     if (message.messageType === 'offer' && parsed.offer && message.receiverId === userId && !isOfferAccepted && !isBargainEnded && message.senderId !== userId) {
-        const acceptBtn = document.createElement('button');
-        acceptBtn.className = 'accept-offer-btn';
-        acceptBtn.textContent = 'Accept';
-        acceptBtn.onclick = async () => {
-            const productDetails = {
-                productId: parsed.productId,
-                productName: parsed.productName,
-                offer: Number(parsed.offer),
-                senderId: message.senderId
-            };
-            document.getElementById('confirmationMessage').textContent =
-                `Are you sure you want to accept the offer of ₦${Number(parsed.offer).toLocaleString('en-NG')} for "${parsed.productName || 'Product'}"?`;
-            const acceptModal = document.getElementById('acceptConfirmationModal');
-            acceptModal.style.display = 'block';
-            document.getElementById('confirmAcceptBtn').onclick = async () => {
-                try {
-                    const token = localStorage.getItem('authToken');
-                    if (!token) throw new Error('No auth token found');
-                    const response = await fetch(`${API_BASE_URL}/posts/${productDetails.productId}/update-price`, {
-                        method: 'PUT',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${token}`
-                        },
-                        body: JSON.stringify({ newPrice: productDetails.offer })
-                    });
-                    if (!response.ok) {
-                        const errorData = await response.json();
-                        throw new Error(errorData.message || 'Failed to update price');
-                    }
-                    const updatedPost = await response.json();
-
-                    acceptedOffers.add(productDetails.productId);
-
-                    const offerMessages = document.querySelectorAll(`.message.received`);
-                    offerMessages.forEach(msg => {
-                        if (msg.innerHTML.includes(parsed.productId)) {
-                            const buttons = msg.querySelectorAll('.accept-offer-btn, .decline-offer-btn');
-                            buttons.forEach(btn => btn.remove());
-                        }
-                    });
-
-                    const acceptanceMessage = {
-                        receiverId: productDetails.senderId,
-                        messageType: 'sellerAccept',
-                        text: JSON.stringify({
-                            text: `Your offer for "${productDetails.productName}" has been accepted. New price is ₦${Number(productDetails.offer).toLocaleString('en-NG')}`,
-                            productId: productDetails.productId,
-                            productName: parsed.productName,
-                            offer: productDetails.offer,
-                            image: parsed.image || productImage || ''
-                        }),
-                        offerDetails: { // Added offerDetails for consistency
-                            productId: productDetails.productId,
-                            productName: parsed.productName,
-                            proposedPrice: productDetails.offer,
-                            image: parsed.image || productImage || '',
-                            status: 'accepted'
-                        },
-                        createdAt: new Date(),
-                        isRead: false
-                    };
-
-                    // Optimistic display
-                    const optimisticAcceptance = { ...acceptanceMessage, senderId: userId, status: 'sent' };
-                    displayMessage(optimisticAcceptance, true);
-
-                    // Send via HTTP
-                    const acceptResponse = await fetch(`${API_BASE_URL}/send`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${token}`
-                        },
-                        body: JSON.stringify(acceptanceMessage)
-                    });
-                    const acceptData = await acceptResponse.json();
-                    if (!acceptResponse.ok) throw new Error(acceptData.error || `HTTP error ${acceptResponse.status}`);
-                    const lastSentAccept = chatMessages.querySelector('.message.sent:last-child');
-                    if (lastSentAccept && acceptData.data?._id) {
-                        lastSentAccept.dataset.messageId = acceptData.data._id;
-                        displayedMessages.add(acceptData.data._id);
-                    }
-
-              const buyerAcceptMessage = {
-    receiverId: message.senderId, // Send to the buyer
-    messageType: 'buyerAccept',
-    text: JSON.stringify({
+        
+const acceptBtn = document.createElement('button');
+acceptBtn.className = 'accept-offer-btn';
+acceptBtn.textContent = 'Accept';
+acceptBtn.onclick = async () => {
+    const productDetails = {
+        productId: parsed.productId,
         productName: parsed.productName,
-        offer: productDetails.offer,
-        buyerName: localStorage.getItem('username') || 'Buyer',
-        image: parsed.image || productImage || '',
-        productId: productDetails.productId
-    }),
-    offerDetails: {
-        productId: productDetails.productId,
-        productName: parsed.productName,
-        proposedPrice: productDetails.offer,
-        image: parsed.image || productImage || '',
-        status: 'accepted'
-    },
-    createdAt: new Date(),
-    isRead: false
-};      
+        offer: Number(parsed.offer),
+        senderId: message.senderId
+    };
+    document.getElementById('confirmationMessage').textContent =
+        `Are you sure you want to accept the seller's offer of ₦${Number(parsed.offer).toLocaleString('en-NG')} for "${parsed.productName || 'Product'}"?`;
+    const acceptModal = document.getElementById('acceptConfirmationModal');
+    acceptModal.style.display = 'block';
+    document.getElementById('confirmAcceptBtn').onclick = async () => {
+        try {
+            const token = localStorage.getItem('authToken');
+            if (!token) throw new Error('No auth token found');
+            const response = await fetch(`${API_BASE_URL}/posts/${productDetails.productId}/update-price`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ newPrice: productDetails.offer })
+            });
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to update price');
+            }
+            const updatedPost = await response.json();
 
-                    // Optimistic display
-                    const optimisticBuyerAccept = { ...buyerAcceptMessage, senderId: userId, status: 'sent' };
-                    displayMessage(optimisticBuyerAccept, true);
+            acceptedOffers.add(productDetails.productId);
 
-                    // Send via HTTP
-                    const buyerResponse = await fetch(`${API_BASE_URL}/send`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${token}`
-                        },
-                        body: JSON.stringify(buyerAcceptMessage)
-                    });
-                    const buyerData = await buyerResponse.json();
-                    if (!buyerResponse.ok) throw new Error(buyerData.error || `HTTP error ${buyerResponse.status}`);
-                    const lastSentBuyer = chatMessages.querySelector('.message.sent:last-child');
-                    if (lastSentBuyer && buyerData.data?._id) {
-                        lastSentBuyer.dataset.messageId = buyerData.data._id;
-                        displayedMessages.add(buyerData.data._id);
-                    }
-
-                    acceptModal.style.display = 'none';
-                    showToast('Price updated successfully!', 'success');
-                } catch (error) {
-                    console.error('Failed to accept offer:', error);
-                    showToast(`Failed to accept offer: ${error.message}`, 'error');
-                    acceptModal.style.display = 'none';
-                    const lastSent = chatMessages.querySelectorAll('.message.sent:last-child');
-                    lastSent.forEach(msg => msg.remove());
+            const offerMessages = document.querySelectorAll(`.message.received`);
+            offerMessages.forEach(msg => {
+                if (msg.innerHTML.includes(parsed.productId)) {
+                    const buttons = msg.querySelectorAll('.accept-offer-btn, .end-bargain-btn');
+                    buttons.forEach(btn => btn.remove());
                 }
-            };
-            document.getElementById('cancelAcceptBtn').onclick = () => {
-                acceptModal.style.display = 'none';
-            };
-        };
+            });
 
+            const acceptMessage = {
+                receiverId: userId, // Buyer
+                messageType: 'buyerAccept',
+                text: JSON.stringify({
+                    text: `Last price of ${productDetails.offer.toLocaleString('en-NG')} for ${parsed.productName} has been accepted`,
+                    productName: parsed.productName,
+                    productId: productDetails.productId,
+                    offer: productDetails.offer,
+                    buyerName: localStorage.getItem('username') || 'Buyer',
+                    image: parsed.image || productImage || ''
+                }),
+                offerDetails: {
+                    productId: productDetails.productId,
+                    productName: parsed.productName,
+                    proposedPrice: productDetails.offer,
+                    image: parsed.image || productImage || '',
+                    status: 'accepted'
+                },
+                createdAt: new Date(),
+                isRead: false
+            };
+
+            const sellerNotificationMessage = {
+                receiverId: message.senderId, // Seller
+                messageType: 'sellerNotification',
+                text: `Your last price of ₦${productDetails.offer.toLocaleString('en-NG')} for "${parsed.productName}" has been accepted by ${recipientUsername}. You shall be notified as soon as payment is completed.`,
+                offerDetails: {
+                    productId: productDetails.productId,
+                    productName: parsed.productName,
+                    proposedPrice: productDetails.offer,
+                    status: 'accepted'
+                },
+                createdAt: new Date(),
+                isRead: false
+            };
+
+            // Optimistic display for buyer
+            const optimisticAccept = { ...acceptMessage, senderId: userId, status: 'sent' };
+            displayMessage(optimisticAccept, true);
+
+            // Send buyerAccept message
+            const acceptResponse = await fetch(`${API_BASE_URL}/send`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(acceptMessage)
+            });
+            const acceptData = await acceptResponse.json();
+            if (!acceptResponse.ok) throw new Error(acceptData.error || `HTTP error ${acceptResponse.status}`);
+            const lastSent = chatMessages.querySelector('.message.sent:last-child');
+            if (lastSent && acceptData.data?._id) {
+                lastSent.dataset.messageId = acceptData.data._id;
+                displayedMessages.add(acceptData.data._id);
+            }
+
+            // Send sellerNotification message
+            const sellerResponse = await fetch(`${API_BASE_URL}/send`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(sellerNotificationMessage)
+            });
+            const sellerData = await sellerResponse.json();
+            if (!sellerResponse.ok) throw new Error(sellerData.error || `HTTP error ${sellerResponse.status}`);
+
+            acceptModal.style.display = 'none';
+            showToast('Offer accepted successfully!', 'success');
+        } catch (error) {
+            console.error('Failed to accept counter-offer:', error);
+            showToast(`Failed to accept offer: ${error.message}`, 'error');
+            acceptModal.style.display = 'none';
+            const lastSent = chatMessages.querySelector('.message.sent:last-child');
+            if (lastSent) lastSent.remove();
+        }
+    };
+    document.getElementById('cancelAcceptBtn').onclick = () => {
+        acceptModal.style.display = 'none';
+    };
+};
         const declineBtn = document.createElement('button');
         declineBtn.className = 'decline-offer-btn';
         declineBtn.textContent = 'Decline';

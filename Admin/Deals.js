@@ -37,7 +37,7 @@ function showSkeletonLoaders(container, count = 3) {
 
 // Function to update deals badge
 function updateDealsBadge(count) {
-  const badge = document.getElementById('deals-badge-nav');
+  const badge = document.getElementById('deals-badge');
   if (!badge) return;
   if (count > 0) {
     badge.style.display = 'inline-block';
@@ -52,7 +52,6 @@ async function fetchTransactions() {
   const list = document.getElementById('transaction-list');
   const noTransactions = document.getElementById('no-transactions');
 
-  // Validate userId and authToken
   if (!userId || !authToken) {
     console.error('Missing userId or authToken');
     list.innerHTML = '<p style="text-align: center; color: #777;">Please log in to view transactions.</p>';
@@ -71,19 +70,19 @@ async function fetchTransactions() {
     });
 
     if (!res.ok) {
+      let errorMessage = 'Unknown error';
       try {
         const errorBody = await res.json();
-        throw new Error(`HTTP error! Status: ${res.status}. Error: ${errorBody.message || JSON.stringify(errorBody)}`);
+        errorMessage = errorBody.message || JSON.stringify(errorBody);
       } catch (parseError) {
-        const errorBody = await res.text();
-        throw new Error(`HTTP error! Status: ${res.status}. Error: ${errorBody}`);
+        errorMessage = await res.text();
       }
+      throw new Error(`HTTP error! Status: ${res.status}. Error: ${errorMessage}`);
     }
 
     const data = await res.json();
-    console.log('API Response:', data); // Log response for debugging
+    console.log('API Response:', data);
 
-    // Check if data.transactions is an array
     if (!data.transactions || !Array.isArray(data.transactions)) {
       console.error('Expected data.transactions to be an array but received:', data);
       list.innerHTML = '<p style="text-align: center; color: #777;">No transactions available.</p>';
@@ -92,10 +91,8 @@ async function fetchTransactions() {
       return;
     }
 
-    // Use data.transactions instead of data
     const transactions = data.transactions;
 
-    // Calculate unread count and update badge
     const unReadCount = transactions.filter((d) => !d.viewed).length;
     updateDealsBadge(unReadCount);
 
@@ -118,7 +115,7 @@ async function fetchTransactions() {
 
       const product = t.productId || {};
       const productImage = product.photo || 'Default.png';
-      const productDescription = product.description || 'Product';
+      const productDescription = product.title || 'Product';
       const amount = t.amount || '0';
 
       const statusBadge = `<span class="badge ${t.status}">${t.status}</span>`;
@@ -126,8 +123,8 @@ async function fetchTransactions() {
       let refundBtn = '';
 
       if (currentTab === 'buying') {
-        if (t.status === 'pending' && !t.refundRequested) {
-          confirmBtn = `<button class="confirm-btn" onclick="handleConfirmDelivery('${t._id}')">Confirm Delivery</button>`;
+        if (t.status === 'pending' && !t.refundRequested && t._id) {
+          confirmBtn = `<button class="confirm-btn" onclick="openConfirmModal('${t._id}')">Confirm Delivery</button>`;
         }
         if (t.status === 'pending' && !t.refundRequested) {
           refundBtn = `<button class="refund-btn" onclick="openRefundModal('${t._id}')">Request Refund</button>`;
@@ -198,8 +195,17 @@ function showTab(tab) {
 
 // Function to confirm delivery
 async function confirmDelivery(transactionId) {
+  if (!transactionId) {
+    console.error('[CONFIRM DELIVERY ERROR] Transaction ID is missing');
+    throw new Error('Transaction ID is missing');
+  }
   const token = localStorage.getItem('authToken');
+  if (!token) {
+    console.error('[CONFIRM DELIVERY ERROR] Authentication token is missing');
+    throw new Error('Authentication token is missing');
+  }
   try {
+    console.log('[CONFIRM DELIVERY] Sending request for transaction:', transactionId);
     const res = await fetch(`${API_BASE_URL}/confirm-delivery/${transactionId}`, {
       method: 'POST',
       headers: {
@@ -210,20 +216,116 @@ async function confirmDelivery(transactionId) {
 
     const data = await res.json();
     if (res.ok) {
+      console.log('[CONFIRM DELIVERY SUCCESS]', data);
       return data;
     } else {
+      console.error('[CONFIRM DELIVERY FAILED]', data);
       throw new Error(data.error || 'Failed to confirm delivery');
     }
   } catch (err) {
-    console.error('Confirm Delivery Error:', err);
+    console.error('[CONFIRM DELIVERY ERROR]', err);
     throw err;
   }
 }
 
+// Function to open confirmation modal
+function openConfirmModal(transactionId) {
+  if (!transactionId) {
+    console.error('[OPEN CONFIRM MODAL ERROR] Transaction ID is undefined');
+    showToast('Error: Invalid transaction ID.');
+    return;
+  }
+  console.log('[OPEN CONFIRM MODAL] Transaction:', transactionId);
+  localStorage.setItem('transactionId', transactionId);
+  const confirmModal = document.getElementById('confirmModal');
+  if (!confirmModal) {
+    console.error('[OPEN CONFIRM MODAL ERROR] #confirmModal not found in DOM');
+    showToast('Error: Confirmation modal not found.');
+    return;
+  }
+  confirmModal.style.display = 'flex';
+}
+
+// Function to close confirmation modal
+function closeConfirmModal() {
+  const confirmModal = document.getElementById('confirmModal');
+  if (confirmModal) {
+    confirmModal.style.display = 'none';
+    localStorage.removeItem('transactionId');
+    console.log('[CLOSE CONFIRM MODAL]');
+  }
+}
+
+// Function to open loader modal
+function openLoaderModal() {
+  const loaderModal = document.getElementById('loaderModal');
+  if (!loaderModal) {
+    console.error('[OPEN LOADER MODAL ERROR] #loaderModal not found in DOM');
+    showToast('Error: Loader modal not found.');
+    return;
+  }
+  loaderModal.style.display = 'flex';
+}
+
+// Function to close loader modal
+function closeLoaderModal() {
+  const loaderModal = document.getElementById('loaderModal');
+  if (loaderModal) {
+    loaderModal.style.display = 'none';
+    console.log('[CLOSE LOADER MODAL]');
+  }
+}
+
+// Function to open response modal
+function openResponseModal(success, message) {
+  const responseModal = document.getElementById('responseModal');
+  const responseIcon = document.getElementById('responseIcon');
+  const responseTitle = document.getElementById('responseTitle');
+  const responseMessage = document.getElementById('responseMessage');
+  const responseButton = document.getElementById('responseButton');
+
+  if (!responseModal || !responseIcon || !responseTitle || !responseMessage || !responseButton) {
+    console.error('[OPEN RESPONSE MODAL ERROR] Response modal elements not found in DOM');
+    showToast('Error: Response modal not found.');
+    return;
+  }
+
+  if (success) {
+    responseIcon.innerHTML = '<i class="fas fa-check-circle"></i>';
+    responseTitle.textContent = 'Transfer Successful!';
+    responseMessage.textContent = message || 'Your delivery confirmation has been processed successfully.';
+    responseButton.className = 'success-btn';
+  } else {
+    responseIcon.innerHTML = '<i class="fas fa-times-circle"></i>';
+    responseTitle.textContent = 'Transfer Failed';
+    responseMessage.textContent = message || 'Failed to confirm delivery. Please try again.';
+    responseButton.className = 'error-btn';
+  }
+
+  responseModal.style.display = 'flex';
+}
+
+// Function to close response modal
+function closeResponseModal() {
+  const responseModal = document.getElementById('responseModal');
+  if (responseModal) {
+    responseModal.style.display = 'none';
+    localStorage.removeItem('transactionId');
+    console.log('[CLOSE RESPONSE MODAL]');
+  }
+}
+
 // Function to handle confirm delivery
-async function handleConfirmDelivery(transactionId) {
-  console.log('[CONFIRM DELIVERY] Clicked for transaction:', transactionId);
-  const confirmButton = document.querySelector(`button[onclick="handleConfirmDelivery('${transactionId}')"]`);
+async function handleConfirmDelivery() {
+  const transactionId = localStorage.getItem('transactionId');
+  if (!transactionId) {
+    console.error('[HANDLE CONFIRM DELIVERY ERROR] No transaction ID found in localStorage');
+    showToast('No transaction selected.');
+    closeConfirmModal();
+    return;
+  }
+
+  const confirmButton = document.querySelector(`button[onclick="openConfirmModal('${transactionId}')"]`);
   if (confirmButton) {
     confirmButton.textContent = 'Processing';
     confirmButton.classList.add('processing-btn');
@@ -231,97 +333,22 @@ async function handleConfirmDelivery(transactionId) {
   }
 
   try {
-    const response = await confirmDelivery(transactionId);
-    console.log('[CONFIRM DELIVERY RESPONSE]', response);
-    openOtpModal(transactionId, response.transferReference);
+    console.log('[CONFIRM DELIVERY INITIATED] Transaction ID:', transactionId);
+    closeConfirmModal();
+    openLoaderModal();
+    const response = await confirmDelivery(transactionId); // Await the API call
+    closeLoaderModal();
+    openResponseModal(true, response.message);
+    fetchTransactions();
   } catch (err) {
-    showToast(err.message || 'Failed to initiate delivery confirmation.');
+    console.error('[CONFIRM DELIVERY SERVER ERROR]', err.message);
+    closeLoaderModal();
+    openResponseModal(false, err.message);
     if (confirmButton) {
       confirmButton.textContent = 'Confirm Delivery';
       confirmButton.classList.remove('processing-btn');
       confirmButton.disabled = false;
     }
-  }
-}
-
-// Function to submit OTP
-async function submitOtp() {
-  const otp = document.getElementById('otpInput').value;
-  const transactionId = localStorage.getItem('transactionId');
-  const transferReference = localStorage.getItem('transferReference') || 'TRF_taeq33dk47dzzu75';
-  const submitButton = document.querySelector('#otpModal button[onclick="submitOtp()"]');
-
-  if (!otp || !transactionId) {
-    showToast('Please enter the OTP and ensure a valid transaction.');
-    return;
-  }
-
-  if (submitButton) {
-    submitButton.textContent = 'Processing';
-    submitButton.classList.add('processing-btn');
-    submitButton.disabled = true;
-  }
-
-  try {
-    console.log('[SUBMIT OTP] Sending to /confirm-otp:', { transactionId, otp, transferReference });
-    const otpRes = await fetch(`${API_BASE_URL}/confirm-otp`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${localStorage.getItem('authToken')}`,
-      },
-      body: JSON.stringify({ transactionId, otp, transferReference }),
-    });
-
-    const otpData = await otpRes.json();
-    console.log('[CONFIRM OTP RESPONSE]', otpData);
-    if (!otpRes.ok) {
-      throw new Error(otpData.error || `OTP validation failed with status ${otpRes.status}`);
-    }
-
-    closeOtpModal();
-    openSuccessModal();
-    fetchTransactions();
-  } catch (err) {
-    console.error('[OTP CONFIRMATION ERROR]', err.message);
-    showToast(err.message || 'Error confirming delivery. Please try again.');
-    if (submitButton) {
-      submitButton.textContent = 'Submit OTP';
-      submitButton.classList.remove('processing-btn');
-      submitButton.disabled = false;
-    }
-  }
-}
-
-// Function to open success modal
-function openSuccessModal() {
-  const successModal = document.getElementById('successModal');
-  if (!successModal) {
-    console.error('[OPEN SUCCESS MODAL ERROR] #successModal not found in DOM');
-    showToast('Error: Success modal not found.');
-    return;
-  }
-  successModal.style.display = 'flex';
-  successModal.style.opacity = '1';
-  successModal.style.visibility = 'visible';
-  successModal.style.zIndex = '10000';
-  console.log('[SUCCESS MODAL STYLES]', {
-    display: successModal.style.display,
-    opacity: successModal.style.opacity,
-    visibility: successModal.style.visibility,
-    zIndex: successModal.style.zIndex,
-  });
-  successModal.offsetHeight; // Force reflow
-}
-
-// Function to close success modal
-function closeSuccessModal() {
-  const successModal = document.getElementById('successModal');
-  if (successModal) {
-    successModal.style.display = 'none';
-    successModal.style.opacity = '0';
-    successModal.style.visibility = 'hidden';
-    console.log('[CLOSE SUCCESS MODAL]');
   }
 }
 
@@ -401,44 +428,6 @@ async function submitRefund() {
   } catch (err) {
     console.error('Refund request error:', err);
     showToast(err.message || 'Error requesting refund. Please try again.');
-  }
-}
-
-// Function to open OTP modal
-function openOtpModal(transactionId, transferReference) {
-  console.log('[OPEN OTP MODAL] Transaction:', transactionId, 'Transfer Reference:', transferReference);
-  localStorage.setItem('transactionId', transactionId);
-  localStorage.setItem('transferReference', transferReference);
-  const otpModal = document.getElementById('otpModal');
-  if (!otpModal) {
-    console.error('[OPEN OTP MODAL ERROR] #otpModal not found in DOM');
-    showToast('Error: OTP modal not found.');
-    return;
-  }
-  otpModal.style.display = 'flex';
-  otpModal.style.opacity = '1';
-  otpModal.style.visibility = 'visible';
-  otpModal.style.zIndex = '10000';
-  console.log('[OTP MODAL STYLES]', {
-    display: otpModal.style.display,
-    opacity: otpModal.style.opacity,
-    visibility: otpModal.style.visibility,
-    zIndex: otpModal.style.zIndex,
-  });
-  otpModal.offsetHeight; // Force reflow
-}
-
-// Function to close OTP modal
-function closeOtpModal() {
-  const otpModal = document.getElementById('otpModal');
-  if (otpModal) {
-    otpModal.style.display = 'none';
-    otpModal.style.opacity = '0';
-    otpModal.style.visibility = 'hidden';
-    document.getElementById('otpInput').value = '';
-    localStorage.removeItem('transactionId');
-    localStorage.removeItem('transferReference');
-    console.log('[CLOSE OTP MODAL]');
   }
 }
 

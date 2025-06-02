@@ -5,23 +5,28 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta http-equiv="X-UA-Compatible" content="ie=edge" />
   <title>Create Ad</title>
-  <link rel="stylesheet" href="Ads-Styles.css" />
   <script src="https://cdn.jsdelivr.net/npm/jwt-decode@3.1.2/build/jwt-decode.min.js"></script>
+  <!-- Updated FFmpeg script to reliable CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/umd/ffmpeg.min.js"></script>
+  <link rel="stylesheet" href="Ads-Styles.css" />
   <script src="addPic.js"></script>
   <style>
+    /* Existing CSS unchanged for brevity; only key mobile optimizations added */
     .tab-header {
       display: flex;
       justify-content: center;
       margin: 10px 0;
+      width: auto;
     }
     .tab-button {
       flex: 1;
-      padding: 10px;
+      padding: 12px; /* Slightly larger padding for touch */
       cursor: pointer;
       border: none;
       background: #eee;
       font-weight: bold;
       transition: background-color 0.3s, color 0.3s;
+      font-size: 16px; /* Larger font for mobile readability */
     }
     .tab-button.active {
       background: #28a745;
@@ -43,7 +48,7 @@
       display: none;
       z-index: 9999;
       text-align: center;
-      width: 60%;
+      width: 80%; /* Wider for mobile */
       font-size: 14px;
     }
     .preview-container img,
@@ -62,8 +67,8 @@
     .publish-button {
       color: white;
       background-color: #28a745;
-      width: 80%;
-      height: 35px;
+      width: 200px;
+      height: 40px; /* Larger button for touch */
       border: solid 0.1px green;
       border-radius: 50px;
       text-align: center;
@@ -71,19 +76,16 @@
       font-weight: bold;
       cursor: pointer;
       transition: background-color 0.3s;
+      font-size: 16px; /* Larger font */
     }
     .publish-button:disabled {
       background-color: #ccc;
       cursor: not-allowed;
     }
-    /* Loading Modal Styles */
     .loading-modal {
       display: none;
       position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
+      top: 0; left: 0; right: 0; bottom: 0;
       background: rgba(0, 0, 0, 0.7);
       z-index: 10000;
       align-items: center;
@@ -105,9 +107,20 @@
       animation: spin 1s linear infinite;
       margin: 0 auto 10px;
     }
+    #video-description::placeholder {
+      padding: 15px 20px;
+      font-family: 'Lato';
+    }
     @keyframes spin {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
+    }
+    /* Ensure inputs are touch-friendly */
+    .input, select, textarea {
+      font-size: 16px; /* Larger font for mobile */
+      padding: 10px;
+      width: 100%;
+      box-sizing: border-box;
     }
   </style>
 </head>
@@ -129,35 +142,31 @@
       <form id="normal-ad-form" class="ad-form" enctype="multipart/form-data" novalidate>
         <div class="input-form">
           <label for="title">Enter product title</label>
-    <input id="title" name="title" type="text" class="input" placeholder="e.g. Nexus deep freezer, 200 liters" maxlength="500" required />
+          <input id="title" name="title" type="text" class="input" placeholder="e.g. Nexus deep freezer, 200 liters" maxlength="500" required />
           <div class="error" id="normal-title-error"></div>
         </div>
-          <div class="input-form">
+        <div class="input-form">
           <label for="description">Enter product description</label>
           <input id="description" name="description" type="text" class="input" 
-          placeholder="e.g. Alice violin strings, nylon core. Good for Advanced players..." maxlength="1500" />
+                 placeholder="e.g. Alice violin strings, nylon core. Good for Advanced players..." maxlength="1500" />
           <div class="error" id="normal-description-error"></div>
         </div>
-
         <div class="input-form">
           <label for="productCondition">Product Condition</label>
           <input id="productCondition" name="productCondition" type="text" class="input" placeholder="e.g. New, Used" required maxlength="100" />
           <div class="error" id="normal-condition-error"></div>
         </div>
-
         <div class="input-form">
           <label for="price-display">Product Price ₦</label>
           <input id="price-display" type="text" class="input" placeholder="Enter Price" autocomplete="off" required />
           <input id="price" name="price" type="hidden" />
           <div class="error" id="normal-price-error"></div>
         </div>
-
         <div class="input-form">
           <label for="location">Location</label>
           <input id="location" name="location" type="text" class="input" placeholder="Enter Location" required maxlength="100" />
           <div class="error" id="normal-location-error"></div>
         </div>
-
         <div class="input-form">
           <label for="category">Product Category</label>
           <select id="category" name="category" class="input" required>
@@ -171,14 +180,13 @@
           </select>
           <div class="error" id="normal-category-error"></div>
         </div>
-
         <div class="file-section">
           <label for="photo-input">Upload Image (Max 6MB)</label>
+          <br />
           <input class="media-input" type="file" id="photo-input" name="photo" accept="image/jpeg,image/png" />
           <div class="error" id="normal-photo-error"></div>
           <div id="photo-preview-container" class="preview-container"></div>
         </div>
-
         <input type="hidden" name="postType" value="regular" />
       </form>
 
@@ -186,10 +194,9 @@
       <form id="video-ad-form" class="ad-form" enctype="multipart/form-data" style="display: none;" novalidate>
         <div class="input-form">
           <label for="video-description">Video Description</label>
-          <textarea id="video-description" name="description" class="input" placeholder="Write a short pitch..." required maxlength="500"></textarea>
+          <textarea id="video-description" name="description" class="input" placeholder="Write a short pitch..." required maxlength="500" style="width: 100%; height: 60px; border: 0.1px #28a745 solid; border-radius: 4px;"></textarea>
           <div class="error" id="video-description-error"></div>
         </div>
-
         <div class="input-form">
           <label for="video-category">Product Category</label>
           <select id="video-category" name="category" class="input" required>
@@ -203,20 +210,18 @@
           </select>
           <div class="error" id="video-category-error"></div>
         </div>
-
         <div class="input-form">
           <label for="product-link">Salmart Product Link</label>
-          <input id="product-link" name="productLink" type="url" class="input" placeholder="e.g. https://salmart.onrender.com/product/123" required />
+          <input id="product-link" name="productLink" type="url" class="input" placeholder="e.g. https://salmart.vercel.app/product/123" required />
           <div class="error" id="product-link-error"></div>
         </div>
-
         <div class="file-section">
           <label for="video-input">Upload Video (Max 6MB, 60s)</label>
+          <br />
           <input id="video-input" type="file" class="media-input" name="video" accept="video/mp4" required />
           <div class="error" id="video-error"></div>
           <div id="video-preview-container" class="preview-container"></div>
         </div>
-
         <input type="hidden" name="postType" value="video_ad" />
       </form>
 
@@ -247,10 +252,38 @@
 
   <script>
     const MAX_FILE_SIZE = 6 * 1024 * 1024; // 6MB
+    const MAX_DURATION = 60; // 60 seconds
     const MAX_DESCRIPTION_LENGTH = 500;
     const MAX_TEXT_LENGTH = 100;
     const API_BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart.onrender.com';
-    const VALID_DOMAIN = 'https://salmart.vercel.app';
+    const VALID_BASE_DOMAIN = 'salmart.vercel.app';
+    const VALID_LOCALHOST = 'localhost';
+
+    // Initialize FFmpeg
+    let ffmpeg;
+    let ffmpegLoaded = false;
+
+    async function loadFFmpeg() {
+      if (!ffmpegLoaded) {
+        try {
+          const { createFFmpeg, fetchFile } = FFmpeg;
+          if (!createFFmpeg || !fetchFile) {
+            throw new Error('FFmpeg library not properly loaded');
+          }
+          console.log('[FFMPEG] Loading from: https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/umd/ffmpeg-core.js');
+          ffmpeg = createFFmpeg({ 
+            log: true,
+            corePath: 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/umd/ffmpeg-core.js'
+          });
+          await ffmpeg.load();
+          ffmpegLoaded = true;
+          console.log('[FFMPEG] Loaded successfully');
+        } catch (error) {
+          console.error('[FFMPEG] Failed to load:', error);
+          showToast('Video processing unavailable. Please use a pre-compressed video under 6MB.', '#dc3545');
+        }
+      }
+    }
 
     // DOM references
     const normalForm = document.getElementById('normal-ad-form');
@@ -268,28 +301,32 @@
     // Show toast notification
     function showToast(message, color = '#28a745') {
       const toast = document.getElementById('toast');
-      toast.textContent = message;
-      toast.style.backgroundColor = color;
-      toast.style.display = 'block';
-      setTimeout(() => {
-        toast.style.display = 'none';
-      }, 3000);
+      if (toast) {
+        toast.textContent = message;
+        toast.style.backgroundColor = color;
+        toast.style.display = 'block';
+        setTimeout(() => {
+          toast.style.display = 'none';
+        }, 3000);
+      }
     }
 
     // Show/hide loading modal
     function showLoadingModal() {
-      loadingModal.style.display = 'flex';
+      if (loadingModal) loadingModal.style.display = 'flex';
     }
     function hideLoadingModal() {
-      loadingModal.style.display = 'none';
+      if (loadingModal) loadingModal.style.display = 'none';
     }
 
     // Reset buttons and enable tabs
     function resetButtons() {
-      publishButton.disabled = false;
-      publishButton.textContent = 'Publish ad';
-      normalTab.disabled = false;
-      videoTab.disabled = false;
+      if (publishButton) {
+        publishButton.disabled = false;
+        publishButton.textContent = 'Publish ad';
+      }
+      if (normalTab) normalTab.disabled = false;
+      if (videoTab) videoTab.disabled = false;
       hideLoadingModal();
     }
 
@@ -299,9 +336,7 @@
       const parts = cleanValue.split('.');
       let integerPart = parts[0];
       let decimalPart = parts[1] || '';
-      if (decimalPart.length > 2) {
-        decimalPart = decimalPart.substring(0, 2);
-      }
+      if (decimalPart.length > 2) decimalPart = decimalPart.substring(0, 2);
       integerPart = integerPart.replace(/^0+(?=\d)/, '');
       integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
       return decimalPart.length > 0 ? `${integerPart}.${decimalPart}` : integerPart;
@@ -315,91 +350,214 @@
     }
 
     // Price input event: format and update hidden input
-    priceDisplay.addEventListener('input', (e) => {
-      const cursorPosition = e.target.selectionStart;
-      const oldLength = e.target.value.length;
-      let formatted = formatPriceInput(e.target.value);
-      e.target.value = formatted;
-      const newLength = formatted.length;
-      const diff = newLength - oldLength;
-      e.target.selectionEnd = cursorPosition + diff;
-      const numericValue = parsePrice(formatted);
-      if (!isNaN(numericValue)) {
-        priceHidden.value = numericValue.toFixed(2);
-      } else {
-        priceHidden.value = '';
-      }
-    });
+    if (priceDisplay) {
+      priceDisplay.addEventListener('input', (e) => {
+        const cursorPosition = e.target.selectionStart;
+        const oldLength = e.target.value.length;
+        let formatted = formatPriceInput(e.target.value);
+        e.target.value = formatted;
+        const newLength = formatted.length;
+        const diff = newLength - oldLength;
+        e.target.selectionEnd = cursorPosition + diff;
+        const numericValue = parsePrice(formatted);
+        if (!isNaN(numericValue)) {
+          priceHidden.value = numericValue.toFixed(2);
+        } else {
+          priceHidden.value = '';
+        }
+      });
+    }
 
     // Photo preview and validation
-    document.getElementById('photo-input').addEventListener('change', function (e) {
-      const photoError = document.getElementById('normal-photo-error');
-      const previewContainer = document.getElementById('photo-preview-container');
-      previewContainer.innerHTML = '';
-      photoError.style.display = 'none';
-      const file = e.target.files[0];
-      if (file) {
-        if (!['image/jpeg', 'image/png'].includes(file.type)) {
-          photoError.textContent = 'Only JPEG or PNG images are allowed';
-          photoError.style.display = 'block';
-          this.value = '';
-          return;
+    const photoInput = document.getElementById('photo-input');
+    if (photoInput) {
+      photoInput.addEventListener('change', function (e) {
+        const photoError = document.getElementById('normal-photo-error');
+        const previewContainer = document.getElementById('photo-preview-container');
+        previewContainer.innerHTML = '';
+        photoError.style.display = 'none';
+        const file = e.target.files[0];
+        if (file) {
+          if (!['image/jpeg', 'image/png'].includes(file.type)) {
+            photoError.textContent = 'Only JPEG or PNG images are allowed';
+            photoError.style.display = 'block';
+            this.value = '';
+            return;
+          }
+          if (file.size > MAX_FILE_SIZE) {
+            photoError.textContent = 'Image size cannot exceed 6MB';
+            photoError.style.display = 'block';
+            this.value = '';
+            return;
+          }
+          const img = document.createElement('img');
+          img.src = URL.createObjectURL(file);
+          img.alt = 'Image Preview';
+          previewContainer.appendChild(img);
         }
-        if (file.size > MAX_FILE_SIZE) {
-          photoError.textContent = 'Image size cannot exceed 6MB';
-          photoError.style.display = 'block';
-          this.value = '';
-          return;
-        }
-        const img = document.createElement('img');
-        img.src = URL.createObjectURL(file);
-        img.alt = 'Image Preview';
-        previewContainer.appendChild(img);
+      });
+    }
+
+    // Compress and trim video
+    async function processVideo(file) {
+      if (!ffmpegLoaded) {
+        showToast('Video processing unavailable. Please use a pre-compressed video under 6MB.', '#dc3545');
+        throw new Error('Video processing unavailable');
       }
-    });
+
+      const inputName = 'input.mp4';
+      const outputName = 'output.mp4';
+
+      // Write input file to FFmpeg's virtual filesystem
+      await ffmpeg.FS('writeFile', inputName, await FFmpeg.fetchFile(file));
+
+      // Check video duration
+      let duration = 0;
+      const video = document.createElement('video');
+      video.src = URL.createObjectURL(file);
+      await new Promise((resolve) => {
+        video.onloadedmetadata = () => {
+          duration = video.duration;
+          resolve();
+        };
+      });
+
+      // Build FFmpeg command
+      let command = ['-i', inputName];
+
+      // Trim if duration exceeds 60 seconds
+      if (duration > MAX_DURATION) {
+        showToast('Video exceeds 60 seconds and will be trimmed to 1 minute.', '#ffc107');
+        command.push('-t', MAX_DURATION.toString());
+      }
+
+      // Compress video (optimized for mobile)
+      command.push(
+        '-vcodec', 'libx264',
+        '-crf', '30', // Higher CRF for smaller file size
+        '-preset', 'ultrafast', // Faster encoding
+        '-vf', 'scale=640:360', // Downscale to 360p
+        '-acodec', 'aac',
+        '-b:a', '96k', // Lower audio bitrate
+        outputName
+      );
+
+      // Run FFmpeg command
+      await ffmpeg.run(...command);
+
+      // Read the output file
+      const data = ffmpeg.FS('readFile', outputName);
+      const compressedFile = new File([data.buffer], file.name, { type: 'video/mp4' });
+
+      // Verify output file size
+      if (compressedFile.size > MAX_FILE_SIZE) {
+        throw new Error('Compressed video exceeds 6MB');
+      }
+
+      // Clean up
+      try {
+        if (ffmpeg.FS('readdir', '/').includes(inputName)) ffmpeg.FS('unlink', inputName);
+        if (ffmpeg.FS('readdir', '/').includes(outputName)) ffmpeg.FS('unlink', outputName);
+      } catch (e) {
+        console.warn('[FFMPEG] Cleanup error:', e);
+      }
+
+      return compressedFile;
+    }
 
     // Video preview and validation
-    document.getElementById('video-input').addEventListener('change', function (e) {
-      const videoError = document.getElementById('video-error');
-      const previewContainer = document.getElementById('video-preview-container');
-      previewContainer.innerHTML = '';
-      videoError.style.display = 'none';
-      const file = e.target.files[0];
-      if (file) {
-        if (file.type !== 'video/mp4') {
-          videoError.textContent = 'Only MP4 videos are allowed';
-          videoError.style.display = 'block';
-          this.value = '';
-          return;
-        }
-        if (file.size > MAX_FILE_SIZE) {
-          videoError.textContent = 'Video size cannot exceed 6MB';
-          videoError.style.display = 'block';
-          this.value = '';
-          return;
-        }
-        const video = document.createElement('video');
-        video.src = URL.createObjectURL(file);
-        video.controls = true;
-        previewContainer.appendChild(video);
-        video.onloadedmetadata = () => {
-          if (video.duration > 60) {
-            videoError.textContent = 'Video duration cannot exceed 60 seconds';
+    const videoInput = document.getElementById('video-input');
+    if (videoInput) {
+      videoInput.addEventListener('change', async function (e) {
+        const videoError = document.getElementById('video-error');
+        const previewContainer = document.getElementById('video-preview-container');
+        previewContainer.innerHTML = '';
+        videoError.style.display = 'none';
+        const file = e.target.files[0];
+        if (file) {
+          if (file.type !== 'video/mp4') {
+            videoError.textContent = 'Only MP4 videos are allowed';
             videoError.style.display = 'block';
             this.value = '';
-            previewContainer.innerHTML = '';
+            return;
           }
-        };
-      }
-    });
+          if (file.size > MAX_FILE_SIZE) {
+            videoError.textContent = 'Video size cannot exceed 6MB';
+            videoError.style.display = 'block';
+            this.value = '';
+            return;
+          }
+
+          // Validate duration without FFmpeg
+          const video = document.createElement('video');
+          video.src = URL.createObjectURL(file);
+          await new Promise((resolve) => {
+            video.onloadedmetadata = () => {
+              if (video.duration > MAX_DURATION) {
+                videoError.textContent = 'Video duration cannot exceed 60 seconds';
+                videoError.style.display = 'block';
+                this.value = '';
+                previewContainer.innerHTML = '';
+                resolve();
+                return;
+              }
+              // Create preview
+              video.controls = true;
+              previewContainer.appendChild(video);
+              resolve();
+            };
+            video.onerror = () => {
+              videoError.textContent = 'Invalid video file';
+              videoError.style.display = 'block';
+              this.value = '';
+              previewContainer.innerHTML = '';
+              resolve();
+            };
+          });
+
+          // Attempt FFmpeg processing if loaded
+          if (ffmpegLoaded) {
+            try {
+              showToast('Processing video, please wait...', '#28a745');
+              const processedFile = await processVideo(file);
+              const dataTransfer = new DataTransfer();
+              dataTransfer.items.add(processedFile);
+              this.files = dataTransfer.files;
+              video.src = URL.createObjectURL(processedFile);
+            } catch (error) {
+              console.error('[VIDEO PROCESSING ERROR]', error);
+              videoError.textContent = error.message || 'Failed to process video';
+              videoError.style.display = 'block';
+              this.value = '';
+              previewContainer.innerHTML = '';
+            }
+          }
+        }
+      });
+    }
 
     // Validate product link
     function isValidSalmartLink(link) {
       try {
         const url = new URL(link);
-        return url.hostname === VALID_DOMAIN || (window.location.hostname === 'localhost' && url.hostname === 'localhost');
+        const isLocalhost = window.location.hostname === 'localhost' && url.hostname === 'localhost';
+        const isSalmartDomain = url.hostname === VALID_BASE_DOMAIN || url.hostname.endsWith(`.${VALID_BASE_DOMAIN}`);
+        const isSecure = url.protocol === 'https:' || (isLocalhost && url.protocol === 'http:');
+        const productPathRegex = /^\/product\/[a-zA-Z0-9]+$/;
+        const path = url.pathname;
+
+        if (!(isLocalhost || isSalmartDomain)) {
+          return { valid: false, error: 'Link must be from Salmart (e.g., https://salmart.vercel.app/product/123)' };
+        }
+        if (!isSecure) {
+          return { valid: false, error: 'Link must use HTTPS (or HTTP for localhost)' };
+        }
+        if (!productPathRegex.test(path)) {
+          return { valid: false, error: 'Link must point to a product page (e.g., /product/123)' };
+        }
+        return { valid: true };
       } catch (e) {
-        return false;
+        return { valid: false, error: 'Invalid URL format' };
       }
     }
 
@@ -418,9 +576,9 @@
         normalTab.classList.remove('active');
         videoTab.classList.add('active');
       }
+      document.querySelectorAll('.error').forEach(err => err.style.display = 'none');
       document.getElementById('photo-preview-container').innerHTML = '';
       document.getElementById('video-preview-container').innerHTML = '';
-      document.querySelectorAll('.error').forEach(err => err.style.display = 'none');
     }
 
     // Submit ad with validation
@@ -439,10 +597,7 @@
         return;
       }
 
-      // Show loading modal
       showLoadingModal();
-
-      // Disable buttons to prevent multiple submissions
       publishButton.disabled = true;
       publishButton.textContent = 'Processing...';
       normalTab.disabled = true;
@@ -450,8 +605,7 @@
 
       // Validation for Normal Ad
       if (isNormalTab) {
-           const title = form.querySelector('#title').value.trim();
-        
+        const title = form.querySelector('#title').value.trim();
         const description = form.querySelector('#description').value.trim();
         const productCondition = form.querySelector('#productCondition').value.trim();
         const price = form.querySelector('#price').value;
@@ -460,7 +614,7 @@
         const photo = form.querySelector('#photo-input').files[0];
 
         if (!title) {
-          showFieldError('normal-title-error', 'Titl is required');
+          showFieldError('normal-title-error', 'Title is required');
           return resetAfterError();
         }
         if (description.length > MAX_DESCRIPTION_LENGTH) {
@@ -522,13 +676,13 @@
           showFieldError('product-link-error', 'Product link is required');
           return resetAfterError();
         }
-        if (!isValidSalmartLink(productLink)) {
-          showFieldError('product-link-error', 'Link must be a valid Salmart URL (e.g., https://salmart.vercel.app/posts/123)');
+        const linkValidation = isValidSalmartLink(productLink);
+        if (!linkValidation.valid) {
+          showFieldError('product-link-error', linkValidation.error);
           return resetAfterError();
         }
       }
 
-      // Helper functions to show error and reset buttons
       function showFieldError(id, message) {
         const el = document.getElementById(id);
         el.textContent = message;
@@ -541,7 +695,6 @@
 
       try {
         const formData = new FormData(form);
-
         const response = await fetch(`${API_BASE_URL}/post`, {
           method: 'POST',
           headers: {
@@ -549,7 +702,6 @@
           },
           body: formData,
         });
-
         const result = await response.json();
 
         if (response.ok) {
@@ -574,9 +726,27 @@
     }
 
     // Event listeners
-    normalTab.addEventListener('click', () => switchTab('normal'));
-    videoTab.addEventListener('click', () => switchTab('video'));
-    publishButton.addEventListener('click', submitAd);
+    if (normalTab) normalTab.addEventListener('click', () => switchTab('normal'));
+    if (videoTab) videoTab.addEventListener('click', () => switchTab('video'));
+    if (publishButton) publishButton.addEventListener('click', submitAd);
+
+    // Global error handler for unhandled promise rejections
+    window.addEventListener('unhandledrejection', event => {
+      console.error('[UNHANDLED PROMISE REJECTION]', event.reason);
+      showToast('An unexpected error occurred. Please try again.', '#dc3545');
+    });
+
+    // Initialize FFmpeg on load
+    loadFFmpeg();
+
+    // Check userId for profile fetch
+    const userId = localStorage.getItem('userId');
+    if (!userId) {
+      console.warn('[PROFILE FETCH] No userId found in localStorage. User may not be logged in.');
+      showToast('Please log in to access all features.', '#ffc107');
+    } else {
+      console.log('[PROFILE FETCH] Fetching profile for userId:', userId);
+    }
   </script>
 </body>
 </html>

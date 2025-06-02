@@ -48,7 +48,7 @@ trim: true,
           return false;
         }
       },
-      message: 'Product link must be a valid Salmart URL (e.g., https://salmart.vercel.app/posts/123)',
+      message: 'Product link must be a valid Salmart URL (e.g., https://salmart.vercel.app)',
     },
   },
   location: {

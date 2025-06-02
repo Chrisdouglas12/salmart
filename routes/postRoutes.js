@@ -235,7 +235,7 @@ module.exports = (io) => {
 
       // Validate productLink for video ads
       const isProduction = process.env.NODE_ENV === 'production';
-      const validDomain = isProduction ? 'salmart.vercel.app' : 'localhost';
+      const validDomain = isProduction ? 'https://salmart.vercel.app' : 'localhost';
       const isValidSalmartLink = (link) => {
         try {
           const url = new URL(link);
@@ -628,6 +628,59 @@ router.get('/post', async (req, res) => {
       res.status(500).json({ message: 'Server error' });
     }
   });
+  router.get('/post/reply/:postId/:commentId', async (req, res) => {
+  try {
+    const { postId, commentId } = req.params;
+
+    // Validate postId
+    if (!mongoose.Types.ObjectId.isValid(postId)) {
+      logger.warn(`Invalid post ID: ${postId}`);
+      return res.status(400).json({ message: 'Invalid post ID' });
+    }
+
+    // Validate commentId
+    if (!mongoose.Types.ObjectId.isValid(commentId)) {
+      logger.warn(`Invalid comment ID: ${commentId}`);
+      return res.status(400).json({ message: 'Invalid comment ID' });
+    }
+
+    // Find the post
+    const post = await Post.findById(postId);
+    if (!post) {
+      logger.error(`Post not found: ${postId}`);
+      return res.status(404).json({ message: 'Post not found' });
+    }
+
+    // Find the comment within the post
+    const comment = post.comments.id(commentId);
+    if (!comment) {
+      logger.error(`Comment not found: ${commentId} in post ${postId}`);
+      return res.status(404).json({ message: 'Comment not found' });
+    }
+
+    // Fetch user details for the comment author
+    const user = await User.findById(comment.userId).select('firstName lastName profilePicture').lean();
+    if (!user) {
+      logger.warn(`User not found for comment ${commentId}`);
+    }
+
+    // Prepare the response in the expected format
+    const commentData = {
+      _id: comment._id,
+      text: comment.text,
+      name: user ? `${user.firstName} ${user.lastName}` : comment.name || 'Unknown User',
+      profilePicture: user?.profilePicture || comment.profilePicture || 'default-avatar.png',
+      createdAt: comment.createdAt,
+      replies: comment.replies || [],
+    };
+
+    logger.info(`Fetched comment ${commentId} for post ${postId}`);
+    res.status(200).json({ comment: commentData });
+  } catch (error) {
+    logger.error(`Error fetching comment ${req.params.commentId} for post ${req.params.postId}: ${error.message}`);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
 
   router.post('/post/reply/:postId/:commentId', verifyToken, async (req, res) => {
     try {

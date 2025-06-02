@@ -78,6 +78,64 @@
         background-position: 200% 0;
       }
     }
+
+    /* Inline CSS for modals */
+    .modal-content {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      width: 90%;
+      max-width: 400px;
+      text-align: center;
+    }
+
+    .modal-content h3 {
+      margin-bottom: 20px;
+      font-size: 1.2rem;
+    }
+
+    .modal-content button {
+      padding: 10px 20px;
+      margin: 10px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .modal-content .confirm-btn {
+      background-color: #28a745;
+      color: white;
+    }
+
+    .modal-content .cancel-btn {
+      background-color: #dc3545;
+      color: white;
+    }
+
+    .modal-content .success-btn {
+      background-color: #28a745;
+      color: white;
+    }
+
+    .modal-content .error-btn {
+      background-color: #dc3545;
+      color: white;
+    }
+
+    .loader {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #3498db;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 20px auto;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
   </style>
 </head>
 <body>
@@ -167,25 +225,32 @@
     </ul>
   </nav>
 
-  <!-- OTP Modal -->
-  <div id="otpModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background-color: rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
+  <!-- Confirmation Modal -->
+  <div id="confirmModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background-color: rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
     <div class="modal-content">
-      <h3>Enter OTP to Confirm Transfer</h3>
-      <input type="text" id="otpInput" placeholder="Enter OTP" />
-      <button onclick="submitOtp()">Submit OTP</button>
-      <button onclick="closeOtpModal()">Cancel</button>
+      <h3>Are you sure you want to confirm delivery?</h3>
+      <button onclick="handleConfirmDelivery()" class="confirm-btn">Yes</button>
+      <button onclick="closeConfirmModal()" class="cancel-btn">No</button>
     </div>
   </div>
 
-  <!-- Success Modal -->
-  <div id="successModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background-color: rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
-    <div class="modal-content success-modal">
-      <div class="success-icon">
+  <!-- Loader Modal -->
+  <div id="loaderModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background-color: rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
+    <div class="modal-content">
+      <div class="loader"></div>
+      <p>Processing transfer...</p>
+    </div>
+  </div>
+
+  <!-- Response Modal -->
+  <div id="responseModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background-color: rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
+    <div class="modal-content">
+      <div class="success-icon" id="responseIcon">
         <i class="fas fa-check-circle"></i>
       </div>
-      <h3>Payment Successful!</h3>
-      <p>Your payment has been confirmed successfully.</p>
-      <button onclick="closeSuccessModal()" class="success-btn">Close</button>
+      <h3 id="responseTitle">Transfer Successful!</h3>
+      <p id="responseMessage">Your delivery confirmation has been processed successfully.</p>
+      <button onclick="closeResponseModal()" class="success-btn" id="responseButton">Close</button>
     </div>
   </div>
 
@@ -235,5 +300,7 @@
     });
   </script>
   <script src="Badge.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+  <script>eruda.init();</script>
 </body>
 </html>

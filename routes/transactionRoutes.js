@@ -5,11 +5,14 @@ const User = require('../models/userSchema.js')
 const Report = require('../models/reportSchema.js')
 const RefundRequests = require('../models/refundSchema.js')
 const verifyToken = require('../middleware/auths.js')
+const axios = require('axios')
 const Transaction = require('../models/transactionSchema.js')
 const router = express.Router()
 const Notification = require('../models/notificationSchema.js')
 
 module.exports = (io) => {
+
+
 //Get Transaction
 router.get('/get-transactions/:userId', verifyToken, async (req, res) => {
  console.log("fecting tx")
@@ -21,6 +24,20 @@ router.get('/get-transactions/:userId', verifyToken, async (req, res) => {
     res.status(200).json({ success: true, transactions });
   } catch (error) {
     console.error('Fetch transactions error:', error.message);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+//Check payment status
+router.get('/check-payment-status', async (req, res) => {
+  try {
+    const { productId, buyerId } = req.query;
+    const [transaction, escrow] = await Promise.all([
+      Transaction.findOne({ productId, buyerId, status: 'completed' }),
+      Escrow.findOne({ product: productId, buyer: buyerId, status: 'Released' }),
+    ]);
+    res.status(200).json({ success: true, paymentCompleted: !!(transaction || escrow) });
+  } catch (error) {
+    console.error('Check payment status error:', error.message);
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
