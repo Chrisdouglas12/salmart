@@ -70,6 +70,7 @@ router.post('/pay', async (req, res) => {
 const protocol = req.secure ? 'https' : 'http';
 const host = req.get('host');
 const API_BASE_URL = `${protocol}://${host}`;
+
         // include correct sellerId in metadata
         const response = await paystack.transaction.initialize({
             email,

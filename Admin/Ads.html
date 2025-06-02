@@ -390,25 +390,26 @@
       });
     }
 
-    // Validate product link
-    function isValidSalmartLink(link) {
-      try {
-        const url = new URL(link);
-        const isLocalhost = window.location.hostname === 'localhost' && url.hostname === 'localhost';
-        const isSalmartDomain = url.hostname === VALID_BASE_DOMAIN || url.hostname.endsWith(`.${VALID_BASE_DOMAIN}`);
-        const isSecure = url.protocol === 'https:' || (isLocalhost && url.protocol === 'http:');
+function isValidSalmartLink(link) {
+  try {
+    const url = new URL(link);
+    const isLocalhost = window.location.hostname === 'localhost' && url.hostname === 'localhost';
+    const isSalmartDomain = url.hostname === VALID_BASE_DOMAIN || url.hostname.endsWith(`.${VALID_BASE_DOMAIN}`);
+    const isSecure = url.protocol === 'https:' || (isLocalhost && url.protocol === 'http:');
 
-        if (!(isLocalhost || isSalmartDomain)) {
-          return { valid: false, error: 'Link must be from Salmart (e.g., https://salmart.vercel.app/product/123)' };
-        }
-        if (!isSecure) {
-          return { valid: false, error: 'Link must use HTTPS (or HTTP for localhost)' };
-        }
-      } catch (e) {
-        return { valid: false, error: 'Invalid URL format' };
-      }
+    if (!(isLocalhost || isSalmartDomain)) {
+      return { valid: false, error: 'Link must be from Salmart (e.g., https://salmart.vercel.app/product/123)' };
     }
 
+    if (!isSecure) {
+      return { valid: false, error: 'Link must use HTTPS (or HTTP for localhost)' };
+    }
+
+    return { valid: true };
+  } catch (e) {
+    return { valid: false, error: 'Invalid URL format' };
+  }
+}
     // Switch tabs
     function switchTab(type) {
       if (publishButton.disabled) return;
@@ -589,5 +590,7 @@
       console.log('[PROFILE FETCH] Fetching profile for userId:', userId);
     }
   </script>
+      <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+    <script>eruda.init();</script>
 </body>
 </html>
