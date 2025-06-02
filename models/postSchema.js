@@ -12,7 +12,9 @@ const postSchema = new mongoose.Schema({
   },
   title:{
 type: String,
-required: true,
+required: function() {
+     return this.postType === 'regular'
+},
 trim: true,
 
   },

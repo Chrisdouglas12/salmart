@@ -6,18 +6,6 @@
     <title>Post Details</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="posts-details.css">
-    <!-- Inside post-details.html -->
-<script>
-  const params = new URLSearchParams(window.location.search);
-  const postId = params.get("id");
-
-  if (postId) {
-    // Use postId to fetch post data from your backend or localStorage
-    console.log("Post ID:", postId);
-  } else {
-    console.log("No post ID found in URL");
-  }
-</script>
     
 </head>
 <body>

@@ -157,7 +157,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     function showShareModal(post) {
         const shareModal = document.createElement('div');
         shareModal.className = 'share-modal';
-        const postLink = `${window.location.origin}/index.html?id=${post._id}`;
+        const postLink = `${window.location.origin}/product.html?id=${post._id}`;
         
         shareModal.innerHTML = `
             <div class="share-modal-content">
@@ -735,7 +735,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                     // Comment toggle
                     const commentToggleButton = postElement.querySelector('.reply-button');
                     commentToggleButton.addEventListener('click', () => {
-                        window.location.href = `posts-details.html?postId=${post._id}`;
+                        window.location.href = `product.html?postId=${post._id}`;
                     });
 
                     // Buy now functionality
