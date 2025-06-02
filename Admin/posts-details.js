@@ -819,5 +819,5 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Initialize page
     await fetchUserProfile();
     await fetchPost();
-    window.addEventListener('popstate', fetchPost);
+    window.addEventListener('popstate', fetchPost); // Ensure content loads on navigation
 });

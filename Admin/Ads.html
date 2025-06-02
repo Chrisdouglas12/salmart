@@ -391,6 +391,8 @@
     }
 
 function isValidSalmartLink(link) {
+  const VALID_BASE_DOMAIN = 'salmart.vercel.app';
+
   try {
     const url = new URL(link);
     const isLocalhost = window.location.hostname === 'localhost' && url.hostname === 'localhost';
@@ -398,11 +400,19 @@ function isValidSalmartLink(link) {
     const isSecure = url.protocol === 'https:' || (isLocalhost && url.protocol === 'http:');
 
     if (!(isLocalhost || isSalmartDomain)) {
-      return { valid: false, error: 'Link must be from Salmart (e.g., https://salmart.vercel.app/product/123)' };
+      return { valid: false, error: 'Link must be from Salmart (e.g., https://salmart.vercel.app/product.html?id=123)' };
     }
 
     if (!isSecure) {
       return { valid: false, error: 'Link must use HTTPS (or HTTP for localhost)' };
+    }
+
+    // Optional: Enforce that it's a product-related path
+    const pathname = url.pathname;
+    const isValidProductPath = pathname.startsWith('/product') || pathname === '/product.html';
+
+    if (!isValidProductPath) {
+      return { valid: false, error: 'Link must lead to a product page on Salmart' };
     }
 
     return { valid: true };
