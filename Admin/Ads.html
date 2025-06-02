@@ -397,8 +397,6 @@
         const isLocalhost = window.location.hostname === 'localhost' && url.hostname === 'localhost';
         const isSalmartDomain = url.hostname === VALID_BASE_DOMAIN || url.hostname.endsWith(`.${VALID_BASE_DOMAIN}`);
         const isSecure = url.protocol === 'https:' || (isLocalhost && url.protocol === 'http:');
-        const productPathRegex = /^\/product?[a-zA-Z0-9]=[a-zA-Z0-9]+$/;
-        const path = url.pathname;
 
         if (!(isLocalhost || isSalmartDomain)) {
           return { valid: false, error: 'Link must be from Salmart (e.g., https://salmart.vercel.app/product/123)' };
@@ -406,10 +404,6 @@
         if (!isSecure) {
           return { valid: false, error: 'Link must use HTTPS (or HTTP for localhost)' };
         }
-        if (!productPathRegex.test(path)) {
-          return { valid: false, error: 'Link must point to a product page (e.g., /product/123)' };
-        }
-        return { valid: true };
       } catch (e) {
         return { valid: false, error: 'Invalid URL format' };
       }
