@@ -37,8 +37,7 @@
       <li><a href="Messages.html"><i class="fas fa-comment"></i>Messages</a></li> 
       <li><a href="Deals.html"><i class="fas fa-cart-plus"></i>Deals</a></li>
       <li><a href="Profile.html"><i class="fas fa-user"></i> Profile</a></li>
-      <li><a href="Profile.html"><i class="fa-solid fa-user-tie"></i> Hire Skills</a></li>
-      <li><a href="Profile.html"><i class="fa-solid fa-receipt"></i> Generate Receipts</a></li>
+
       <li><a href="Profile.html"><i class="fa-solid fa-lock"></i> Privacy Policy</a></li>
       <li><a href="Privacy.html"><i class="fa-solid fa-circle-info"></i> Community Standards</a></li>
       <li><a href="SignIn.html"><i class="fas fa-sign-out-alt"></i><span id="logout text">Log out</span></a></li>
@@ -372,7 +371,7 @@
 
   <!-- Inline Follow Button Script (Remove if using profile.js follow logic) -->
   <script>
-       const API_BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart-production.up.railway.app';
+       const API_BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart.onrender.com';
     const socket = io(`${API_BASE_URL}`, {
       path: '/socket.io',
       transports: ['websocket', 'polling']
@@ -425,7 +424,7 @@
     }
     followButton.addEventListener("click", async function () {
       try {
-        const API_BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart-production.up.railway.app';
+        const API_BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart.onrender.com';
         const response = await fetch(`${API_BASE_URL}/api/follow`, {
           method: "POST",
           headers: {
@@ -462,7 +461,7 @@
     if (typeof eruda !== 'undefined') {
       eruda.init();
     }
-    const API_BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart-production.up.railway.app';
+    const API_BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart.onrender.com';
     function getLoggedInUserInfo() {
       const token = localStorage.getItem("authToken");
       if (!token) {

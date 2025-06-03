@@ -136,8 +136,7 @@
       <li><a href="Messages.html"><i class="fas fa-comment"></i>Messages</a></li> 
             <li><a href="Deals.html"><i class="fas fa-cart-plus"></i>Deals</a></li>
       <li><a href="Profile.html"><i class="fas fa-user"></i> Profile</a></li>
-       <li><a href="Profile.html"><i class="fa-solid fa-user-tie"></i> Hire Skills</a></li>
-       <li><a href="Profile.html"><i class="fa-solid fa-receipt"></i> Generate Reciepts</a></li>
+      
         <li><a href="Profile.html"><i class="fa-solid fa-lock"></i> Privacy Policy</a></li>
          <li><a href="Privacy.html"><i class="fa-solid fa-circle-info"></i> Community Standards</a></li>
 <li><a href="SignIn.html" id="logout-link"><i class="fas fa-sign-out-alt"></i> <span id="logout-text">Log out</span></a></li>
@@ -227,8 +226,8 @@ window.onload = function() {
 <script>
   const API_BASE_URL = window.location.hostname === 'localhost' 
   ? 'http://localhost:3000' 
-  : 'https://salmart-production.up.railway.app';
-  // Connect to your backend (replace with actual URL)
+  : 'https://salmart.onrender.com';
+  // Connect to your backend
   const socket = io(`${API_BASE_URL}`,
    {
     path: '/socket.io',
@@ -239,30 +238,7 @@ window.onload = function() {
     console.log('Connected to server');
   });
 </script>
-<script>
-  // Example: When a user likes a post
-  function likePost(postId, userId) {
-    socket.emit("like", { postId, userId });
-  }
 
-  // Example: When a user comments
-  function commentPost(postId, userId, comment) {
-    socket.emit("comment", { postId, userId, comment });
-  }
-</script>
-<script>
-  // Listen for new likes
-  socket.on("new-like", (data) => {
-    console.log("New like:", data);
-    alert(`User ${data.userId} liked post ${data.postId}`);
-  });
-
-  // Listen for new comments
-  socket.on("new-comment", (data) => {
-    console.log("New comment:", data);
-    alert(`User ${data.userId} commented on post ${data.postId}: "${data.comment}"`);
-  });
-</script>
 <div id="imageModal" class="modal">
     <span class="close">&times;</span>
     <img class="modal-content" id="fullImage">
@@ -581,22 +557,7 @@ background-color: #ccc
   color: #3498db;
 }
 </style>
-<script>
-  function openImage(imageUrl) {
-    const modal = document.getElementById("imageModal");
-    const fullImage = document.getElementById("fullImage");
 
-    fullImage.src = imageUrl;
-    modal.style.display = "flex";
-
-    // Close the modal when clicking outside the image
-    modal.onclick = function (event) {
-        if (event.target === modal || event.target.classList.contains("close")) {
-            modal.style.display = "none";
-        }
-    };
-}
-</script>
 <script>
   function showToast(message, color = '#28a745') {
     const toast = document.getElementById("toast");
@@ -674,7 +635,6 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
 <script>eruda.init();</script>
-<script type="module" src="firebase-app.js"></script>
 <script src="Badge.js"></script>
 <script src="requestScript.js"></script>
 </html> 

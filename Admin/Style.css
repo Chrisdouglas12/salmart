@@ -1615,7 +1615,7 @@ a::hover{
   }
 
   .product-card {
-    background-color: #f9f9f9;
+    background-color: #fff;
     border-radius: 10px;
     padding: 10px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -1917,105 +1917,6 @@ a::hover{
 
 
 
-/* Post options */
-.post-options {
-  position: relative;
-}
-
-.post-options-button {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 16px;
-  color: #333;
-}
-
-.post-options-menu {
-  display: none;
-  position: absolute;
-  right: 0;
-  top: 30px;
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  z-index: 100;
-}
-
-.post-options-menu.show {
-  display: block;
-}
-
-.post-options-menu ul {
-  list-style: none;
-  margin: 0;
-  padding: 8px 0;
-}
-
-.post-options-menu li {
-  padding: 8px 16px;
-}
-
-.post-options-menu li button {
-  background: none;
-  border: none;
-  color: #333;
-  cursor: pointer;
-  width: 100%;
-  text-align: left;
-}
-
-.post-options-menu li button:hover {
-  background: #f0f0f0;
-}
-
-/* Product card */
-.product-card {
-  background: #fff;
-  border-radius: 8px;
-  padding: 12px;
-  margin: 10px 0;
-  border: 1px solid #e0e0e0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  font-family: 'Arial', sans-serif;
-}
-
-/* Product info */
-.product-info {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 14px;
-  color: #333;
-}
-
-.product-info .icon {
-  font-size: 18px;
-}
-
-.product-info .label {
-  font-weight: bold;
-  margin: 0;
-  color: #555;
-}
-
-.product-info .value {
-  margin: 0;
-  color: #222;
-}
-
-.product-info-inline {
-  display: flex;
-  gap: 20px;
-}
-
-.info-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
 /* Media card */
 .media-card img {
   width: 100%;
@@ -2025,8 +1926,8 @@ a::hover{
 
 
 .buy-now-button:disabled {
-  background: #28a745;
-  color: #fff;
+  background: #ddd;
+  color: white;
   cursor: not-allowed;
 }
 
@@ -2058,71 +1959,6 @@ a::hover{
 
 .reply-button:hover i, .share-button:hover i {
   color: #007bff;
-}
-
-
-
-/* Delete confirmation modal */
-.delete-confirmation-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.delete-modal-content {
-  background: #fff;
-  border-radius: 12px;
-  padding: 20px;
-  width: 90%;
-  max-width: 400px;
-}
-
-.delete-modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15px;
-}
-
-.delete-modal-header h3 {
-  margin: 0;
-  font-size: 18px;
-}
-
-.close-delete-modal {
-  cursor: pointer;
-  font-size: 24px;
-}
-
-.delete-modal-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 15px;
-}
-
-.cancel-delete,
-.confirm-delete {
-  padding: 8px 16px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.cancel-delete {
-  background: #ccc;
-}
-
-.confirm-delete {
-  background: #dc3545;
-  color: #fff;
 }
 
 /* Toast message */
