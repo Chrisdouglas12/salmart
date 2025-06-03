@@ -1926,8 +1926,9 @@ a::hover{
 
 
 .buy-now-button:disabled {
-  background: #ddd;
-  color: white;
+  background-color: #e0e0e0;
+  color: #9e9e9e;
+  border: solid 1px #ccc;
   cursor: not-allowed;
 }
 
