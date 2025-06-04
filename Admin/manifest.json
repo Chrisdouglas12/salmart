@@ -1,8 +1,8 @@
 {
-  "name": "SALMART",
-  "short_name": "SALMART",
+  "name": "Salmart",
+  "short_name": "Salmart",
   "start_url": "/index.html",
-  "display": "standalone",
+  "display": "fullscreen",
   "background_color": "#ffffff",
   "theme_color": "#00b894",
   "icons": [

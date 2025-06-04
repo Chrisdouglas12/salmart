@@ -117,44 +117,100 @@
             opacity: 1;
             bottom: 50px;
         }
+
+.pwa-install-button {
+    /* Positioning at the top */
+    position: fixed;
+    top: 10px; /* Distance from the top */
+    left: 50%; /* Center horizontally */
+    transform: translateX(-50%); /* Adjust to truly center */
+    z-index: 9999; /* Ensure it's on top of almost everything */
+
+    /* Basic Styling */
+    background-color: #28a745; /* Green - matches your theme */
+    color: white;
+    padding: 12px 25px; /* More padding for a better touch target */
+    border: none;
+    border-radius: 8px; /* Slightly more rounded corners */
+    font-family: 'Poppins', sans-serif; /* Consistent font */
+    font-size: 16px; /* Readable font size */
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); /* Subtle shadow for depth */
+    transition: all 0.3s ease; /* Smooth transitions for hover/focus */
+
+    /* Animation for appearing/disappearing */
+    opacity: 0;
+    visibility: hidden;
+    transform: translateX(-50%) translateY(-20px); /* Start slightly above and faded */
+}
+
+.pwa-install-button.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0); /* Slide into place */
+}
+
+.pwa-install-button:hover {
+    background-color: #218838; /* Darker green on hover */
+    transform: translateX(-50%) translateY(-2px); /* Slight lift on hover */
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+}
+
+.pwa-install-button:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.5); /* Green outline on focus */
+}
+
     </style>
     <script src="addPic.js"></script>
-    <script>
+
+<script>
 let deferredPrompt;
+const installBtn = document.getElementById('installBtn'); // Get button reference once
 
 window.addEventListener('beforeinstallprompt', (e) => {
   console.log('✅ beforeinstallprompt event fired!');
   e.preventDefault();
   deferredPrompt = e;
 
-  const installBtn = document.getElementById('installBtn');
-  console.log('🔍 installBtn element:', installBtn); // Log the button element itself
+  // Function to show the button with class
+  const showInstallButton = () => {
+    if (installBtn) {
+      console.log('ℹ️ installBtn found. Adding "show" class.');
+      installBtn.classList.add('show'); // Add the class to make it visible and animate
+      
+      // Attach click listener only once
+      if (!installBtn._hasClickListener) {
+        installBtn.addEventListener('click', () => {
+          console.log('🖱️ installBtn clicked!');
+          installBtn.classList.remove('show'); // Hide the button by removing the class
+          deferredPrompt.prompt();
 
-  if (installBtn) {
-    console.log('ℹ️ installBtn found. Setting display to block.');
-    installBtn.style.display = 'block'; // Make the button visible
-    console.log('ℹ️ installBtn display style:', installBtn.style.display); // Log the display style *after* setting it
+          deferredPrompt.userChoice.then((choiceResult) => {
+            console.log('✅ userChoice result:', choiceResult.outcome);
+            if (choiceResult.outcome === 'accepted') {
+              console.log('User accepted the install prompt');
+            } else {
+              console.log('User dismissed the install prompt');
+            }
+            deferredPrompt = null;
+          });
+        });
+        installBtn._hasClickListener = true;
+      }
+    } else {
+      console.warn('⚠️ installBtn not found when trying to show.');
+    }
+  };
 
-    installBtn.addEventListener('click', () => {
-      console.log('🖱️ installBtn clicked!');
-      installBtn.style.display = 'none';
-      deferredPrompt.prompt();
+  // Call immediately in case the button is already available (less likely in head, but safe)
+  showInstallButton(); 
 
-      deferredPrompt.userChoice.then((choiceResult) => {
-        console.log('✅ userChoice result:', choiceResult.outcome);
-        if (choiceResult.outcome === 'accepted') {
-          console.log('User accepted the install prompt');
-        } else {
-          console.log('User dismissed the install prompt');
-        }
-        deferredPrompt = null;
-      });
-    });
-  } else {
-    console.warn('⚠️ installBtn not found. beforeinstallprompt handler might not work.');
-  }
+  // Ensure button is handled once the DOM is fully loaded, in case it wasn't available earlier
+  document.addEventListener('DOMContentLoaded', showInstallButton);
 });
 </script>
+
 </head>
 <body>
   <div class="Genenral-container">
@@ -174,7 +230,9 @@ window.addEventListener('beforeinstallprompt', (e) => {
       </div>
       <h2 class="head" style="color: #28a745; background-color: white; padding-top: 20px; padding-bottom: 20px; margin-top: -0px; box-shadow: 0 0px 10px 0px #d3d3d3; border: solid; border-width: 1px; border-color: #fff; position: fixed; z-index:1; width: 100vw; font-size: 19px; font-family: Poppins">Salmart</h2> 
     </div>
-<button id="installBtn" style="display:; position:fixed; bottom:20px; right:20px; padding:10px 20px; background:#00b894; color:white; border:none; border-radius:8px; z-index: 300000;">Install SALMART</button>
+<button id="installBtn" class="pwa-install-button" aria-label="Install App" style="display:none;">
+    Install Salmart
+</button>
 
     <div style="text-align: center">
       <!-- Delete Confirmation Modal -->
