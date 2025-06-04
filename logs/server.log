@@ -5125,3 +5125,61 @@
 {"level":"info","message":"✅ Cloudinary configured","timestamp":"2025-06-04T05:32:41.366Z"}
 {"level":"info","message":"✅ Server running on port 3000","timestamp":"2025-06-04T05:32:41.413Z"}
 {"level":"info","message":"✅ MongoDB connected successfully","timestamp":"2025-06-04T05:33:05.173Z"}
+{"level":"info","message":"✅ Firebase Admin SDK initialized successfully","timestamp":"2025-06-04T05:37:12.523Z"}
+{"level":"info","message":"✅ Socket.IO initialized","timestamp":"2025-06-04T05:37:12.743Z"}
+{"level":"info","message":"✅ Nodemailer configured","timestamp":"2025-06-04T05:37:12.865Z"}
+{"level":"info","message":"✅ Cloudinary configured","timestamp":"2025-06-04T05:37:12.869Z"}
+{"level":"info","message":"✅ Server running on port 3000","timestamp":"2025-06-04T05:37:12.931Z"}
+{"level":"error","message":"❌ MongoDB connection error: Server selection timed out after 5000 ms","timestamp":"2025-06-04T05:37:20.229Z"}
+{"level":"info","message":"✅ Firebase Admin SDK initialized successfully","timestamp":"2025-06-04T05:40:19.767Z"}
+{"level":"info","message":"✅ Socket.IO initialized","timestamp":"2025-06-04T05:40:20.054Z"}
+{"level":"info","message":"✅ Nodemailer configured","timestamp":"2025-06-04T05:40:20.157Z"}
+{"level":"info","message":"✅ Cloudinary configured","timestamp":"2025-06-04T05:40:20.160Z"}
+{"level":"info","message":"✅ Server running on port 3000","timestamp":"2025-06-04T05:40:20.226Z"}
+{"level":"info","message":"✅ MongoDB connected successfully","timestamp":"2025-06-04T05:40:24.865Z"}
+{"level":"info","message":"Socket connected: 2ilyh1NQzXp7ZzyCAAAB","timestamp":"2025-06-04T05:40:57.403Z"}
+{"level":"info","message":"[2025-06-04T05:40:57.769Z] GET /verify-token","timestamp":"2025-06-04T05:40:57.769Z"}
+{"level":"info","message":"[2025-06-04T05:40:57.809Z] GET /notification-counts?userId=67d845b5c9add2113fc80789","timestamp":"2025-06-04T05:40:57.810Z"}
+{"level":"info","message":"[2025-06-04T05:40:57.990Z] GET /users-profile/67d845b5c9add2113fc80789","timestamp":"2025-06-04T05:40:57.990Z"}
+{"level":"info","message":"[2025-06-04T05:40:58.001Z] GET /api/following","timestamp":"2025-06-04T05:40:58.001Z"}
+{"level":"info","message":"[2025-06-04T05:40:58.293Z] GET /post?category=","timestamp":"2025-06-04T05:40:58.293Z"}
+{"level":"info","message":"[2025-06-04T05:41:10.620Z] POST /post/like/683fd39487e6398fa4fdf38f","timestamp":"2025-06-04T05:41:10.620Z"}
+{"level":"info","message":"[2025-06-04T05:41:19.212Z] POST /post/like/683fd39487e6398fa4fdf38f","timestamp":"2025-06-04T05:41:19.213Z"}
+{"level":"info","message":"[2025-06-04T05:41:26.351Z] GET /notification-counts?userId=67d845b5c9add2113fc80789","timestamp":"2025-06-04T05:41:26.351Z"}
+{"level":"info","message":"[2025-06-04T05:41:56.351Z] GET /notification-counts?userId=67d845b5c9add2113fc80789","timestamp":"2025-06-04T05:41:56.352Z"}
+{"level":"info","message":"[2025-06-04T05:42:19.032Z] POST /pay","timestamp":"2025-06-04T05:42:19.032Z"}
+{"level":"info","message":"Socket disconnected: 2ilyh1NQzXp7ZzyCAAAB","timestamp":"2025-06-04T05:42:20.309Z"}
+{"level":"info","message":"[2025-06-04T05:42:44.202Z] GET /payment-success?postId=683fd39487e6398fa4fdf38f&buyerId=67d845b5c9add2113fc80789&trxref=dfk16lc3xu&reference=dfk16lc3xu","timestamp":"2025-06-04T05:42:44.203Z"}
+{"level":"info","message":"[2025-06-04T05:42:56.663Z] GET /favicon.ico","timestamp":"2025-06-04T05:42:56.664Z"}
+{"level":"info","message":"[2025-06-04T05:43:13.439Z] POST /share-receipt","timestamp":"2025-06-04T05:43:13.440Z"}
+{"level":"info","message":"Socket connected: 9CTFrbiEjv82zAQhAAAD","timestamp":"2025-06-04T05:43:38.205Z"}
+{"level":"info","message":"Socket disconnected: 9CTFrbiEjv82zAQhAAAD","timestamp":"2025-06-04T05:43:38.330Z"}
+{"level":"info","message":"Socket connected: XJyJK2l_5AVGUbECAAAF","timestamp":"2025-06-04T06:08:57.042Z"}
+{"level":"info","message":"[2025-06-04T06:08:57.313Z] GET /users-profile/67d845b5c9add2113fc80789","timestamp":"2025-06-04T06:08:57.313Z"}
+{"level":"info","message":"[2025-06-04T06:08:57.326Z] GET /notification-counts?userId=67d845b5c9add2113fc80789","timestamp":"2025-06-04T06:08:57.326Z"}
+{"level":"info","message":"[2025-06-04T06:08:57.535Z] GET /api/following","timestamp":"2025-06-04T06:08:57.536Z"}
+{"level":"info","message":"[2025-06-04T06:08:57.541Z] GET /verify-token","timestamp":"2025-06-04T06:08:57.541Z"}
+{"level":"info","message":"[2025-06-04T06:08:57.773Z] GET /post?category=","timestamp":"2025-06-04T06:08:57.773Z"}
+{"level":"info","message":"[2025-06-04T06:09:34.295Z] GET /notification-counts?userId=67d845b5c9add2113fc80789","timestamp":"2025-06-04T06:09:34.295Z"}
+{"level":"info","message":"Socket disconnected: XJyJK2l_5AVGUbECAAAF","timestamp":"2025-06-04T06:09:36.375Z"}
+{"level":"info","message":"Socket connected: jfKLFJUcN3AZuxliAAAH","timestamp":"2025-06-04T06:09:50.723Z"}
+{"level":"info","message":"[2025-06-04T06:09:50.874Z] GET /users-profile/67d845b5c9add2113fc80789","timestamp":"2025-06-04T06:09:50.875Z"}
+{"level":"info","message":"[2025-06-04T06:09:50.949Z] GET /notification-counts?userId=67d845b5c9add2113fc80789","timestamp":"2025-06-04T06:09:50.949Z"}
+{"level":"info","message":"[2025-06-04T06:09:51.001Z] GET /verify-token","timestamp":"2025-06-04T06:09:51.001Z"}
+{"level":"info","message":"[2025-06-04T06:09:51.009Z] GET /api/following","timestamp":"2025-06-04T06:09:51.009Z"}
+{"level":"info","message":"[2025-06-04T06:09:51.254Z] GET /post?category=","timestamp":"2025-06-04T06:09:51.254Z"}
+{"level":"info","message":"Socket disconnected: jfKLFJUcN3AZuxliAAAH","timestamp":"2025-06-04T06:10:01.967Z"}
+{"level":"info","message":"Socket connected: VKHrzq_TSbqHCmLfAAAJ","timestamp":"2025-06-04T06:11:24.703Z"}
+{"level":"info","message":"[2025-06-04T06:11:24.900Z] GET /users-profile/67d845b5c9add2113fc80789","timestamp":"2025-06-04T06:11:24.900Z"}
+{"level":"info","message":"[2025-06-04T06:11:24.910Z] GET /notification-counts?userId=67d845b5c9add2113fc80789","timestamp":"2025-06-04T06:11:24.910Z"}
+{"level":"info","message":"[2025-06-04T06:11:25.065Z] GET /verify-token","timestamp":"2025-06-04T06:11:25.066Z"}
+{"level":"info","message":"[2025-06-04T06:11:25.106Z] GET /api/following","timestamp":"2025-06-04T06:11:25.107Z"}
+{"level":"info","message":"[2025-06-04T06:11:25.326Z] GET /post?category=","timestamp":"2025-06-04T06:11:25.326Z"}
+{"level":"info","message":"Socket disconnected: VKHrzq_TSbqHCmLfAAAJ","timestamp":"2025-06-04T06:11:39.758Z"}
+{"level":"info","message":"Socket connected: lMTtvYM2R6WDHsPJAAAL","timestamp":"2025-06-04T06:12:03.769Z"}
+{"level":"info","message":"[2025-06-04T06:12:03.948Z] GET /users-profile/67d845b5c9add2113fc80789","timestamp":"2025-06-04T06:12:03.948Z"}
+{"level":"info","message":"[2025-06-04T06:12:03.968Z] GET /notification-counts?userId=67d845b5c9add2113fc80789","timestamp":"2025-06-04T06:12:03.968Z"}
+{"level":"info","message":"[2025-06-04T06:12:04.030Z] GET /api/following","timestamp":"2025-06-04T06:12:04.030Z"}
+{"level":"info","message":"[2025-06-04T06:12:04.036Z] GET /verify-token","timestamp":"2025-06-04T06:12:04.037Z"}
+{"level":"info","message":"[2025-06-04T06:12:04.383Z] GET /post?category=","timestamp":"2025-06-04T06:12:04.383Z"}
+{"level":"info","message":"Socket disconnected: lMTtvYM2R6WDHsPJAAAL","timestamp":"2025-06-04T06:12:13.921Z"}

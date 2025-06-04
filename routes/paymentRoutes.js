@@ -9,6 +9,7 @@ const cloudinary = require('cloudinary').v2;
 const fs = require('fs').promises;
 const winston = require('winston');
 const Post = require('../models/postSchema.js');
+const Message = require('../models/messageSchema.js')
 const User = require('../models/userSchema.js');
 const Transaction = require('../models/transactionSchema.js');
 const Escrow = require('../models/escrowSchema.js');
