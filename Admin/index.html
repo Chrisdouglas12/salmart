@@ -138,6 +138,43 @@
       </div>
       <h2 class="head" style="color: #28a745; background-color: white; padding-top: 20px; padding-bottom: 20px; margin-top: -0px; box-shadow: 0 0px 10px 0px #d3d3d3; border: solid; border-width: 1px; border-color: #fff; position: fixed; z-index:1; width: 100vw; font-size: 19px; font-family: Poppins">Salmart</h2> 
     </div>
+<button id="installBtn" style="display:none; position:fixed; bottom:20px; right:20px; padding:10px 20px; background:#00b894; color:white; border:none; border-radius:8px; z-index: 300000;">Install SALMART</button>
+<script>
+let deferredPrompt;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  console.log('✅ beforeinstallprompt event fired!');
+  e.preventDefault();
+  deferredPrompt = e;
+
+  const installBtn = document.getElementById('installBtn');
+  console.log('🔍 installBtn element:', installBtn); // Log the button element itself
+
+  if (installBtn) {
+    console.log('ℹ️ installBtn found. Setting display to block.');
+    installBtn.style.display = 'block'; // Make the button visible
+    console.log('ℹ️ installBtn display style:', installBtn.style.display); // Log the display style *after* setting it
+
+    installBtn.addEventListener('click', () => {
+      console.log('🖱️ installBtn clicked!');
+      installBtn.style.display = 'none';
+      deferredPrompt.prompt();
+
+      deferredPrompt.userChoice.then((choiceResult) => {
+        console.log('✅ userChoice result:', choiceResult.outcome);
+        if (choiceResult.outcome === 'accepted') {
+          console.log('User accepted the install prompt');
+        } else {
+          console.log('User dismissed the install prompt');
+        }
+        deferredPrompt = null;
+      });
+    });
+  } else {
+    console.warn('⚠️ installBtn not found. beforeinstallprompt handler might not work.');
+  }
+});
+</script>
 
     <div style="text-align: center">
       <!-- Delete Confirmation Modal -->
@@ -165,7 +202,7 @@
           </div>
         </div>
       </div>
-      <button id="installBtn" style="display:none; position:fixed; bottom:20px; right:20px; padding:10px 20px; background:#00b894; color:white; border:none; border-radius:8px;">Install SALMART</button>
+    
       <nav id="navbar">
         <ul>
         <li class="active">
@@ -445,33 +482,7 @@
     });
     </script>
     <script src="Badge.js"></script>
-    <script>
-let deferredPrompt;
 
-window.addEventListener('beforeinstallprompt', (e) => {
-  e.preventDefault();
-  deferredPrompt = e;
-
-  const installBtn = document.getElementById('installBtn');
-  installBtn.style.display = 'block';
-
-  installBtn.addEventListener('click', () => {
-    installBtn.style.display = 'none';
-    deferredPrompt.prompt();
-
-    deferredPrompt.userChoice.then((choiceResult) => {
-      if (choiceResult.outcome === 'accepted') {
-        console.log('User accepted the install prompt');
-      } else {
-        console.log('User dismissed the install prompt');
-      }
-      deferredPrompt = null;
-    });
-  });
-});
-    </script>
-    
-    
     <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
     <script>eruda.init();</script>
     <script type="module" src="firebase-app.js"></script>
