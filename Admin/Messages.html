@@ -4,99 +4,366 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Messages</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js"></script>
   <script src="addPic.js"></script>
   <style>
-    * { padding: 0; margin: 0; box-sizing: border-box; }
-    body { font-family: Poppins; background-color: #fff; }
-
-    h3 {
-      color: #28a745;
-      background-color: white;
-      text-align: center;
-      border-bottom: 1px #ddd solid;
-      padding: 20px;
-      position: sticky;
-      top: 0;
-      z-index: 1;
-    } 
-
-    #message-list {
-      padding: 10px;
-      max-width: 500px;
-      margin: auto;
-      overflow-x: hidden;
+    :root {
+      --primary-color: #28a745;
+      --primary-dark: #00A041;
+      --secondary-color: #F8F9FA;
+      --text-primary: #1A1A1A;
+      --text-secondary: #6C757D;
+      --text-muted: #9CA3AF;
+      --border-color: #E5E7EB;
+      --shadow-light: 0 1px 3px rgba(0, 0, 0, 0.1);
+      --shadow-medium: 0 4px 6px rgba(0, 0, 0, 0.07);
+      --shadow-heavy: 0 10px 15px rgba(0, 0, 0, 0.1);
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --spacing-xs: 4px;
+      --spacing-sm: 8px;
+      --spacing-md: 12px;
+      --spacing-lg: 16px;
+      --spacing-xl: 20px;
+      --spacing-2xl: 24px;
+      --gradient-primary: linear-gradient(135deg, #00C851 0%, #00A041 100%);
+      --gradient-bg: linear-gradient(180deg, #FAFBFC 0%, #F8F9FA 100%);
     }
 
+    * {
+      padding: 0;
+      margin: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--gradient-bg);
+      color: var(--text-primary);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Header Styles */
+    .header {
+      background: #fff;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border-color);
+      padding: var(--spacing-lg) var(--spacing-xl);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .header-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: #28a745;
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-md);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-md);
+    }
+
+    .profile-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 2px solid var(--border-color);
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+
+    .profile-avatar:hover {
+      border-color: var(--primary-color);
+      transform: scale(1.05);
+    }
+
+    .search-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--secondary-color);
+      border: 1px solid #28a745;
+      display: flex;
+      color: #28a745;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+
+    .search-btn:hover {
+      background: #28a745;
+      color: white;
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-medium);
+    }
+
+    /* Message List Container */
+    .message-container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: var(--spacing-lg);
+      padding-bottom: 100px;
+    }
+
+    /* Message Item Styles */
     .message-item {
-      padding: 15px;
-      margin-bottom: 5px;
-      border-radius: 10px;
+      background: white;
+      border-radius: var(--radius-lg);
+      padding: var(--spacing-lg);
+      margin-bottom: var(--spacing-md);
       cursor: pointer;
       display: flex;
       align-items: center;
-      gap: 5px;
-      width: 100%;
+      gap: var(--spacing-lg);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 1px solid transparent;
       position: relative;
+      overflow: hidden;
     }
 
-    .message-item:hover { background-color: #f1f1f1; }
+    .message-item::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--gradient-primary);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      z-index: -1;
+    }
 
-    .message-item img {
-      width: 50px;
-      height: 50px;
+    .message-item:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-heavy);
+      border-color: var(--primary-color);
+    }
+
+    .message-item:hover::before {
+      opacity: 0.05;
+    }
+
+    .message-item:active {
+      transform: translateY(0);
+    }
+
+    .message-avatar {
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .message-avatar img {
+      width: 56px;
+      height: 56px;
       border-radius: 50%;
+      border: 3px solid var(--border-color);
+      transition: all 0.2s ease;
     }
 
-    .message-item .info {
-      flex-grow: 1;
-      max-width: 70%;
+    .message-avatar .online-indicator {
+      position: absolute;
+      bottom: 2px;
+      right: 2px;
+      width: 16px;
+      height: 16px;
+      background: #10B981;
+      border: 3px solid white;
+      border-radius: 50%;
+      box-shadow: var(--shadow-light);
     }
 
-    .message-item .info h4 {
+    .message-content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .message-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--spacing-xs);
+    }
+
+    .message-name {
       font-size: 16px;
-      margin-bottom: 2px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin: 0;
     }
 
-    .message-item .info p {
+    .message-time {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .message-preview {
       font-size: 14px;
-      color: #777;
-      white-space: nowrap;
+      color: var(--text-secondary);
+      margin: 0;
       overflow: hidden;
       text-overflow: ellipsis;
+      white-space: nowrap;
+      line-height: 1.4;
     }
 
-    .message-item .time {
+    .message-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: var(--spacing-xs);
+    }
+
+    .message-type-icon {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--spacing-xs);
       font-size: 12px;
-      color: #aaa;
+      color: var(--text-muted);
     }
 
-    .unread-dot {
-      width: 10px;
-      height: 10px;
-      background: green;
-      border-radius: 50%;
+    /* Unread Message Styles */
+    .message-item.unread {
+      border-color: var(--primary-color);
+      background: linear-gradient(135deg, rgba(0, 200, 81, 0.02) 0%, rgba(0, 200, 81, 0.05) 100%);
+    }
+
+    .message-item.unread .message-name {
+      font-weight: 700;
+      color: var(--primary-color);
+    }
+
+    .message-item.unread .message-preview {
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+
+    .unread-indicator {
       position: absolute;
-      right: 10px;
-      top: 50%;
-      transform: translateY(-50%);
+      top: var(--spacing-lg);
+      right: var(--spacing-lg);
+      width: 12px;
+      height: 12px;
+      background: var(--primary-color);
+      border-radius: 50%;
+      box-shadow: 0 0 0 3px rgba(0, 200, 81, 0.2);
+      animation: pulse 2s infinite;
     }
 
-    .unread {
-      font-weight: bold;
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(0, 200, 81, 0.4); }
+      70% { box-shadow: 0 0 0 10px rgba(0, 200, 81, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(0, 200, 81, 0); }
     }
 
+    /* New Message Animation */
     .message-item.new {
-      animation: fadeIn 0.5s ease-in;
+      animation: slideInFromTop 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(-10px); }
-      to { opacity: 1; transform: translateY(0); }
+    @keyframes slideInFromTop {
+      from {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
     }
 
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: var(--spacing-2xl) var(--spacing-lg);
+      display: none;
+    }
+
+    .empty-state-icon {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto var(--spacing-xl);
+      background: var(--gradient-primary);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 32px;
+    }
+
+    .empty-state h3 {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: var(--spacing-sm);
+    }
+
+    .empty-state p {
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+
+    /* Skeleton Loader */
+    .skeleton-wrapper {
+      background: white;
+      border-radius: var(--radius-lg);
+      padding: var(--spacing-lg);
+      margin-bottom: var(--spacing-md);
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-lg);
+    }
+
+    .skeleton-avatar {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+      background-size: 200% 100%;
+      animation: skeleton-loading 1.5s infinite;
+    }
+
+    .skeleton-content {
+      flex: 1;
+    }
+
+    .skeleton-line {
+      height: 12px;
+      border-radius: 6px;
+      background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+      background-size: 200% 100%;
+      animation: skeleton-loading 1.5s infinite;
+      margin-bottom: var(--spacing-sm);
+    }
+
+    .skeleton-line.title { width: 40%; height: 16px; }
+    .skeleton-line.subtitle { width: 70%; }
+    .skeleton-line.time { width: 25%; height: 10px; }
+
+    @keyframes skeleton-loading {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+    /* Bottom Navbar */
     #navbar {
       position: fixed;
       bottom: 0;
@@ -123,15 +390,16 @@
       flex-direction: column;
       align-items: center;
       text-decoration: none;
-      color: #28a745;
+      color: var(--primary-color);
       font-size: 12px;
       padding: 8px;
       transition: color 0.2s;
     }
 
     #navbar a.active {
-      color: #28a745;
       font-weight: 600;
+      border-radius: 8px;
+      padding: -10px;
     }
 
     #navbar a i {
@@ -139,186 +407,170 @@
       margin-bottom: 5px;
     }
 
-    .icon-badge-wrapper {
-      position: relative;
-      display: inline-block;
+     .icon-badge-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.notification-badge {
+  position: absolute;
+  top: -5px;
+  right: -10px;
+  background-color: red;
+  color: white;
+  font-size: 10px;
+  width: 18px;
+  height: 18px;
+  line-height: 18px;
+  border-radius: 50%;
+  text-align: center;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  overflow: hidden;
+}
+
+    /* Responsive Design */
+    @media (max-width: 640px) {
+      .header {
+        padding: var(--spacing-md) var(--spacing-lg);
+      }
+      
+      .header-title {
+        font-size: 20px;
+      }
+      
+      .message-container {
+        padding: var(--spacing-md);
+        padding-bottom: 100px;
+      }
+      
+      .message-item {
+        padding: var(--spacing-md);
+        gap: var(--spacing-md);
+      }
+      
+      .message-avatar img {
+        width: 48px;
+        height: 48px;
+      }
     }
 
-    .notification-badge {
-      position: absolute;
-      top: -5px;
-      right: -10px;
-      background-color: red;
-      color: white;
-      font-size: 10px;
-      width: 18px;
-      height: 18px;
-      line-height: 18px;
-      border-radius: 50%;
+    /* Loading States */
+    .loading {
+      opacity: 0.7;
+      pointer-events: none;
+    }
+
+    /* Error State */
+    .error-message {
+      background: #FEF2F2;
+      border: 1px solid #FECACA;
+      color: #DC2626;
+      padding: var(--spacing-lg);
+      border-radius: var(--radius-md);
       text-align: center;
-      z-index: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: bold;
-      overflow: hidden;
-    }
-
-    .profile-pic img {
-      position: fixed;
-      z-index: 2;
-      margin-left: 20px;
-      margin-top: -55px;
-      border: solid 0.1px #ddd;
-    }
-
-    .skeleton-wrapper {
-      display: flex;
-      width: 100%;
-      align-items: center;
-      background-color: #ffffff;
-      border-radius: 12px;
-      padding: 12px 16px;
-      margin-bottom: 10px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-      z-index: 1000;
-    }
-
-    .skeleton-avatar {
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-      background-size: 200% 100%;
-      animation: skeleton-loading 1.5s infinite;
-      margin-right: 12px;
-    }
-
-    .skeleton-content {
-      flex: 1;
-    }
-
-    .skeleton-line {
-      height: 12px;
-      width: 70%;
-      border-radius: 4px;
-      background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-      background-size: 200% 100%;
-      animation: skeleton-loading 1.5s infinite;
-      margin-bottom: 8px;
-    }
-
-    .skeleton-line.short {
-      width: 60%;
-    }
-
-    .skeleton-line.time {
-      width: 30%;
-      height: 10px;
-    }
-
-    @keyframes skeleton-loading {
-      0% { background-position: 200% 0; }
-      100% { background-position: -200% 0; }
+      margin: var(--spacing-lg);
     }
   </style>
 </head>
 <body>
-  <h3>Messages
-    <div style="z-index: 3; position: fixed; margin-left: 80%; margin-top: -33px; font-size: 16px;">
-      <a href="">
-        <i class="fas fa-search" style="color:#28a745; border: 0.1px solid #fff; border-radius: 20px; padding: 8.5px; background-color:#fff; font-weight: light"></i>
+  <!-- Header -->
+  <header class="header">
+    <h1 class="header-title">
+      <i class="fas fa-comments"></i>
+      Messages
+    </h1>
+    <div class="header-actions">
+      <a href="#" class="search-btn">
+        <i class="fas fa-search"></i>
       </a>
+      <img src="Default.png" alt="Profile" id="profile-picture5" class="profile-avatar" onerror="this.src='Default.png'">
     </div>
-  </h3>
-  <div class="profile-pic">
-    <img src="Default.png" alt="up" id="profile-picture5" width="40px" height="40px" style="border-radius: 50%">
-  </div>
-  
-  <div style="text-align: center">
-    <nav id="navbar">
-      <ul>
-        <li>
-          <a href="index.html">
-            <i class="fas fa-store"></i> Market
-          </a>
-        </li>
-        <li>
-          <a href="requestlists.html">
-            <i class="fas fa-clipboard-list"></i> Requests
-          </a>
-        </li>
-        <li>
-          <a href="Alerts.html" onclick="clearBadge('alerts')">
-            <span class="icon-badge-wrapper">
-              <i class="fas fa-bell"></i>
-              <span class="notification-badge" id="alerts-badge"></span>
-            </span>
-            Alerts
-          </a>
-        </li>
-        <li class="active">
-          <a href="Messages.html" onclick="clearBadge('messages')">
-            <span class="icon-badge-wrapper">
-              <i class="fas fa-comments"></i>
-              <span class="notification-badge" id="messages-badge"></span>
-            </span>
-            Messages
-          </a>
-        </li>
-        <li>
-          <a href="Deals.html" onclick="clearBadge('deals')">
-            <span class="icon-badge-wrapper">
-              <i class="fas fa-cart-plus"></i>
-              <span class="notification-badge" id="deals-badge"></span>
-            </span>
-            Deals
-          </a>
-        </li>
-        <li>
-          <a href="Profile.html">
-            <i class="fas fa-user"></i> Profile
-          </a>
-        </li>
-      </ul>
-    </nav>
+  </header>
+
+  <!-- Message List Container -->
+  <div class="message-container">
+    <div id="message-list"></div>
+    
+    <!-- Empty State -->
+    <div class="empty-state" id="empty-state">
+      <div class="empty-state-icon">
+        <i class="fas fa-comments"></i>
+      </div>
+      <h3>No messages yet</h3>
+      <p>Start a conversation to see your messages here</p>
+    </div>
   </div>
 
-  <div id="message-list"></div>
-  <p id="no-messages" style="display:none; text-align: center;">No messages yet, check back later!</p>
+  <!-- Navigation -->
+  <nav id="navbar">
+    <ul>
+      <li>
+        <a href="index.html">
+          <i class="fas fa-store"></i>
+          Market
+        </a>
+      </li>
+      <li>
+        <a href="requestlists.html">
+          <i class="fas fa-clipboard-list"></i>
+          Requests
+        </a>
+      </li>
+      <li>
+        <a href="Alerts.html" onclick="clearBadge('alerts')">
+          <span class="icon-badge-wrapper">
+            <i class="fas fa-bell"></i>
+            <span class="notification-badge" id="alerts-badge"></span>
+          </span>
+          Alerts
+        </a>
+      </li>
+      <li>
+        <a href="Messages.html" class="active" onclick="clearBadge('messages')">
+          <span class="icon-badge-wrapper">
+            <i class="fas fa-comments"></i>
+            <span class="notification-badge" id="messages-badge"></span>
+          </span>
+          Messages
+        </a>
+      </li>
+      <li>
+        <a href="Deals.html" onclick="clearBadge('deals')">
+          <span class="icon-badge-wrapper">
+            <i class="fas fa-cart-plus"></i>
+            <span class="notification-badge" id="deals-badge"></span>
+          </span>
+          Deals
+        </a>
+      </li>
+      <li>
+        <a href="Profile.html">
+          <i class="fas fa-user"></i>
+          Profile
+        </a>
+      </li>
+    </ul>
+  </nav>
 
   <script>
-    const userId = localStorage.getItem("userId");
+    // Global variables
+    const userId = localStorage?.getItem("userId");
     const API_BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart.onrender.com';
     let socket = null;
     let isInitialLoad = true;
     let isClickProcessing = false;
     let messages = [];
+    let messageUpdateTimeouts = new Map();
 
-    // Create skeleton loader
-    function createSkeletonLoader() {
-      const skeleton = document.createElement('div');
-      skeleton.classList.add('skeleton-wrapper');
-      skeleton.innerHTML = `
-        <div class="skeleton-avatar"></div>
-        <div class="skeleton-content">
-          <div class="skeleton-line"></div>
-          <div class="skeleton-line short"></div>
-          <div class="skeleton-line time"></div>
-        </div>
-      `;
-      return skeleton;
-    }
+    // DOM elements
+    const messageListElement = document.getElementById("message-list");
+    const emptyStateElement = document.getElementById("empty-state");
 
-    // Show skeleton loaders
-    function showSkeletonLoaders(container, count = 6) {
-      container.innerHTML = '';
-      for (let i = 0; i < count; i++) {
-        container.appendChild(createSkeletonLoader());
-      }
-    }
-
-    // Check user authentication
+    // Initialize app
     if (!userId) {
       console.error('No userId found, redirecting to SignIn');
       window.location.href = "SignIn.html";
@@ -330,6 +582,31 @@
       console.log('Initializing Messages page...');
       setupSocketIO();
       await fetchMessages();
+      setupEventListeners();
+    }
+
+    function setupEventListeners() {
+      // Add refresh functionality
+      window.addEventListener('focus', () => {
+        if (!isInitialLoad) {
+          fetchMessages();
+        }
+      });
+
+      // Add pull-to-refresh simulation
+      let touchStartY = 0;
+      let touchEndY = 0;
+
+      messageListElement.addEventListener('touchstart', (e) => {
+        touchStartY = e.changedTouches[0].screenY;
+      });
+
+      messageListElement.addEventListener('touchend', (e) => {
+        touchEndY = e.changedTouches[0].screenY;
+        if (touchEndY - touchStartY > 100 && messageListElement.scrollTop === 0) {
+          fetchMessages();
+        }
+      });
     }
 
     function setupSocketIO() {
@@ -350,25 +627,12 @@
 
       socket.on('newMessage', (newMessage) => {
         console.log('Received newMessage:', newMessage);
-        try {
-          if (messages.some(msg => msg._id === newMessage._id)) {
-            console.log('Duplicate message skipped:', newMessage._id);
-            return;
-          }
-          messages.unshift(newMessage);
-          messages.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-          renderMessages();
-          document.getElementById("message-list").scrollTop = 0;
-          document.getElementById("no-messages").style.display = "none";
-        } catch (error) {
-          console.error('Error handling newMessage:', error);
-          fetchMessages();
-        }
+        handleNewMessage(newMessage);
       });
 
       socket.on('messageError', (data) => {
         console.error('Server message error:', data.error);
-        fetchMessages();
+        showErrorMessage('Failed to receive message updates');
       });
 
       socket.on('connect_error', (error) => {
@@ -385,13 +649,84 @@
       });
     }
 
-    async function fetchMessages() {
-      const messageListElement = document.getElementById("message-list");
-      const noMessagesElement = document.getElementById("no-messages");
+    function handleNewMessage(newMessage) {
+      try {
+        // Check for duplicate messages
+        if (messages.some(msg => msg._id === newMessage._id)) {
+          console.log('Duplicate message skipped:', newMessage._id);
+          return;
+        }
 
+        // Add new message to the beginning
+        messages.unshift(newMessage);
+        
+        // Sort messages by creation date (newest first)
+        messages.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        
+        // Re-render messages
+        renderMessages();
+        
+        // Scroll to top to show new message
+        messageListElement.scrollTop = 0;
+        
+        // Hide empty state
+        emptyStateElement.style.display = "none";
+        
+        // Clear any existing timeout for this message
+        if (messageUpdateTimeouts.has(newMessage._id)) {
+          clearTimeout(messageUpdateTimeouts.get(newMessage._id));
+        }
+        
+        // Set timeout to remove 'new' class after animation
+        const timeoutId = setTimeout(() => {
+          const messageElement = document.querySelector(`[data-message-id="${newMessage._id}"]`);
+          if (messageElement) {
+            messageElement.classList.remove('new');
+          }
+          messageUpdateTimeouts.delete(newMessage._id);
+        }, 500);
+        
+        messageUpdateTimeouts.set(newMessage._id, timeoutId);
+        
+      } catch (error) {
+        console.error('Error handling newMessage:', error);
+        fetchMessages(); // Fallback to refetch
+      }
+    }
+
+    function createSkeletonLoader() {
+      return `
+        <div class="skeleton-wrapper">
+          <div class="skeleton-avatar"></div>
+          <div class="skeleton-content">
+            <div class="skeleton-line title"></div>
+            <div class="skeleton-line subtitle"></div>
+            <div class="skeleton-line time"></div>
+          </div>
+        </div>
+      `;
+    }
+
+    function showSkeletonLoaders(count = 6) {
+      const skeletonHTML = Array(count).fill(createSkeletonLoader()).join('');
+      messageListElement.innerHTML = skeletonHTML;
+      emptyStateElement.style.display = "none";
+    }
+
+    function showErrorMessage(message) {
+      messageListElement.innerHTML = `
+        <div class="error-message">
+          <i class="fas fa-exclamation-triangle" style="margin-right: 8px;"></i>
+          ${message}
+        </div>
+      `;
+      emptyStateElement.style.display = "none";
+    }
+
+    async function fetchMessages() {
       if (isInitialLoad) {
         console.log('Showing skeleton loaders...');
-        showSkeletonLoaders(messageListElement);
+        showSkeletonLoaders();
       }
 
       try {
@@ -401,36 +736,43 @@
             'Authorization': `Bearer ${localStorage.getItem('authToken')}`
           }
         });
-        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-        messages = await response.json();
-        console.log('Fetched messages:', messages);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        
+        const fetchedMessages = await response.json();
+        console.log('Fetched messages:', fetchedMessages);
+        
+        // Update messages array
+        messages = fetchedMessages;
+        
+        // Render messages
         renderMessages();
+        
         isInitialLoad = false;
+        
       } catch (error) {
         console.error('Fetch messages error:', error);
-        messageListElement.innerHTML = "<p style='text-align: center;'>Failed to load messages. Please try again later.</p>";
-        noMessagesElement.style.display = "none";
+        showErrorMessage('Failed to load messages. Please try again later.');
         isInitialLoad = false;
       }
     }
 
     function renderMessages() {
-      const messageListElement = document.getElementById("message-list");
-      const noMessagesElement = document.getElementById("no-messages");
-
       if (messages.length === 0) {
         console.log('No messages to display');
         messageListElement.innerHTML = '';
-        noMessagesElement.style.display = "block";
+        emptyStateElement.style.display = "block";
         return;
       }
 
-      noMessagesElement.style.display = "none";
+      emptyStateElement.style.display = "none";
       messageListElement.innerHTML = generateMessageHTML(messages);
-      messageListElement.scrollTop = 0;
     }
 
     function generateMessageHTML(messages) {
+      // Group messages by chat partner (most recent message per partner)
       const uniqueChats = {};
       messages.forEach(msg => {
         const chatPartnerId = msg.senderId === userId ? msg.receiverId : msg.senderId;
@@ -439,31 +781,55 @@
         }
       });
 
-      return Object.values(uniqueChats).map(message => {
-        const chatPartnerId = message.senderId === userId ? message.receiverId : message.senderId;
-        const isUnread = !message.isRead;
-        const isNew = messages.indexOf(message) === 0;
+      // Sort by most recent message
+      const sortedChats = Object.values(uniqueChats)
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
-        let messagePreview;
+      return sortedChats.map(message => {
+        const chatPartnerId = message.senderId === userId ? message.receiverId : message.senderId;
+        const isUnread = !message.isRead && message.senderId !== userId;
+        const isNew = messages.indexOf(message) === 0 && !isInitialLoad;
+
+        // Generate message preview
+        let messagePreview = '';
+        let messageIcon = '';
+        
         if (message.messageType === 'image') {
-          messagePreview = 'Photo';
+          messagePreview = '📷 Photo';
+          messageIcon = '<i class="fas fa-image"></i>';
         } else if (message.metadata?.isSystemMessage) {
           messagePreview = message.text || 'System notification';
+          messageIcon = '<i class="fas fa-info-circle"></i>';
         } else {
-          messagePreview = message.text || 'Bargain message';
+          messagePreview = message.text || 'New message';
+          messageIcon = '<i class="fas fa-comment"></i>';
         }
 
         return `
           <div class="message-item ${isUnread ? 'unread' : ''} ${isNew ? 'new' : ''}" 
                data-message-id="${message._id}" 
                onclick="handleMessageClick('${encodeURIComponent(chatPartnerId)}', '${encodeURIComponent(message.chatPartnerName)}', '${encodeURIComponent(message.chatPartnerProfilePicture || 'Default.png')}')">
-            <img src="${escapeHTML(message.chatPartnerProfilePicture) || 'Default.png'}" alt="Profile" onerror="this.src='Default.png'">
-            <div class="info">
-              <h4>${escapeHTML(message.chatPartnerName)}</h4>
-              <p>${escapeHTML(messagePreview)}</p>
+            
+            <div class="message-avatar">
+              <img src="${escapeHTML(message.chatPartnerProfilePicture) || 'Default.png'}" 
+                   alt="${escapeHTML(message.chatPartnerName)}" 
+                   onerror="this.src='Default.png'">
             </div>
-            <div class="time">${formatTime(message.createdAt)}</div>
-            ${isUnread ? '<span class="unread-dot"></span>' : ''}
+            
+            <div class="message-content">
+              <div class="message-header">
+                <h3 class="message-name">${escapeHTML(message.chatPartnerName)}</h3>
+                <span class="message-time">${formatTime(message.createdAt)}</span>
+              </div>
+              <p class="message-preview">${escapeHTML(messagePreview)}</p>
+              <div class="message-meta">
+                <span class="message-type-icon">
+                  ${messageIcon}
+                </span>
+              </div>
+            </div>
+            
+            ${isUnread ? '<div class="unread-indicator"></div>' : ''}
           </div>
         `;
       }).join('');
@@ -474,11 +840,23 @@
         console.log('Click processing, ignoring...');
         return;
       }
+      
       isClickProcessing = true;
+      const decodedPartnerId = decodeURIComponent(partnerId);
 
-      // Attempt to mark messages as viewed
       try {
-        console.log('Marking messages as viewed for partner:', decodeURIComponent(partnerId));
+        // Mark messages as read immediately in UI
+        const messageElement = document.querySelector(`[data-message-id]`);
+        if (messageElement) {
+          messageElement.classList.remove('unread');
+          const unreadIndicator = messageElement.querySelector('.unread-indicator');
+          if (unreadIndicator) {
+            unreadIndicator.remove();
+          }
+        }
+
+        // Mark messages as viewed on server
+        console.log('Marking messages as viewed for partner:', decodedPartnerId);
         const token = localStorage.getItem('authToken');
         const response = await fetch(`${API_BASE_URL}/api/messages/mark-as-viewed`, {
           method: 'PUT',
@@ -488,26 +866,29 @@
           },
           body: JSON.stringify({ 
             userId,
-            partnerId: decodeURIComponent(partnerId)
+            partnerId: decodedPartnerId
           })
         });
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-        await fetchMessages(); // Refresh messages to update unread status
-      } catch (error) {
-        console.error('Error marking messages as viewed:', error);
-      }
 
-      // Navigate to chat regardless of API success
-      try {
+        if (!response.ok) {
+          console.warn('Failed to mark messages as viewed on server');
+        }
+
+        // Navigate to chat
         const chatUrl = `Chats.html?user_id=${encodeURIComponent(userId)}&recipient_id=${partnerId}&recipient_username=${partnerName}&recipient_profile_picture_url=${partnerProfile}`;
         console.log('Navigating to:', chatUrl);
         window.location.href = chatUrl;
+
       } catch (error) {
-        console.error('Navigation error:', error);
+        console.error('Error in handleMessageClick:', error);
+        // Navigate anyway
+        const chatUrl = `Chats.html?user_id=${encodeURIComponent(userId)}&recipient_id=${partnerId}&recipient_username=${partnerName}&recipient_profile_picture_url=${partnerProfile}`;
+        window.location.href = chatUrl;
       } finally {
-        isClickProcessing = false;
+        // Reset processing flag after a delay
+        setTimeout(() => {
+          isClickProcessing = false;
+        }, 1000);
       }
     }
 
@@ -518,22 +899,92 @@
           console.warn('Invalid timestamp:', timestamp);
           return '';
         }
-        const options = { hour: '2-digit', minute: '2-digit' };
-        return date.toDateString() === new Date().toDateString() 
-          ? date.toLocaleTimeString([], options)
-          : date.toLocaleDateString([], { month: 'short', day: 'numeric' });
-      } catch {
+
+        const now = new Date();
+        const diff = now - date;
+        const minutes = Math.floor(diff / 60000);
+        const hours = Math.floor(diff / 3600000);
+        const days = Math.floor(diff / 86400000);
+
+        // Less than 1 minute ago
+        if (minutes < 1) {
+          return 'Just now';
+        }
+        // Less than 1 hour ago
+        else if (minutes < 60) {
+          return `${minutes}m`;
+        }
+        // Less than 24 hours ago
+        else if (hours < 24) {
+          return `${hours}h`;
+        }
+        // Less than 7 days ago
+        else if (days < 7) {
+          return `${days}d`;
+        }
+        // Same year
+        else if (date.getFullYear() === now.getFullYear()) {
+          return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+        }
+        // Different year
+        else {
+          return date.toLocaleDateString([], { month: 'short', day: 'numeric', year: '2-digit' });
+        }
+      } catch (error) {
         console.warn('Error formatting timestamp:', timestamp);
         return '';
       }
     }
 
     function escapeHTML(str) {
-      return str ? str.replace(/&/g, '&amp;')
-                     .replace(/</g, '&lt;')
-                     .replace(/>/g, '&gt;')
-                     .replace(/"/g, '&quot;')
-                     .replace(/'/g, '&#39;') : '';
+      if (!str) return '';
+      return str.toString()
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    // Clear notification badge function
+    function clearBadge(badgeType) {
+      const badge = document.getElementById(`${badgeType}-badge`);
+      if (badge) {
+        badge.style.display = 'none';
+      }
+    }
+
+    // Cleanup function
+    window.addEventListener('beforeunload', () => {
+      // Clear all timeouts
+      messageUpdateTimeouts.forEach(timeoutId => clearTimeout(timeoutId));
+      messageUpdateTimeouts.clear();
+      
+      // Disconnect socket
+      if (socket) {
+        socket.disconnect();
+      }
+    });
+
+    // Handle visibility change (when tab becomes active/inactive)
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden && !isInitialLoad) {
+        // Refresh messages when tab becomes active
+        fetchMessages();
+      }
+    });
+
+    // Add service worker for better performance (optional)
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then((registration) => {
+            console.log('SW registered: ', registration);
+          })
+          .catch((registrationError) => {
+            console.log('SW registration failed: ', registrationError);
+          });
+      });
     }
   </script>
   <script src="Badge.js"></script>
