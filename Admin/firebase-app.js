@@ -173,9 +173,9 @@
         // WhatsApp-like notification options
         const notificationOptions = {
           body: body || 'New notification',
-          icon: '/images/icon-128x128.png',
-          badge: '/images/badge-128x128.png',
-          image: image || '/images/notification-banner.jpg',
+          icon: '/salmart-192x192.png',
+          badge: '/salmart-192x192.png',
+          image: image || '/salmart-192x192.png',
           vibrate: [100, 50, 100],
           requireInteraction: true,
           tag: `salmart-${type}-${postId || senderId || Date.now()}`,
@@ -230,7 +230,7 @@
   function getNotificationUrl(type, postId, senderId) {
     console.log('🔗 [FCM] Generating notification URL:', { type, postId, senderId });
     if (type === 'like' || type === 'comment') {
-      const url = `post.html?postId=${postId}`;
+      const url = `product.html?postId=${postId}`;
       console.log('✅ [FCM] Generated URL:', url);
       return url;
     } else if (type === 'message') {

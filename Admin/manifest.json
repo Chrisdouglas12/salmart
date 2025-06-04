@@ -7,12 +7,12 @@
   "theme_color": "#00b894",
   "icons": [
     {
-      "src": "salmart.png",
+      "src": "salmart-192x192.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "salmart2.png",
+      "src": "salmart2-512x512.png",
       "sizes": "512x512",
       "type": "image/png"
     }

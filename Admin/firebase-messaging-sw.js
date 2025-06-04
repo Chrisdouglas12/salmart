@@ -28,9 +28,9 @@ try {
     
     const notificationOptions = {
   body,
-  icon: '/images/icon-128x128.png',
-  badge: '/images/badge-128x128.png',
-  image: image || '/images/notification-banner.jpg',
+  icon: '/salmart.png-192x192.png',
+  badge: '/salmart-192x192.png',
+  image: image || 'salmart-192x192.png',
   vibrate: [100, 50, 100],
   requireInteraction: true,
   tag: `salmart-${type}-${postId || senderId || Date.now()}`,
@@ -64,7 +64,7 @@ try {
 
   function getNotificationUrl(type, postId, senderId) {
     const baseUrl = 'https://salmart.vercel.app';
-    if (type === 'like' || type === 'comment') return `${baseUrl}/post.html?postId=${postId}`;
+    if (type === 'like' || type === 'comment') return `${baseUrl}/product.html?postId=${postId}`;
     if (type === 'message') return `${baseUrl}/Messages.html?userId=${senderId}`;
     return baseUrl;
   }

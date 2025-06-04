@@ -4,8 +4,8 @@ const urlsToCache = [
   '/index.html',
   '/Style.css',
   '/homeScript.js',
-  '/icons/icon-192x192.png',
-  '/icons/icon-512x512.png',
+  '/salmart-192x192.png',
+  '/salmart2-512x512.png',
   // Add more files you want to cache
 ];
 
