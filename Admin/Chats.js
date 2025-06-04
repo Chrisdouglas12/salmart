@@ -63,7 +63,7 @@ const displayedMessages = new Set();
 let isInitialMessageSent = localStorage.getItem(`initialMessageSent_${productId}_${receiverId}`) === 'true';
 
 // Store offer-related button elements by product ID for real-time updates
-const offerButtons = new Map(); // Key: productId, Value: { acceptBtn, declineBtn, proceedToPaymentBtn }
+const offerButtons = new Map(); // Key: productId, Value: { acceptBtn, declineBtn, proceedToPaymentBtn, systemButton }
 
 // Function to render product preview
 function renderProductPreview() {
@@ -89,7 +89,14 @@ if (userId && receiverId) socket.emit('joinRoom', userId);
 
 let lastDisplayedDate = null;
 
-// Helper: create a persistent system message div
+/**
+ * Creates a system message div for display within the chat.
+ * @param {string} text The main text content of the system message.
+ * @param {string|null} productId The ID of the product related to the message.
+ * @param {string|null} productPhoto URL of the product image to display.
+ * @param {object|null} buttonDetails Details for a button to include (text, disabled, onClick).
+ * @returns {HTMLDivElement} The created system message div element.
+ */
 function createSystemMessage(text, productId = null, productPhoto = null, buttonDetails = null) {
     const div = document.createElement('div');
     div.className = 'system-message';
@@ -107,7 +114,7 @@ function createSystemMessage(text, productId = null, productPhoto = null, button
 
     if (buttonDetails) {
         const btn = document.createElement('button');
-        btn.className = 'system-message-button'; // New class for system message buttons
+        btn.className = 'system-message-button';
         btn.textContent = buttonDetails.text;
         btn.disabled = buttonDetails.disabled;
         if (buttonDetails.disabled) {
@@ -126,9 +133,14 @@ function createSystemMessage(text, productId = null, productPhoto = null, button
     return div;
 }
 
-// Display a message in the chat
-function displayMessage(message, isOptimistic = false) { // Added isOptimistic parameter
-    if (message._id && displayedMessages.has(message._id)) {
+/**
+ * Displays a message in the chat interface.
+ * @param {object} message The message object to display.
+ * @param {boolean} isOptimistic True if the message is being optimistically displayed before server confirmation.
+ */
+function displayMessage(message, isOptimistic = false) {
+    // Only display messages once to prevent duplicates, especially with optimistic updates
+    if (message._id && displayedMessages.has(message._id) && !isOptimistic) {
         return;
     }
     if (message._id) {
@@ -143,6 +155,7 @@ function displayMessage(message, isOptimistic = false) { // Added isOptimistic p
         lastDisplayedDate = formattedDate;
     }
 
+    // Update bargaining and offer statuses
     if (message.offerDetails && message.offerDetails.productId) {
         if (['accepted', 'rejected', 'completed'].includes(message.offerDetails.status)) {
             acceptedOffers.add(message.offerDetails.productId);
@@ -153,61 +166,77 @@ function displayMessage(message, isOptimistic = false) { // Added isOptimistic p
         }
     }
 
+    // Handle system messages directly
     if (message.metadata?.isSystemMessage) {
         let systemText = message.text;
         let productPhoto = null;
         let buttonDetails = null;
+        const parsedOfferDetails = message.offerDetails || {};
 
         if (message.messageType === 'sellerCounterAccepted' && message.receiverId === userId) {
             // Seller's view when buyer accepts their counter offer
-            const parsed = message.offerDetails || {};
-            systemText = `You last price was accepted.`;
-            productPhoto = parsed.image || ''; // Product photo for system message
+            systemText = `Your last price was accepted.`;
+            productPhoto = parsedOfferDetails.image || '';
             buttonDetails = {
                 text: 'Waiting for payment',
                 disabled: true
             };
+            // Check payment status to update button text on load
+            verifyPaymentStatus(parsedOfferDetails.productId, 'seller').then(isPaid => {
+                if (isPaid) {
+                    buttonDetails.text = 'Payment Completed';
+                }
+            });
         } else if (message.messageType === 'sellerAccept' && message.receiverId === userId) {
-             // Seller's view when seller accepts initial offer
-            const parsed = message.offerDetails || {};
-            systemText = `You have accepted the offer of ₦${Number(parsed.proposedPrice || 0).toLocaleString('en-NG')} for "${parsed.productName || 'Product'}".`;
-            productPhoto = parsed.image || '';
+            // Seller's view when seller accepts initial offer
+            systemText = `You have accepted the offer of ₦${Number(parsedOfferDetails.proposedPrice || 0).toLocaleString('en-NG')} for "${parsedOfferDetails.productName || 'Product'}".`;
+            productPhoto = parsedOfferDetails.image || '';
             buttonDetails = {
                 text: 'Waiting for payment',
                 disabled: true
             };
+            // Check payment status to update button text on load
+            verifyPaymentStatus(parsedOfferDetails.productId, 'seller').then(isPaid => {
+                if (isPaid) {
+                    buttonDetails.text = 'Payment Completed';
+                }
+            });
         } else {
             switch (message.messageType) {
                 case 'accept-offer':
-                    systemText = `Offer for ${message.offerDetails.productName} at ₦${message.offerDetails.proposedPrice.toLocaleString('en-NG')} was accepted`;
+                    systemText = `Offer for ${parsedOfferDetails.productName} at ₦${parsedOfferDetails.proposedPrice.toLocaleString('en-NG')} was accepted`;
                     break;
                 case 'reject-offer':
-                    systemText = `Offer for ${message.offerDetails.productName} was rejected`;
-                    endedBargains.add(message.offerDetails.productId);
-                    bargainingSessions.delete(`${message.offerDetails.productId}-${message.senderId}`);
+                    systemText = `Offer for ${parsedOfferDetails.productName} was rejected`;
+                    endedBargains.add(parsedOfferDetails.productId);
+                    bargainingSessions.delete(`${parsedOfferDetails.productId}-${message.senderId}`);
                     break;
                 case 'end-bargain':
-                    systemText = `Bargaining for ${message.offerDetails.productName} has ended`;
-                    endedBargains.add(message.offerDetails.productId);
-                    bargainingSessions.delete(`${message.offerDetails.productId}-${message.senderId}`);
+                    systemText = `Bargaining for ${parsedOfferDetails.productName} has ended`;
+                    endedBargains.add(parsedOfferDetails.productId);
+                    bargainingSessions.delete(`${parsedOfferDetails.productId}-${message.senderId}`);
                     break;
                 case 'payment-completed':
-                    systemText = `Payment completed for ${message.offerDetails.productName}`;
+                    systemText = `Payment completed for ${parsedOfferDetails.productName}`;
+                    break;
+                default:
+                    // If it's a generic system message, use its text directly
+                    systemText = message.text;
                     break;
             }
         }
-        chatMessages.appendChild(createSystemMessage(systemText, message.offerDetails?.productId, productPhoto, buttonDetails));
+        chatMessages.appendChild(createSystemMessage(systemText, parsedOfferDetails.productId, productPhoto, buttonDetails));
         chatMessages.scrollTop = chatMessages.scrollHeight;
         return;
     }
 
-    // Existing handling for image messages, payment completed with receipt etc.
+    // Handle specific message types like image messages or payment completed with receipt
     if (message.messageType === 'image' || (message.attachment && message.attachment.type === 'image')) {
         const imageUrl = message.attachment?.url || message.content;
         if (imageUrl) {
             const msgDiv = document.createElement('div');
             msgDiv.classList.add('message', message.senderId === userId ? 'sent' : 'received');
-            msgDiv.dataset.messageId = message._id || `temp_${Date.now()}`; // Temp ID for optimistic messages
+            msgDiv.dataset.messageId = message._id || `temp_${Date.now()}`;
             const time = message.createdAt ? new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
             msgDiv.innerHTML = `
                 ${message.text ? `<div>${message.text}</div>` : ''}
@@ -258,15 +287,12 @@ function displayMessage(message, isOptimistic = false) { // Added isOptimistic p
     }
 
     if (message.messageType === 'buyerAccept' && message.receiverId === userId) {
-        let parsed;
-        try {
-            parsed = JSON.parse(message.text);
-        } catch (e) {
-            console.warn('Failed to parse buyerAccept message text:', message.text, e);
-            parsed = {};
-        }
-        // This is the message for the buyer
-        const buyerDiv = createSystemMessage(`Your offer for "${parsed.productName || 'Product'}" has been accepted.`);
+        // This is the message for the buyer when an offer (initial or counter) is accepted.
+        const parsed = message.offerDetails || JSON.parse(message.text);
+        const acceptedAmount = Number(parsed.proposedPrice || parsed.offer || 0).toLocaleString('en-NG');
+        const buyerAcceptText = `You have accepted the offer of ₦${acceptedAmount} for "${parsed.productName || 'Product'}".`;
+
+        const buyerDiv = createSystemMessage(buyerAcceptText);
 
         if (parsed.image) {
             const imageContainer = document.createElement('div');
@@ -282,76 +308,59 @@ function displayMessage(message, isOptimistic = false) { // Added isOptimistic p
         paymentBtn.className = 'proceed-to-payment-btn';
         paymentBtn.textContent = 'Proceed to Payment';
 
-        // Store reference to this button for real-time updates
+        // Store reference to this button for real-time updates and persistence
         offerButtons.set(parsed.productId, { ...offerButtons.get(parsed.productId), proceedToPaymentBtn: paymentBtn });
 
-        const verifyPayment = async () => {
-            try {
-                const token = localStorage.getItem('authToken');
-                if (!token) {
-                    showToast('Please log in to verify payment', 'error');
-                    return false;
-                }
-                const response = await fetch(`${API_BASE_URL}/payment-success?productId=${parsed.productId}&buyerId=${userId}&format=json`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({ error: 'Server error' }));
-                    showToast(`Payment verification failed: ${errorData.error || 'Server error'}`, 'error');
-                    return false;
-                }
-                const result = await response.json();
-                if (result.paymentCompleted) {
-                    paymentBtn.disabled = true;
-                    paymentBtn.textContent = 'Payment Completed';
-                    paymentBtn.style.backgroundColor = 'gray';
-                    paymentBtn.style.cursor = 'not-allowed';
-                    return true;
-                }
-                return false;
-            } catch (error) {
-                showToast('Error verifying payment. Please try again.', 'error');
-                return false;
+        const verifyPaymentAndUpdateButton = async () => {
+            const isPaid = await verifyPaymentStatus(parsed.productId, 'buyer');
+            if (isPaid) {
+                paymentBtn.disabled = true;
+                paymentBtn.textContent = 'Payment Completed';
+                paymentBtn.style.backgroundColor = 'gray';
+                paymentBtn.style.cursor = 'not-allowed';
+            } else {
+                paymentBtn.disabled = false;
+                paymentBtn.textContent = 'Proceed to Payment';
+                paymentBtn.style.backgroundColor = ''; // Reset if previously gray/red
+                paymentBtn.style.cursor = 'pointer';
             }
         };
 
-        verifyPayment().then(isPaid => {
-            if (!isPaid) {
-                paymentBtn.onclick = async () => {
-                    const postId = parsed.productId;
-                    const email = localStorage.getItem('email');
-                    const buyerId = localStorage.getItem('userId');
-                    if (!email || !buyerId) {
-                        showToast('Please log in to make a payment', 'error');
-                        return;
-                    }
-                    try {
-                        paymentBtn.disabled = true;
-                        paymentBtn.textContent = 'Processing...';
-                        const response = await fetch(`${API_BASE_URL}/pay`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-                            },
-                            body: JSON.stringify({ email, postId, buyerId })
-                        });
-                        const result = await response.json();
-                        if (result.success) {
-                            window.location.href = result.url;
-                        } else {
-                            paymentBtn.disabled = false;
-                            paymentBtn.textContent = 'Proceed to Payment';
-                            showToast(`Payment initiation failed: ${result.message || 'Please try again'}`, 'error');
-                        }
-                    } catch (error) {
-                        paymentBtn.disabled = false;
-                        paymentBtn.textContent = 'Proceed to Payment';
-                        showToast('Payment processing error', 'error');
-                    }
-                };
+        verifyPaymentAndUpdateButton(); // Initial check on load
+
+        paymentBtn.onclick = async () => {
+            const postId = parsed.productId;
+            const email = localStorage.getItem('email');
+            const buyerId = localStorage.getItem('userId');
+            if (!email || !buyerId) {
+                showToast('Please log in to make a payment', 'error');
+                return;
             }
-        });
+            try {
+                paymentBtn.disabled = true;
+                paymentBtn.textContent = 'Processing...';
+                const response = await fetch(`${API_BASE_URL}/pay`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                    },
+                    body: JSON.stringify({ email, postId, buyerId })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    window.location.href = result.url;
+                } else {
+                    paymentBtn.disabled = false;
+                    paymentBtn.textContent = 'Proceed to Payment';
+                    showToast(`Payment initiation failed: ${result.message || 'Please try again'}`, 'error');
+                }
+            } catch (error) {
+                paymentBtn.disabled = false;
+                paymentBtn.textContent = 'Proceed to Payment';
+                showToast('Payment processing error', 'error');
+            }
+        };
 
         buyerDiv.appendChild(paymentBtn);
         chatMessages.appendChild(buyerDiv);
@@ -359,36 +368,11 @@ function displayMessage(message, isOptimistic = false) { // Added isOptimistic p
         return;
     }
 
-    if (message.messageType === 'sellerAccept' && message.receiverId === userId) {
-        // This block is for the seller to see when THEY accept an initial offer.
-        let parsed;
-        try {
-            parsed = message.offerDetails || JSON.parse(message.text);
-        } catch (e) {
-            console.warn('Failed to parse sellerAccept message:', message, e);
-            parsed = {};
-        }
-
-        const sellerAcceptText = `You have accepted the offer of ₦${Number(parsed.proposedPrice || 0).toLocaleString('en-NG')} for "${parsed.productName || 'Product'}".`;
-        const productPhoto = parsed.image || ''; // Assuming product photo is in offerDetails
-
-        // Button for seller
-        const buttonDetails = {
-            text: 'Waiting for payment',
-            disabled: true
-        };
-
-        chatMessages.appendChild(createSystemMessage(sellerAcceptText, parsed.productId, productPhoto, buttonDetails));
-        acceptedOffers.add(parsed.productId);
-        bargainingSessions.delete(`${parsed.productId}-${message.senderId}`);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-        return;
-    }
-
-
     let msg = message.text, img = null, parsed = {};
     console.log('Processing message:', { messageType: message.messageType, text: message.text });
-    if (['offer', 'counter-offer', 'buyerAccept', 'sellerAccept', 'sellerCounterAccepted'].includes(message.messageType)) { // Added sellerCounterAccepted
+
+    // Parse message content for offer, counter-offer, and general text messages that might contain JSON
+    if (['offer', 'counter-offer', 'text'].includes(message.messageType) && message.text.startsWith('{')) {
         try {
             parsed = JSON.parse(message.text);
             msg = parsed.text || message.text;
@@ -398,9 +382,16 @@ function displayMessage(message, isOptimistic = false) { // Added isOptimistic p
             parsed.productName = parsed.productName || (message.offerDetails?.productName) || 'Product';
             parsed.image = parsed.image || (message.offerDetails?.image) || '';
             console.log('Parsed special message:', parsed, 'Image:', img);
+
+            // Fix relative image URLs
+            if (img && !img.match(/^https?:\/\//)) {
+                img = img.startsWith('/') ? `${API_BASE_URL}${img}` : img;
+            }
         } catch (e) {
-            console.warn(`Failed to parse ${message.messageType} message text:`, message.text, e);
+            console.warn(`Failed to parse ${message.messageType} message text as JSON:`, message.text, e);
             msg = message.text;
+            img = null;
+            // Ensure offerDetails are still populated if available
             parsed = {
                 offer: (message.offerDetails?.proposedPrice) || 0,
                 productId: (message.offerDetails?.productId) || '',
@@ -408,27 +399,10 @@ function displayMessage(message, isOptimistic = false) { // Added isOptimistic p
                 image: (message.offerDetails?.image) || ''
             };
         }
-    } else if (message.messageType === 'text') {
-        if (message.text.startsWith('{')) {
-            try {
-                parsed = JSON.parse(message.text);
-                msg = parsed.text || message.text;
-                img = parsed.image || null;
-                console.log('Parsed text message:', parsed, 'Image:', img);
-                if (img && !img.match(/^https?:\/\//)) {
-                    console.warn('Invalid image URL, attempting to fix:', img);
-                    img = img.startsWith('/') ? `${API_BASE_URL}${img}` : img;
-                }
-            } catch (e) {
-                console.warn('Failed to parse text message as JSON:', message.text, e);
-                msg = message.text;
-                img = null;
-            }
-        } else {
-            msg = message.text;
-            img = null;
-            console.log('Plain text message:', msg, 'Image:', img);
-        }
+    } else {
+        msg = message.text;
+        img = null;
+        console.log('Plain text message or already handled system/image message:', msg, 'Image:', img);
     }
 
     if (message.messageType === 'counter-offer' && message.senderId === userId && parsed.productId) {
@@ -436,6 +410,7 @@ function displayMessage(message, isOptimistic = false) { // Added isOptimistic p
         console.log(`Added to sentCounterOffers: ${parsed.productId}`, sentCounterOffers);
     }
 
+    // Display bargaining session start message
     if (parsed?.offer && !bargainingSessions.has(`${parsed.productId}-${message.senderId}`) && !endedBargains.has(parsed.productId)) {
         bargainingSessions.add(`${parsed.productId}-${message.senderId}`);
         const startText = message.senderId === userId
@@ -446,12 +421,12 @@ function displayMessage(message, isOptimistic = false) { // Added isOptimistic p
 
     const msgDiv = document.createElement('div');
     msgDiv.classList.add('message', message.senderId === userId ? 'sent' : 'received');
-    msgDiv.dataset.messageId = message._id || `temp_${Date.now()}`; // Temp ID for optimistic messages
+    msgDiv.dataset.messageId = message._id || `temp_${Date.now()}`;
     const time = message.createdAt ? new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
 
-    if (message.messageType === 'counter-offer' && parsed.productId) {
+    if (['offer', 'counter-offer'].includes(message.messageType) && parsed.productId) {
         msgDiv.setAttribute('data-product-id', parsed.productId);
-        msgDiv.setAttribute('data-message-type', 'counter-offer');
+        msgDiv.setAttribute('data-message-type', message.messageType);
     }
 
     msgDiv.innerHTML = `
@@ -476,20 +451,19 @@ function displayMessage(message, isOptimistic = false) { // Added isOptimistic p
         image: img
     });
 
+    // Seller's side: Buyer's initial offer (receiver is seller)
     if (message.messageType === 'offer' && parsed.offer && message.receiverId === userId && !isOfferAccepted && !isBargainEnded && message.senderId !== userId) {
         const acceptBtn = document.createElement('button');
         acceptBtn.className = 'accept-offer-btn';
         acceptBtn.textContent = 'Accept';
-        
-        // Store reference to the accept button
-        if(parsed.productId) offerButtons.set(parsed.productId, { ...offerButtons.get(parsed.productId), acceptBtn: acceptBtn });
+        if (parsed.productId) offerButtons.set(parsed.productId, { ...offerButtons.get(parsed.productId), acceptBtn: acceptBtn });
 
         acceptBtn.onclick = async () => {
             const productDetails = {
                 productId: parsed.productId,
                 productName: parsed.productName,
                 offer: Number(parsed.offer),
-                senderId: message.senderId // This is the buyer who sent the initial offer
+                senderId: message.senderId
             };
             document.getElementById('confirmationMessage').textContent =
                 `Are you sure you want to accept the offer of ₦${Number(parsed.offer).toLocaleString('en-NG')} for "${parsed.productName || 'Product'}"?`;
@@ -522,17 +496,18 @@ function displayMessage(message, isOptimistic = false) { // Added isOptimistic p
                         buttons.forEach(btn => btn.remove());
                     });
 
-                    // Seller sends message to themselves (system message)
+                    // Seller sends system message to themselves (for persistence and UI update)
                     const sellerAcceptMessage = {
+                        senderId: userId, // Current user is sender (seller)
                         receiverId: userId, // Seller (current user)
-                        messageType: 'sellerAccept', // New type for seller's acceptance confirmation
-                        metadata: { isSystemMessage: true }, // Mark as system message
+                        messageType: 'sellerAccept',
+                        metadata: { isSystemMessage: true },
                         text: JSON.stringify({
                             text: `You have accepted the offer of ₦${productDetails.offer.toLocaleString('en-NG')} for "${parsed.productName}".`,
                             productName: parsed.productName,
                             productId: productDetails.productId,
                             proposedPrice: productDetails.offer,
-                            image: parsed.image || productImage || '' // Include product image
+                            image: parsed.image || productImage || ''
                         }),
                         offerDetails: {
                             productId: productDetails.productId,
@@ -542,11 +517,16 @@ function displayMessage(message, isOptimistic = false) { // Added isOptimistic p
                             status: 'accepted'
                         },
                         createdAt: new Date(),
-                        isRead: false
+                        isRead: true // System messages are considered read by sender
                     };
 
-                    // Seller sends message to buyer (offer accepted message)
+                    // Optimistic display for seller
+                    const optimisticSellerAccept = { ...sellerAcceptMessage, _id: `temp_seller_accept_${Date.now()}` };
+                    displayMessage(optimisticSellerAccept, true);
+
+                    // Buyer sends message to seller (offer accepted message)
                     const buyerAcceptMessage = {
+                        senderId: userId, // Seller is sending this to the buyer
                         receiverId: message.senderId, // Buyer
                         messageType: 'buyerAccept',
                         text: JSON.stringify({
@@ -555,7 +535,7 @@ function displayMessage(message, isOptimistic = false) { // Added isOptimistic p
                             productId: productDetails.productId,
                             offer: productDetails.offer,
                             buyerName: localStorage.getItem('username') || 'Buyer',
-                            image: parsed.image || productImage || '' // Include product image
+                            image: parsed.image || productImage || ''
                         }),
                         offerDetails: {
                             productId: productDetails.productId,
@@ -568,12 +548,7 @@ function displayMessage(message, isOptimistic = false) { // Added isOptimistic p
                         isRead: false
                     };
 
-
-                    // Optimistic display for seller
-                    const optimisticSellerAccept = { ...sellerAcceptMessage, senderId: userId, status: 'sent', _id: `temp_${Date.now()}_seller_accept` };
-                    displayMessage(optimisticSellerAccept, true);
-
-                    // Send buyerAccept message
+                    // Send the buyerAccept message via HTTP
                     const acceptResponse = await fetch(`${API_BASE_URL}/send`, {
                         method: 'POST',
                         headers: {
@@ -584,8 +559,15 @@ function displayMessage(message, isOptimistic = false) { // Added isOptimistic p
                     });
                     const acceptData = await acceptResponse.json();
                     if (!acceptResponse.ok) throw new Error(acceptData.error || `HTTP error ${acceptResponse.status}`);
-                    // No need to update lastSent for optimisticSellerAccept as it's a system message.
-                    // The actual message for buyer will be handled by the backend.
+
+                    // Also save the seller's system message to localStorage for persistence
+                    const storedMessages = JSON.parse(localStorage.getItem(`chat_${userId}_${receiverId}`) || '[]');
+                    if (!storedMessages.some(msg => msg._id === sellerAcceptMessage._id)) {
+                         // Assign a temporary ID if no _id from server for system messages
+                        const tempId = `system_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+                        storedMessages.push({ ...sellerAcceptMessage, _id: tempId });
+                        localStorage.setItem(`chat_${userId}_${receiverId}`, JSON.stringify(storedMessages));
+                    }
 
                     acceptModal.style.display = 'none';
                     showToast('Offer accepted successfully!', 'success');
@@ -603,30 +585,29 @@ function displayMessage(message, isOptimistic = false) { // Added isOptimistic p
         const declineBtn = document.createElement('button');
         declineBtn.className = 'decline-offer-btn';
         declineBtn.textContent = 'Decline';
-        // Store reference to the decline button
-        if(parsed.productId) offerButtons.set(parsed.productId, { ...offerButtons.get(parsed.productId), declineBtn: declineBtn });
+        if (parsed.productId) offerButtons.set(parsed.productId, { ...offerButtons.get(parsed.productId), declineBtn: declineBtn });
 
         declineBtn.onclick = () => {
-            openLastPriceModal(parsed.productId, parsed.productName, parsed.image || productImage); // Pass product image
+            openLastPriceModal(parsed.productId, parsed.productName, parsed.image || productImage);
         };
 
         msgDiv.appendChild(acceptBtn);
         msgDiv.appendChild(declineBtn);
     }
 
+    // Buyer's side: Seller's counter offer (receiver is buyer)
     if (message.messageType === 'counter-offer' && parsed.offer && message.receiverId === userId && !isOfferAccepted && !isBargainEnded && message.senderId === receiverId) {
         const acceptBtn = document.createElement('button');
         acceptBtn.className = 'accept-offer-btn';
         acceptBtn.textContent = 'Accept';
-         // Store reference to the accept button
-        if(parsed.productId) offerButtons.set(parsed.productId, { ...offerButtons.get(parsed.productId), acceptBtn: acceptBtn });
+        if (parsed.productId) offerButtons.set(parsed.productId, { ...offerButtons.get(parsed.productId), acceptBtn: acceptBtn });
 
         acceptBtn.onclick = async () => {
             const productDetails = {
                 productId: parsed.productId,
                 productName: parsed.productName,
                 offer: Number(parsed.offer),
-                senderId: message.senderId // This is the seller who sent the counter-offer
+                senderId: message.senderId
             };
             document.getElementById('confirmationMessage').textContent =
                 `Are you sure you want to accept the seller's offer of ₦${Number(parsed.offer).toLocaleString('en-NG')} for "${parsed.productName || 'Product'}"?`;
@@ -659,12 +640,14 @@ function displayMessage(message, isOptimistic = false) { // Added isOptimistic p
                         buttons.forEach(btn => btn.remove());
                     });
 
-                    // Buyer sends message to themselves (offer accepted)
+                    // Buyer sends system message to themselves (for persistence and UI update)
                     const buyerAcceptMessage = {
+                        senderId: userId, // Current user is sender (buyer)
                         receiverId: userId, // Buyer (current user)
                         messageType: 'buyerAccept',
+                        metadata: { isSystemMessage: true },
                         text: JSON.stringify({
-                            text: `Your offer for "${parsed.productName}" has been accepted.`,
+                            text: `You have accepted the offer of ₦${productDetails.offer.toLocaleString('en-NG')} for "${parsed.productName}".`,
                             productName: parsed.productName,
                             productId: productDetails.productId,
                             offer: productDetails.offer,
@@ -679,20 +662,26 @@ function displayMessage(message, isOptimistic = false) { // Added isOptimistic p
                             status: 'accepted'
                         },
                         createdAt: new Date(),
-                        isRead: false
+                        isRead: true
                     };
 
-                    // Buyer sends notification to seller (sellerCounterAccepted)
+                    // Optimistic display for buyer
+                    const optimisticBuyerAccept = { ...buyerAcceptMessage, _id: `temp_buyer_accept_${Date.now()}` };
+                    displayMessage(optimisticBuyerAccept, true);
+
+
+                    // Buyer sends notification to seller that counter-offer was accepted
                     const sellerNotificationMessage = {
+                        senderId: userId, // Buyer is sending this to the seller
                         receiverId: message.senderId, // Seller
-                        messageType: 'sellerCounterAccepted', // New type for seller notification when buyer accepts counter-offer
-                        metadata: { isSystemMessage: true }, // Mark as system message
+                        messageType: 'sellerCounterAccepted',
+                        metadata: { isSystemMessage: true },
                         text: JSON.stringify({
                             text: `Your last price of ₦${productDetails.offer.toLocaleString('en-NG')} for "${parsed.productName}" was accepted by ${recipientUsername}.`,
                             productName: parsed.productName,
                             productId: productDetails.productId,
                             proposedPrice: productDetails.offer,
-                            image: parsed.image || productImage || '' // Include product image
+                            image: parsed.image || productImage || ''
                         }),
                         offerDetails: {
                             productId: productDetails.productId,
@@ -705,25 +694,7 @@ function displayMessage(message, isOptimistic = false) { // Added isOptimistic p
                         isRead: false
                     };
 
-                    // Optimistic display for buyer
-                    const optimisticBuyerAccept = { ...buyerAcceptMessage, senderId: userId, status: 'sent', _id: `temp_${Date.now()}_buyer_accept` };
-                    displayMessage(optimisticBuyerAccept, true);
-
-
-                    // Send buyerAccept message
-                    const acceptResponse = await fetch(`${API_BASE_URL}/send`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${token}`
-                        },
-                        body: JSON.stringify(buyerAcceptMessage)
-                    });
-                    const acceptData = await acceptResponse.json();
-                    if (!acceptResponse.ok) throw new Error(acceptData.error || `HTTP error ${acceptResponse.status}`);
-
-
-                    // Send sellerNotification message
+                    // Send sellerNotification message via HTTP
                     const sellerResponse = await fetch(`${API_BASE_URL}/send`, {
                         method: 'POST',
                         headers: {
@@ -734,6 +705,14 @@ function displayMessage(message, isOptimistic = false) { // Added isOptimistic p
                     });
                     const sellerData = await sellerResponse.json();
                     if (!sellerResponse.ok) throw new Error(sellerData.error || `HTTP error ${sellerResponse.status}`);
+
+                    // Also save the buyer's system message to localStorage for persistence
+                    const storedMessages = JSON.parse(localStorage.getItem(`chat_${userId}_${receiverId}`) || '[]');
+                    if (!storedMessages.some(msg => msg._id === buyerAcceptMessage._id)) {
+                        const tempId = `system_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+                        storedMessages.push({ ...buyerAcceptMessage, _id: tempId });
+                        localStorage.setItem(`chat_${userId}_${receiverId}`, JSON.stringify(storedMessages));
+                    }
 
                     acceptModal.style.display = 'none';
                     showToast('Offer accepted successfully!', 'success');
@@ -769,8 +748,10 @@ function displayMessage(message, isOptimistic = false) { // Added isOptimistic p
                 });
 
                 const endBargainMessage = {
-                    receiverId: message.senderId,
+                    senderId: userId, // Current user is sender
+                    receiverId: message.senderId, // The other party
                     messageType: 'end-bargain',
+                    metadata: { isSystemMessage: true }, // Mark as system message
                     text: JSON.stringify({
                         productId: productDetails.productId,
                         productName: productDetails.productName
@@ -785,7 +766,7 @@ function displayMessage(message, isOptimistic = false) { // Added isOptimistic p
                 };
 
                 // Optimistic display
-                const optimisticEnd = { ...endBargainMessage, senderId: userId, status: 'sent' };
+                const optimisticEnd = { ...endBargainMessage, _id: `temp_end_bargain_${Date.now()}` };
                 displayMessage(optimisticEnd, true);
 
                 // Send via HTTP
@@ -799,10 +780,12 @@ function displayMessage(message, isOptimistic = false) { // Added isOptimistic p
                 });
                 const endData = await endResponse.json();
                 if (!endResponse.ok) throw new Error(endData.error || `HTTP error ${endResponse.status}`);
-                const lastSent = chatMessages.querySelector('.message.sent:last-child');
-                if (lastSent && endData.data?._id) {
-                    lastSent.dataset.messageId = endData.data._id;
-                    displayedMessages.add(endData.data._id);
+
+                // Also save to localStorage for persistence
+                const storedMessages = JSON.parse(localStorage.getItem(`chat_${userId}_${receiverId}`) || '[]');
+                if (!storedMessages.some(msg => msg._id === endBargainMessage._id)) {
+                    storedMessages.push({ ...endBargainMessage, _id: endData.data?._id || optimisticEnd._id });
+                    localStorage.setItem(`chat_${userId}_${receiverId}`, JSON.stringify(storedMessages));
                 }
 
                 showToast('Bargain ended successfully!', 'success');
@@ -810,7 +793,7 @@ function displayMessage(message, isOptimistic = false) { // Added isOptimistic p
                 console.error('Failed to end bargain:', error);
                 showToast(`Failed to end bargain: ${error.message}`, 'error');
                 const lastSent = chatMessages.querySelector('.message.sent:last-child');
-                if (lastSent) lastSent.remove();
+                if (lastSent && lastSent.dataset.messageId.startsWith('temp_end_bargain_')) lastSent.remove();
             }
         };
 
@@ -818,49 +801,60 @@ function displayMessage(message, isOptimistic = false) { // Added isOptimistic p
         msgDiv.appendChild(endBargainBtn);
     }
 
-    // This block handles the payment button for the buyer, regardless of whether it's an initial offer or counter-offer accepted.
-    // It should specifically trigger when a buyer receives a 'buyerAccept' message.
-    // The previous logic for `parsed.payment && message.receiverId === userId` seems to be intended for this,
-    // but the `buyerAccept` message is explicitly handled at the beginning of `displayMessage` function.
-    // We'll rely on the `buyerAccept` block for the button and its `verifyPayment` logic.
-
     chatMessages.appendChild(msgDiv);
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
-// Format number with thousands separators
+/**
+ * Formats a number with thousands separators for NGN (Nigerian Naira) locale.
+ * @param {number|string} number The number to format.
+ * @returns {string} The formatted number string.
+ */
 function formatNumberWithCommas(number) {
     if (typeof number !== 'number' && typeof number !== 'string') return '';
-    const num = parseFloat(String(number).replace(/,/g, ''));
+    const num = parseFloat(String(number).replace(/[^0-9.]/g, '')); // Allow decimals for robustness, then format as integer
     if (isNaN(num)) return '';
-    return num.toLocaleString('en-NG', { maximumFractionDigits: 0 });
+    // Use 'en-NG' locale for Nigerian Naira formatting, omitting fraction digits
+    return num.toLocaleString('en-NG', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+    });
 }
 
-// Add thousands separators to lastPriceInput
+// Add thousands separators to lastPriceInput and maintain cursor position
 lastPriceInput.addEventListener('input', (e) => {
     const input = e.target;
+    const originalValue = input.value;
     const cursorPosition = input.selectionStart;
-    let value = input.value.replace(/[^0-9]/g, '');
+
+    // Remove all non-digit characters for processing
+    let value = originalValue.replace(/\D/g, '');
+
+    // Format the value
+    let formattedValue = '';
     if (value) {
-        const formattedValue = formatNumberWithCommas(value);
-        input.value = formattedValue;
-        const commasBeforeCursor = (input.value.slice(0, cursorPosition).match(/,/g) || []).length;
-        const newCommasBeforeCursor = (formattedValue.slice(0, cursorPosition).match(/,/g) || []).length;
-        input.setSelectionRange(
-            cursorPosition + (newCommasBeforeCursor - commasBeforeCursor),
-            cursorPosition + (newCommasBeforeCursor - commasBeforeCursor)
-        );
-    } else {
-        input.value = '';
+        formattedValue = formatNumberWithCommas(value);
     }
+
+    input.value = formattedValue;
+
+    // Adjust cursor position
+    const diff = formattedValue.length - originalValue.length;
+    input.setSelectionRange(cursorPosition + diff, cursorPosition + diff);
 });
 
 
-// Open modal for seller to send a counteroffer
+/**
+ * Opens the modal for the seller to send a counteroffer.
+ * @param {string} productId The ID of the product.
+ * @param {string} productName The name of the product.
+ * @param {string} productImage The URL of the product image.
+ */
 function openLastPriceModal(productId, productName, productImage) {
     lastPriceModal.style.display = 'block';
-    submitLastPriceBtn.onclick = async () => { // Changed to async
-        const lastPrice = lastPriceInput.value.trim().replace(/,/g, ''); // Remove commas
+    lastPriceInput.value = ''; // Clear previous input
+    submitLastPriceBtn.onclick = async () => {
+        const lastPrice = lastPriceInput.value.trim().replace(/,/g, ''); // Remove commas for numerical value
         if (lastPrice && !isNaN(lastPrice) && Number(lastPrice) > 0) {
             const message = {
                 receiverId: receiverId,
@@ -884,7 +878,7 @@ function openLastPriceModal(productId, productName, productImage) {
             };
 
             // Optimistic display
-            const optimisticMessage = { ...message, senderId: userId, status: 'sent' };
+            const optimisticMessage = { ...message, senderId: userId, status: 'sent', _id: `temp_counter_offer_${Date.now()}` };
             displayMessage(optimisticMessage, true);
 
             try {
@@ -900,9 +894,12 @@ function openLastPriceModal(productId, productName, productImage) {
                 });
                 const data = await response.json();
                 if (!response.ok) throw new Error(data.error || `HTTP error ${response.status}`);
-                const lastSent = chatMessages.querySelector('.message.sent:last-child');
-                if (lastSent && data.data?._id) {
-                    lastSent.dataset.messageId = data.data._id;
+
+                // Update optimistic message with actual ID from server
+                const sentMessageDiv = chatMessages.querySelector(`[data-message-id="${optimisticMessage._id}"]`);
+                if (sentMessageDiv && data.data?._id) {
+                    sentMessageDiv.dataset.messageId = data.data._id;
+                    displayedMessages.delete(optimisticMessage._id);
                     displayedMessages.add(data.data._id);
                 }
                 console.log('Last price sent:', data);
@@ -910,8 +907,9 @@ function openLastPriceModal(productId, productName, productImage) {
             } catch (error) {
                 console.error('Error sending last price:', error);
                 showToast(`Failed to send last price: ${error.message}`, 'error');
-                const lastSent = chatMessages.querySelector('.message.sent:last-child');
-                if (lastSent) lastSent.remove();
+                // Remove optimistic message if sending failed
+                const failedSentMessage = chatMessages.querySelector(`[data-message-id="${optimisticMessage._id}"]`);
+                if (failedSentMessage) failedSentMessage.remove();
             }
         } else {
             showToast('Please enter a valid positive number', 'error');
@@ -948,7 +946,7 @@ bargainBtn.onclick = async () => {
             throw new Error(`HTTP error! Status: ${res.status}`);
         }
         const data = await res.json();
-        console.log('Products API response:', data); // Log the full response
+        console.log('Products API response:', data);
 
         const container = document.getElementById('bargainProductsContainer');
         if (!container) {
@@ -965,7 +963,7 @@ bargainBtn.onclick = async () => {
         }
 
         data.products.forEach(product => {
-            console.log('Rendering product:', product); // Log each product
+            console.log('Rendering product:', product);
             const card = document.createElement('div');
             card.className = 'product-card';
             card.innerHTML = `
@@ -982,28 +980,22 @@ bargainBtn.onclick = async () => {
             const priceInput = card.querySelector('.bargain-price-input');
 
             // Apply thousands separators to bargain price input
-            priceInput.addEventListener('beforeinput', (e) => {
-                if (e.data && !/^[0-9]$/.test(e.data)) {
-                    e.preventDefault();
-                }
-            });
-
             priceInput.addEventListener('input', (e) => {
                 const input = e.target;
+                const originalValue = input.value;
                 const cursorPosition = input.selectionStart;
-                let value = input.value.replace(/[^0-9]/g, '');
+
+                let value = originalValue.replace(/\D/g, '');
+
+                let formattedValue = '';
                 if (value) {
-                    const formattedValue = formatNumberWithCommas(value);
-                    input.value = formattedValue;
-                    const commasBeforeCursor = (input.value.slice(0, cursorPosition).match(/,/g) || []).length;
-                    const newCommasBeforeCursor = (formattedValue.slice(0, cursorPosition).match(/,/g) || []).length;
-                    input.setSelectionRange(
-                        cursorPosition + (newCommasBeforeCursor - commasBeforeCursor),
-                        cursorPosition + (newCommasBeforeCursor - commasBeforeCursor)
-                    );
-                } else {
-                    input.value = '';
+                    formattedValue = formatNumberWithCommas(value);
                 }
+
+                input.value = formattedValue;
+
+                const diff = formattedValue.length - originalValue.length;
+                input.setSelectionRange(cursorPosition + diff, cursorPosition + diff);
             });
 
             sendButton.onclick = async () => {
@@ -1015,7 +1007,7 @@ bargainBtn.onclick = async () => {
                         receiverId,
                         messageType: 'offer',
                         text: JSON.stringify({
-                            text: `My offer for "${product.title}" is ₦${Number(price).toLocaleString('en-NG')}`, // Use title
+                            text: `My offer for "${product.title}" is ₦${Number(price).toLocaleString('en-NG')}`,
                             offer: Number(price),
                             productId: product._id,
                             productName: product.title,
@@ -1033,7 +1025,7 @@ bargainBtn.onclick = async () => {
                     };
 
                     // Optimistic display
-                    const optimisticMessage = { ...message, senderId: userId, status: 'sent' };
+                    const optimisticMessage = { ...message, senderId: userId, status: 'sent', _id: `temp_offer_${Date.now()}` };
                     displayMessage(optimisticMessage, true);
 
                     try {
@@ -1049,9 +1041,11 @@ bargainBtn.onclick = async () => {
                         });
                         const data = await response.json();
                         if (!response.ok) throw new Error(data.error || `HTTP error ${response.status}`);
-                        const lastSent = chatMessages.querySelector('.message.sent:last-child');
-                        if (lastSent && data.data?._id) {
-                            lastSent.dataset.messageId = data.data._id;
+
+                        const sentMessageDiv = chatMessages.querySelector(`[data-message-id="${optimisticMessage._id}"]`);
+                        if (sentMessageDiv && data.data?._id) {
+                            sentMessageDiv.dataset.messageId = data.data._id;
+                            displayedMessages.delete(optimisticMessage._id);
                             displayedMessages.add(data.data._id);
                         }
                         console.log('Offer sent:', data);
@@ -1059,8 +1053,8 @@ bargainBtn.onclick = async () => {
                     } catch (error) {
                         console.error('Error sending offer:', error);
                         showToast(`Failed to send offer: ${error.message}`, 'error');
-                        const lastSent = chatMessages.querySelector('.message.sent:last-child');
-                        if (lastSent) lastSent.remove();
+                        const failedSentMessage = chatMessages.querySelector(`[data-message-id="${optimisticMessage._id}"]`);
+                        if (failedSentMessage) failedSentMessage.remove();
                     } finally {
                         sendButton.disabled = false;
                         sendButton.textContent = 'Send Offer';
@@ -1108,19 +1102,7 @@ sendBtn.onclick = async () => {
         return;
     }
 
-    // Normalize text and predefinedMessage to handle newlines and whitespace
-    const normalizedText = text.replace(/\s+/g, ' ').trim();
-    const normalizedPredefined = predefinedMessage.replace(/\s+/g, ' ').trim();
     const isInitialMessage = !isInitialMessageSent && predefinedMessage && productImage;
-
-    console.log('Message comparison:', {
-        inputText: text,
-        normalizedText,
-        predefinedMessage: predefinedMessage,
-        normalizedPredefined,
-        isInitialMessage,
-        isInitialMessageSent
-    });
 
     const message = {
         receiverId,
@@ -1139,7 +1121,7 @@ sendBtn.onclick = async () => {
     });
 
     // Optimistic display
-    const optimisticMessage = { ...message, senderId: userId, status: 'sent' };
+    const optimisticMessage = { ...message, senderId: userId, status: 'sent', _id: `temp_msg_${Date.now()}` };
     displayMessage(optimisticMessage, true);
 
     // Clear input immediately
@@ -1168,18 +1150,49 @@ sendBtn.onclick = async () => {
         });
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || `HTTP error ${response.status}`);
-        const lastSent = chatMessages.querySelector('.message.sent:last-child');
-        if (lastSent && data.data?._id) {
-            lastSent.dataset.messageId = data.data._id;
+
+        const sentMessageDiv = chatMessages.querySelector(`[data-message-id="${optimisticMessage._id}"]`);
+        if (sentMessageDiv && data.data?._id) {
+            sentMessageDiv.dataset.messageId = data.data._id;
+            displayedMessages.delete(optimisticMessage._id);
             displayedMessages.add(data.data._id);
         }
     } catch (error) {
         console.error('Error sending message:', error);
         showToast(`Failed to send message: ${error.message}`, 'error');
-        const lastSent = chatMessages.querySelector('.message.sent:last-child');
-        if (lastSent) lastSent.remove();
+        const failedSentMessage = chatMessages.querySelector(`[data-message-id="${optimisticMessage._id}"]`);
+        if (failedSentMessage) failedSentMessage.remove();
     }
 };
+
+/**
+ * Verifies the payment status for a product.
+ * @param {string} productId The ID of the product.
+ * @param {'buyer'|'seller'} role The role (buyer or seller) for context.
+ * @returns {Promise<boolean>} True if payment is completed, false otherwise.
+ */
+async function verifyPaymentStatus(productId, role) {
+    try {
+        const token = localStorage.getItem('authToken');
+        if (!token) {
+            console.warn('No auth token found for payment verification.');
+            return false;
+        }
+        const response = await fetch(`${API_BASE_URL}/payment-status?productId=${productId}&buyerId=${role === 'buyer' ? userId : receiverId}&sellerId=${role === 'seller' ? userId : receiverId}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ error: 'Server error' }));
+            console.error(`Payment verification failed: ${errorData.error || 'Server error'}`, errorData);
+            return false;
+        }
+        const result = await response.json();
+        return result.paymentCompleted;
+    } catch (error) {
+        console.error('Error verifying payment status:', error);
+        return false;
+    }
+}
 
 // Handle incoming messages
 socket.on('newMessage', message => {
@@ -1189,25 +1202,11 @@ socket.on('newMessage', message => {
         return;
     }
 
-    // Explicitly check for system message types for display
-    if (message.messageType === 'sellerCounterAccepted' || message.messageType === 'sellerAccept') {
-        // These are handled as system messages and should be displayed as such for the receiver
+    // Only display if it's not an optimistic message being confirmed
+    if (!displayedMessages.has(message._id)) {
         displayMessage(message);
-    } else if (message.messageType === 'buyerAccept') {
-        // Only display for the buyer (receiver of the buyerAccept message)
-        if (message.receiverId === userId) {
-            displayMessage(message);
-        } else {
-            console.log('Skipping buyerAccept message for non-buyer:', {
-                productId: message.offerDetails?.productId,
-                userId,
-                receiverId: message.receiverId
-            });
-            return;
-        }
     } else {
-        // Default display for other message types
-        displayMessage(message);
+        console.log('Skipping duplicate message:', message._id);
     }
 
     // Mark message as seen if the current user is the receiver and message is not already seen
@@ -1221,51 +1220,66 @@ socket.on('newMessage', message => {
 
     showToast(`New message from ${recipientUsername}`, 'success');
 
-    // Store in localStorage as a fallback
+    // Store in localStorage
     const storedMessages = JSON.parse(localStorage.getItem(`chat_${userId}_${receiverId}`) || '[]');
-    if (!storedMessages.some(msg => msg._id === message._id)) { // Prevent duplicates from optimistic updates
+    if (!storedMessages.some(msg => msg._id === message._id)) {
         storedMessages.push(message);
         localStorage.setItem(`chat_${userId}_${receiverId}`, JSON.stringify(storedMessages));
     }
 });
 
 // New Socket.IO event for real-time payment status updates
-socket.on('paymentStatusUpdate', (data) => {
+socket.on('paymentStatusUpdate', async (data) => {
     console.log('Received paymentStatusUpdate:', data);
-    if (data.productId && (data.buyerId === userId || data.sellerId === userId)) { // Check if relevant to current user
+    if (data.productId && (data.buyerId === userId || data.sellerId === userId)) {
         const productRelatedButtons = offerButtons.get(data.productId);
 
-        if (productRelatedButtons) {
-            // Update seller's "Waiting for payment" button
-            if (productRelatedButtons.systemButton) {
-                if (data.status === 'completed') {
-                    productRelatedButtons.systemButton.textContent = 'Payment Completed';
-                    productRelatedButtons.systemButton.disabled = true;
-                    productRelatedButtons.systemButton.style.backgroundColor = 'gray';
-                    productRelatedButtons.systemButton.style.cursor = 'not-allowed';
-                    showToast('Payment confirmed!', 'success');
-                } else if (data.status === 'failed') {
-                     // Optionally handle failed payments for seller
-                    productRelatedButtons.systemButton.textContent = 'Payment Failed';
-                    productRelatedButtons.systemButton.style.backgroundColor = 'red';
-                    productRelatedButtons.systemButton.style.cursor = 'not-allowed';
-                    showToast('Payment failed. Please contact the buyer.', 'error');
-                }
-            }
-            // Update buyer's "Proceed to Payment" button
-            if (productRelatedButtons.proceedToPaymentBtn) {
-                if (data.status === 'completed') {
-                    productRelatedButtons.proceedToPaymentBtn.textContent = 'Payment Completed';
-                    productRelatedButtons.proceedToPaymentBtn.disabled = true;
-                    productRelatedButtons.proceedToPaymentBtn.style.backgroundColor = 'gray';
-                    productRelatedButtons.proceedToPaymentBtn.style.cursor = 'not-allowed';
-                } else if (data.status === 'failed') {
-                    productRelatedButtons.proceedToPaymentBtn.textContent = 'Payment Failed';
-                    productRelatedButtons.proceedToPaymentBtn.disabled = false; // Allow retry
-                    productRelatedButtons.proceedToPaymentBtn.style.backgroundColor = 'red';
-                }
+        // Update seller's "Waiting for payment" button
+        if (productRelatedButtons?.systemButton) {
+            if (data.status === 'completed') {
+                productRelatedButtons.systemButton.textContent = 'Payment Completed';
+                productRelatedButtons.systemButton.disabled = true;
+                productRelatedButtons.systemButton.style.backgroundColor = 'gray';
+                productRelatedButtons.systemButton.style.cursor = 'not-allowed';
+                showToast('Payment confirmed!', 'success');
+            } else if (data.status === 'failed') {
+                productRelatedButtons.systemButton.textContent = 'Payment Failed';
+                productRelatedButtons.systemButton.style.backgroundColor = 'red';
+                productRelatedButtons.systemButton.style.cursor = 'not-allowed';
+                showToast('Payment failed. Please contact the buyer.', 'error');
             }
         }
+        // Update buyer's "Proceed to Payment" button
+        if (productRelatedButtons?.proceedToPaymentBtn) {
+            if (data.status === 'completed') {
+                productRelatedButtons.proceedToPaymentBtn.textContent = 'Payment Completed';
+                productRelatedButtons.proceedToPaymentBtn.disabled = true;
+                productRelatedButtons.proceedToPaymentBtn.style.backgroundColor = 'gray';
+                productRelatedButtons.proceedToPaymentBtn.style.cursor = 'not-allowed';
+            } else if (data.status === 'failed') {
+                productRelatedButtons.proceedToPaymentBtn.textContent = 'Payment Failed';
+                productRelatedButtons.proceedToPaymentBtn.disabled = false;
+                productRelatedButtons.proceedToPaymentBtn.style.backgroundColor = 'red';
+            }
+        }
+
+        // To ensure persistence, update the relevant message in localStorage
+        const storedMessages = JSON.parse(localStorage.getItem(`chat_${userId}_${receiverId}`) || '[]');
+        const updatedMessages = storedMessages.map(msg => {
+            if (msg.offerDetails?.productId === data.productId &&
+                (msg.messageType === 'sellerAccept' || msg.messageType === 'sellerCounterAccepted' || msg.messageType === 'buyerAccept')) {
+                // Update the status within the message's offerDetails for persistence
+                return {
+                    ...msg,
+                    offerDetails: {
+                        ...msg.offerDetails,
+                        status: data.status
+                    }
+                };
+            }
+            return msg;
+        });
+        localStorage.setItem(`chat_${userId}_${receiverId}`, JSON.stringify(updatedMessages));
     }
 });
 
@@ -1281,6 +1295,12 @@ socket.on('messageSynced', (message) => {
     if (!storedMessages.some(msg => msg._id === message._id)) {
         storedMessages.push(message);
         localStorage.setItem(`chat_${userId}_${receiverId}`, JSON.stringify(storedMessages));
+    } else {
+        // If message exists, update its status (e.g., from optimistic to confirmed)
+        const updatedMessages = storedMessages.map(msg =>
+            msg._id === message._id ? { ...msg, ...message } : msg
+        );
+        localStorage.setItem(`chat_${userId}_${receiverId}`, JSON.stringify(updatedMessages));
     }
 });
 
@@ -1293,7 +1313,6 @@ socket.on('newMessageNotification', (notification) => {
 // Load chat history and check for initial message
 async function loadChatHistory() {
     try {
-        // Check for auth token
         const token = localStorage.getItem('authToken');
         if (!token) {
             showToast('Please log in to view messages', 'error');
@@ -1313,7 +1332,6 @@ async function loadChatHistory() {
         }
 
         const rawText = await res.text();
-        console.log('Raw response:', rawText);
         let messages;
         try {
             messages = JSON.parse(rawText);
@@ -1326,38 +1344,45 @@ async function loadChatHistory() {
         if (!Array.isArray(messages)) {
             console.warn('Response is not an array:', messages);
             showToast('Invalid chat history format.', 'error');
-            // Fallback to localStorage
-            messages = JSON.parse(localStorage.getItem(`chat_${userId}_${receiverId}`) || '[]');
+            messages = []; // Treat as empty array if format is wrong
         }
         console.log(`Fetched ${messages.length} messages`);
 
+        // Filter and process messages before displaying
         const validMessages = messages.filter((msg, index) => {
             if (!msg || typeof msg !== 'object' || !msg.text || !msg.messageType) {
                 console.warn(`Skipping invalid message at index ${index}:`, msg);
                 return false;
             }
-            if (['offer', 'counter-offer', 'buyerAccept', 'sellerAccept', 'sellerCounterAccepted', 'end-bargain'].includes(msg.messageType)) {
+            // Ensure message.text is a string, then if it starts with '{', attempt to parse it
+            if (typeof msg.text === 'string' && msg.text.startsWith('{')) {
                 try {
-                    JSON.parse(msg.text);
-                    return true;
+                    const parsedText = JSON.parse(msg.text);
+                    if (typeof parsedText === 'object' && parsedText !== null) {
+                        msg.text = parsedText; // Replace msg.text with the parsed object for easier access
+                    }
                 } catch (e) {
                     console.warn(`Invalid JSON text in message at index ${index}:`, msg.text);
-                    // Attempt to parse text if it's not valid JSON, treat it as plain text content for now
-                    msg.text = JSON.stringify({ text: msg.text }); // Wrap in JSON for consistency
-                    return true;
+                    // If parsing fails, keep msg.text as original string
                 }
             }
             return true;
         });
 
-        // Check if initial message was sent
+        // Clear existing messages before re-rendering
+        chatMessages.innerHTML = '';
+        displayedMessages.clear(); // Clear displayed messages set
+
+        // Check if initial message was sent by looking through history
         const initialMessageExists = validMessages.some(msg => {
-            if (msg.senderId === userId && msg.messageType === 'text' && msg.text.startsWith('{')) {
-                try {
-                    const parsed = JSON.parse(msg.text);
-                    return parsed.image === productImage && parsed.text === predefinedMessage;
-                } catch (e) {
-                    return false;
+            if (msg.senderId === userId && msg.messageType === 'text') {
+                // If msg.text is an object (from JSON.parse above), check its properties
+                if (typeof msg.text === 'object' && msg.text !== null && msg.text.image === productImage && msg.text.text === predefinedMessage) {
+                    return true;
+                }
+                // Fallback for old messages where text might not have been JSON.stringified
+                if (typeof msg.text === 'string' && msg.text.includes(productImage) && msg.text.includes(predefinedMessage)) {
+                    return true;
                 }
             }
             return false;
@@ -1366,21 +1391,38 @@ async function loadChatHistory() {
         if (initialMessageExists) {
             isInitialMessageSent = true;
             localStorage.setItem(`initialMessageSent_${productId}_${receiverId}`, 'true');
+        } else {
+            isInitialMessageSent = false;
+            localStorage.setItem(`initialMessageSent_${productId}_${receiverId}`, 'false');
         }
 
-        // Render product preview if initial message not sent
-        renderProductPreview();
+        renderProductPreview(); // Render product preview based on updated isInitialMessageSent
 
-        lastDisplayedDate = null;
-        validMessages.forEach(displayMessage);
-        // Update localStorage with fetched messages
+        lastDisplayedDate = null; // Reset date for fresh rendering
+        validMessages.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt)).forEach(displayMessage);
+
+        // Mark all loaded messages as seen (if current user is receiver)
+        const unreadMessages = validMessages.filter(msg => msg.receiverId === userId && msg.status !== 'seen').map(msg => msg._id);
+        if (unreadMessages.length > 0) {
+            socket.emit('markAsSeen', {
+                messageIds: unreadMessages,
+                senderId: receiverId, // The sender of these messages
+                receiverId: userId
+            });
+        }
+
+        // Update localStorage with fetched messages (after filtering and processing)
         localStorage.setItem(`chat_${userId}_${receiverId}`, JSON.stringify(validMessages));
+
     } catch (error) {
         console.error('Error loading chat history:', error);
         showToast(`Failed to load messages: ${error.message}`, 'error');
-        // Fallback to localStorage
+        // Fallback to localStorage if API call fails
         const storedMessages = JSON.parse(localStorage.getItem(`chat_${userId}_${receiverId}`) || '[]');
-        storedMessages.forEach(displayMessage);
+        chatMessages.innerHTML = ''; // Clear current display
+        displayedMessages.clear();
+        lastDisplayedDate = null;
+        storedMessages.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt)).forEach(displayMessage);
         renderProductPreview();
     }
 }
@@ -1416,7 +1458,8 @@ socket.on('markSeenError', ({ error }) => {
 socket.on('messagesSeen', ({ messageIds }) => {
     const messages = document.querySelectorAll('.message.sent .message-timestamp');
     messages.forEach((timestamp) => {
-        if (messageIds.includes(timestamp.dataset.messageId)) {
+        const messageId = timestamp.closest('.message').dataset.messageId;
+        if (messageIds.includes(messageId) && !timestamp.textContent.includes('✔✔')) {
             timestamp.textContent += ' ✔✔';
         }
     });
