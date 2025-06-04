@@ -5,7 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home | Salmart</title>
     <link rel="manifest" href="/manifest.json" />
-<meta name="theme-color" content="#00b894" />
+<!-- Set address bar, nav bar, and task switcher color -->
+<meta name="theme-color" content="#ffffff">
+
+<!-- Set navigation bar color (for Android) -->
+<meta name="msapplication-navbutton-color" content="#ffffff">
+<meta name="nav-color" content="#ffffff">
+<meta name="color-scheme" content="light">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="apple-touch-icon" href="/salmart-192x192.png" />
     <link rel="stylesheet" href="./Style.css">
     
@@ -117,32 +124,29 @@
             opacity: 1;
             bottom: 50px;
         }
-/* Install Button Base Style */
 .install-btn {
-  display: none;
   position: fixed;
   top: 20px;
   right: 20px;
-  padding: 12px 24px;
-  background: linear-gradient(135deg, #00b894, #00cec9);
+  z-index: 9999;
+  padding: 10px 20px;
+  background-color: #00b894;
   color: white;
-  font-weight: 600;
-  font-family: 'Poppins', sans-serif;
-  font-size: 16px;
   border: none;
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 184, 148, 0.3);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  font-family: 'Poppins', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
   cursor: pointer;
-  z-index: 9999;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: all 0.3s ease;
+  display: none;
 }
 
-/* Hover Effect */
 .install-btn:hover {
-  transform: scale(1.05);
-  box-shadow: 0 6px 16px rgba(0, 184, 148, 0.5);
+  background-color: #019870;
+  transform: translateY(-2px);
 }
-
 /* Slide Down Animation */
 .install-btn.show {
   display: block !important;
