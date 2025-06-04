@@ -2,9 +2,10 @@
   "name": "Salmart",
   "short_name": "Salmart",
   "start_url": "/index.html",
-  "display": "fullscreen",
+  "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#fff",
+  "theme_color": "#00b894",
+  "orientation": "portrait",
   "icons": [
     {
       "src": "/salmart-192x192.png",

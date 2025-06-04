@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home | Salmart</title>
     <link rel="manifest" href="/manifest.json" />
-<meta name="theme-color" content="#fff" />
+<meta name="theme-color" content="#00b894" />
 <link rel="apple-touch-icon" href="/salmart-192x192.png" />
     <link rel="stylesheet" href="./Style.css">
     
@@ -117,7 +117,62 @@
             opacity: 1;
             bottom: 50px;
         }
+/* Install Button Base Style */
+.install-btn {
+  display: none;
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #00b894, #00cec9);
+  color: white;
+  font-weight: 600;
+  font-family: 'Poppins', sans-serif;
+  font-size: 16px;
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 184, 148, 0.3);
+  cursor: pointer;
+  z-index: 9999;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
 
+/* Hover Effect */
+.install-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 16px rgba(0, 184, 148, 0.5);
+}
+
+/* Slide Down Animation */
+.install-btn.show {
+  display: block !important;
+  animation: slideDown 0.4s ease forwards;
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Responsive Positioning for Smaller Screens */
+@media (max-width: 480px) {
+  .install-btn {
+    top: auto;
+    bottom: 20px;
+    right: 20px;
+    left: 20px;
+    width: calc(100% - 40px);
+    font-size: 15px;
+    padding: 14px;
+    border-radius: 10px;
+  }
+}
     </style>
     <script src="addPic.js"></script>
 
@@ -141,63 +196,43 @@
       </div>
       <h2 class="head" style="color: #28a745; background-color: white; padding-top: 20px; padding-bottom: 20px; margin-top: -0px; box-shadow: 0 0px 10px 0px #d3d3d3; border: solid; border-width: 1px; border-color: #fff; position: fixed; z-index:1; width: 100vw; font-size: 19px; font-family: Poppins">Salmart</h2> 
     </div>
+<button id="installBtn" class="install-btn">📲 Install Salmart</button>
 
-   <button id="installBtn" style="display:none; position:fixed; bottom:20px; right:20px; padding:10px 20px; background:#00b894; color:white; border:none; border-radius:8px; z-index: 300000;">Install Salmart</button>
-<script>
-    let deferredPrompt;
+    <script>
+  let deferredPrompt;
+  const installBtn = document.getElementById('installBtn');
 
-    window.addEventListener('beforeinstallprompt', (e) => {
-      console.log('✅ beforeinstallprompt event fired!');
-      e.preventDefault(); // Stop the default browser prompt
-      deferredPrompt = e;
+  window.addEventListener('beforeinstallprompt', (e) => {
+    // Prevent auto prompt
+    e.preventDefault();
+    deferredPrompt = e;
 
-      // Note: The button element might not be in the DOM yet when this script runs in <head>.
-      // We'll address this by getting it when needed in the click handler.
-      // Or by having the button always available if you want to make it visible
-      // immediately after the event.
-      
-      // Let's ensure the button exists before trying to access it
-      const checkAndShowInstallBtn = () => {
-        const installBtn = document.getElementById('installBtn');
-        console.log('🔍 installBtn element (on check):', installBtn); 
-        if (installBtn) {
-          console.log('ℹ️ installBtn found. Setting display to block.');
-          installBtn.style.display = 'block'; // Make the button visible
-          console.log('ℹ️ installBtn display style:', installBtn.style.display);
-          
-          // Attach click listener only once
-          if (!installBtn._hasClickListener) { // Simple flag to prevent multiple listeners
-            installBtn.addEventListener('click', () => {
-              console.log('🖱️ installBtn clicked!');
-              installBtn.style.display = 'none'; // Hide the button after clicking
-              deferredPrompt.prompt(); // Show the browser's install prompt
+    // Show the install button with animation
+    installBtn.classList.add('show');
 
-              deferredPrompt.userChoice.then((choiceResult) => {
-                console.log('✅ userChoice result:', choiceResult.outcome);
-                if (choiceResult.outcome === 'accepted') {
-                  console.log('User accepted the install prompt');
-                } else {
-                  console.log('User dismissed the install prompt');
-                }
-                deferredPrompt = null; // Clear the deferred prompt
-              });
-            });
-            installBtn._hasClickListener = true;
-          }
-        } else {
-          console.warn('⚠️ installBtn not found. Will retry on DOMContentLoaded.');
-        }
-      };
+    installBtn.addEventListener('click', async () => {
+      installBtn.disabled = true;
+      deferredPrompt.prompt();
 
-      // Call immediately in case the button is already available (unlikely in head for this layout)
-      // or if it's placed very high in the body.
-      checkAndShowInstallBtn(); 
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        console.log('User accepted the install prompt');
+      } else {
+        console.log('User dismissed the install prompt');
+      }
 
-      // Ensure button is handled once the DOM is fully loaded
-      document.addEventListener('DOMContentLoaded', checkAndShowInstallBtn);
-
+      installBtn.classList.remove('show');
+      deferredPrompt = null;
     });
-    </script>
+  });
+
+  // Optional: Hide button if app is already installed
+  window.addEventListener('appinstalled', () => {
+    console.log('PWA was installed');
+    installBtn.classList.remove('show');
+  });
+</script>
+    
 
     <div style="text-align: center">
       <!-- Delete Confirmation Modal -->

@@ -6733,3 +6733,9 @@
 {"level":"info","message":"[2025-06-04T15:24:04.378Z] GET /api/following","timestamp":"2025-06-04T15:24:04.378Z"}
 {"level":"info","message":"[2025-06-04T15:24:04.565Z] GET /post?category=","timestamp":"2025-06-04T15:24:04.565Z"}
 {"level":"info","message":"Socket disconnected: 5c-Mmdh7mwL1vAYSAABj","timestamp":"2025-06-04T15:24:05.846Z"}
+{"level":"info","message":"✅ Firebase Admin SDK initialized successfully","timestamp":"2025-06-04T15:28:17.700Z"}
+{"level":"info","message":"✅ Socket.IO initialized","timestamp":"2025-06-04T15:28:17.938Z"}
+{"level":"info","message":"✅ Nodemailer configured","timestamp":"2025-06-04T15:28:18.054Z"}
+{"level":"info","message":"✅ Cloudinary configured","timestamp":"2025-06-04T15:28:18.057Z"}
+{"level":"info","message":"✅ Server running on port 3000","timestamp":"2025-06-04T15:28:18.123Z"}
+{"level":"info","message":"✅ MongoDB connected successfully","timestamp":"2025-06-04T15:28:22.864Z"}
