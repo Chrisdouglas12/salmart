@@ -5094,3 +5094,34 @@
 {"level":"info","message":"✅ Cloudinary configured","timestamp":"2025-06-04T05:01:05.314Z"}
 {"level":"info","message":"✅ Server running on port 3000","timestamp":"2025-06-04T05:01:05.373Z"}
 {"level":"info","message":"✅ MongoDB connected successfully","timestamp":"2025-06-04T05:01:09.885Z"}
+{"level":"info","message":"✅ Firebase Admin SDK initialized successfully","timestamp":"2025-06-04T05:14:48.128Z"}
+{"level":"info","message":"✅ Socket.IO initialized","timestamp":"2025-06-04T05:14:48.358Z"}
+{"level":"info","message":"✅ Nodemailer configured","timestamp":"2025-06-04T05:14:48.460Z"}
+{"level":"info","message":"✅ Cloudinary configured","timestamp":"2025-06-04T05:14:48.463Z"}
+{"level":"info","message":"✅ Server running on port 3000","timestamp":"2025-06-04T05:14:48.515Z"}
+{"level":"error","message":"❌ MongoDB connection error: Server selection timed out after 5000 ms","timestamp":"2025-06-04T05:14:54.269Z"}
+{"level":"info","message":"✅ Firebase Admin SDK initialized successfully","timestamp":"2025-06-04T05:15:24.171Z"}
+{"level":"info","message":"✅ Socket.IO initialized","timestamp":"2025-06-04T05:15:24.383Z"}
+{"level":"info","message":"✅ Nodemailer configured","timestamp":"2025-06-04T05:15:24.482Z"}
+{"level":"info","message":"✅ Cloudinary configured","timestamp":"2025-06-04T05:15:24.484Z"}
+{"level":"info","message":"✅ Server running on port 3000","timestamp":"2025-06-04T05:15:24.532Z"}
+{"level":"info","message":"✅ MongoDB connected successfully","timestamp":"2025-06-04T05:15:27.763Z"}
+{"level":"info","message":"Socket connected: Df0Dhpv4hxYNoS4EAAAB","timestamp":"2025-06-04T05:17:40.877Z"}
+{"level":"info","message":"[2025-06-04T05:17:41.305Z] GET /users-profile/67d845b5c9add2113fc80789","timestamp":"2025-06-04T05:17:41.305Z"}
+{"level":"info","message":"[2025-06-04T05:17:41.336Z] GET /notification-counts?userId=67d845b5c9add2113fc80789","timestamp":"2025-06-04T05:17:41.337Z"}
+{"level":"info","message":"[2025-06-04T05:17:41.532Z] GET /api/following","timestamp":"2025-06-04T05:17:41.532Z"}
+{"level":"info","message":"[2025-06-04T05:17:41.543Z] GET /verify-token","timestamp":"2025-06-04T05:17:41.543Z"}
+{"level":"info","message":"[2025-06-04T05:17:46.557Z] GET /post?category=","timestamp":"2025-06-04T05:17:46.557Z"}
+{"level":"info","message":"[2025-06-04T05:17:59.873Z] POST /post/like/683fd39487e6398fa4fdf38f","timestamp":"2025-06-04T05:17:59.873Z"}
+{"level":"info","message":"[2025-06-04T05:18:09.932Z] GET /notification-counts?userId=67d845b5c9add2113fc80789","timestamp":"2025-06-04T05:18:09.933Z"}
+{"level":"info","message":"Socket disconnected: Df0Dhpv4hxYNoS4EAAAB","timestamp":"2025-06-04T05:18:20.856Z"}
+{"level":"info","message":"Socket connected: dIpcCg9qSvGCM4XUAAAD","timestamp":"2025-06-04T05:18:28.242Z"}
+{"level":"info","message":"[2025-06-04T05:18:28.461Z] GET /post?category=","timestamp":"2025-06-04T05:18:28.461Z"}
+{"level":"info","message":"[2025-06-04T05:18:57.014Z] GET /notification-counts?userId=67d845b5c9add2113fc80789","timestamp":"2025-06-04T05:18:57.015Z"}
+{"level":"info","message":"Socket disconnected: dIpcCg9qSvGCM4XUAAAD","timestamp":"2025-06-04T05:19:12.051Z"}
+{"level":"info","message":"✅ Firebase Admin SDK initialized successfully","timestamp":"2025-06-04T05:32:41.097Z"}
+{"level":"info","message":"✅ Socket.IO initialized","timestamp":"2025-06-04T05:32:41.281Z"}
+{"level":"info","message":"✅ Nodemailer configured","timestamp":"2025-06-04T05:32:41.364Z"}
+{"level":"info","message":"✅ Cloudinary configured","timestamp":"2025-06-04T05:32:41.366Z"}
+{"level":"info","message":"✅ Server running on port 3000","timestamp":"2025-06-04T05:32:41.413Z"}
+{"level":"info","message":"✅ MongoDB connected successfully","timestamp":"2025-06-04T05:33:05.173Z"}
