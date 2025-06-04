@@ -319,3 +319,22 @@
 {"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-04T06:09:51.035Z"}
 {"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-04T06:11:25.119Z"}
 {"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-04T06:12:04.046Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-04T10:54:34.187Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-04T10:54:55.279Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-04T10:55:18.325Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-04T10:55:26.951Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-04T10:55:34.874Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-04T10:55:37.891Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-04T10:56:05.171Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-04T10:56:08.536Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-04T11:13:31.909Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-04T11:13:48.222Z"}
+{"body":{"buyerId":"67d845b5c9add2113fc80789","currency":"NGN","email":"deb@gmail.com","postId":"68402a385caa49109048626f"},"level":"info","message":"Payment initiation started","requestId":"PAY_1749035628228","timestamp":"2025-06-04T11:13:48.231Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-04T11:13:48.869Z"}
+{"body":{"buyerId":"67d845b5c9add2113fc80789","currency":"NGN","email":"deb@gmail.com","postId":"68402a385caa49109048626f"},"level":"info","message":"Payment initiation started","requestId":"PAY_1749035628871","timestamp":"2025-06-04T11:13:48.871Z"}
+{"level":"info","message":"Payment initialized successfully","reference":"r8tn78bkca","requestId":"PAY_1749035628228","timestamp":"2025-06-04T11:13:49.341Z"}
+{"level":"info","message":"Payment initialized successfully","reference":"ke2aqxzwbq","requestId":"PAY_1749035628871","timestamp":"2025-06-04T11:13:49.903Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-04T11:14:36.332Z"}
+{"level":"info","message":"Payment verification started","reference":"r8tn78bkca","requestId":"SUCCESS_1749035676340","timestamp":"2025-06-04T11:14:36.341Z"}
+{"level":"info","message":"Payment verification completed successfully","receiptSent":true,"reference":"r8tn78bkca","requestId":"SUCCESS_1749035676340","timestamp":"2025-06-04T11:14:46.548Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-04T11:14:47.312Z"}
