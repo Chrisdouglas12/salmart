@@ -164,6 +164,29 @@
     </style>
     <script src="addPic.js"></script>
 
+
+</head>
+<body>
+  <div class="Genenral-container">
+    <div class="menu-icon">
+      <div></div>
+      <div></div>
+      <div></div>
+    </div>
+    <div class="profile-pic">
+      <img src="Default.png"  id="profile-picture3" width="40px" height="40px" style="border-radius: 50%">
+    </div>
+    <div style="text-align:center">
+      <div style="z-index: 3; position: fixed; margin-left: 83.5%; margin-top: 16px; font-size: 16px;">
+        <a href="Search.html">
+          <i class="fas fa-search" style="color:#28a745; border: 0.1px solid #fff; border-radius: 20px; padding: 8.5px; background-color:#fff; box-shadow: 0 0 10px #ddd; font-weight: light; margin-left: auto"></i>
+        </a>
+      </div>
+      <h2 class="head" style="color: #28a745; background-color: white; padding-top: 20px; padding-bottom: 20px; margin-top: -0px; box-shadow: 0 0px 10px 0px #d3d3d3; border: solid; border-width: 1px; border-color: #fff; position: fixed; z-index:1; width: 100vw; font-size: 19px; font-family: Poppins">Salmart</h2> 
+    </div>
+<button id="installBtn" class="pwa-install-button" aria-label="Install App" style="display:none;">
+    Install Salmart
+</button>
 <script>
 let deferredPrompt;
 const installBtn = document.getElementById('installBtn'); // Get button reference once
@@ -210,29 +233,6 @@ window.addEventListener('beforeinstallprompt', (e) => {
   document.addEventListener('DOMContentLoaded', showInstallButton);
 });
 </script>
-
-</head>
-<body>
-  <div class="Genenral-container">
-    <div class="menu-icon">
-      <div></div>
-      <div></div>
-      <div></div>
-    </div>
-    <div class="profile-pic">
-      <img src="Default.png"  id="profile-picture3" width="40px" height="40px" style="border-radius: 50%">
-    </div>
-    <div style="text-align:center">
-      <div style="z-index: 3; position: fixed; margin-left: 83.5%; margin-top: 16px; font-size: 16px;">
-        <a href="Search.html">
-          <i class="fas fa-search" style="color:#28a745; border: 0.1px solid #fff; border-radius: 20px; padding: 8.5px; background-color:#fff; box-shadow: 0 0 10px #ddd; font-weight: light; margin-left: auto"></i>
-        </a>
-      </div>
-      <h2 class="head" style="color: #28a745; background-color: white; padding-top: 20px; padding-bottom: 20px; margin-top: -0px; box-shadow: 0 0px 10px 0px #d3d3d3; border: solid; border-width: 1px; border-color: #fff; position: fixed; z-index:1; width: 100vw; font-size: 19px; font-family: Poppins">Salmart</h2> 
-    </div>
-<button id="installBtn" class="pwa-install-button" aria-label="Install App" style="display:none;">
-    Install Salmart
-</button>
 
     <div style="text-align: center">
       <!-- Delete Confirmation Modal -->
