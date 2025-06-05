@@ -588,3 +588,66 @@
 {"level":"info","message":"Sending FCM notification to user 679d530c96d06fa5dfab1ded for message 684154bb9db1e12b06c65f4a","timestamp":"2025-06-05T08:26:35.531Z"}
 {"level":"info","message":"FCM notification sent to user 679d530c96d06fa5dfab1ded","timestamp":"2025-06-05T08:26:37.683Z"}
 {"level":"info","message":"Triggering badge update for user 679d530c96d06fa5dfab1ded","timestamp":"2025-06-05T08:26:37.685Z"}
+{"level":"info","message":"Fetched 3 latest messages for user 679d530c96d06fa5dfab1ded","timestamp":"2025-06-05T10:51:50.176Z"}
+{"level":"info","message":"Fetched 3 latest messages for user 679d530c96d06fa5dfab1ded","timestamp":"2025-06-05T10:53:05.164Z"}
+{"level":"info","message":"Fetched 42 messages between 679d530c96d06fa5dfab1ded and 67d845b5c9add2113fc80789","timestamp":"2025-06-05T10:53:09.147Z"}
+{"level":"info","message":"Fetched 3 latest messages for user 679d530c96d06fa5dfab1ded","timestamp":"2025-06-05T11:02:36.850Z"}
+{"level":"info","message":"Fetched 3 latest messages for user 679d530c96d06fa5dfab1ded","timestamp":"2025-06-05T11:11:55.992Z"}
+{"level":"error","message":"Error fetching messages for user 679d530c96d06fa5dfab1ded: connection <monitor> to 65.62.31.9:27017 timed out","timestamp":"2025-06-05T11:12:21.828Z"}
+{"level":"error","message":"Error fetching messages for user 679d530c96d06fa5dfab1ded: connection <monitor> to 65.62.31.9:27017 closed","timestamp":"2025-06-05T11:12:44.827Z"}
+{"level":"info","message":"Fetched 3 latest messages for user 679d530c96d06fa5dfab1ded","timestamp":"2025-06-05T11:30:11.803Z"}
+{"level":"info","message":"Fetched 42 messages between 679d530c96d06fa5dfab1ded and 67d845b5c9add2113fc80789","timestamp":"2025-06-05T11:30:15.806Z"}
+{"level":"info","message":"Fetched 3 latest messages for user 679d530c96d06fa5dfab1ded","timestamp":"2025-06-05T11:34:42.934Z"}
+{"level":"info","message":"Fetched 42 messages between 679d530c96d06fa5dfab1ded and 67d845b5c9add2113fc80789","timestamp":"2025-06-05T11:34:46.575Z"}
+{"level":"info","message":"Fetched 3 latest messages for user 679d530c96d06fa5dfab1ded","timestamp":"2025-06-05T11:45:29.870Z"}
+{"level":"info","message":"Fetched 42 messages between 679d530c96d06fa5dfab1ded and 67d845b5c9add2113fc80789","timestamp":"2025-06-05T11:45:33.549Z"}
+{"level":"warn","message":"Missing senderId or receiverId in /messages","timestamp":"2025-06-05T11:47:18.938Z"}
+{"level":"info","message":"Fetched 3 latest messages for user 679d530c96d06fa5dfab1ded","timestamp":"2025-06-05T11:47:50.564Z"}
+{"level":"info","message":"Fetched 42 messages between 679d530c96d06fa5dfab1ded and 67d845b5c9add2113fc80789","timestamp":"2025-06-05T11:47:53.884Z"}
+{"level":"info","message":"Fetched 3 latest messages for user 679d530c96d06fa5dfab1ded","timestamp":"2025-06-05T11:48:50.865Z"}
+{"level":"info","message":"Fetched 3 latest messages for user 679d530c96d06fa5dfab1ded","timestamp":"2025-06-05T12:24:33.118Z"}
+{"level":"info","message":"Fetched 42 messages between 679d530c96d06fa5dfab1ded and 67d845b5c9add2113fc80789","timestamp":"2025-06-05T12:24:37.493Z"}
+{"level":"error","message":"Error fetching messages between 679d530c96d06fa5dfab1ded and 67d845b5c9add2113fc80789: connection <monitor> to 65.62.31.187:27017 closed","timestamp":"2025-06-05T12:25:31.683Z"}
+{"level":"error","message":"Failed to send message from 679d530c96d06fa5dfab1ded to 67d845b5c9add2113fc80789: connection <monitor> to 65.62.31.187:27017 closed","timestamp":"2025-06-05T12:25:40.438Z"}
+{"level":"error","message":"Error fetching messages between 679d530c96d06fa5dfab1ded and 67b6fbdedfb7a20620fcb1d1: connection timed out","timestamp":"2025-06-05T12:26:29.137Z"}
+{"level":"info","message":"Fetched 3 latest messages for user 679d530c96d06fa5dfab1ded","timestamp":"2025-06-05T12:45:12.815Z"}
+{"level":"info","message":"Fetched 3 latest messages for user 679d530c96d06fa5dfab1ded","timestamp":"2025-06-05T12:46:09.514Z"}
+{"level":"info","message":"Fetched 42 messages between 679d530c96d06fa5dfab1ded and 67d845b5c9add2113fc80789","timestamp":"2025-06-05T12:46:12.714Z"}
+{"level":"error","message":"Error fetching messages between 679d530c96d06fa5dfab1ded and 67d845b5c9add2113fc80789: connection <monitor> to 65.62.31.9:27017 closed","timestamp":"2025-06-05T12:47:01.170Z"}
+{"level":"error","message":"Failed to send message from 679d530c96d06fa5dfab1ded to 67d845b5c9add2113fc80789: connection <monitor> to 65.62.31.187:27017 timed out","timestamp":"2025-06-05T12:47:22.737Z"}
+{"level":"info","message":"Fetched 3 latest messages for user 679d530c96d06fa5dfab1ded","timestamp":"2025-06-05T13:03:55.351Z"}
+{"level":"info","message":"Fetched 42 messages between 679d530c96d06fa5dfab1ded and 67d845b5c9add2113fc80789","timestamp":"2025-06-05T13:04:02.137Z"}
+{"level":"info","message":"Message sent from 679d530c96d06fa5dfab1ded to 67d845b5c9add2113fc80789: 684195d885b057a2fadf56f4","timestamp":"2025-06-05T13:04:24.838Z"}
+{"level":"info","message":"Emitting receiveMessage to user 67d845b5c9add2113fc80789: {\"_id\":\"684195d885b057a2fadf56f4\",\"senderId\":\"679d530c96d06fa5dfab1ded\",\"receiverId\":\"67d845b5c9add2113fc80789\",\"text\":\"How\",\"messageType\":\"text\",\"attachment\":null,\"chatPartnerName\":\"Chris Douglas\",\"status\":\"sent\",\"createdAt\":\"2025-06-05T13:04:24.379Z\"}","timestamp":"2025-06-05T13:04:24.853Z"}
+{"level":"info","message":"Emitting newMessage to user 679d530c96d06fa5dfab1ded: {\"_id\":\"684195d885b057a2fadf56f4\",\"senderId\":\"679d530c96d06fa5dfab1ded\",\"receiverId\":\"67d845b5c9add2113fc80789\",\"text\":\"How\",\"messageType\":\"text\",\"attachment\":null,\"chatPartnerName\":\"Chris Douglas\",\"status\":\"sent\",\"createdAt\":\"2025-06-05T13:04:24.379Z\"}","timestamp":"2025-06-05T13:04:24.859Z"}
+{"level":"info","message":"Sending FCM notification to user 67d845b5c9add2113fc80789 for message 684195d885b057a2fadf56f4","timestamp":"2025-06-05T13:04:24.863Z"}
+{"level":"info","message":"FCM notification sent to user 67d845b5c9add2113fc80789","timestamp":"2025-06-05T13:04:27.828Z"}
+{"level":"info","message":"Triggering badge update for user 67d845b5c9add2113fc80789","timestamp":"2025-06-05T13:04:27.829Z"}
+{"level":"info","message":"Fetched 43 messages between 679d530c96d06fa5dfab1ded and 67d845b5c9add2113fc80789","timestamp":"2025-06-05T13:04:35.106Z"}
+{"level":"info","message":"Message sent from 679d530c96d06fa5dfab1ded to 67d845b5c9add2113fc80789: 6841962b85b057a2fadf56fd","timestamp":"2025-06-05T13:05:48.138Z"}
+{"level":"info","message":"Emitting receiveMessage to user 67d845b5c9add2113fc80789: {\"_id\":\"6841962b85b057a2fadf56fd\",\"senderId\":\"679d530c96d06fa5dfab1ded\",\"receiverId\":\"67d845b5c9add2113fc80789\",\"text\":\"Hello Chris\",\"messageType\":\"text\",\"attachment\":null,\"chatPartnerName\":\"Chris Douglas\",\"status\":\"sent\",\"createdAt\":\"2025-06-05T13:05:47.880Z\"}","timestamp":"2025-06-05T13:05:48.146Z"}
+{"level":"info","message":"Emitting newMessage to user 679d530c96d06fa5dfab1ded: {\"_id\":\"6841962b85b057a2fadf56fd\",\"senderId\":\"679d530c96d06fa5dfab1ded\",\"receiverId\":\"67d845b5c9add2113fc80789\",\"text\":\"Hello Chris\",\"messageType\":\"text\",\"attachment\":null,\"chatPartnerName\":\"Chris Douglas\",\"status\":\"sent\",\"createdAt\":\"2025-06-05T13:05:47.880Z\"}","timestamp":"2025-06-05T13:05:48.160Z"}
+{"level":"info","message":"Sending FCM notification to user 67d845b5c9add2113fc80789 for message 6841962b85b057a2fadf56fd","timestamp":"2025-06-05T13:05:48.166Z"}
+{"level":"info","message":"FCM notification sent to user 67d845b5c9add2113fc80789","timestamp":"2025-06-05T13:05:48.381Z"}
+{"level":"info","message":"Triggering badge update for user 67d845b5c9add2113fc80789","timestamp":"2025-06-05T13:05:48.383Z"}
+{"level":"info","message":"Fetched 44 messages between 679d530c96d06fa5dfab1ded and 67d845b5c9add2113fc80789","timestamp":"2025-06-05T13:05:59.919Z"}
+{"level":"info","message":"Fetched 44 messages between 679d530c96d06fa5dfab1ded and 67d845b5c9add2113fc80789","timestamp":"2025-06-05T13:06:19.869Z"}
+{"level":"info","message":"Fetched 3 latest messages for user 679d530c96d06fa5dfab1ded","timestamp":"2025-06-05T13:07:58.776Z"}
+{"level":"info","message":"Fetched 3 latest messages for user 679d530c96d06fa5dfab1ded","timestamp":"2025-06-05T13:08:14.047Z"}
+{"level":"info","message":"Fetched 44 messages between 679d530c96d06fa5dfab1ded and 67d845b5c9add2113fc80789","timestamp":"2025-06-05T13:08:16.130Z"}
+{"level":"info","message":"Fetched 3 latest messages for user 679d530c96d06fa5dfab1ded","timestamp":"2025-06-05T13:19:15.035Z"}
+{"level":"info","message":"Fetched 44 messages between 679d530c96d06fa5dfab1ded and 67d845b5c9add2113fc80789","timestamp":"2025-06-05T13:19:26.326Z"}
+{"level":"info","message":"Message sent from 679d530c96d06fa5dfab1ded to 67d845b5c9add2113fc80789: 6841996e85b057a2fadf5737","timestamp":"2025-06-05T13:19:45.738Z"}
+{"level":"info","message":"Emitting receiveMessage to user 67d845b5c9add2113fc80789: {\"_id\":\"6841996e85b057a2fadf5737\",\"senderId\":\"679d530c96d06fa5dfab1ded\",\"receiverId\":\"67d845b5c9add2113fc80789\",\"text\":\"Hi\",\"messageType\":\"text\",\"attachment\":null,\"chatPartnerName\":\"Chris Douglas\",\"status\":\"sent\",\"createdAt\":\"2025-06-05T13:19:42.562Z\"}","timestamp":"2025-06-05T13:19:45.748Z"}
+{"level":"info","message":"Emitting newMessage to user 679d530c96d06fa5dfab1ded: {\"_id\":\"6841996e85b057a2fadf5737\",\"senderId\":\"679d530c96d06fa5dfab1ded\",\"receiverId\":\"67d845b5c9add2113fc80789\",\"text\":\"Hi\",\"messageType\":\"text\",\"attachment\":null,\"chatPartnerName\":\"Chris Douglas\",\"status\":\"sent\",\"createdAt\":\"2025-06-05T13:19:42.562Z\"}","timestamp":"2025-06-05T13:19:45.754Z"}
+{"level":"info","message":"Sending FCM notification to user 67d845b5c9add2113fc80789 for message 6841996e85b057a2fadf5737","timestamp":"2025-06-05T13:19:45.760Z"}
+{"level":"info","message":"FCM notification sent to user 67d845b5c9add2113fc80789","timestamp":"2025-06-05T13:19:45.978Z"}
+{"level":"info","message":"Triggering badge update for user 67d845b5c9add2113fc80789","timestamp":"2025-06-05T13:19:45.980Z"}
+{"level":"info","message":"Fetched 3 latest messages for user 679d530c96d06fa5dfab1ded","timestamp":"2025-06-05T13:27:58.039Z"}
+{"level":"info","message":"Fetched 45 messages between 679d530c96d06fa5dfab1ded and 67d845b5c9add2113fc80789","timestamp":"2025-06-05T13:28:03.303Z"}
+{"level":"info","message":"Message sent from 679d530c96d06fa5dfab1ded to 67d845b5c9add2113fc80789: 68419b7b85b057a2fadf5756","timestamp":"2025-06-05T13:28:27.821Z"}
+{"level":"info","message":"Emitting receiveMessage to user 67d845b5c9add2113fc80789: {\"_id\":\"68419b7b85b057a2fadf5756\",\"senderId\":\"679d530c96d06fa5dfab1ded\",\"receiverId\":\"67d845b5c9add2113fc80789\",\"text\":\"{\\\"text\\\":\\\"My offer for \\\\\\\"Deep freezer\\\\\\\" is ₦400,000\\\",\\\"offer\\\":400000,\\\"productId\\\":\\\"684072c97aaaf3991f8814ec\\\",\\\"productName\\\":\\\"Deep freezer\\\",\\\"image\\\":\\\"https://res.cloudinary.com/dp7shydjh/image/upload/v1749054152/Uploads/e2behrqk5dqfkpxv11vs.png\\\"}\",\"messageType\":\"offer\",\"attachment\":null,\"chatPartnerName\":\"Chris Douglas\",\"status\":\"sent\",\"createdAt\":\"2025-06-05T13:28:27.608Z\"}","timestamp":"2025-06-05T13:28:27.825Z"}
+{"level":"info","message":"Emitting newMessage to user 679d530c96d06fa5dfab1ded: {\"_id\":\"68419b7b85b057a2fadf5756\",\"senderId\":\"679d530c96d06fa5dfab1ded\",\"receiverId\":\"67d845b5c9add2113fc80789\",\"text\":\"{\\\"text\\\":\\\"My offer for \\\\\\\"Deep freezer\\\\\\\" is ₦400,000\\\",\\\"offer\\\":400000,\\\"productId\\\":\\\"684072c97aaaf3991f8814ec\\\",\\\"productName\\\":\\\"Deep freezer\\\",\\\"image\\\":\\\"https://res.cloudinary.com/dp7shydjh/image/upload/v1749054152/Uploads/e2behrqk5dqfkpxv11vs.png\\\"}\",\"messageType\":\"offer\",\"attachment\":null,\"chatPartnerName\":\"Chris Douglas\",\"status\":\"sent\",\"createdAt\":\"2025-06-05T13:28:27.608Z\"}","timestamp":"2025-06-05T13:28:27.828Z"}
+{"level":"info","message":"Sending FCM notification to user 67d845b5c9add2113fc80789 for message 68419b7b85b057a2fadf5756","timestamp":"2025-06-05T13:28:27.830Z"}
+{"level":"info","message":"FCM notification sent to user 67d845b5c9add2113fc80789","timestamp":"2025-06-05T13:28:28.007Z"}
+{"level":"info","message":"Triggering badge update for user 67d845b5c9add2113fc80789","timestamp":"2025-06-05T13:28:28.009Z"}
