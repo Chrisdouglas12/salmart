@@ -329,11 +329,6 @@
         }
     });
 
-    // Send typing signal when user types
-    typeSection.addEventListener('input', () => {
-        socket.emit('typing', { senderId: userId, receiverId });
-    });
-
     // Handle errors from the server
     socket.on('messageError', ({ error }) => {
         showToast(`Message error: ${error}`, 'error');

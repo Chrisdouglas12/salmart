@@ -99,3 +99,11 @@
 
         return messageDate.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
     }
+
+    // Send typing signal when user starts typing
+    function sendTypingSignal() {
+        socket.emit('typing', { senderId: userId, receiverId });
+    }
+
+    // Attach typing indicator to input field
+    typeSection.addEventListener('input', sendTypingSignal);
