@@ -20,6 +20,12 @@
       flex-direction: column;
       overflow-x: hidden;
     }
+    html, body {
+  height: 100%;
+  background-color: #ffffff; /* Reinforce background */
+  margin: 0;
+  padding: 0;
+}
   /* Modal Styling */
 .thumbnail {
     width: 60px;

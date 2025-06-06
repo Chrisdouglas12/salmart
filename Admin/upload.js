@@ -1,4 +1,3 @@
-
 document.addEventListener("DOMContentLoaded", function() {
   // Function to decode JWT token and get user info
   function getLoggedInUserInfo() {
@@ -54,6 +53,13 @@ document.addEventListener("DOMContentLoaded", function() {
   // Close modal handlers
   function closeModal() {
     modal.classList.remove('show');
+    // Reset the form when closing
+    fileInput.value = '';
+    imagePreview.src = '';
+    document.querySelectorAll('.edit-btn').forEach(btn => {
+      btn.disabled = true;
+    });
+    saveBtn.disabled = true;
   }
 
   closeModalBtn.addEventListener('click', closeModal);
@@ -74,6 +80,20 @@ document.addEventListener("DOMContentLoaded", function() {
   // File input change handler
   fileInput.addEventListener('change', function(e) {
     if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        showToast('Please select an image file', '#e74c3c');
+        return;
+      }
+      
+      // Validate file size (e.g., max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        showToast('File size must be less than 5MB', '#e74c3c');
+        return;
+      }
+
       const reader = new FileReader();
 
       reader.onload = function(event) {
@@ -85,7 +105,7 @@ document.addEventListener("DOMContentLoaded", function() {
         saveBtn.disabled = false;
       };
 
-      reader.readAsDataURL(e.target.files[0]);
+      reader.readAsDataURL(file);
     }
   });
 
@@ -94,33 +114,75 @@ document.addEventListener("DOMContentLoaded", function() {
     showToast('Camera functionality would be implemented here');
   });
 
-  // Save button handler
-  saveBtn.addEventListener('click', function() {
+  // Save button handler - NOW WITH ACTUAL BACKEND UPLOAD
+  saveBtn.addEventListener('click', async function() {
     if (!isOwnProfile) {
       console.warn('Non-owner attempted to save profile picture');
+      showToast('You can only update your own profile picture', '#e74c3c');
+      return;
+    }
+
+    const file = fileInput.files[0];
+    
+    if (!file) {
+      showToast('Please select a file first', '#e74c3c');
       return;
     }
 
     // Show loading state
     saveBtn.classList.add('uploading');
+    saveBtn.disabled = true;
 
-    // Simulate upload (replace with actual upload logic)
-    setTimeout(function() {
-      // Hide loading state
-      saveBtn.classList.remove('uploading');
+    try {
+      // Create FormData to send the file
+      const formData = new FormData();
+      formData.append('profilePicture', file);
 
-      // Update profile picture
+      // Get auth token for the request
+      const token = localStorage.getItem('authToken');
+      
+      if (!token) {
+        throw new Error('Authentication token not found. Please log in again.');
+      }
+
+      console.log('Uploading profile picture...');
+      
+      const response = await fetch(`${API_BASE_URL}/upload-profile-picture`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Upload failed');
+      }
+
+      console.log('Profile picture uploaded successfully:', data.profilePicture);
+
+      // Update profile picture with the URL returned from backend
       const profilePic = document.getElementById('profile-picture');
       const profilePic1 = document.getElementById('profile-picture1');
-      if (profilePic) profilePic.src = imagePreview.src;
-      if (profilePic1) profilePic1.src = imagePreview.src;
+      if (profilePic) profilePic.src = data.profilePicture;
+      if (profilePic1) profilePic1.src = data.profilePicture;
 
       // Close modal
       closeModal();
 
       // Show success message
       showToast('Profile picture updated successfully!', '#2ecc71');
-    }, 1500);
+
+    } catch (error) {
+      console.error('Upload error:', error);
+      showToast(error.message || 'Failed to upload profile picture', '#e74c3c');
+    } finally {
+      // Hide loading state
+      saveBtn.classList.remove('uploading');
+      saveBtn.disabled = false;
+    }
   });
 
   // Toast notification function (aligned with other scripts)

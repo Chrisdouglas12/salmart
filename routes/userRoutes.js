@@ -452,7 +452,7 @@ router.get('/profile/:userId', async (req, res) => {
       firstName: user.firstName,
       lastName: user.lastName,
       profilePicture: user.profilePicture,
-      productsCount: 0, // Replace with actual product count logic
+      productsCount: post.isSold?.length || 0, // Replace with actual product count logic
     });
   } catch (error) {
     console.error('Get profile error:', error.message);
