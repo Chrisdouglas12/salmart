@@ -7511,3 +7511,23 @@
 {"level":"info","message":"Fetched counts for user 68431813432ee393a735a686: {\"notificationCount\":0,\"messagesCount\":0}","messagesCount":0,"notificationCount":0,"timestamp":"2025-06-06T16:34:20.003Z"}
 {"level":"info","message":"Emitting countsUpdate to user 68431813432ee393a735a686: {\"notificationCount\":0,\"messagesCount\":0}","messagesCount":0,"notificationCount":0,"timestamp":"2025-06-06T16:34:20.006Z","userId":"68431813432ee393a735a686"}
 {"level":"info","message":"Emitted countsUpdate to user 68431813432ee393a735a686","timestamp":"2025-06-06T16:34:20.010Z"}
+{"level":"error","message":"MongoDB not connected: readyState=2","timestamp":"2025-06-06T20:28:30.178Z"}
+{"level":"error","message":"Error fetching notification counts for user 68431813432ee393a735a686: Database connection lost","timestamp":"2025-06-06T20:28:30.182Z"}
+{"level":"info","message":"Emitting countsUpdate to user 68431813432ee393a735a686: {\"notificationCount\":0,\"messagesCount\":0}","messagesCount":0,"notificationCount":0,"timestamp":"2025-06-06T20:28:30.188Z","userId":"68431813432ee393a735a686"}
+{"level":"info","message":"Emitted countsUpdate to user 68431813432ee393a735a686","timestamp":"2025-06-06T20:28:30.200Z"}
+{"level":"error","message":"MongoDB not connected: readyState=2","timestamp":"2025-06-06T20:29:29.959Z"}
+{"level":"error","message":"Error fetching notification counts for user 68431813432ee393a735a686: Database connection lost","timestamp":"2025-06-06T20:29:29.961Z"}
+{"level":"info","message":"Emitting countsUpdate to user 68431813432ee393a735a686: {\"notificationCount\":0,\"messagesCount\":0}","messagesCount":0,"notificationCount":0,"timestamp":"2025-06-06T20:29:29.967Z","userId":"68431813432ee393a735a686"}
+{"level":"info","message":"Emitted countsUpdate to user 68431813432ee393a735a686","timestamp":"2025-06-06T20:29:29.977Z"}
+{"level":"error","message":"MongoDB not connected: readyState=2","timestamp":"2025-06-06T20:29:59.917Z"}
+{"level":"error","message":"Error fetching notification counts for user 68431813432ee393a735a686: Database connection lost","timestamp":"2025-06-06T20:29:59.919Z"}
+{"level":"info","message":"Emitting countsUpdate to user 68431813432ee393a735a686: {\"notificationCount\":0,\"messagesCount\":0}","messagesCount":0,"notificationCount":0,"timestamp":"2025-06-06T20:29:59.923Z","userId":"68431813432ee393a735a686"}
+{"level":"info","message":"Emitted countsUpdate to user 68431813432ee393a735a686","timestamp":"2025-06-06T20:29:59.927Z"}
+{"level":"error","message":"MongoDB not connected: readyState=2","timestamp":"2025-06-06T20:30:30.020Z"}
+{"level":"error","message":"Error fetching notification counts for user 68431813432ee393a735a686: Database connection lost","timestamp":"2025-06-06T20:30:30.023Z"}
+{"level":"info","message":"Emitting countsUpdate to user 68431813432ee393a735a686: {\"notificationCount\":0,\"messagesCount\":0}","messagesCount":0,"notificationCount":0,"timestamp":"2025-06-06T20:30:30.029Z","userId":"68431813432ee393a735a686"}
+{"level":"info","message":"Emitted countsUpdate to user 68431813432ee393a735a686","timestamp":"2025-06-06T20:30:30.045Z"}
+{"level":"error","message":"MongoDB not connected: readyState=2","timestamp":"2025-06-06T20:30:59.936Z"}
+{"level":"error","message":"Error fetching notification counts for user 68431813432ee393a735a686: Database connection lost","timestamp":"2025-06-06T20:30:59.939Z"}
+{"level":"info","message":"Emitting countsUpdate to user 68431813432ee393a735a686: {\"notificationCount\":0,\"messagesCount\":0}","messagesCount":0,"notificationCount":0,"timestamp":"2025-06-06T20:30:59.944Z","userId":"68431813432ee393a735a686"}
+{"level":"info","message":"Emitted countsUpdate to user 68431813432ee393a735a686","timestamp":"2025-06-06T20:30:59.948Z"}

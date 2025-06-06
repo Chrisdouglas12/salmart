@@ -14,7 +14,6 @@
   <script src="profilePostScript.js"></script>
   <script src="sideBar"></script>
   <script src="addPic.js"></script>
-  <script src="upload.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900&display=swap" rel="stylesheet">
 </head>
 <body style="background-color: #f3f8f1">
@@ -26,6 +25,20 @@
     <div></div>
     <div></div>
   </div>
+  
+   <form id="upload-form">
+    <div class="profile-picture-container">
+      <div class="skeleton skeleton-profile-pic"></div>
+      <img src="default-avater.png" id="profile-picture" class="profile-picture">
+      <input type="file" id="profile-picture-upload" accept="image/jpeg, image/png" style="display: none;">
+      <label for="profile-picture-upload" class="file-input-icon">
+        <i class="fas fa-camera"></i>
+      </label>
+      <button id="upload-button" class="upload-button" style="display: none;">Upload Profile Picture</button>
+    </div>
+    <div class="skeleton skeleton-username"></div>
+    <h2 id="username" style="display: none;">Username</h2>
+  </form>
   <div class="side-bar" style="z-index: 3000">
     <div class="profile-sec">
       <img src="default-avatar.png" id="profile-picture1">
@@ -44,19 +57,7 @@
     </ul>
     <pre style="font-size: 10px; text-align: center; margin-top: 40px; color: green">©Salmart Technologies 2025</pre>
   </div>
-  <form id="upload-form">
-    <div class="profile-picture-container">
-      <div class="skeleton skeleton-profile-pic"></div>
-      <img src="default-avatar.png" id="profile-picture" class="profile-picture" style="display: none;">
-      <input type="file" id="profile-picture-upload" accept="image/jpeg, image/png" style="display: none;">
-      <label for="profile-picture-upload" class="file-input-icon">
-        <i class="fas fa-camera"></i>
-      </label>
-      <button id="upload-button" class="upload-button" style="display: none;">Upload Profile Picture</button>
-    </div>
-    <div class="skeleton skeleton-username"></div>
-    <h2 id="username" style="display: none;">Username</h2>
-  </form>
+ 
 
   <div id="delete-modal" class="modern-modal">
     <div class="modal-content">
@@ -527,7 +528,7 @@
         profilePicEls.forEach(el => {
           if (el) {
             el.onerror = function() {
-              this.src = "default-avatar.png";
+              this.src = "default-avater.png";
             };
             el.src = data.profilePicture;
             el.style.display = 'block'; // Show profile picture
@@ -604,4 +605,5 @@
   <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
   <script>eruda.init();</script>
   <script src="reviews.js"></script>
+    <script src="upload.js"></script>
 </html>

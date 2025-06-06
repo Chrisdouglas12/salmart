@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
             if (response.ok) {
                 const userData = await response.json();
-                userAvatar.src = userData.profilePicture || 'default-avatar.png';
+                userAvatar.src = userData.profilePicture || 'default-avater.png';
             }
         } catch (error) {
             console.error('Error fetching user profile:', error);

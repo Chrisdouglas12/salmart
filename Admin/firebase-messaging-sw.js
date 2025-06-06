@@ -77,7 +77,7 @@ try {
 }
 
 // ===== PWA Caching (Crucial for Install Prompt) =====
-const CACHE_NAME = 'salmart-cache-v1'; // Increment this on new deployments to update cache
+const CACHE_NAME = 'salmart-cache-v3'; // Increment this on new deployments to update cache
 const urlsToCache = [
   '/',
   '/index.html',
@@ -103,7 +103,7 @@ const urlsToCache = [
   '/salmart-512x512.png', // Ensure this exists and is listed in manifest
   // IMPORTANT: Ensure manifest.json is also in this list
   '/manifest.json',
-  '/offline.html', // Optional fallback page (add to public folder)
+  '/Offline.html', // Optional fallback page (add to public folder)
 
   // Add any other critical assets: fonts, images, etc.
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css',
