@@ -637,3 +637,895 @@
 {"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749130083765","timestamp":"2025-06-05T13:28:04.890Z"}
 {"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749130083824","timestamp":"2025-06-05T13:28:04.913Z"}
 {"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T13:28:05.054Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:08:17.814Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:08:26.934Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:08:29.039Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749132509046","timestamp":"2025-06-05T14:08:29.047Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:08:29.194Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749132509196","timestamp":"2025-06-05T14:08:29.197Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:08:29.248Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749132509250","timestamp":"2025-06-05T14:08:29.251Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:08:29.278Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749132509280","timestamp":"2025-06-05T14:08:29.280Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:08:29.302Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749132509304","timestamp":"2025-06-05T14:08:29.304Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749132509196","timestamp":"2025-06-05T14:08:30.164Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749132509046","timestamp":"2025-06-05T14:08:30.212Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749132509304","timestamp":"2025-06-05T14:08:30.247Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749132509280","timestamp":"2025-06-05T14:08:30.283Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749132509250","timestamp":"2025-06-05T14:08:30.321Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:08:30.374Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749132510376","timestamp":"2025-06-05T14:08:30.377Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:08:30.424Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749132510428","timestamp":"2025-06-05T14:08:30.428Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749132510376","timestamp":"2025-06-05T14:08:30.725Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749132510428","timestamp":"2025-06-05T14:08:30.755Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:08:36.553Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:08:39.228Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749132519231","timestamp":"2025-06-05T14:08:39.231Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:08:39.312Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749132519316","timestamp":"2025-06-05T14:08:39.316Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749132519231","timestamp":"2025-06-05T14:08:39.920Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749132519316","timestamp":"2025-06-05T14:08:39.968Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:08:46.817Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:08:47.552Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749132527554","timestamp":"2025-06-05T14:08:47.554Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749132527554","timestamp":"2025-06-05T14:08:48.238Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:09:10.748Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:10:25.114Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:10:27.980Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749132627984","timestamp":"2025-06-05T14:10:27.985Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749132627984","timestamp":"2025-06-05T14:10:28.717Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:10:43.573Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:11:22.308Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:11:24.757Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749132684760","timestamp":"2025-06-05T14:11:24.761Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:11:24.821Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749132684824","timestamp":"2025-06-05T14:11:24.824Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749132684824","timestamp":"2025-06-05T14:11:25.472Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749132684760","timestamp":"2025-06-05T14:11:25.504Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:12:03.717Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:12:04.303Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749132724306","timestamp":"2025-06-05T14:12:04.307Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749132724306","timestamp":"2025-06-05T14:12:05.100Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:12:20.930Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:12:23.738Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749132743742","timestamp":"2025-06-05T14:12:23.742Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:12:23.812Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749132743815","timestamp":"2025-06-05T14:12:23.815Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749132743742","timestamp":"2025-06-05T14:12:24.428Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749132743815","timestamp":"2025-06-05T14:12:24.466Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:13:13.839Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:13:16.751Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749132796756","timestamp":"2025-06-05T14:13:16.758Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749132796756","timestamp":"2025-06-05T14:13:17.445Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:13:40.550Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:24:57.779Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:25:00.916Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749133500921","timestamp":"2025-06-05T14:25:00.921Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749133500921","timestamp":"2025-06-05T14:25:01.777Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:25:19.247Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:26:07.474Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:26:09.969Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749133569972","timestamp":"2025-06-05T14:26:09.973Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:26:10.026Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749133570028","timestamp":"2025-06-05T14:26:10.028Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749133570028","timestamp":"2025-06-05T14:26:10.761Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749133569972","timestamp":"2025-06-05T14:26:10.795Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:26:21.639Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:26:22.301Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749133582303","timestamp":"2025-06-05T14:26:22.304Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749133582303","timestamp":"2025-06-05T14:26:23.105Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:26:42.899Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:26:45.681Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749133605684","timestamp":"2025-06-05T14:26:45.684Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:26:45.746Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749133605748","timestamp":"2025-06-05T14:26:45.748Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749133605684","timestamp":"2025-06-05T14:26:46.378Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749133605748","timestamp":"2025-06-05T14:26:53.310Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:27:59.727Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:28:02.592Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749133682596","timestamp":"2025-06-05T14:28:02.596Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749133682596","timestamp":"2025-06-05T14:28:03.465Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:31:46.849Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:31:49.032Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:31:53.102Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:31:55.438Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749133915442","timestamp":"2025-06-05T14:31:55.443Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749133915442","timestamp":"2025-06-05T14:31:56.256Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:32:09.989Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:32:24.514Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:32:25.942Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:33:21.263Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:33:45.582Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:33:48.424Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749134028428","timestamp":"2025-06-05T14:33:48.429Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:33:48.491Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749134028494","timestamp":"2025-06-05T14:33:48.494Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749134028494","timestamp":"2025-06-05T14:33:49.222Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749134028428","timestamp":"2025-06-05T14:33:49.257Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:33:55.837Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:35:05.228Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:35:24.580Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:35:26.512Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749134126514","timestamp":"2025-06-05T14:35:26.517Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:35:26.561Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749134126563","timestamp":"2025-06-05T14:35:26.563Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749134126514","timestamp":"2025-06-05T14:35:27.234Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749134126563","timestamp":"2025-06-05T14:35:27.244Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:35:30.948Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:35:33.329Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749134133332","timestamp":"2025-06-05T14:35:33.333Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749134133332","timestamp":"2025-06-05T14:35:34.120Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:35:47.304Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:35:47.934Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749134147939","timestamp":"2025-06-05T14:35:47.940Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749134147939","timestamp":"2025-06-05T14:35:48.636Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:36:00.628Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:36:03.562Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749134163566","timestamp":"2025-06-05T14:36:03.566Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749134163566","timestamp":"2025-06-05T14:36:04.316Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:36:47.936Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:36:50.722Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749134210725","timestamp":"2025-06-05T14:36:50.726Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:36:50.776Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749134210777","timestamp":"2025-06-05T14:36:50.778Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749134210725","timestamp":"2025-06-05T14:36:51.478Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749134210777","timestamp":"2025-06-05T14:36:51.508Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:37:19.191Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:37:52.180Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:37:53.816Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:38:10.599Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:38:13.203Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749134293206","timestamp":"2025-06-05T14:38:13.206Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749134293206","timestamp":"2025-06-05T14:38:14.009Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:38:56.081Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:38:58.442Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749134338445","timestamp":"2025-06-05T14:38:58.446Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:38:58.510Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749134338511","timestamp":"2025-06-05T14:38:58.511Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749134338445","timestamp":"2025-06-05T14:38:59.298Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749134338511","timestamp":"2025-06-05T14:38:59.358Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:39:06.501Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:39:07.045Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749134347046","timestamp":"2025-06-05T14:39:07.046Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749134347046","timestamp":"2025-06-05T14:39:07.722Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:39:25.385Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:39:27.981Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749134367983","timestamp":"2025-06-05T14:39:27.983Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:39:28.051Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749134368052","timestamp":"2025-06-05T14:39:28.053Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749134367983","timestamp":"2025-06-05T14:39:28.680Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749134368052","timestamp":"2025-06-05T14:39:28.694Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:40:09.338Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:40:12.133Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749134412136","timestamp":"2025-06-05T14:40:12.137Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:40:12.204Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749134412206","timestamp":"2025-06-05T14:40:12.206Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749134412206","timestamp":"2025-06-05T14:40:12.859Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749134412136","timestamp":"2025-06-05T14:40:12.872Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:45:34.561Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:45:55.084Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:46:00.166Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:46:08.395Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:46:15.841Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:46:46.117Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:47:37.770Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:48:07.241Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:52:21.788Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:54:56.485Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T14:59:11.736Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T15:14:35.208Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T15:16:29.399Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T15:19:10.148Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T15:19:14.319Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T15:20:38.293Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T15:20:43.073Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T15:21:13.514Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T15:22:41.721Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T15:22:46.839Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T15:22:49.427Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749136969437","timestamp":"2025-06-05T15:22:49.439Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T15:22:49.610Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749136969612","timestamp":"2025-06-05T15:22:49.612Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749136969612","timestamp":"2025-06-05T15:22:50.544Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749136969437","timestamp":"2025-06-05T15:22:50.578Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T15:25:35.287Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T15:25:38.371Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749137138375","timestamp":"2025-06-05T15:25:38.375Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T15:25:38.448Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749137138450","timestamp":"2025-06-05T15:25:38.451Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749137138375","timestamp":"2025-06-05T15:25:39.057Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749137138450","timestamp":"2025-06-05T15:25:39.091Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T15:25:56.542Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T15:25:59.415Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749137159417","timestamp":"2025-06-05T15:25:59.417Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T15:25:59.485Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749137159487","timestamp":"2025-06-05T15:25:59.488Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749137159417","timestamp":"2025-06-05T15:26:00.062Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749137159487","timestamp":"2025-06-05T15:26:00.140Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T15:26:31.286Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T15:26:33.898Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749137193901","timestamp":"2025-06-05T15:26:33.902Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749137193901","timestamp":"2025-06-05T15:26:34.760Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T15:26:46.248Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T15:27:18.542Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T15:27:21.458Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749137241461","timestamp":"2025-06-05T15:27:21.462Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T15:27:21.537Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749137241540","timestamp":"2025-06-05T15:27:21.540Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749137241461","timestamp":"2025-06-05T15:27:25.632Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749137241540","timestamp":"2025-06-05T15:27:25.706Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T15:27:56.899Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T15:27:59.597Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749137279601","timestamp":"2025-06-05T15:27:59.602Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749137279601","timestamp":"2025-06-05T15:28:00.425Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T15:28:45.311Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T15:28:48.138Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749137328141","timestamp":"2025-06-05T15:28:48.142Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T15:28:48.196Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749137328199","timestamp":"2025-06-05T15:28:48.199Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749137328141","timestamp":"2025-06-05T15:28:48.958Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749137328199","timestamp":"2025-06-05T15:28:48.997Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T15:29:00.416Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T15:29:15.346Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T15:30:12.346Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T15:30:51.638Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T15:30:54.219Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749137454222","timestamp":"2025-06-05T15:30:54.222Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749137454222","timestamp":"2025-06-05T15:30:55.143Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T15:30:56.257Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T15:31:32.112Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T15:31:34.887Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749137494890","timestamp":"2025-06-05T15:31:34.890Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T15:31:34.969Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749137494972","timestamp":"2025-06-05T15:31:34.972Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749137494890","timestamp":"2025-06-05T15:31:35.628Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749137494972","timestamp":"2025-06-05T15:31:35.667Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T15:32:15.047Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T15:32:17.716Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749137537718","timestamp":"2025-06-05T15:32:17.718Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749137537718","timestamp":"2025-06-05T15:32:18.464Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T15:32:24.879Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T15:32:25.468Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749137545471","timestamp":"2025-06-05T15:32:25.471Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749137545471","timestamp":"2025-06-05T15:32:26.513Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T15:33:16.273Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T15:33:19.055Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749137599057","timestamp":"2025-06-05T15:33:19.057Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T15:33:19.146Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749137599149","timestamp":"2025-06-05T15:33:19.149Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749137599057","timestamp":"2025-06-05T15:33:19.752Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749137599149","timestamp":"2025-06-05T15:33:19.771Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T15:34:06.116Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T15:34:08.748Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749137648751","timestamp":"2025-06-05T15:34:08.751Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T15:34:08.811Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749137648813","timestamp":"2025-06-05T15:34:08.813Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749137648751","timestamp":"2025-06-05T15:34:09.452Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749137648813","timestamp":"2025-06-05T15:34:09.474Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T15:34:38.045Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T15:34:40.908Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749137680910","timestamp":"2025-06-05T15:34:40.910Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749137680910","timestamp":"2025-06-05T15:34:41.548Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T15:34:50.842Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T15:34:51.489Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749137691491","timestamp":"2025-06-05T15:34:51.491Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749137691491","timestamp":"2025-06-05T15:34:52.151Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T15:44:28.247Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T16:17:29.740Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T16:21:00.400Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T16:23:04.822Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T16:23:10.295Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749140590303","timestamp":"2025-06-05T16:23:10.304Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749140590303","timestamp":"2025-06-05T16:23:11.931Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T16:34:14.833Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T16:34:23.725Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T16:34:28.914Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749141268923","timestamp":"2025-06-05T16:34:28.924Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749141268923","timestamp":"2025-06-05T16:34:30.560Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T16:34:42.312Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T16:34:43.122Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749141283126","timestamp":"2025-06-05T16:34:43.126Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749141283126","timestamp":"2025-06-05T16:34:43.889Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T16:34:54.485Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T16:35:01.627Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749141301630","timestamp":"2025-06-05T16:35:01.630Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749141301630","timestamp":"2025-06-05T16:35:02.929Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T16:35:13.720Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T16:35:14.373Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749141314378","timestamp":"2025-06-05T16:35:14.378Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749141314378","timestamp":"2025-06-05T16:35:15.105Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T16:35:43.700Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T16:35:46.744Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749141346747","timestamp":"2025-06-05T16:35:46.747Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749141346747","timestamp":"2025-06-05T16:35:47.882Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T16:36:08.077Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T16:36:08.580Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749141368583","timestamp":"2025-06-05T16:36:08.584Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749141368583","timestamp":"2025-06-05T16:36:09.329Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T16:43:23.405Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T17:20:05.610Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T17:20:15.558Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T17:30:00.807Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T17:33:24.195Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T17:34:17.491Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T17:34:26.488Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749144866496","timestamp":"2025-06-05T17:34:26.498Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749144866496","timestamp":"2025-06-05T17:34:28.454Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T17:34:59.405Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T17:35:00.132Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749144900134","timestamp":"2025-06-05T17:35:00.135Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749144900134","timestamp":"2025-06-05T17:35:00.859Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T17:35:08.525Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T17:38:11.741Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T17:38:15.139Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749145095143","timestamp":"2025-06-05T17:38:15.144Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749145095143","timestamp":"2025-06-05T17:38:16.857Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T17:38:16.893Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749145096896","timestamp":"2025-06-05T17:38:16.896Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749145096896","timestamp":"2025-06-05T17:38:17.203Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T17:38:17.237Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749145097239","timestamp":"2025-06-05T17:38:17.239Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749145097239","timestamp":"2025-06-05T17:38:17.671Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T17:38:32.386Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T17:38:35.351Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749145115354","timestamp":"2025-06-05T17:38:35.354Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749145115354","timestamp":"2025-06-05T17:38:36.102Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T17:38:41.543Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T17:38:42.018Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749145122020","timestamp":"2025-06-05T17:38:42.020Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749145122020","timestamp":"2025-06-05T17:38:42.760Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T17:38:58.714Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T17:39:16.730Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749145156732","timestamp":"2025-06-05T17:39:16.733Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749145156732","timestamp":"2025-06-05T17:39:17.573Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T17:39:26.573Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T17:39:29.552Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749145169555","timestamp":"2025-06-05T17:39:29.555Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749145169555","timestamp":"2025-06-05T17:39:30.365Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T17:54:19.518Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T17:56:16.317Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T17:56:19.421Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749146179432","timestamp":"2025-06-05T17:56:19.433Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749146179432","timestamp":"2025-06-05T17:56:20.731Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T17:56:26.167Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T17:56:26.869Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749146186871","timestamp":"2025-06-05T17:56:26.871Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749146186871","timestamp":"2025-06-05T17:56:27.620Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T17:57:49.949Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T17:58:36.061Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T17:58:38.733Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749146318735","timestamp":"2025-06-05T17:58:38.738Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749146318735","timestamp":"2025-06-05T17:58:39.841Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T17:58:39.871Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749146319872","timestamp":"2025-06-05T17:58:39.872Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749146319872","timestamp":"2025-06-05T17:58:40.329Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T18:00:02.349Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T18:00:10.530Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T18:00:13.113Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749146413115","timestamp":"2025-06-05T18:00:13.116Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749146413115","timestamp":"2025-06-05T18:00:14.046Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T18:00:14.077Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749146414080","timestamp":"2025-06-05T18:00:14.080Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749146414080","timestamp":"2025-06-05T18:00:14.390Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T18:00:23.594Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T18:01:15.627Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T18:01:18.709Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749146478714","timestamp":"2025-06-05T18:01:18.715Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749146478714","timestamp":"2025-06-05T18:01:19.520Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T18:06:08.038Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T18:06:11.317Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749146771335","timestamp":"2025-06-05T18:06:11.336Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749146771335","timestamp":"2025-06-05T18:06:12.308Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T18:06:19.601Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T18:06:58.068Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T18:07:01.460Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749146821464","timestamp":"2025-06-05T18:07:01.465Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T18:07:01.552Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749146821555","timestamp":"2025-06-05T18:07:01.556Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749146821464","timestamp":"2025-06-05T18:07:02.313Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749146821555","timestamp":"2025-06-05T18:07:02.375Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T18:07:13.338Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T18:25:20.759Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T18:25:24.446Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T18:25:48.220Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T18:26:11.550Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T18:26:14.253Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749147974268","timestamp":"2025-06-05T18:26:14.269Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749147974268","timestamp":"2025-06-05T18:26:15.549Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T18:26:15.590Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749147975594","timestamp":"2025-06-05T18:26:15.594Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749147975594","timestamp":"2025-06-05T18:26:15.953Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T18:26:20.468Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T18:26:28.599Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T18:26:31.421Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749147991425","timestamp":"2025-06-05T18:26:31.426Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749147991425","timestamp":"2025-06-05T18:26:32.174Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T18:26:32.211Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749147992214","timestamp":"2025-06-05T18:26:32.214Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749147992214","timestamp":"2025-06-05T18:26:32.554Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T18:39:30.228Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T18:41:22.059Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T18:41:39.596Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T18:46:52.587Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T18:46:56.346Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T18:47:23.296Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T18:48:06.422Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T18:48:09.328Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749149289331","timestamp":"2025-06-05T18:48:09.334Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749149289331","timestamp":"2025-06-05T18:48:10.257Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T18:48:10.277Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749149290279","timestamp":"2025-06-05T18:48:10.279Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749149290279","timestamp":"2025-06-05T18:48:10.588Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T18:48:19.436Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T18:48:22.180Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749149302183","timestamp":"2025-06-05T18:48:22.183Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749149302183","timestamp":"2025-06-05T18:48:22.860Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T18:48:22.897Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749149302901","timestamp":"2025-06-05T18:48:22.901Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749149302901","timestamp":"2025-06-05T18:48:23.571Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-05T18:48:29.742Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T06:23:40.998Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T06:26:10.851Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T06:45:06.447Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T06:47:18.963Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T06:48:34.391Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T06:48:38.637Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T06:48:54.398Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T06:55:39.453Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T06:55:53.618Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T06:57:10.630Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T06:57:15.581Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T06:57:37.217Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T06:57:47.546Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T06:58:42.461Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T06:59:35.293Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T07:00:03.406Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T07:00:09.876Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T07:00:19.433Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T07:00:22.353Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749193222362","timestamp":"2025-06-06T07:00:22.363Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749193222362","timestamp":"2025-06-06T07:00:24.315Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T07:00:24.361Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749193224364","timestamp":"2025-06-06T07:00:24.364Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T07:00:24.418Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749193224364","timestamp":"2025-06-06T07:00:25.879Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T07:00:48.990Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T07:00:52.343Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749193252346","timestamp":"2025-06-06T07:00:52.347Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749193252346","timestamp":"2025-06-06T07:00:53.293Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T07:00:53.332Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749193253335","timestamp":"2025-06-06T07:00:53.335Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749193253335","timestamp":"2025-06-06T07:00:53.951Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T07:02:48.650Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T07:02:51.814Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749193371817","timestamp":"2025-06-06T07:02:51.818Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749193371817","timestamp":"2025-06-06T07:02:53.250Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T07:02:53.280Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749193373282","timestamp":"2025-06-06T07:02:53.282Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749193373282","timestamp":"2025-06-06T07:02:53.742Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T07:04:20.967Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T07:04:29.235Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749193469237","timestamp":"2025-06-06T07:04:29.238Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749193469237","timestamp":"2025-06-06T07:04:30.535Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T07:04:41.363Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T07:05:10.506Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T07:05:14.535Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749193514539","timestamp":"2025-06-06T07:05:14.539Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749193514539","timestamp":"2025-06-06T07:05:15.545Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T07:05:21.087Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T07:06:13.547Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T07:06:17.062Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749193577064","timestamp":"2025-06-06T07:06:17.065Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749193577064","timestamp":"2025-06-06T07:06:17.997Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T07:06:18.037Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749193578039","timestamp":"2025-06-06T07:06:18.039Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749193578039","timestamp":"2025-06-06T07:06:18.343Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T07:06:25.688Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T07:06:26.192Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749193586195","timestamp":"2025-06-06T07:06:26.195Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749193586195","timestamp":"2025-06-06T07:06:27.271Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T07:19:15.485Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T07:19:22.281Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T07:19:25.287Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749194365289","timestamp":"2025-06-06T07:19:25.290Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749194365289","timestamp":"2025-06-06T07:19:26.153Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T07:19:26.178Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749194366180","timestamp":"2025-06-06T07:19:26.181Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749194366180","timestamp":"2025-06-06T07:19:26.723Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T07:20:01.608Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T07:26:56.926Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T07:27:03.705Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T07:27:24.503Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T07:28:46.883Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T07:29:09.340Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T07:30:19.442Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T07:31:38.245Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T07:33:36.464Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T07:34:38.887Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T07:34:59.782Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T07:36:06.539Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T07:38:35.535Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T07:38:43.342Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T07:40:25.867Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T07:41:10.070Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T07:41:26.882Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T07:41:30.253Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749195690261","timestamp":"2025-06-06T07:41:30.263Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749195690261","timestamp":"2025-06-06T07:41:31.555Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T07:41:31.604Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749195691607","timestamp":"2025-06-06T07:41:31.608Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749195691607","timestamp":"2025-06-06T07:41:32.049Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T07:41:46.620Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T07:41:50.805Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749195710807","timestamp":"2025-06-06T07:41:50.808Z"}
+{"error":"fetch failed","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749195710807","timestamp":"2025-06-06T07:42:01.346Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T07:56:26.423Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T07:57:34.273Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T07:59:12.679Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T07:59:15.548Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749196755551","timestamp":"2025-06-06T07:59:15.552Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749196755551","timestamp":"2025-06-06T07:59:16.943Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T07:59:16.976Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749196756977","timestamp":"2025-06-06T07:59:16.978Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749196756977","timestamp":"2025-06-06T07:59:18.612Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T07:59:44.720Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T07:59:50.070Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T07:59:52.006Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T07:59:52.692Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T08:00:16.511Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T08:07:02.027Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749197222042","timestamp":"2025-06-06T08:07:02.044Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749197222042","timestamp":"2025-06-06T08:07:03.071Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T08:07:03.171Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749197223176","timestamp":"2025-06-06T08:07:03.176Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749197223176","timestamp":"2025-06-06T08:07:03.569Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T08:07:09.810Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T08:07:13.234Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749197233236","timestamp":"2025-06-06T08:07:13.236Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749197233236","timestamp":"2025-06-06T08:07:14.207Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T08:07:14.244Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749197234247","timestamp":"2025-06-06T08:07:14.247Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749197234247","timestamp":"2025-06-06T08:07:14.619Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T08:07:20.214Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T08:07:20.844Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749197240847","timestamp":"2025-06-06T08:07:20.847Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749197240847","timestamp":"2025-06-06T08:07:21.973Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T08:15:35.394Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T08:21:11.041Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T08:21:16.668Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T08:21:19.894Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749198079898","timestamp":"2025-06-06T08:21:19.899Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749198079898","timestamp":"2025-06-06T08:21:21.254Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T08:21:21.305Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749198081308","timestamp":"2025-06-06T08:21:21.309Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749198081308","timestamp":"2025-06-06T08:21:21.816Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T08:21:30.436Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T08:21:31.022Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749198091026","timestamp":"2025-06-06T08:21:31.027Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749198091026","timestamp":"2025-06-06T08:21:31.835Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T08:24:19.976Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T08:24:23.002Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749198263004","timestamp":"2025-06-06T08:24:23.004Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749198263004","timestamp":"2025-06-06T08:24:23.821Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T08:24:23.868Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749198263871","timestamp":"2025-06-06T08:24:23.871Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749198263871","timestamp":"2025-06-06T08:24:24.261Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T08:24:31.412Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T08:24:44.551Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T08:24:47.710Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749198287713","timestamp":"2025-06-06T08:24:47.714Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749198287713","timestamp":"2025-06-06T08:24:48.850Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T08:24:48.882Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749198288884","timestamp":"2025-06-06T08:24:48.884Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749198288884","timestamp":"2025-06-06T08:24:49.351Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T08:25:50.466Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T08:25:53.271Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749198353275","timestamp":"2025-06-06T08:25:53.275Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749198353275","timestamp":"2025-06-06T08:25:54.103Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T08:42:47.622Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T08:43:07.274Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T08:43:40.170Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T09:03:17.646Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T09:04:02.000Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T09:04:05.144Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749200645146","timestamp":"2025-06-06T09:04:05.146Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749200645146","timestamp":"2025-06-06T09:04:06.122Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T09:26:13.877Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T09:26:51.547Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T09:26:54.489Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749202014491","timestamp":"2025-06-06T09:26:54.491Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749202014491","timestamp":"2025-06-06T09:26:55.621Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T09:27:12.240Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T09:27:22.078Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T09:27:25.053Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749202045054","timestamp":"2025-06-06T09:27:25.055Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749202045054","timestamp":"2025-06-06T09:27:25.830Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T12:02:25.041Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T12:02:28.069Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749211348071","timestamp":"2025-06-06T12:02:28.072Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749211348071","timestamp":"2025-06-06T12:02:29.111Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T12:02:39.763Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T12:02:47.775Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T12:02:50.407Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749211370409","timestamp":"2025-06-06T12:02:50.409Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749211370409","timestamp":"2025-06-06T12:02:51.279Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T12:03:30.101Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T12:04:17.899Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T12:04:45.925Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T12:04:49.145Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749211489149","timestamp":"2025-06-06T12:04:49.149Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749211489149","timestamp":"2025-06-06T12:04:50.047Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T12:04:50.083Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749211490086","timestamp":"2025-06-06T12:04:50.087Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749211490086","timestamp":"2025-06-06T12:04:50.516Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T12:04:51.814Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T12:05:46.804Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T12:05:49.598Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749211549600","timestamp":"2025-06-06T12:05:49.600Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749211549600","timestamp":"2025-06-06T12:05:50.651Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T12:05:50.676Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749211550678","timestamp":"2025-06-06T12:05:50.678Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749211550678","timestamp":"2025-06-06T12:05:51.214Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T12:06:16.997Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T12:06:21.382Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749211581385","timestamp":"2025-06-06T12:06:21.386Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749211581385","timestamp":"2025-06-06T12:06:22.621Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T12:06:29.162Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T12:07:03.141Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T12:07:06.121Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749211626123","timestamp":"2025-06-06T12:07:06.123Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749211626123","timestamp":"2025-06-06T12:07:07.097Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T12:08:12.133Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T12:08:15.571Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749211695574","timestamp":"2025-06-06T12:08:15.575Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749211695574","timestamp":"2025-06-06T12:08:16.926Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T12:08:16.969Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749211696972","timestamp":"2025-06-06T12:08:16.973Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749211696972","timestamp":"2025-06-06T12:08:17.313Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T12:08:30.306Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T12:08:31.084Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749211711087","timestamp":"2025-06-06T12:08:31.087Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749211711087","timestamp":"2025-06-06T12:08:31.985Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T12:46:40.320Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T12:47:24.883Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T12:48:05.992Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T12:48:55.290Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T13:39:22.388Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T13:39:26.215Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749217166238","timestamp":"2025-06-06T13:39:26.239Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749217166238","timestamp":"2025-06-06T13:39:27.813Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T13:39:43.644Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T13:39:44.335Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749217184340","timestamp":"2025-06-06T13:39:44.340Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749217184340","timestamp":"2025-06-06T13:39:45.485Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T13:39:55.787Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T13:39:59.358Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749217199361","timestamp":"2025-06-06T13:39:59.362Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749217199361","timestamp":"2025-06-06T13:40:00.366Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T13:40:26.617Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T13:40:27.295Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749217227298","timestamp":"2025-06-06T13:40:27.299Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749217227298","timestamp":"2025-06-06T13:40:29.076Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T13:42:50.763Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T13:47:32.977Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T13:47:56.495Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749217676504","timestamp":"2025-06-06T13:47:56.505Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T13:47:56.629Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749217676632","timestamp":"2025-06-06T13:47:56.632Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749217676632","timestamp":"2025-06-06T13:48:17.725Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749217676504","timestamp":"2025-06-06T13:48:20.899Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T13:48:36.177Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T13:48:38.582Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749217718585","timestamp":"2025-06-06T13:48:38.585Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T13:48:38.651Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749217718654","timestamp":"2025-06-06T13:48:38.654Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749217718654","timestamp":"2025-06-06T13:48:39.403Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T13:48:39.433Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749217719436","timestamp":"2025-06-06T13:48:39.436Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749217718585","timestamp":"2025-06-06T13:48:39.465Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749217719436","timestamp":"2025-06-06T13:48:39.834Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T13:50:44.220Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T13:50:49.907Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749217849910","timestamp":"2025-06-06T13:50:49.910Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T13:50:50.000Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749217850003","timestamp":"2025-06-06T13:50:50.003Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749217849910","timestamp":"2025-06-06T13:50:50.865Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749217850003","timestamp":"2025-06-06T13:50:51.087Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T13:51:01.594Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T13:51:35.537Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T13:52:00.130Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T13:52:04.199Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T13:52:05.978Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T13:52:06.540Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T13:52:54.372Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T13:53:18.349Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749217998353","timestamp":"2025-06-06T13:53:18.354Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T13:53:18.451Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749217998455","timestamp":"2025-06-06T13:53:18.455Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749217998353","timestamp":"2025-06-06T13:53:19.391Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749217998455","timestamp":"2025-06-06T13:53:19.678Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T13:53:43.760Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T13:57:16.714Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T13:57:28.763Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749218248783","timestamp":"2025-06-06T13:57:28.785Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749218248783","timestamp":"2025-06-06T13:57:30.308Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T13:57:40.145Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T13:58:26.988Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T13:58:29.552Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749218309555","timestamp":"2025-06-06T13:58:29.556Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T13:58:29.635Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749218309639","timestamp":"2025-06-06T13:58:29.639Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749218309639","timestamp":"2025-06-06T13:58:30.321Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749218309555","timestamp":"2025-06-06T13:58:30.367Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T13:58:39.303Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T13:59:34.149Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T13:59:37.256Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749218377259","timestamp":"2025-06-06T13:59:37.260Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749218377259","timestamp":"2025-06-06T13:59:38.218Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T14:05:29.589Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T14:05:32.667Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749218732685","timestamp":"2025-06-06T14:05:32.686Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749218732685","timestamp":"2025-06-06T14:05:34.074Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T14:05:36.179Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T14:06:50.305Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T14:06:52.856Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749218812859","timestamp":"2025-06-06T14:06:52.861Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T14:06:52.937Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749218812941","timestamp":"2025-06-06T14:06:52.941Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749218812859","timestamp":"2025-06-06T14:06:53.737Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749218812941","timestamp":"2025-06-06T14:06:53.888Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T14:07:21.468Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T14:08:13.023Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T14:09:14.538Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T14:09:18.061Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749218958064","timestamp":"2025-06-06T14:09:18.065Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749218958064","timestamp":"2025-06-06T14:09:19.324Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T14:09:25.906Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T14:10:14.112Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T14:10:17.065Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749219017067","timestamp":"2025-06-06T14:10:17.069Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T14:10:17.144Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749219017146","timestamp":"2025-06-06T14:10:17.146Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749219017067","timestamp":"2025-06-06T14:10:17.917Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749219017146","timestamp":"2025-06-06T14:10:17.968Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T14:10:23.475Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T14:10:24.304Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749219024307","timestamp":"2025-06-06T14:10:24.307Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749219024307","timestamp":"2025-06-06T14:10:25.050Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T14:18:54.467Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T14:18:57.772Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749219537784","timestamp":"2025-06-06T14:18:57.785Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T14:18:57.938Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749219537940","timestamp":"2025-06-06T14:18:57.941Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749219537784","timestamp":"2025-06-06T14:18:58.806Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749219537940","timestamp":"2025-06-06T14:18:58.852Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T14:19:07.066Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T14:19:07.909Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749219547913","timestamp":"2025-06-06T14:19:07.914Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749219547913","timestamp":"2025-06-06T14:19:09.250Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T14:29:33.761Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T14:29:48.309Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749220188321","timestamp":"2025-06-06T14:29:48.322Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T14:29:48.471Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749220188474","timestamp":"2025-06-06T14:29:48.475Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749220188474","timestamp":"2025-06-06T14:29:49.641Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749220188321","timestamp":"2025-06-06T14:29:49.669Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T14:29:57.224Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T14:29:58.451Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749220198454","timestamp":"2025-06-06T14:29:58.455Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749220198454","timestamp":"2025-06-06T14:30:00.277Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T14:30:24.535Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T14:30:44.436Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749220244440","timestamp":"2025-06-06T14:30:44.440Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T14:30:44.523Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749220244527","timestamp":"2025-06-06T14:30:44.527Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T14:30:44.581Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749220244584","timestamp":"2025-06-06T14:30:44.584Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T14:30:44.659Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749220244663","timestamp":"2025-06-06T14:30:44.663Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T14:30:44.692Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749220244695","timestamp":"2025-06-06T14:30:44.695Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T14:30:44.754Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749220244757","timestamp":"2025-06-06T14:30:44.757Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749220244584","timestamp":"2025-06-06T14:30:45.377Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749220244695","timestamp":"2025-06-06T14:30:45.404Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T14:30:45.436Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749220245439","timestamp":"2025-06-06T14:30:45.439Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T14:30:45.469Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749220245472","timestamp":"2025-06-06T14:30:45.472Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749220244440","timestamp":"2025-06-06T14:30:45.506Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749220244663","timestamp":"2025-06-06T14:30:45.531Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T14:30:45.558Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749220245560","timestamp":"2025-06-06T14:30:45.560Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749220244757","timestamp":"2025-06-06T14:30:45.687Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T14:30:45.712Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749220245715","timestamp":"2025-06-06T14:30:45.715Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749220244527","timestamp":"2025-06-06T14:30:45.843Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749220245439","timestamp":"2025-06-06T14:30:45.875Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749220245472","timestamp":"2025-06-06T14:30:45.895Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749220245560","timestamp":"2025-06-06T14:30:45.920Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T14:30:45.935Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749220245937","timestamp":"2025-06-06T14:30:45.937Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749220245715","timestamp":"2025-06-06T14:30:46.087Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749220245937","timestamp":"2025-06-06T14:30:46.336Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T14:31:54.670Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T14:32:03.892Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749220323894","timestamp":"2025-06-06T14:32:03.895Z"}
+{"error":"fetch failed","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749220323894","timestamp":"2025-06-06T14:32:14.431Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T15:18:38.073Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T15:18:41.637Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749223121655","timestamp":"2025-06-06T15:18:41.656Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T15:18:41.848Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749223121850","timestamp":"2025-06-06T15:18:41.850Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749223121655","timestamp":"2025-06-06T15:18:42.817Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749223121850","timestamp":"2025-06-06T15:18:42.847Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T15:19:13.513Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T15:20:24.332Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T15:20:51.719Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T15:20:53.447Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749223253449","timestamp":"2025-06-06T15:20:53.450Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T15:20:53.507Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749223253509","timestamp":"2025-06-06T15:20:53.509Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T15:20:53.532Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749223253534","timestamp":"2025-06-06T15:20:53.534Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T15:20:53.567Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749223253569","timestamp":"2025-06-06T15:20:53.569Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T15:20:53.589Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749223253590","timestamp":"2025-06-06T15:20:53.591Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T15:20:53.667Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749223253669","timestamp":"2025-06-06T15:20:53.669Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749223253449","timestamp":"2025-06-06T15:20:54.326Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749223253569","timestamp":"2025-06-06T15:20:54.358Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749223253534","timestamp":"2025-06-06T15:20:54.387Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749223253669","timestamp":"2025-06-06T15:20:54.425Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749223253509","timestamp":"2025-06-06T15:20:54.636Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749223253590","timestamp":"2025-06-06T15:20:54.680Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T15:20:55.501Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T15:20:58.287Z"}
+{"level":"info","message":"Payment verification started","requestId":"SUCCESS_1749223258288","timestamp":"2025-06-06T15:20:58.289Z"}
+{"error":"Transaction reference not found.","level":"error","message":"Payment verification failed","requestId":"SUCCESS_1749223258288","timestamp":"2025-06-06T15:20:58.681Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T15:21:10.265Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T15:21:53.220Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T15:22:45.929Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T15:22:59.463Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T15:23:12.173Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T15:23:58.448Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T15:24:14.884Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T15:25:01.514Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T15:25:49.427Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T15:26:00.213Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T15:32:08.914Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T15:32:21.131Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T15:32:34.224Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T15:42:51.158Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T15:42:59.759Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T15:43:07.105Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T15:43:11.028Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T15:43:18.753Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T15:46:12.748Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T15:46:15.221Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T15:47:21.795Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T15:48:28.783Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T15:49:14.009Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T15:49:50.318Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T15:50:55.307Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T15:53:33.792Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T16:11:35.914Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T16:11:48.042Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T16:14:01.266Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T16:19:56.797Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T16:20:25.784Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T16:21:01.643Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T16:21:06.981Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T16:25:04.178Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T16:25:18.598Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T16:26:36.065Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T16:28:46.560Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T16:29:27.944Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T16:30:45.041Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T16:31:34.840Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T16:32:15.300Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T16:33:04.309Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-06T16:34:19.682Z"}

@@ -68,4 +68,5 @@ const bargainingSessions = new Set();
 const acceptedOffers = new Set();
 const sentCounterOffers = new Set();
 const displayedMessages = new Set();
+const displayedMessages = new Set();
 let isInitialMessageSent = localStorage.getItem(`initialMessageSent_${productId}_${receiverId}`) === 'true';

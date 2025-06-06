@@ -181,89 +181,88 @@ module.exports = (io) => {
 
   // Send a new message
   router.post('/send', verifyToken, async (req, res) => {
-  let senderId = null; // Default value
-  let receiverId = null; // Default value
-  try {
-    ({ receiverId } = req.body); // Destructure receiverId first
-    const { text, messageType = 'text', offerDetails, attachment } = req.body;
-    senderId = req.user.userId; // Assign senderId
+     let senderId;
+     let receiverId;
+    try {
+      const { receiverId, text, messageType = 'text', offerDetails, attachment } = req.body;
+      const senderId = req.user.userId;
 
-    if (!receiverId || !text) {
-      logger.warn(`Missing receiverId or text for message from user ${senderId || 'unknown'}`);
-      return res.status(400).json({ error: 'Receiver ID and message text are required' });
+      if (!receiverId || !text) {
+        logger.warn(`Missing receiverId or text for message from user ${senderId}`);
+        return res.status(400).json({ error: 'Receiver ID and message text are required' });
+      }
+
+      if (!mongoose.Types.ObjectId.isValid(receiverId)) {
+        logger.warn(`Invalid receiverId ${receiverId} format`);
+        return res.status(400).json({ error: 'Invalid receiverId format' });
+      }
+
+      const receiver = await User.findById(receiverId);
+      if (!receiver) {
+        logger.error(`Receiver ${receiverId} not found`);
+        return res.status(404).json({ error: 'Receiver not found' });
+      }
+
+      const sender = await User.findById(senderId);
+      if (!sender) {
+        logger.error(`Sender ${senderId} not found`);
+        return res.status(404).json({ error: 'Sender not found' });
+      }
+
+      const message = new Message({
+        senderId,
+        receiverId,
+        text,
+        messageType,
+        offerDetails: offerDetails || null,
+        attachment: attachment || null,
+        status: 'sent',
+        createdAt: new Date(),
+      });
+      await message.save();
+
+      logger.info(`Message sent from ${senderId} to ${receiverId}: ${message._id}`);
+
+      // Emit Socket.IO message events
+      const messageData = {
+        _id: message._id,
+        senderId,
+        receiverId,
+        text,
+        messageType,
+        offerDetails: message.offerDetails,
+        attachment: message.attachment,
+        chatPartnerName: `${sender.firstName} ${sender.lastName}`,
+        status: message.status,
+        createdAt: message.createdAt,
+      };
+
+      logger.info(`Emitting receiveMessage to user ${receiverId}: ${JSON.stringify(messageData)}`);
+      io.to(`user_${receiverId}`).emit('receiveMessage', messageData);
+      logger.info(`Emitting newMessage to user ${senderId}: ${JSON.stringify(messageData)}`);
+      io.to(`user_${senderId}`).emit('newMessage', messageData);
+
+      // Send FCM notification
+      logger.info(`Sending FCM notification to user ${receiverId} for message ${message._id}`);
+      await sendFCMNotification(
+        receiverId,
+        'New Message',
+        `${sender.firstName} ${sender.lastName} sent you a message`,
+        { type: 'message', messageId: message._id.toString() },
+        io
+      );
+      logger.info(`FCM notification sent to user ${receiverId}`);
+
+      // Trigger badge update
+      logger.info(`Triggering badge update for user ${receiverId}`);
+      await NotificationService.triggerCountUpdate(io, receiverId);
+
+      res.status(201).json({ message: 'Message sent successfully', data: message });
+    } catch (error) {
+      logger.error(`Failed to send message from ${senderId} to ${receiverId}: ${error.message}`);
+      res.status(500).json({ error: 'Server error' });
     }
-
-    if (!mongoose.Types.ObjectId.isValid(receiverId)) {
-      logger.warn(`Invalid receiverId ${receiverId} format`);
-      return res.status(400).json({ error: 'Invalid receiverId format' });
-    }
-
-    const receiver = await User.findById(receiverId);
-    if (!receiver) {
-      logger.error(`Receiver ${receiverId} not found`);
-      return res.status(404).json({ error: 'Receiver not found' });
-    }
-
-    const sender = await User.findById(senderId);
-    if (!sender) {
-      logger.error(`Sender ${senderId} not found`);
-      return res.status(404).json({ error: 'Sender not found' });
-    }
-
-    const message = new Message({
-      senderId,
-      receiverId,
-      text,
-      messageType,
-      offerDetails: offerDetails || null,
-      attachment: attachment || null,
-      status: 'sent',
-      createdAt: new Date(),
-    });
-    await message.save();
-
-    logger.info(`Message sent from ${senderId} to ${receiverId}: ${message._id}`);
-
-    // Emit Socket.IO message events
-    const messageData = {
-      _id: message._id,
-      senderId,
-      receiverId,
-      text,
-      messageType,
-      offerDetails: message.offerDetails,
-      attachment: message.attachment,
-      chatPartnerName: `${sender.firstName} ${sender.lastName}`,
-      status: message.status,
-      createdAt: message.createdAt,
-    };
-
-    logger.info(`Emitting receiveMessage to user ${receiverId}: ${JSON.stringify(messageData)}`);
-    io.to(`user_${receiverId}`).emit('receiveMessage', messageData);
-    logger.info(`Emitting newMessage to user ${senderId}: ${JSON.stringify(messageData)}`);
-    io.to(`user_${senderId}`).emit('newMessage', messageData);
-
-    // Send FCM notification
-    logger.info(`Sending FCM notification to user ${receiverId} for message ${message._id}`);
-    await sendFCMNotification(
-      receiverId,
-      'New Message',
-      `${sender.firstName} ${sender.lastName} sent you a message`,
-      { type: 'message', messageId: message._id.toString() },
-      io
-    );
-    logger.info(`FCM notification sent to user ${receiverId}`);
-
-    // Trigger badge update
-    logger.info(`Triggering badge update for user ${receiverId}`);
-    await NotificationService.triggerCountUpdate(io, receiverId);
-
-    res.status(201).json({ message: 'Message sent successfully', data: message });
-  } catch (error) {
-    logger.error(`Failed to send message from ${senderId || 'unknown'} to ${receiverId || 'unknown'}: ${error.message}`);
-    res.status(500).json({ error: 'Server error' });
-  }
-});
+  });
 
   return router;
 };

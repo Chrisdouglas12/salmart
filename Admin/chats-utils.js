@@ -1,5 +1,4 @@
 // utils.js
-
 // Render product preview for initial messages
 function renderProductPreview() {
     if (productImage && productName && !isInitialMessageSent) {

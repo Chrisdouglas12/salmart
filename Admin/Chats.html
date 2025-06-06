@@ -492,7 +492,17 @@
     <button id="send-btn">Send</button>
     <button id="bargain-btn">Bargain</button>
   </div>
+<script>
+     const bargain-btn = document.getElementById('bargain-btn');
 
+button.addEventListener('click', (e) => {
+  e.preventDefault();
+  alert('Feature is under development.');
+});
+
+// To disable the button
+button.disabled = true;
+</script>
   <!-- Report modal -->
   <div id="reportConfirmationModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.7); z-index:2000; align-items:center; justify-content:center;">
     <div style="background:white; max-width:350px; margin:120px auto; padding:24px; border-radius:10px; text-align:center;">
@@ -557,9 +567,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
   <script>eruda.init();</script>
-  <script src="chats-config.js"></script>
-  <script src="chats-events.js"></script>
-  <script src="chats-ui.js"></script>
-  <script src="chats-utils.js"></script>
+  <script src="Chats.js"></script></script>
 </body>
 </html>

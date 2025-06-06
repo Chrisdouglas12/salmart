@@ -100,15 +100,19 @@ router.post('/release-escrow', verifyToken, async (req, res) => {
   }
 });
 
-router.get('/banks/register', async (req, res) => {
+
+router.get('/banks', async (req, res) => {
   try {
-    const response = await axios.get('https://api.flutterwave.com/v3/banks/NG', {
-      headers: { Authorization: `Bearer ${process.env.FLUTTERWAVE_SECRET_KEY}` },
+    const response = await axios.get('https://api.paystack.co/bank?country=nigeria', {
+      headers: {
+        Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+      },
     });
 
-    if (response.data.status !== 'success') {
+    if (!response.data.status) {
       return res.status(400).json({ success: false, message: response.data.message || 'Unable to fetch banks' });
     }
+
     res.status(200).json({ success: true, banks: response.data.data });
   } catch (error) {
     console.error('Fetch banks error:', error.message);
@@ -119,22 +123,36 @@ router.get('/banks/register', async (req, res) => {
 router.post('/resolve-account', async (req, res) => {
   try {
     const { account_number, bank_code } = req.body;
-    const response = await axios.post(
-      'https://api.flutterwave.com/v3/accounts/resolve',
-      { account_number, account_bank: bank_code },
-      { headers: { Authorization: `Bearer ${process.env.FLUTTERWAVE_SECRET_KEY}`, 'Content-Type': 'application/json' } }
-    );
 
-    if (response.data.status === 'success') {
-      res.status(200).json({ success: true, account_name: response.data.data.account_name });
+    const response = await axios.get(`https://api.paystack.co/bank/resolve`, {
+      headers: {
+        Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+      },
+      params: {
+        account_number,
+        bank_code,
+      },
+    });
+
+    if (response.data.status) {
+      res.status(200).json({
+        success: true,
+        account_name: response.data.data.account_name,
+      });
     } else {
-      res.status(400).json({ success: false, message: response.data.message || 'Unable to resolve account' });
+      res.status(400).json({
+        success: false,
+        message: response.data.message || 'Unable to resolve account',
+      });
     }
   } catch (error) {
     console.error('Resolve account error:', error.message);
-    res.status(500).json({ success: false, message: 'Server error' });
+    const message =
+      error.response?.data?.message || 'Server error while resolving account';
+    res.status(500).json({ success: false, message });
   }
 });
+
 
 router.post('/create-recipient', verifyToken, async (req, res) => {
   try {
