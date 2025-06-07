@@ -13548,3 +13548,9 @@
 {"level":"info","message":"✅ Cloudinary configured","timestamp":"2025-06-07T08:07:24.508Z"}
 {"level":"info","message":"✅ Server running on port 3000","timestamp":"2025-06-07T08:07:24.570Z"}
 {"level":"error","message":"❌ MongoDB connection error: Server selection timed out after 5000 ms","timestamp":"2025-06-07T08:07:30.804Z"}
+{"level":"info","message":"✅ Firebase Admin SDK initialized successfully","timestamp":"2025-06-07T12:10:04.702Z"}
+{"level":"info","message":"✅ Socket.IO initialized","timestamp":"2025-06-07T12:10:04.891Z"}
+{"level":"info","message":"✅ Nodemailer configured","timestamp":"2025-06-07T12:10:04.998Z"}
+{"level":"info","message":"✅ Cloudinary configured","timestamp":"2025-06-07T12:10:05.001Z"}
+{"level":"info","message":"✅ Server running on port 3000","timestamp":"2025-06-07T12:10:05.079Z"}
+{"level":"error","message":"❌ MongoDB connection error: Server selection timed out after 5000 ms","timestamp":"2025-06-07T12:10:10.945Z"}
