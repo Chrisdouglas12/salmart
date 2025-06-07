@@ -13542,3 +13542,9 @@
 {"level":"info","message":"Socket disconnected: FTbdGya6sYXVNJkoAAAN","timestamp":"2025-06-07T07:59:49.730Z"}
 {"level":"info","message":"[2025-06-07T07:59:49.769Z] POST /alerts/mark-as-viewed","timestamp":"2025-06-07T07:59:49.769Z"}
 {"level":"info","message":"[2025-06-07T07:59:50.016Z] GET /notification-counts?userId=6843d062f457581752641ee3","timestamp":"2025-06-07T07:59:50.017Z"}
+{"level":"info","message":"✅ Firebase Admin SDK initialized successfully","timestamp":"2025-06-07T08:07:24.176Z"}
+{"level":"info","message":"✅ Socket.IO initialized","timestamp":"2025-06-07T08:07:24.390Z"}
+{"level":"info","message":"✅ Nodemailer configured","timestamp":"2025-06-07T08:07:24.505Z"}
+{"level":"info","message":"✅ Cloudinary configured","timestamp":"2025-06-07T08:07:24.508Z"}
+{"level":"info","message":"✅ Server running on port 3000","timestamp":"2025-06-07T08:07:24.570Z"}
+{"level":"error","message":"❌ MongoDB connection error: Server selection timed out after 5000 ms","timestamp":"2025-06-07T08:07:30.804Z"}

@@ -49,7 +49,7 @@ async function sendFCMNotification(userId, title, body, data = {}, io, imageUrl 
       webpush: {
         headers: { Urgency: 'high' },
         notification: {
-          icon: profilePictureUrl || 'https://salmart.vercel.app/salmart-192x192.png',
+          icon: profilePictureUrl || 'https://salmart.vercel.app/salmart-192x192(0).png',
           image: imageUrl || null,
           requireInteraction: true,
         },
