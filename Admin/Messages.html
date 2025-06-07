@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dexie@3.2.4/dist/dexie.min.js"></script>
   <script src="addPic.js"></script>
   <style>
     :root {
@@ -557,43 +558,13 @@
   </nav>
   
 <script>
-  // === IndexedDB Helper for Messages ===
-  const DB_NAME = 'salmart-chat-db';
-  const DB_STORE_NAME = 'messageList';
+// Create the Dexie database
+const db = new Dexie('SalmartMessagesDB');
 
-  function openDB() {
-    return new Promise((resolve, reject) => {
-      const request = indexedDB.open(DB_NAME, 1);
-      request.onerror = (e) => reject(e);
-      request.onsuccess = (e) => resolve(e.target.result);
-      request.onupgradeneeded = (e) => {
-        const db = e.target.result;
-        if (!db.objectStoreNames.contains(DB_STORE_NAME)) {
-          db.createObjectStore(DB_STORE_NAME, { keyPath: 'id' }); // assuming messages have unique 'id'
-        }
-      };
-    });
-  }
-
-  async function saveMessagesToDB(messages) {
-    const db = await openDB();
-    const tx = db.transaction(DB_STORE_NAME, 'readwrite');
-    const store = tx.objectStore(DB_STORE_NAME);
-    store.clear(); // optional: clear previous messages
-    messages.forEach(msg => store.put(msg));
-    await tx.done;
-  }
-
-  async function getMessagesFromDB() {
-    const db = await openDB();
-    const tx = db.transaction(DB_STORE_NAME, 'readonly');
-    const store = tx.objectStore(DB_STORE_NAME);
-    return new Promise((resolve, reject) => {
-      const request = store.getAll();
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = (e) => reject(e);
-    });
-  }
+// Define the schema (you can add more fields if needed)
+db.version(1).stores({
+  messages: 'id, senderId, receiverId, timestamp' // 'id' is primary key
+});
 </script>
   <script>
     // Global variables
@@ -764,12 +735,10 @@
 
          async function fetchMessages() {
   if (isInitialLoad) {
-    console.log('Showing skeleton loaders...');
     showSkeletonLoaders();
   }
 
   try {
-    console.log('Fetching messages for user:', userId);
     const response = await fetch(`${API_BASE_URL}/api/messages?userId=${userId}`, {
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('authToken')}`
@@ -779,25 +748,23 @@
     if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
 
     const fetchedMessages = await response.json();
-    console.log('Fetched messages:', fetchedMessages);
 
     // Save to IndexedDB
-    await saveMessagesToDB(fetchedMessages);
+    await db.messages.clear(); // optional: clear old list first
+    await db.messages.bulkPut(fetchedMessages);
 
+    // Update state
     messages = fetchedMessages;
     renderMessages();
     isInitialLoad = false;
 
   } catch (error) {
-    console.warn('⚠️ Failed to fetch from network. Trying IndexedDB...', error);
-    const cachedMessages = await getMessagesFromDB();
-    if (cachedMessages.length > 0) {
-      messages = cachedMessages;
-      renderMessages();
-      showErrorMessage('You are offline. Showing cached messages.');
-    } else {
-      showErrorMessage('Failed to load messages. No offline data available.');
-    }
+    console.error('Fetch messages error:', error);
+    showErrorMessage('Failed to load messages. Showing cached messages...');
+
+    // Load from IndexedDB if offline
+    messages = await db.messages.toArray();
+    renderMessages();
     isInitialLoad = false;
   }
 }
