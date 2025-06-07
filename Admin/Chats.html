@@ -6,8 +6,10 @@
   <title>Chat - SALMART</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+ 
   <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+ 
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { background: #F1F1F1; font-family: 'Poppins', sans-serif; }
@@ -67,12 +69,12 @@
       border-top-left-radius: 4px;
       font-size: 14px;
     }
-    .sent::after, .received::after {
-      content: '';
-      position: absolute;
-      bottom: 0;
-      width: 12px;
-      height: 12px;
+    .sent::after .received::after {
+       content: '' ;
+       position: absolute;
+       bottom: 0;
+       width: 12px;
+       height: 12px;
     }
     .message-timestamp {
       font-size: 11px;
@@ -80,8 +82,8 @@
       margin-top: 8px;
       text-align: right;
     }
-    .sent .message-timestamp {
-      color: #666; /* Adjusted for visibility */
+    .sent .message-timestamp{
+      color: #fff;
     }
 
     .message-container {
@@ -196,6 +198,7 @@
       margin-top: 10px;
     }
 
+    /* Modal for Seller's Last Price */
     #lastPriceModal {
       display: none;
       position: fixed;
@@ -239,261 +242,284 @@
       cursor: pointer;
       margin-left: 10px;
     }
-
     .chat-options {
-      margin-left: auto;
-      position: relative;
-    }
+  margin-left: auto;
+  position: relative;
+}
 
-    #ellipsis-btn {
-      font-size: 16px;
-      color: #28a745;
-      cursor: pointer;
-      padding: 5px;
-      position: fixed;
-      top: 15px;
-      right: 15px;
-      z-index: 3000;
-    }
+#ellipsis-btn {
+  font-size: 16px;
+  color: #28a745;
+  cursor: pointer;
+  padding: 5px;
+  margin-top: -38px;
+  margin-left: 90%;
+  position: Fixed;
+  z-index: 3000;
+}
 
-    .dropdown-menu {
-      display: none;
-      position: absolute;
-      top: 30px;
-      right: 0;
-      background: white;
-      border: 1px solid #ccc;
-      box-shadow: 0 0 8px rgba(0,0,0,0.1);
-      border-radius: 5px;
-      z-index: 4000;
-      width: 150px;
-    }
+.dropdown-menu {
+  display: none;
+  position: absolute;
+  top: 30px;
+  right: 0;
+  background: white;
+  border: 1px solid #ccc;
+  box-shadow: 0 0 8px rgba(0,0,0,0.1);
+  border-radius: 5px;
+  z-index: 4000;
+  width: 150px;
+}
 
-    .dropdown-item {
-      padding: 10px;
-      font-size: 14px;
-      color: #333;
-      cursor: pointer;
-    }
+.dropdown-item {
+  padding: 10px;
+  font-size: 14px;
+  color: #333;
+  cursor: pointer;
+}
 
-    .dropdown-item:hover {
-      background-color: #f5f5f5;
-    }
+.dropdown-item:hover {
+  background-color: #f5f5f5;
+}
+/* Confirmation Modal Styles */
+#acceptConfirmationModal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 1001;
+}
 
-    #acceptConfirmationModal {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0,0,0,0.7);
-      z-index: 1001;
-    }
+#acceptConfirmationModal > div {
+  background: white;
+  max-width: 400px;
+  margin: 100px auto;
+  padding: 20px;
+  border-radius: 10px;
+  text-align: center;
+}
 
-    #acceptConfirmationModal > div {
-      background: white;
-      max-width: 400px;
-      margin: 100px auto;
-      padding: 20px;
-      border-radius: 10px;
-      text-align: center;
-    }
+#acceptConfirmationModal h3 {
+  margin-bottom: 15px;
+  color: #333;
+}
 
-    #acceptConfirmationModal h3 {
-      margin-bottom: 15px;
-      color: #333;
-    }
+#acceptConfirmationModal p {
+  margin-bottom: 20px;
+  font-size: 16px;
+}
 
-    #acceptConfirmationModal p {
-      margin-bottom: 20px;
-      font-size: 16px;
-    }
+.update-status-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 1002;
+  align-items: center;
+  justify-content: center;
+}
 
-    .update-status-modal {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0,0,0,0.7);
-      z-index: 1002;
-      align-items: center;
-      justify-content: center;
-    }
+.update-status-content {
+  background: white;
+  width: 300px;
+  padding: 30px;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+}
 
-    .update-status-content {
-      background: white;
-      width: 300px;
-      padding: 30px;
-      border-radius: 12px;
-      text-align: center;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-    }
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #28a745;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 20px;
+}
 
-    .spinner {
-      width: 50px;
-      height: 50px;
-      border: 4px solid #f3f3f3;
-      border-top: 4px solid #28a745;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin: 0 auto 20px;
-    }
 
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
+.success-icon {
+  color: #28a745;
+  font-size: 50px;
+  margin-bottom: 20px;
+}
 
-    .success-icon {
-      color: #28a745;
-      font-size: 50px;
-      margin-bottom: 20px;
-    }
+.update-status-text {
+  font-size: 16px;
+  margin-bottom: 20px;
+  color: #333;
+}
 
-    .update-status-text {
-      font-size: 16px;
-      margin-bottom: 20px;
-      color: #333;
-    }
+.status-action-btn {
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+/* Toast Notification */
+.toast-message {
+    position: fixed;
+    bottom: 50px;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    background-color: #28a745;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: bold;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
+    opacity: 1;
+    transition: opacity 0.5s ease-in-out;
+    z-index: 1000;
+    max-width: 80%;
+    word-wrap: break-word;
+}
 
-    .status-action-btn {
-      background: #28a745;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 6px;
-      cursor: pointer;
-      margin-top: 10px;
-    }
+/* Fade out effect */
+.toast-message.fade-out {
+    opacity: 0;
+}
 
-    .toast-message {
-      position: fixed;
-      bottom: 50px;
-      left: 50%;
-      transform: translateX(-50%);
-      text-align: center;
-      background-color: #28a745;
-      color: white;
-      padding: 12px 20px;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: bold;
-      box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
-      opacity: 1;
-      transition: opacity 0.5s ease-in-out;
-      z-index: 1000;
-      max-width: 80%;
-      word-wrap: break-word;
-    }
+/* Error toast */
+.toast-message.error {
+    background-color: #dc3545;
+}
 
-    .toast-message.fade-out {
-      opacity: 0;
-    }
+/* Warning toast */
+.toast-message.warning {
+    background-color: #ffc107;
+    color: #212529;
+}
+/* Styling for End Bargain button */
+.end-bargain-btn {
+    background-color: #ff4d4d;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    margin: 5px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+}
+.end-bargain-btn:hover {
+    background-color: #cc0000;
+}
 
-    .toast-message.error {
-      background-color: #dc3545;
-    }
+/* Styling for Proceed to Payment button */
+.proceed-to-payment-btn {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    margin: 5px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+}
+.system-message {
+    text-align: center;
+    margin: 10px auto;
+    color: #777;
+    font-size: 14px;
+    font-weight: 500;
+    background-color: #f5f5f5;
+    border-radius: 8px;
+    max-width: 80%;
+    padding: 8px 12px;
+    width: fit-content;
+}
+.proceed-to-payment-btn {
+    background-color: #10B981;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    margin-top: 8px;
+    cursor: pointer;
+    font-weight: 600;
+}
+.proceed-to-payment-btn:disabled {
+    background-color: gray;
+    cursor: not-allowed;
+}
+.accept-offer-btn,
+.decline-offer-btn,
+.end-bargain-btn {
+    margin: 5px 5px 0 0;
+    padding: 6px 12px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+}
+.accept-offer-btn {
+    background-color: #2563eb;
+    color: white;
+}
+.decline-offer-btn {
+    background-color: #ef4444;
+    color: white;
+}
+.end-bargain-btn {
+    background-color: #6b7280;
+    color: white;
+}
 
-    .toast-message.warning {
-      background-color: #ffc107;
-      color: #212529;
-    }
+.proceed-to-payment-btn:hover {
+    background-color: #218838;
+}
 
-    .end-bargain-btn {
-      background-color: #ff4d4d;
-      color: white;
-      border: none;
-      padding: 5px 10px;
-      margin: 5px;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 14px;
-    }
-
-    .end-bargain-btn:hover {
-      background-color: #cc0000;
-    }
-
-    .proceed-to-payment-btn {
-      background-color: #10B981;
-      color: white;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 4px;
-      margin-top: 8px;
-      cursor: pointer;
-      font-weight: 600;
-    }
-
-    .proceed-to-payment-btn:disabled {
-      background-color: gray;
-      cursor: not-allowed;
-    }
-
-    .accept-offer-btn,
-    .decline-offer-btn,
-    .end-bargain-btn {
-      margin: 5px 5px 0 0;
-      padding: 6px 12px;
-      border-radius: 4px;
-      border: none;
-      cursor: pointer;
-      font-weight: 600;
-    }
-
-    .accept-offer-btn {
-      background-color: #2563eb;
-      color: white;
-    }
-
-    .decline-offer-btn {
-      background-color: #ef4444;
-      color: white;
-    }
-
-    .end-bargain-btn {
-      background-color: #6b7280;
-      color: white;
-    }
-
-    .proceed-to-payment-btn:hover {
-      background-color: #218838;
-    }
-
-    .product-photo-preview {
-      max-width: 200px;
-      border-radius: 5px;
-    }
+/* Styling for product image in messages */
+.product-photo-preview {
+    max-width: 200px;
+    border-radius: 5px;
+}
   </style>
 </head>
 <body>
   <i class="fas fa-ellipsis-v" id="ellipsis-btn"></i>
   <div id="chat-dropdown" class="dropdown-menu">
+    
     <div class="dropdown-item" onclick="blockUser()">Block User</div>
-    <div class="dropdown-item" onclick="reportUser()">Report User</div>
+     <div class="dropdown-item" onclick="reportUser()">Report User</div>
+  </div>
   </div>
 
   <div class="chats-header">
     <img id="chatspic" alt="User">
     <div>
+            
+
       <div id="chats-userName">Username</div>
+
       <div class="typing-indicator" id="typing-indicator"></div>
     </div>
   </div>
 
   <div id="chat-messages"></div>
-
-  <div id="toast" class="toast-message" style="display: none;"></div>
+  
+ 
+<!-- Toast Notification -->
+<div id="toast" class="toast-message" style="display: none;"></div>
   <div class="message-container">
-    <input id="type-section" placeholder="Type a message...">
+    <input id="type-section" placeholder="Type a message..." oninput="sendTypingSignal()">
     <button id="send-btn">Send</button>
     <button id="bargain-btn">Bargain</button>
   </div>
-<script>
-     const bargain-btn = document.getElementById('bargain-btn');
+  <script>
+       const bargain-btn = document.getElementById('bargain-btn');
 
 button.addEventListener('click', (e) => {
   e.preventDefault();
@@ -502,58 +528,56 @@ button.addEventListener('click', (e) => {
 
 // To disable the button
 button.disabled = true;
-</script>
-  <!-- Report modal -->
-  <div id="reportConfirmationModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.7); z-index:2000; align-items:center; justify-content:center;">
-    <div style="background:white; max-width:350px; margin:120px auto; padding:24px; border-radius:10px; text-align:center;">
-      <h3>Report User</h3>
-      <p id="reportConfirmationText"></p>
-      <textarea id="reportReason" placeholder="Reason for reporting..." style="width:100%; height:100px; margin:10px 0; padding:8px; border-radius:5px; border:1px solid #ddd;"></textarea>
-      <button id="confirmReportBtn" style="background:#28a745; color:white; border:none; padding:10px 20px; border-radius:5px; margin-right:10px;">Submit Report</button>
-      <button id="cancelReportBtn" style="background:red; color:white; border:none; padding:10px 20px; border-radius:5px;">Cancel</button>
-    </div>
+  </script>
+    <!-- Report modal -->
+<div id="reportConfirmationModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.7); z-index:2000; align-items:center; justify-content:center;">
+  <div style="background:white; max-width:350px; margin:120px auto; padding:24px; border-radius:10px; text-align:center;">
+    <h3>Report User</h3>
+    <p id="reportConfirmationText"></p>
+    <textarea id="reportReason" placeholder="Reason for reporting..." style="width:100%; height:100px; margin:10px 0; padding:8px; border-radius:5px; border:1px solid #ddd;"></textarea>
+    <button id="confirmReportBtn" style="background:#28a745; color:white; border:none; padding:10px 20px; border-radius:5px; margin-right:10px;">Submit Report</button>
+    <button id="cancelReportBtn" style="background:red; color:white; border:none; padding:10px 20px; border-radius:5px;">Cancel</button>
   </div>
+</div>
 
-  <!-- Block modal -->
-  <div id="blockConfirmationModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.7); z-index:2000; align-items:center; justify-content:center;">
-    <div style="background:white; max-width:350px; margin:120px auto; padding:24px; border-radius:10px; text-align:center;">
-      <h3>Block User</h3>
-      <p id="blockConfirmationText"></p>
-      <button id="confirmBlockBtn" style="background:#28a745; color:white; border:none; padding:10px 20px; border-radius:5px; margin-right:10px;">Yes, Block</button>
-      <button id="cancelBlockBtn" style="background:red; color:white; border:none; padding:10px 20px; border-radius:5px;">Cancel</button>
-    </div>
+<div id="blockConfirmationModal" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.7); z-index:2000; align-items:center; justify-content:center;">
+  <div style="background:white; max-width:350px; margin:120px auto; padding:24px; border-radius:10px; text-align:center;">
+    <h3>Block User</h3>
+    <p id="blockConfirmationText"></p>
+    <button id="confirmBlockBtn" style="background:#28a745; color:white; border:none; padding:10px 20px; border-radius:5px; margin-right:10px;">Yes, Block</button>
+    <button id="cancelBlockBtn" style="background:red; color:white; border:none; padding:10px 20px; border-radius:5px;">Cancel</button>
   </div>
+</div>
 
   <!-- Bargain Modal -->
   <div id="bargainModal">
     <div id="bargainModalContent">
       <h3>Select a Product to Bargain</h3>
       <div id="bargainProductsContainer">Loading...</div>
-      <button class="cancel-bargain-btn" id="closeBargainModalBtn">Close</button>
+      <button class="cancel-bargain-btn" onclick="closeBargainModal()">Close</button>
     </div>
   </div>
-
   <!-- Price Update Status Modal -->
-  <div id="updateStatusModal" class="update-status-modal">
-    <div class="update-status-content">
-      <div id="updateSpinner" class="spinner"></div>
-      <div id="successIcon" class="success-icon" style="display: none;">
-        <i class="fas fa-check-circle"></i>
-      </div>
-      <div id="updateStatusText" class="update-status-text">Updating price...</div>
-      <button id="statusActionBtn" class="status-action-btn" style="display: none;">OK</button>
+<div id="updateStatusModal" class="update-status-modal">
+  <div class="update-status-content">
+    <div id="updateSpinner" class="spinner"></div>
+    <div id="successIcon" class="success-icon" style="display: none;">
+      <i class="fas fa-check-circle"></i>
     </div>
+    <div id="updateStatusText" class="update-status-text">Updating price...</div>
+    <button id="statusActionBtn" class="status-action-btn" style="display: none;">OK</button>
   </div>
-
+</div>
   <!-- Confirmation Modal for Accepting Offer -->
-  <div id="acceptConfirmationModal">
-    <div>
-      <h3>Confirm Price Acceptance</h3>
-      <p id="confirmationMessage">Are you sure you want to accept this price?</p>
-      <button id="confirmAcceptBtn" style="background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-right: 10px;">Yes, Accept</button>
-      <button id="cancelAcceptBtn" style="background: red; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">No, Cancel</button>
-    </div>
+<div id="acceptConfirmationModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 1001;">
+  <div style="background: white; max-width: 400px; margin: 100px auto; padding: 20px; border-radius: 10px; text-align: center;">
+    <h3>Confirm Price Acceptance</h3>
+    <p id="confirmationMessage">Are you sure you want to accept this price?</p>
+    <button id="confirmAcceptBtn" style="background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-right: 10px;">Yes, Accept</button>
+    <button id="cancelAcceptBtn" style="background: red; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">No, Cancel</button>
   </div>
+</div>
+  
 
   <!-- Modal for Seller's Last Price -->
   <div id="lastPriceModal">
@@ -564,9 +588,8 @@ button.disabled = true;
       <button id="closeLastPriceModalBtn" onclick="closeLastPriceModal()">Close</button>
     </div>
   </div>
-
-  <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+    <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
   <script>eruda.init();</script>
-  <script src="Chats.js"></script></script>
+ <script src="Chats.js"></script>
 </body>
 </html>

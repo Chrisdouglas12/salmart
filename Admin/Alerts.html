@@ -17,6 +17,27 @@
       --light-gray: #f5f7fa;
       --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
       --border-radius: 12px;
+            --primary-color: #28a745;
+      --primary-dark: #00A041;
+      --secondary-color: #F8F9FA;
+      --text-primary: #1A1A1A;
+      --text-secondary: #6C757D;
+      --text-muted: #9CA3AF;
+      --border-color: #E5E7EB;
+      --shadow-light: 0 1px 3px rgba(0, 0, 0, 0.1);
+      --shadow-medium: 0 4px 6px rgba(0, 0, 0, 0.07);
+      --shadow-heavy: 0 10px 15px rgba(0, 0, 0, 0.1);
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --spacing-xs: 4px;
+      --spacing-sm: 8px;
+      --spacing-md: 12px;
+      --spacing-lg: 16px;
+      --spacing-xl: 20px;
+      --spacing-2xl: 24px;
+      --gradient-primary: linear-gradient(135deg, #00C851 0%, #00A041 100%);
+      --gradient-bg: linear-gradient(180deg, #FAFBFC 0%, #F8F9FA 100%);
     }
 
     * {
@@ -34,68 +55,75 @@
       overflow-x: hidden;
     }
 
-    /* Header */
-    header {
-      background-color: white;
-      box-shadow: var(--shadow);
-      position: fixed;
+    /* Header Styles */
+    .header {
+      background: #fff;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border-color);
+      padding: var(--spacing-lg) var(--spacing-xl);
+      position: sticky;
       top: 0;
-      width: 100%;
-      z-index: 1000;
+      z-index: 100;
       display: flex;
       align-items: center;
-      padding: 10px 15px;
+      justify-content: space-between;
     }
 
-    header .profile-pic {
+    .header-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: #28a745;
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-md);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-md);
+    }
+
+    .profile-avatar {
       width: 40px;
       height: 40px;
       border-radius: 50%;
-      overflow: hidden;
-      margin-right: 15px;
+      border: 2px solid var(--border-color);
+      transition: all 0.2s ease;
+      cursor: pointer;
     }
 
-    header .profile-pic img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
+    .profile-avatar:hover {
+      border-color: var(--primary-color);
+      transform: scale(1.05);
     }
 
-    header h3 {
-      flex: 1;
-      color: var(--primary-color);
-      font-size: 18px;
-      font-weight: 600;
-      text-align: center;
-      margin: 0;
+    .search-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--secondary-color);
+      border: 1px solid #28a745;
+      display: flex;
+      color: #28a745;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
     }
 
-    header .search-icon {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 35px;
-  height: 35px;
-  font-size: 18px;
-  color: var(--primary-color);
-  background-color: white;
-  border: 1px solid #ddd;
-  border-radius: 50%;
-  box-shadow: var(--shadow);
-  cursor: pointer;
-  transition: background-color 0.2s;
-  vertical-align: middle; /* fixes baseline gap */
-}
-    header .search-icon:hover {
-      background-color: #f0f0f0;
+    .search-btn:hover {
+      background: #28a745;
+      color: white;
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-medium);
     }
-    header .search-icon {
-  text-decoration: none;
-}
 
     /* Notifications Wrapper */
     #notifications-wrapper {
-      margin-top: 60px;
+     
       margin-bottom: 60px;
       padding: 15px;
       max-width: 680px;
@@ -347,14 +375,18 @@
   </style>
 </head>
 <body>
-  <header>
-    <div class="profile-pic">
-      <img src="default-avatar.png"  id="profile-picture6">
+   <!-- Header -->
+  <header class="header">
+    <h1 class="header-title">
+      <i class="fas fa-bell"></i>
+      Alerts
+    </h1>
+    <div class="header-actions">
+      <a href="#" class="search-btn">
+        <i class="fas fa-search"></i>
+      </a>
+      <img src="default-avater.png" alt="Profile" id="profile-picture6" class="profile-avatar" onerror="this.src='default-avatar.png'">
     </div>
-    <h3>Alerts</h3>
-    <a href="search.html" class="search-icon" aria-label="Search">
-      <i class="fas fa-search"></i>
-    </a>
   </header>
 
   <div id="notifications-wrapper" role="region" aria-live="polite">

@@ -3,118 +3,256 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Salmart | Sign In</title>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+  <meta name="theme-color" content="#28a745">
+  <meta name="description" content="Sign in to Salmart - Your trusted platform">
+  
+  <!-- PWA Meta Tags -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Salmart">
+  
+  <title>Sign In | Salmart</title>
+  
+  <!-- Preconnect for performance -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
   <script src="https://cdn.jsdelivr.net/npm/jwt-decode@3.1.2/build/jwt-decode.min.js"></script>
+  
   <style>
+    :root {
+      --primary-color: #28a745;
+      --primary-dark: #1e7e34;
+      --primary-light: #34ce57;
+      --white: #ffffff;
+      --gray-50: #f8f9fa;
+      --gray-100: #f1f3f4;
+      --gray-200: #e9ecef;
+      --gray-300: #dee2e6;
+      --gray-400: #ced4da;
+      --gray-500: #adb5bd;
+      --gray-600: #6c757d;
+      --gray-700: #495057;
+      --gray-800: #343a40;
+      --gray-900: #212529;
+      --error-color: #dc3545;
+      --success-color: var(--primary-color);
+      --border-radius: 12px;
+      --border-radius-lg: 16px;
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
     }
 
+    html {
+      font-size: 16px;
+      -webkit-text-size-adjust: 100%;
+    }
+
     body {
-      font-family: 'Poppins', sans-serif;
-      background-color: #f7f9fc;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, var(--gray-50) 0%, var(--gray-100) 100%);
+      color: var(--gray-800);
+      line-height: 1.6;
+      min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
-      height: 100vh;
+      padding: 1rem;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
 
     .login-container {
-      background: #fff;
-      padding: 40px 30px;
-      border-radius: 10px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      background: var(--white);
+      padding: 2.5rem;
+      border-radius: var(--border-radius-lg);
+      box-shadow: var(--shadow-xl);
       width: 100%;
-      max-width: 400px;
+      max-width: 420px;
+      border: 1px solid var(--gray-200);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .login-container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--primary-color), var(--primary-light));
+    }
+
+    .brand-section {
       text-align: center;
+      margin-bottom: 2rem;
     }
 
-    .login-container h2 {
-      color: #28a745;
-      margin-bottom: 10px;
+    .brand-logo {
+      width: 48px;
+      height: 48px;
+      background: var(--primary-color);
+      border-radius: var(--border-radius);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1rem;
+      font-weight: 700;
+      font-size: 1.25rem;
+      color: var(--white);
+      letter-spacing: -0.025em;
     }
 
-    .login-container p {
-      font-size: 14px;
-      color: #666;
-      margin-bottom: 25px;
+    .brand-title {
+      font-size: 1.875rem;
+      font-weight: 700;
+      color: var(--gray-900);
+      margin-bottom: 0.5rem;
+      letter-spacing: -0.025em;
     }
 
-    .login-container input {
+    .brand-subtitle {
+      font-size: 0.875rem;
+      color: var(--gray-600);
+      font-weight: 400;
+    }
+
+    .form-section {
+      margin-bottom: 1.5rem;
+    }
+
+    .input-group {
+      margin-bottom: 1.25rem;
+      position: relative;
+    }
+
+    .input-label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--gray-700);
+      margin-bottom: 0.5rem;
+    }
+
+    .form-input {
       width: 100%;
-      padding: 12px 15px;
-      margin-bottom: 15px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      font-size: 15px;
+      padding: 0.75rem 1rem;
+      font-size: 1rem;
+      border: 2px solid var(--gray-300);
+      border-radius: var(--border-radius);
+      background: var(--white);
+      color: var(--gray-900);
+      transition: var(--transition);
+      font-family: inherit;
     }
 
-    .login-container input:focus {
+    .form-input:focus {
       outline: none;
-      border-color: #2e7d32;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.1);
     }
 
-    .login-container button {
+    .form-input:hover {
+      border-color: var(--gray-400);
+    }
+
+    .form-input::placeholder {
+      color: var(--gray-500);
+    }
+
+    .primary-button {
       width: 100%;
-      padding: 12px;
-      background-color: #28a745;
-      color: #fff;
-      font-weight: bold;
+      padding: 0.875rem 1.5rem;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--white);
+      background: var(--primary-color);
       border: none;
-      border-radius: 6px;
-      font-size: 16px;
+      border-radius: var(--border-radius);
       cursor: pointer;
-      transition: 0.3s ease;
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+      font-family: inherit;
+      letter-spacing: 0.025em;
     }
 
-    .login-container button:hover {
-      background-color: #256a28;
+    .primary-button:hover {
+      background: var(--primary-dark);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-lg);
     }
 
-    .login-container .links {
-      margin-top: 15px;
-      font-size: 14px;
+    .primary-button:active {
+      transform: translateY(0);
+      box-shadow: var(--shadow-md);
     }
 
-    .login-container .links a {
-      color: #2e7d32;
-      text-decoration: none;
+    .primary-button:disabled {
+      background: var(--gray-400);
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
     }
 
-    #error-msg {
-      color: red;
-      margin-bottom: 10px;
-      font-size: 14px;
-    }
-
-    #success-msg {
-      color: #2e7d32;
-      margin-bottom: 10px;
-      font-size: 14px;
+    .message {
+      padding: 0.75rem 1rem;
+      border-radius: var(--border-radius);
+      font-size: 0.875rem;
+      font-weight: 500;
+      margin-bottom: 1rem;
       display: none;
     }
 
-    .spinner-message {
-      margin-top: 20px;
+    .message.show {
+      display: block;
+    }
+
+    .error-message {
+      background: #fef2f2;
+      color: #b91c1c;
+      border: 1px solid #fecaca;
+    }
+
+    .success-message {
+      background: #f0fdf4;
+      color: #166534;
+      border: 1px solid #bbf7d0;
+    }
+
+    .loading-container {
       display: none;
       align-items: center;
       justify-content: center;
-      font-size: 15px;
-      color: #28a745;
+      gap: 0.75rem;
+      margin-top: 1rem;
+      padding: 1rem;
+      background: var(--gray-50);
+      border-radius: var(--border-radius);
     }
 
-    .spinner-message span {
-      margin-left: 10px;
+    .loading-container.show {
+      display: flex;
     }
 
     .spinner {
       width: 20px;
       height: 20px;
-      border: 3px solid #ccc;
-      border-top-color: #28a745;
+      border: 2px solid var(--gray-300);
+      border-top-color: var(--primary-color);
       border-radius: 50%;
       animation: spin 1s linear infinite;
     }
@@ -123,42 +261,342 @@
       to { transform: rotate(360deg); }
     }
 
-    footer {
-      margin-top: 30px;
+    .loading-text {
+      font-size: 0.875rem;
+      color: var(--gray-600);
+      font-weight: 500;
+    }
+
+    .links-section {
       text-align: center;
-      font-size: 13px;
-      color: #999;
+      margin-top: 2rem;
+      padding-top: 2rem;
+      border-top: 1px solid var(--gray-200);
+    }
+
+    .auth-link {
+      display: block;
+      margin-bottom: 0.75rem;
+      font-size: 0.875rem;
+      color: var(--gray-600);
+    }
+
+    .auth-link a {
+      color: var(--primary-color);
+      text-decoration: none;
+      font-weight: 500;
+      transition: var(--transition);
+    }
+
+    .auth-link a:hover {
+      color: var(--primary-dark);
+      text-decoration: underline;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 2rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--gray-200);
+      font-size: 0.75rem;
+      color: var(--gray-500);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 480px) {
+      body {
+        padding: 0.5rem;
+      }
+      
+      .login-container {
+        padding: 2rem 1.5rem;
+        border-radius: var(--border-radius);
+      }
+      
+      .brand-title {
+        font-size: 1.5rem;
+      }
+      
+      .form-input {
+        padding: 0.875rem 0.75rem;
+      }
+      
+      .primary-button {
+        padding: 1rem;
+      }
+    }
+
+    @media (max-width: 360px) {
+      .login-container {
+        padding: 1.5rem 1rem;
+      }
+    }
+
+    /* High contrast mode support */
+    @media (prefers-contrast: high) {
+      .form-input {
+        border-width: 2px;
+      }
+      
+      .primary-button {
+        border: 2px solid var(--primary-color);
+      }
+    }
+
+    /* Reduced motion support */
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    /* Focus visible for better accessibility */
+    .form-input:focus-visible,
+    .primary-button:focus-visible,
+    .auth-link a:focus-visible {
+      outline: 2px solid var(--primary-color);
+      outline-offset: 2px;
+    }
+
+    /* Loading state for button */
+    .primary-button.loading {
+      position: relative;
+      color: transparent;
+    }
+
+    .primary-button.loading::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 20px;
+      height: 20px;
+      margin: -10px 0 0 -10px;
+      border: 2px solid transparent;
+      border-top-color: var(--white);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
     }
   </style>
 </head>
 <body>
-
   <div class="login-container">
-    <h2>Salmart</h2>
-    <p>Welcome to Salmart! Please sign in.</p>
-
-    <div id="error-msg"></div>
-    <div id="success-msg">Login successful!</div>
-
-    <form id="form-se">
-      <input type="email" id="email" placeholder="Enter your email" required>
-      <input type="password" id="password" placeholder="Enter your password" required>
-      <button type="submit" id="sign-btn">Sign in</button>
-    </form>
-
-    <div class="spinner-message" id="spinner-msg">
-      <div class="spinner"></div>
-      <span>Signing you in...</span>
+    <div class="brand-section">
+      <div class="brand-logo">S</div>
+      <h1 class="brand-title">Salmart</h1>
+      <p class="brand-subtitle">Welcome back! Please sign in to continue.</p>
     </div>
 
-    <div class="links">
-      <p>Don't have an account? <a href="Register.html">Register</a></p>
-      <p><a href="#">Forgot password?</a></p>
+    <div class="form-section">
+      <div id="error-msg" class="message error-message"></div>
+      <div id="success-msg" class="message success-message">Login successful!</div>
+
+      <form id="form-se" novalidate>
+        <div class="input-group">
+          <label for="email" class="input-label">Email Address</label>
+          <input 
+            type="email" 
+            id="email" 
+            class="form-input"
+            placeholder="Enter your email address"
+            autocomplete="email"
+            required
+            aria-describedby="email-error"
+          >
+        </div>
+
+        <div class="input-group">
+          <label for="password" class="input-label">Password</label>
+          <input 
+            type="password" 
+            id="password" 
+            class="form-input"
+            placeholder="Enter your password"
+            autocomplete="current-password"
+            required
+            aria-describedby="password-error"
+          >
+        </div>
+
+        <button type="submit" id="sign-btn" class="primary-button">
+          Sign In
+        </button>
+      </form>
+
+      <div class="loading-container" id="spinner-msg">
+        <div class="spinner" aria-hidden="true"></div>
+        <span class="loading-text">Signing you in...</span>
+      </div>
     </div>
 
-    <footer>&copy; Salmart Technologies 2025</footer>
+    <div class="links-section">
+      <div class="auth-link">
+        Don't have an account? <a href="Register.html">Create account</a>
+      </div>
+      <div class="auth-link">
+        <a href="#" id="forgot-password">Forgot your password?</a>
+      </div>
+    </div>
+
+    <footer class="footer">
+      &copy; 2025 Salmart Technologies. All rights reserved.
+    </footer>
   </div>
 
   <script src="Login.js"></script>
+  
+  <!-- Enhanced functionality script -->
+  <script>
+    // Enhanced form validation and UX improvements
+    document.addEventListener('DOMContentLoaded', function() {
+      const form = document.getElementById('form-se');
+      const emailInput = document.getElementById('email');
+      const passwordInput = document.getElementById('password');
+      const submitButton = document.getElementById('sign-btn');
+      const errorMsg = document.getElementById('error-msg');
+      const successMsg = document.getElementById('success-msg');
+      const spinnerMsg = document.getElementById('spinner-msg');
+
+      // Real-time validation
+      emailInput.addEventListener('blur', validateEmail);
+      passwordInput.addEventListener('blur', validatePassword);
+      
+      // Clear error messages on input
+      emailInput.addEventListener('input', clearErrors);
+      passwordInput.addEventListener('input', clearErrors);
+
+      function validateEmail() {
+        const email = emailInput.value.trim();
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        
+        if (!email) {
+          showFieldError(emailInput, 'Email is required');
+          return false;
+        } else if (!emailRegex.test(email)) {
+          showFieldError(emailInput, 'Please enter a valid email address');
+          return false;
+        } else {
+          clearFieldError(emailInput);
+          return true;
+        }
+      }
+
+      function validatePassword() {
+        const password = passwordInput.value;
+        
+        if (!password) {
+          showFieldError(passwordInput, 'Password is required');
+          return false;
+        } else if (password.length < 6) {
+          showFieldError(passwordInput, 'Password must be at least 6 characters');
+          return false;
+        } else {
+          clearFieldError(passwordInput);
+          return true;
+        }
+      }
+
+      function showFieldError(input, message) {
+        input.style.borderColor = '#dc3545';
+        input.setAttribute('aria-invalid', 'true');
+      }
+
+      function clearFieldError(input) {
+        input.style.borderColor = '';
+        input.removeAttribute('aria-invalid');
+      }
+
+      function clearErrors() {
+        errorMsg.classList.remove('show');
+        errorMsg.textContent = '';
+        successMsg.classList.remove('show');
+      }
+
+      function showError(message) {
+        errorMsg.textContent = message;
+        errorMsg.classList.add('show');
+        successMsg.classList.remove('show');
+      }
+
+      function showSuccess(message) {
+        successMsg.textContent = message;
+        successMsg.classList.add('show');
+        errorMsg.classList.remove('show');
+      }
+
+      function showLoading(show = true) {
+        if (show) {
+          spinnerMsg.classList.add('show');
+          submitButton.disabled = true;
+          submitButton.classList.add('loading');
+          submitButton.setAttribute('aria-busy', 'true');
+        } else {
+          spinnerMsg.classList.remove('show');
+          submitButton.disabled = false;
+          submitButton.classList.remove('loading');
+          submitButton.removeAttribute('aria-busy');
+        }
+      }
+
+      // Enhanced form submission handling
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const isEmailValid = validateEmail();
+        const isPasswordValid = validatePassword();
+        
+        if (isEmailValid && isPasswordValid) {
+          showLoading(true);
+          clearErrors();
+          
+          // Your existing login logic will go here
+          // For now, we'll simulate the process
+          setTimeout(() => {
+            showLoading(false);
+            // Your Login.js will handle the actual authentication
+          }, 1000);
+        }
+      });
+
+      // Keyboard accessibility improvements
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && e.target.matches('input')) {
+          const inputs = Array.from(form.querySelectorAll('input'));
+          const currentIndex = inputs.indexOf(e.target);
+          
+          if (currentIndex < inputs.length - 1) {
+            inputs[currentIndex + 1].focus();
+          } else {
+            form.dispatchEvent(new Event('submit'));
+          }
+        }
+      });
+
+      // PWA installation prompt (if supported)
+      let deferredPrompt;
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+      });
+
+      // Auto-focus first input for better UX
+      emailInput.focus();
+    });
+
+    // Service Worker registration for PWA
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/sw.js')
+          .then(function(registration) {
+            console.log('ServiceWorker registration successful');
+          })
+          .catch(function(err) {
+            console.log('ServiceWorker registration failed');
+          });
+      });
+    }
+  </script>
 </body>
 </html>

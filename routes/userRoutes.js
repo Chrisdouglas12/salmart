@@ -440,25 +440,32 @@ router.post('/unfollow/:id', verifyToken, async (req, res) => {
   }
 });
 
-// Get user profile
+
 router.get('/profile/:userId', async (req, res) => {
   try {
     const user = await User.findById(req.params.userId).populate('followers');
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
+
+    // --- Correct way to get products count ---
+    const productsCount = await Post.countDocuments({ createdBy: req.params.userId });
+    // Assuming your Post/Product model has an 'owner' field that references the User ID
+
     res.json({
       followersCount: user.followers?.length || 0,
-      firstName: user.firstName,
-      lastName: user.lastName,
+      name: `${user.firstName} ${user.lastName}`.trim(), // Combine first and last name for 'name'
       profilePicture: user.profilePicture,
-      productsCount: post.isSold?.length || 0, // Replace with actual product count logic
+      productsCount: productsCount, // Use the correctly fetched count
     });
   } catch (error) {
     console.error('Get profile error:', error.message);
+    // It's good practice to log the full error for debugging
+    console.error(error); // Log the full error object
     res.status(500).json({ message: 'Server error' });
   }
 });
+
 
 // Check follow status
 router.get('/api/is-following/:userId', verifyToken, async (req, res) => {

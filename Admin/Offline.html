@@ -341,12 +341,9 @@
 
         function goHome() {
             // Try to navigate to the root of the app
-            if (window.location.pathname !== '/') {
-                window.location.href = '/';
-            } else {
-                // If already at root, try to reload
-                window.location.reload();
-            }
+            if (window.location.pathname !== '/index.html') {
+                window.location.href = '/index.html';
+            } 
         }
 
         // Listen for online/offline events

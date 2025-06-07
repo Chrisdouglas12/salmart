@@ -1476,3 +1476,31 @@
 {"level":"info","message":"Fetched 104 messages between 679d530c96d06fa5dfab1ded and 67d845b5c9add2113fc80789","timestamp":"2025-06-06T15:53:36.335Z"}
 {"level":"info","message":"Fetched 1 latest messages for user 68431813432ee393a735a686","timestamp":"2025-06-06T20:54:48.385Z"}
 {"level":"info","message":"Fetched 1 latest messages for user 68431813432ee393a735a686","timestamp":"2025-06-06T21:01:49.347Z"}
+{"level":"info","message":"Fetched 2 latest messages for user 68431685432ee393a735a641","timestamp":"2025-06-07T06:15:51.569Z"}
+{"level":"info","message":"Fetched 1 messages between 68431685432ee393a735a641 and 6843d062f457581752641ee3","timestamp":"2025-06-07T06:15:57.759Z"}
+{"level":"info","message":"Fetched 1 latest messages for user 6843d062f457581752641ee3","timestamp":"2025-06-07T06:17:47.062Z"}
+{"level":"info","message":"Fetched 2 latest messages for user 68431685432ee393a735a641","timestamp":"2025-06-07T06:47:40.832Z"}
+{"level":"info","message":"Fetched 1 messages between 68431685432ee393a735a641 and 68431813432ee393a735a686","timestamp":"2025-06-07T06:47:46.238Z"}
+{"level":"info","message":"Message sent from 68431685432ee393a735a641 to 68431813432ee393a735a686: 6843e099bf6a288452ccd556","timestamp":"2025-06-07T06:47:53.447Z"}
+{"level":"info","message":"Emitting receiveMessage to user 68431813432ee393a735a686: {\"_id\":\"6843e099bf6a288452ccd556\",\"senderId\":\"68431685432ee393a735a641\",\"receiverId\":\"68431813432ee393a735a686\",\"text\":\"Yes oh\",\"messageType\":\"text\",\"offerDetails\":null,\"attachment\":null,\"chatPartnerName\":\"Christian Friday\",\"status\":\"sent\",\"createdAt\":\"2025-06-07T06:47:53.129Z\"}","timestamp":"2025-06-07T06:47:53.460Z"}
+{"level":"info","message":"Emitting newMessage to user 68431685432ee393a735a641: {\"_id\":\"6843e099bf6a288452ccd556\",\"senderId\":\"68431685432ee393a735a641\",\"receiverId\":\"68431813432ee393a735a686\",\"text\":\"Yes oh\",\"messageType\":\"text\",\"offerDetails\":null,\"attachment\":null,\"chatPartnerName\":\"Christian Friday\",\"status\":\"sent\",\"createdAt\":\"2025-06-07T06:47:53.129Z\"}","timestamp":"2025-06-07T06:47:53.470Z"}
+{"level":"info","message":"Sending FCM notification to user 68431813432ee393a735a686 for message 6843e099bf6a288452ccd556","timestamp":"2025-06-07T06:47:53.482Z"}
+{"level":"info","message":"FCM notification sent to user 68431813432ee393a735a686","timestamp":"2025-06-07T06:47:53.713Z"}
+{"level":"info","message":"Triggering badge update for user 68431813432ee393a735a686","timestamp":"2025-06-07T06:47:53.715Z"}
+{"level":"info","message":"Fetched 2 latest messages for user 68431685432ee393a735a641","timestamp":"2025-06-07T06:48:21.817Z"}
+{"level":"info","message":"Fetched 2 latest messages for user 68431685432ee393a735a641","timestamp":"2025-06-07T06:50:22.396Z"}
+{"level":"info","message":"Fetched 2 messages between 68431685432ee393a735a641 and 68431813432ee393a735a686","timestamp":"2025-06-07T06:50:26.406Z"}
+{"level":"info","message":"Message sent from 68431685432ee393a735a641 to 68431813432ee393a735a686: 6843e13dbf6a288452ccd57f","timestamp":"2025-06-07T06:50:38.092Z"}
+{"level":"info","message":"Emitting receiveMessage to user 68431813432ee393a735a686: {\"_id\":\"6843e13dbf6a288452ccd57f\",\"senderId\":\"68431685432ee393a735a641\",\"receiverId\":\"68431813432ee393a735a686\",\"text\":\"Okay\",\"messageType\":\"text\",\"offerDetails\":null,\"attachment\":null,\"chatPartnerName\":\"Christian Friday\",\"status\":\"sent\",\"createdAt\":\"2025-06-07T06:50:37.851Z\"}","timestamp":"2025-06-07T06:50:38.109Z"}
+{"level":"info","message":"Emitting newMessage to user 68431685432ee393a735a641: {\"_id\":\"6843e13dbf6a288452ccd57f\",\"senderId\":\"68431685432ee393a735a641\",\"receiverId\":\"68431813432ee393a735a686\",\"text\":\"Okay\",\"messageType\":\"text\",\"offerDetails\":null,\"attachment\":null,\"chatPartnerName\":\"Christian Friday\",\"status\":\"sent\",\"createdAt\":\"2025-06-07T06:50:37.851Z\"}","timestamp":"2025-06-07T06:50:38.114Z"}
+{"level":"info","message":"Sending FCM notification to user 68431813432ee393a735a686 for message 6843e13dbf6a288452ccd57f","timestamp":"2025-06-07T06:50:38.119Z"}
+{"level":"info","message":"FCM notification sent to user 68431813432ee393a735a686","timestamp":"2025-06-07T06:50:38.323Z"}
+{"level":"info","message":"Triggering badge update for user 68431813432ee393a735a686","timestamp":"2025-06-07T06:50:38.326Z"}
+{"level":"info","message":"Fetched 3 messages between 68431685432ee393a735a641 and 68431813432ee393a735a686","timestamp":"2025-06-07T06:50:55.394Z"}
+{"level":"info","message":"Fetched 2 latest messages for user 68431685432ee393a735a641","timestamp":"2025-06-07T06:51:30.896Z"}
+{"level":"info","message":"Fetched 2 latest messages for user 68431685432ee393a735a641","timestamp":"2025-06-07T06:52:03.831Z"}
+{"level":"info","message":"Fetched 2 latest messages for user 68431685432ee393a735a641","timestamp":"2025-06-07T07:00:03.326Z"}
+{"level":"info","message":"Fetched 2 latest messages for user 68431685432ee393a735a641","timestamp":"2025-06-07T07:02:00.441Z"}
+{"level":"info","message":"Fetched 2 latest messages for user 68431685432ee393a735a641","timestamp":"2025-06-07T07:02:24.427Z"}
+{"level":"info","message":"Fetched 1 latest messages for user 6843d062f457581752641ee3","timestamp":"2025-06-07T07:54:40.152Z"}
+{"level":"info","message":"Fetched 1 latest messages for user 6843d062f457581752641ee3","timestamp":"2025-06-07T07:55:24.436Z"}

@@ -1,37 +1,237 @@
+    :root {
+      --primary-color: #28a745;
+      --secondary-color: #218838;
+      --text-color: #333;
+      --light-gray: #f5f7fa;
+      --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      --border-radius: 12px;
+            --primary-color: #28a745;
+      --primary-dark: #00A041;
+      --secondary-color: #F8F9FA;
+      --text-primary: #1A1A1A;
+      --text-secondary: #6C757D;
+      --text-muted: #9CA3AF;
+      --border-color: #E5E7EB;
+      --shadow-light: 0 1px 3px rgba(0, 0, 0, 0.1);
+      --shadow-medium: 0 4px 6px rgba(0, 0, 0, 0.07);
+      --shadow-heavy: 0 10px 15px rgba(0, 0, 0, 0.1);
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --spacing-xs: 4px;
+      --spacing-sm: 8px;
+      --spacing-md: 12px;
+      --spacing-lg: 16px;
+      --spacing-xl: 20px;
+      --spacing-2xl: 24px;
+      --gradient-primary: linear-gradient(135deg, #00C851 0%, #00A041 100%);
+      --gradient-bg: linear-gradient(180deg, #FAFBFC 0%, #F8F9FA 100%);
+    }
 
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: Poppins, sans-serif; background-color: #f8f8f8; padding-bottom: 80px; }
-    h3 {
-      background-color: white;
-      text-align: center;
-      padding: 20px;
-      font-size: 20px;
-      color: #28a745;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+/* Reset and Base Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #fff;
+  min-height: 100vh;
+  padding-bottom: 80px;
+  line-height: 1.6;
+  color: #333;
+}
+
+    /* Header Styles */
+    .header {
+      background: #fff;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border-color);
+      padding: var(--spacing-lg) var(--spacing-xl);
       position: sticky;
       top: 0;
-      z-index: 2;
-    }
-    .tabs {
+      z-index: 100;
       display: flex;
-      justify-content: center;
-      background-color: white;
-      border-bottom: 1px solid #ddd;
-      padding: 10px;
+      align-items: center;
+      justify-content: space-between;
     }
-    .tab {
-      padding: 10px 20px;
-      cursor: pointer;
-      border-radius: 20px;
-      margin: 0 5px;
-      font-weight: 500;
+
+    .header-title {
+      font-size: 20px;
+      font-weight: 600;
       color: #28a745;
-      background-color: #e8f5e9;
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-md);
     }
-    .tab.active {
-      background-color: #28a745;
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-md);
+    }
+
+    .profile-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 2px solid var(--border-color);
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+
+    .profile-avatar:hover {
+      border-color: var(--primary-color);
+      transform: scale(1.05);
+    }
+
+    .search-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--secondary-color);
+      border: 1px solid #28a745;
+      display: flex;
+      color: #28a745;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+
+    .search-btn:hover {
+      background: #28a745;
       color: white;
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-medium);
     }
+    
+        /* Bottom Navbar */
+    #navbar {
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      background-color: white;
+      box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+      z-index: 1000;
+    }
+
+    #navbar ul {
+      display: flex;
+      justify-content: space-around;
+      padding: 10px 0;
+      list-style: none;
+    }
+
+    #navbar li {
+      flex: 1;
+      text-align: center;
+    }
+
+    #navbar a {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-decoration: none;
+      color: var(--primary-color);
+      font-size: 12px;
+      padding: 8px;
+      transition: color 0.2s;
+    }
+
+    #navbar a.active {
+      color: var(--secondary-color);
+      font-weight: 600;
+    }
+
+    #navbar a i {
+      font-size: 20px;
+      margin-bottom: 5px;
+    }
+
+     .icon-badge-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.notification-badge {
+  position: absolute;
+  top: -5px;
+  right: -10px;
+  background-color: red;
+  color: white;
+  font-size: 10px;
+  width: 18px;
+  height: 18px;
+  line-height: 18px;
+  border-radius: 50%;
+  text-align: center;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  overflow: hidden;
+}
+
+
+/* Tab Navigation */
+.tabs {
+  display: flex;
+  justify-content: center;
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  padding: 16px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+}
+
+.tab {
+  padding: 12px 24px;
+  cursor: pointer;
+  border-radius: 25px;
+  margin: 0 8px;
+  font-weight: 500;
+  font-size: 14px;
+  color: #28a745;
+  background: linear-gradient(135deg, #e8f5e9 0%, #f1f8f2 100%);
+  border: 2px solid transparent;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.tab::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  transition: left 0.5s;
+}
+
+.tab:hover::before {
+  left: 100%;
+}
+
+.tab:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(40, 167, 69, 0.15);
+  border-color: rgba(40, 167, 69, 0.2);
+}
+
+.tab.active {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  color: white;
+  box-shadow: 0 8px 25px rgba(40, 167, 69, 0.3);
+  transform: translateY(-2px);
+}
+
     .transaction-card {
       background: white;
       margin: 10px;
@@ -61,16 +261,39 @@
       font-size: 14px;
       color: #555;
     }
-    .badge {
-      display: inline-block;
-      padding: 5px 10px;
-      border-radius: 20px;
-      font-size: 12px;
-      margin-top: 5px;
-    }
-    .badge.pending { background-color: #ffeeba; color: #856404; }
-    .badge.released { background-color: #d4edda; color: #155724; }
-    .badge.refund-requested { background-color: #f8d7da; color: #721c24; }
+
+/* Enhanced Badges */
+.badge {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  margin-top: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: 1px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.badge.pending {
+  background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+  color: #856404;
+  border-color: #f0ad4e;
+}
+
+.badge.released {
+  background: linear-gradient(135deg, #d4edda 0%, #b8e6b8 100%);
+  color: #155724;
+  border-color: #28a745;
+}
+
+.badge.refund-requested {
+  background: linear-gradient(135deg, #f8d7da 0%, #f5b7b1 100%);
+  color: #721c24;
+  border-color: #dc3545;
+}
+
     .confirm-btn, .refund-btn {
       margin-top: 10px;
       border: none;
@@ -84,193 +307,264 @@
     .refund-btn { background-color: #dc3545; color: white; }
     .refund-btn:hover { background-color: #c82333; }
 
-    #no-transactions {
-      text-align: center;
-      padding: 20px;
-      color: #777;
-    }
-    .deal-user-info {
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      gap: 6px;
-      font-size: 13px;
-      margin-top: 10px;
-      color: #444;
-    }
-    *{
-  margin: 0;
-  padding: 0;
+.confirm-btn {
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
 }
-  .side-bar{
-    display: none;
-    position: fixed;
-    top: 0px;
-    left: 0;
-    z-index: 10000;
-    background-color: #fff;
-    border: 1px #ddd solid;
-    box-shadow: 0 0 10px #ddd;
-    height: 100vh;
-    width: 70%;
-  }
-  h1{
-    margin: 20px 0px;
-    margin-left: 5px;
-    
-  }
-  .side-bar ul{
-    list-style: none;
-     margin: 0;
-     padding: 0;
-  padding-top: 20px;
-  margin-left: 5px;
-  
-  }
-  .side-bar li{
-    margin-bottom: 10px;
-    border: 0.1px solid #fff;
-    padding: 10px;
-    border-end-end-radius: 20px;
-    background-color:  #fff;
-    box-shadow: 0 0 10px #ddd;
-    margin-right: 3px;
-  }
-  .side-bar .active{
-    color:  #dd;
-  }
-  .side-bar a{
-    text-decoration: none;
-    color:  #28a745;
-    padding-right: 10%;
-    
-  }
-  .side-bar i{
-    margin-right: 20px;
-    
-  }
-.profile-sec {
-  width: 100%; /* Ensures it spans the entire width of the sidebar */
-  border-bottom: 0.1px solid #fff; /* The line at the bottom */
-  padding-bottom: 5px;
+
+.confirm-btn:hover {
+  background: linear-gradient(135deg, #0056b3 0%, #004085 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 123, 255, 0.4);
+}
+
+.refund-btn {
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
+}
+
+.refund-btn:hover {
+  background: linear-gradient(135deg, #c82333 0%, #a71e2a 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(220, 53, 69, 0.4);
+}
+
+.cancel-btn {
+  background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);
+}
+
+.cancel-btn:hover {
+  background: linear-gradient(135deg, #5a6268 0%, #495057 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(108, 117, 125, 0.4);
+}
+
+/* No Transactions State */
+#no-transactions {
+  text-align: center;
+  padding: 40px 20px;
+  color: #6c757d;
+  font-size: 16px;
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  border-radius: 16px;
+  margin: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+}
+
+/* Deal User Info */
+.deal-user-info {
   display: flex;
-  box-sizing: border-box;
-  box-shadow: 0 0 10px #ddd;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  font-size: 13px;
+  margin-top: 12px;
+  color: #495057;
+  font-weight: 500;
+}
+
+/* Sidebar Styles */
+.side-bar {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 10000;
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  border-right: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.1);
+  height: 100vh;
+  width: 75%;
+  max-width: 320px;
+  backdrop-filter: blur(10px);
+}
+
+.side-bar h1 {
+  margin: 24px 0 16px 16px;
+  font-size: 24px;
+  font-weight: 700;
+  color: #28a745;
+}
+
+.side-bar ul {
+  list-style: none;
+  margin: 0;
+  padding: 16px 0;
+  margin-left: 8px;
+}
+
+.side-bar li {
+  margin-bottom: 8px;
+  border-radius: 12px;
+  padding: 14px 16px;
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  margin-right: 8px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.side-bar li:hover {
+  transform: translateX(4px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  background: linear-gradient(135deg, #e8f5e9 0%, #f1f8f2 100%);
+}
+
+.side-bar a {
+  text-decoration: none;
+  color: #28a745;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  transition: color 0.3s ease;
+}
+
+.side-bar a:hover {
+  color: #1e7e34;
+}
+
+.side-bar i {
+  margin-right: 16px;
+  font-size: 18px;
+}
+
+/* Profile Section */
+.profile-sec {
+  width: 100%;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .profile-sec img {
-  border: solid 0.1px #fff;
-  box-shadow: 0 0 10px #ddd;
-  border-radius: 100%;
-  width: 45px; 
-  height: 45px;
-  margin-left: 5px;
-  margin-top: 10px;
+  border: 2px solid #28a745;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  margin-right: 12px;
+  transition: transform 0.3s ease;
 }
-  no-scroll {
-  overflow: hidden;
-  position: fixed;
-  width: 100%;
+
+.profile-sec img:hover {
+  transform: scale(1.1);
 }
-.menu-icon{
+
+/* Menu Icon */
+.menu-icon {
   color: #28a745;
+  font-size: 24px;
+  transition: transform 0.3s ease;
 }
-a .active {
-  color: blue;
+
+.menu-icon:hover {
+  transform: scale(1.1);
 }
+
+/* Toast Notifications */
 .toast {
   visibility: hidden;
-  min-width: 200px;
-  background-color: #4BB543;
+  min-width: 250px;
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
   color: white;
   text-align: center;
-  border-radius: 8px;
-  padding: 12px 16px;
+  border-radius: 12px;
+  padding: 16px 20px;
   position: fixed;
-  z-index: 1000;
+  z-index: 10001;
   left: 50%;
   bottom: 30px;
   transform: translateX(-50%);
-  font-family: Poppins, sans-serif;
+  font-family: 'Poppins', sans-serif;
   font-size: 14px;
+  font-weight: 500;
   opacity: 0;
-  transition: opacity 0.5s ease, bottom 0.5s ease;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 8px 32px rgba(40, 167, 69, 0.3);
 }
+
 .toast.show {
   visibility: visible;
   opacity: 1;
   bottom: 50px;
+  transform: translateX(-50%) translateY(0);
 }
 
 .snackbar {
   visibility: hidden;
-  min-width: 220px;
-  background-color: #323232;
+  min-width: 280px;
+  background: linear-gradient(135deg, #343a40 0%, #495057 100%);
   color: #fff;
   text-align: center;
-  border-radius: 8px;
-  padding: 14px 24px;
+  border-radius: 12px;
+  padding: 16px 24px;
   position: fixed;
   left: 50%;
   bottom: 20px;
-  font-family: Poppins, sans-serif;
+  font-family: 'Poppins', sans-serif;
   font-size: 14px;
-  z-index: 9999;
+  font-weight: 500;
+  z-index: 10001;
   opacity: 0;
-  transition: all 0.4s ease;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
 }
 
 .snackbar.show {
   visibility: visible;
   opacity: 1;
-  
-  .cancel-btn {
-  margin-top: 10px;
-  border: none;
-  padding: 8px 12px;
-  border-radius: 5px;
-  font-size: 14px;
-  cursor: pointer;
-  background-color: #6c757d;
-  color: white;
-}
-.cancel-btn:hover {
-  background-color: #5a6268;
+  transform: translateX(-50%) translateY(-10px);
 }
 
+/* Form Elements */
 #refundReason {
   font-family: 'Poppins', sans-serif;
   resize: vertical;
-  min-height: 100px;
+  min-height: 120px;
   max-height: 200px;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  padding: 12px;
+  transition: border-color 0.3s ease;
+  font-size: 14px;
+  line-height: 1.5;
 }
 
 #refundReason:focus {
   outline: none;
   border-color: #28a745;
+  box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.1);
 }
-/* Skeleton Loader */
+
+/* Enhanced Skeleton Loader */
 .skeleton-card {
-  background: white;
-  margin: 10px;
-  border-radius: 10px;
-  padding: 15px;
-  box-shadow: 0 0 10px rgba(0,0,0,0.05);
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  margin: 16px;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .skeleton-content {
   display: flex;
   align-items: center;
+  gap: 16px;
 }
 
 .skeleton-image {
-  width: 70px;
-  height: 70px;
-  border-radius: 5px;
+  width: 75px;
+  height: 75px;
+  border-radius: 12px;
   background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
   background-size: 200% 100%;
-  animation: skeleton-loading 1.5s infinite;
-  margin-right: 10px;
+  animation: skeleton-loading 2s infinite;
 }
 
 .skeleton-details {
@@ -278,30 +572,30 @@ a .active {
 }
 
 .skeleton-line {
-  height: 12px;
-  border-radius: 4px;
+  height: 14px;
+  border-radius: 8px;
   background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
   background-size: 200% 100%;
-  animation: skeleton-loading 1.5s infinite;
-  margin-bottom: 8px;
+  animation: skeleton-loading 2s infinite;
+  margin-bottom: 12px;
 }
 
 .skeleton-line.short {
-  width: 60%;
+  width: 65%;
 }
 
 .skeleton-line.badge {
-  width: 30%;
-  height: 20px;
+  width: 35%;
+  height: 24px;
   border-radius: 20px;
-  margin-top: 5px;
+  margin-top: 8px;
 }
 
 .skeleton-line.button {
-  width: 40%;
-  height: 30px;
-  border-radius: 5px;
-  margin-top: 10px;
+  width: 45%;
+  height: 36px;
+  border-radius: 8px;
+  margin-top: 12px;
 }
 
 @keyframes skeleton-loading {
@@ -313,15 +607,16 @@ a .active {
   }
 }
 
- 
- #otpModal {
+/* Enhanced Modal Styles */
+#otpModal {
   position: fixed !important;
   top: 0 !important;
   left: 0 !important;
   width: 100% !important;
   height: 100% !important;
-  background-color: rgba(0, 0, 0, 0.5) !important;
-  display: none !important; /* Initial state */
+  background: rgba(0, 0, 0, 0.6) !important;
+  backdrop-filter: blur(5px) !important;
+  display: none !important;
   justify-content: center !important;
   align-items: center !important;
   z-index: 10000000 !important;
@@ -329,116 +624,126 @@ a .active {
   visibility: visible !important;
 }
 
-#otpModal[style*="display: flex"] {
-  display: flex !important;
-}
-
 .modal-content {
-  background-color: white !important;
-  padding: 20px !important;
-  border-radius: 10px !important;
-  width: 300px !important;
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%) !important;
+  padding: 32px !important;
+  border-radius: 16px !important;
+  width: 350px !important;
   max-width: 90% !important;
   text-align: center !important;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2) !important;
+  box-shadow: 0 16px 64px rgba(0, 0, 0, 0.2) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
   opacity: 1 !important;
   visibility: visible !important;
+  animation: modalSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
 .modal-content input {
   width: 100% !important;
-  margin-bottom: 15px !important;
-  padding: 8px !important;
-  border-radius: 5px !important;
-  border: 1px solid #ccc !important;
+  margin-bottom: 16px !important;
+  padding: 12px 16px !important;
+  border-radius: 8px !important;
+  border: 2px solid #e9ecef !important;
   box-sizing: border-box !important;
+  font-size: 16px !important;
+  transition: border-color 0.3s ease !important;
+}
+
+.modal-content input:focus {
+  outline: none !important;
+  border-color: #28a745 !important;
+  box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.1) !important;
 }
 
 .modal-content button {
-  padding: 10px 20px !important;
-  margin: 5px !important;
+  padding: 12px 24px !important;
+  margin: 8px !important;
   border: none !important;
-  border-radius: 5px !important;
+  border-radius: 8px !important;
   cursor: pointer !important;
-  background-color: #28a745 !important;
+  font-weight: 500 !important;
+  font-size: 14px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
   color: white !important;
+  box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3) !important;
+}
+
+.modal-content button:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 25px rgba(40, 167, 69, 0.4) !important;
 }
 
 .modal-content button:last-child {
-  background-color: #dc3545 !important;
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%) !important;
+  box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3) !important;
 }
 
-/* Ensure other modals don't interfere */
-#refundModal {
-  z-index: 9999 !important;
+.modal-content button:last-child:hover {
+  box-shadow: 0 8px 25px rgba(220, 53, 69, 0.4) !important;
 }
 
-/* Reset any conflicting styles */
-#otpModal *,
-.modal-content * {
-  display: unset !important;
-  opacity: 1 !important;
-  visibility: visible !important;
-}
-
-/* Modal Content */
-.modal-content {
-  background: #fff;
-  padding: 20px;
-  border-radius: 10px;
-  width: 90%;
-  max-width: 400px;
-  text-align: center;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-  font-family: 'Poppins', sans-serif;
-}
-
-/* Success Modal Specific Styles */
+/* Success Modal */
 .success-modal {
-  padding: 30px;
-  animation: slideIn 0.3s ease-in-out;
+  padding: 40px !important;
+  animation: modalSlideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
 .success-icon {
-  font-size: 48px;
+  font-size: 64px;
   color: #28a745;
-  margin-bottom: 15px;
+  margin-bottom: 20px;
+  animation: successPulse 0.6s ease-in-out;
 }
 
 .success-modal h3 {
-  font-size: 24px;
-  font-weight: 600;
-  color: #333;
-  margin-bottom: 10px;
+  font-size: 28px;
+  font-weight: 700;
+  color: #2c3e50;
+  margin-bottom: 12px;
+  background: none !important;
+  box-shadow: none !important;
+  position: static !important;
+  padding: 0 !important;
 }
 
 .success-modal p {
   font-size: 16px;
-  color: #666;
-  margin-bottom: 20px;
+  color: #6c757d;
+  margin-bottom: 24px;
+  line-height: 1.6;
 }
 
 .success-btn {
-  background: #28a745;
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
   color: #fff;
-  padding: 10px 20px;
+  padding: 12px 32px;
   border: none;
-  border-radius: 5px;
+  border-radius: 8px;
   font-size: 16px;
+  font-weight: 500;
   cursor: pointer;
-  transition: background 0.3s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
 }
 
 .success-btn:hover {
-  background: #218838;
+  background: linear-gradient(135deg, #1e7e34 0%, #17a2b8 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(40, 167, 69, 0.4);
 }
 
-/* Button Processing State */
+/* Processing Button */
 .processing-btn {
-  background: #ccc !important;
+  background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%) !important;
   cursor: not-allowed !important;
   position: relative;
   color: transparent !important;
+  transform: none !important;
 }
 
 .processing-btn::after {
@@ -447,44 +752,103 @@ a .active {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  border: 2px solid #fff;
-  border-top-color: #333;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
   border-radius: 50%;
-  width: 16px;
-  height: 16px;
+  width: 20px;
+  height: 20px;
   animation: spin 1s linear infinite;
 }
 
-/* Confirm Button Styling */
-.confirm-btn {
-  background: #007bff;
-  color: #fff;
-  padding: 8px 16px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 14px;
-  margin-top: 10px;
-  transition: background 0.3s;
+/* Utility Classes */
+.no-scroll {
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
 }
 
-.confirm-btn:hover {
-  background: #0056b3;
-}
-
-/* Animation for Modal */
-@keyframes slideIn {
+/* Animations */
+@keyframes modalSlideIn {
   from {
-    transform: translateY(-50px);
+    transform: translateY(-50px) scale(0.9);
     opacity: 0;
   }
   to {
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
     opacity: 1;
   }
 }
 
+@keyframes successPulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
 @keyframes spin {
-  0% { transform: translate(-50%, -50%) rotate(0deg); }
-  100% { transform: translate(-50%, -50%) rotate(360deg); }
+  0% {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .transaction-card {
+    margin: 12px 8px;
+    padding: 16px;
+  }
+  
+  .tabs {
+    padding: 12px 8px;
+  }
+  
+  .tab {
+    padding: 10px 16px;
+    margin: 0 4px;
+    font-size: 13px;
+  }
+  
+  .modal-content {
+    width: 320px !important;
+    padding: 24px !important;
+  }
+  
+  .success-modal {
+    padding: 32px !important;
+  }
+}
+
+/* Accessibility Improvements */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Focus Indicators */
+.tab:focus,
+.confirm-btn:focus,
+.refund-btn:focus,
+.cancel-btn:focus {
+  outline: 2px solid #28a745;
+  outline-offset: 2px;
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+  .transaction-card {
+    border: 2px solid #000;
+  }
+  
+  .badge {
+    border-width: 2px;
+  }
 }

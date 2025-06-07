@@ -7195,3 +7195,378 @@
 {"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-06T21:02:06.921Z"}
 {"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-06T21:02:07.161Z"}
 {"level":"info","message":"Fetched 2 posts for user anonymous","timestamp":"2025-06-06T21:02:07.662Z"}
+{"level":"info","message":"✅ Cloudinary configured in postRoutes","timestamp":"2025-06-07T05:24:39.937Z"}
+{"level":"info","message":"✅ Cloudinary configured in postRoutes","timestamp":"2025-06-07T05:27:13.298Z"}
+{"level":"info","message":"✅ Cloudinary configured in postRoutes","timestamp":"2025-06-07T05:28:12.116Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T05:28:21.466Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T05:28:36.277Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T05:28:36.412Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T05:28:43.886Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T05:28:43.958Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T05:28:44.313Z"}
+{"level":"info","message":"Fetched 2 posts for user anonymous","timestamp":"2025-06-07T05:28:44.793Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T05:28:48.709Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T05:28:55.743Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T05:29:21.820Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T05:29:23.368Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T05:29:42.647Z"}
+{"level":"info","message":"Fetched 2 posts for user anonymous","timestamp":"2025-06-07T05:29:43.212Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T05:30:12.331Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T05:30:42.335Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T05:31:12.372Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T05:31:42.329Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T05:32:39.252Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T05:35:20.578Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T05:36:01.887Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T05:36:18.882Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T05:36:29.010Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T05:37:02.992Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T05:37:24.453Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T05:42:23.324Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T05:42:23.612Z"}
+{"level":"info","message":"Fetched 2 posts for user anonymous","timestamp":"2025-06-07T05:42:24.204Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T05:42:53.322Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T05:43:17.264Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T05:43:17.299Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T05:43:17.519Z"}
+{"level":"info","message":"Fetched 2 posts for user anonymous","timestamp":"2025-06-07T05:43:17.945Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T05:44:15.452Z"}
+{"level":"info","message":"Starting post creation for user 6843d062f457581752641ee3, type: regular","timestamp":"2025-06-07T05:44:18.791Z"}
+{"level":"info","message":"Post created by user 6843d062f457581752641ee3: 6843d1b3f457581752641f02","timestamp":"2025-06-07T05:44:19.340Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T05:44:22.157Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T05:44:22.209Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T05:44:22.462Z"}
+{"level":"info","message":"Fetched 3 posts for user anonymous","timestamp":"2025-06-07T05:44:22.857Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T05:44:26.904Z"}
+{"level":"info","message":"User 6843d062f457581752641ee3 liked post 6843d1b3f457581752641f02","timestamp":"2025-06-07T05:44:27.121Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T05:44:46.490Z"}
+{"level":"info","message":"User 6843d062f457581752641ee3 liked post 68431888432ee393a735a6ab","timestamp":"2025-06-07T05:44:46.702Z"}
+{"level":"info","message":"Created like notification for user 68431813432ee393a735a686 for post 68431888432ee393a735a6ab","timestamp":"2025-06-07T05:44:47.074Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T05:44:50.184Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T05:44:51.250Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T05:45:06.907Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T05:45:19.576Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T05:46:07.131Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T05:46:36.346Z"}
+{"level":"info","message":"Fetched 3 posts for user anonymous","timestamp":"2025-06-07T05:46:53.345Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T05:47:06.354Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T05:47:12.115Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T05:47:12.184Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T05:51:23.795Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T05:51:28.797Z"}
+{"level":"error","message":"Error fetching posts: connection timed out","timestamp":"2025-06-07T05:51:33.808Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T05:57:32.819Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T05:57:32.879Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T05:57:38.626Z"}
+{"level":"info","message":"Fetched 3 posts for user anonymous","timestamp":"2025-06-07T05:57:39.035Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T05:57:54.430Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T05:57:54.648Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T05:57:56.268Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T05:57:56.311Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T05:57:57.795Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T05:58:16.213Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T05:58:25.594Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T05:58:55.066Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T05:58:55.608Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T05:58:57.662Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T05:58:58.362Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T05:59:26.221Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:01:50.143Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:01:50.199Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:01:56.937Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:02:17.278Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:02:18.361Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:02:36.090Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:02:47.535Z"}
+{"level":"info","message":"✅ Cloudinary configured in postRoutes","timestamp":"2025-06-07T06:03:18.203Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:03:48.421Z"}
+{"level":"info","message":"✅ Cloudinary configured in postRoutes","timestamp":"2025-06-07T06:04:19.994Z"}
+{"level":"info","message":"✅ Cloudinary configured in postRoutes","timestamp":"2025-06-07T06:06:20.935Z"}
+{"level":"info","message":"✅ Cloudinary configured in postRoutes","timestamp":"2025-06-07T06:10:48.948Z"}
+{"level":"info","message":"✅ Cloudinary configured in postRoutes","timestamp":"2025-06-07T06:11:51.617Z"}
+{"level":"info","message":"✅ Cloudinary configured in postRoutes","timestamp":"2025-06-07T06:13:24.080Z"}
+{"level":"info","message":"✅ Cloudinary configured in postRoutes","timestamp":"2025-06-07T06:14:03.589Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:14:36.631Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:14:36.813Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:14:38.226Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:15:05.606Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:15:18.440Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:15:18.771Z"}
+{"level":"info","message":"Fetched 3 posts for user anonymous","timestamp":"2025-06-07T06:15:19.531Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:15:34.396Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:15:34.849Z"}
+{"level":"info","message":"Fetched 3 posts for user anonymous","timestamp":"2025-06-07T06:15:35.355Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:15:36.866Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:15:37.104Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:15:37.971Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:15:37.997Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:15:38.689Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:15:49.536Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:15:49.939Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:15:50.739Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:15:50.927Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:15:56.113Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:15:57.513Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:16:12.924Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:16:13.283Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:16:14.832Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:16:14.875Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:16:18.099Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:16:19.007Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:16:35.610Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:16:40.796Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:16:41.066Z"}
+{"level":"info","message":"Fetched 3 posts for user anonymous","timestamp":"2025-06-07T06:16:41.671Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:16:56.798Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:16:57.136Z"}
+{"level":"info","message":"Fetched 3 posts for user anonymous","timestamp":"2025-06-07T06:16:57.665Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:17:05.418Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:17:05.619Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:17:07.339Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:17:07.386Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:17:08.522Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:17:36.397Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:17:45.688Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:17:45.726Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:17:46.213Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:17:46.815Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:17:48.659Z"}
+{"level":"info","message":"Fetched 3 posts for user anonymous","timestamp":"2025-06-07T06:17:49.638Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:17:50.165Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:17:50.417Z"}
+{"level":"info","message":"Fetched 3 posts for user anonymous","timestamp":"2025-06-07T06:17:51.178Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:19:10.596Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:19:10.624Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:19:10.898Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:19:12.109Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:19:12.270Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:19:13.760Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:19:13.799Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:19:15.659Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:19:43.330Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:19:57.127Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:20:46.893Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:20:46.944Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:20:48.344Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:21:01.395Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:21:02.969Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:21:03.583Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:21:16.112Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:21:39.297Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:21:46.106Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:22:02.356Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:22:02.836Z"}
+{"level":"info","message":"Fetched 3 posts for user anonymous","timestamp":"2025-06-07T06:22:03.773Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:22:16.701Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:23:41.018Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:26:17.438Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:26:17.691Z"}
+{"level":"info","message":"Fetched 3 posts for user anonymous","timestamp":"2025-06-07T06:26:18.322Z"}
+{"level":"info","message":"✅ Cloudinary configured in postRoutes","timestamp":"2025-06-07T06:44:38.767Z"}
+{"level":"info","message":"✅ Cloudinary configured in postRoutes","timestamp":"2025-06-07T06:45:56.081Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:46:18.300Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:46:18.674Z"}
+{"level":"info","message":"Fetched 3 posts for user anonymous","timestamp":"2025-06-07T06:46:19.252Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:46:47.695Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:47:16.791Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:47:27.511Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:47:27.666Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:47:29.330Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:47:29.397Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:47:30.954Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:47:31.716Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:47:38.843Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:47:39.119Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:47:40.067Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:47:40.223Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:47:44.043Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:47:45.758Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:47:52.706Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:48:21.181Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:50:12.485Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:50:12.514Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:50:13.147Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:50:17.466Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:50:17.686Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:50:18.974Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:50:19.000Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:50:20.628Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:50:20.870Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:50:21.631Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:50:21.763Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:50:24.401Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:50:26.055Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:50:37.303Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:50:53.331Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:50:55.153Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:51:09.187Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:51:10.235Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:51:10.262Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:51:10.904Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:51:29.534Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:51:29.756Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:51:30.342Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:51:30.419Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:51:34.523Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:51:34.808Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:51:35.341Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:51:35.366Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:51:36.096Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:51:44.890Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:51:45.076Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:51:46.526Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:51:46.558Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:52:02.218Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:52:02.465Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:52:03.118Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:52:03.231Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:52:08.802Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:52:08.829Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:52:09.201Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:52:11.030Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:52:14.543Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:54:18.341Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:54:18.373Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:54:19.393Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:54:29.039Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:54:29.052Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:54:29.920Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:56:42.696Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:56:42.719Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:56:43.299Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:57:20.145Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:57:20.166Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:57:21.038Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:58:19.698Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:58:19.718Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:58:20.224Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:58:39.212Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:58:39.232Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:58:39.912Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:59:09.512Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:59:09.535Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:59:10.203Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:59:19.319Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:59:19.346Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:59:20.017Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:59:27.504Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:59:27.524Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:59:28.156Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:59:38.406Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:59:38.427Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:59:38.892Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:59:49.937Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:59:49.962Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T06:59:50.811Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:00:01.783Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:00:02.062Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:00:02.739Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:00:02.797Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:00:05.653Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:00:05.922Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:00:06.533Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:00:06.556Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:00:07.173Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:00:15.217Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:00:49.529Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:00:49.555Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:00:50.275Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:00:55.792Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:00:55.808Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:00:56.243Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:01:47.545Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:01:47.559Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:01:47.986Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:01:56.815Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:01:56.837Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:01:57.506Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:01:58.953Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:01:59.181Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:01:59.833Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:01:59.947Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:02:03.990Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:02:04.210Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:02:04.706Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:02:04.747Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:02:05.343Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:02:09.330Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:02:20.184Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:02:20.200Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:02:20.595Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:02:22.877Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:02:23.131Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:02:23.776Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:02:23.867Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:02:26.165Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:02:26.545Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:02:27.054Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:02:27.101Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:02:27.768Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:02:41.154Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:02:48.844Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:02:48.881Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:02:49.591Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:03:02.411Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:03:02.626Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:03:04.099Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:03:04.134Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:03:10.626Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:08:04.061Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:08:04.098Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:08:48.539Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:08:48.580Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:10:33.225Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:10:33.259Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:11:02.555Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:11:06.022Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:11:06.082Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:11:10.858Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:11:11.329Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:11:14.056Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:11:14.096Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:12:26.085Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:12:26.118Z"}
+{"level":"info","message":"✅ Cloudinary configured in postRoutes","timestamp":"2025-06-07T07:13:13.609Z"}
+{"level":"info","message":"✅ Cloudinary configured in postRoutes","timestamp":"2025-06-07T07:16:45.932Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:16:52.148Z"}
+{"level":"info","message":"✅ Cloudinary configured in postRoutes","timestamp":"2025-06-07T07:17:49.168Z"}
+{"level":"info","message":"✅ Cloudinary configured in postRoutes","timestamp":"2025-06-07T07:20:55.222Z"}
+{"level":"info","message":"✅ Cloudinary configured in postRoutes","timestamp":"2025-06-07T07:23:49.815Z"}
+{"level":"info","message":"✅ Cloudinary configured in postRoutes","timestamp":"2025-06-07T07:25:44.604Z"}
+{"level":"info","message":"✅ Cloudinary configured in postRoutes","timestamp":"2025-06-07T07:30:07.692Z"}
+{"level":"info","message":"✅ Cloudinary configured in postRoutes","timestamp":"2025-06-07T07:48:44.298Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:54:31.412Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:54:31.741Z"}
+{"level":"info","message":"Fetched 3 posts for user anonymous","timestamp":"2025-06-07T07:54:32.381Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:54:38.819Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:54:39.010Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:54:39.534Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:54:39.703Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:54:42.198Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:54:42.584Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:54:49.836Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:54:49.874Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:54:50.101Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:54:57.839Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:54:57.913Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:54:58.110Z"}
+{"level":"info","message":"Fetched 3 posts for user anonymous","timestamp":"2025-06-07T07:54:58.602Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:55:23.002Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:55:23.265Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:55:23.842Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:55:23.977Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:55:28.407Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:55:28.611Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:55:30.046Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:55:30.089Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:55:30.585Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:55:59.798Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:56:29.809Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:56:59.804Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:57:29.826Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:57:59.808Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:58:29.788Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:58:59.813Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:59:29.252Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:59:49.771Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-07T07:59:50.023Z"}

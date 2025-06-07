@@ -7,12 +7,10 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
   <script src="addPic.js"></script>
-  <link rel="stylesheet" href="Deals.css">
-  <link rel="stylesheet" href="Style.css">
+ <link rel="stylesheet" href="Deals.css">
   <style>
     /* Inline CSS for skeleton loaders to ensure visibility */
-
-    .skeleton-card {
+.skeleton-card {
       background: #fff;
       border: 1px solid #e0e0e0;
       border-radius: 8px;
@@ -139,36 +137,19 @@
   </style>
 </head>
 <body>
-  <h3>Deals</h3>
-  <div class="profile-pic" style="margin-top: -54px; margin-left: 80%; box-shadow: 0 0 10px #ddd; border: solid 1px #fff;">
-    <img src="Default.png" alt="" id="profile-picture8" width="40px" height="40px" style="border-radius: 50%">
-  </div>
-  <div class="menu-icon" style="margin-top: -42px">
-    <div></div>
-    <div></div>
-    <div></div>
-  </div>
-   
-  <div class="side-bar">
-    <div class="profile-sec">
-      <img src="default-avatar.png" alt="pic" id="profile-picture1">
-      <h1 id="username8">Username</h1>
+    <!-- Header -->
+  <header class="header">
+    <h1 class="header-title">
+      <i class="fas fa-cart-plus"></i>
+      Deals
+    </h1>
+    <div class="header-actions">
+      <a href="#" class="search-btn">
+        <i class="fas fa-search"></i>
+      </a>
+      <img  alt="Profile" id="profile-picture6" class="profile-avatar" src="default-avater.png" onerror="this.src='default-avatar.png'">
     </div>
-    <ul>
-      <li><a href="index.html" class="active"><i class="fas fa-store"></i>Market</a></li>
-      <li><a href="Alerts.html"><i class="fas fa-bell"></i> Alerts</a></li>
-      <li><a href="Messages.html"><i class="fas fa-comment"></i>Messages</a></li> 
-      <li><a href="Deals.html"><i class="fas fa-cart-plus"></i>Deals</a></li>
-      <li><a href="Profile.html"><i class="fas fa-user"></i> Profile</a></li>
-      <li><a href="Profile.html"><i class="fa-solid fa-user-tie"></i> Hire Skills</a></li>
-      <li><a href="Profile.html"><i class="fa-solid fa-receipt"></i> Generate Receipts</a></li>
-      <li><a href="Profile.html"><i class="fa-solid fa-lock"></i> Privacy Policy</a></li>
-      <li><a href="Privacy.html"><i class="fa-solid fa-circle-info"></i> Community Standards</a></li>
-      <li><a href="SignIn.html"><i class="fas fa-sign-out-alt"></i><span id="logout-text">Log out</span></a></li>
-    </ul>
-    <pre style="font-size: 10px; text-align: center; margin-top: 40px; color: green">©Salmart Technologies 2025</pre>
-  </div>
-
+  </header>
   <div class="tabs">
     <div class="tab active" onclick="showTab('buying')">Buying</div>
     <div class="tab" onclick="showTab('selling')">Selling</div>
