@@ -7,7 +7,6 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/dexie@3.2.4/dist/dexie.min.js"></script>
   <script src="addPic.js"></script>
   <style>
     :root {
@@ -556,16 +555,7 @@
       </li>
     </ul>
   </nav>
-  
-<script>
-// Create the Dexie database
-const db = new Dexie('SalmartMessagesDB');
 
-// Define the schema (you can add more fields if needed)
-db.version(1).stores({
-  messages: 'id, senderId, receiverId, timestamp' // 'id' is primary key
-});
-</script>
   <script>
     // Global variables
     const userId = localStorage?.getItem("userId");
@@ -733,41 +723,42 @@ db.version(1).stores({
       emptyStateElement.style.display = "none";
     }
 
-         async function fetchMessages() {
-  if (isInitialLoad) {
-    showSkeletonLoaders();
-  }
-
-  try {
-    const response = await fetch(`${API_BASE_URL}/api/messages?userId=${userId}`, {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+    async function fetchMessages() {
+      if (isInitialLoad) {
+        console.log('Showing skeleton loaders...');
+        showSkeletonLoaders();
       }
-    });
 
-    if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+      try {
+        console.log('Fetching messages for user:', userId);
+        const response = await fetch(`${API_BASE_URL}/api/messages?userId=${userId}`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        
+        const fetchedMessages = await response.json();
+        console.log('Fetched messages:', fetchedMessages);
+        
+        // Update messages array
+        messages = fetchedMessages;
+        
+        // Render messages
+        renderMessages();
+        
+        isInitialLoad = false;
+        
+      } catch (error) {
+        console.error('Fetch messages error:', error);
+        showErrorMessage('Failed to load messages. Please try again later.');
+        isInitialLoad = false;
+      }
+    }
 
-    const fetchedMessages = await response.json();
-
-    // Save to IndexedDB
-    await db.messages.clear(); // optional: clear old list first
-    await db.messages.bulkPut(fetchedMessages);
-
-    // Update state
-    messages = fetchedMessages;
-    renderMessages();
-    isInitialLoad = false;
-
-  } catch (error) {
-    console.error('Fetch messages error:', error);
-    showErrorMessage('Failed to load messages. Showing cached messages...');
-
-    // Load from IndexedDB if offline
-    messages = await db.messages.toArray();
-    renderMessages();
-    isInitialLoad = false;
-  }
-}
     function renderMessages() {
       if (messages.length === 0) {
         console.log('No messages to display');
