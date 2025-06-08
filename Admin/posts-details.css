@@ -661,3 +661,29 @@ body.dark-mode {
         padding: 16px
     }
 }
+
+.buy {
+  text-align: center;
+  margin-top: 10px;
+  padding: 0 10px; /* Optional: adds some side padding on small screens */
+}
+
+.buy-now-btn {
+  background-color: #28a745;
+  color: #fff;
+  border: none;
+  padding: 12px 20px;
+  font-size: 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 400px; /* Optional: limits button width on larger screens */
+  display: block;
+  margin: 0 auto;
+}
+
+.buy-now-btn:hover {
+  background-color: #218838;
+}

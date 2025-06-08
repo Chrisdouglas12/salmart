@@ -171,60 +171,55 @@ document.addEventListener('DOMContentLoaded', async function () {
                 }
 
             } else if (target.classList.contains('like-button')) {
-                if (!authToken) {
-                    showToast('Please log in to like posts.', '#dc3545');
-                    return;
-                }
-
-                const likeCountElement = target.querySelector('.like-count');
-                const icon = target.querySelector('i');
-                // Store the current state before the API call for potential revert
-                const initialLikes = parseInt(likeCountElement.textContent, 10);
-                const initialIconClassFas = icon.classList.contains('fas');
-
-                // Disable the button immediately to prevent multiple clicks
-                target.disabled = true;
-
-                try {
-                    const response = await fetch(`${API_BASE_URL}/post/like/${postId}`, {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': `Bearer ${authToken}`,
-                            'Content-Type': 'application/json',
-                        },
-                        // The action is now determined by the server response, not by the client's initial guess.
-                        // However, to tell the server what we want to do, we still pass it.
-                        // It's crucial that the server responds with the *new, correct* state.
-                        body: JSON.stringify({ action: initialIconClassFas ? 'unlike' : 'like' }),
-                    });
-
-                    if (!response.ok) {
-                        const errorData = await response.json();
-                        throw new Error(errorData.message || 'Failed to like/unlike post');
+                    if (!authToken) {
+                        showToast('Please log in to like posts.', '#dc3545');
+                        return;
                     }
 
-                    const data = await response.json(); // Server should return the updated post or just the new likes array
-                    const newLikesCount = data.likes ? data.likes.length : 0;
-                    const userHasLiked = data.likes ? data.likes.includes(loggedInUser) : false;
+                    const likeCountElement = target.querySelector('.like-count');
+                    const icon = target.querySelector('i');
+                    const isCurrentlyLiked = icon.classList.contains('fas');
+                    let currentLikes = parseInt(likeCountElement.textContent, 10);
 
-                    // *** ONLY UPDATE UI AFTER SUCCESSFUL SERVER RESPONSE ***
-                    likeCountElement.textContent = newLikesCount;
-                    icon.classList.toggle('fas', userHasLiked);
-                    icon.classList.toggle('far', !userHasLiked);
+                    target.disabled = true;
+                    likeCountElement.textContent = isCurrentlyLiked ? currentLikes - 1 : currentLikes + 1;
+                    icon.classList.toggle('fas', !isCurrentlyLiked);
+                    icon.classList.toggle('far', isCurrentlyLiked);
 
-                    // Optional: If you have a socket.io connection and want real-time updates for others
-                    // if (window.socket) window.socket.emit('like', { postId, userId: loggedInUser, newLikesCount: newLikesCount, userHasLiked: userHasLiked });
+                    try {
+                        const response = await fetch(`${API_BASE_URL}/post/like/${postId}`, {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `Bearer ${authToken}`,
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ action: isCurrentlyLiked ? 'unlike' : 'like' }),
+                        });
 
-                } catch (error) {
-                    console.error('Like error:', error);
-                    // Revert UI to initial state only if API call fails
-                    likeCountElement.textContent = initialLikes;
-                    icon.classList.toggle('fas', initialIconClassFas);
-                    icon.classList.toggle('far', !initialIconClassFas);
-                    showToast(error.message || 'Failed to process like/unlike.', '#dc3545');
-                } finally {
-                    target.disabled = false; // Re-enable button regardless of success or failure
-                }
+                        if (!response.ok) {
+                            const errorData = await response.json();
+                            throw new Error(errorData.message || 'Failed to like/unlike post');
+                        }
+
+                        const data = await response.json();
+                        likeCountElement.textContent = data.likes.length;
+                        const userLikes = data.likes.includes(loggedInUser);
+                        icon.classList.toggle('fas', userLikes);
+                        icon.classList.toggle('far', !userLikes);
+
+                        if (userLikes && !isCurrentlyLiked) {
+                            socket.emit('like', { postId, userId: loggedInUser });
+                        }
+                    } catch (error) {
+                        console.error('Like error:', error);
+                        likeCountElement.textContent = currentLikes;
+                        icon.classList.toggle('fas', isCurrentlyLiked);
+                        icon.classList.toggle('far', !isCurrentlyLiked);
+                        showToast(error.message || 'Failed to like/unlike post.', '#dc3545');
+                    } finally {
+                        target.disabled = false;
+                    }
+
 
             } else if (target.classList.contains('reply-button')) {
                 window.location.href = `product.html?postId=${postId}`;
