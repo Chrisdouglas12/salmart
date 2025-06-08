@@ -430,11 +430,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                         ${mediaContent}
                     </div>
                 </div>
-<div class="buy">
-  ${post.createdBy?.userId !== loggedInUser ? `
-    <button class="buy-now-btn">Buy Now</button>
-  ` : ''}
-</div>
+                <div class="buy" style="text-align: center"><i class="fas fa-cart-plus"></i>
+                  Buy Now  ${post.createdBy?.userId !== loggedInUser ? buttonContent : ''}
+                </div>
                 <div class="post-actions">
                     <button class="like-button">
                         <i class="${post.likes?.includes(loggedInUser) ? 'fas' : 'far'} fa-heart"></i>

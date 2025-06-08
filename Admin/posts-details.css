@@ -20,16 +20,17 @@ body.dark-mode {
 
 /* Container */
 .container {
-    max-width: 700px; /* Slightly wider for better content fit */
+   max-width: 700px; /* Slightly wider for better content fit */
     margin: 0 auto;
-    padding: 16px;
+    padding: 0px;
+    
 }
 
 /* Header */
 .post-details-header {
     display: flex;
     align-items: center;
-    padding: 16px 20px;
+    padding: 20px 25px;
     background-color: #ffffff;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
     position: sticky;
@@ -136,7 +137,7 @@ body.dark-mode {
 }
 
 .follow-button {
-    background-color: #1b74e4;
+    background-color: #28a744;
     color: #ffffff;
     border: none;
     padding: 8px 16px;
@@ -564,12 +565,13 @@ body.dark-mode {
 
 /* Buy Button */
 .buy {
-    background: linear-gradient(135deg, #28a745, #218838);
-    color: #ffffff;
-    border: none;
+    background: #fff
+    color: #28a745;
+    border: 1px solid #fff;
+    box-shadow: 0 0 10px #ddd;
     padding: 8px 16px;
     border-radius: 8px;
-    width: 48%;
+    width: 100%;
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
@@ -581,7 +583,7 @@ body.dark-mode {
 }
 
 .buy:hover {
-    background: linear-gradient(135deg, #218838, #1e7e34);
+    background: #f3f8f1;
     transform: translateY(-1px);
 }
 
@@ -662,28 +664,3 @@ body.dark-mode {
     }
 }
 
-.buy {
-  text-align: center;
-  margin-top: 10px;
-  padding: 0 10px; /* Optional: adds some side padding on small screens */
-}
-
-.buy-now-btn {
-  background-color: #28a745;
-  color: #fff;
-  border: none;
-  padding: 12px 20px;
-  font-size: 16px;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.2s ease;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  width: 100%;
-  max-width: 400px; /* Optional: limits button width on larger screens */
-  display: block;
-  margin: 0 auto;
-}
-
-.buy-now-btn:hover {
-  background-color: #218838;
-}
