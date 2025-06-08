@@ -1512,3 +1512,39 @@
 {"level":"info","message":"Fetched 2 latest messages for user 6843d062f457581752641ee3","timestamp":"2025-06-08T18:06:37.080Z"}
 {"level":"info","message":"Fetched 2 latest messages for user 6843d062f457581752641ee3","timestamp":"2025-06-08T18:06:45.391Z"}
 {"level":"info","message":"Fetched 2 latest messages for user 6843d062f457581752641ee3","timestamp":"2025-06-08T18:06:46.551Z"}
+{"level":"info","message":"Fetched 2 latest messages for user 6843d062f457581752641ee3","timestamp":"2025-06-08T19:09:38.525Z"}
+{"level":"info","message":"Fetched 2 latest messages for user 6843d062f457581752641ee3","timestamp":"2025-06-08T19:19:44.600Z"}
+{"level":"info","message":"Fetched 2 latest messages for user 6843d062f457581752641ee3","timestamp":"2025-06-08T19:19:46.853Z"}
+{"level":"info","message":"Fetched 2 latest messages for user 6843d062f457581752641ee3","timestamp":"2025-06-08T19:19:47.444Z"}
+{"level":"info","message":"Fetched 2 latest messages for user 6843d062f457581752641ee3","timestamp":"2025-06-08T19:22:02.002Z"}
+{"level":"info","message":"Fetched 2 latest messages for user 6843d062f457581752641ee3","timestamp":"2025-06-08T19:22:03.802Z"}
+{"level":"info","message":"Fetched 2 latest messages for user 6843d062f457581752641ee3","timestamp":"2025-06-08T19:22:04.412Z"}
+{"level":"info","message":"Fetched 2 latest messages for user 6843d062f457581752641ee3","timestamp":"2025-06-08T19:24:04.015Z"}
+{"level":"info","message":"Fetched 2 latest messages for user 6843d062f457581752641ee3","timestamp":"2025-06-08T19:24:06.524Z"}
+{"level":"info","message":"Fetched 2 latest messages for user 6843d062f457581752641ee3","timestamp":"2025-06-08T19:24:07.143Z"}
+{"level":"info","message":"Fetched 2 latest messages for user 6843d062f457581752641ee3","timestamp":"2025-06-08T19:57:52.847Z"}
+{"level":"info","message":"Fetched 5 messages between 6843d062f457581752641ee3 and 6843f54a956396ecb52e3ec0","timestamp":"2025-06-08T19:57:55.883Z"}
+{"level":"info","message":"Fetched 2 latest messages for user 6843d062f457581752641ee3","timestamp":"2025-06-08T19:59:06.202Z"}
+{"level":"info","message":"Fetched 5 messages between 6843d062f457581752641ee3 and 6843f54a956396ecb52e3ec0","timestamp":"2025-06-08T19:59:09.980Z"}
+{"level":"info","message":"Fetched 2 latest messages for user 6843d062f457581752641ee3","timestamp":"2025-06-08T20:02:42.152Z"}
+{"level":"info","message":"Fetched 5 messages between 6843d062f457581752641ee3 and 6843f54a956396ecb52e3ec0","timestamp":"2025-06-08T20:02:46.148Z"}
+{"level":"info","message":"Message sent from 6843d062f457581752641ee3 to 6843f54a956396ecb52e3ec0: 6845ec72d91182d2f09fc66f","timestamp":"2025-06-08T20:02:58.736Z"}
+{"level":"info","message":"Emitting receiveMessage to user 6843f54a956396ecb52e3ec0: {\"_id\":\"6845ec72d91182d2f09fc66f\",\"senderId\":\"6843d062f457581752641ee3\",\"receiverId\":\"6843f54a956396ecb52e3ec0\",\"text\":\"Hi\",\"messageType\":\"text\",\"offerDetails\":null,\"attachment\":null,\"chatPartnerName\":\"Debbie James\",\"status\":\"sent\",\"createdAt\":\"2025-06-08T20:02:58.128Z\"}","timestamp":"2025-06-08T20:02:58.749Z"}
+{"level":"info","message":"Emitting newMessage to user 6843d062f457581752641ee3: {\"_id\":\"6845ec72d91182d2f09fc66f\",\"senderId\":\"6843d062f457581752641ee3\",\"receiverId\":\"6843f54a956396ecb52e3ec0\",\"text\":\"Hi\",\"messageType\":\"text\",\"offerDetails\":null,\"attachment\":null,\"chatPartnerName\":\"Debbie James\",\"status\":\"sent\",\"createdAt\":\"2025-06-08T20:02:58.128Z\"}","timestamp":"2025-06-08T20:02:58.754Z"}
+{"level":"info","message":"Sending FCM notification to user 6843f54a956396ecb52e3ec0 for message 6845ec72d91182d2f09fc66f","timestamp":"2025-06-08T20:02:58.759Z"}
+{"level":"info","message":"FCM notification sent to user 6843f54a956396ecb52e3ec0","timestamp":"2025-06-08T20:03:01.804Z"}
+{"level":"info","message":"Triggering badge update for user 6843f54a956396ecb52e3ec0","timestamp":"2025-06-08T20:03:01.806Z"}
+{"level":"info","message":"Fetched 2 latest messages for user 6843d062f457581752641ee3","timestamp":"2025-06-08T20:04:02.358Z"}
+{"level":"info","message":"Fetched 6 messages between 6843d062f457581752641ee3 and 6843f54a956396ecb52e3ec0","timestamp":"2025-06-08T20:04:05.686Z"}
+{"level":"info","message":"Fetched 2 latest messages for user 6843d062f457581752641ee3","timestamp":"2025-06-08T20:04:38.361Z"}
+{"level":"info","message":"Fetched 6 messages between 6843d062f457581752641ee3 and 6843f54a956396ecb52e3ec0","timestamp":"2025-06-08T20:04:41.871Z"}
+{"level":"info","message":"Fetched 2 latest messages for user 6843d062f457581752641ee3","timestamp":"2025-06-08T20:07:16.608Z"}
+{"level":"info","message":"Fetched 2 messages between 6843d062f457581752641ee3 and 68431685432ee393a735a641","timestamp":"2025-06-08T20:07:20.252Z"}
+{"level":"info","message":"Message sent from 6843d062f457581752641ee3 to 68431685432ee393a735a641: 6845ed86d91182d2f09fc6bc","timestamp":"2025-06-08T20:07:34.835Z"}
+{"level":"info","message":"Emitting receiveMessage to user 68431685432ee393a735a641: {\"_id\":\"6845ed86d91182d2f09fc6bc\",\"senderId\":\"6843d062f457581752641ee3\",\"receiverId\":\"68431685432ee393a735a641\",\"text\":\"Alright sir\",\"messageType\":\"text\",\"offerDetails\":null,\"attachment\":null,\"chatPartnerName\":\"Debbie James\",\"status\":\"sent\",\"createdAt\":\"2025-06-08T20:07:34.606Z\"}","timestamp":"2025-06-08T20:07:34.841Z"}
+{"level":"info","message":"Emitting newMessage to user 6843d062f457581752641ee3: {\"_id\":\"6845ed86d91182d2f09fc6bc\",\"senderId\":\"6843d062f457581752641ee3\",\"receiverId\":\"68431685432ee393a735a641\",\"text\":\"Alright sir\",\"messageType\":\"text\",\"offerDetails\":null,\"attachment\":null,\"chatPartnerName\":\"Debbie James\",\"status\":\"sent\",\"createdAt\":\"2025-06-08T20:07:34.606Z\"}","timestamp":"2025-06-08T20:07:34.846Z"}
+{"level":"info","message":"Sending FCM notification to user 68431685432ee393a735a641 for message 6845ed86d91182d2f09fc6bc","timestamp":"2025-06-08T20:07:34.850Z"}
+{"level":"info","message":"FCM notification sent to user 68431685432ee393a735a641","timestamp":"2025-06-08T20:07:36.275Z"}
+{"level":"info","message":"Triggering badge update for user 68431685432ee393a735a641","timestamp":"2025-06-08T20:07:36.276Z"}
+{"level":"info","message":"Fetched 2 latest messages for user 6843d062f457581752641ee3","timestamp":"2025-06-08T20:08:16.908Z"}
+{"level":"info","message":"Fetched 2 latest messages for user 6843f54a956396ecb52e3ec0","timestamp":"2025-06-08T20:10:01.212Z"}

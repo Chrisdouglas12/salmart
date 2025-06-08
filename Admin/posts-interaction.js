@@ -27,11 +27,42 @@ document.addEventListener('DOMContentLoaded', async function () {
                 const { following } = await response.json();
                 localStorage.setItem('followingList', JSON.stringify(following));
                 followingList = following;
+                // After fetching, update all existing follow buttons
+                updateAllFollowButtons();
             }
         } catch (error) {
             console.error('Error checking follow status:', error);
         }
     }
+
+    // Function to update the state of follow buttons across all posts
+    function updateAllFollowButtons() {
+        const currentLoggedInUserId = localStorage.getItem('userId');
+
+        document.querySelectorAll('.post').forEach(postElement => {
+            const postCreatorId = postElement.dataset.userId; // Assuming you set data-user-id on the post element
+            const followButton = postElement.querySelector('.follow-button');
+
+            if (followButton) {
+                // 3. Follow button should be hidden from the post creator on their posts.
+                if (currentLoggedInUserId && postCreatorId === currentLoggedInUserId) {
+                    followButton.style.display = 'none';
+                } else if (followingList.includes(postCreatorId)) {
+                    // 2. Once a user clicks the follow button, it should be hidden for him, it should not show again.
+                    // (Visually, by changing text and disabling)
+                    followButton.innerHTML = '<i class="fas fa-user-check"></i> Following';
+                    followButton.style.backgroundColor = '#28a745';
+                    followButton.style.color = '#fff';
+                    followButton.disabled = true; // Disable to prevent further clicks
+                } else {
+                    followButton.innerHTML = '<i class="fas fa-user-plus"></i> Follow';
+                    followButton.style.backgroundColor = ''; // Reset to default
+                    followButton.disabled = false; // Enable if not followed
+                }
+            }
+        });
+    }
+
 
     function showDeleteConfirmationModal(postId, authToken, postElement) {
         const modal = document.createElement('div');
@@ -97,6 +128,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     window.addEventListener('postsRendered', () => {
         // Trigger event in post-video-controls.js
         window.dispatchEvent(new Event('initVideoControls'));
+        updateAllFollowButtons(); // Call this when posts are rendered to set initial state
     });
 
 
@@ -239,8 +271,27 @@ document.addEventListener('DOMContentLoaded', async function () {
 
             } else if (target.classList.contains('follow-button')) {
                 const userIdToFollow = target.dataset.userId;
+                const currentLoggedInUserId = localStorage.getItem('userId');
+
                 if (!authToken) {
                     showToast('Please log in to follow users.', '#dc3545');
+                    return;
+                }
+
+                // Prevent following self
+                if (userIdToFollow === currentLoggedInUserId) {
+                    showToast('You cannot follow yourself.', '#dc3545');
+                    target.style.display = 'none'; // Hide button if somehow still visible
+                    return;
+                }
+
+                // 1. Ensure no duplicates and handle immediate UI update
+                if (followingList.includes(userIdToFollow)) {
+                    showToast('You are already following this user.', '#ffc107'); // Yellow for warning
+                    // Already following, update button state just in case
+                    target.innerHTML = '<i class="fas fa-user-check"></i> Following';
+                    target.style.backgroundColor = '#28a745';
+                    target.disabled = true;
                     return;
                 }
 
@@ -256,16 +307,11 @@ document.addEventListener('DOMContentLoaded', async function () {
                     if (!response.ok) throw new Error('Failed to follow user');
 
                     // Update followingList in local storage and memory
-                    if (!followingList.includes(userIdToFollow)) {
-                        followingList.push(userIdToFollow);
-                        localStorage.setItem('followingList', JSON.stringify(followingList));
-                    }
+                    followingList.push(userIdToFollow); // Add only if not already present (checked above)
+                    localStorage.setItem('followingList', JSON.stringify(followingList));
 
-                    // Update all follow buttons for this user
-                    document.querySelectorAll(`.follow-button[data-user-id="${userIdToFollow}"]`).forEach(btn => {
-                        btn.innerHTML = '<i class="fas fa-user-check"></i> Following';
-                        btn.style.backgroundColor = '#28a745';
-                    });
+                    // Update all follow buttons for this user across the page
+                    updateAllFollowButtons();
 
                     showToast('You are now following this user!', '#28a745');
                 } catch (error) {

@@ -458,7 +458,38 @@ document.addEventListener('DOMContentLoaded', async () => {
                     `).join('') : '<p>No comments yet.</p>'}
                 </div>
             `;
+                    // Buy now functionality
+                    const buyNowButton = postDetailsContainer.querySelector('.buy-now-button[data-post-id]');
+                    if (buyNowButton) {
+                        buyNowButton.addEventListener('click', async () => {
+                            const postId = buyNowButton.getAttribute('data-post-id').trim();
+                            const email = localStorage.getItem('email');
+                            const buyerId = localStorage.getItem('userId');
 
+                            if (!email || !buyerId) {
+                                showToast("Please log in to make a purchase.", '#dc3545');
+                                return;
+                            }
+
+                            try {
+                                const response = await fetch(`${API_BASE_URL}/pay`, {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ email, postId, buyerId }),
+                                });
+
+                                const result = await response.json();
+                                if (result.success) {
+                                    window.location.href = result.url;
+                                } else {
+                                    showToast("Payment failed!", '#dc3545');
+                                }
+                            } catch (error) {
+                                console.error("Error processing payment:", error);
+                                showToast("Payment error!", '#dc3545');
+                            }
+                        });
+                    }
             // Initialize video controls if applicable
             initializeVideoControls(postDetailsContainer);
 
