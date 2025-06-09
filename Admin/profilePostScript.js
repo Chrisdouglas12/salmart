@@ -1075,7 +1075,8 @@ document.addEventListener('DOMContentLoaded', async function () {
 
                 document.querySelectorAll(`.follow-button[data-user-id="${userIdToFollow}"]`).forEach(button => {
                     button.innerHTML = `<i class="fas fa-user-check"></i> Following`;
-                    button.style.backgroundColor = '#28a745';
+                    button.style.backgroundColor = '#fff';
+                    button.style.color = '#28a745';
                 });
 
                 showToast(`You are now following this user!`, '#28a745');

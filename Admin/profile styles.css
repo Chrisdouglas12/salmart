@@ -362,7 +362,8 @@ button i{
 }
 
 .following {
-  background-color: #6c757d;
+  background-color: #fff;
+  color: #28a745;
 }
   .side-bar{
     display: none;

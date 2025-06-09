@@ -609,21 +609,18 @@ a::hover{
   margin-top: 8px;
 }
 .follow-button {
-    background-color: transparent;
     color: #28a745;
-    border: 0.1px solid #28a745;
-    padding: 8px 12px;
-    border-radius: 20px;
     cursor: pointer;
+    border: none;
     font-size: 13px;
-    font-weight: 500px;
+    font-weight: 700px;
     transition: background-color 0.2s ease, color 0.2s ease;
     margin-right: 5%; /* Align to the right */
     margin-top: -10px;
 }
 
 .follow-button:hover {
-    background-color: #28a745;
+    background-color: #f3f8f1;
     color: #FFFFFF;
 }
 
@@ -631,7 +628,7 @@ a::hover{
     background-color: #6c757d;
     cursor: not-allowed;
     cursor: not-allowed;
-    color: #9CA3AF;
+    color: #28a745;
 }
 .post-options {
   position: relative;
@@ -694,21 +691,23 @@ a::hover{
   color: #007bff;
 }
      
-.buy button {
-  color: #28a745;
-  background-color: #fff;
-  padding: 8px;
-  border: 1px solid #fff;
-  border-radius: 4px;
-  gap: 20px;
-  width: 48.9%;
-  box-shadow: 0 0 10px #ddd;
-  font-size: 14px;
-  cursor: pointer;
+     .buy button{
+      background-color: white ;
+      padding: 5px;
+      color: #28a745;
+      border: 1px #fff solid;
+      box-shadow: 0 0 10px #ddd;
+      border-radius: 4px;
+      width: 48.1%;
+      margin: 1.5px;
+      display: flexbox;
+      height: 35px;
+ cursor: pointer;
   transition: all 0.2s ease; /* Smooth animations */
-  
-}
-
+    }
+    .buy{
+      justify-content: space-between;
+    }
 .buy button:hover {
   background-color: #f3f8f1;
   transform: translateY(-2px);
@@ -720,20 +719,7 @@ a::hover{
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
 }
 
-    .buy{
-      justify-content: space-between;
-      background: #f3f8f1;
-
-      border-radius: 6px;
-      height: 45px;
-      display: flex;
-      align-items: center;
-      margin: 0 auto;
-      width: 100%;
-      gap: 18px;
-      border: 1px solid #fff;
-      box-shadow: 0 0 10px #ddd;
-    }
+    
     
     /* Report Modal Styles */
 .report-modal {
