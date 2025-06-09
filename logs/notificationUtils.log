@@ -1270,3 +1270,4 @@
 {"level":"info","message":"FCM notification sent to user 6843f54a956396ecb52e3ec0: New Post, Response: projects/salmart-330ab/messages/e71ee2c0-d6ee-4f0b-b23b-67d88d3be645","timestamp":"2025-06-09T16:48:40.068Z"}
 {"level":"info","message":"Emitted badge-update for user 6843f54a956396ecb52e3ec0: type=new_post, count=3","timestamp":"2025-06-09T16:48:40.475Z"}
 {"level":"warn","message":"No FCM token for user 6846e9cc91c8d81ee744f910","timestamp":"2025-06-09T16:58:41.459Z"}
+{"level":"warn","message":"No FCM token for user 6846e9cc91c8d81ee744f910","timestamp":"2025-06-09T18:04:32.128Z"}

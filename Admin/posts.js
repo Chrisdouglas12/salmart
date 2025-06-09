@@ -1,16 +1,39 @@
 // post-renderer.js
 document.addEventListener('DOMContentLoaded', async function () {
-    // Ensure these are available from auth.js (loaded first)
     const API_BASE_URL = window.API_BASE_URL || (window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart.onrender.com');
-    const loggedInUser = window.loggedInUser; // Will be updated by auth.js
-    const showToast = window.showToast; // Utility from auth.js
+    const showToast = window.showToast;
 
-    let followingList = [];
-    try {
-        followingList = JSON.parse(localStorage.getItem('followingList')) || [];
-    } catch (e) {
-        console.error("Error parsing followingList:", e);
-        followingList = [];
+    // Use a variable that will be populated *after* auth status is ready
+    let currentLoggedInUser = null;
+    let currentFollowingList = [];
+
+    // Function to fetch the logged-in user's following list
+    async function fetchFollowingList() {
+        if (!currentLoggedInUser) {
+            console.log("No logged-in user to fetch following list for.");
+            return [];
+        }
+        const token = localStorage.getItem('authToken');
+        if (!token) return [];
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/is-following-list`, {
+                method: 'GET',
+                headers: { 'Authorization': `Bearer ${token}` },
+            });
+            if (response.ok) {
+                const { following } = await response.json();
+                return following || [];
+            } else {
+                console.warn('Could not fetch following list from backend. Status:', response.status);
+                // If token is invalid/expired, this should be handled by verify-token,
+                // but this catch ensures we don't block.
+                return [];
+            }
+        } catch (error) {
+            console.error('Error fetching following list:', error);
+            return [];
+        }
     }
 
     function formatTime(timestamp) {
@@ -26,14 +49,15 @@ document.addEventListener('DOMContentLoaded', async function () {
         return postDate.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
     }
 
-    // Function to render a single post
     function renderPost(post) {
         const postElement = document.createElement('div');
         postElement.classList.add('post');
         postElement.dataset.createdAt = post.createdAt || new Date().toISOString();
         postElement.dataset.postId = post._id || '';
 
-        const isFollowing = post.isFollowing || (post.createdBy && followingList.includes(post.createdBy.userId));
+        // Determine if the post creator is in the currentFollowingList
+        const isFollowing = currentFollowingList.includes(post.createdBy.userId);
+        const isPostCreator = post.createdBy && post.createdBy.userId === currentLoggedInUser;
 
         let mediaContent = '';
         let productDetails = '';
@@ -151,6 +175,25 @@ document.addEventListener('DOMContentLoaded', async function () {
             `;
         }
 
+        // CONDITIONAL LOGIC FOR FOLLOW BUTTON
+        let followButtonHtml = '';
+        if (post.createdBy && post.createdBy.userId && currentLoggedInUser) {
+            if (post.createdBy.userId === currentLoggedInUser) {
+                // If logged-in user is the post creator, hide the follow button
+                followButtonHtml = ''; // No button
+            } else {
+                // Show follow/following button
+                followButtonHtml = isFollowing ?
+                    `<button class="follow-button" data-user-id="${post.createdBy.userId}" style="background-color: #28a745;" disabled>
+                        <i class="fas fa-user-check"></i> Following
+                    </button>` :
+                    `<button class="follow-button" data-user-id="${post.createdBy.userId}">
+                        <i class="fas fa-user-plus"></i> Follow
+                    </button>`;
+            }
+        }
+        // If currentLoggedInUser is null (not logged in), followButtonHtml will remain ''
+
         postElement.innerHTML = `
             <div class="post-header">
                 <a href="Profile.html?userId=${post.createdBy ? post.createdBy.userId : ''}">
@@ -162,20 +205,12 @@ document.addEventListener('DOMContentLoaded', async function () {
                     </a>
                     <p class="post-time">${formatTime(post.createdAt || new Date())}</p>
                 </div>
-                ${post.createdBy && post.createdBy.userId !== loggedInUser ?
-                    (isFollowing ?
-                        `<button class="follow-button" data-user-id="${post.createdBy.userId}" style="background-color: #28a745;">
-                            <i class="fas fa-user-check"></i> Following
-                        </button>` :
-                        `<button class="follow-button" data-user-id="${post.createdBy.userId}">
-                            <i class="fas fa-user-plus"></i> Follow
-                        </button>`)
-                    : ''}
+                ${followButtonHtml}
                 <div class="post-options">
                     <button class="post-options-button"><i class="fas fa-ellipsis-h"></i></button>
                     <div class="post-options-menu">
                         <ul>
-                            ${post.createdBy && post.createdBy.userId === loggedInUser ? `
+                            ${isPostCreator ? `
                                 <li><button class="delete-post-button" data-post-id="${post._id || ''}">Delete Post</button></li>
                                 <li><button class="edit-post-button" data-post-id="${post._id || ''}">Edit Post</button></li>
                             ` : ''}
@@ -195,12 +230,12 @@ document.addEventListener('DOMContentLoaded', async function () {
             </div>
 
             <div class="buy" style="text-align: center">
-                ${post.createdBy && post.createdBy.userId !== loggedInUser ? buttonContent : ''}
+                ${isPostCreator ? '' : buttonContent}
             </div>
 
             <div class="post-actions">
                 <button class="action-button like-button">
-                    <i class="${post.likes && post.likes.includes(loggedInUser) ? 'fas' : 'far'} fa-heart"></i>
+                    <i class="${post.likes && post.likes.includes(currentLoggedInUser) ? 'fas' : 'far'} fa-heart"></i>
                     <span class="like-count">${post.likes ? post.likes.length : 0}</span> <p>Likes</p>
                 </button>
                 <button class="action-button reply-button">
@@ -215,7 +250,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         return postElement;
     }
 
-    async function fetchPosts(category = '') {
+    async function fetchAndRenderPosts(category = '') {
         const postsContainer = document.getElementById('posts-container');
         if (!postsContainer) {
             console.error('Posts container not found.');
@@ -223,6 +258,10 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
 
         try {
+            // Ensure logged-in user and following list are updated before fetching posts
+            currentLoggedInUser = window.loggedInUser; // Get the latest from auth.js
+            currentFollowingList = await fetchFollowingList(); // Fetch fresh list
+
             const response = await fetch(`${API_BASE_URL}/post?category=${encodeURIComponent(category)}`);
             if (!response.ok) throw new Error('Failed to fetch posts');
 
@@ -230,11 +269,10 @@ document.addEventListener('DOMContentLoaded', async function () {
             postsContainer.innerHTML = ''; // Clear existing posts
 
             posts.forEach(post => {
-                const postElement = renderPost(post);
+                const postElement = renderPost(post); // renderPost now uses currentFollowingList and currentLoggedInUser
                 postsContainer.prepend(postElement);
             });
 
-            // After rendering, trigger event listeners in post-interactions.js
             window.dispatchEvent(new Event('postsRendered'));
 
         } catch (error) {
@@ -243,9 +281,37 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
     }
 
-    // Expose fetchPosts globally so other scripts (like category buttons) can call it
-    window.fetchPosts = fetchPosts;
+    // Expose fetchAndRenderPosts globally for category buttons
+    window.fetchPosts = fetchAndRenderPosts;
 
-    // Initial fetch of posts
-    await fetchPosts();
+    // Expose a utility to update follow buttons across the page
+    window.updateFollowButtonsUI = (userId, isFollowingStatus) => {
+        // Update the in-memory list first
+        if (isFollowingStatus) {
+            if (!currentFollowingList.includes(userId)) {
+                currentFollowingList.push(userId);
+            }
+        } else {
+            currentFollowingList = currentFollowingList.filter(id => id !== userId);
+        }
+
+        document.querySelectorAll(`.follow-button[data-user-id="${userId}"]`).forEach(btn => {
+            if (isFollowingStatus) {
+                btn.innerHTML = '<i class="fas fa-user-check"></i> Following';
+                btn.style.backgroundColor = '#28a745';
+                btn.disabled = true;
+            } else {
+                btn.innerHTML = '<i class="fas fa-user-plus"></i> Follow';
+                btn.style.backgroundColor = ''; // Reset to default/CSS
+                btn.disabled = false;
+            }
+        });
+    };
+
+    // Wait for auth status to be ready before fetching posts
+    document.addEventListener('authStatusReady', async (event) => {
+        currentLoggedInUser = event.detail.loggedInUser;
+        console.log('Auth status ready. Logged in user:', currentLoggedInUser);
+        await fetchAndRenderPosts(); // Initial fetch after auth
+    });
 });
