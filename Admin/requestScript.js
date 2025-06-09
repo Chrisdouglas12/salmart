@@ -722,20 +722,21 @@ async function fetchRequests(category = '') {
           ${request.location ? `<div class="location">Location: ${escapeHtml(request.location)}</div>` : ''}
           ${request.budget ? `<div class="budget">Budget: ₦${escapeHtml(request.budget.toString())}</div>` : ''}
         </div>
-        ${isOwner ? '' : `
-          <div class="contact-btn">
-            <a id="contact-link">
-              <button 
-                data-recipient-id="${request.user._id}" 
-                data-recipient-username="${request.user.firstName} ${request.user.lastName || 'Request Creator'}" 
-                data-profile-picture="${request.user.profilePicture || 'default-avatar.png'}"
-                id="contact-creator-link"
-              >
-                <i class="fas fa-paper-plane"></i> Send message
-              </button>
-            </a>
-          </div>
-        `}
+     ${isOwner ? '' : `
+  <div class="contact-btn">
+    <a id="contact-link">
+      <button 
+        data-recipient-id="${request.user._id}" 
+        data-recipient-username="${request.user.firstName} ${request.user.lastName || 'Request Creator'}" 
+        data-profile-picture="${request.user.profilePicture || 'default-avatar.png'}"
+        data-original-request="${request.text || request.description || 'Request details'}"
+        id="contact-creator-link"
+      >
+        <i class="fas fa-paper-plane"></i> Send message
+      </button>
+    </a>
+  </div>
+`}
         <div class="engagement-actions">
           <form class="like-form">
             <button type="submit" class="like-btn ${isLiked ? 'liked' : ''}">
@@ -756,34 +757,51 @@ async function fetchRequests(category = '') {
     }
 
     // Message Sending Functionality
-    const sendMessageButtons = document.querySelectorAll("#contact-creator-link");
-    sendMessageButtons.forEach((sendMessageBtn) => {
-      const userId = localStorage.getItem("userId");
-      const recipientId = sendMessageBtn.dataset.recipientId;
-      if (userId === recipientId) {
-        sendMessageBtn.disabled = true;
-        sendMessageBtn.title = "You cannot message yourself";
-      }
+    // Message Sending Functionality
+const sendMessageButtons = document.querySelectorAll("#contact-creator-link");
+const userId = localStorage.getItem("userId");
 
-      sendMessageBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        if (!userId) {
-          showErrorModal("Please log in to send a message");
-          return;
-        }
+sendMessageButtons.forEach((sendMessageBtn) => {
+  const recipientId = sendMessageBtn.dataset.recipientId;
+  
+  // Check if user is trying to message themselves
+  if (userId === recipientId) {
+    sendMessageBtn.disabled = true;
+    sendMessageBtn.title = "You cannot message yourself";
+    sendMessageBtn.classList.add('disabled'); // Add visual styling
+    return; // Skip adding event listener for disabled buttons
+  }
 
-        const recipientId = sendMessageBtn.dataset.recipientId;
-        const recipientUsername = sendMessageBtn.dataset.recipientUsername || "Request Creator";
-        const recipientProfilePictureUrl = sendMessageBtn.dataset.profilePicture || 'default-avatar.png';
-        const message = `Do you still need this item`;
+  sendMessageBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    
+    // Check if user is logged in
+    if (!userId) {
+      showErrorModal("Please log in to send a message");
+      return;
+    }
 
-        const encodedMessage = encodeURIComponent(message);
-        const encodedRecipientUsername = encodeURIComponent(recipientUsername);
-        const encodedRecipientProfilePictureUrl = encodeURIComponent(recipientProfilePictureUrl);
+    // Get recipient data
+    const recipientUsername = sendMessageBtn.dataset.recipientUsername || "Request Creator";
+    const recipientProfilePictureUrl = sendMessageBtn.dataset.profilePicture || 'default-avatar.png';
+    
+    // Get original request content for WhatsApp-style reply
+    const originalRequest = sendMessageBtn.dataset.originalRequest || "Request details";
+    
+    // Create WhatsApp-style reply format
+    const replyMessage = `┌─ ${recipientUsername}:\n│ ${originalRequest}\n└─\n\nDo you still need this item?`;
+    
+    // Encode parameters
+    const encodedMessage = encodeURIComponent(replyMessage);
+    const encodedRecipientUsername = encodeURIComponent(recipientUsername);
+    const encodedRecipientProfilePictureUrl = encodeURIComponent(recipientProfilePictureUrl);
 
-        window.location.href = `Chats.html?user_id=${userId}&recipient_id=${recipientId}&recipient_username=${encodedRecipientUsername}&recipient_profile_picture_url=${encodedRecipientProfilePictureUrl}&message=${encodedMessage}`;
-      });
-    });
+    // Navigate to chat
+    window.location.href = `Chats.html?user_id=${userId}&recipient_id=${recipientId}&recipient_username=${encodedRecipientUsername}&recipient_profile_picture_url=${encodedRecipientProfilePictureUrl}&message=${encodedMessage}`;
+  });
+});
+
+       
 
     // Like Button Event Listeners
     document.querySelectorAll('.like-form').forEach(form => {

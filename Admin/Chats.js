@@ -150,7 +150,7 @@ function saveBargainStates() {
 }
 
 // Display a message in the chat
-function displayMessage(message, isOptimistic = false) { // Added isOptimistic parameter
+function displayMessage(message, isOptimistic = false) {
     if (message._id && displayedMessages.has(message._id)) {
         return;
     }
@@ -160,12 +160,21 @@ function displayMessage(message, isOptimistic = false) { // Added isOptimistic p
 
     const messageDate = new Date(message.createdAt);
     const formattedDate = formatMessageDate(messageDate);
-
+    
+    let content = message.content || ''; // Add this fallback
+    
+    if (content.includes('┌─')) {
+        content = content
+            .replace(/┌─.*?└─/s, '<div class="quoted">$&</div>')
+            .replace(/┌─\s*(.*?):\n/g, '<strong>$1:</strong><br>')
+            .replace(/│\s*/g, '')
+            .replace(/└─/g, '');
+    }
+    
     if (formattedDate !== lastDisplayedDate) {
         chatMessages.appendChild(createSystemMessage(formattedDate));
         lastDisplayedDate = formattedDate;
     }
-
     // Update state based on message type
     if (message.offerDetails && message.offerDetails.productId) {
         const productKey = message.offerDetails.productId;

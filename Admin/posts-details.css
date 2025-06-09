@@ -564,7 +564,7 @@ body.dark-mode {
 }
 
 /* Buy Button */
-.buy {
+.buy-now-button{
     background: #fff
     color: #28a745;
     border: 1px solid #fff;
@@ -580,6 +580,9 @@ body.dark-mode {
     justify-content: center;
     align-items: center;
     height: 40px;
+}
+.buy-now-button button{
+     color: #28a745;
 }
 
 .buy:hover {
