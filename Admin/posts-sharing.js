@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function sharePost(post, postLink, platform) {
-        const shareText = `Check out this product: ${post.description || 'No description'} - ${post.price ? '₦' + Number(post.price).toLocaleString('en-Ng') : 'Price not specified'}`;
+        const shareText = `Check out this product: ${post.description || 'No description'} - ${post.photo} - ${post.price ? '₦' + Number(post.price).toLocaleString('en-Ng') : 'Price not specified'}`;
 
         switch (platform) {
             case 'copy':

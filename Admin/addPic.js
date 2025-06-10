@@ -5,123 +5,120 @@ document.addEventListener('DOMContentLoaded', function() {
     const profilePicture2 = document.getElementById('profile-picture');
     const profilePicture5 = document.getElementById('profile-picture5');
     const profilePicture6 = document.getElementById('profile-picture6');
-    const profilePicture8 = document.getElementById('profile-picture8');//for Deals.html
-    const username8 = document.getElementById('username8'); //for Deals.html
+    const profilePicture8 = document.getElementById('profile-picture8'); // for Deals.html
+    const username8 = document.getElementById('username8'); // for Deals.html
     const username1 = document.getElementById('username1');
     const username = document.getElementById('username');
     const profileUsername = document.getElementById('profileHeaderUsr');
-    const followers = document.getElementById('followers');
+    const followers = document.getElementById('followers'); // This seems unused in the original snippet but kept for context.
     const productsCount = document.getElementById('products-count');
-  
-    let userId = new URLSearchParams(window.location.search).get('userId') || localStorage.getItem('userId');
 
-    if (!userId) {
-        alert('User ID is not available. Please log in.');
-        window.location.href = '/SignIn.html';
-        return;
-    }
+    // Define API_BASE_URL upfront
+    const API_BASE_URL = window.location.hostname === 'localhost' ?
+        'http://localhost:3000' :
+        'https://salmart.onrender.com';
 
-    function checkLoginState() {
+    // A utility function to check login state without immediate redirection
+    function getAuthTokenAndUserId() {
         const token = localStorage.getItem('authToken');
-        if (!token) {
-            alert('You must be logged in to perform this action.');
-            window.location.href = '/SignIn.html';
-            return false;
+        const userId = localStorage.getItem('userId'); // Assuming userId is stored in localStorage after login
+        if (token && userId) {
+            return { token, userId };
         }
-        return true;
+        return null; // No token or userId found
     }
 
-    if (checkLoginState()) {
+    // Attempt to get login credentials
+    const authDetails = getAuthTokenAndUserId();
 
-        const token = localStorage.getItem('authToken');
+    // If a user is logged in, fetch their profile data
+    if (authDetails) {
+        const { token, userId } = authDetails;
         console.log(`Fetching profile for userId: ${userId}`);
-const API_BASE_URL = window.location.hostname === 'localhost' 
-       ?
-      'http://localhost:3000' :
-      'https://salmart.onrender.com'
 
         fetch(`${API_BASE_URL}/users-profile/${userId}`, {
-            method: 'GET',
-            headers: {
-                'Authorization': 'Bearer ' + token,
-                'Accept': 'application/json'
-            }
-        })
-        .then(response => {
-            if (!response.ok) return response.json().then(err => { throw err; });
-            return response.json();
-        })
-        .then(data => {
-            console.log("Profile Data:", data);
-            console.log("Raw profilePicture value:", data.profilePicture);
+                method: 'GET',
+                headers: {
+                    'Authorization': 'Bearer ' + token,
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => {
+                if (!response.ok) return response.json().then(err => {
+                    throw err;
+                });
+                return response.json();
+            })
+            .then(data => {
+                console.log("Profile Data:", data);
+                console.log("Raw profilePicture value:", data.profilePicture);
 
-            // Construct image URL (fixed version)
-            let imageUrl = data.profilePicture
-                ? (data.profilePicture.startsWith("http") ? data.profilePicture : `${API_BASE_URL} ${data.profilePicture.startsWith("/") ? data.profilePicture : '/' + data.profilePicture}`)
-                : "/default-avatar.png";
+                let imageUrl = data.profilePicture ?
+                    (data.profilePicture.startsWith("http") ? data.profilePicture : `${API_BASE_URL}${data.profilePicture.startsWith("/") ? data.profilePicture : '/' + data.profilePicture}`) :
+                    "/default-avatar.png";
 
-            console.log("Final image URL:", imageUrl);
+                console.log("Final image URL:", imageUrl);
 
-            // Force reload of the image by temporarily setting it to an empty string
-            if (profilePicture1) {
-                profilePicture1.src = ''; // Clear the old image
-                setTimeout(() => {
-                    profilePicture1.src = imageUrl; // Set the new image URL
-                }, 100); // Add a slight delay to ensure it refreshes
-            }
-            if (profilePicture3) {
-                profilePicture3.src = '';
-                setTimeout(() => {
-                    profilePicture3.src = imageUrl;
-                }, 100);
-            }
-            if (profilePicture2) {
-                profilePicture2.src = '';
-                setTimeout(() => {
-                    profilePicture2.src = imageUrl;
-                }, 100);
-            }
-            if (profilePicture5) {
-                profilePicture5.src = '';
-                setTimeout(() => {
-                    profilePicture5.src = imageUrl;
-                }, 100);
-            }
-            if(profilePicture6) {
-              profilePicture6.src = '';
-              setTimeout(() => {
-                profilePicture6.src = imageUrl;
-              }, 100);
-            }
-            if(profilePicture8) {
-              profilePicture8.src = '';
-              setTimeout(() => {
-                profilePicture8.src = imageUrl;
-              }, 100);
-            }
-            if (profilePicture) {
-                profilePicture.src = '';
-                setTimeout(() => {
-                    profilePicture.src = imageUrl;
-                }, 100);
-            }
+                // Update profile pictures across various elements
+                const profilePictureElements = [
+                    profilePicture1, profilePicture3, profilePicture2,
+                    profilePicture5, profilePicture6, profilePicture8, profilePicture
+                ];
 
-            // Set other profile details
-            if (username) username.textContent = `${data.firstName} ${data.lastName}`;
-            if (username1) username1.textContent = `${data.firstName} ${data.lastName}`;
-                        // Set other profile details
-            if (username8) username8.textContent = `${data.firstName} ${data.lastName}`;
-            if (profileUsername) profileUsername.textContent = `${data.firstName} ${data.lastName}`;
-            if (productsCount) productsCount.textContent = data.products?.length || 0;
+                profilePictureElements.forEach(imgElement => {
+                    if (imgElement) {
+                        imgElement.src = ''; // Clear the old image
+                        setTimeout(() => {
+                            imgElement.src = imageUrl; // Set the new image URL
+                        }, 100); // Small delay for refresh
+                    }
+                });
 
-        })
-        .catch(error => {
-            console.error('Error fetching profile:', error);
-            showToast('You are offline. check your network and try again');
-            if (error.message === 'Invalid token') {
-                localStorage.removeItem('authToken');
-                window.location.href = '/SignIn.html';
+                // Set other profile details
+                if (username) username.textContent = `${data.firstName} ${data.lastName}`;
+                if (username1) username1.textContent = `${data.firstName} ${data.lastName}`;
+                if (username8) username8.textContent = `${data.firstName} ${data.lastName}`;
+                if (profileUsername) profileUsername.textContent = `${data.firstName} ${data.lastName}`;
+                if (productsCount) productsCount.textContent = data.products?.length || 0;
+
+                // Dispatch a custom event to signal that auth status is ready
+                // This is crucial for post-renderer.js to know if a user is logged in
+                window.loggedInUser = userId; // Store the logged-in user ID globally or on window
+                const authStatusEvent = new CustomEvent('authStatusReady', {
+                    detail: {
+                        loggedInUser: userId
+                    }
+                });
+                document.dispatchEvent(authStatusEvent);
+            })
+            .catch(error => {
+                console.error('Error fetching profile:', error);
+                // showToast('You are offline. check your network and try again'); // Assuming showToast exists
+                if (error.message === 'Invalid token' || error.status === 401 || error.status === 403) {
+                    console.log('Invalid token, clearing storage and redirecting to login.');
+                    localStorage.removeItem('authToken');
+                    localStorage.removeItem('userId'); // Also remove userId
+                    // window.location.href = '/SignIn.html'; // Only redirect if an invalid token was the issue
+                }
+                // Even if there's an error fetching profile, if posts are meant to be public,
+                // the post-renderer.js will still attempt to fetch them.
+                window.loggedInUser = null; // Ensure loggedInUser is null if fetching profile fails
+                const authStatusEvent = new CustomEvent('authStatusReady', {
+                    detail: {
+                        loggedInUser: null
+                    }
+                });
+                document.dispatchEvent(authStatusEvent);
+            });
+    } else {
+        // If not logged in, immediately dispatch authStatusReady with null user
+        window.loggedInUser = null;
+        const authStatusEvent = new CustomEvent('authStatusReady', {
+            detail: {
+                loggedInUser: null
             }
         });
+        document.dispatchEvent(authStatusEvent);
+        console.log('User is not logged in. Posts will be displayed without user-specific features.');
     }
 });

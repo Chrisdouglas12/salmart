@@ -44,8 +44,8 @@ document.addEventListener('DOMContentLoaded', async function () {
 
             if (response.ok) {
                 const userData = await response.json();
-                profilePictureContainer.src = userData.profilePicture || 'default-avatar.png';
-                homeProfilePicture.src = userData.profilePicture || 'default-avatar.png';
+                profilePictureContainer.src = userData.profilePicture || 'default-avater.png';
+                homeProfilePicture.src = userData.profilePicture || 'default-avater.png';
                 usernameContainer.textContent = `Welcome, ${userData.firstName || 'User'}`;
                 loggedInUser = userData.userId;
                 fetchPosts();
@@ -66,8 +66,8 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 
     function showLoginOption() {
-        profilePictureContainer.src = 'default-avatar.png';
-        homeProfilePicture.src = 'default-avatar.png';
+        profilePictureContainer.src = 'default-avater.png';
+        homeProfilePicture.src = 'default-avater.png';
         usernameContainer.textContent = 'Please log in';
     }
 
@@ -134,7 +134,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 
     function sharePost(post, postLink, platform) {
-        const shareText = `Check out this product: ${post.description || 'No description'} - ${post.price ? '₦' + Number(post.price).toLocaleString('en-Ng') : 'Price not specified'}`;
+        const shareText = `Check out this product: ${post.description || 'No description'} - ${post.photo} - ${post.price ? '₦' + Number(post.price).toLocaleString('en-Ng') : 'Price not specified'}`;
 
         switch (platform) {
             case 'copy':

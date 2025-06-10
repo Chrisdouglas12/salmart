@@ -197,7 +197,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         postElement.innerHTML = `
             <div class="post-header">
                 <a href="Profile.html?userId=${post.createdBy ? post.createdBy.userId : ''}">
-                    <img src="${post.profilePicture || 'default-avatar.png'}" class="post-avatar">
+                    <img src="${post.profilePicture || 'default-avater.png'}" class="post-avatar">
                 </a>
                 <div class="post-user-info">
                     <a href="Profile.html?userId=${post.createdBy ? post.createdBy.userId : ''}">

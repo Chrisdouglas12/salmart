@@ -1834,3 +1834,18 @@ a::hover{
 .playback-speed:focus {
     outline: none;
 }
+
+/*Login button*/
+.login-btn{
+     padding: 10px;
+     color: white;
+     background-color: #28a745;
+     position: fixed;
+     display: block;
+     z-index: 40000;
+     margin-left: 50px;
+     border: none;
+     border-radius: 6px;
+     width: 80px;
+     margin-top: 10px;
+}
