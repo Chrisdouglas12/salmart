@@ -573,6 +573,10 @@
         } else if (notification.type === 'warning') {
           typeLabel = 'Bank Details';
           notificationText = `Please add your bank details to receive payment from ${notification.senderId.firstName} ${notification.senderId.lastName}.`;
+        }else if (notification.type === 'reply') {
+          typeLabel = 'Reply';
+          notificationText = `${notification.senderId.firstName} ${notification.senderId.lastName} replied your comment.`;
+             
         }
 
         notificationElement.innerHTML = `

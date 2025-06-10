@@ -121,7 +121,7 @@ const initializeSocket = (io) => {
             type: 'like',
             senderId: userId,
             postId,
-            message: `${sender.firstName} ${sender.lastName} liked your post`,
+            message: `${sender.firstName} ${sender.lastName} liked your Ad`,
             createdAt: new Date(),
           });
           await notification.save();
@@ -136,7 +136,7 @@ const initializeSocket = (io) => {
           await sendFCMNotification(
             post.createdBy.userId.toString(),
             'New Like',
-            `${sender.firstName} ${sender.lastName} liked your post`,
+            `${sender.firstName} ${sender.lastName} liked your ad`,
             { type: 'like', postId: postId.toString() },
             io,
             null,
@@ -174,7 +174,7 @@ const initializeSocket = (io) => {
             type: 'comment',
             senderId: userId,
             postId,
-            message: `${sender.firstName} ${sender.lastName} commented on your post`,
+            message: `${sender.firstName} ${sender.lastName} commented on your ad`,
             createdAt: new Date(),
           });
           await notification.save();

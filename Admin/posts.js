@@ -113,8 +113,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             productDetails = `
                 <div class="product-info">
                     <span class="icon">📦</span>
-                    <div>
-                        <p class="label">Product</p>
+                    
                         <p class="value">${post.description || 'No descript'}</p>
                     </div>
                 </div>

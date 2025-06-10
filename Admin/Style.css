@@ -1849,3 +1849,43 @@ a::hover{
      width: 80px;
      margin-top: 10px;
 }
+.buy-now-button, .checkout-product-button{
+    background: #fff;
+    color: #28a745;
+    border: 1px solid #fff;
+    box-shadow: 0 0 10px #ddd;
+    padding: 8px 16px;
+    border-radius: 8px;
+    width: 100%;
+    font-size: 14px;
+    margin-top: 8px;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.1s ease;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 40px;
+}
+.buy-now-button button{
+     color: #28a745;
+}
+.buy-now-button i {
+     margin-right: 8px;
+}
+
+.buy:hover {
+    background: #f3f8f1;
+    transform: translateY(-1px);
+}
+
+.buy:active {
+    transform: translateY(0);
+}
+
+.dark-mode .buy {
+    background: linear-gradient(135deg, #3a3b3c, #2d2e2f);
+}
+
+.dark-mode .buy:hover {
+    background: linear-gradient(135deg, #4a4b4c, #3a3b3c);
+}
