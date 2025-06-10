@@ -21,7 +21,7 @@ const urlsToCache = [
   '/product.html',
    '/Badges.js',
   '/salmart-192x192.png',
-  '/salmart2-512x512.png',
+  '/salmart-512x512.png',
   // Add more files you want to cache
 ];
 

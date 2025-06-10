@@ -184,7 +184,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             } else {
                 // Show follow/following button
                 followButtonHtml = isFollowing ?
-                    `<button class="follow-button" data-user-id="${post.createdBy.userId}" style="background-color: #28a745;" disabled>
+                    `<button class="follow-button" data-user-id="${post.createdBy.userId}" style="background-color: #fff; color:  #28a745" disabled>
                         <i class="fas fa-user-check"></i> Following
                     </button>` :
                     `<button class="follow-button" data-user-id="${post.createdBy.userId}">
