@@ -123,57 +123,143 @@
         }
 .install-btn {
   position: fixed;
-  margin-top: -40px;
+  top: 20px;
   right: 20px;
   z-index: 9999;
-  padding: 10px 20px;
-  background-color: #00b894;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #28a745 0%, #f3f8f1 100%);
   color: white;
   border: none;
-  border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-  font-family: 'Poppins', sans-serif;
-  font-size: 15px;
+  border-radius: 16px;
+  box-shadow: 0 12px 32px rgba(102, 126, 234, 0.3);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-size: 14px;
   font-weight: 600;
+  letter-spacing: 0.5px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: none;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  text-transform: uppercase;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.install-btn::before {
+  content: "📱";
+  margin-right: 8px;
+  font-size: 16px;
 }
 
 .install-btn:hover {
-  background-color: #019870;
-  transform: translateY(-2px);
+  background: linear-gradient(135deg, #5a6fd8 0%, #6a4c93 100%);
+  transform: translateY(-3px);
+  box-shadow: 0 16px 40px rgba(102, 126, 234, 0.4);
 }
+
+.install-btn:active {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+}
+
 /* Slide Down Animation */
 .install-btn.show {
   display: block !important;
-  animation: slideDown 0.4s ease forwards;
+  animation: slideDown 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 @keyframes slideDown {
   from {
-    transform: translateY(-20px);
+    transform: translateY(-30px);
     opacity: 0;
+    scale: 0.9;
   }
   to {
     transform: translateY(0);
     opacity: 1;
+    scale: 1;
+  }
+}
+
+/* Alternative dark theme */
+.install-btn.dark-theme {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+}
+
+.install-btn.dark-theme:hover {
+  background: linear-gradient(135deg, #0f0f23 0%, #0e1a2e 100%);
+}
+
+/* Pulse animation for attention */
+.install-btn.pulse {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 12px 32px rgba(102, 126, 234, 0.3);
+  }
+  50% {
+    box-shadow: 0 12px 32px rgba(102, 126, 234, 0.6);
+  }
+  100% {
+    box-shadow: 0 12px 32px rgba(102, 126, 234, 0.3);
   }
 }
 
 /* Responsive Positioning for Smaller Screens */
-@media (max-width: 480px) {
+@media (max-width: 768px) {
   .install-btn {
-    top: auto;
-    bottom: 20px;
-    right: 20px;
-    left: 20px;
-    width: calc(100% - 40px);
-    font-size: 15px;
-    padding: 14px;
-    border-radius: 10px;
+    top: 15px;
+    right: 15px;
+    left: 15px;
+    width: calc(100% - 30px);
+    font-size: 14px;
+    padding: 16px;
+    border-radius: 14px;
+    text-align: center;
   }
 }
+
+@media (max-width: 480px) {
+  .install-btn {
+    top: 10px;
+    right: 10px;
+    left: 10px;
+    width: calc(100% - 20px);
+    font-size: 13px;
+    padding: 14px;
+    border-radius: 12px;
+  }
+}
+
+/* iOS Safari specific styles */
+@supports (-webkit-touch-callout: none) {
+  .install-btn {
+    -webkit-appearance: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+/* Focus styles for accessibility */
+.install-btn:focus {
+  outline: none;
+  box-shadow: 0 12px 32px rgba(102, 126, 234, 0.3), 0 0 0 3px rgba(102, 126, 234, 0.5);
+}
+
+/* Hide button when installed */
+.install-btn.installed {
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.8);
+}
+  
+  
+
+    
     </style>
     <script src="addPic.js"></script>
 

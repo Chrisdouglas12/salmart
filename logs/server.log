@@ -18031,3 +18031,15 @@
 {"level":"info","message":"Socket disconnected: hfgDg2BodVgPkrZdAAA1","timestamp":"2025-06-10T09:38:28.585Z"}
 {"level":"info","message":"Socket connected: Y4wol8vrhdoNQqMSAAA3","timestamp":"2025-06-10T09:38:29.642Z"}
 {"level":"info","message":"Socket disconnected: Y4wol8vrhdoNQqMSAAA3","timestamp":"2025-06-10T09:38:29.740Z"}
+{"level":"info","message":"✅ Firebase Admin SDK initialized successfully","timestamp":"2025-06-10T09:41:54.116Z"}
+{"level":"info","message":"✅ Socket.IO initialized","timestamp":"2025-06-10T09:41:54.368Z"}
+{"level":"info","message":"✅ Nodemailer configured","timestamp":"2025-06-10T09:41:54.484Z"}
+{"level":"info","message":"✅ Cloudinary configured","timestamp":"2025-06-10T09:41:54.487Z"}
+{"level":"info","message":"✅ Server running on port 3000","timestamp":"2025-06-10T09:41:54.547Z"}
+{"level":"info","message":"✅ MongoDB connected successfully","timestamp":"2025-06-10T09:41:57.136Z"}
+{"level":"info","message":"Socket connected: n4wizitkRkmQv-cXAAAB","timestamp":"2025-06-10T09:58:43.682Z"}
+{"level":"info","message":"[2025-06-10T09:58:44.015Z] GET /users-profile/68431685432ee393a735a641","timestamp":"2025-06-10T09:58:44.015Z"}
+{"level":"info","message":"[2025-06-10T09:58:44.254Z] GET /notification-counts?userId=68431685432ee393a735a641","timestamp":"2025-06-10T09:58:44.255Z"}
+{"level":"info","message":"[2025-06-10T09:58:44.268Z] GET /verify-token","timestamp":"2025-06-10T09:58:44.269Z"}
+{"level":"info","message":"[2025-06-10T09:58:44.635Z] GET /api/is-following-list","timestamp":"2025-06-10T09:58:44.636Z"}
+{"level":"info","message":"[2025-06-10T09:58:44.950Z] GET /post?category=","timestamp":"2025-06-10T09:58:44.950Z"}

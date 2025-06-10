@@ -9851,3 +9851,7 @@
 {"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-10T09:38:16.878Z"}
 {"level":"info","message":"User 68431685432ee393a735a641 liked post 68471065e1dd545cb7e51c89","timestamp":"2025-06-10T09:38:17.077Z"}
 {"level":"info","message":"Created like notification for user 6843d062f457581752641ee3 for post 68471065e1dd545cb7e51c89","timestamp":"2025-06-10T09:38:17.445Z"}
+{"level":"info","message":"✅ Cloudinary configured in postRoutes","timestamp":"2025-06-10T09:41:47.721Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-10T09:58:44.282Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-06-10T09:58:44.955Z"}
+{"level":"info","message":"Fetched 8 posts for user anonymous","timestamp":"2025-06-10T09:58:46.733Z"}
