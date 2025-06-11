@@ -359,21 +359,6 @@
             installBtn.classList.add('installed');
         });
 
-        // Smart positioning based on scroll
-        let lastScrollTop = 0;
-        window.addEventListener('scroll', () => {
-            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-            
-            if (scrollTop > lastScrollTop && scrollTop > 100) {
-                // Scrolling down - make button more compact
-                installBtn.classList.add('compact');
-            } else {
-                // Scrolling up - show full button
-                installBtn.classList.remove('compact');
-            }
-            
-            lastScrollTop = scrollTop;
-        });
 
         // Responsive button mode switching
         function updateButtonMode() {

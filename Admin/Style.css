@@ -1621,218 +1621,191 @@ a::hover{
 .toast-message.show {
   opacity: 1;
 }
-/* Video container */
+/* VIDEO CONTAINER */
 .post-video-container {
   position: relative;
   width: 100%;
-  aspect-ratio: 9 / 16; /* YouTube Shorts aspect ratio */
-  max-width: 540px; /* Mobile-first max width */
-  max-height: 400px;
+  max-width: 540px;
+  aspect-ratio: 9 / 16;
   margin: 0 auto;
   overflow: hidden;
-  border-radius: 12px; /* Rounded corners */
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); /* Subtle shadow */
-  background-color: #000; /* Black background for video */
+  border-radius: 16px;
+  background-color: #000;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  transition: box-shadow 0.3s ease;
 }
 
-/* Video element */
+.post-video-container:hover {
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+}
+
+/* VIDEO ELEMENT */
 .post-video {
   width: 100%;
   height: 100%;
   display: block;
+  object-fit: cover;
 }
 
-/* Hide default browser controls */
+/* Hide browser controls */
 .post-video::-webkit-media-controls {
   display: none !important;
 }
 .post-video {
-  controls: none; /* Ensure no default controls */
+  controls: none;
 }
 
+/* LOADING SPINNER */
+.loading-spinner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 20px;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 12px;
+  border-radius: 50%;
+  z-index: 2;
+}
 
-/* Custom controls container */
+/* CUSTOM CONTROLS */
 .custom-controls {
   position: absolute;
   bottom: 0;
-  left: 0;
-  right: 0;
+  width: 100%;
   display: flex;
   align-items: center;
-  padding: 10px;
-  background: rgba(0, 0, 0, 0.7); /* Semi-transparent background */
-  opacity: 0;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(8px);
   transition: opacity 0.3s ease;
+  opacity: 0;
 }
 
 .post-video-container:hover .custom-controls {
-  opacity: 1; /* Show controls on hover */
+  opacity: 1;
 }
 
-/* Control buttons */
+/* CONTROL BUTTONS */
 .control-button {
   background: none;
   border: none;
   color: #fff;
-  font-size: 20px;
+  font-size: 18px;
+  padding: 6px;
   cursor: pointer;
-  padding: 5px;
-  transition: transform 0.2s ease;
+  transition: transform 0.2s ease, color 0.2s ease;
 }
 
 .control-button:hover {
-  transform: scale(1.1);
+  transform: scale(1.15);
+  color: #ffd700;
 }
 
-/* Progress bar */
+/* PROGRESS BAR */
 .progress-container {
-  flex: 1;
-  height: 5px;
-  background: rgba(255, 255, 255, 0.3);
-  border-radius: 5px;
+  flex-grow: 1;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 3px;
   margin: 0 10px;
+  position: relative;
   cursor: pointer;
-}
-
-.progress-bar {
-  width: 0;
-  height: 100%;
-  background: #007bff; /* Blue progress bar */
-  border-radius: 5px;
-  transition: width 0.1s linear;
-}
-
-
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .post-video-container {
-    max-width: 100%;
-  }
-  .product-info-inline {
-    flex-direction: column;
-    gap: 10px;
-  }
-}
-
-.post-video-container {
-    position: relative;
-    width: 100%;
-    max-width: 100%;
-    overflow: hidden;
-}
-
-
-.video-thumbnail {
-    display: none;
-}
-
-.loading-spinner {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 24px;
-    color: #fff;
-    background: rgba(0, 0, 0, 0.5);
-    padding: 10px;
-    border-radius: 50%;
-}
-
-.custom-controls {
-    display: flex;
-    align-items: center;
-    position: absolute;
-    bottom: 0;
-    width: 100%;
-    background: rgba(0, 0, 0, 0.7);
-    padding: 5px;
-    box-sizing: border-box;
-}
-
-.control-button {
-    background: none;
-    border: none;
-    color: #fff;
-    font-size: 16px;
-    padding: 5px 10px;
-    cursor: pointer;
-    transition: color 0.2s;
-}
-
-.control-button:hover {
-    color: #ccc;
-}
-
-.progress-container {
-    flex-grow: 1;
-    height: 5px;
-    background: #555;
-    cursor: pointer;
-    margin: 0 10px;
-    position: relative;
 }
 
 .buffered-bar {
-    height: 100%;
-    background: #777;
-    width: 0;
-    position: absolute;
-    top: 0;
-    left: 0;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.4);
+  width: 0;
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: 3px;
 }
 
 .progress-bar {
-    height: 100%;
-    background: #007bff;
-    width: 0;
-    position: absolute;
-    top: 0;
-    left: 0;
-    transition: width 0.1s linear;
+  height: 100%;
+  background: #1e90ff;
+  width: 0;
+  position: absolute;
+  top: 0;
+  left: 0;
+  transition: width 0.2s linear;
+  border-radius: 3px;
 }
 
-.seek-preview {
-    position: absolute;
-    top: -80px;
-    transform: translateX(-50%);
-    background: #000;
-    border: 1px solid #fff;
-    border-radius: 4px;
-}
-
-.seek-preview-canvas {
-    width: 120px;
-    height: 68px;
-}
-
+/* TIME DISPLAY */
 .time-display {
-    color: #fff;
-    font-size: 12px;
-    margin: 0 10px;
+  color: #fff;
+  font-size: 13px;
+  min-width: 50px;
 }
 
+/* VOLUME SLIDER */
 .volume-control {
-    width: 60px;
-    margin: 0 10px;
+  width: 80px;
 }
 
 .volume-slider {
-    width: 100%;
-    cursor: pointer;
+  width: 100%;
+  accent-color: #fff;
+  cursor: pointer;
 }
 
+/* PLAYBACK SPEED */
 .playback-speed {
-    background: none;
-    border: none;
-    color: #fff;
-    font-size: 12px;
-    margin: 0 10px;
-    cursor: pointer;
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 13px;
+  cursor: pointer;
+  transition: color 0.2s;
 }
 
-.playback-speed:focus {
-    outline: none;
+.playback-speed:hover {
+  color: #ccc;
+}
+
+/* SEEK PREVIEW */
+.seek-preview {
+  position: absolute;
+  top: -90px;
+  transform: translateX(-50%);
+  background: #000;
+  border: 1px solid #fff;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.seek-preview-canvas {
+  width: 130px;
+  height: 72px;
+}
+
+/* RESPONSIVE DESIGN */
+@media (max-width: 768px) {
+  .post-video-container {
+    max-width: 100%;
+    border-radius: 12px;
+  }
+
+  .custom-controls {
+    padding: 8px 10px;
+  }
+
+  .control-button {
+    font-size: 16px;
+  }
+
+  .volume-control {
+    width: 60px;
+  }
+
+  .time-display {
+    font-size: 11px;
+  }
 }
 
 /*Login button*/
