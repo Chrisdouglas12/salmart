@@ -77,7 +77,7 @@ try {
 }
 
 // ===== PWA Caching (Crucial for Install Prompt) =====
-const CACHE_NAME = 'salmart-cache-v1.3.1'; // Increment this on new deployments to update cache
+const CACHE_NAME = 'salmart-cache-v1.5.1'; // Increment this on new deployments to update cache
 const urlsToCache = [
   '/',
   '/index.html',

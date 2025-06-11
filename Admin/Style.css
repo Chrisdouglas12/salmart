@@ -1565,6 +1565,62 @@ a::hover{
         padding: 6px 12px;
     }
 }
+
+/* Media card */
+.media-card img {
+  width: 100%;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+
+/* Post actions */
+.post-actions {
+  display: flex;
+  gap: 15px;
+  margin-top: 10px;
+}
+
+.action-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 14px;
+  color: #333;
+}
+
+.action-button i {
+  font-size: 16px;
+}
+
+.like-button:hover i {
+  color: #e0245e;
+}
+
+.reply-button:hover i, .share-button:hover i {
+  color: #007bff;
+}
+
+/* Toast message */
+.toast-message {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: #333;
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 4px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: 1000;
+}
+
+.toast-message.show {
+  opacity: 1;
+}
 /* Video container */
 .post-video-container {
   position: relative;
@@ -1647,62 +1703,6 @@ a::hover{
 }
 
 
-
-/* Media card */
-.media-card img {
-  width: 100%;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-
-/* Post actions */
-.post-actions {
-  display: flex;
-  gap: 15px;
-  margin-top: 10px;
-}
-
-.action-button {
-  background: none;
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 14px;
-  color: #333;
-}
-
-.action-button i {
-  font-size: 16px;
-}
-
-.like-button:hover i {
-  color: #e0245e;
-}
-
-.reply-button:hover i, .share-button:hover i {
-  color: #007bff;
-}
-
-/* Toast message */
-.toast-message {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  background: #333;
-  color: #fff;
-  padding: 10px 20px;
-  border-radius: 4px;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  z-index: 1000;
-}
-
-.toast-message.show {
-  opacity: 1;
-}
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
@@ -1849,7 +1849,7 @@ a::hover{
      width: 80px;
      margin-top: 10px;
 }
-.buy-now-button, .checkout-product-button{
+.checkout-product-button{
     background: #fff;
     color: #28a745;
     border: 1px solid #fff;
@@ -1869,7 +1869,7 @@ a::hover{
 .buy-now-button button{
      color: #28a745;
 }
-.buy-now-button i {
+.checkout-product-button i {
      margin-right: 8px;
 }
 

@@ -554,9 +554,13 @@ body.dark-mode {
     justify-content: center;
     align-items: center;
     height: 40px;
+    gap: 8px;
 }
 .buy-now-button i{
      margin-left: 8px;
+}
+a{
+     text-decoration: none;
 }
 
 .buy:hover {
@@ -649,6 +653,7 @@ body.dark-mode {
   max-width: 540px; /* Mobile-first max width */
   max-height: 400px;
   margin: 0 auto;
+  margin-bottom: 10px;
   overflow: hidden;
   border-radius: 12px; /* Rounded corners */
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); /* Subtle shadow */

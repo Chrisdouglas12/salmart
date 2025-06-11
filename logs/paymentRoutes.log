@@ -1942,3 +1942,16 @@
 {"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-10T21:19:54.314Z"}
 {"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-10T21:25:05.850Z"}
 {"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-10T21:28:01.665Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-10T21:41:14.520Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-10T21:41:27.029Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-10T21:44:33.811Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-10T21:45:31.009Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-10T21:46:28.634Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-10T21:49:28.051Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-10T21:52:30.134Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-10T21:54:42.572Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-11T15:50:18.251Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-11T22:45:55.364Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-11T22:46:13.827Z"}
+{"body":{"buyerId":"68431685432ee393a735a641","currency":"NGN","email":"chrisdouglas1700@gmail.com","postId":"68471065e1dd545cb7e51c89"},"level":"info","message":"Payment initiation started","requestId":"PAY_1749681973834","timestamp":"2025-06-11T22:46:13.835Z"}
+{"level":"info","message":"Payment initialized successfully","reference":"k5atc1rn78","requestId":"PAY_1749681973834","timestamp":"2025-06-11T22:46:14.974Z"}

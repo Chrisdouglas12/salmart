@@ -18,6 +18,27 @@ document.addEventListener('DOMContentLoaded', function() {
         'http://localhost:3000' :
         'https://salmart.onrender.com';
 
+    // Default profile picture URL
+    const DEFAULT_PROFILE_PIC = "/default-avater.png";
+
+    // Function to set default profile pictures
+    function setDefaultProfilePictures() {
+        const profilePictureElements = [
+            profilePicture1, profilePicture3, profilePicture2,
+            profilePicture5, profilePicture6, profilePicture8, profilePicture
+        ];
+
+        profilePictureElements.forEach(imgElement => {
+            if (imgElement) {
+                // Force set the default image
+                imgElement.src = DEFAULT_PROFILE_PIC;
+                // Also set alt text for accessibility
+                imgElement.alt = "Default Profile Picture";
+                console.log(`Set default profile picture for element:`, imgElement.id || imgElement.className);
+            }
+        });
+    }
+
     // A utility function to check login state without immediate redirection
     function getAuthTokenAndUserId() {
         const token = localStorage.getItem('authToken');
@@ -55,7 +76,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 let imageUrl = data.profilePicture ?
                     (data.profilePicture.startsWith("http") ? data.profilePicture : `${API_BASE_URL}${data.profilePicture.startsWith("/") ? data.profilePicture : '/' + data.profilePicture}`) :
-                    "/default-avatar.png";
+                    DEFAULT_PROFILE_PIC;
 
                 console.log("Final image URL:", imageUrl);
 
@@ -93,6 +114,10 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .catch(error => {
                 console.error('Error fetching profile:', error);
+                
+                // Set default profile pictures on error
+                setDefaultProfilePictures();
+                
                 // showToast('You are offline. check your network and try again'); // Assuming showToast exists
                 if (error.message === 'Invalid token' || error.status === 401 || error.status === 403) {
                     console.log('Invalid token, clearing storage and redirecting to login.');
@@ -111,7 +136,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.dispatchEvent(authStatusEvent);
             });
     } else {
-        // If not logged in, immediately dispatch authStatusReady with null user
+        // If not logged in, set default profile pictures
+        console.log('User is not logged in. Setting default profile pictures.');
+        
+        // Use setTimeout to ensure DOM is fully ready and handle any timing issues
+        setTimeout(() => {
+            setDefaultProfilePictures();
+        }, 50);
+        
+        // Immediately dispatch authStatusReady with null user
         window.loggedInUser = null;
         const authStatusEvent = new CustomEvent('authStatusReady', {
             detail: {

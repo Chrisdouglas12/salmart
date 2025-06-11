@@ -391,7 +391,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 `;
                 buttonContent = `
                     <button class="buy-now-button" data-post-id="${post._id || ''}" ${post.isSold ? 'disabled' : ''}>
-                        <i class="fas fa-shopping-cart"></i>  ${post.isSold ? ' Sold Out' : ' Buy Now'}
+                        <i class="fas fa-shopping-cart-plus" style="margin-right: 8px;"></i>  ${post.isSold ? 'Sold Out' : 'Buy Now'}
                     </button>
                 `;
             }

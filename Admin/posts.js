@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     // Use a variable that will be populated *after* auth status is ready
     let currentLoggedInUser = null;
     let currentFollowingList = [];
+    let isAuthReady = false;
 
     // Function to fetch the logged-in user's following list
     async function fetchFollowingList() {
@@ -113,8 +114,8 @@ document.addEventListener('DOMContentLoaded', async function () {
             productDetails = `
                 <div class="product-info">
                     <span class="icon">📦</span>
-                    
-                        <p class="value">${post.description || 'No descript'}</p>
+                    <div>
+                        <p class="value">${post.description || 'No description'}</p>
                     </div>
                 </div>
             `;
@@ -159,39 +160,94 @@ document.addEventListener('DOMContentLoaded', async function () {
                     </div>
                 </div>
             `;
-            buttonContent = `
-                <button class="buy-now-button" data-post-id="${post._id || ''}" ${post.isSold ? 'disabled' : ''}>
-                    <i class="fas fa-shopping-cart"></i> ${post.isSold ? 'Sold Out' : 'Buy Now'}
-                </button>
-                <button class="buy-now-button send-message-btn" id="send-message-btn"
-                    data-recipient-id="${post.createdBy ? post.createdBy.userId : ''}"
-                    data-product-image="${productImageForChat}"
-                    data-product-description="${post.title || ''}"
-                    data-post-id="${post._id || ''}"
-                    ${post.isSold ? 'disabled' : ''}>
-                    <i class="fas fa-circle-dot"></i> ${post.isSold ? 'Unavailable' : 'Check Availability'}
-                </button>
-            `;
+
+            // Modified button content to handle non-logged in users
+            if (currentLoggedInUser) {
+                // User is logged in - show normal buttons
+                buttonContent = `
+                    <button class="buy-now-button" data-post-id="${post._id || ''}" ${post.isSold ? 'disabled' : ''}>
+                        <i class="fas fa-shopping-cart"></i> ${post.isSold ? 'Sold Out' : 'Buy Now'}
+                    </button>
+                    <button class="buy-now-button send-message-btn" id="send-message-btn"
+                        data-recipient-id="${post.createdBy ? post.createdBy.userId : ''}"
+                        data-product-image="${productImageForChat}"
+                        data-product-description="${post.title || ''}"
+                        data-post-id="${post._id || ''}"
+                        ${post.isSold ? 'disabled' : ''}>
+                        <i class="fas fa-circle-dot"></i> ${post.isSold ? 'Unavailable' : 'Check Availability'}
+                    </button>
+                `;
+            } else {
+                // User is not logged in - show login prompt buttons
+                buttonContent = `
+                    <button class="buy-now-button login-required" onclick="redirectToLogin()">
+                        <i class="fas fa-shopping-cart"></i> Buy Now
+                    </button>
+                    <button class="buy-now-button login-required" onclick="redirectToLogin()">
+                        <i class="fas fa-circle-dot"></i> Check Availability
+                    </button>
+                `;
+            }
         }
 
         // CONDITIONAL LOGIC FOR FOLLOW BUTTON
         let followButtonHtml = '';
-        if (post.createdBy && post.createdBy.userId && currentLoggedInUser) {
-            if (post.createdBy.userId === currentLoggedInUser) {
-                // If logged-in user is the post creator, hide the follow button
-                followButtonHtml = ''; // No button
+        if (post.createdBy && post.createdBy.userId) {
+            if (currentLoggedInUser) {
+                // User is logged in
+                if (post.createdBy.userId === currentLoggedInUser) {
+                    // If logged-in user is the post creator, hide the follow button
+                    followButtonHtml = ''; // No button
+                } else {
+                    // Show follow/following button
+                    followButtonHtml = isFollowing ?
+                        `<button class="follow-button" data-user-id="${post.createdBy.userId}" style="background-color: #fff; color: #28a745" disabled>
+                            <i class="fas fa-user-check"></i> Following
+                        </button>` :
+                        `<button class="follow-button" data-user-id="${post.createdBy.userId}">
+                            <i class="fas fa-user-plus"></i> Follow
+                        </button>`;
+                }
             } else {
-                // Show follow/following button
-                followButtonHtml = isFollowing ?
-                    `<button class="follow-button" data-user-id="${post.createdBy.userId}" style="background-color: #fff; color:  #28a745" disabled>
-                        <i class="fas fa-user-check"></i> Following
-                    </button>` :
-                    `<button class="follow-button" data-user-id="${post.createdBy.userId}">
+                // User is not logged in - show login required follow button
+                followButtonHtml = `
+                    <button class="follow-button login-required" onclick="redirectToLogin()">
                         <i class="fas fa-user-plus"></i> Follow
-                    </button>`;
+                    </button>
+                `;
             }
         }
-        // If currentLoggedInUser is null (not logged in), followButtonHtml will remain ''
+
+        // Modified post actions for non-logged in users
+        const postActionsHtml = currentLoggedInUser ? `
+            <div class="post-actions">
+                <button class="action-button like-button">
+                    <i class="${post.likes && post.likes.includes(currentLoggedInUser) ? 'fas' : 'far'} fa-heart"></i>
+                    <span class="like-count">${post.likes ? post.likes.length : 0}</span> <p>Likes</p>
+                </button>
+                <button class="action-button reply-button">
+                    <i class="far fa-comment-alt"></i>
+                    <span class="comment-count">${post.comments ? post.comments.length : 0}</span> <p>Comments</p>
+                </button>
+                <button class="action-button share-button">
+                    <i class="fas fa-share"></i>
+                </button>
+            </div>
+        ` : `
+            <div class="post-actions">
+                <button class="action-button login-required" onclick="redirectToLogin()">
+                    <i class="far fa-heart"></i>
+                    <span class="like-count">${post.likes ? post.likes.length : 0}</span> <p>Likes</p>
+                </button>
+                <button class="action-button login-required" onclick="redirectToLogin()">
+                    <i class="far fa-comment-alt"></i>
+                    <span class="comment-count">${post.comments ? post.comments.length : 0}</span> <p>Comments</p>
+                </button>
+                <button class="action-button share-button">
+                    <i class="fas fa-share"></i>
+                </button>
+            </div>
+        `;
 
         postElement.innerHTML = `
             <div class="post-header">
@@ -232,19 +288,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 ${isPostCreator ? '' : buttonContent}
             </div>
 
-            <div class="post-actions">
-                <button class="action-button like-button">
-                    <i class="${post.likes && post.likes.includes(currentLoggedInUser) ? 'fas' : 'far'} fa-heart"></i>
-                    <span class="like-count">${post.likes ? post.likes.length : 0}</span> <p>Likes</p>
-                </button>
-                <button class="action-button reply-button">
-                    <i class="far fa-comment-alt"></i>
-                    <span class="comment-count">${post.comments ? post.comments.length : 0}</span> <p>Comments</p>
-                </button>
-                <button class="action-button share-button">
-                    <i class="fas fa-share"></i>
-                </button>
-            </div>
+            ${postActionsHtml}
         `;
         return postElement;
     }
@@ -257,10 +301,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
 
         try {
-            // Ensure logged-in user and following list are updated before fetching posts
-            currentLoggedInUser = window.loggedInUser; // Get the latest from auth.js
-            currentFollowingList = await fetchFollowingList(); // Fetch fresh list
-
+            // Always fetch posts, regardless of login status
             const response = await fetch(`${API_BASE_URL}/post?category=${encodeURIComponent(category)}`);
             if (!response.ok) throw new Error('Failed to fetch posts');
 
@@ -268,7 +309,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             postsContainer.innerHTML = ''; // Clear existing posts
 
             posts.forEach(post => {
-                const postElement = renderPost(post); // renderPost now uses currentFollowingList and currentLoggedInUser
+                const postElement = renderPost(post); // renderPost now handles both logged-in and non-logged-in users
                 postsContainer.prepend(postElement);
             });
 
@@ -277,6 +318,42 @@ document.addEventListener('DOMContentLoaded', async function () {
         } catch (error) {
             console.error('Error fetching posts:', error);
             postsContainer.innerHTML = '<p style="text-align: center; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">No posts yet. Try again or create one!</p>';
+        }
+    }
+
+    // Function to redirect to login page
+    window.redirectToLogin = function() {
+        if (window.showToast) {
+            window.showToast('Please login to access this feature', 'info');
+        }
+        setTimeout(() => {
+            window.location.href = 'SignIn.html';
+        }, 1000);
+    };
+
+    // Function to initialize auth status
+    async function initializeAuthStatus() {
+        try {
+            // Try to get current user from auth.js if available
+            if (window.loggedInUser !== undefined) {
+                currentLoggedInUser = window.loggedInUser;
+            }
+
+            // If user is logged in, fetch their following list
+            if (currentLoggedInUser) {
+                currentFollowingList = await fetchFollowingList();
+            }
+
+            isAuthReady = true;
+            console.log('Auth initialization complete. User:', currentLoggedInUser);
+            
+            // Fetch posts after auth status is determined
+            await fetchAndRenderPosts();
+        } catch (error) {
+            console.error('Error initializing auth status:', error);
+            // Even if auth fails, we should still fetch posts for non-logged-in view
+            isAuthReady = true;
+            await fetchAndRenderPosts();
         }
     }
 
@@ -307,10 +384,30 @@ document.addEventListener('DOMContentLoaded', async function () {
         });
     };
 
-    // Wait for auth status to be ready before fetching posts
+    // Listen for auth status ready event (if it exists)
     document.addEventListener('authStatusReady', async (event) => {
         currentLoggedInUser = event.detail.loggedInUser;
-        console.log('Auth status ready. Logged in user:', currentLoggedInUser);
-        await fetchAndRenderPosts(); // Initial fetch after auth
+        currentFollowingList = await fetchFollowingList();
+        console.log('Auth status ready event received. Logged in user:', currentLoggedInUser);
+        
+        // Re-render posts with updated auth status
+        await fetchAndRenderPosts();
     });
+
+    // Initialize immediately - don't wait for auth status
+    // This ensures posts are fetched even if user is not logged in
+    setTimeout(async () => {
+        if (!isAuthReady) {
+            console.log('Initializing without waiting for auth status...');
+            await initializeAuthStatus();
+        }
+    }, 500); // Small delay to allow auth.js to set window.loggedInUser if present
+
+    // Fallback: If no auth status event is received within 2 seconds, proceed anyway
+    setTimeout(async () => {
+        if (!isAuthReady) {
+            console.log('Auth timeout - proceeding with post fetch...');
+            await initializeAuthStatus();
+        }
+    }, 2000);
 });
