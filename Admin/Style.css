@@ -155,6 +155,7 @@
   position: fixed;
   width: 100%;
 }
+
 .menu-icon{
   color: #28a745;
 }
@@ -208,6 +209,7 @@ a .active {
   color: white;
   border-color: #28a745;
 }
+
 .category-scroll-wrapper{
   display: flex;
   justify-content: center;
