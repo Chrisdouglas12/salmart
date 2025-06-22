@@ -21,10 +21,12 @@
         /* Skeleton Loader */
         .skeleton-post {
             background: white;
+     
             margin: 10px;
             border-radius: 10px;
             padding: 15px;
             box-shadow: 0 0 10px rgba(0,0,0,0.05);
+            
         }
 
         .skeleton-header {
@@ -73,8 +75,7 @@
             animation: skeleton-loading 1.5s infinite;
             margin: 10px 0;
         }
-
-        .skeleton-button {
+           .skeleton-button {
             width: 40%;
             height: 40px;
             border-radius: 5px;
@@ -269,18 +270,6 @@
             transform: scale(0);
         }
 
-        /* Accessibility */
-        .install-btn:focus {
-            outline: none;
-            box-shadow: 0 8px 25px rgba(40, 167, 69, 0.3), 0 0 0 3px rgba(40, 167, 69, 0.3);
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-            .install-btn {
-                animation: none;
-                transition: none;
-            }
-        }
     </style>
 
     <script src="addPic.js"></script>
@@ -288,6 +277,7 @@
 
 </head>
 <body>
+     
   <div class="Genenral-container">
     <div class="menu-icon">
       <div></div>
@@ -305,6 +295,7 @@
       </div>
       <h2 class="head" style="color: #28a745; background-color: white; padding-top: 20px; padding-bottom: 20px; margin-top: -0px; box-shadow: 0 0px 10px 0px #ddd; border: solid; border-width: 1px; border-color: #fff; position: fixed; z-index:1; width: 100vw; font-size: 19px; font-family: Poppins">Salmart</h2> 
     </div>
+
 <button id="installBtn" class="install-btn"> Install Salmart</button>
 
  
@@ -477,13 +468,22 @@
       </ul>
       <pre style="font-size: 10px; text-align: center; margin-top: 40px; color: green">©Salmart Technologies 2025</pre>
     </div>
+       <div class="iframe-container">
+  <iframe id="desktop-iframe" class="desktop-only" src="Community.html" frameborder="0" width="450" height="100%" style="position:fixed ; right: 25px;margin-top: 65px;
+  " ></iframe>
+  </div>
+            <div class="iframe-container">
+  <iframe id="desktop-iframe" class="desktop-only" src="login.html" frameborder="0" width="450" height="100%" style="position:fixed ; right: 68%; margin-top: 68px;
+  " ></iframe>
+  </div>
     <div class="create-post-container">
       <div>
-        <a href="Ads.html"><button class="post-input" style="background-color:#007bff; color: white; font-family: 'Poppins'; font-size: 12px"><i class="fas fa-bullhorn"></i> Create an ad</button></a>
-        <a href="Request.html"><button class="post-input" style="background-color: #28a745; color: white; font-family: 'Poppins'; font-size: 12px">Create a request <i class="fas fa-circle-plus"></i></button></a>
+        <a href="Ads.html"><button class="post-input" style="background-color:#007bff; color: white; font-family: 'Poppins'; font-size: 12px;max-width: 230px;"><i class="fas fa-bullhorn"></i> Create an ad</button></a>
+        <a href="Request.html"><button class="post-input" style="background-color: #28a745; color: white; font-family: 'Poppins'; font-size: 12px;max-width: 230px;">Create a request <i class="fas fa-circle-plus"></i></button></a>
       </div>
+       
       <!-- Category Filter Section -->
-      <div class="category-filter">
+      <div class="category-filter" ">
         <div class="category-scroll-wrapper">
           <div class="category-scroll">
             <button class="category-btn active" data-category="all"><i class="fas fa-layer-group"></i> All</button>
@@ -497,6 +497,7 @@
         </div>
       </div> 
     </div>
+
 
     <div id="loader" style="display: none;">Loading...</div>
     <div>

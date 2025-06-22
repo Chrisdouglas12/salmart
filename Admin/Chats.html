@@ -54,21 +54,46 @@
       word-wrap: break-word;
       box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
-    .sent {
-      background-color: #28a745;
-      margin-left: auto;
-      border: solid 0.1px #e5e5ea;
-      border-top-right-radius: 4px;
-      color: #fff;
-      font-size: 14px;
+    
+    @media (min-width: 768px) {
+         .message{
+              max-width: 20%;
+              word-wrap: break-word;
+              
+             
+         }
+         #chat-messages{
+              padding: 10px;
+              overflow-y: auto;
+      height: calc(100vh - 160px);
+      margin-top: 60px;
+         }
     }
-    .received {
-      background-color: #fff;
-      border: solid 0.1px #e5e5ea;
-      box-shadow: 0 0 10px #ddd;
-      border-top-left-radius: 4px;
-      font-size: 14px;
-    }
+.sent {
+  background-color: #28a745;
+  margin-left: auto;
+  border: solid 0.1px #e5e5ea;
+  border-top-right-radius: 4px;
+  color: #fff;
+  font-size: 14px;
+  display: block;
+  padding: 8px;
+  width: fit-content;
+  margin-bottom: 10px; /* add some space between messages */
+}
+
+.received {
+  background-color: #fff;
+  border: solid 0.1px #e5e5ea;
+  box-shadow: 0 0 10px #ddd;
+  border-top-left-radius: 4px;
+  font-size: 14px;
+  display: block;
+  padding: 8px;
+  width: fit-content;
+  margin-bottom: 10px; /* add some space between messages */
+}
+
     .quoted-message {
     display: flex;
     background: rgba(0, 0, 0, 0.05);
@@ -540,6 +565,7 @@
 .product-photo-preview {
     max-width: 200px;
     border-radius: 5px;
+    margin-top: 50px;
 }
   </style>
 </head>
@@ -648,4 +674,3 @@ button.disabled = true;
  <script src="Chats.js"></script>
 </body>
 </html>
-break-word: word-break;

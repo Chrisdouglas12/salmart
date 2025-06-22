@@ -75,7 +75,7 @@ function renderProductPreview() {
         previewContainer.innerHTML = `
             <p style="font-size: 14px; color: #777;">Product Preview: ${productName}</p>
             ${isValidImageUrl
-                ? `<img src="${productImage}" class="product-photo-preview" alt="Product Preview" style="max-width: 200px; border-radius: 5px;" onerror="this.style.display='none';this.nextElementSibling.style.display='block';">
+                ? `<img src="${productImage}" class="product-photo-preview" alt="Product Preview" style="max-width: 200px; border-radius: 5px; margin-top: 60px;" onerror="this.style.display='none';this.nextElementSibling.style.display='block';">
                    <p style="display:none;color:red;">Failed to load product image.</p>`
                 : `<p style="color:red;">No product image available.</p>`}
         `;

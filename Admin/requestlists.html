@@ -17,7 +17,6 @@
 <script src="addPic.js"></script>
 
 
-
 </head>
 <body>
   <div class="Genenral-container">
@@ -144,12 +143,20 @@
     <pre style="font-size: 10px; text-align: center; margin-top: 40px; color: green">&copy;Salmart Technologies 2025</pre>
   </div>
 
-
+       <div class="iframe-container">
+  <iframe id="desktop-iframe" class="desktop-only" src="Community.html" frameborder="0" width="450" height="100%" style="position:fixed ; right: 25px;margin-top: 68px;
+  " ></iframe>
+  </div>
+            <div class="iframe-container">
+  <iframe id="desktop-iframe" class="desktop-only" src="login.html" frameborder="0" width="450" height="100%" style="position:fixed ; right: 68%; margin-top: 68px;
+  " ></iframe>
+  </div>
  <div class="create-post-container">
      <div>
-         <a href="Ads.html"><button class="post-input"  placeholder="Create an ad..." style="background-color:#007bff; color: white; font-family: 'Poppins'; font-size: 12px"> <i class="fas fa-bullhorn"></i> Create an ad</button></a>
-                  <a href="Request.html"><button class="post-input" placeholder="Create a request..." style="background-color:  #28a745; color: white; font-family: 'Poppins'; font-size: 12px"> Create a request <i class="fas fa-circle-plus"></i></button></a>
+         <a href="Ads.html"><button class="post-input"  placeholder="Create an ad..." style="background-color:#007bff; color: white; font-family: 'Poppins'; font-size: 12px; max-width: 230px"> <i class="fas fa-bullhorn"></i> Create an ad</button></a>
+                  <a href="Request.html"><button class="post-input" placeholder="Create a request..." style="background-color:  #28a745; color: white; font-family: 'Poppins'; font-size: 12px; max-width:230px;"> Create a request <i class="fas fa-circle-plus"></i></button></a>
           </div>
+
      <!-- Category Filter Section -->
 
 <div class="category-filter">
@@ -166,6 +173,7 @@
 </div>
  </div> 
  </div>
+ 
  <div id="loader" style="display: none;">Loading...</div>
   <div>
    
@@ -268,6 +276,7 @@ window.onload = function() {
     border-radius: 5px;
     box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
 }
+
 .modal {
     display: none;
     position: fixed;
@@ -330,16 +339,41 @@ window.onload = function() {
 .request-card:hover {
   box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
 }
-.request-bg{
-  background-color: #28a745;
-  border: 1px solid #fff;
-  border-radius: 4px;
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 40px ;
+.request-bg {
+    position: relative;
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    border-radius: 16px;
+    padding: 30px;
+    margin: 20px 0;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
+
+.request-bg::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: 
+        linear-gradient(45deg, rgba(255,255,255,0.03) 25%, transparent 25%),
+        linear-gradient(-45deg, rgba(255,255,255,0.03) 25%, transparent 25%);
+    background-size: 20px 20px;
+}
+
+.request-bg .text {
+    position: relative;
+    z-index: 2;
+    color: white;
+    font-size: 18px;
+    font-weight: 600;
+    line-height: 1.6;
+    text-align: center;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
 
 /* Styling for the user info section */
 .request-card .user-info {

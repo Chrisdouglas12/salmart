@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Salmart - Social Commerce Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f3f8f1;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+         
+         a{
+           text-decoration: none;
+           color: #28a745;
+         }
+        .dashboard-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            min-height: 100vh;
+            margin-bottom: 60px;
+        }
+
+        .header {
+            background: #fff;
+            border-radius: 20px;
+            padding: 20px 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(40, 167, 69, 0.15);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-icon {
+            width: 50px;
+            height: 50px;
+            background: #28a745;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
+        }
+
+        .logo-text {
+            font-size: 28px;
+            font-weight: 700;
+            color: #28a745;
+        }
+
+        .header-stats {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #7f8c8d;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .welcome-section {
+            background: #fff;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 10px 40px rgba(40, 167, 69, 0.15);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .welcome-section::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200px;
+            height: 200px;
+            background: #28a745;
+            border-radius: 50%;
+            opacity: 0.1;
+        }
+
+        .welcome-section h2 {
+            font-size: 32px;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .welcome-section p {
+            color: #5a6c7d;
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 25px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .cta-button {
+            background: #28a745;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
+            position: relative;
+            z-index: 1;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(40, 167, 69, 0.6);
+            background: #218838;
+        }
+
+        .quick-actions {
+            background: #fff;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(40, 167, 69, 0.15);
+        }
+
+        .quick-actions h3 {
+            font-size: 20px;
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+
+        .action-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .action-item {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .action-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(40, 167, 69, 0.2);
+            background: #f3f8f1;
+            color: #28a745;
+        }
+
+        .action-item i {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: #28a745;
+            transition: color 0.3s ease;
+        }
+
+        .action-item:hover i {
+            color: #28a745;
+        }
+
+        .action-item span {
+            display: block;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .features-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .feature-card {
+            background: #fff;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(40, 167, 69, 0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 50px rgba(40, 167, 69, 0.2);
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: #28a745;
+        }
+
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            background: #28a745;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
+        }
+
+        .feature-card h4 {
+            font-size: 18px;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .feature-card p {
+            color: #5a6c7d;
+            line-height: 1.6;
+            font-size: 14px;
+        }
+
+        .trending-section {
+            background: #fff;
+            border-radius: 20px;
+            padding: 30px;
+            margin-top: 30px;
+            box-shadow: 0 10px 40px rgba(40, 167, 69, 0.1);
+        }
+
+        .trending-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .trending-header h3 {
+            font-size: 20px;
+            color: #2c3e50;
+        }
+
+        .view-all {
+            color: #28a745;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .trending-items {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .trending-item {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .trending-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(40, 167, 69, 0.15);
+        }
+
+        .trending-item .item-image {
+            width: 80px;
+            height: 80px;
+            background: #28a745;
+            border-radius: 50%;
+            margin: 0 auto 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 32px;
+        }
+
+        .trending-item h5 {
+            font-size: 16px;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .trending-item .price {
+            color: #28a745;
+            font-weight: 700;
+            font-size: 18px;
+        }
+
+        .floating-elements {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .floating-element {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            animation: float 20s infinite linear;
+        }
+
+        .floating-element:nth-child(1) {
+            width: 100px;
+            height: 100px;
+            top: 20%;
+            left: 10%;
+            animation-delay: 0s;
+        }
+
+        .floating-element:nth-child(2) {
+            width: 60px;
+            height: 60px;
+            top: 60%;
+            right: 20%;
+            animation-delay: -5s;
+        }
+
+        .floating-element:nth-child(3) {
+            width: 80px;
+            height: 80px;
+            bottom: 20%;
+            left: 30%;
+            animation-delay: -10s;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px) rotate(0deg); }
+            33% { transform: translateY(-20px) rotate(120deg); }
+            66% { transform: translateY(10px) rotate(240deg); }
+            100% { transform: translateY(0px) rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .header {
+                padding: 15px 20px;
+            }
+            
+            .header-stats {
+                gap: 20px;
+            }
+            
+            .logo-text {
+                font-size: 24px;
+            }
+            
+            .welcome-section {
+                padding: 30px 20px;
+            }
+            
+            .action-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-elements">
+        <div class="floating-element"></div>
+        <div class="floating-element"></div>
+        <div class="floating-element"></div>
+    </div>
+
+    <div class="dashboard-container">
+        <header class="header">
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="fas fa-store"></i>
+                </div>
+                <div class="logo-text">Salmart</div>
+            </div>
+
+        </header>
+
+        <div class="main-content">
+            <div class="welcome-section">
+                <h2>Welcome to Salmart</h2>
+                <p>Experience the future of social commerce where buying and selling meets community. Connect with verified sellers, discover trending products, and shop with confidence in our secure marketplace.</p>
+                <button class="cta-button">
+                    <i class="fas fa-rocket"></i>
+                    Start Shopping
+                </button>
+            </div>
+
+            <div class="quick-actions">
+                <h3>Quick Actions</h3>
+                <div class="action-grid">
+                    <div class="action-item">
+                        <i class="fas fa-plus-circle"></i>
+                        <a href="Ads.html"><span>List Product</span></a>
+                    </div>
+                    <div class="action-item">
+                        <i class="fas fa-search"></i>
+                        <a href="Search.html"><span>Browse Items</span></a>
+                    </div>
+                    <div class="action-item">
+                        <i class="fas fa-shopping-cart"></i>
+                        <a href="Deals.html"><span>Deals</span></a>
+                    </div>
+                    <div class="action-item">
+                        <i class="fas fa-user-friends"></i>
+                       <a href="Messages.html"> <span>Connect</span></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="features-section">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <h4>Secure Escrow System</h4>
+                <p>Our advanced escrow system protects both buyers and sellers, ensuring safe transactions and peace of mind for every purchase.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <h4>Social Commerce</h4>
+                <p>Connect with friends, share products, and discover new items through our integrated social features and community reviews.</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-mobile-alt"></i>
+                </div>
+                <h4>Mobile Optimized</h4>
+                <p>Shop seamlessly across all devices with our responsive design and dedicated mobile app for iOS and Android.</p>
+            </div>
+        </div>
+
+</body>
+</html>

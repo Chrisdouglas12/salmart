@@ -46,6 +46,7 @@
       line-height: 1.5;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
+      overflow-x: hidden;
     }
 
     /* Header Styles */
@@ -57,7 +58,7 @@
       padding: var(--spacing-lg) var(--spacing-xl);
       position: sticky;
       top: 0;
-      z-index: 100;
+      z-index: 1000;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -114,12 +115,23 @@
       box-shadow: var(--shadow-medium);
     }
 
+    /* Main Container */
+    .main-container {
+      display: flex;
+      max-width: 1400px;
+      margin: 0 auto;
+      height: calc(100vh - 70px - 60px); /* Subtract header and navbar heights */
+      overflow: hidden;
+    }
+
     /* Message List Container */
     .message-container {
-      max-width: 600px;
-      margin: 0 auto;
+      width: 100%;
+      max-width: 500px;
       padding: var(--spacing-lg);
       padding-bottom: 100px;
+      overflow-y: auto;
+      transition: all 0.3s ease;
     }
 
     /* Message Item Styles */
@@ -163,6 +175,11 @@
 
     .message-item:active {
       transform: translateY(0);
+    }
+
+    .message-item.selected {
+      background: var(--secondary-color);
+      border-color: var(--primary-color);
     }
 
     .message-avatar {
@@ -243,7 +260,6 @@
     /* Unread Message Styles */
     .message-item.unread {
       border-color: var(--primary-color);
-      background: linear-gradient(135deg, rgba(0, 200, 81, 0.02) 0%, rgba(0, 200, 81, 0.05) 100%);
     }
 
     .message-item.unread .message-name {
@@ -363,6 +379,7 @@
       0% { background-position: 200% 0; }
       100% { background-position: -200% 0; }
     }
+
     /* Bottom Navbar */
     #navbar {
       position: fixed;
@@ -375,9 +392,11 @@
 
     #navbar ul {
       display: flex;
-      justify-content: space-around;
+      max-width: 600px;
+      justify-content: center;
       padding: 10px 0;
       list-style: none;
+      margin: 0 auto;
     }
 
     #navbar li {
@@ -399,7 +418,6 @@
     #navbar a.active {
       font-weight: 600;
       border-radius: 8px;
-      padding: -10px;
     }
 
     #navbar a i {
@@ -407,51 +425,100 @@
       margin-bottom: 5px;
     }
 
-     .icon-badge-wrapper {
-  position: relative;
-  display: inline-block;
-}
+    .icon-badge-wrapper {
+      position: relative;
+      display: inline-block;
+    }
 
-.notification-badge {
-  position: absolute;
-  top: -5px;
-  right: -10px;
-  background-color: red;
-  color: white;
-  font-size: 10px;
-  width: 18px;
-  height: 18px;
-  line-height: 18px;
-  border-radius: 50%;
-  text-align: center;
-  z-index: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  overflow: hidden;
-}
+    .notification-badge {
+      position: absolute;
+      top: -5px;
+      right: -10px;
+      background-color: red;
+      color: white;
+      font-size: 10px;
+      width: 18px;
+      height: 18px;
+      line-height: 18px;
+      border-radius: 50%;
+      text-align: center;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      overflow: hidden;
+    }
 
     /* Responsive Design */
-    @media (max-width: 640px) {
+    @media (min-width: 768px) {
+      .desktop-only {
+        display: block;
+      }
+
+      .main-container {
+        flex-direction: row;
+        gap: var(--spacing-lg);
+      }
+
+      .message-container {
+        width: 45%;
+        max-width: 400px;
+        padding: var(--spacing-lg);
+        border-right: 1px solid var(--border-color);
+      }
+
+      .iframe-container {
+        width: 40%;
+        max-width: 900px;
+        height: 100%;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .desktop-iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-medium);
+        transition: all 0.3s ease;
+      }
+
+      #navbar {
+        display: none; /* Hide navbar on desktop */
+      }
+
+      .header {
+        max-width: 1400px;
+        margin: 0 auto;
+      }
+    }
+
+    @media (max-width: 767px) {
+      .desktop-only {
+        display: none;
+      }
+
+      .message-container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding-bottom: 100px;
+      }
+
       .header {
         padding: var(--spacing-md) var(--spacing-lg);
       }
-      
+
       .header-title {
         font-size: 20px;
       }
-      
-      .message-container {
-        padding: var(--spacing-md);
-        padding-bottom: 100px;
-      }
-      
+
       .message-item {
         padding: var(--spacing-md);
         gap: var(--spacing-md);
       }
-      
+
       .message-avatar img {
         width: 48px;
         height: 48px;
@@ -487,21 +554,29 @@
       <a href="#" class="search-btn">
         <i class="fas fa-search"></i>
       </a>
-      <img src="Default.png" alt="Profile" id="profile-picture5" class="profile-avatar" onerror="this.src='Default.png'">
+      <img src="default-avater.png" alt="Profile" id="profile-picture5" class="profile-avatar" onerror="this.src='default-avater.png'">
     </div>
   </header>
 
-  <!-- Message List Container -->
-  <div class="message-container">
-    <div id="message-list"></div>
-    
-    <!-- Empty State -->
-    <div class="empty-state" id="empty-state">
-      <div class="empty-state-icon">
-        <i class="fas fa-comments"></i>
+  <!-- Main Container -->
+  <div class="main-container">
+    <!-- Message List Container -->
+    <div class="message-container">
+      <div id="message-list"></div>
+      
+      <!-- Empty State -->
+      <div class="empty-state" id="empty-state">
+        <div class="empty-state-icon">
+          <i class="fas fa-comments"></i>
+        </div>
+        <h3>No messages yet</h3>
+        <p>Start a conversation to see your messages here</p>
       </div>
-      <h3>No messages yet</h3>
-      <p>Start a conversation to see your messages here</p>
+    </div>
+
+    <!-- Iframe Container -->
+    <div class="iframe-container desktop-only">
+      <iframe id="desktop-iframe" class="desktop-iframe" src="Chats.html" frameborder="0"></iframe>
     </div>
   </div>
 
@@ -565,10 +640,12 @@
     let isClickProcessing = false;
     let messages = [];
     let messageUpdateTimeouts = new Map();
+    let selectedPartnerId = null;
 
     // DOM elements
     const messageListElement = document.getElementById("message-list");
     const emptyStateElement = document.getElementById("empty-state");
+    const chatIframe = document.getElementById("desktop-iframe");
 
     // Initialize app
     if (!userId) {
@@ -586,14 +663,12 @@
     }
 
     function setupEventListeners() {
-      // Add refresh functionality
       window.addEventListener('focus', () => {
         if (!isInitialLoad) {
           fetchMessages();
         }
       });
 
-      // Add pull-to-refresh simulation
       let touchStartY = 0;
       let touchEndY = 0;
 
@@ -651,33 +726,21 @@
 
     function handleNewMessage(newMessage) {
       try {
-        // Check for duplicate messages
         if (messages.some(msg => msg._id === newMessage._id)) {
           console.log('Duplicate message skipped:', newMessage._id);
           return;
         }
 
-        // Add new message to the beginning
         messages.unshift(newMessage);
-        
-        // Sort messages by creation date (newest first)
         messages.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-        
-        // Re-render messages
         renderMessages();
-        
-        // Scroll to top to show new message
         messageListElement.scrollTop = 0;
-        
-        // Hide empty state
         emptyStateElement.style.display = "none";
-        
-        // Clear any existing timeout for this message
+
         if (messageUpdateTimeouts.has(newMessage._id)) {
           clearTimeout(messageUpdateTimeouts.get(newMessage._id));
         }
-        
-        // Set timeout to remove 'new' class after animation
+
         const timeoutId = setTimeout(() => {
           const messageElement = document.querySelector(`[data-message-id="${newMessage._id}"]`);
           if (messageElement) {
@@ -685,12 +748,11 @@
           }
           messageUpdateTimeouts.delete(newMessage._id);
         }, 500);
-        
+
         messageUpdateTimeouts.set(newMessage._id, timeoutId);
-        
       } catch (error) {
         console.error('Error handling newMessage:', error);
-        fetchMessages(); // Fallback to refetch
+        fetchMessages();
       }
     }
 
@@ -736,22 +798,16 @@
             'Authorization': `Bearer ${localStorage.getItem('authToken')}`
           }
         });
-        
+
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
         }
-        
+
         const fetchedMessages = await response.json();
         console.log('Fetched messages:', fetchedMessages);
-        
-        // Update messages array
         messages = fetchedMessages;
-        
-        // Render messages
         renderMessages();
-        
         isInitialLoad = false;
-        
       } catch (error) {
         console.error('Fetch messages error:', error);
         showErrorMessage('Failed to load messages. Please try again later.');
@@ -772,7 +828,6 @@
     }
 
     function generateMessageHTML(messages) {
-      // Group messages by chat partner (most recent message per partner)
       const uniqueChats = {};
       messages.forEach(msg => {
         const chatPartnerId = msg.senderId === userId ? msg.receiverId : msg.senderId;
@@ -781,7 +836,6 @@
         }
       });
 
-      // Sort by most recent message
       const sortedChats = Object.values(uniqueChats)
         .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
@@ -789,8 +843,8 @@
         const chatPartnerId = message.senderId === userId ? message.receiverId : message.senderId;
         const isUnread = !message.isRead && message.senderId !== userId;
         const isNew = messages.indexOf(message) === 0 && !isInitialLoad;
+        const isSelected = chatPartnerId === selectedPartnerId;
 
-        // Generate message preview
         let messagePreview = '';
         let messageIcon = '';
         
@@ -806,14 +860,15 @@
         }
 
         return `
-          <div class="message-item ${isUnread ? 'unread' : ''} ${isNew ? 'new' : ''}" 
+          <div class="message-item ${isUnread ? 'unread' : ''} ${isNew ? 'new' : ''} ${isSelected ? 'selected' : ''}" 
                data-message-id="${message._id}" 
+               data-partner-id="${chatPartnerId}"
                onclick="handleMessageClick('${encodeURIComponent(chatPartnerId)}', '${encodeURIComponent(message.chatPartnerName)}', '${encodeURIComponent(message.chatPartnerProfilePicture || 'Default.png')}')">
             
             <div class="message-avatar">
-              <img src="${escapeHTML(message.chatPartnerProfilePicture) || 'Default.png'}" 
+              <img src="${escapeHTML(message.chatPartnerProfilePicture) || 'default-avater.png'}" 
                    alt="${escapeHTML(message.chatPartnerName)}" 
-                   onerror="this.src='Default.png'">
+                   onerror="this.src='default-avater.png'">
             </div>
             
             <div class="message-content">
@@ -840,52 +895,65 @@
         console.log('Click processing, ignoring...');
         return;
       }
-      
+
       isClickProcessing = true;
       const decodedPartnerId = decodeURIComponent(partnerId);
 
       try {
-        // Mark messages as read immediately in UI
-        const messageElement = document.querySelector(`[data-message-id]`);
-        if (messageElement) {
-          messageElement.classList.remove('unread');
-          const unreadIndicator = messageElement.querySelector('.unread-indicator');
-          if (unreadIndicator) {
-            unreadIndicator.remove();
+        // Update selected state
+        selectedPartnerId = decodedPartnerId;
+        
+        // Update UI to show selected message
+        document.querySelectorAll('.message-item').forEach(item => {
+          item.classList.remove('selected');
+          if (item.getAttribute('data-partner-id') === decodedPartnerId) {
+            item.classList.add('selected');
           }
-        }
-
-        // Mark messages as viewed on server
-        console.log('Marking messages as viewed for partner:', decodedPartnerId);
-        const token = localStorage.getItem('authToken');
-        const response = await fetch(`${API_BASE_URL}/api/messages/mark-as-viewed`, {
-          method: 'PUT',
-          headers: { 
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ 
-            userId,
-            partnerId: decodedPartnerId
-          })
         });
 
-        if (!response.ok) {
-          console.warn('Failed to mark messages as viewed on server');
+        if (window.innerWidth >= 768) {
+          // Desktop: Load chat in iframe
+          const chatUrl = `Chats.html?user_id=${encodeURIComponent(userId)}&recipient_id=${partnerId}&recipient_username=${partnerName}&recipient_profile_picture_url=${partnerProfile}`;
+          chatIframe.src = chatUrl;
+
+          // Mark messages as read
+          const messageElement = document.querySelector(`[data-partner-id="${decodedPartnerId}"]`);
+          if (messageElement) {
+            messageElement.classList.remove('unread');
+            const unreadIndicator = messageElement.querySelector('.unread-indicator');
+            if (unreadIndicator) {
+              unreadIndicator.remove();
+            }
+          }
+
+          const token = localStorage.getItem('authToken');
+          const response = await fetch(`${API_BASE_URL}/api/messages/mark-as-viewed`, {
+            method: 'PUT',
+            headers: { 
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ 
+              userId,
+              partnerId: decodedPartnerId
+            })
+          });
+
+          if (!response.ok) {
+            console.warn('Failed to mark messages as viewed on server');
+          }
+        } else {
+          // Mobile: Navigate to chat page
+          const chatUrl = `Chats.html?user_id=${encodeURIComponent(userId)}&recipient_id=${partnerId}&recipient_username=${partnerName}&recipient_profile_picture_url=${partnerProfile}`;
+          window.location.href = chatUrl;
         }
-
-        // Navigate to chat
-        const chatUrl = `Chats.html?user_id=${encodeURIComponent(userId)}&recipient_id=${partnerId}&recipient_username=${partnerName}&recipient_profile_picture_url=${partnerProfile}`;
-        console.log('Navigating to:', chatUrl);
-        window.location.href = chatUrl;
-
       } catch (error) {
         console.error('Error in handleMessageClick:', error);
-        // Navigate anyway
-        const chatUrl = `Chats.html?user_id=${encodeURIComponent(userId)}&recipient_id=${partnerId}&recipient_username=${partnerName}&recipient_profile_picture_url=${partnerProfile}`;
-        window.location.href = chatUrl;
+        if (window.innerWidth < 768) {
+          const chatUrl = `Chats.html?user_id=${encodeURIComponent(userId)}&recipient_id=${partnerId}&recipient_username=${partnerName}&recipient_profile_picture_url=${partnerProfile}`;
+          window.location.href = chatUrl;
+        }
       } finally {
-        // Reset processing flag after a delay
         setTimeout(() => {
           isClickProcessing = false;
         }, 1000);
@@ -906,30 +974,14 @@
         const hours = Math.floor(diff / 3600000);
         const days = Math.floor(diff / 86400000);
 
-        // Less than 1 minute ago
-        if (minutes < 1) {
-          return 'Just now';
-        }
-        // Less than 1 hour ago
-        else if (minutes < 60) {
-          return `${minutes}m`;
-        }
-        // Less than 24 hours ago
-        else if (hours < 24) {
-          return `${hours}h`;
-        }
-        // Less than 7 days ago
-        else if (days < 7) {
-          return `${days}d`;
-        }
-        // Same year
+        if (minutes < 1) return 'Just now';
+        else if (minutes < 60) return `${minutes}m`;
+        else if (hours < 24) return `${hours}h`;
+        else if (days < 7) return `${days}d`;
         else if (date.getFullYear() === now.getFullYear()) {
           return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
         }
-        // Different year
-        else {
-          return date.toLocaleDateString([], { month: 'short', day: 'numeric', year: '2-digit' });
-        }
+        return date.toLocaleDateString([], { month: 'short', day: 'numeric', year: '2-digit' });
       } catch (error) {
         console.warn('Error formatting timestamp:', timestamp);
         return '';
@@ -943,10 +995,9 @@
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
+        .replace(/'/g, '&#039;');
     }
 
-    // Clear notification badge function
     function clearBadge(badgeType) {
       const badge = document.getElementById(`${badgeType}-badge`);
       if (badge) {
@@ -954,27 +1005,20 @@
       }
     }
 
-    // Cleanup function
     window.addEventListener('beforeunload', () => {
-      // Clear all timeouts
       messageUpdateTimeouts.forEach(timeoutId => clearTimeout(timeoutId));
       messageUpdateTimeouts.clear();
-      
-      // Disconnect socket
       if (socket) {
         socket.disconnect();
       }
     });
 
-    // Handle visibility change (when tab becomes active/inactive)
     document.addEventListener('visibilitychange', () => {
       if (!document.hidden && !isInitialLoad) {
-        // Refresh messages when tab becomes active
         fetchMessages();
       }
     });
 
-    // Add service worker for better performance (optional)
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js')
@@ -987,6 +1031,8 @@
       });
     }
   </script>
+  <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+  <script>eruda.init();</script>
   <script src="Badge.js"></script>
 </body>
 </html>
