@@ -387,74 +387,96 @@ document.addEventListener('DOMContentLoaded', async function () {
         return div.innerHTML;
     }
 
-    function renderPromotedSection(promotedPosts) {
+function renderPromotedSection(promotedPosts) {
     const promotedContainer = document.getElementById('promoted-posts-container');
-    if (!promotedContainer || promotedPosts.length === 0) return;
+    if (!promotedContainer || promotedPosts.length < 3) return; // Require at least 3 ads
 
-    // Clear existing content to prevent duplicates
+    // Clear existing content
     promotedContainer.innerHTML = '';
     // Deduplicate posts by _id
     allPromotedPosts = [...new Map(promotedPosts.map(post => [post._id, post])).values()];
     
-    let currentRowIndex = 0;
+    let currentFirstIndex = 0;
 
-    // Determine posts per row based on screen size
-    const postsPerRow = window.innerWidth <= 768 ? 3 : window.innerWidth <= 1200 ? 4 : 5;
+    // Determine posts per row based on screen size (minimum 3 posts)
+    const postsPerRow = Math.max(3, window.innerWidth <= 768 ? 5 : window.innerWidth <= 1200 ? 6 : 7);
 
-    // Create rows
-    function createRow(posts, startIndex) {
+    // Create carousel wrapper for smooth sliding
+    const carouselWrapper = document.createElement('div');
+    carouselWrapper.classList.add('promoted-carousel-wrapper');
+    carouselWrapper.style.cssText = `
+        overflow-x: auto;
+        position: relative;
+        width: 100%;
+        
+        
+    `;
+
+    const carouselTrack = document.createElement('div');
+    carouselTrack.classList.add('promoted-carousel-track');
+    carouselTrack.style.cssText = `
+        display: flex;
+        transition: transform 0.5s ease-in-out;
+        width: 100%;
+    `;
+
+    // Create row with rotating positions
+    function createRow(posts, firstIndex) {
         const row = document.createElement('div');
         row.classList.add('promoted-posts-row');
-        // Set initial position for animation
-        row.style.transform = startIndex > 0 ? 'translateX(100%)' : 'translateX(0)';
+        
 
-        // Get posts for this row
-        const postsToShow = posts.slice(startIndex, startIndex + postsPerRow);
+        // Calculate indices for rotation: [first, second, third, ...]
+        const totalPosts = Math.min(posts.length, postsPerRow);
+        const indices = [];
+        for (let i = 0; i < totalPosts; i++) {
+            indices.push((firstIndex + i) % posts.length);
+        }
 
-        // Render posts
-        postsToShow.forEach(post => {
-            const postElement = renderPromotedPost(post);
+        // Render posts in rotated order
+        indices.forEach(index => {
+            const postElement = renderPromotedPost(posts[index]);
+            postElement.style.flex = '1'; // Equal width for each post
             row.appendChild(postElement);
         });
 
         return row;
     }
 
-    // Calculate total rows needed
-    const totalRows = Math.ceil(allPromotedPosts.length / postsPerRow);
+    // Create initial row
+    const initialRow = createRow(allPromotedPosts, currentFirstIndex);
+    carouselTrack.appendChild(initialRow);
+    carouselWrapper.appendChild(carouselTrack);
+    promotedContainer.appendChild(carouselWrapper);
 
-    // Create all rows
-    for (let i = 0; i < totalRows; i++) {
-        const row = createRow(allPromotedPosts, i * postsPerRow);
-        promotedContainer.appendChild(row);
-    }
-
-    // Auto-rotation function
+    // Auto-rotation function with smooth left-to-right transition
     function rotatePromotedPosts() {
-        const rows = promotedContainer.querySelectorAll('.promoted-posts-row');
-        if (rows.length <= 1) return;
+        if (allPromotedPosts.length < 3) return;
 
-        const currentRow = rows[currentRowIndex];
-        const nextRowIndex = (currentRowIndex + 1) % rows.length;
-        const nextRow = rows[nextRowIndex];
+        // Increment first index to rotate
+        currentFirstIndex = (currentFirstIndex + 1) % allPromotedPosts.length;
 
-        // Animate current row out
-        currentRow.style.transition = 'transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-        currentRow.style.transform = 'translateX(-100%)';
+        // Create new row for next content
+        const newRow = createRow(allPromotedPosts, currentFirstIndex);
+        carouselTrack.appendChild(newRow);
 
-        // Animate next row in
-        nextRow.style.transition = 'transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-        nextRow.style.transform = 'translateX(0)';
+        // Slide to show new row (left-to-right transition)
+        carouselTrack.style.transform = 'translateX(-100%)';
 
-        // Reset other rows
-        rows.forEach((row, index) => {
-            if (index !== currentRowIndex && index !== nextRowIndex) {
-                row.style.transition = 'none';
-                row.style.transform = 'translateX(100%)';
+        // After transition completes, reset position and remove old row
+        setTimeout(() => {
+            const oldRow = carouselTrack.firstElementChild;
+            if (oldRow) {
+                carouselTrack.removeChild(oldRow);
             }
-        });
-
-        currentRowIndex = nextRowIndex;
+            carouselTrack.style.transition = 'none';
+            carouselTrack.style.transform = 'translateX(0)';
+            
+            // Re-enable transition for next animation
+            setTimeout(() => {
+                carouselTrack.style.transition = 'transform 0.5s ease-in-out';
+            }, 50);
+        }, 500);
     }
 
     // Clear existing interval
@@ -462,86 +484,160 @@ document.addEventListener('DOMContentLoaded', async function () {
         clearInterval(promotedPostsRotationInterval);
     }
 
-    // Start auto-rotation if multiple rows
-    if (totalRows > 1) {
-        promotedPostsRotationInterval = setInterval(rotatePromotedPosts, 5000);
-    }
 
     // Enable manual navigation
-    addPromotedNavigationControls(promotedContainer, totalRows);
+    addPromotedNavigationControls(promotedContainer, allPromotedPosts.length);
 
     // Pause auto-rotation on user interaction
     promotedContainer.addEventListener('mouseenter', () => clearInterval(promotedPostsRotationInterval));
     promotedContainer.addEventListener('mouseleave', () => {
-        if (totalRows > 1) {
+        if (allPromotedPosts.length >= 3) {
             promotedPostsRotationInterval = setInterval(rotatePromotedPosts, 5000);
         }
     });
 }
 
-function addPromotedNavigationControls(container, totalRows) {
-    if (totalRows <= 1) return;
+function addPromotedNavigationControls(container, totalPosts) {
+    if (totalPosts < 3) return;
 
     const prevArrow = document.createElement('button');
     prevArrow.className = 'promoted-nav-arrow prev';
     prevArrow.innerHTML = '<i class="fas fa-chevron-left"></i>';
     prevArrow.setAttribute('aria-label', 'Previous promoted posts');
+    prevArrow.style.cssText = `
+        position: absolute;
+        left: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 10;
+        background: rgba(0, 0, 0, 0.5);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        cursor: pointer;
+        transition: background 0.3s ease;
+    `;
 
     const nextArrow = document.createElement('button');
     nextArrow.className = 'promoted-nav-arrow next';
     nextArrow.innerHTML = '<i class="fas fa-chevron-right"></i>';
     nextArrow.setAttribute('aria-label', 'Next promoted posts');
+    nextArrow.style.cssText = `
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 10;
+        background: rgba(0, 0, 0, 0.5);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        cursor: pointer;
+        transition: background 0.3s ease;
+    `;
 
+    container.style.position = 'relative'; // Ensure container can hold positioned arrows
     container.appendChild(prevArrow);
     container.appendChild(nextArrow);
 
     prevArrow.addEventListener('click', () => navigatePromoted('prev'));
     nextArrow.addEventListener('click', () => navigatePromoted('next'));
+
+    // Hover effects
+    [prevArrow, nextArrow].forEach(arrow => {
+        arrow.addEventListener('mouseenter', () => {
+            arrow.style.background = 'rgba(0, 0, 0, 0.8)';
+        });
+        arrow.addEventListener('mouseleave', () => {
+            arrow.style.background = 'rgba(0, 0, 0, 0.5)';
+        });
+    });
 }
 
 function navigatePromoted(direction) {
     const promotedContainer = document.getElementById('promoted-posts-container');
-    if (!promotedContainer) return;
+    const carouselTrack = promotedContainer?.querySelector('.promoted-carousel-track');
+    
+    if (!promotedContainer || !carouselTrack || allPromotedPosts.length < 3) return;
 
-    const rows = promotedContainer.querySelectorAll('.promoted-posts-row');
-    if (rows.length <= 1) return;
+    // Determine posts per row based on current screen size
+    const postsPerRow = Math.max(3, window.innerWidth <= 768 ? 5 : window.innerWidth <= 1200 ? 6 : 7);
 
-    let targetRowIndex;
-    if (direction === 'next') {
-        targetRowIndex = (currentRowIndex + 1) % rows.length;
-    } else {
-        targetRowIndex = currentRowIndex === 0 ? rows.length - 1 : currentRowIndex - 1;
+    // Create row function (same as in renderPromotedSection)
+    function createRow(posts, firstIndex) {
+        const row = document.createElement('div');
+        row.classList.add('promoted-posts-row');
+        
+
+        const totalPosts = Math.min(posts.length, postsPerRow);
+        const indices = [];
+        for (let i = 0; i < totalPosts; i++) {
+            indices.push((firstIndex + i) % posts.length);
+        }
+
+        indices.forEach(index => {
+            const postElement = renderPromotedPost(posts[index]);
+            postElement.style.flex = '1';
+            row.appendChild(postElement);
+        });
+
+        return row;
     }
 
-    const currentRow = rows[currentRowIndex];
-    const targetRow = rows[targetRowIndex];
-
-    const translateDirection = direction === 'next' ? '-100%' : '100%';
-    const comeFromDirection = direction === 'next' ? '100%' : '-100%';
-
-    targetRow.style.transition = 'none';
-    targetRow.style.transform = `translateX(${comeFromDirection})`;
-    targetRow.offsetHeight; // Force reflow
-
-    currentRow.style.transition = 'transform 0.4s ease-in-out';
-    currentRow.style.transform = `translateX(${translateDirection})`;
-
-    targetRow.style.transition = 'transform 0.4s ease-in-out';
-    targetRow.style.transform = 'translateX(0)';
-
-    rows.forEach((row, index) => {
-        if (index !== currentRowIndex && index !== targetRowIndex) {
-            row.style.transition = 'none';
-            row.style.transform = 'translateX(100%)';
-        }
-    });
-
-    currentRowIndex = targetRowIndex;
+    // Update currentFirstIndex based on direction
+    const totalPosts = allPromotedPosts.length;
+    if (direction === 'next') {
+        currentFirstIndex = (currentFirstIndex + 1) % totalPosts;
+        
+        // Create new row and append it
+        const newRow = createRow(allPromotedPosts, currentFirstIndex);
+        carouselTrack.appendChild(newRow);
+        
+        // Slide left to show new content
+        carouselTrack.style.transform = 'translateX(-100%)';
+        
+        // Clean up after transition
+        setTimeout(() => {
+            const oldRow = carouselTrack.firstElementChild;
+            if (oldRow) carouselTrack.removeChild(oldRow);
+            carouselTrack.style.transition = 'none';
+            carouselTrack.style.transform = 'translateX(0)';
+            setTimeout(() => {
+                carouselTrack.style.transition = 'transform 0.5s ease-in-out';
+            }, 50);
+        }, 500);
+        
+    } else { // prev
+        currentFirstIndex = (currentFirstIndex - 1 + totalPosts) % totalPosts;
+        
+        // Create new row and prepend it
+        const newRow = createRow(allPromotedPosts, currentFirstIndex);
+        carouselTrack.style.transition = 'none';
+        carouselTrack.style.transform = 'translateX(-100%)';
+        carouselTrack.insertBefore(newRow, carouselTrack.firstChild);
+        
+        // Force reflow then slide right to show new content
+        carouselTrack.offsetHeight;
+        carouselTrack.style.transition = 'transform 0.5s ease-in-out';
+        carouselTrack.style.transform = 'translateX(0)';
+        
+        // Clean up after transition
+        setTimeout(() => {
+            const lastRow = carouselTrack.lastElementChild;
+            if (lastRow && carouselTrack.children.length > 1) {
+                carouselTrack.removeChild(lastRow);
+            }
+        }, 500);
+    }
 
     // Restart auto-rotation
     if (promotedPostsRotationInterval) {
         clearInterval(promotedPostsRotationInterval);
-        if (rows.length > 1) {
+        if (allPromotedPosts.length >= 3) {
             promotedPostsRotationInterval = setInterval(() => navigatePromoted('next'), 5000);
         }
     }
@@ -550,14 +646,13 @@ function navigatePromoted(direction) {
 // Update resize handler
 window.addEventListener('resize', () => {
     const promotedContainer = document.getElementById('promoted-posts-container');
-    if (promotedContainer && allPromotedPosts.length > 0) {
+    if (promotedContainer && allPromotedPosts.length >= 3) {
         clearTimeout(window.promotedResizeTimeout);
         window.promotedResizeTimeout = setTimeout(() => {
             renderPromotedSection(allPromotedPosts);
         }, 250);
     }
 });
-
     async function fetchAndRenderPosts(category = '') {
         const postsContainer = document.getElementById('posts-container');
         const promotedContainer = document.getElementById('promoted-posts-container');

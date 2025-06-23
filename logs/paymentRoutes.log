@@ -2920,3 +2920,9 @@
 {"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-23T08:09:27.141Z"}
 {"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-23T08:09:41.693Z"}
 {"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-23T08:09:48.146Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-23T08:29:30.189Z"}
+{"body":{"buyerId":"6843f54a956396ecb52e3ec0","currency":"NGN","email":"kelvin@gmail.com","postId":"6851492733db5d3f8fff78c3"},"level":"info","message":"Payment initiation started","requestId":"PAY_1750667370199","timestamp":"2025-06-23T08:29:30.200Z"}
+{"level":"info","message":"Payment initialized successfully","reference":"qhgbw4fk6e","requestId":"PAY_1750667370199","timestamp":"2025-06-23T08:29:32.536Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-23T08:29:34.365Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-23T08:29:53.103Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-23T08:29:59.728Z"}
