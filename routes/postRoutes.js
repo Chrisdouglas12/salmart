@@ -304,67 +304,72 @@ module.exports = (io) => {
   }
 );
 
-  // Remaining routes (unchanged except for minor adjustments to remove thumbnail references)
-  router.get('/post', async (req, res) => {
-    try {
-      const { category } = req.query;
-      const validCategories = ['electronics', 'fashion', 'home', 'vehicles', 'music', 'others'];
-      const categoryFilter = category && validCategories.includes(category)
-        ? { category }
-        : {};
 
-      const posts = await Post.find(categoryFilter).sort({ createdAt: -1 });
-      if (!posts || posts.length === 0) {
-        logger.info(`No posts found for query: ${JSON.stringify(categoryFilter)}`);
-        return res.status(404).json({ message: 'No posts found' });
-      }
+router.get('/post', async (req, res) => {
+  try {
+    const { category } = req.query;
+    const validCategories = ['electronics', 'fashion', 'home', 'vehicles', 'music', 'others'];
+    const categoryFilter = category && validCategories.includes(category)
+      ? { category }
+      : {};
 
-      let loggedInUserId = null;
-      const authHeader = req.headers['authorization'];
-      if (authHeader && authHeader.startsWith('Bearer ')) {
-        const token = authHeader.split(' ')[1];
-        try {
-          const decoded = jwt.verify(token, process.env.JWT_SECRET);
-          loggedInUserId = decoded.userId;
-        } catch (err) {
-          logger.warn(`Invalid token in get posts: ${err.message}`);
-        }
-      }
+    // Fetch posts, sorting by isPromoted (true first) and then createdAt (newest first)
+    const posts = await Post.find(categoryFilter)
+      .sort({ isPromoted: -1, createdAt: -1 })
+      .lean();
 
-      const following = loggedInUserId
-        ? await User.findById(loggedInUserId).select('following').lean().then((u) => u?.following || [])
-        : [];
-
-      const populatedPosts = await Promise.all(
-        posts.map(async (post) => {
-          const user = await User.findById(post.createdBy.userId).select('profilePicture firstName lastName').lean();
-          const isFollowing = following.some(
-            (followedId) => followedId.toString() === post.createdBy.userId.toString()
-          );
-
-          return {
-            ...post.toObject(),
-            profilePicture: user?.profilePicture || 'default-avatar.png',
-            createdBy: {
-              ...post.createdBy,
-              name: user ? `${user.firstName} ${user.lastName}` : post.createdBy.name,
-            },
-            isFollowing,
-            postType: post.postType,
-            media: post.postType === 'video_ad'
-              ? { video: post.video }
-              : { photo: post.photo },
-          };
-        })
-      );
-
-      logger.info(`Fetched ${populatedPosts.length} posts for user ${loggedInUserId || 'anonymous'}`);
-      res.status(200).json(populatedPosts);
-    } catch (error) {
-      logger.error(`Error fetching posts: ${error.message}`);
-      res.status(500).json({ message: 'Server error' });
+    if (!posts || posts.length === 0) {
+      logger.info(`No posts found for query: ${JSON.stringify(categoryFilter)}`);
+      return res.status(404).json({ message: 'No posts found' });
     }
-  });
+
+    let loggedInUserId = null;
+    const authHeader = req.headers['authorization'];
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.split(' ')[1];
+      try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        loggedInUserId = decoded.userId;
+      } catch (err) {
+        logger.warn(`Invalid token in get posts: ${err.message}`);
+      }
+    }
+
+    const following = loggedInUserId
+      ? await User.findById(loggedInUserId).select('following').lean().then((u) => u?.following || [])
+      : [];
+
+    const populatedPosts = await Promise.all(
+      posts.map(async (post) => {
+        const user = await User.findById(post.createdBy.userId).select('profilePicture firstName lastName').lean();
+        const isFollowing = following.some(
+          (followedId) => followedId.toString() === post.createdBy.userId.toString()
+        );
+
+        return {
+          ...post,
+          profilePicture: user?.profilePicture || 'default-avatar.png',
+          createdBy: {
+            ...post.createdBy,
+            name: user ? `${user.firstName} ${user.lastName}` : post.createdBy.name,
+          },
+          isFollowing,
+          postType: post.postType,
+          media: post.postType === 'video_ad'
+            ? { video: post.video }
+            : { photo: post.photo },
+        };
+      })
+    );
+
+    logger.info(`Fetched ${populatedPosts.length} posts for user ${loggedInUserId || 'anonymous'}`);
+    res.status(200).json(populatedPosts);
+  } catch (error) {
+    logger.error(`Error fetching posts: ${error.message}`);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 
   router.get('/post/:postId', async (req, res) => {
     try {

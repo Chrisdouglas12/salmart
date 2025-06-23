@@ -38,11 +38,7 @@ const originalPrice = urlParams.get('original_price') ? parseFloat(urlParams.get
 console.log('Product Image URL:', productImage);
 console.log('Predefined Message:', JSON.stringify(predefinedMessage));
 
-// Validate required URL parameters
-if (!userId || !receiverId) {
-    showToast('Missing user or recipient ID. Please try again.', 'error');
-    window.location.href = 'index.html';
-}
+
 
 
 // Set recipient info in the UI

@@ -2215,3 +2215,28 @@
 {"level":"info","message":"Fetched 24 messages between 68431685432ee393a735a641 and 6843d062f457581752641ee3","timestamp":"2025-06-22T09:46:05.149Z"}
 {"level":"info","message":"Fetched 24 messages between 68431685432ee393a735a641 and 6843d062f457581752641ee3","timestamp":"2025-06-22T09:46:08.121Z"}
 {"level":"warn","message":"Missing senderId or receiverId in /messages","timestamp":"2025-06-22T09:48:53.334Z"}
+{"level":"info","message":"Fetched 4 latest messages for user 68431685432ee393a735a641","timestamp":"2025-06-22T14:06:21.705Z"}
+{"level":"warn","message":"Missing senderId or receiverId in /messages","timestamp":"2025-06-22T14:06:23.797Z"}
+{"level":"info","message":"Fetched 24 messages between 68431685432ee393a735a641 and 6843d062f457581752641ee3","timestamp":"2025-06-22T14:06:41.579Z"}
+{"level":"info","message":"Fetched 0 messages between 68431685432ee393a735a641 and 6843f54a956396ecb52e3ec0","timestamp":"2025-06-22T14:07:26.233Z"}
+{"level":"info","message":"Message sent from 68431685432ee393a735a641 to 6843f54a956396ecb52e3ec0: 68580e20dd1f7cca52ae105d","timestamp":"2025-06-22T14:07:28.933Z"}
+{"level":"info","message":"Emitting receiveMessage to user 6843f54a956396ecb52e3ec0: {\"_id\":\"68580e20dd1f7cca52ae105d\",\"senderId\":\"68431685432ee393a735a641\",\"receiverId\":\"6843f54a956396ecb52e3ec0\",\"text\":\"{\\\"text\\\":\\\"Is this item still available?Product: Gas Cooker\\\",\\\"image\\\":\\\"https://res.cloudinary.com/dp7shydjh/image/upload/v1750157606/Uploads/wipei4msajl8sqinyacz.jpg\\\"}\",\"messageType\":\"text\",\"offerDetails\":null,\"attachment\":null,\"chatPartnerName\":\"Christian Friday\",\"status\":\"sent\",\"createdAt\":\"2025-06-22T14:07:28.499Z\"}","timestamp":"2025-06-22T14:07:28.944Z"}
+{"level":"info","message":"Emitting newMessage to user 68431685432ee393a735a641: {\"_id\":\"68580e20dd1f7cca52ae105d\",\"senderId\":\"68431685432ee393a735a641\",\"receiverId\":\"6843f54a956396ecb52e3ec0\",\"text\":\"{\\\"text\\\":\\\"Is this item still available?Product: Gas Cooker\\\",\\\"image\\\":\\\"https://res.cloudinary.com/dp7shydjh/image/upload/v1750157606/Uploads/wipei4msajl8sqinyacz.jpg\\\"}\",\"messageType\":\"text\",\"offerDetails\":null,\"attachment\":null,\"chatPartnerName\":\"Christian Friday\",\"status\":\"sent\",\"createdAt\":\"2025-06-22T14:07:28.499Z\"}","timestamp":"2025-06-22T14:07:28.950Z"}
+{"level":"info","message":"Sending FCM notification to user 6843f54a956396ecb52e3ec0 for message 68580e20dd1f7cca52ae105d","timestamp":"2025-06-22T14:07:28.959Z"}
+{"level":"info","message":"FCM notification sent to user 6843f54a956396ecb52e3ec0","timestamp":"2025-06-22T14:07:32.107Z"}
+{"level":"info","message":"Triggering badge update for user 6843f54a956396ecb52e3ec0","timestamp":"2025-06-22T14:07:32.109Z"}
+{"level":"warn","message":"Missing senderId or receiverId in /messages","timestamp":"2025-06-23T00:33:19.179Z"}
+{"level":"error","message":"Error fetching messages for user 6843d062f457581752641ee3: getaddrinfo ENOTFOUND ac-78e8zxz-shard-00-00.bfiorya.mongodb.net","timestamp":"2025-06-23T00:33:22.260Z"}
+{"level":"warn","message":"Missing senderId or receiverId in /messages","timestamp":"2025-06-23T00:33:27.861Z"}
+{"level":"error","message":"Error fetching messages for user 6843d062f457581752641ee3: getaddrinfo ENOTFOUND ac-78e8zxz-shard-00-00.bfiorya.mongodb.net","timestamp":"2025-06-23T00:33:30.836Z"}
+{"level":"warn","message":"Missing senderId or receiverId in /messages","timestamp":"2025-06-23T00:34:27.544Z"}
+{"level":"error","message":"Error fetching messages for user 6843d062f457581752641ee3: getaddrinfo ENOTFOUND ac-78e8zxz-shard-00-00.bfiorya.mongodb.net","timestamp":"2025-06-23T00:34:30.366Z"}
+{"level":"warn","message":"Missing senderId or receiverId in /messages","timestamp":"2025-06-23T00:34:32.520Z"}
+{"level":"error","message":"Error fetching messages for user 6843d062f457581752641ee3: getaddrinfo ENOTFOUND ac-78e8zxz-shard-00-00.bfiorya.mongodb.net","timestamp":"2025-06-23T00:34:35.495Z"}
+{"level":"warn","message":"Missing senderId or receiverId in /messages","timestamp":"2025-06-23T00:34:53.113Z"}
+{"level":"error","message":"Error fetching messages for user 6843d062f457581752641ee3: getaddrinfo ENOTFOUND ac-78e8zxz-shard-00-00.bfiorya.mongodb.net","timestamp":"2025-06-23T00:34:56.232Z"}
+{"level":"error","message":"Error fetching messages for user 6843d062f457581752641ee3: getaddrinfo ENOTFOUND ac-78e8zxz-shard-00-00.bfiorya.mongodb.net","timestamp":"2025-06-23T00:35:01.260Z"}
+{"level":"warn","message":"Missing senderId or receiverId in /messages","timestamp":"2025-06-23T00:35:04.713Z"}
+{"level":"error","message":"Error fetching messages for user 6843d062f457581752641ee3: getaddrinfo ENOTFOUND ac-78e8zxz-shard-00-00.bfiorya.mongodb.net","timestamp":"2025-06-23T00:35:07.816Z"}
+{"level":"warn","message":"Missing senderId or receiverId in /messages","timestamp":"2025-06-23T00:35:08.712Z"}
+{"level":"error","message":"Error fetching messages for user 6843d062f457581752641ee3: getaddrinfo ENOTFOUND ac-78e8zxz-shard-00-00.bfiorya.mongodb.net","timestamp":"2025-06-23T00:35:12.854Z"}

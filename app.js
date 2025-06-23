@@ -23,6 +23,9 @@ const messageRoutes = require('./routes/messageRoutes.js');
 const paymentRoutes = require('./routes/paymentRoutes.js');
 const transactionRoutes = require('./routes/transactionRoutes.js');
 const adminRoutes = require('./routes/adminRoutes.js');
+const promoteRoutes = require('./routes/promoteRoutes.js');
+const cleanupPromotions = require('./cron/promotionCleanUp.js');
+
 
 // Initialize Winston logger
 const logger = winston.createLogger({
@@ -122,6 +125,7 @@ app.use(messageRoutes(io));
 app.use(paymentRoutes(io));
 app.use(transactionRoutes(io));
 app.use(adminRoutes(io));
+app.use(promoteRoutes(io));
 
 // Search Endpoint
 app.get('/search', async (req, res) => {

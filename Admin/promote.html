@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Promote Post</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            max-width: 800px;
+            width: 100%;
+        }
+
+        h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 40px;
+            font-size: 1.1rem;
+        }
+
+        .promotion-plans {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .plan {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-radius: 15px;
+            padding: 30px 20px;
+            text-align: center;
+            color: white;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .plan:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(240, 147, 251, 0.4);
+        }
+
+        .plan::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, transparent 100%);
+            pointer-events: none;
+        }
+
+        .plan.popular {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transform: scale(1.05);
+        }
+
+        .plan.popular::after {
+            content: 'POPULAR';
+            position: absolute;
+            top: 15px;
+            right: -30px;
+            background: #ff6b6b;
+            color: white;
+            padding: 5px 40px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            transform: rotate(45deg);
+        }
+
+        .plan h3 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .plan .price {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .plan .duration {
+            font-size: 1rem;
+            opacity: 0.9;
+            margin-bottom: 20px;
+        }
+
+        .plan .features {
+            list-style: none;
+            margin-bottom: 25px;
+        }
+
+        .plan .features li {
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .plan .features li:before {
+            content: '✓';
+            margin-right: 8px;
+            font-weight: bold;
+        }
+
+        .select-plan {
+            background: rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 12px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .select-plan:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+
+        .select-plan:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .post-preview {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .post-preview h4 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .promotion-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .stat-card h5 {
+            color: #1976d2;
+            font-size: 1.2rem;
+            margin-bottom: 5px;
+        }
+
+        .stat-card p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        #payment-status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status-loading {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #0c5460;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .custom-plan {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 15px;
+        }
+
+        .custom-plan h4 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .custom-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 15px;
+            align-items: end;
+        }
+
+        .custom-inputs input {
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .custom-inputs input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            
+            h2 {
+                font-size: 2rem;
+            }
+            
+            .promotion-plans {
+                grid-template-columns: 1fr;
+            }
+            
+            .custom-inputs {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>🚀 Promote Your Post</h2>
+        <p class="subtitle">Choose a promotion plan to feature your post as a sponsored ad and reach more customers</p>
+        
+        <div class="post-preview" id="postPreview" style="display: none;">
+            <h4>📄 Post Preview</h4>
+            <div id="postContent"></div>
+        </div>
+
+        <div class="promotion-plans">
+            <div class="plan">
+                <h3>Basic Plan</h3>
+                <div class="price">₦2,400</div>
+                <div class="duration">3 days promotion</div>
+                <ul class="features">
+                    <li>Basic visibility boost</li>
+                    <li>Standard placement</li>
+                    <li>Mobile & desktop ads</li>
+                </ul>
+                <button class="select-plan" data-amount="2400" data-duration="3">Select Plan</button>
+            </div>
+            
+            <div class="plan popular">
+                <h3>Standard Plan</h3>
+                <div class="price">₦5,600</div>
+                <div class="duration">7 days promotion</div>
+                <ul class="features">
+                    <li>Enhanced visibility</li>
+                    <li>Priority placement</li>
+                    <li>Analytics dashboard</li>
+                    <li>Mobile & desktop ads</li>
+                </ul>
+                <button class="select-plan" data-amount="5600" data-duration="7">Select Plan</button>
+            </div>
+            
+            <div class="plan">
+                <h3>Premium Plan</h3>
+                <div class="price">₦11,200</div>
+                <div class="duration">14 days promotion</div>
+                <ul class="features">
+                    <li>Maximum visibility</li>
+                    <li>Top placement priority</li>
+                    <li>Advanced analytics</li>
+                    <li>Cross-platform promotion</li>
+                    <li>Featured badge</li>
+                </ul>
+                <button class="select-plan" data-amount="11200" data-duration="14">Select Plan</button>
+            </div>
+        </div>
+
+        <div class="custom-plan">
+            <h4>🎯 Custom Plan</h4>
+            <div class="custom-inputs">
+                <div>
+                    <label for="customDays">Days to promote:</label>
+                    <input type="number" id="customDays" min="1" max="30" placeholder="Enter days">
+                </div>
+                <div>
+                    <label for="customAmount">Total amount:</label>
+                    <input type="text" id="customAmount" readonly placeholder="₦0">
+                </div>
+                <button class="select-plan" id="customPlanBtn" disabled>Select Custom</button>
+            </div>
+        </div>
+
+        <div class="promotion-stats">
+            <div class="stat-card">
+                <h5>📈 Avg. Views</h5>
+                <p>2.5x more visibility</p>
+            </div>
+            <div class="stat-card">
+                <h5>💰 ROI</h5>
+                <p>Average 300% return</p>
+            </div>
+            <div class="stat-card">
+                <h5>⏱️ Quick Setup</h5>
+                <p>Live in 5 minutes</p>
+            </div>
+        </div>
+
+        <div id="payment-status" style="display: none;"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const API_BASE_URL = window.API_BASE_URL || (window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart.onrender.com');
+            const DAILY_RATE = 800; // ₦800 per day
+            
+            // Toast notification function
+            const showToast = (message, type = 'info') => {
+                const status = document.getElementById('payment-status');
+                status.style.display = 'block';
+                status.className = `status-${type}`;
+                
+                if (type === 'loading') {
+                    status.innerHTML = `<div class="loading-spinner"></div>${message}`;
+                } else {
+                    status.innerHTML = message;
+                }
+                
+                if (type !== 'loading') {
+                    setTimeout(() => {
+                        status.style.display = 'none';
+                    }, 5000);
+                }
+            };
+
+            // Get post ID from URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const postId = urlParams.get('postId');
+            // Get status and reference from URL for post-payment verification/display
+            const paymentStatus = urlParams.get('status');
+            const paymentReference = urlParams.get('reference');
+
+            if (!postId) {
+                showToast('Invalid post ID. Redirecting...', 'error');
+                setTimeout(() => window.location.href = 'index.html', 2000);
+                return;
+            }
+
+            // Handle post-payment redirects
+            if (paymentStatus === 'success' && paymentReference) {
+                verifyPromotionPayment(postId, paymentReference);
+            } else if (paymentStatus === 'error') {
+                showToast('Payment process encountered an error. Please try again.', 'error');
+            }
+
+
+            // Load post preview
+            loadPostPreview(postId);
+
+            // Custom plan calculator
+            const customDaysInput = document.getElementById('customDays');
+            const customAmountInput = document.getElementById('customAmount');
+            const customPlanBtn = document.getElementById('customPlanBtn');
+
+            customDaysInput.addEventListener('input', () => {
+                const days = parseInt(customDaysInput.value) || 0;
+                const amount = days * DAILY_RATE;
+                customAmountInput.value = days > 0 ? `₦${amount.toLocaleString()}` : '₦0';
+                customPlanBtn.disabled = days <= 0;
+                customPlanBtn.dataset.amount = amount;
+                customPlanBtn.dataset.duration = days;
+            });
+
+            // Plan selection handlers
+            const selectPlanButtons = document.querySelectorAll('.select-plan');
+            selectPlanButtons.forEach(button => {
+                button.addEventListener('click', handlePlanSelection);
+            });
+
+            async function loadPostPreview(postId) {
+                try {
+                    const response = await fetch(`${API_BASE_URL}/post/${postId}`);
+
+                    if (response.ok) {
+                        const post = await response.json();
+                        displayPostPreview(post);
+                    }
+                } catch (error) {
+                    console.log('Could not load post preview:', error.message);
+                }
+            }
+
+            function displayPostPreview(post) {
+                const preview = document.getElementById('postPreview');
+                const content = document.getElementById('postContent');
+                
+                content.innerHTML = `
+                    <div style="border: 1px solid #ddd; padding: 15px; border-radius: 10px; background: white;">
+                        <h5 style="margin-bottom: 10px; color: #333;">${post.title || 'Post Title'}</h5>
+                        <p style="color: #666; margin-bottom: 10px;">${(post.description || 'Post description').substring(0, 100)}...</p>
+                        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; color: #888;">
+                            <span>💰 ${post.price ? '₦' + post.price.toLocaleString() : 'Price not set'}</span>
+                            <span>📍 ${post.location || 'Location not set'}</span>
+                        </div>
+                    </div>
+                `;
+                preview.style.display = 'block';
+            }
+
+            async function handlePlanSelection(event) {
+    const button = event.target;
+    const amount = parseInt(button.dataset.amount);
+    const duration = parseInt(button.dataset.duration);
+
+    if (!amount || !duration) {
+        showToast('Please select a valid plan', 'error');
+        return;
+    }
+
+    const email = localStorage.getItem('email');
+    const userId = localStorage.getItem('userId');
+    const token = localStorage.getItem('authToken');
+
+    // Log for debugging
+    console.log('Plan Selection Data:', { postId, amount, duration, email, userId, token });
+
+    if (!email || !userId || !token || !postId) {
+        showToast('Please log in to promote your post.', 'error');
+        setTimeout(() => window.location.href = 'login.html', 2000);
+        return;
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        showToast('Invalid email address. Please log in again.', 'error');
+        setTimeout(() => window.location.href = 'login.html', 2000);
+        return;
+    }
+
+    // Convert amount to kobo for Paystack
+    const amountInKobo = amount * 100;
+
+    // Disable all buttons during processing
+    selectPlanButtons.forEach(btn => btn.disabled = true);
+    showToast('Processing payment...', 'loading');
+
+    try {
+        const payload = {
+            postId: postId,
+            amount: amountInKobo,
+            duration: duration,
+            email: email,
+            dailyRate: DAILY_RATE
+        };
+        console.log('Sending payload to backend:', payload); // Debug log
+
+        const response = await fetch(`${API_BASE_URL}/initiate`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+
+        if (response.ok && result.success && result.authorization_url) {
+            showToast('Redirecting to payment...', 'loading');
+            window.location.href = result.authorization_url;
+        } else {
+            showToast(`Payment failed: ${result.message || 'Please try again.'}`, 'error');
+            selectPlanButtons.forEach(btn => btn.disabled = false);
+        }
+    } catch (error) {
+        console.error('Payment error:', error);
+        showToast('Failed to process payment. Please try again.', 'error');
+        selectPlanButtons.forEach(btn => btn.disabled = false);
+    }
+}
+            // New function to handle payment verification after redirect from Paystack
+            async function verifyPromotionPayment(postId, reference) {
+                const token = localStorage.getItem('authToken');
+                if (!token) {
+                    showToast('Authentication token missing for verification. Please log in again.', 'error');
+                    return;
+                }
+
+                showToast('Verifying payment...', 'loading');
+                try {
+                    // Corrected endpoint to match your backend router setup (e.g., /api/promotion/verify)
+                    const response = await fetch(`${API_BASE_URL}/verify`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}` // Send the JWT token
+                        },
+                        body: JSON.stringify({
+                            postId: postId,
+                            email: email,
+                            reference: reference
+                        })
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok && result.success) {
+                        showToast('Payment verified and post promoted successfully!', 'success');
+                        // Clean up URL parameters to prevent re-verification on refresh
+                        const newUrl = new URL(window.location.href);
+                        newUrl.searchParams.delete('status');
+                        newUrl.searchParams.delete('reference');
+                        window.history.replaceState({}, document.title, newUrl.toString());
+
+                    } else {
+                        showToast(`Payment verification failed: ${result.message || 'Please try again.'}`, 'error');
+                    }
+                } catch (error) {
+                    console.error('Error during payment verification:', error);
+                    showToast('Network error during payment verification. Please try again.', 'error');
+                } finally {
+                    // Always re-enable buttons after verification attempt
+                    selectPlanButtons.forEach(btn => btn.disabled = false);
+                }
+            }
+
+            // Utility function to format currency
+            function formatCurrency(amount) {
+                return new Intl.NumberFormat('en-NG', {
+                    style: 'currency',
+                    currency: 'NGN'
+                }).format(amount);
+            }
+
+            // Add analytics tracking
+            function trackPromotionEvent(action, plan, amount) {
+                // Add your analytics tracking here
+                console.log(`Promotion ${action}:`, { plan, amount, postId });
+            }
+        });
+    </script>
+</body>
+</html>

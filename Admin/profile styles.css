@@ -972,3 +972,29 @@ a .active {
      border-radius: 8px;
      margin-bottom: 30px;
 }
+
+/* Existing styles for desktop-only iframes */
+.desktop-only {
+  display: none; /* Hidden by default */
+}
+
+@media only screen and (min-width: 768px) {
+  .desktop-only {
+    display: block; /* Shown on desktops */
+    border: solid 1px #ddd; /* Matches the profile page border */
+    border-radius: 10px; /* Matches the profile page border-radius */
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1); /* Matches the profile page shadow */
+  }
+
+  /* Specific adjustments for the left iframe */
+  .iframe-container:first-of-type .desktop-only {
+    left: 25px; /* Adjust as needed for spacing from the left */
+    right: auto; /* Ensure it's not conflicting with right positioning */
+  }
+
+  /* Specific adjustments for the right iframe */
+  .iframe-container:last-of-type .desktop-only {
+    right: 25px; /* Adjust as needed for spacing from the right */
+    left: auto; /* Ensure it's not conflicting with left positioning */
+  }
+}

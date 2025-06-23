@@ -1,14 +1,14 @@
-// post-renderer.js
 document.addEventListener('DOMContentLoaded', async function () {
     const API_BASE_URL = window.API_BASE_URL || (window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart.onrender.com');
     const showToast = window.showToast;
 
-    // Use a variable that will be populated *after* auth status is ready
     let currentLoggedInUser = null;
     let currentFollowingList = [];
     let isAuthReady = false;
+    let promotedPostsRotationInterval = null;
+    let allPromotedPosts = [];
 
-    // Function to fetch the logged-in user's following list
+    // Fetch the logged-in user's following list
     async function fetchFollowingList() {
         if (!currentLoggedInUser) {
             console.log("No logged-in user to fetch following list for.");
@@ -26,9 +26,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 const { following } = await response.json();
                 return following || [];
             } else {
-                console.warn('Could not fetch following list from backend. Status:', response.status);
-                // If token is invalid/expired, this should be handled by verify-token,
-                // but this catch ensures we don't block.
+                console.warn('Could not fetch following list. Status:', response.status);
                 return [];
             }
         } catch (error) {
@@ -50,14 +48,102 @@ document.addEventListener('DOMContentLoaded', async function () {
         return postDate.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
     }
 
+    function renderPromotedPost(post) {
+        const postElement = document.createElement('div');
+        postElement.classList.add('promoted-post');
+        postElement.dataset.createdAt = post.createdAt || new Date().toISOString();
+        postElement.dataset.postId = post._id || '';
+
+        const isFollowing = currentFollowingList.includes(post.createdBy?.userId);
+        const isPostCreator = post.createdBy && post.createdBy.userId === currentLoggedInUser;
+
+        let mediaContent = '';
+        let productDetails = '';
+        let buttonContent = '';
+
+        const productImageForChat = post.postType === 'video_ad' ? (post.thumbnail || 'default-video-poster.png') : (post.photo || 'default-image.png');
+
+        if (post.postType === 'video_ad') {
+            mediaContent = `
+                <div class="promoted-video-container">
+                    <video class="promoted-video" preload="metadata" muted aria-label="Promoted video ad for ${(post.description || 'product').replace(/"/g, '&quot;')}">
+                        <source src="${post.video || ''}" type="video/mp4" />
+                        Your browser does not support the video tag.
+                    </video>
+                    <div class="promoted-video-overlay">
+                        <button class="promoted-play-btn">
+                            <i class="fas fa-play"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+            productDetails = `
+                <div class="promoted-product-info">
+                    <h4 class="promoted-title">${escapeHtml(post.description || 'No description')}</h4>
+                </div>
+            `;
+            buttonContent = `
+                <a href="${post.productLink || '#'}" class="promoted-cta-button" aria-label="Check out product ${escapeHtml(post.description || 'product')}" ${!post.productLink ? 'style="pointer-events: none; opacity: 0.6;"' : ''}>
+                    <i class="fas fa-shopping-cart"></i> Shop Now
+                </a>
+            `;
+        } else {
+            mediaContent = `
+                <img src="${productImageForChat}" class="promoted-image" alt="Promoted Product" onerror="this.src='default-image.png'">
+            `;
+            productDetails = `
+                <div class="promoted-product-info">
+                    <h4 class="promoted-title">${escapeHtml(post.title || 'No description')}</h4>
+                    <p class="promoted-price">${post.price ? '₦' + Number(post.price).toLocaleString('en-NG') : 'Price not specified'}</p>
+                    <p class="promoted-location">${escapeHtml(post.location || 'N/A')}</p>
+                </div>
+            `;
+
+            if (currentLoggedInUser && !isPostCreator) {
+                buttonContent = `
+                    <button class="promoted-cta-button" data-post-id="${post._id || ''}" ${post.isSold ? 'disabled' : ''}>
+                        <i class="fas fa-shopping-cart"></i> ${post.isSold ? 'Sold Out' : 'Buy Now'}
+                    </button>
+                `;
+            } else if (!currentLoggedInUser) {
+                buttonContent = `
+                    <button class="promoted-cta-button login-required" onclick="redirectToLogin()">
+                        <i class="fas fa-shopping-cart"></i> Buy Now
+                    </button>
+                `;
+            }
+        }
+
+        postElement.innerHTML = `
+            <div class="promoted-badge">
+                <i class="fas fa-bullhorn"></i>
+                <span>Promoted</span>
+            </div>
+            <div class="promoted-header">
+                <img src="${post.profilePicture || 'default-avatar.png'}" class="promoted-avatar" onerror="this.src='default-avatar.png'" alt="User Avatar">
+                <div class="promoted-user-info">
+                    <h5 class="promoted-user-name">${escapeHtml(post.createdBy ? post.createdBy.name : 'Unknown')}</h5>
+                    <span class="promoted-time">${formatTime(post.createdAt || new Date())}</span>
+                </div>
+            </div>
+            <div class="promoted-media">
+                ${mediaContent}
+            </div>
+            ${productDetails}
+            <div class="promoted-actions">
+                ${buttonContent}
+            </div>
+        `;
+        return postElement;
+    }
+
     function renderPost(post) {
         const postElement = document.createElement('div');
         postElement.classList.add('post');
         postElement.dataset.createdAt = post.createdAt || new Date().toISOString();
         postElement.dataset.postId = post._id || '';
 
-        // Determine if the post creator is in the currentFollowingList
-        const isFollowing = currentFollowingList.includes(post.createdBy.userId);
+        const isFollowing = currentFollowingList.includes(post.createdBy?.userId);
         const isPostCreator = post.createdBy && post.createdBy.userId === currentLoggedInUser;
 
         let mediaContent = '';
@@ -69,7 +155,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         if (post.postType === 'video_ad') {
             mediaContent = `
                 <div class="post-video-container">
-                    <video class="post-video" preload="metadata" aria-label="Video ad for ${post.description || 'product'}">
+                    <video class="post-video" preload="metadata" aria-label="Video ad for ${(post.description || 'product').replace(/"/g, '&quot;')}">
                         <source src="${post.video || ''}" type="video/mp4" />
                         <source src="${post.video ? post.video.replace('.mp4', '.webm') : ''}" type="video/webm" />
                         <source src="${post.video ? post.video.replace('.mp4', '.ogg') : ''}" type="video/ogg" />
@@ -115,32 +201,32 @@ document.addEventListener('DOMContentLoaded', async function () {
                 <div class="product-info">
                     <span class="icon">📦</span>
                     <div>
-                        <p class="value">${post.description || 'No description'}</p>
+                        <p class="value">${escapeHtml(post.description || 'No description')}</p>
                     </div>
                 </div>
             `;
             buttonContent = `
-                <a href="${post.productLink || '#'}" class="buy-now-button checkout-product-button" aria-label="Check out product ${post.description || 'product'}" ${!post.productLink ? 'disabled' : ''}>
+                <a href="${post.productLink || '#'}" class="buy-now-button checkout-product-button" aria-label="Check out product ${escapeHtml(post.description || 'product')}" ${!post.productLink ? 'style="pointer-events: none; opacity: 0.6;"' : ''}>
                     <i class="fas fa-shopping-cart"></i> Check Out Product
                 </a>
             `;
         } else {
             mediaContent = `
-                <img src="${productImageForChat}" class="post-image" onclick="openImage('${productImageForChat}')" alt="Product Image">
+                <img src="${productImageForChat}" class="post-image" onclick="openImage('${productImageForChat.replace(/'/g, "\\'")}')" alt="Product Image" onerror="this.src='default-image.png'">
             `;
             productDetails = `
                 <div class="product-info">
                     <span class="icon">📦</span>
                     <div>
                         <p class="label">Product</p>
-                        <p class="value">${post.title || 'No description'}</p>
+                        <p class="value">${escapeHtml(post.title || 'No description')}</p>
                     </div>
                 </div>
                 <div class="product-info">
                     <span class="icon">🔄</span>
                     <div>
                         <p class="label">Condition</p>
-                        <p class="value">${post.productCondition || 'N/A'}</p>
+                        <p class="value">${escapeHtml(post.productCondition || 'N/A')}</p>
                     </div>
                 </div>
                 <div class="product-info-inline">
@@ -148,37 +234,44 @@ document.addEventListener('DOMContentLoaded', async function () {
                         <span class="icon">💵</span>
                         <div>
                             <p class="label">Price</p>
-                            <p class="value price-value">${post.price ? '₦' + Number(post.price).toLocaleString('en-Ng') : 'Price not specified'}</p>
+                            <p class="value price-value">${post.price ? '₦' + Number(post.price).toLocaleString('en-NG') : 'Price not specified'}</p>
                         </div>
                     </div>
                     <div class="info-item">
                         <span class="icon">📍</span>
                         <div>
                             <p class="label">Location</p>
-                            <p class="value location-value">${post.location || 'N/A'}</p>
+                            <p class="value location-value">${escapeHtml(post.location || 'N/A')}</p>
                         </div>
                     </div>
                 </div>
             `;
 
-            // Modified button content to handle non-logged in users
             if (currentLoggedInUser) {
-                // User is logged in - show normal buttons
-                buttonContent = `
-                    <button class="buy-now-button" data-post-id="${post._id || ''}" ${post.isSold ? 'disabled' : ''}>
-                        <i class="fas fa-shopping-cart"></i> ${post.isSold ? 'Sold Out' : 'Buy Now'}
-                    </button>
-                    <button class="buy-now-button send-message-btn" id="send-message-btn"
-                        data-recipient-id="${post.createdBy ? post.createdBy.userId : ''}"
-                        data-product-image="${productImageForChat}"
-                        data-product-description="${post.title || ''}"
-                        data-post-id="${post._id || ''}"
-                        ${post.isSold ? 'disabled' : ''}>
-                        <i class="fas fa-circle-dot"></i> ${post.isSold ? 'Unavailable' : 'Check Availability'}
-                    </button>
-                `;
+                if (isPostCreator) {
+                    // Show promote button for post creator
+                    buttonContent = !post.isPromoted ? `
+                        <button class="promote-button buy-now-button" data-post-id="${post._id || ''}" aria-label="Promote this post">
+                            <i class="fas fa-bullhorn"></i> Promote Post
+                        </button>
+                    ` : '';
+                } else {
+                    // Show buy buttons for other users
+                    buttonContent = `
+                        <button class="buy-now-button" data-post-id="${post._id || ''}" ${post.isSold ? 'disabled' : ''}>
+                            <i class="fas fa-shopping-cart"></i> ${post.isSold ? 'Sold Out' : 'Buy Now'}
+                        </button>
+                        <button class="buy-now-button send-message-btn" 
+                            data-recipient-id="${post.createdBy ? post.createdBy.userId : ''}"
+                            data-product-image="${productImageForChat}"
+                            data-product-description="${escapeHtml(post.title || '')}"
+                            data-post-id="${post._id || ''}"
+                            ${post.isSold ? 'disabled' : ''}>
+                            <i class="fas fa-circle-dot"></i> ${post.isSold ? 'Unavailable' : 'Check Availability'}
+                        </button>
+                    `;
+                }
             } else {
-                // User is not logged in - show login prompt buttons
                 buttonContent = `
                     <button class="buy-now-button login-required" onclick="redirectToLogin()">
                         <i class="fas fa-shopping-cart"></i> Buy Now
@@ -190,16 +283,12 @@ document.addEventListener('DOMContentLoaded', async function () {
             }
         }
 
-        // CONDITIONAL LOGIC FOR FOLLOW BUTTON
         let followButtonHtml = '';
         if (post.createdBy && post.createdBy.userId) {
             if (currentLoggedInUser) {
-                // User is logged in
                 if (post.createdBy.userId === currentLoggedInUser) {
-                    // If logged-in user is the post creator, hide the follow button
-                    followButtonHtml = ''; // No button
+                    followButtonHtml = '';
                 } else {
-                    // Show follow/following button
                     followButtonHtml = isFollowing ?
                         `<button class="follow-button" data-user-id="${post.createdBy.userId}" style="background-color: #fff; color: #28a745" disabled>
                             <i class="fas fa-user-check"></i> Following
@@ -209,7 +298,6 @@ document.addEventListener('DOMContentLoaded', async function () {
                         </button>`;
                 }
             } else {
-                // User is not logged in - show login required follow button
                 followButtonHtml = `
                     <button class="follow-button login-required" onclick="redirectToLogin()">
                         <i class="fas fa-user-plus"></i> Follow
@@ -218,18 +306,17 @@ document.addEventListener('DOMContentLoaded', async function () {
             }
         }
 
-        // Modified post actions for non-logged in users
         const postActionsHtml = currentLoggedInUser ? `
             <div class="post-actions">
-                <button class="action-button like-button">
+                <button class="action-button like-button" data-post-id="${post._id || ''}">
                     <i class="${post.likes && post.likes.includes(currentLoggedInUser) ? 'fas' : 'far'} fa-heart"></i>
-                    <span class="like-count">${post.likes ? post.likes.length : 0}</span> <p>Likes</p>
+                    <span class="like-count">${post.likes ? post.likes.length : 0}</span> <span>Likes</span>
                 </button>
-                <button class="action-button reply-button">
+                <button class="action-button reply-button" data-post-id="${post._id || ''}">
                     <i class="far fa-comment-alt"></i>
-                    <span class="comment-count">${post.comments ? post.comments.length : 0}</span> <p>Comments</p>
+                    <span class="comment-count">${post.comments ? post.comments.length : 0}</span> <span>Comments</span>
                 </button>
-                <button class="action-button share-button">
+                <button class="action-button share-button" data-post-id="${post._id || ''}">
                     <i class="fas fa-share"></i>
                 </button>
             </div>
@@ -237,13 +324,13 @@ document.addEventListener('DOMContentLoaded', async function () {
             <div class="post-actions">
                 <button class="action-button login-required" onclick="redirectToLogin()">
                     <i class="far fa-heart"></i>
-                    <span class="like-count">${post.likes ? post.likes.length : 0}</span> <p>Likes</p>
+                    <span class="like-count">${post.likes ? post.likes.length : 0}</span> <span>Likes</span>
                 </button>
                 <button class="action-button login-required" onclick="redirectToLogin()">
                     <i class="far fa-comment-alt"></i>
-                    <span class="comment-count">${post.comments ? post.comments.length : 0}</span> <p>Comments</p>
+                    <span class="comment-count">${post.comments ? post.comments.length : 0}</span> <span>Comments</span>
                 </button>
-                <button class="action-button share-button">
+                <button class="action-button share-button" data-post-id="${post._id || ''}">
                     <i class="fas fa-share"></i>
                 </button>
             </div>
@@ -252,24 +339,24 @@ document.addEventListener('DOMContentLoaded', async function () {
         postElement.innerHTML = `
             <div class="post-header">
                 <a href="Profile.html?userId=${post.createdBy ? post.createdBy.userId : ''}">
-                    <img src="${post.profilePicture || 'default-avater.png'}" class="post-avatar">
+                    <img src="${post.profilePicture || 'default-avatar.png'}" class="post-avatar" onerror="this.src='default-avatar.png'" alt="User Avatar">
                 </a>
                 <div class="post-user-info">
                     <a href="Profile.html?userId=${post.createdBy ? post.createdBy.userId : ''}">
-                        <h4 class="post-user-name">${post.createdBy ? post.createdBy.name : 'Unknown'}</h4>
+                        <h4 class="post-user-name">${escapeHtml(post.createdBy ? post.createdBy.name : 'Unknown')}</h4>
                     </a>
                     <p class="post-time">${formatTime(post.createdAt || new Date())}</p>
                 </div>
                 ${followButtonHtml}
                 <div class="post-options">
-                    <button class="post-options-button"><i class="fas fa-ellipsis-h"></i></button>
+                    <button class="post-options-button" type="button"><i class="fas fa-ellipsis-h"></i></button>
                     <div class="post-options-menu">
                         <ul>
                             ${isPostCreator ? `
-                                <li><button class="delete-post-button" data-post-id="${post._id || ''}">Delete Post</button></li>
-                                <li><button class="edit-post-button" data-post-id="${post._id || ''}">Edit Post</button></li>
+                                <li><button class="delete-post-button" data-post-id="${post._id || ''}" type="button">Delete Post</button></li>
+                                <li><button class="edit-post-button" data-post-id="${post._id || ''}" type="button">Edit Post</button></li>
                             ` : ''}
-                            <li><button class="report-post-button" data-post-id="${post._id || ''}">Report Post</button></li>
+                            <li><button class="report-post-button" data-post-id="${post._id || ''}" type="button">Report Post</button></li>
                         </ul>
                     </div>
                 </div>
@@ -285,7 +372,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             </div>
 
             <div class="buy" style="text-align: center">
-                ${isPostCreator ? '' : buttonContent}
+                ${buttonContent}
             </div>
 
             ${postActionsHtml}
@@ -293,76 +380,301 @@ document.addEventListener('DOMContentLoaded', async function () {
         return postElement;
     }
 
+    // Helper function to escape HTML
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    function renderPromotedSection(promotedPosts) {
+    const promotedContainer = document.getElementById('promoted-posts-container');
+    if (!promotedContainer || promotedPosts.length === 0) return;
+
+    // Clear existing content to prevent duplicates
+    promotedContainer.innerHTML = '';
+    // Deduplicate posts by _id
+    allPromotedPosts = [...new Map(promotedPosts.map(post => [post._id, post])).values()];
+    
+    let currentRowIndex = 0;
+
+    // Determine posts per row based on screen size
+    const postsPerRow = window.innerWidth <= 768 ? 3 : window.innerWidth <= 1200 ? 4 : 5;
+
+    // Create rows
+    function createRow(posts, startIndex) {
+        const row = document.createElement('div');
+        row.classList.add('promoted-posts-row');
+        // Set initial position for animation
+        row.style.transform = startIndex > 0 ? 'translateX(100%)' : 'translateX(0)';
+
+        // Get posts for this row
+        const postsToShow = posts.slice(startIndex, startIndex + postsPerRow);
+
+        // Render posts
+        postsToShow.forEach(post => {
+            const postElement = renderPromotedPost(post);
+            row.appendChild(postElement);
+        });
+
+        return row;
+    }
+
+    // Calculate total rows needed
+    const totalRows = Math.ceil(allPromotedPosts.length / postsPerRow);
+
+    // Create all rows
+    for (let i = 0; i < totalRows; i++) {
+        const row = createRow(allPromotedPosts, i * postsPerRow);
+        promotedContainer.appendChild(row);
+    }
+
+    // Auto-rotation function
+    function rotatePromotedPosts() {
+        const rows = promotedContainer.querySelectorAll('.promoted-posts-row');
+        if (rows.length <= 1) return;
+
+        const currentRow = rows[currentRowIndex];
+        const nextRowIndex = (currentRowIndex + 1) % rows.length;
+        const nextRow = rows[nextRowIndex];
+
+        // Animate current row out
+        currentRow.style.transition = 'transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+        currentRow.style.transform = 'translateX(-100%)';
+
+        // Animate next row in
+        nextRow.style.transition = 'transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+        nextRow.style.transform = 'translateX(0)';
+
+        // Reset other rows
+        rows.forEach((row, index) => {
+            if (index !== currentRowIndex && index !== nextRowIndex) {
+                row.style.transition = 'none';
+                row.style.transform = 'translateX(100%)';
+            }
+        });
+
+        currentRowIndex = nextRowIndex;
+    }
+
+    // Clear existing interval
+    if (promotedPostsRotationInterval) {
+        clearInterval(promotedPostsRotationInterval);
+    }
+
+    // Start auto-rotation if multiple rows
+    if (totalRows > 1) {
+        promotedPostsRotationInterval = setInterval(rotatePromotedPosts, 5000);
+    }
+
+    // Enable manual navigation
+    addPromotedNavigationControls(promotedContainer, totalRows);
+
+    // Pause auto-rotation on user interaction
+    promotedContainer.addEventListener('mouseenter', () => clearInterval(promotedPostsRotationInterval));
+    promotedContainer.addEventListener('mouseleave', () => {
+        if (totalRows > 1) {
+            promotedPostsRotationInterval = setInterval(rotatePromotedPosts, 5000);
+        }
+    });
+}
+
+function addPromotedNavigationControls(container, totalRows) {
+    if (totalRows <= 1) return;
+
+    const prevArrow = document.createElement('button');
+    prevArrow.className = 'promoted-nav-arrow prev';
+    prevArrow.innerHTML = '<i class="fas fa-chevron-left"></i>';
+    prevArrow.setAttribute('aria-label', 'Previous promoted posts');
+
+    const nextArrow = document.createElement('button');
+    nextArrow.className = 'promoted-nav-arrow next';
+    nextArrow.innerHTML = '<i class="fas fa-chevron-right"></i>';
+    nextArrow.setAttribute('aria-label', 'Next promoted posts');
+
+    container.appendChild(prevArrow);
+    container.appendChild(nextArrow);
+
+    prevArrow.addEventListener('click', () => navigatePromoted('prev'));
+    nextArrow.addEventListener('click', () => navigatePromoted('next'));
+}
+
+function navigatePromoted(direction) {
+    const promotedContainer = document.getElementById('promoted-posts-container');
+    if (!promotedContainer) return;
+
+    const rows = promotedContainer.querySelectorAll('.promoted-posts-row');
+    if (rows.length <= 1) return;
+
+    let targetRowIndex;
+    if (direction === 'next') {
+        targetRowIndex = (currentRowIndex + 1) % rows.length;
+    } else {
+        targetRowIndex = currentRowIndex === 0 ? rows.length - 1 : currentRowIndex - 1;
+    }
+
+    const currentRow = rows[currentRowIndex];
+    const targetRow = rows[targetRowIndex];
+
+    const translateDirection = direction === 'next' ? '-100%' : '100%';
+    const comeFromDirection = direction === 'next' ? '100%' : '-100%';
+
+    targetRow.style.transition = 'none';
+    targetRow.style.transform = `translateX(${comeFromDirection})`;
+    targetRow.offsetHeight; // Force reflow
+
+    currentRow.style.transition = 'transform 0.4s ease-in-out';
+    currentRow.style.transform = `translateX(${translateDirection})`;
+
+    targetRow.style.transition = 'transform 0.4s ease-in-out';
+    targetRow.style.transform = 'translateX(0)';
+
+    rows.forEach((row, index) => {
+        if (index !== currentRowIndex && index !== targetRowIndex) {
+            row.style.transition = 'none';
+            row.style.transform = 'translateX(100%)';
+        }
+    });
+
+    currentRowIndex = targetRowIndex;
+
+    // Restart auto-rotation
+    if (promotedPostsRotationInterval) {
+        clearInterval(promotedPostsRotationInterval);
+        if (rows.length > 1) {
+            promotedPostsRotationInterval = setInterval(() => navigatePromoted('next'), 5000);
+        }
+    }
+}
+
+// Update resize handler
+window.addEventListener('resize', () => {
+    const promotedContainer = document.getElementById('promoted-posts-container');
+    if (promotedContainer && allPromotedPosts.length > 0) {
+        clearTimeout(window.promotedResizeTimeout);
+        window.promotedResizeTimeout = setTimeout(() => {
+            renderPromotedSection(allPromotedPosts);
+        }, 250);
+    }
+});
+
     async function fetchAndRenderPosts(category = '') {
         const postsContainer = document.getElementById('posts-container');
+        const promotedContainer = document.getElementById('promoted-posts-container');
+        
         if (!postsContainer) {
             console.error('Posts container not found.');
             return;
         }
 
         try {
-            // Always fetch posts, regardless of login status
             const response = await fetch(`${API_BASE_URL}/post?category=${encodeURIComponent(category)}`);
             if (!response.ok) throw new Error('Failed to fetch posts');
 
             const posts = await response.json();
             postsContainer.innerHTML = ''; // Clear existing posts
 
-            posts.forEach(post => {
-                const postElement = renderPost(post); // renderPost now handles both logged-in and non-logged-in users
+            if (!Array.isArray(posts) || posts.length === 0) {
+                postsContainer.innerHTML = '<p style="text-align: center; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">No posts yet. Try again or create one!</p>';
+                if (promotedContainer) promotedContainer.innerHTML = '';
+                return;
+            }
+
+            // Separate promoted and non-promoted posts
+            const promotedPosts = posts.filter(post => post.isPromoted);
+            const nonPromotedPosts = posts.filter(post => !post.isPromoted);
+
+            // Render promoted posts section
+            if (promotedPosts.length > 0 && promotedContainer) {
+                renderPromotedSection(promotedPosts);
+            } else if (promotedContainer) {
+                promotedContainer.innerHTML = '';
+            }
+
+            // Render regular posts
+            nonPromotedPosts.forEach(post => {
+                const postElement = renderPost(post);
                 postsContainer.prepend(postElement);
             });
+
+            if (nonPromotedPosts.length === 0) {
+                postsContainer.innerHTML = '<p style="text-align: center; margin: 2rem;">No regular posts available.</p>';
+            }
 
             window.dispatchEvent(new Event('postsRendered'));
 
         } catch (error) {
             console.error('Error fetching posts:', error);
-            postsContainer.innerHTML = '<p style="text-align: center; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">No posts yet. Try again or create one!</p>';
+            postsContainer.innerHTML = '<p style="text-align: center; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">Error loading posts. Please try again later.</p>';
+            if (promotedContainer) promotedContainer.innerHTML = '';
         }
     }
 
-    // Function to redirect to login page
     window.redirectToLogin = function() {
         if (window.showToast) {
-            window.showToast('Please login to access this feature', 'info');
-        }
-        setTimeout(() => {
+            window.showToast('Please log in to access this feature', 'error');
+            setTimeout(() => {
+                window.location.href = 'SignIn.html';
+            }, 1000);
+        } else {
             window.location.href = 'SignIn.html';
-        }, 1000);
-    };
+        }
+    }
 
-    // Function to initialize auth status
+    // Handle Promote button
+    document.addEventListener('click', async (event) => {
+        if (event.target.closest('.promote-button')) {
+            const button = event.target.closest('.promote-button');
+            const postId = button.dataset.postId;
+            if (!postId) {
+                if (showToast) {
+                    showToast('Invalid post ID', 'error');
+                }
+                return;
+            }
+            window.location.href = `promote.html?postId=${postId}`;
+        }
+
+        // Handle promoted video play button
+        if (event.target.closest('.promoted-play-btn')) {
+            const button = event.target.closest('.promoted-play-btn');
+            const videoContainer = button.closest('.promoted-video-container');
+            const video = videoContainer.querySelector('.promoted-video');
+            const overlay = videoContainer.querySelector('.promoted-video-overlay');
+            
+            if (video.paused) {
+                video.play();
+                overlay.style.display = 'none';
+            }
+        }
+    });
+
+    // Initialize auth status
     async function initializeAuthStatus() {
         try {
-            // Try to get current user from auth.js if available
             if (window.loggedInUser !== undefined) {
                 currentLoggedInUser = window.loggedInUser;
             }
 
-            // If user is logged in, fetch their following list
             if (currentLoggedInUser) {
                 currentFollowingList = await fetchFollowingList();
             }
 
             isAuthReady = true;
             console.log('Auth initialization complete. User:', currentLoggedInUser);
-            
-            // Fetch posts after auth status is determined
+
             await fetchAndRenderPosts();
         } catch (error) {
             console.error('Error initializing auth status:', error);
-            // Even if auth fails, we should still fetch posts for non-logged-in view
             isAuthReady = true;
             await fetchAndRenderPosts();
         }
     }
 
-    // Expose fetchAndRenderPosts globally for category buttons
+    // Global functions
     window.fetchPosts = fetchAndRenderPosts;
 
-    // Expose a utility to update follow buttons across the page
     window.updateFollowButtonsUI = (userId, isFollowingStatus) => {
-        // Update the in-memory list first
         if (isFollowingStatus) {
             if (!currentFollowingList.includes(userId)) {
                 currentFollowingList.push(userId);
@@ -378,32 +690,36 @@ document.addEventListener('DOMContentLoaded', async function () {
                 btn.disabled = true;
             } else {
                 btn.innerHTML = '<i class="fas fa-user-plus"></i> Follow';
-                btn.style.backgroundColor = ''; // Reset to default/CSS
+                btn.style.backgroundColor = '';
                 btn.disabled = false;
             }
         });
     };
 
-    // Listen for auth status ready event (if it exists)
+    // Event listeners
     document.addEventListener('authStatusReady', async (event) => {
         currentLoggedInUser = event.detail.loggedInUser;
         currentFollowingList = await fetchFollowingList();
         console.log('Auth status ready event received. Logged in user:', currentLoggedInUser);
-        
-        // Re-render posts with updated auth status
+
         await fetchAndRenderPosts();
     });
 
-    // Initialize immediately - don't wait for auth status
-    // This ensures posts are fetched even if user is not logged in
+    // Cleanup interval on page unload
+    window.addEventListener('beforeunload', () => {
+        if (promotedPostsRotationInterval) {
+            clearInterval(promotedPostsRotationInterval);
+        }
+    });
+
+    // Fallback timeouts
     setTimeout(async () => {
         if (!isAuthReady) {
             console.log('Initializing without waiting for auth status...');
             await initializeAuthStatus();
         }
-    }, 500); // Small delay to allow auth.js to set window.loggedInUser if present
+    }, 500);
 
-    // Fallback: If no auth status event is received within 2 seconds, proceed anyway
     setTimeout(async () => {
         if (!isAuthReady) {
             console.log('Auth timeout - proceeding with post fetch...');
