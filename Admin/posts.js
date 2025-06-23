@@ -5,10 +5,8 @@ document.addEventListener('DOMContentLoaded', async function () {
     let currentLoggedInUser = null;
     let currentFollowingList = [];
     let isAuthReady = false;
-    let promotedPostsRotationInterval = null;
     let allPromotedPosts = [];
 
-    // Fetch the logged-in user's following list
     async function fetchFollowingList() {
         if (!currentLoggedInUser) {
             console.log("No logged-in user to fetch following list for.");
@@ -249,19 +247,17 @@ document.addEventListener('DOMContentLoaded', async function () {
 
             if (currentLoggedInUser) {
                 if (isPostCreator) {
-                    // Show promote button for post creator
                     buttonContent = !post.isPromoted ? `
                         <button class="promote-button buy-now-button" data-post-id="${post._id || ''}" aria-label="Promote this post">
                             <i class="fas fa-bullhorn"></i> Promote Post
                         </button>
                     ` : '';
                 } else {
-                    // Show buy buttons for other users
                     buttonContent = `
                         <button class="buy-now-button" data-post-id="${post._id || ''}" ${post.isSold ? 'disabled' : ''}>
                             <i class="fas fa-shopping-cart"></i> ${post.isSold ? 'Sold Out' : 'Buy Now'}
                         </button>
-                        <button class="buy-now-button send-message-btn" 
+                        <button class="buy-now-button send-message-btn"
                             data-recipient-id="${post.createdBy ? post.createdBy.userId : ''}"
                             data-product-image="${productImageForChat}"
                             data-product-description="${escapeHtml(post.title || '')}"
@@ -290,7 +286,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                     followButtonHtml = '';
                 } else {
                     followButtonHtml = isFollowing ?
-                        `<button class="follow-button" data-user-id="${post.createdBy.userId}" style="background-color: #fff; color: #28a745" disabled>
+                        `<button class="follow-button" data-user-id="${post.createdBy.userId}" style="background-color: #28a745; color: #fff;" disabled>
                             <i class="fas fa-user-check"></i> Following
                         </button>` :
                         `<button class="follow-button" data-user-id="${post.createdBy.userId}">
@@ -380,283 +376,92 @@ document.addEventListener('DOMContentLoaded', async function () {
         return postElement;
     }
 
-    // Helper function to escape HTML
     function escapeHtml(text) {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
     }
 
-function renderPromotedSection(promotedPosts) {
-    const promotedContainer = document.getElementById('promoted-posts-container');
-    if (!promotedContainer || promotedPosts.length < 3) return; // Require at least 3 ads
+    function createPromotedPostsRow(posts) {
+        const rowContainer = document.createElement('div');
+        rowContainer.classList.add('promoted-posts-row-container');
+        rowContainer.style.cssText = `
+            display: flex;
+            overflow-x: auto;
+            gap: 15px;
+            padding: 10px 0;
+            margin-bottom: 20px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch;
+            position: relative;
+        `;
 
-    // Clear existing content
-    promotedContainer.innerHTML = '';
-    // Deduplicate posts by _id
-    allPromotedPosts = [...new Map(promotedPosts.map(post => [post._id, post])).values()];
-    
-    let currentFirstIndex = 0;
-
-    // Determine posts per row based on screen size (minimum 3 posts)
-    const postsPerRow = Math.max(3, window.innerWidth <= 768 ? 5 : window.innerWidth <= 1200 ? 6 : 7);
-
-    // Create carousel wrapper for smooth sliding
-    const carouselWrapper = document.createElement('div');
-    carouselWrapper.classList.add('promoted-carousel-wrapper');
-    carouselWrapper.style.cssText = `
-        overflow-x: auto;
-        position: relative;
-        width: 100%;
-        
-        
-    `;
-
-    const carouselTrack = document.createElement('div');
-    carouselTrack.classList.add('promoted-carousel-track');
-    carouselTrack.style.cssText = `
-        display: flex;
-        transition: transform 0.5s ease-in-out;
-        width: 100%;
-    `;
-
-    // Create row with rotating positions
-    function createRow(posts, firstIndex) {
-        const row = document.createElement('div');
-        row.classList.add('promoted-posts-row');
-        
-
-        // Calculate indices for rotation: [first, second, third, ...]
-        const totalPosts = Math.min(posts.length, postsPerRow);
-        const indices = [];
-        for (let i = 0; i < totalPosts; i++) {
-            indices.push((firstIndex + i) % posts.length);
-        }
-
-        // Render posts in rotated order
-        indices.forEach(index => {
-            const postElement = renderPromotedPost(posts[index]);
-            postElement.style.flex = '1'; // Equal width for each post
-            row.appendChild(postElement);
+        posts.forEach(post => {
+            const postElement = renderPromotedPost(post);
+            postElement.style.flex = '0 0 auto';
+            postElement.style.width = `calc((100% / 5) - 12px)`;
+            postElement.style.minWidth = '200px';
+            postElement.style.scrollSnapAlign = 'start';
+            rowContainer.appendChild(postElement); // Changed to appendChild to maintain order
         });
 
-        return row;
-    }
+        if (posts.length > 5) {
+            const prevArrow = document.createElement('button');
+            prevArrow.className = 'promoted-row-nav-arrow prev';
+            prevArrow.innerHTML = '<i class="fas fa-chevron-left"></i>';
+            prevArrow.setAttribute('aria-label', 'Previous promoted posts');
 
-    // Create initial row
-    const initialRow = createRow(allPromotedPosts, currentFirstIndex);
-    carouselTrack.appendChild(initialRow);
-    carouselWrapper.appendChild(carouselTrack);
-    promotedContainer.appendChild(carouselWrapper);
+            const nextArrow = document.createElement('button');
+            nextArrow.className = 'promoted-row-nav-arrow next';
+            nextArrow.innerHTML = '<i class="fas fa-chevron-right"></i>';
+            nextArrow.setAttribute('aria-label', 'Next promoted posts');
 
-    // Auto-rotation function with smooth left-to-right transition
-    function rotatePromotedPosts() {
-        if (allPromotedPosts.length < 3) return;
+            const arrowStyles = `
+                position: absolute;
+                top: 50%;
+                transform: translateY(-50%);
+                background: rgba(0, 0, 0, 0.6);
+                color: white;
+                border: none;
+                border-radius: 50%;
+                width: 35px;
+                height: 35px;
+                cursor: pointer;
+                z-index: 1;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1.2em;
+                transition: background 0.3s ease;
+            `;
+            prevArrow.style.cssText = arrowStyles + 'left: 5px;';
+            nextArrow.style.cssText = arrowStyles + 'right: 5px;';
 
-        // Increment first index to rotate
-        currentFirstIndex = (currentFirstIndex + 1) % allPromotedPosts.length;
+            prevArrow.addEventListener('click', () => {
+                rowContainer.scrollBy({ left: -rowContainer.offsetWidth, behavior: 'smooth' });
+            });
+            nextArrow.addEventListener('click', () => {
+                rowContainer.scrollBy({ left: rowContainer.offsetWidth, behavior: 'smooth' });
+            });
 
-        // Create new row for next content
-        const newRow = createRow(allPromotedPosts, currentFirstIndex);
-        carouselTrack.appendChild(newRow);
-
-        // Slide to show new row (left-to-right transition)
-        carouselTrack.style.transform = 'translateX(-100%)';
-
-        // After transition completes, reset position and remove old row
-        setTimeout(() => {
-            const oldRow = carouselTrack.firstElementChild;
-            if (oldRow) {
-                carouselTrack.removeChild(oldRow);
-            }
-            carouselTrack.style.transition = 'none';
-            carouselTrack.style.transform = 'translateX(0)';
-            
-            // Re-enable transition for next animation
-            setTimeout(() => {
-                carouselTrack.style.transition = 'transform 0.5s ease-in-out';
-            }, 50);
-        }, 500);
-    }
-
-    // Clear existing interval
-    if (promotedPostsRotationInterval) {
-        clearInterval(promotedPostsRotationInterval);
-    }
-
-
-    // Enable manual navigation
-    addPromotedNavigationControls(promotedContainer, allPromotedPosts.length);
-
-    // Pause auto-rotation on user interaction
-    promotedContainer.addEventListener('mouseenter', () => clearInterval(promotedPostsRotationInterval));
-    promotedContainer.addEventListener('mouseleave', () => {
-        if (allPromotedPosts.length >= 3) {
-            promotedPostsRotationInterval = setInterval(rotatePromotedPosts, 5000);
-        }
-    });
-}
-
-function addPromotedNavigationControls(container, totalPosts) {
-    if (totalPosts < 3) return;
-
-    const prevArrow = document.createElement('button');
-    prevArrow.className = 'promoted-nav-arrow prev';
-    prevArrow.innerHTML = '<i class="fas fa-chevron-left"></i>';
-    prevArrow.setAttribute('aria-label', 'Previous promoted posts');
-    prevArrow.style.cssText = `
-        position: absolute;
-        left: 10px;
-        top: 50%;
-        transform: translateY(-50%);
-        z-index: 10;
-        background: rgba(0, 0, 0, 0.5);
-        color: white;
-        border: none;
-        border-radius: 50%;
-        width: 40px;
-        height: 40px;
-        cursor: pointer;
-        transition: background 0.3s ease;
-    `;
-
-    const nextArrow = document.createElement('button');
-    nextArrow.className = 'promoted-nav-arrow next';
-    nextArrow.innerHTML = '<i class="fas fa-chevron-right"></i>';
-    nextArrow.setAttribute('aria-label', 'Next promoted posts');
-    nextArrow.style.cssText = `
-        position: absolute;
-        right: 10px;
-        top: 50%;
-        transform: translateY(-50%);
-        z-index: 10;
-        background: rgba(0, 0, 0, 0.5);
-        color: white;
-        border: none;
-        border-radius: 50%;
-        width: 40px;
-        height: 40px;
-        cursor: pointer;
-        transition: background 0.3s ease;
-    `;
-
-    container.style.position = 'relative'; // Ensure container can hold positioned arrows
-    container.appendChild(prevArrow);
-    container.appendChild(nextArrow);
-
-    prevArrow.addEventListener('click', () => navigatePromoted('prev'));
-    nextArrow.addEventListener('click', () => navigatePromoted('next'));
-
-    // Hover effects
-    [prevArrow, nextArrow].forEach(arrow => {
-        arrow.addEventListener('mouseenter', () => {
-            arrow.style.background = 'rgba(0, 0, 0, 0.8)';
-        });
-        arrow.addEventListener('mouseleave', () => {
-            arrow.style.background = 'rgba(0, 0, 0, 0.5)';
-        });
-    });
-}
-
-function navigatePromoted(direction) {
-    const promotedContainer = document.getElementById('promoted-posts-container');
-    const carouselTrack = promotedContainer?.querySelector('.promoted-carousel-track');
-    
-    if (!promotedContainer || !carouselTrack || allPromotedPosts.length < 3) return;
-
-    // Determine posts per row based on current screen size
-    const postsPerRow = Math.max(3, window.innerWidth <= 768 ? 5 : window.innerWidth <= 1200 ? 6 : 7);
-
-    // Create row function (same as in renderPromotedSection)
-    function createRow(posts, firstIndex) {
-        const row = document.createElement('div');
-        row.classList.add('promoted-posts-row');
-        
-
-        const totalPosts = Math.min(posts.length, postsPerRow);
-        const indices = [];
-        for (let i = 0; i < totalPosts; i++) {
-            indices.push((firstIndex + i) % posts.length);
+            const wrapper = document.createElement('div');
+            wrapper.style.position = 'relative';
+            wrapper.style.width = '100%';
+            wrapper.appendChild(rowContainer);
+            wrapper.appendChild(prevArrow);
+            wrapper.appendChild(nextArrow);
+            return wrapper;
         }
 
-        indices.forEach(index => {
-            const postElement = renderPromotedPost(posts[index]);
-            postElement.style.flex = '1';
-            row.appendChild(postElement);
-        });
-
-        return row;
+        return rowContainer;
     }
 
-    // Update currentFirstIndex based on direction
-    const totalPosts = allPromotedPosts.length;
-    if (direction === 'next') {
-        currentFirstIndex = (currentFirstIndex + 1) % totalPosts;
-        
-        // Create new row and append it
-        const newRow = createRow(allPromotedPosts, currentFirstIndex);
-        carouselTrack.appendChild(newRow);
-        
-        // Slide left to show new content
-        carouselTrack.style.transform = 'translateX(-100%)';
-        
-        // Clean up after transition
-        setTimeout(() => {
-            const oldRow = carouselTrack.firstElementChild;
-            if (oldRow) carouselTrack.removeChild(oldRow);
-            carouselTrack.style.transition = 'none';
-            carouselTrack.style.transform = 'translateX(0)';
-            setTimeout(() => {
-                carouselTrack.style.transition = 'transform 0.5s ease-in-out';
-            }, 50);
-        }, 500);
-        
-    } else { // prev
-        currentFirstIndex = (currentFirstIndex - 1 + totalPosts) % totalPosts;
-        
-        // Create new row and prepend it
-        const newRow = createRow(allPromotedPosts, currentFirstIndex);
-        carouselTrack.style.transition = 'none';
-        carouselTrack.style.transform = 'translateX(-100%)';
-        carouselTrack.insertBefore(newRow, carouselTrack.firstChild);
-        
-        // Force reflow then slide right to show new content
-        carouselTrack.offsetHeight;
-        carouselTrack.style.transition = 'transform 0.5s ease-in-out';
-        carouselTrack.style.transform = 'translateX(0)';
-        
-        // Clean up after transition
-        setTimeout(() => {
-            const lastRow = carouselTrack.lastElementChild;
-            if (lastRow && carouselTrack.children.length > 1) {
-                carouselTrack.removeChild(lastRow);
-            }
-        }, 500);
-    }
-
-    // Restart auto-rotation
-    if (promotedPostsRotationInterval) {
-        clearInterval(promotedPostsRotationInterval);
-        if (allPromotedPosts.length >= 3) {
-            promotedPostsRotationInterval = setInterval(() => navigatePromoted('next'), 5000);
-        }
-    }
-}
-
-// Update resize handler
-window.addEventListener('resize', () => {
-    const promotedContainer = document.getElementById('promoted-posts-container');
-    if (promotedContainer && allPromotedPosts.length >= 3) {
-        clearTimeout(window.promotedResizeTimeout);
-        window.promotedResizeTimeout = setTimeout(() => {
-            renderPromotedSection(allPromotedPosts);
-        }, 250);
-    }
-});
     async function fetchAndRenderPosts(category = '') {
         const postsContainer = document.getElementById('posts-container');
-        const promotedContainer = document.getElementById('promoted-posts-container');
-        
+
         if (!postsContainer) {
             console.error('Posts container not found.');
             return;
@@ -671,29 +476,54 @@ window.addEventListener('resize', () => {
 
             if (!Array.isArray(posts) || posts.length === 0) {
                 postsContainer.innerHTML = '<p style="text-align: center; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">No posts yet. Try again or create one!</p>';
-                if (promotedContainer) promotedContainer.innerHTML = '';
                 return;
             }
 
-            // Separate promoted and non-promoted posts
             const promotedPosts = posts.filter(post => post.isPromoted);
             const nonPromotedPosts = posts.filter(post => !post.isPromoted);
 
-            // Render promoted posts section
-            if (promotedPosts.length > 0 && promotedContainer) {
-                renderPromotedSection(promotedPosts);
-            } else if (promotedContainer) {
-                promotedContainer.innerHTML = '';
+            const postsPerPromotedRow = 5;
+
+            // --- Step 1: Render initial set of promoted posts at the very top ---
+            // Render up to 5 promoted posts first if available
+            if (promotedPosts.length > 0) {
+                const initialPromotedPosts = promotedPosts.slice(0, postsPerPromotedRow);
+                const promotedRow = createPromotedPostsRow(initialPromotedPosts);
+                postsContainer.prepend(promotedRow);
             }
 
-            // Render regular posts
-            nonPromotedPosts.forEach(post => {
-                const postElement = renderPost(post);
-                postsContainer.prepend(postElement);
-            });
+            let promotedPostIndex = postsPerPromotedRow; // Start index for next promoted posts
 
-            if (nonPromotedPosts.length === 0) {
-                postsContainer.innerHTML = '<p style="text-align: center; margin: 2rem;">No regular posts available.</p>';
+            // --- Step 2: Intertwine promoted posts with normal posts ---
+            for (let i = 0; i < nonPromotedPosts.length; i++) {
+                const postElement = renderPost(nonPromotedPosts[i]);
+                postsContainer.prepend(postElement);
+
+                // Insert a promoted post row after every 2 normal posts, if available
+                if ((i + 1) % 2 === 0 && promotedPostIndex < promotedPosts.length) {
+                    const postsForThisPromotedRow = promotedPosts.slice(promotedPostIndex, promotedPostIndex + postsPerPromotedRow);
+                    if (postsForThisPromotedRow.length > 0) {
+                        const promotedRow = createPromotedPostsRow(postsForThisPromotedRow);
+                        postsContainer.prepend(promotedRow);
+                        promotedPostIndex += postsPerPromotedRow;
+                    }
+                }
+            }
+
+            // --- Step 3: Append any remaining promoted posts at the end ---
+            while (promotedPostIndex < promotedPosts.length) {
+                const postsForThisPromotedRow = promotedPosts.slice(promotedPostIndex, promotedPostIndex + postsPerPromotedRow);
+                if (postsForThisPromotedRow.length > 0) {
+                    const promotedRow = createPromotedPostsRow(postsForThisPromotedRow);
+                    postsContainer.prepend(promotedRow);
+                    promotedPostIndex += postsPerPromotedRow;
+                } else {
+                    break;
+                }
+            }
+
+            if (nonPromotedPosts.length === 0 && promotedPosts.length === 0) {
+                postsContainer.innerHTML = '<p style="text-align: center; margin: 2rem;">No posts available.</p>';
             }
 
             window.dispatchEvent(new Event('postsRendered'));
@@ -701,7 +531,6 @@ window.addEventListener('resize', () => {
         } catch (error) {
             console.error('Error fetching posts:', error);
             postsContainer.innerHTML = '<p style="text-align: center; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">Error loading posts. Please try again later.</p>';
-            if (promotedContainer) promotedContainer.innerHTML = '';
         }
     }
 
@@ -716,7 +545,6 @@ window.addEventListener('resize', () => {
         }
     }
 
-    // Handle Promote button
     document.addEventListener('click', async (event) => {
         if (event.target.closest('.promote-button')) {
             const button = event.target.closest('.promote-button');
@@ -730,13 +558,12 @@ window.addEventListener('resize', () => {
             window.location.href = `promote.html?postId=${postId}`;
         }
 
-        // Handle promoted video play button
         if (event.target.closest('.promoted-play-btn')) {
             const button = event.target.closest('.promoted-play-btn');
             const videoContainer = button.closest('.promoted-video-container');
             const video = videoContainer.querySelector('.promoted-video');
             const overlay = videoContainer.querySelector('.promoted-video-overlay');
-            
+
             if (video.paused) {
                 video.play();
                 overlay.style.display = 'none';
@@ -744,7 +571,6 @@ window.addEventListener('resize', () => {
         }
     });
 
-    // Initialize auth status
     async function initializeAuthStatus() {
         try {
             if (window.loggedInUser !== undefined) {
@@ -766,7 +592,6 @@ window.addEventListener('resize', () => {
         }
     }
 
-    // Global functions
     window.fetchPosts = fetchAndRenderPosts;
 
     window.updateFollowButtonsUI = (userId, isFollowingStatus) => {
@@ -791,7 +616,6 @@ window.addEventListener('resize', () => {
         });
     };
 
-    // Event listeners
     document.addEventListener('authStatusReady', async (event) => {
         currentLoggedInUser = event.detail.loggedInUser;
         currentFollowingList = await fetchFollowingList();
@@ -800,14 +624,11 @@ window.addEventListener('resize', () => {
         await fetchAndRenderPosts();
     });
 
-    // Cleanup interval on page unload
     window.addEventListener('beforeunload', () => {
-        if (promotedPostsRotationInterval) {
-            clearInterval(promotedPostsRotationInterval);
-        }
+        // No specific interval to clear for promoted posts anymore in this setup.
+        // If other intervals are added, they would be cleared here.
     });
 
-    // Fallback timeouts
     setTimeout(async () => {
         if (!isAuthReady) {
             console.log('Initializing without waiting for auth status...');

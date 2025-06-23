@@ -14,16 +14,6 @@
 }
 /* Enhanced Post Display Styles for Social E-commerce Platform */
 
-/* Post Container */
-#posts-container {
-  max-width: 420px;
-  margin: 0 auto;
-  padding: 8px 12px;
-  display: flex;
-  flex-direction: column-reverse;
-  gap: 16px;
-  margin-bottom: 80px;
-}
 
   /* Promote Button Styles */
 .promote-button {
@@ -58,7 +48,8 @@
     position: relative;
     overflow-x: auto; /* Enable horizontal scrolling */
     overflow-y: hidden; /* Prevent vertical scrolling */
-    margin-bottom: 0.75rem;
+    margin-bottom: 1rem;
+    display: none;
     background: #fff;
     border-radius: 15px;
     padding: 1rem;
@@ -398,47 +389,8 @@
     }
 }
 
-/* Promoted Indicator Styles */
-.promoted-indicator {
-    background: linear-gradient(135deg, #28a745, #20c997);
-    color: white;
-    border: none;
-    padding: 12px 24px;
-    border-radius: 25px;
-    font-weight: 600;
-    font-size: 14px;
-    cursor: not-allowed;
-    opacity: 0.8;
-    display: flex !important;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    width: 100% !important;
-    max-width: 100% !important;
-    flex: 1 1 100% !important;
-    margin: 0 !important;
-}
 
-.promoted-indicator i {
-    font-size: 16px;
-    color: #ffd700;
-}
 
-/* Container styling to ensure promote button takes full width */
-.promoted-indicator {
-    width: 100% !important;
-    max-width: 100% !important;
-    flex: 1 1 100% !important;
-    display: block !important;
-    box-sizing: border-box;
-}
-
-/* Override any flex container behavior for promote buttons */
-.buy:has(.promote-button),
-.buy:has(.promoted-indicator) {
-    display: block !important;
-    width: 100%;
-}
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
