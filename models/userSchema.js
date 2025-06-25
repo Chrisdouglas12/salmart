@@ -28,6 +28,15 @@ blockedUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   isBanned: { type: Boolean, default: false },
   isAdmin: { type: Boolean, default: false },
   fcmToken: { type: String, default: null },
+  viewCount: {
+    type: Number,
+    default: 0,
+  },
+  //store precomputed relevance scores for users
+  userRelevanceScores: [{
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    score: Number,
+  }],
   notificationPreferences: {
     likes: { type: Boolean, default: true },
     comments: { type: Boolean, default: true },

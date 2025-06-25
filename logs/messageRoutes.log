@@ -2240,3 +2240,6 @@
 {"level":"error","message":"Error fetching messages for user 6843d062f457581752641ee3: getaddrinfo ENOTFOUND ac-78e8zxz-shard-00-00.bfiorya.mongodb.net","timestamp":"2025-06-23T00:35:07.816Z"}
 {"level":"warn","message":"Missing senderId or receiverId in /messages","timestamp":"2025-06-23T00:35:08.712Z"}
 {"level":"error","message":"Error fetching messages for user 6843d062f457581752641ee3: getaddrinfo ENOTFOUND ac-78e8zxz-shard-00-00.bfiorya.mongodb.net","timestamp":"2025-06-23T00:35:12.854Z"}
+{"level":"warn","message":"Missing senderId or receiverId in /messages","timestamp":"2025-06-25T02:58:17.482Z"}
+{"level":"info","message":"Fetched 6 latest messages for user 6843d062f457581752641ee3","timestamp":"2025-06-25T02:58:24.088Z"}
+{"level":"info","message":"Fetched 6 latest messages for user 6843d062f457581752641ee3","timestamp":"2025-06-25T02:58:25.857Z"}

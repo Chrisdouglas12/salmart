@@ -309,13 +309,33 @@ router.get('/post', async (req, res) => {
   try {
     const { category } = req.query;
     const validCategories = ['electronics', 'fashion', 'home', 'vehicles', 'music', 'others'];
-    const categoryFilter = category && validCategories.includes(category)
-      ? { category }
-      : {};
+    const categoryFilter = category && validCategories.includes(category) ? { category } : {};
 
-    // Fetch posts, sorting by isPromoted (true first) and then createdAt (newest first)
-    const posts = await Post.find(categoryFilter)
-      .sort({ isPromoted: -1, createdAt: -1 })
+    // Fetch logged-in user ID (if any)
+    let loggedInUserId = null;
+    let userInterests = [];
+    let following = [];
+    const authHeader = req.headers['authorization'];
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.split(' ')[1];
+      try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        loggedInUserId = decoded.userId;
+        const user = await User.findById(loggedInUserId).select('following').lean();
+        following = user?.following || [];
+        // Assume user interests are derived from past interactions (e.g., liked categories)
+        // You can enhance this by tracking user likes or purchases in a separate collection
+        userInterests = await Post.find({ likes: loggedInUserId })
+          .distinct('category')
+          .lean();
+      } catch (err) {
+        logger.warn(`Invalid token in get posts: ${err.message}`);
+      }
+    }
+
+    // Fetch posts with status 'active'
+    const posts = await Post.find({ ...categoryFilter, status: 'active' })
+      .populate('createdBy.userId', 'firstName lastName profilePicture')
       .lean();
 
     if (!posts || posts.length === 0) {
@@ -323,43 +343,77 @@ router.get('/post', async (req, res) => {
       return res.status(404).json({ message: 'No posts found' });
     }
 
-    let loggedInUserId = null;
-    const authHeader = req.headers['authorization'];
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      const token = authHeader.split(' ')[1];
-      try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        loggedInUserId = decoded.userId;
-      } catch (err) {
-        logger.warn(`Invalid token in get posts: ${err.message}`);
+    // Calculate scores for each post
+    const currentTime = new Date();
+    const rankedPosts = posts.map((post) => {
+      // Engagement Score: Based on likes and comments
+      const likeCount = post.likes?.length || 0;
+      const commentCount = post.comments?.length || 0;
+      const engagementScore = (likeCount * 0.2) + (commentCount * 0.5);
+
+      // Recency Score: Decay based on time since creation (in hours)
+      const hoursSincePosted = (currentTime - new Date(post.createdAt)) / (1000 * 60 * 60);
+      const recencyScore = 1 / (hoursSincePosted + 1); // Exponential decay
+
+      // Relevance Score: Based on category match and user relationships
+      let relevanceScore = 0;
+      if (loggedInUserId) {
+        // Boost if the post is from a followed user
+        if (following.some((id) => id.toString() === post.createdBy.userId._id.toString())) {
+          relevanceScore += 0.5;
+        }
+        // Boost if the post's category matches user interests
+        if (userInterests.includes(post.category)) {
+          relevanceScore += 0.3;
+        }
       }
-    }
 
-    const following = loggedInUserId
-      ? await User.findById(loggedInUserId).select('following').lean().then((u) => u?.following || [])
-      : [];
+      // Promotion Score: Boost promoted posts based on amount paid
+      let promotionScore = 0;
+      if (post.isPromoted && post.promotionDetails?.endDate > currentTime) {
+        const amountPaid = post.promotionDetails.amountPaid || 0;
+        promotionScore = Math.min(amountPaid / 100, 2); // Cap promotion boost at 2
+      }
 
-    const populatedPosts = await Promise.all(
-      posts.map(async (post) => {
-        const user = await User.findById(post.createdBy.userId).select('profilePicture firstName lastName').lean();
-        const isFollowing = following.some(
-          (followedId) => followedId.toString() === post.createdBy.userId.toString()
-        );
+      // Content Type Score: Boost video ads
+      const contentTypeScore = post.postType === 'video_ad' ? 0.3 : 0;
 
-        return {
-          ...post,
-          profilePicture: user?.profilePicture || 'default-avatar.png',
-          createdBy: {
-            ...post.createdBy,
-            name: user ? `${user.firstName} ${user.lastName}` : post.createdBy.name,
-          },
-          isFollowing,
-          postType: post.postType,
-          media: post.postType === 'video_ad'
-            ? { video: post.video }
-            : { photo: post.photo },
-        };
-      })
+      // Total Score
+      const totalScore =
+        (engagementScore * 0.4) +
+        (recencyScore * 0.2) +
+        (relevanceScore * 0.3) +
+        (promotionScore * 0.2) +
+        contentTypeScore;
+
+      return { ...post, totalScore };
+    });
+
+    // Sort posts by totalScore (descending) and limit to top results (e.g., 50)
+    const sortedPosts = rankedPosts
+      .sort((a, b) => b.totalScore - a.totalScore)
+      .slice(0, 50);
+
+    // Format response
+    const populatedPosts = sortedPosts.map((post) => ({
+      ...post,
+      createdBy: {
+        userId: post.createdBy.userId._id,
+        name: `${post.createdBy.userId.firstName} ${post.createdBy.userId.lastName}`,
+        profilePicture: post.createdBy.userId.profilePicture || 'default-avatar.png',
+      },
+      isFollowing: following.some(
+        (followedId) => followedId.toString() === post.createdBy.userId._id.toString()
+      ),
+      postType: post.postType,
+      media: post.postType === 'video_ad' ? { video: post.video } : { photo: post.photo },
+      isLiked: loggedInUserId ? post.likes.includes(loggedInUserId) : false,
+    }));
+
+    // Update viewCount for fetched posts (optional)
+    await Post.updateMany(
+      { _id: { $in: sortedPosts.map((p) => p._id) } },
+      { $inc: { viewCount: 1 } }
     );
 
     logger.info(`Fetched ${populatedPosts.length} posts for user ${loggedInUserId || 'anonymous'}`);
@@ -369,7 +423,6 @@ router.get('/post', async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
-
 
   router.get('/post/:postId', async (req, res) => {
     try {

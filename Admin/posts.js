@@ -118,7 +118,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 <span>Promoted</span>
             </div>
             <div class="promoted-header">
-                <img src="${post.profilePicture || 'default-avatar.png'}" class="promoted-avatar" onerror="this.src='default-avatar.png'" alt="User Avatar">
+                <img src="${post.profilePicture || 'default-avater.png'}" class="promoted-avatar" onerror="this.src='default-avater.png'" alt="User Avatar">
                 <div class="promoted-user-info">
                     <h5 class="promoted-user-name">${escapeHtml(post.createdBy ? post.createdBy.name : 'Unknown')}</h5>
                     <span class="promoted-time">${formatTime(post.createdAt || new Date())}</span>
@@ -335,7 +335,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         postElement.innerHTML = `
             <div class="post-header">
                 <a href="Profile.html?userId=${post.createdBy ? post.createdBy.userId : ''}">
-                    <img src="${post.profilePicture || 'default-avatar.png'}" class="post-avatar" onerror="this.src='default-avatar.png'" alt="User Avatar">
+                    <img src="${post.profilePicture || 'default-avater.png'}" class="post-avatar" onerror="this.src='default-avater.png'" alt="User Avatar">
                 </a>
                 <div class="post-user-info">
                     <a href="Profile.html?userId=${post.createdBy ? post.createdBy.userId : ''}">
@@ -383,6 +383,25 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 
     function createPromotedPostsRow(posts) {
+        // Create wrapper container with header
+        const wrapperContainer = document.createElement('div');
+        wrapperContainer.classList.add('promoted-posts-wrapper');
+        wrapperContainer.style.cssText = `
+            margin-bottom: 20px;
+        `;
+
+        // Create header
+        const headerElement = document.createElement('div');
+        headerElement.classList.add('promoted-posts-header');
+        headerElement.innerHTML = '<h3>Things you may like</h3>';
+        headerElement.style.cssText = `
+            font-size: 1em;
+            font-weight: 600;
+            color: #333;
+     
+        `;
+
+        // Create scrollable container
         const rowContainer = document.createElement('div');
         rowContainer.classList.add('promoted-posts-row-container');
         rowContainer.style.cssText = `
@@ -390,13 +409,16 @@ document.addEventListener('DOMContentLoaded', async function () {
             overflow-x: auto;
             gap: 15px;
             padding: 10px 0;
-            margin-bottom: 20px;
             background-color: #f9f9f9;
             border-radius: 8px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
             scroll-snap-type: x mandatory;
             -webkit-overflow-scrolling: touch;
             position: relative;
+            /* Hide webkit scrollbar */
+            -webkit-scrollbar: none;
+            -ms-overflow-style: none;
+            scrollbar-width: none;
         `;
 
         posts.forEach(post => {
@@ -405,8 +427,12 @@ document.addEventListener('DOMContentLoaded', async function () {
             postElement.style.width = `calc((100% / 5) - 12px)`;
             postElement.style.minWidth = '200px';
             postElement.style.scrollSnapAlign = 'start';
-            rowContainer.appendChild(postElement); // Changed to appendChild to maintain order
+            rowContainer.appendChild(postElement);
         });
+
+        // Add header and container to wrapper
+        wrapperContainer.appendChild(headerElement);
+        wrapperContainer.appendChild(rowContainer);
 
         if (posts.length > 5) {
             const prevArrow = document.createElement('button');
@@ -447,16 +473,13 @@ document.addEventListener('DOMContentLoaded', async function () {
                 rowContainer.scrollBy({ left: rowContainer.offsetWidth, behavior: 'smooth' });
             });
 
-            const wrapper = document.createElement('div');
-            wrapper.style.position = 'relative';
-            wrapper.style.width = '100%';
-            wrapper.appendChild(rowContainer);
-            wrapper.appendChild(prevArrow);
-            wrapper.appendChild(nextArrow);
-            return wrapper;
+            // Position relative container for arrows
+            rowContainer.style.position = 'relative';
+            rowContainer.appendChild(prevArrow);
+            rowContainer.appendChild(nextArrow);
         }
 
-        return rowContainer;
+        return wrapperContainer;
     }
 
     async function fetchAndRenderPosts(category = '') {
@@ -641,5 +664,6 @@ document.addEventListener('DOMContentLoaded', async function () {
             console.log('Auth timeout - proceeding with post fetch...');
             await initializeAuthStatus();
         }
-    }, 2000);
-});
+    }, 2000)
+    
+})
