@@ -462,7 +462,7 @@
       resultsEl.innerHTML = '';
 
       try {
-        const res = await fetch(`http://localhost:3000/search?q=${encodeURIComponent(query)}`);
+        const res = await fetch(`${API_BASE_URL}/search?q=${encodeURIComponent(query)}`);
         const data = await res.json();
         
         // Hide loading state

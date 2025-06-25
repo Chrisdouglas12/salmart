@@ -385,7 +385,7 @@
       <a href="#" class="search-btn">
         <i class="fas fa-search"></i>
       </a>
-      <img src="default-avater.png" alt="Profile" id="profile-picture6" class="profile-avatar" onerror="this.src='default-avatar.png'">
+      <img src="default-avater.png" alt="Profile" id="profile-picture6" class="profile-avatar" onerror="this.src='default-avater.png'">
     </div>
   </header>
 
@@ -580,7 +580,7 @@
         }
 
         notificationElement.innerHTML = `
-          <img src="${notification.senderId.profilePicture || 'default-avatar.png'}" class="notification-avatar" alt="User avatar" loading="lazy">
+          <img src="${notification.senderId.profilePicture || 'default-avater.png'}" class="notification-avatar" alt="User avatar" loading="lazy">
           <div class="notification-content">
             <div class="notification-type">${typeLabel}</div>
             <div class="notification-message">
@@ -670,7 +670,7 @@
       }
 
       notificationElement.innerHTML = `
-        <img src="${notification.sender.profilePicture || 'default-avatar.png'}" class="notification-avatar" alt="User avatar" loading="lazy">
+        <img src="${notification.sender.profilePicture || 'default-avater.png'}" class="notification-avatar" alt="User avatar" loading="lazy">
         <div class="notification-content">
           <div class="notification-type">${typeLabel}</div>
           <div class="notification-message">${notificationText}</div>

@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const API_BASE_URL = window.location.hostname === 'localhost' 
     ? 'http://localhost:3000' 
-    : 'https://salmart-production.up.railway.app';
+    : 'https://salmart.onrender.com';
 
   // Prefill form if editing
   if (isEdit && postId) {
