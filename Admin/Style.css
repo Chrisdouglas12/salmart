@@ -642,7 +642,7 @@
 
 @media (min-width: 768px) {
   #posts-container {
-    max-width: 500px;
+    max-width: 450px;
   }
   
   .post {
@@ -902,7 +902,15 @@ h1 {
     margin: 0 calc(1200px / 2);
   }
 }
-
+@media only screen and (max-width: 411px) {
+#posts-container{
+     max-width: 100;
+     .iframe-container {
+  position: relative;
+  display: none; /* Hidden by default on mobile */
+}
+}
+}
 .post-input {
   max-width: 600px;
   margin-bottom: 0;
@@ -1044,19 +1052,6 @@ h1 {
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
-a {
-  text-decoration: none;
-  color: black;
-}
-
-a:hover {
-  color: var(--primary-color);
-  cursor: pointer;
-}
-
-a .active {
-  color: blue;
-}
 
 .profile-pic {
   position: fixed;
@@ -1138,20 +1133,28 @@ a .active {
   flex-direction: column;
   align-items: center;
   text-decoration: none;
-  color: var(--primary-color);
+  color: #28a745;
   font-size: 12px;
   padding: 8px;
   transition: color 0.2s;
 }
 
 #navbar a.active {
-  color: var(--secondary-color);
-  font-weight: 600;
+  color: #28a745;
+  font-weight: 500;
+}
+#navbar i.active {
+  color: #28a745;
+  font-weight: 500;
 }
 
 #navbar a i {
-  font-size: 20px;
+  font-size: 14px;
   margin-bottom: 5px;
+  background: #fff;
+  border: 1px solid #fff;
+  box-shadow: 0 0 10px #ddd;
+  padding: 10px;
 }
 
 .icon-badge-wrapper {
@@ -2039,10 +2042,13 @@ a .active {
   display: none; /* Hidden by default on mobile */
 }
 
-@media only screen and (min-width: 800px) {
+@media only screen and (min-width: 900px) {
   .iframe-container {
     display: block;
   }
+
+}
+
   
   /* Main iframe styling */
   .desktop-only {
