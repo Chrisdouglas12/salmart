@@ -375,8 +375,7 @@
   </style>
 </head>
 <body>
-   <!-- Header -->
-  <header class="header">
+   <header class="header">
     <h1 class="header-title">
       <i class="fas fa-bell"></i>
       Alerts
@@ -556,16 +555,17 @@
           notificationElement.classList.add('unread');
         }
 
-        let notificationText = '';
+        let notificationText = notification.message; // Use the message directly from the backend
         let typeLabel = '';
+        
+        // Determine type label based on backend's notification type
         if (notification.type === 'like') {
           typeLabel = 'Reactions';
-          notificationText = `${notification.senderId.firstName} ${notification.senderId.lastName} liked your post.`;
         } else if (notification.type === 'comment') {
           typeLabel = 'Comment';
-          notificationText = `${notification.senderId.firstName} ${notification.senderId.lastName} commented on your ad.`;
         } else if (notification.type === 'payment') {
           typeLabel = 'Payment';
+          // For non-aggregated types, use the sender's name and original message logic
           notificationText = `${notification.senderId.firstName} ${notification.senderId.lastName} paid for "${notification.payment}". Please release delivery address.`;
         } else if (notification.type === 'delivery') {
           typeLabel = 'Funds Transfer';
@@ -573,18 +573,32 @@
         } else if (notification.type === 'warning') {
           typeLabel = 'Bank Details';
           notificationText = `Please add your bank details to receive payment from ${notification.senderId.firstName} ${notification.senderId.lastName}.`;
-        }else if (notification.type === 'reply') {
+        } else if (notification.type === 'reply') {
           typeLabel = 'Reply';
           notificationText = `${notification.senderId.firstName} ${notification.senderId.lastName} replied your comment.`;
-             
+        } else if (notification.type === 'follow') { // Added follow notification display
+          typeLabel = 'New Follower';
+          notificationText = `${notification.senderId.firstName} ${notification.senderId.lastName} followed you.`;
         }
+        else if (notification.type === 'new_posts') { // Added follow notification display
+          typeLabel = 'New Post';
+          notificationText = `${notification.senderId.firstName} ${notification.senderId.lastName} Created posted a new product.`;
+        } else if (notification.type === 'Promotion') { // Added follow notification display
+          typeLabel = 'Promotion';
+          notificationText = 'Your promotion has been approved';
+        }
+        
+        // Use senderId.profilePicture if available, else a default.
+        // For aggregated notifications, the senderId might be the last person to interact,
+        // or a default avatar might be more appropriate depending on your design.
+        const avatarSrc = notification.senderId?.profilePicture || 'default-avater.png';
 
         notificationElement.innerHTML = `
-          <img src="${notification.senderId.profilePicture || 'default-avater.png'}" class="notification-avatar" alt="User avatar" loading="lazy">
+          <img src="${avatarSrc}" class="notification-avatar" alt="User avatar" loading="lazy">
           <div class="notification-content">
             <div class="notification-type">${typeLabel}</div>
             <div class="notification-message">
-              <a href="post-details.html?postId=${notification.postId}" style="text-decoration: none; color: inherit">${notificationText}</a>
+              <a href="post-details.html?postId=${notification.postId || ''}" style="text-decoration: none; color: inherit">${notificationText}</a>
             </div>
             <span class="notification-time">${formatTime(notification.createdAt)}</span>
           </div>
@@ -656,24 +670,50 @@
       const notificationsContainer = document.getElementById('notifications');
       const noAlertsMessage = document.getElementById('no-alerts');
 
+      // If no alerts message is visible, hide it
+      if (noAlertsMessage.style.display === 'block') {
+          noAlertsMessage.style.display = 'none';
+      }
+
       const notificationElement = document.createElement('div');
       notificationElement.classList.add('notification', 'unread');
 
-      let notificationText = '';
+      let notificationText = notification.message; // Use the message directly from the backend
       let typeLabel = '';
+      
+      // Determine type label based on backend's notification type
       if (notification.type === 'like') {
         typeLabel = 'Reactions';
-        notificationText = `${notification.sender.firstName} ${notification.sender.lastName} liked your post.`;
       } else if (notification.type === 'comment') {
         typeLabel = 'Comment';
-        notificationText = `${notification.sender.firstName} ${notification.sender.lastName} commented: "${notification.comment}"`;
+      } else if (notification.type === 'payment') {
+          typeLabel = 'Payment';
+          notificationText = `${notification.sender.firstName} ${notification.sender.lastName} paid for "${notification.payment}". Please release delivery address.`;
+      } else if (notification.type === 'delivery') {
+          typeLabel = 'Funds Transfer';
+          notificationText = `${notification.sender.firstName} ${notification.sender.lastName} confirmed delivery of "${notification.payment}". Funds released to your bank account.`;
+      } else if (notification.type === 'warning') {
+          typeLabel = 'Bank Details';
+          notificationText = `Please add your bank details to receive payment from ${notification.sender.firstName} ${notification.sender.lastName}.`;
+      } else if (notification.type === 'reply') {
+          typeLabel = 'Reply';
+          notificationText = `${notification.sender.firstName} ${notification.sender.lastName} replied your comment.`;
+      } else if (notification.type === 'follow') { // Added follow notification display
+          typeLabel = 'New Follower';
+          notificationText = `${notification.sender.firstName} ${notification.sender.lastName} followed you.`;
       }
 
+      // Use sender.profilePicture if available, else a default.
+      // For aggregated notifications, the sender in the socket event might be the last person to interact.
+      const avatarSrc = notification.sender?.profilePicture || 'default-avater.png';
+
       notificationElement.innerHTML = `
-        <img src="${notification.sender.profilePicture || 'default-avater.png'}" class="notification-avatar" alt="User avatar" loading="lazy">
+        <img src="${avatarSrc}" class="notification-avatar" alt="User avatar" loading="lazy">
         <div class="notification-content">
           <div class="notification-type">${typeLabel}</div>
-          <div class="notification-message">${notificationText}</div>
+          <div class="notification-message">
+            <a href="post-details.html?postId=${notification.postId || ''}" style="text-decoration: none; color: inherit">${notificationText}</a>
+          </div>
           <span class="notification-time">Just now</span>
         </div>
         <button class="notification-dismiss" aria-label="Dismiss notification">
@@ -683,22 +723,23 @@
 
       notificationElement.querySelector('.notification-dismiss').addEventListener('click', async (e) => {
         e.stopPropagation();
-        await dismissNotification(notification._id);
+        await dismissNotification(notification._id); // Note: _id might not be present for real-time aggregation. You might need to handle this differently for immediate dismissals vs. backend dismissal.
         notificationElement.remove();
         if (!notificationsContainer.children.length) {
           noAlertsMessage.style.display = 'block';
         }
       });
 
+      // Prepend to show new notifications at the top
       notificationsContainer.prepend(notificationElement);
-      noAlertsMessage.style.display = 'none';
-      showToast(`${notification.sender.firstName} ${notification.sender.lastName} ${notification.type === 'like' ? 'liked' : 'commented on'} your post`, '#28a745');
+      // The toast message can still use the direct sender's name if available, or the aggregated message
+      showToast(notification.message, '#28a745');
     });
 
     // Handle New Messages
     socket.on('receiveMessage', (message) => {
       console.log('New message:', message);
-      showToast(`New message from ${message.senderId}`, '#28a745');
+      showToast(`New message from ${message.chatPartnerName || 'a user'}`, '#28a745');
     });
 
     // Initialize

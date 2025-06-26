@@ -4,7 +4,7 @@ const Notification = require('../models/notificationSchema.js');
 const Post = require('../models/postSchema.js');
 const Message = require('../models/messageSchema.js');
 const NotificationService = require('../services/notificationService.js');
-const { sendFCMNotification } = require('../services/notificationUtils.js');
+const { sendFCMNotification } = require('../services/notificationUtils.js'); // Assuming sendFCMNotification is adapted to handle collapseKey
 const winston = require('winston');
 
 const logger = winston.createLogger({
@@ -18,6 +18,79 @@ const logger = winston.createLogger({
     new winston.transports.Console()
   ]
 });
+
+// A simple in-memory map to store recent interactions for aggregation.
+// In a production environment with multiple server instances, this would need a distributed cache (e.g., Redis).
+const recentInteractions = new Map(); // Map<postId, {likes: Set<userId>, comments: Set<userId>, lastProcessed: Date}>
+
+// Function to generate the aggregated message
+async function getAggregatedMessage(postId, type, currentSenderId, ownerId) {
+  // Fetch the latest state of the post's likes/comments for accurate count and names
+  const post = await Post.findById(postId).select('likes comments');
+  if (!post) return null;
+
+  let userIds = [];
+  let actionVerb = '';
+  let notificationType = '';
+
+  if (type === 'like') {
+    userIds = post.likes || [];
+    actionVerb = 'liked';
+    notificationType = 'like';
+  } else if (type === 'comment') {
+    // For comments, we'd typically need to store who commented.
+    // Assuming 'comments' field on Post also stores `senderId` or `createdBy.userId`
+    // For simplicity, let's just count total comments and use a generic message or fetch last few distinct commenters.
+    // If post.comments only contains comment text, you'd need a separate Comment model to get sender IDs.
+    // For now, let's assume post.comments can give us distinct sender IDs.
+    const distinctCommenterIds = Array.from(new Set(post.comments.map(c => c.createdBy?.userId ? c.createdBy.userId.toString() : null))).filter(Boolean);
+    userIds = distinctCommenterIds.map(id => new mongoose.Types.ObjectId(id));
+    actionVerb = 'commented on';
+    notificationType = 'comment';
+  }
+
+  // Filter out the post owner from the list
+  const interactionUsers = userIds.filter(id => id.toString() !== ownerId.toString());
+
+  if (interactionUsers.length === 0) {
+    return null; // No one else interacted
+  }
+
+  // Get the sender's name (the one who just performed the action)
+  const currentSender = await User.findById(currentSenderId).select('firstName');
+  const currentSenderName = currentSender ? currentSender.firstName : 'Someone';
+
+  let message = '';
+  let firstSenderName = currentSenderName; // Default to the current sender
+
+  // Find other recent interactors if available
+  const otherInteractors = interactionUsers.filter(id => id.toString() !== currentSenderId.toString());
+
+  if (otherInteractors.length > 0) {
+    const firstOtherInteractor = await User.findById(otherInteractors[0]).select('firstName');
+    firstSenderName = firstOtherInteractor ? firstOtherInteractor.firstName : 'Someone';
+  }
+
+  const totalInteractions = interactionUsers.length;
+
+  if (totalInteractions === 1) {
+    message = `${firstSenderName} ${actionVerb} your ad.`;
+  } else {
+    // Try to find the name of the most recent user, which might be the `currentSenderName`
+    // unless `firstSenderName` was updated to be someone else from `otherInteractors`.
+    const displaySender = currentSenderName;
+
+    const remainingCount = totalInteractions - 1;
+    if (remainingCount > 0) {
+      message = `${displaySender} and ${remainingCount} others ${actionVerb} your ad.`;
+    } else {
+      message = `${displaySender} ${actionVerb} your ad.`;
+    }
+  }
+
+  return { message, notificationType };
+}
+
 
 const initializeSocket = (io) => {
   logger.info('Initializing Socket.IO event handlers');
@@ -88,7 +161,8 @@ const initializeSocket = (io) => {
           { type: 'follow', userId: followerId.toString() },
           io,
           null,
-          follower.profilePicture
+          follower.profilePicture,
+          `follow_${followerId}_${followedId}` // collapseKey to group follow notifications (though usually less frequent)
         );
         logger.info(`FCM notification sent for follow event from ${followerId} to ${followedId}`);
         await NotificationService.triggerCountUpdate(followedId, io);
@@ -110,40 +184,55 @@ const initializeSocket = (io) => {
           logger.error(`Post ${postId} not found`);
           return;
         }
+        const postOwnerId = post.createdBy.userId;
         const sender = await User.findById(userId).select('firstName lastName profilePicture');
         if (!sender) {
           logger.error(`User ${userId} not found`);
           return;
         }
-        if (post.createdBy.userId.toString() !== userId.toString()) {
-          const notification = new Notification({
-            userId: post.createdBy.userId,
-            type: 'like',
-            senderId: userId,
-            postId,
-            message: `${sender.firstName} ${sender.lastName} liked your Ad`,
-            createdAt: new Date(),
-          });
-          await notification.save();
-          logger.info(`Created like notification for user ${post.createdBy.userId} for post ${postId}`);
-          io.to(`user_${post.createdBy.userId}`).emit('notification', {
-            type: 'like',
-            postId,
-            userId,
-            sender: { firstName: sender.firstName, lastName: sender.lastName, profilePicture: sender.profilePicture },
-            createdAt: new Date(),
-          });
-          await sendFCMNotification(
-            post.createdBy.userId.toString(),
-            'New Like',
-            `${sender.firstName} ${sender.lastName} liked your ad`,
-            { type: 'like', postId: postId.toString() },
-            io,
-            null,
-            sender.profilePicture
-          );
-          logger.info(`FCM notification sent for like event on post ${postId} by user ${userId}`);
-          await NotificationService.triggerCountUpdate(post.createdBy.userId, io);
+
+        // Only create/send notification if the liker is not the post owner
+        if (postOwnerId.toString() !== userId.toString()) {
+          // --- Aggregation Logic for Likes ---
+          const { message: aggregatedMessage, notificationType } = await getAggregatedMessage(postId, 'like', userId, postOwnerId);
+
+          if (aggregatedMessage) {
+            // Update or create notification in DB (you might want to handle this more granularly
+            // if you need a history of every single like vs. aggregated display).
+            // For now, we'll create a new notification entry, but the FCM will be aggregated.
+            const notification = new Notification({
+              userId: postOwnerId,
+              type: 'like',
+              senderId: userId, // Still store the specific sender for DB history if needed
+              postId,
+              message: aggregatedMessage, // Store the aggregated message
+              createdAt: new Date(),
+            });
+            await notification.save();
+            logger.info(`Created (or updated) like notification for user ${postOwnerId} for post ${postId}`);
+
+            io.to(`user_${postOwnerId}`).emit('notification', {
+              type: notificationType,
+              postId,
+              userId,
+              sender: { firstName: sender.firstName, lastName: sender.lastName, profilePicture: sender.profilePicture },
+              message: aggregatedMessage, // Send aggregated message via socket
+              createdAt: new Date(),
+            });
+
+            await sendFCMNotification(
+              postOwnerId.toString(),
+              'New Like',
+              aggregatedMessage, // Use the aggregated message for FCM
+              { type: 'like', postId: postId.toString() },
+              io,
+              null,
+              sender.profilePicture, // Still use the direct sender's picture or a generic one
+              `post_like_${postId.toString()}` // collapseKey for likes on this specific post
+            );
+            logger.info(`FCM notification sent for like event on post ${postId} by user ${userId} (aggregated)`);
+            await NotificationService.triggerCountUpdate(postOwnerId, io);
+          }
         }
         logger.info(`Like notification processed for post ${postId} by user ${userId}`);
       } catch (error) {
@@ -163,41 +252,54 @@ const initializeSocket = (io) => {
           logger.error(`Post ${postId} not found`);
           return;
         }
+        const postOwnerId = post.createdBy.userId;
         const sender = await User.findById(userId).select('firstName lastName profilePicture');
         if (!sender) {
           logger.error(`User ${userId} not found`);
           return;
         }
-        if (post.createdBy.userId.toString() !== userId.toString()) {
-          const notification = new Notification({
-            userId: post.createdBy.userId,
-            type: 'comment',
-            senderId: userId,
-            postId,
-            message: `${sender.firstName} ${sender.lastName} commented on your ad`,
-            createdAt: new Date(),
-          });
-          await notification.save();
-          logger.info(`Created comment notification for user ${post.createdBy.userId} for post ${postId}`);
-          io.to(`user_${post.createdBy.userId}`).emit('notification', {
-            type: 'comment',
-            postId,
-            userId,
-            comment,
-            sender: { firstName: sender.firstName, lastName: sender.lastName, profilePicture: sender.profilePicture },
-            createdAt: new Date(),
-          });
-          await sendFCMNotification(
-            post.createdBy.userId.toString(),
-            'New Comment',
-            `${sender.firstName} ${sender.lastName}: ${comment}`,
-            { type: 'comment', postId: postId.toString() },
-            io,
-            null,
-            sender.profilePicture
-          );
-          logger.info(`FCM notification sent for comment event on post ${postId} by user ${userId}`);
-          await NotificationService.triggerCountUpdate(post.createdBy.userId, io);
+
+        // Only create/send notification if the commenter is not the post owner
+        if (postOwnerId.toString() !== userId.toString()) {
+          // --- Aggregation Logic for Comments ---
+          const { message: aggregatedMessage, notificationType } = await getAggregatedMessage(postId, 'comment', userId, postOwnerId);
+
+          if (aggregatedMessage) {
+            // Store the specific comment in DB if needed, but the notification will be aggregated
+            const notification = new Notification({
+              userId: postOwnerId,
+              type: 'comment',
+              senderId: userId,
+              postId,
+              message: aggregatedMessage, // Store the aggregated message
+              createdAt: new Date(),
+            });
+            await notification.save();
+            logger.info(`Created (or updated) comment notification for user ${postOwnerId} for post ${postId}`);
+
+            io.to(`user_${postOwnerId}`).emit('notification', {
+              type: notificationType,
+              postId,
+              userId,
+              comment, // Still send the specific comment via socket for real-time display
+              sender: { firstName: sender.firstName, lastName: sender.lastName, profilePicture: sender.profilePicture },
+              message: aggregatedMessage, // Send aggregated message via socket
+              createdAt: new Date(),
+            });
+
+            await sendFCMNotification(
+              postOwnerId.toString(),
+              'New Comment',
+              aggregatedMessage, // Use the aggregated message for FCM
+              { type: 'comment', postId: postId.toString() },
+              io,
+              null,
+              sender.profilePicture, // Still use the direct sender's picture or a generic one
+              `post_comment_${postId.toString()}` // collapseKey for comments on this specific post
+            );
+            logger.info(`FCM notification sent for comment event on post ${postId} by user ${userId} (aggregated)`);
+            await NotificationService.triggerCountUpdate(postOwnerId, io);
+          }
         }
         logger.info(`Comment notification processed for post ${postId} by user ${userId}`);
       } catch (error) {
@@ -315,7 +417,8 @@ const initializeSocket = (io) => {
             },
             io,
             productImageUrl,
-            senderProfilePictureUrl
+            senderProfilePictureUrl,
+            `message_${senderId.toString()}_${receiverId.toString()}` // collapseKey for messages in this chat
           );
           logger.info(`FCM notification attempt completed for user ${receiverId}`);
         }
@@ -411,7 +514,9 @@ const initializeSocket = (io) => {
           `Your offer for ${originalOffer.offerDetails.productName} was accepted`,
           { type: 'accept-offer', offerId: offerId.toString() },
           io,
-          originalOffer.offerDetails.image || null
+          originalOffer.offerDetails.image || null,
+          null, // No specific sender profile picture for system message
+          `offer_accepted_${originalOffer.offerDetails.productId.toString()}` // collapseKey for offer acceptance on this product
         );
         logger.info(`FCM notification sent for offer ${offerId} accepted by ${acceptorId}`);
         await NotificationService.triggerCountUpdate(originalOffer.senderId, io);
