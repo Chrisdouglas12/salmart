@@ -2243,3 +2243,19 @@
 {"level":"warn","message":"Missing senderId or receiverId in /messages","timestamp":"2025-06-25T02:58:17.482Z"}
 {"level":"info","message":"Fetched 6 latest messages for user 6843d062f457581752641ee3","timestamp":"2025-06-25T02:58:24.088Z"}
 {"level":"info","message":"Fetched 6 latest messages for user 6843d062f457581752641ee3","timestamp":"2025-06-25T02:58:25.857Z"}
+{"level":"warn","message":"Missing senderId or receiverId in /messages","timestamp":"2025-06-25T22:58:59.726Z"}
+{"level":"info","message":"Fetched 6 latest messages for user 6843d062f457581752641ee3","timestamp":"2025-06-25T22:59:01.853Z"}
+{"level":"info","message":"Fetched 6 messages between 6843d062f457581752641ee3 and 6846e9cc91c8d81ee744f910","timestamp":"2025-06-25T22:59:07.051Z"}
+{"level":"info","message":"Message sent from 6843d062f457581752641ee3 to 6846e9cc91c8d81ee744f910: 685c7f4003cb1cbe4dc8a0ea","timestamp":"2025-06-25T22:59:12.957Z"}
+{"level":"info","message":"Emitting receiveMessage to user 6846e9cc91c8d81ee744f910: {\"_id\":\"685c7f4003cb1cbe4dc8a0ea\",\"senderId\":\"6843d062f457581752641ee3\",\"receiverId\":\"6846e9cc91c8d81ee744f910\",\"text\":\"Hi\",\"messageType\":\"text\",\"offerDetails\":null,\"attachment\":null,\"chatPartnerName\":\"Debbie James\",\"status\":\"sent\",\"createdAt\":\"2025-06-25T22:59:12.595Z\"}","timestamp":"2025-06-25T22:59:12.971Z"}
+{"level":"info","message":"Emitting newMessage to user 6843d062f457581752641ee3: {\"_id\":\"685c7f4003cb1cbe4dc8a0ea\",\"senderId\":\"6843d062f457581752641ee3\",\"receiverId\":\"6846e9cc91c8d81ee744f910\",\"text\":\"Hi\",\"messageType\":\"text\",\"offerDetails\":null,\"attachment\":null,\"chatPartnerName\":\"Debbie James\",\"status\":\"sent\",\"createdAt\":\"2025-06-25T22:59:12.595Z\"}","timestamp":"2025-06-25T22:59:12.977Z"}
+{"level":"info","message":"Sending FCM notification to user 6846e9cc91c8d81ee744f910 for message 685c7f4003cb1cbe4dc8a0ea","timestamp":"2025-06-25T22:59:12.986Z"}
+{"level":"info","message":"FCM notification sent to user 6846e9cc91c8d81ee744f910","timestamp":"2025-06-25T22:59:15.597Z"}
+{"level":"info","message":"Triggering badge update for user 6846e9cc91c8d81ee744f910","timestamp":"2025-06-25T22:59:15.600Z"}
+{"level":"info","message":"Fetched 8 messages between 6843d062f457581752641ee3 and 6846e9cc91c8d81ee744f910","timestamp":"2025-06-25T23:00:17.617Z"}
+{"level":"info","message":"Message sent from 6843d062f457581752641ee3 to 6846e9cc91c8d81ee744f910: 685c7f8d03cb1cbe4dc8a0f4","timestamp":"2025-06-25T23:00:29.678Z"}
+{"level":"info","message":"Emitting receiveMessage to user 6846e9cc91c8d81ee744f910: {\"_id\":\"685c7f8d03cb1cbe4dc8a0f4\",\"senderId\":\"6843d062f457581752641ee3\",\"receiverId\":\"6846e9cc91c8d81ee744f910\",\"text\":\"How far?\",\"messageType\":\"text\",\"offerDetails\":null,\"attachment\":null,\"chatPartnerName\":\"Debbie James\",\"status\":\"sent\",\"createdAt\":\"2025-06-25T23:00:29.435Z\"}","timestamp":"2025-06-25T23:00:29.685Z"}
+{"level":"info","message":"Emitting newMessage to user 6843d062f457581752641ee3: {\"_id\":\"685c7f8d03cb1cbe4dc8a0f4\",\"senderId\":\"6843d062f457581752641ee3\",\"receiverId\":\"6846e9cc91c8d81ee744f910\",\"text\":\"How far?\",\"messageType\":\"text\",\"offerDetails\":null,\"attachment\":null,\"chatPartnerName\":\"Debbie James\",\"status\":\"sent\",\"createdAt\":\"2025-06-25T23:00:29.435Z\"}","timestamp":"2025-06-25T23:00:29.695Z"}
+{"level":"info","message":"Sending FCM notification to user 6846e9cc91c8d81ee744f910 for message 685c7f8d03cb1cbe4dc8a0f4","timestamp":"2025-06-25T23:00:29.699Z"}
+{"level":"info","message":"FCM notification sent to user 6846e9cc91c8d81ee744f910","timestamp":"2025-06-25T23:00:31.082Z"}
+{"level":"info","message":"Triggering badge update for user 6846e9cc91c8d81ee744f910","timestamp":"2025-06-25T23:00:31.084Z"}
