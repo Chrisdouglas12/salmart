@@ -2988,3 +2988,12 @@
 {"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-27T21:19:57.306Z"}
 {"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-27T21:27:51.837Z"}
 {"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-27T21:28:08.970Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-27T22:47:55.873Z"}
+{"body":{"buyerId":"68431685432ee393a735a641","currency":"NGN","email":"chrisdouglas1700@gmail.com","postId":"685f0d51b408e815cdf5f413"},"level":"info","message":"Payment initiation started","requestId":"PAY_1751064475886","timestamp":"2025-06-27T22:47:55.886Z"}
+{"level":"info","message":"Payment initialized successfully","reference":"rk876fmuv3","requestId":"PAY_1751064475886","timestamp":"2025-06-27T22:47:58.771Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-27T22:49:18.481Z"}
+{"body":{"buyerId":"68431685432ee393a735a641","currency":"NGN","email":"chrisdouglas1700@gmail.com","postId":"685c759e59862a1ce5b1b5a3"},"level":"info","message":"Payment initiation started","requestId":"PAY_1751064558485","timestamp":"2025-06-27T22:49:18.486Z"}
+{"level":"info","message":"Payment initialized successfully","reference":"yzyog9bz6x","requestId":"PAY_1751064558485","timestamp":"2025-06-27T22:49:19.693Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-27T22:49:23.152Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-27T22:49:59.231Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-27T22:50:12.646Z"}
