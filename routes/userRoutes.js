@@ -559,5 +559,64 @@ router.get('/api/is-following-list', verifyToken, async (req, res) => {
 });
 
 
+router.get('/api/user-suggestions', verifyToken, async (req, res) => {
+  try {
+    const loggedInUserId = req.user.userId;
+    const limit = parseInt(req.query.limit, 10) || 8;
+
+    const loggedInUser = await User.findById(loggedInUserId).lean();
+    if (!loggedInUser) {
+      return res.status(404).json({ message: 'Logged-in user not found' });
+    }
+
+    // Combine following + self for exclusion
+    const excludedUserIds = new Set(
+      [...(loggedInUser.following || []), loggedInUserId].map(id =>
+        new mongoose.Types.ObjectId(id)
+      )
+    );
+
+    const suggestions = await User.aggregate([
+      {
+        $match: {
+          _id: { $nin: Array.from(excludedUserIds) },
+          isBanned: false,
+        },
+      },
+      {
+        $addFields: {
+          followersCount: { $size: "$followers" },
+          name: { $concat: ["$firstName", " ", "$lastName"] },
+          profilePicture: {
+            $ifNull: ["$profilePicture", "/salmart-192x192.png"],
+          },
+        },
+      },
+      {
+        $project: {
+          _id: 1,
+          name: 1,
+          profilePicture: 1,
+          followersCount: 1,
+        },
+      },
+      {
+        $sort: { followersCount: -1 },
+      },
+      {
+        $limit: limit,
+      },
+    ]);
+
+    return res.status(200).json({ suggestions });
+  } catch (error) {
+    console.error('Error in /api/user-suggestions:', {
+      message: error.message,
+      stack: error.stack,
+    });
+    return res.status(500).json({ message: 'Failed to fetch user suggestions' });
+  }
+});
+
   return router;
 };

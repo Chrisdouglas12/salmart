@@ -1,7 +1,3 @@
-// public/posts.js
-
-// Import the salmartCache helper.
-// IMPORTANT: Adjust the path if salmartCache.js is not in the same directory.
 import { salmartCache } from './salmartCache.js';
 
 document.addEventListener('DOMContentLoaded', async function () {
@@ -10,10 +6,11 @@ document.addEventListener('DOMContentLoaded', async function () {
     let isAuthReady = false;
 
     // --- State variables for pagination/filtering ---
+    let userIdToFollow;
     let currentPage = 1;
     let currentCategory = 'all';
     let isLoading = false; // To prevent multiple simultaneous fetches
-
+    let postCounter = 0; // Counter for normal posts to inject suggestions
 
     // --- Helper Functions ---
 
@@ -32,7 +29,8 @@ document.addEventListener('DOMContentLoaded', async function () {
             });
             if (response.ok) {
                 const { following } = await response.json();
-                return following || [];
+                // Ensure unique IDs and convert to string for consistent comparison
+                return [...new Set(following.map(id => id.toString()))] || [];
             } else {
                 console.warn('Could not fetch following list. Status:', response.status);
                 return [];
@@ -43,34 +41,60 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
     }
 
-    function formatTime(timestamp) {
-    const now = new Date();
-    const postDate = new Date(timestamp);
-    const diffInSeconds = Math.floor((now - postDate) / 1000);
+    async function fetchUserSuggestions() {
+        if (!currentLoggedInUser) {
+            console.log("Cannot fetch user suggestions: User not logged in.");
+            return [];
+        }
+        const token = localStorage.getItem('authToken');
+        if (!token) return [];
 
-    if (diffInSeconds < 60) return "Just now";
-    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m`;
-    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h`;
-    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d`;
-    if (diffInSeconds < 2592000) return `${Math.floor(diffInSeconds / 604800)}w`;
-
-    // For older posts, show the actual date
-    const currentYear = now.getFullYear();
-    const postYear = postDate.getFullYear();
-    
-    if (postYear === currentYear) {
-        return postDate.toLocaleDateString(undefined, { 
-            month: "short", 
-            day: "numeric" 
-        });
-    } else {
-        return postDate.toLocaleDateString(undefined, { 
-            month: "short", 
-            day: "numeric", 
-            year: "numeric" 
-        });
+        try {
+            const response = await fetch(`${window.API_BASE_URL || (window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart.onrender.com')}/api/user-suggestions`, {
+                method: 'GET',
+                headers: { 'Authorization': `Bearer ${token}` },
+            });
+            if (response.ok) {
+                const { suggestions } = await response.json();
+                // Filter out users already in currentFollowingList (ids are strings)
+                return suggestions.filter(user => !currentFollowingList.includes(user._id.toString()));
+            } else {
+                console.warn('Could not fetch user suggestions. Status:', response.status);
+                return [];
+            }
+        } catch (error) {
+            console.error('Error fetching user suggestions:', error);
+            return [];
+        }
     }
-}
+
+    function formatTime(timestamp) {
+        const now = new Date();
+        const postDate = new Date(timestamp);
+        const diffInSeconds = Math.floor((now - postDate) / 1000);
+
+        if (diffInSeconds < 60) return "Just now";
+        if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m`;
+        if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h`;
+        if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d`;
+        if (diffInSeconds < 2592000) return `${Math.floor(diffInSeconds / 604800)}w`;
+
+        const currentYear = now.getFullYear();
+        const postYear = postDate.getFullYear();
+
+        if (postYear === currentYear) {
+            return postDate.toLocaleDateString(undefined, {
+                month: "short",
+                day: "numeric"
+            });
+        } else {
+            return postDate.toLocaleDateString(undefined, {
+                month: "short",
+                day: "numeric",
+                year: "numeric"
+            });
+        }
+    }
 
     function escapeHtml(text) {
         const div = document.createElement('div');
@@ -79,6 +103,120 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 
     // --- Render Functions ---
+
+    function renderUserSuggestion(user) {
+        const suggestionElement = document.createElement('div');
+        suggestionElement.classList.add('user-suggestion-card');
+        suggestionElement.innerHTML = `
+            <a href="Profile.html?userId=${user._id}" class="user-info-link">
+                <img src="${user.profilePicture || '/salmart-192x192.png'}" alt="${escapeHtml(user.name)}'s profile picture" class="user-suggestion-avatar" onerror="this.src='/salmart-192x192.png'">
+                <h5 class="user-suggestion-name">${escapeHtml(user.name)}</h5>
+            </a>
+            <button class="follow-button user-suggestion-follow-btn" data-user-id="${user._id}">
+                <i class="fas fa-user-plus"></i> Follow
+            </button>
+        `;
+
+        return suggestionElement;
+    }
+
+    function createUserSuggestionsContainer(users) {
+        if (!users || users.length === 0) {
+            return null;
+        }
+
+        const wrapperContainer = document.createElement('div');
+        wrapperContainer.classList.add('user-suggestions-wrapper');
+        wrapperContainer.style.cssText = `
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        `;
+
+        const headerElement = document.createElement('h3');
+        headerElement.textContent = 'Suggested People to Follow';
+        headerElement.style.cssText = `
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+            text-align: center;
+        `;
+        wrapperContainer.appendChild(headerElement);
+
+        const cardsPerRow = 8;
+
+        for (let i = 0; i < users.length; i += cardsPerRow) {
+            const rowContainer = document.createElement('div');
+            rowContainer.classList.add('user-suggestions-row');
+            rowContainer.style.cssText = `
+                display: flex;
+                overflow-x: auto;
+                gap: 15px;
+                padding-bottom: 10px;
+                scroll-snap-type: x mandatory;
+                -webkit-overflow-scrolling: touch;
+                -webkit-scrollbar: none;
+                -ms-overflow-style: none;
+                scrollbar-width: none;
+                margin-bottom: ${i + cardsPerRow < users.length ? '10px' : '0'};
+            `;
+
+            const currentRowUsers = users.slice(i, i + cardsPerRow);
+            currentRowUsers.forEach(user => {
+                const userCard = renderUserSuggestion(user);
+                userCard.style.flex = '0 0 auto';
+                userCard.style.width = '150px';
+                userCard.style.textAlign = 'center';
+                userCard.style.scrollSnapAlign = 'start';
+                userCard.style.backgroundColor = '#f0f2f5';
+                userCard.style.padding = '10px';
+                userCard.style.borderRadius = '8px';
+                userCard.style.boxShadow = '0 1px 3px rgba(0,0,0,0.08)';
+
+                userCard.querySelector('.user-suggestion-avatar').style.cssText = `
+                    width: 80px;
+                    height: 80px;
+                    border-radius: 50%;
+                    object-fit: cover;
+                    margin-bottom: 8px;
+                    border: 2px solid #ddd;
+                `;
+                userCard.querySelector('.user-suggestion-name').style.cssText = `
+                    font-weight: bold;
+                    margin-bottom: 5px;
+                    color: #333;
+                    font-size: 0.9em;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    display: block;
+                `;
+                userCard.querySelector('.user-info-link').style.cssText = `
+                    text-decoration: none;
+                    color: inherit;
+                    display: block;
+                `;
+                userCard.querySelector('.user-suggestion-follow-btn').style.cssText = `
+                    background-color: #28a745;
+                    color: white;
+                    border: none;
+                    border-radius: 5px;
+                    padding: 8px 12px;
+                    cursor: pointer;
+                    font-size: 0.85em;
+                    width: 90%;
+                    margin-top: 5px;
+                    transition: background-color 0.2s ease;
+                `;
+                rowContainer.appendChild(userCard);
+            });
+            wrapperContainer.appendChild(rowContainer);
+        }
+        return wrapperContainer;
+    }
 
     function renderPromotedPost(post) {
         const postElement = document.createElement('div');
@@ -97,7 +235,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         if (post.postType === 'video_ad') {
             mediaContent = `
                 <div class="promoted-video-container">
-                    <video class="promoted-video" preload="metadata" muted aria-label="Promoted video ad for ${(post.description || 'product').replace(/"/g, '&quot;')}" poster="${post.thumbnail || '/salmart-192x192.png'}">
+                    <video class="promoted-video" preload="metadata" muted aria-label="Promoted video ad for ${(post.description || 'product').replace(/"/g, '"')}" poster="${post.thumbnail || '/salmart-192x192.png'}">
                         <source src="${post.video || ''}" type="video/mp4" />
                         Your browser does not support the video tag.
                     </video>
@@ -174,7 +312,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         postElement.dataset.createdAt = post.createdAt || new Date().toISOString();
         postElement.dataset.postId = post._id || '';
 
-        const isFollowing = currentFollowingList.includes(post.createdBy?.userId);
+        const isFollowing = currentFollowingList.includes(post.createdBy?.userId?.toString());
         const isPostCreator = post.createdBy && post.createdBy.userId === currentLoggedInUser;
 
         let mediaContent = '';
@@ -186,7 +324,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         if (post.postType === 'video_ad') {
             mediaContent = `
                 <div class="post-video-container">
-                    <video class="post-video" preload="metadata" aria-label="Video ad for ${(post.description || 'product').replace(/"/g, '&quot;')}" poster="${post.thumbnail || '/salmart-192x192.png'}">
+                    <video class="post-video" preload="metadata" aria-label="Video ad for ${(post.description || 'product').replace(/"/g, '"')}" poster="${post.thumbnail || '/salmart-192x192.png'}">
                         <source src="${post.video || ''}" type="video/mp4" />
                         <source src="${post.video ? post.video.replace('.mp4', '.webm') : ''}" type="video/webm" />
                         <source src="${post.video ? post.video.replace('.mp4', '.ogg') : ''}" type="video/ogg" />
@@ -284,8 +422,8 @@ document.addEventListener('DOMContentLoaded', async function () {
                 if (post.createdBy.userId === currentLoggedInUser) {
                     followButtonHtml = '';
                 } else {
-                    followButtonHtml = isFollowing ?
-                        `<button class="follow-button" data-user-id="${post.createdBy.userId}" style="background-color: #28a745; color: #fff;" disabled>
+                    followButtonHtml = currentFollowingList.includes(post.createdBy.userId.toString()) ?
+                        `<button class="follow-button" data-user-id="${post.createdBy.userId}" style="background-color: #fff; color: #28a745;" disabled>
                             <i class="fas fa-user-check"></i> Following
                         </button>` :
                         `<button class="follow-button" data-user-id="${post.createdBy.userId}">
@@ -389,7 +527,6 @@ document.addEventListener('DOMContentLoaded', async function () {
             font-size: 1em;
             font-weight: 600;
             color: #333;
-     
         `;
 
         const rowContainer = document.createElement('div');
@@ -422,163 +559,147 @@ document.addEventListener('DOMContentLoaded', async function () {
         wrapperContainer.appendChild(headerElement);
         wrapperContainer.appendChild(rowContainer);
 
-        if (posts.length > 5) {
-            const prevArrow = document.createElement('button');
-            prevArrow.className = 'promoted-row-nav-arrow prev';
-            prevArrow.innerHTML = '<i class="fas fa-chevron-left"></i>';
-            prevArrow.setAttribute('aria-label', 'Previous promoted posts');
-
-            const nextArrow = document.createElement('button');
-            nextArrow.className = 'promoted-row-nav-arrow next';
-            nextArrow.innerHTML = '<i class="fas fa-chevron-right"></i>';
-            nextArrow.setAttribute('aria-label', 'Next promoted posts');
-
-            const arrowStyles = `
-                position: absolute;
-                top: 50%;
-                transform: translateY(-50%);
-                background: rgba(0, 0, 0, 0.6);
-                color: white;
-                border: none;
-                border-radius: 50%;
-                width: 35px;
-                height: 35px;
-                cursor: pointer;
-                z-index: 1;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 1.2em;
-                transition: background 0.3s ease;
-            `;
-            prevArrow.style.cssText = arrowStyles + 'left: 5px;';
-            nextArrow.style.cssText = arrowStyles + 'right: 5px;';
-
-            prevArrow.addEventListener('click', () => {
-                rowContainer.scrollBy({ left: -rowContainer.offsetWidth, behavior: 'smooth' });
-            });
-            nextArrow.addEventListener('click', () => {
-                rowContainer.scrollBy({ left: rowContainer.offsetWidth, behavior: 'smooth' });
-            });
+            
 
             rowContainer.style.position = 'relative';
-            rowContainer.appendChild(prevArrow);
-            rowContainer.appendChild(nextArrow);
-        }
+    
 
         return wrapperContainer;
     }
 
-    // --- Main Post Loading Logic (Updated for Cache-First Display) ---
+    // --- Main Post Loading Logic ---
 
     async function fetchAndRenderPosts(category = currentCategory, page = currentPage, clearExisting = false) {
-        const postsContainer = document.getElementById('posts-container');
-        if (!postsContainer) {
-            console.error('Posts container not found.');
-            return;
-        }
+    const postsContainer = document.getElementById('posts-container');
+    if (!postsContainer) {
+        console.error('Posts container not found.');
+        return;
+    }
 
-        if (isLoading && !clearExisting) {
-            console.log('Posts are already loading. Skipping new request (unless clearing).');
-            return;
-        }
-        isLoading = true;
+    if (isLoading && !clearExisting) {
+        console.log('Posts are already loading. Skipping new request (unless clearing).');
+        return;
+    }
+    isLoading = true;
 
-        // Do NOT clear existing content if skeleton loaders are already displayed.
-        // The goal is to replace the loaders or existing content seamlessly.
-        // We only clear if `clearExisting` is true (e.g., category change),
-        // but even then, we expect skeleton loaders to handle the initial empty state.
-        if (clearExisting) {
-            postsContainer.innerHTML = '';
-        }
+    if (clearExisting) {
+        postsContainer.innerHTML = '';
+        postCounter = 0; // Reset post counter on clear or category change
+    }
 
-        try {
-            const allPosts = await salmartCache.getPostsByCategory(category);
+    try {
+        const allPosts = await salmartCache.getPostsByCategory(category);
 
-            if (!Array.isArray(allPosts) || allPosts.length === 0) {
-                // Only show "No posts yet" if the container is currently empty
-                // (meaning no skeleton loaders or previous posts are visible).
-                if (postsContainer.children.length === 0) {
-                    postsContainer.innerHTML = `
-                        <p style="text-align: center; padding: 20px; color: #666;">
-                            No posts yet for "${category === 'all' ? 'this category' : category}".
-                            Try a different category or create one!
-                        </p>
-                    `;
-                }
-                isLoading = false;
-                return;
-            }
-
-            // Reverse the order of posts so new items appear at the top
-            const postsToRender = [...allPosts].reverse();
-
-            const promotedPosts = postsToRender.filter(post => post.isPromoted);
-            const nonPromotedPosts = postsToRender.filter(post => !post.isPromoted);
-
-            const postsPerPromotedRow = 5;
-
-            let promotedPostsRenderedCount = 0;
-
-            const fragment = document.createDocumentFragment();
-
-            // Handle promoted posts
-            if (promotedPosts.length > 0 && clearExisting) { // Only add initial promoted row on clear
-                const initialPromotedPosts = promotedPosts.slice(0, postsPerPromotedRow);
-                if (initialPromotedPosts.length > 0) {
-                    const promotedRow = createPromotedPostsRow(initialPromotedPosts);
-                    fragment.prepend(promotedRow); // Prepend promoted row
-                    promotedPostsRenderedCount += initialPromotedPosts.length;
-                }
-            }
-            
-            // Prepend non-promoted posts
-            nonPromotedPosts.forEach(post => {
-                const postElement = renderPost(post);
-                fragment.prepend(postElement); // Prepend to show new items at the top
-            });
-
-            // Interleave remaining promoted posts if any
-            for (let i = promotedPostsRenderedCount; i < promotedPosts.length; i += postsPerPromotedRow) {
-                const postsForThisPromotedRow = promotedPosts.slice(i, i + postsPerPromotedRow);
-                if (postsForThisPromotedRow.length > 0) {
-                    const promotedRow = createPromotedPostsRow(postsForThisPromotedRow);
-                    fragment.prepend(promotedRow); // Prepend promoted rows
-                }
-            }
-
-
-            if (clearExisting) {
-                postsContainer.innerHTML = ''; // Clear existing content before prepending new content
-                postsContainer.appendChild(fragment); // Then append the fragment (which is now reversed)
-            } else {
-                // If not clearing, prepend the new posts
-                postsContainer.prepend(fragment);
-            }
-
-            // After rendering, if still no children and we attempted to fetch, show message
+        if (!Array.isArray(allPosts) || allPosts.length === 0) {
             if (postsContainer.children.length === 0) {
-                postsContainer.innerHTML = '<p style="text-align: center; margin: 2rem;">No posts available.</p>';
-            }
-
-            window.dispatchEvent(new Event('postsRendered'));
-
-        } catch (error) {
-            console.error('Error fetching posts:', error);
-            // Only display an error message if the container is currently empty,
-            // otherwise, existing content (including skeleton loaders) remains visible.
-            if (!postsContainer.children.length) {
                 postsContainer.innerHTML = `
-                    <p style="text-align: center; color: red; padding: 20px;">
-                        Error loading posts. Please check your internet connection or try again later.
-                        <br>Error: ${error.message || 'Unknown error'}
+                    <p style="text-align: center; padding: 20px; color: #666;">
+                        No posts yet for "${category === 'all' ? 'this category' : category}".
+                        Try a different category or create one!
                     </p>
                 `;
             }
-        } finally {
             isLoading = false;
+            return;
         }
+
+        // Sort posts by creation date (newest first)
+        const sortedPosts = [...allPosts].sort((a, b) => {
+            const dateA = new Date(a.createdAt || 0);
+            const dateB = new Date(b.createdAt || 0);
+            return dateB - dateA; // Newest first
+        });
+
+        // Separate promoted and non-promoted posts
+        const promotedPosts = sortedPosts.filter(post => post.isPromoted);
+        const nonPromotedPosts = sortedPosts.filter(post => !post.isPromoted);
+
+        // Sort promoted posts by creation date too (newest promoted first)
+        promotedPosts.sort((a, b) => {
+            const dateA = new Date(a.createdAt || 0);
+            const dateB = new Date(b.createdAt || 0);
+            return dateB - dateA;
+        });
+
+        const postsPerPromotedRow = 5;
+        const postsBeforeSuggestion = 5;
+        const usersPerSuggestionRow = 8;
+
+        const fragment = document.createDocumentFragment();
+
+        // Get all user suggestions once at the beginning
+        let allUserSuggestions = [];
+        if (currentLoggedInUser && clearExisting) {
+            allUserSuggestions = await fetchUserSuggestions();
+        }
+
+        // First, add promoted posts row at the very top (if we have promoted posts)
+        if (promotedPosts.length > 0) {
+            const promotedRow = createPromotedPostsRow(promotedPosts);
+            fragment.prepend(promotedRow);
+        }
+
+        // Track which suggestions we've already shown
+        let suggestionRowIndex = 0;
+        let suggestionCounter = 0;
+
+        // Then add non-promoted posts (newest first) with user suggestions interspersed
+        for (let i = 0; i < nonPromotedPosts.length; i++) {
+            const post = nonPromotedPosts[i];
+            const postElement = renderPost(post);
+            fragment.appendChild(postElement);
+            postCounter++;
+            suggestionCounter++;
+
+            // Inject user suggestions after every 5 posts, but only if we have suggestions left
+            if (suggestionCounter % postsBeforeSuggestion === 0 && 
+                currentLoggedInUser && 
+                allUserSuggestions.length > 0 && 
+                suggestionRowIndex * usersPerSuggestionRow < allUserSuggestions.length) {
+                
+                // Get the next batch of users for suggestion row
+                const startIndex = suggestionRowIndex * usersPerSuggestionRow;
+                const endIndex = Math.min(startIndex + usersPerSuggestionRow, allUserSuggestions.length);
+                const usersForThisRow = allUserSuggestions.slice(startIndex, endIndex);
+                
+                if (usersForThisRow.length > 0) {
+                    const userSuggestionsContainer = createUserSuggestionsContainer(usersForThisRow);
+                    if (userSuggestionsContainer) {
+                        fragment.appendChild(userSuggestionsContainer);
+                        suggestionRowIndex++; // Move to next batch for future rows
+                    }
+                }
+            }
+        }
+
+        if (clearExisting) {
+            postsContainer.innerHTML = '';
+            postsContainer.appendChild(fragment);
+        } else {
+            // For non-clearing loads, append new content
+            postsContainer.appendChild(fragment);
+        }
+
+        if (postsContainer.children.length === 0) {
+            postsContainer.innerHTML = '<p style="text-align: center; margin: 2rem;">No posts available.</p>';
+        }
+
+        window.dispatchEvent(new Event('postsRendered'));
+
+    } catch (error) {
+        console.error('Error fetching posts:', error);
+        if (!postsContainer.children.length) {
+            postsContainer.innerHTML = `
+                <p style="text-align: center; color: red; padding: 20px;">
+                    Error loading posts. Please check your internet connection or try again later.
+                    <br>Error: ${error.message || 'Unknown error'}
+                </p>
+            `;
+        }
+    } finally {
+        isLoading = false;
     }
+}
 
     // --- Global Utility Functions ---
 
@@ -593,15 +714,10 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
     };
 
-    window.openImage = function(imageUrl) {
-        console.log("Opening image:", imageUrl);
-        window.open(imageUrl, '_blank');
-    };
 
     // --- Event Delegates for Interactive Elements ---
 
     document.addEventListener('click', async (event) => {
-        // Only keep the promote post button delegation
         const promoteButton = event.target.closest('.promote-button');
         if (promoteButton) {
             const postId = promoteButton.dataset.postId;
@@ -613,8 +729,8 @@ document.addEventListener('DOMContentLoaded', async function () {
             }
             window.location.href = `promote.html?postId=${postId}`;
         }
+        
     });
-
     // --- Authentication and Initialization Logic ---
 
     async function initializeAuthStatusAndPosts() {
@@ -632,56 +748,27 @@ document.addEventListener('DOMContentLoaded', async function () {
             isAuthReady = true;
             console.log('Auth initialization complete. User:', currentLoggedInUser ? currentLoggedInUser : 'Not logged in');
 
-            // Initial fetch of posts after auth is ready
             await fetchAndRenderPosts(currentCategory, currentPage, true);
 
         } catch (error) {
             console.error('Error during initial auth or post fetch:', error);
             isAuthReady = true;
-            // Attempt to fetch posts even if auth status is uncertain, for public content
             await fetchAndRenderPosts(currentCategory, currentPage, true);
         }
     }
 
-    // Expose fetchAndRenderPosts globally if needed by other parts of your app
     window.fetchPosts = fetchAndRenderPosts;
 
-    // Update UI for all follow buttons on the page
-    window.updateFollowButtonsUI = (userId, isFollowingStatus) => {
-        if (isFollowingStatus) {
-            if (!currentFollowingList.includes(userId)) {
-                currentFollowingList.push(userId);
-            }
-        } else {
-            currentFollowingList = currentFollowingList.filter(id => id !== userId);
-        }
-
-        document.querySelectorAll(`.follow-button[data-user-id="${userId}"]`).forEach(btn => {
-            if (isFollowingStatus) {
-                btn.innerHTML = '<i class="fas fa-user-check"></i> Following';
-                btn.style.backgroundColor = '#28a745';
-                btn.style.color = '#fff';
-                btn.disabled = true;
-            } else {
-                btn.innerHTML = '<i class="fas fa-user-plus"></i> Follow';
-                btn.style.backgroundColor = ''; // Reset to default
-                btn.style.color = ''; // Reset to default
-                btn.disabled = false;
-            }
-        });
-    };
-
-    // Listen for a custom event from your auth script indicating auth status is ready
+    
+       
     document.addEventListener('authStatusReady', async (event) => {
         currentLoggedInUser = event.detail.loggedInUser;
         console.log('Auth status ready event received. Logged in user:', currentLoggedInUser ? currentLoggedInUser : 'Not logged in');
         currentFollowingList = await fetchFollowingList();
         isAuthReady = true;
-        // Re-render posts with correct user-specific data (likes, follow buttons)
         await fetchAndRenderPosts(currentCategory, currentPage, true);
     });
 
-    // Fallback timers in case 'authStatusReady' event is missed or not fired quickly
     setTimeout(async () => {
         if (!isAuthReady) {
             console.log('Auth status timeout (500ms) - proceeding with initialization.');
@@ -696,23 +783,14 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
     }, 2000);
 
-    // Event listener for category filter changes - ensure it uses the outer-scoped variables
-    const categoryFilter = document.getElementById('category-filter');
-    if (categoryFilter) {
-        categoryFilter.addEventListener('change', (event) => {
-            currentCategory = event.target.value;
-            currentPage = 1; // Reset page to 1 when category changes
-            fetchAndRenderPosts(currentCategory, currentPage, true); // Clear existing posts on category change
-        });
-    }
+   
 
-    // Event listener for the "Load More" button - ensure it uses the outer-scoped variables
     const loadMoreBtn = document.getElementById('load-more-btn');
     if (loadMoreBtn) {
         loadMoreBtn.addEventListener('click', () => {
             if (!isLoading) {
                 currentPage++;
-                fetchAndRenderPosts(currentCategory, currentPage, false); // Don't clear existing, prepend
+                fetchAndRenderPosts(currentCategory, currentPage, false);
             }
         });
     }

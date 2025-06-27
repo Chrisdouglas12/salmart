@@ -323,8 +323,7 @@ router.get('/post', async (req, res) => {
         loggedInUserId = decoded.userId;
         const user = await User.findById(loggedInUserId).select('following').lean();
         following = user?.following || [];
-        // Assume user interests are derived from past interactions (e.g., liked categories)
-        // You can enhance this by tracking user likes or purchases in a separate collection
+        // Get user interests from past interactions
         userInterests = await Post.find({ likes: loggedInUserId })
           .distinct('category')
           .lean();
@@ -343,56 +342,142 @@ router.get('/post', async (req, res) => {
       return res.status(404).json({ message: 'No posts found' });
     }
 
-    // Calculate scores for each post
     const currentTime = new Date();
-    const rankedPosts = posts.map((post) => {
-      // Engagement Score: Based on likes and comments
-      const likeCount = post.likes?.length || 0;
-      const commentCount = post.comments?.length || 0;
-      const engagementScore = (likeCount * 0.2) + (commentCount * 0.5);
+    
+    // Categorize posts into different buckets for fair distribution
+    const buckets = {
+      ultraFresh: [],    // 0-2 hours
+      fresh: [],         // 2-12 hours  
+      recent: [],        // 12-48 hours
+      thisWeek: [],      // 2-7 days
+      older: []          // 7+ days
+    };
 
-      // Recency Score: Decay based on time since creation (in hours)
+    // Sort posts into time-based buckets
+    posts.forEach(post => {
       const hoursSincePosted = (currentTime - new Date(post.createdAt)) / (1000 * 60 * 60);
-      const recencyScore = 1 / (hoursSincePosted + 1); // Exponential decay
-
-      // Relevance Score: Based on category match and user relationships
-      let relevanceScore = 0;
-      if (loggedInUserId) {
-        // Boost if the post is from a followed user
-        if (following.some((id) => id.toString() === post.createdBy.userId._id.toString())) {
-          relevanceScore += 0.5;
-        }
-        // Boost if the post's category matches user interests
-        if (userInterests.includes(post.category)) {
-          relevanceScore += 0.3;
-        }
-      }
-
-      // Promotion Score: Boost promoted posts based on amount paid
-      let promotionScore = 0;
-      if (post.isPromoted && post.promotionDetails?.endDate > currentTime) {
-        const amountPaid = post.promotionDetails.amountPaid || 0;
-        promotionScore = Math.min(amountPaid / 100, 2); // Cap promotion boost at 2
-      }
-
-      // Content Type Score: Boost video ads
-      const contentTypeScore = post.postType === 'video_ad' ? 0.3 : 0;
-
-      // Total Score
-      const totalScore =
-        (engagementScore * 0.4) +
-        (recencyScore * 0.2) +
-        (relevanceScore * 0.3) +
-        (promotionScore * 0.2) +
-        contentTypeScore;
-
-      return { ...post, totalScore };
+      
+      if (hoursSincePosted < 2) buckets.ultraFresh.push(post);
+      else if (hoursSincePosted < 12) buckets.fresh.push(post);
+      else if (hoursSincePosted < 48) buckets.recent.push(post);
+      else if (hoursSincePosted < 168) buckets.thisWeek.push(post);
+      else buckets.older.push(post);
     });
 
-    // Sort posts by totalScore (descending) and limit to top results (e.g., 50)
-    const sortedPosts = rankedPosts
-      .sort((a, b) => b.totalScore - a.totalScore)
-      .slice(0, 50);
+    // Score and sort each bucket
+    const scoreAndSortBucket = (bucketPosts) => {
+      return bucketPosts.map(post => {
+        const hoursSincePosted = (currentTime - new Date(post.createdAt)) / (1000 * 60 * 60);
+        
+        // Engagement Score
+        const likeCount = post.likes?.length || 0;
+        const commentCount = post.comments?.length || 0;
+        const engagementScore = (likeCount * 0.3) + (commentCount * 0.7);
+
+        // Following Score - Higher priority for followed users
+        let followingScore = 0;
+        if (loggedInUserId && following.some(id => id.toString() === post.createdBy.userId._id.toString())) {
+          followingScore = 5; // Strong boost for followed users
+        }
+
+        // Interest Relevance Score
+        let relevanceScore = 0;
+        if (loggedInUserId && userInterests.includes(post.category)) {
+          relevanceScore = 2;
+        }
+
+        // Promotion Score
+        let promotionScore = 0;
+        if (post.isPromoted && post.promotionDetails?.endDate > currentTime) {
+          const amountPaid = post.promotionDetails.amountPaid || 0;
+          promotionScore = Math.min(amountPaid / 100, 3);
+        }
+
+        // Content Type Score
+        const contentTypeScore = post.postType === 'video_ad' ? 1 : 0;
+
+        // Micro-recency within bucket (for fine-tuning order within same time bucket)
+        const microRecencyScore = 1 / (hoursSincePosted + 1);
+
+        // Total score prioritizing: Following > Engagement > Relevance > Promotion > Content Type > Micro-recency
+        const totalScore = 
+          (followingScore * 0.4) +        // 40% - Following gets highest priority
+          (engagementScore * 0.25) +      // 25% - Engagement
+          (relevanceScore * 0.15) +       // 15% - Interest relevance
+          (promotionScore * 0.1) +        // 10% - Promotions
+          (contentTypeScore * 0.05) +     // 5% - Content type
+          (microRecencyScore * 0.05);     // 5% - Fine-tuning within bucket
+
+        return { ...post, totalScore, hoursSincePosted, followingScore, engagementScore };
+      }).sort((a, b) => b.totalScore - a.totalScore);
+    };
+
+    // Score and sort each bucket
+    const sortedBuckets = {
+      ultraFresh: scoreAndSortBucket(buckets.ultraFresh),
+      fresh: scoreAndSortBucket(buckets.fresh),
+      recent: scoreAndSortBucket(buckets.recent),
+      thisWeek: scoreAndSortBucket(buckets.thisWeek),
+      older: scoreAndSortBucket(buckets.older)
+    };
+
+    // Distribute posts fairly with recency dominance
+    const distributedPosts = [];
+    const maxPosts = 50;
+    
+    // Distribution strategy: Newer posts get more slots
+    const distribution = {
+      ultraFresh: Math.min(15, sortedBuckets.ultraFresh.length),  // Up to 15 slots (30%)
+      fresh: Math.min(15, sortedBuckets.fresh.length),            // Up to 15 slots (30%)
+      recent: Math.min(10, sortedBuckets.recent.length),          // Up to 10 slots (20%)
+      thisWeek: Math.min(7, sortedBuckets.thisWeek.length),       // Up to 7 slots (14%)
+      older: Math.min(3, sortedBuckets.older.length)              // Up to 3 slots (6%)
+    };
+
+    // Fill slots according to distribution
+    distributedPosts.push(...sortedBuckets.ultraFresh.slice(0, distribution.ultraFresh));
+    distributedPosts.push(...sortedBuckets.fresh.slice(0, distribution.fresh));
+    distributedPosts.push(...sortedBuckets.recent.slice(0, distribution.recent));
+    distributedPosts.push(...sortedBuckets.thisWeek.slice(0, distribution.thisWeek));
+    distributedPosts.push(...sortedBuckets.older.slice(0, distribution.older));
+
+    // If we have remaining slots, fill with best remaining posts from any bucket
+    const remainingSlots = maxPosts - distributedPosts.length;
+    if (remainingSlots > 0) {
+      const usedIds = new Set(distributedPosts.map(p => p._id.toString()));
+      const remainingPosts = [
+        ...sortedBuckets.ultraFresh.slice(distribution.ultraFresh),
+        ...sortedBuckets.fresh.slice(distribution.fresh),
+        ...sortedBuckets.recent.slice(distribution.recent),
+        ...sortedBuckets.thisWeek.slice(distribution.thisWeek),
+        ...sortedBuckets.older.slice(distribution.older)
+      ].filter(post => !usedIds.has(post._id.toString()))
+       .sort((a, b) => b.totalScore - a.totalScore);
+
+      distributedPosts.push(...remainingPosts.slice(0, remainingSlots));
+    }
+
+    // Final shuffle within time buckets to avoid predictable ordering (optional)
+    // This maintains recency dominance while adding some variety
+    const finalPosts = [];
+    let ultraIndex = 0, freshIndex = 0, recentIndex = 0;
+    
+    for (let i = 0; i < distributedPosts.length; i++) {
+      // Interleave newer posts more frequently
+      if (i % 3 === 0 && ultraIndex < distribution.ultraFresh) {
+        finalPosts.push(sortedBuckets.ultraFresh[ultraIndex++]);
+      } else if (i % 2 === 0 && freshIndex < distribution.fresh) {
+        finalPosts.push(sortedBuckets.fresh[freshIndex++]);
+      } else if (recentIndex < distribution.recent) {
+        finalPosts.push(sortedBuckets.recent[recentIndex++]);
+      } else {
+        // Fill remaining slots in order
+        finalPosts.push(distributedPosts[finalPosts.length]);
+      }
+    }
+
+    // Use distributed posts as final result
+    const sortedPosts = distributedPosts.slice(0, maxPosts);
 
     // Format response
     const populatedPosts = sortedPosts.map((post) => ({
@@ -410,20 +495,19 @@ router.get('/post', async (req, res) => {
       isLiked: loggedInUserId ? post.likes.includes(loggedInUserId) : false,
     }));
 
-    // Update viewCount for fetched posts (optional)
+    // Update viewCount for fetched posts
     await Post.updateMany(
       { _id: { $in: sortedPosts.map((p) => p._id) } },
       { $inc: { viewCount: 1 } }
     );
 
-    logger.info(`Fetched ${populatedPosts.length} posts for user ${loggedInUserId || 'anonymous'}`);
+    logger.info(`Distributed ${populatedPosts.length} posts for user ${loggedInUserId || 'anonymous'} - Fresh: ${distribution.ultraFresh + distribution.fresh}, Recent: ${distribution.recent}, Older: ${distribution.thisWeek + distribution.older}`);
     res.status(200).json(populatedPosts);
   } catch (error) {
     logger.error(`Error fetching posts: ${error.message}`);
     res.status(500).json({ message: 'Server error' });
   }
 });
-
   router.get('/post/:postId', async (req, res) => {
     try {
       const { postId } = req.params;
@@ -887,6 +971,43 @@ router.get('/post', async (req, res) => {
       res.status(500).json({ success: false, message: 'Server error' });
     }
   });
+  // GET /api/post/:postId/likers
+// This route fetches the names of users who liked a specific post.
+
+router.get('/:postId/likers', async (req, res) => { // Added 'auth' middleware for protection
+    try {
+        const postId = req.params.postId;
+
+        // Find the post by ID
+        const post = await Post.findById(postId);
+
+        if (!post) {
+            return res.status(404).json({ message: 'Post not found' });
+        }
+
+        // Check if there are any likes
+        if (!post.likes || post.likes.length === 0) {
+            return res.status(200).json({ likers: [], message: 'No one has liked this post yet.' });
+        }
+
+        // Fetch user details for each user ID in the 'likes' array
+        // We select only the '_id' and 'name' fields for efficiency and privacy
+        const likers = await User.find({ _id: { $in: post.likes } })
+                                 .select('_id name')
+                                 .lean(); // .lean() makes the result plain JavaScript objects, faster for reads
+
+        // Send back the array of liker objects (with _id and name)
+        res.status(200).json({ likers });
+
+    } catch (error) {
+        console.error('Error fetching likers:', error);
+        // Handle CastError for invalid postId format
+        if (error.name === 'CastError') {
+            return res.status(400).json({ message: 'Invalid Post ID format.' });
+        }
+        res.status(500).json({ message: 'Server error while fetching likers.', error: error.message });
+    }
+});
 
   return router;
 };

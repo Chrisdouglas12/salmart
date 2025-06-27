@@ -14,6 +14,10 @@
 
 }
 
+.follow-button{
+     background: #fff;
+}
+
 a{
      text-decoration: none;
 }
@@ -943,7 +947,7 @@ h1 {
   margin: 0 auto;
   padding: 8px;
   display: flex;
-  flex-direction: column-reverse;
+  flex-direction: column;
   gap: 0;
   margin-bottom: 70px;
 }
@@ -2067,3 +2071,107 @@ h1 {
     z-index: 10000000;
   }
 
+/* public/css/style.css (or similar) */
+
+.user-suggestions-wrapper {
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.user-suggestions-wrapper h3 {
+    font-size: 1.1em;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.user-suggestions-row {
+    display: flex;
+    overflow-x: auto;
+    gap: 15px;
+    padding-bottom: 10px; /* For scrollbar visibility */
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    /* Hide scrollbar for most browsers */
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+}
+
+.user-suggestions-row::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+}
+
+.user-suggestion-card {
+    flex: 0 0 auto;
+    width: 150px; /* Adjust as needed */
+    text-align: center;
+    scroll-snap-align: start;
+    background-color: #f0f2f5;
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between; /* Distribute space */
+}
+
+.user-suggestion-card .user-info-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    width: 100%; /* Ensure link takes full width for text overflow */
+}
+
+.user-suggestion-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 8px;
+    border: 2px solid #ddd;
+}
+
+.user-suggestion-name {
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: #333;
+    font-size: 0.9em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%; /* Ensure ellipsis works */
+}
+
+.user-suggestion-follow-btn {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 0.85em;
+    width: 90%;
+    margin-top: 5px;
+    transition: background-color 0.2s ease;
+}
+
+.user-suggestion-follow-btn:hover {
+    background-color: #0056b3;
+}
+
+.user-suggestion-follow-btn:disabled {
+    background-color: #fff;
+    cursor: not-allowed;
+}
+
+
+.post-header .follow-button[disabled] {
+    background-color: #28a745; /* Green for 'Following' */
+    color: #fff;
+    cursor: default;
+}
