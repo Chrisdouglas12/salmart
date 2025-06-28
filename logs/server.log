@@ -32673,3 +32673,52 @@
 {"level":"info","message":"[2025-06-28T12:33:46.667Z] GET /api/user-suggestions","timestamp":"2025-06-28T12:33:46.667Z"}
 {"level":"info","message":"[2025-06-28T12:34:12.640Z] GET /notification-counts?userId=685cfc99d8a56197d12a2534","timestamp":"2025-06-28T12:34:12.641Z"}
 {"level":"info","message":"Socket disconnected: 9cFZ9QWaThPyWVi3AAAN","timestamp":"2025-06-28T12:34:36.776Z"}
+{"level":"info","message":"✅ Firebase Admin SDK initialized successfully","timestamp":"2025-06-28T12:41:24.695Z"}
+{"level":"info","message":"✅ Socket.IO initialized","timestamp":"2025-06-28T12:41:24.902Z"}
+{"level":"info","message":"✅ Nodemailer configured","timestamp":"2025-06-28T12:41:25.007Z"}
+{"level":"info","message":"✅ Cloudinary configured","timestamp":"2025-06-28T12:41:25.011Z"}
+{"level":"info","message":"✅ Server running on port 3000","timestamp":"2025-06-28T12:41:25.057Z"}
+{"level":"error","message":"❌ MongoDB connection error: Server selection timed out after 5000 ms","timestamp":"2025-06-28T12:41:30.515Z"}
+{"level":"info","message":"✅ Firebase Admin SDK initialized successfully","timestamp":"2025-06-28T12:43:38.296Z"}
+{"level":"info","message":"✅ Socket.IO initialized","timestamp":"2025-06-28T12:43:38.460Z"}
+{"level":"info","message":"✅ Nodemailer configured","timestamp":"2025-06-28T12:43:38.550Z"}
+{"level":"info","message":"✅ Cloudinary configured","timestamp":"2025-06-28T12:43:38.553Z"}
+{"level":"info","message":"✅ Server running on port 3000","timestamp":"2025-06-28T12:43:38.606Z"}
+{"level":"error","message":"❌ MongoDB connection error: Could not connect to any servers in your MongoDB Atlas cluster. One common reason is that you're trying to access the database from an IP that isn't whitelisted. Make sure your current IP address is on your Atlas cluster's IP whitelist: https://www.mongodb.com/docs/atlas/security-whitelist/","timestamp":"2025-06-28T12:43:44.316Z"}
+{"level":"info","message":"✅ Firebase Admin SDK initialized successfully","timestamp":"2025-06-28T12:45:11.663Z"}
+{"level":"info","message":"✅ Socket.IO initialized","timestamp":"2025-06-28T12:45:11.877Z"}
+{"level":"info","message":"✅ Nodemailer configured","timestamp":"2025-06-28T12:45:11.994Z"}
+{"level":"info","message":"✅ Cloudinary configured","timestamp":"2025-06-28T12:45:11.997Z"}
+{"level":"info","message":"✅ Server running on port 3000","timestamp":"2025-06-28T12:45:12.062Z"}
+{"level":"info","message":"Socket connected: a39NfFossyaI7MNuAAAB","timestamp":"2025-06-28T12:45:14.691Z"}
+{"level":"info","message":"✅ MongoDB connected successfully","timestamp":"2025-06-28T12:45:16.258Z"}
+{"level":"info","message":"Socket disconnected: a39NfFossyaI7MNuAAAB","timestamp":"2025-06-28T12:45:46.476Z"}
+{"level":"info","message":"Socket connected: kTRyvjBtthv0HCviAAAD","timestamp":"2025-06-28T12:45:48.184Z"}
+{"level":"info","message":"Socket disconnected: kTRyvjBtthv0HCviAAAD","timestamp":"2025-06-28T12:46:09.243Z"}
+{"level":"info","message":"Socket connected: nYZ0YgxiXGRkFYPsAAAF","timestamp":"2025-06-28T12:46:12.648Z"}
+{"level":"info","message":"[2025-06-28T12:46:13.622Z] GET /post?category=all","timestamp":"2025-06-28T12:46:13.623Z"}
+{"level":"info","message":"Socket disconnected: nYZ0YgxiXGRkFYPsAAAF","timestamp":"2025-06-28T12:47:15.465Z"}
+{"level":"info","message":"Socket connected: vaed3eNA18DwUj4-AAAH","timestamp":"2025-06-28T12:48:40.657Z"}
+{"level":"info","message":"[2025-06-28T12:48:41.562Z] GET /post?category=all","timestamp":"2025-06-28T12:48:41.562Z"}
+{"level":"info","message":"Socket disconnected: vaed3eNA18DwUj4-AAAH","timestamp":"2025-06-28T12:48:56.314Z"}
+{"level":"info","message":"Socket connected: Sj8VKrxjpV6HTcukAAAJ","timestamp":"2025-06-28T12:49:47.368Z"}
+{"level":"info","message":"[2025-06-28T12:49:48.545Z] GET /post?category=all","timestamp":"2025-06-28T12:49:48.545Z"}
+{"level":"info","message":"Socket disconnected: Sj8VKrxjpV6HTcukAAAJ","timestamp":"2025-06-28T12:50:19.299Z"}
+{"level":"info","message":"[2025-06-28T12:50:28.951Z] POST /login","timestamp":"2025-06-28T12:50:28.951Z"}
+{"level":"info","message":"Socket connected: zdP2CFWE2c-iTBuXAAAL","timestamp":"2025-06-28T12:50:34.100Z"}
+{"level":"info","message":"[2025-06-28T12:50:34.184Z] GET /verify-token","timestamp":"2025-06-28T12:50:34.184Z"}
+{"level":"info","message":"[2025-06-28T12:50:34.284Z] GET /profile/685cfc99d8a56197d12a2534","timestamp":"2025-06-28T12:50:34.284Z"}
+{"level":"info","message":"[2025-06-28T12:50:34.364Z] GET /notification-counts?userId=685cfc99d8a56197d12a2534","timestamp":"2025-06-28T12:50:34.365Z"}
+{"level":"info","message":"[2025-06-28T12:50:34.387Z] GET /user-reviews/685cfc99d8a56197d12a2534","timestamp":"2025-06-28T12:50:34.387Z"}
+{"level":"info","message":"[2025-06-28T12:50:34.517Z] GET /average-rating/685cfc99d8a56197d12a2534","timestamp":"2025-06-28T12:50:34.517Z"}
+{"level":"info","message":"Socket connected: Kwa4SLv67M8XXSh3AAAN","timestamp":"2025-06-28T12:50:34.666Z"}
+{"level":"info","message":"Socket disconnected: zdP2CFWE2c-iTBuXAAAL","timestamp":"2025-06-28T12:50:34.671Z"}
+{"level":"info","message":"Socket disconnected: Kwa4SLv67M8XXSh3AAAN","timestamp":"2025-06-28T12:50:34.680Z"}
+{"level":"info","message":"[2025-06-28T12:50:34.800Z] GET /post?userId=685cfc99d8a56197d12a2534","timestamp":"2025-06-28T12:50:34.800Z"}
+{"level":"info","message":"Socket connected: 5HTYisV6Ohc0ZXkdAAAP","timestamp":"2025-06-28T12:50:37.184Z"}
+{"level":"info","message":"[2025-06-28T12:50:37.437Z] GET /notification-counts?userId=685cfc99d8a56197d12a2534","timestamp":"2025-06-28T12:50:37.437Z"}
+{"level":"info","message":"[2025-06-28T12:50:37.478Z] GET /verify-token","timestamp":"2025-06-28T12:50:37.478Z"}
+{"level":"info","message":"[2025-06-28T12:50:37.538Z] GET /users-profile/685cfc99d8a56197d12a2534","timestamp":"2025-06-28T12:50:37.538Z"}
+{"level":"info","message":"Socket disconnected: 5HTYisV6Ohc0ZXkdAAAP","timestamp":"2025-06-28T12:50:57.697Z"}
+{"level":"info","message":"Socket connected: f8XKYtQtI_zda2AsAAAS","timestamp":"2025-06-28T12:51:00.881Z"}
+{"level":"info","message":"Socket disconnected: f8XKYtQtI_zda2AsAAAS","timestamp":"2025-06-28T12:51:00.896Z"}

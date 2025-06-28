@@ -26,8 +26,8 @@ a{
 
   /* Promote Button Styles */
 .promote-button {
-    background: #fff;
-    color: #28a745;
+    background: linear-gradient(135deg, #28a745, #218838, #1e7e34);
+    color: #fff;
     border: none;
     padding: 12px 24px;
     border-radius: 25px;
@@ -275,7 +275,7 @@ a{
 
 .promoted-cta-button {
     width: 100%;
-    background: #28a745;
+    background: linear-gradient(135deg, #28a745, #218838, #1e7e34);
     color: white;
     border: none;
     padding: 0.7rem 1rem;
@@ -701,7 +701,8 @@ body {
 }
 
 .buy-now-button button {
-  color: #28a745;
+  background: linear-gradient(135deg, #28a745, #218838, #1e7e34);
+  color: #fff;
 }
 
 .gallery-image {
@@ -1324,9 +1325,9 @@ h1 {
 }
 
 .buy button {
-  background-color: white;
+  background: linear-gradient(135deg, #28a745, #218838, #1e7e34);
   padding: 5px;
-  color: var(--primary-color);
+  color: #fff;
   border: 1px solid #fff;
   box-shadow: 0 0 10px #ddd;
   border-radius: 4px;

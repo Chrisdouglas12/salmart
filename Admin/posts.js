@@ -578,7 +578,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             flex: 0 0 auto;
             width: calc((100% / 5) - 12px);
             min-width: 200px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #28a745, #218838, #1e7e34);
             border-radius: 8px;
             padding: 20px;
             color: white;
