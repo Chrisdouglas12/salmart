@@ -90,7 +90,7 @@ a{
     top: 0; /* Remove absolute positioning offsets */
     left: 0;
     padding: 0;
-   
+
     width: max-content; /* Allow row to expand based on content */
      /* Space between rows if multiple are visible */
 }
@@ -275,12 +275,13 @@ a{
 
 .promoted-cta-button {
     width: 100%;
-    background: linear-gradient(45deg, #667eea, #764ba2);
+    background: #28a745;
     color: white;
     border: none;
     padding: 0.7rem 1rem;
     border-radius: 8px;
     font-weight: 600;
+    margin: 2px;
     font-size: 0.9rem;
     cursor: pointer;
     transition: all 0.3s ease;
@@ -292,7 +293,7 @@ a{
 }
 
 .promoted-cta-button:hover {
-    transform: translateY(-2px);
+    
     box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
 }
 
@@ -340,24 +341,24 @@ a{
         margin-bottom: 1rem;
         min-height: 260px;
     }
-    
+
     .promoted-posts-row {
         gap: 0.5rem;
     }
-    
+
     .promoted-post {
         width: 240px;
         flex: 0 0 240px;
     }
-    
+
     .promoted-header {
         padding: 0.8rem;
     }
-    
+
     .promoted-product-info {
         padding: 0.8rem;
     }
-    
+
     .promoted-actions {
         padding: 0.8rem;
         padding-top: 0;
@@ -369,7 +370,7 @@ a{
         width: 200px;
         flex: 0 0 200px;
     }
-    
+
     .promoted-image,
     .promoted-video-container {
         height: 120px;
@@ -408,7 +409,7 @@ a{
         padding: 10px 20px;
         font-size: 13px;
     }
-    
+
     .buy-now-button.promote-button i,
     .buy-now-button.promoted-indicator i {
         font-size: 14px;
@@ -621,27 +622,27 @@ a{
     max-width: 100%;
     padding: 8px;
   }
-  
+
   .post {
     padding: 16px;
     border-radius: 16px;
   }
-  
+
   .product-info-inline {
     grid-template-columns: 1fr;
     gap: 12px;
   }
-  
+
   .buy {
     flex-direction: column;
     gap: 12px;
   }
-  
+
   .action-button {
     font-size: 13px;
     padding: 6px 8px;
   }
-  
+
   .action-button p {
     display: none;
   }
@@ -651,16 +652,16 @@ a{
   #posts-container {
     max-width: 450px;
   }
-  
+
   .post {
     padding: 24px;
   }
-  
+
   .post-avatar {
     width: 56px;
     height: 56px;
   }
-  
+
   .post-user-name {
     font-size: 17px;
   }
@@ -2056,7 +2057,7 @@ h1 {
 
 }
 
-  
+
   /* Main iframe styling */
   .desktop-only {
     border: none;

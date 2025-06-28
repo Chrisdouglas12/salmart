@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     let isAuthReady = false;
 
     // --- State variables for pagination/filtering ---
-    let userIdToFollow;
+    let userIdToFollow; // This variable seems unused in the original context, consider removing if not needed.
     let currentPage = 1;
     let currentCategory = 'all';
     let isLoading = false; // To prevent multiple simultaneous fetches
@@ -102,18 +102,40 @@ document.addEventListener('DOMContentLoaded', async function () {
         return div.innerHTML;
     }
 
+    /**
+     * Updates the UI for all follow buttons on the page for a given user ID.
+     * @param {string} userId - The ID of the user whose follow buttons need to be updated.
+     * @param {boolean} isFollowing - True if the user is now followed, false if unfollowed.
+     */
+    window.updateFollowButtonsUI = function(userId, isFollowing) {
+        document.querySelectorAll(`.follow-button[data-user-id="${userId}"]`).forEach(button => {
+            if (isFollowing) {
+                button.innerHTML = '<i class="fas fa-user-check"></i> Following';
+                button.style.backgroundColor = '#fff';
+                button.style.color = '#28a745';
+                button.disabled = true; // Disable if already following
+            } else {
+                button.innerHTML = '<i class="fas fa-user-plus"></i> Follow';
+                button.style.backgroundColor = ''; // Reset to default/CSS
+                button.style.color = ''; // Reset to default/CSS
+                button.disabled = false;
+            }
+        });
+    };
+
     // --- Render Functions ---
 
     function renderUserSuggestion(user) {
         const suggestionElement = document.createElement('div');
         suggestionElement.classList.add('user-suggestion-card');
+        const isFollowingUser = currentFollowingList.includes(user._id.toString());
         suggestionElement.innerHTML = `
             <a href="Profile.html?userId=${user._id}" class="user-info-link">
                 <img src="${user.profilePicture || '/salmart-192x192.png'}" alt="${escapeHtml(user.name)}'s profile picture" class="user-suggestion-avatar" onerror="this.src='/salmart-192x192.png'">
                 <h5 class="user-suggestion-name">${escapeHtml(user.name)}</h5>
             </a>
-            <button class="follow-button user-suggestion-follow-btn" data-user-id="${user._id}">
-                <i class="fas fa-user-plus"></i> Follow
+            <button class="follow-button user-suggestion-follow-btn" data-user-id="${user._id}" ${isFollowingUser ? 'disabled' : ''}>
+                ${isFollowingUser ? '<i class="fas fa-user-check"></i> Following' : '<i class="fas fa-user-plus"></i> Follow'}
             </button>
         `;
 
@@ -251,11 +273,36 @@ document.addEventListener('DOMContentLoaded', async function () {
                     <h4 class="promoted-title">${escapeHtml(post.description || 'No description')}</h4>
                 </div>
             `;
-            buttonContent = `
-                <a href="${post.productLink || '#'}" class="promoted-cta-button" aria-label="Check out product ${escapeHtml(post.description || 'product')}" ${!post.productLink ? 'style="pointer-events: none; opacity: 0.6;"' : ''}>
-                    <i class="fas fa-shopping-cart"></i> Shop Now
-                </a>
-            `;
+            if (currentLoggedInUser && !isPostCreator) {
+                buttonContent = `
+                    <button class="promoted-cta-button buy-now-button" data-post-id="${post._id || ''}" ${post.isSold ? 'disabled' : ''}>
+                        <i class="fas fa-shopping-cart"></i> ${post.isSold ? 'Sold Out' : 'Buy Now'}
+                    </button>
+                     <button class="promoted-cta-button send-message-btn"
+                        data-recipient-id="${post.createdBy ? post.createdBy.userId : ''}"
+                        data-product-image="${productImageForChat}"
+                        data-product-description="${escapeHtml(post.description || '')}"
+                        data-post-id="${post._id || ''}"
+                        ${post.isSold ? 'disabled' : ''}>
+                        <i class="fas fa-paper-plane"></i> ${post.isSold ? 'Unavailable' : 'Message Seller'}
+                    </button>
+                `;
+            } else if (!currentLoggedInUser) {
+                buttonContent = `
+                    <button class="promoted-cta-button login-required" onclick="redirectToLogin()">
+                        <i class="fas fa-shopping-cart"></i> Buy Now
+                    </button>
+                    <button class="promoted-cta-button login-required" onclick="redirectToLogin()">
+                        <i class="fas fa-circle-dot"></i> Message Seller
+                    </button>
+                `;
+            } else { // Current user is the creator
+                buttonContent = `
+                    <a href="${post.productLink || '#'}" class="promoted-cta-button" aria-label="Check out product ${escapeHtml(post.description || 'product')}" ${!post.productLink ? 'style="pointer-events: none; opacity: 0.6;"' : ''}>
+                        <i class="fas fa-shopping-cart"></i> Check Out Product
+                    </a>
+                `;
+            }
         } else {
             mediaContent = `
                 <img src="${productImageForChat}" class="promoted-image" alt="Promoted Product" onerror="this.src='/salmart-192x192.png'">
@@ -270,14 +317,25 @@ document.addEventListener('DOMContentLoaded', async function () {
 
             if (currentLoggedInUser && !isPostCreator) {
                 buttonContent = `
-                    <button class="promoted-cta-button" data-post-id="${post._id || ''}" ${post.isSold ? 'disabled' : ''}>
+                    <button class="promoted-cta-button buy-now-button" data-post-id="${post._id || ''}" ${post.isSold ? 'disabled' : ''}>
                         <i class="fas fa-shopping-cart"></i> ${post.isSold ? 'Sold Out' : 'Buy Now'}
+                    </button>
+                    <button class="promoted-cta-button send-message-btn"
+                        data-recipient-id="${post.createdBy ? post.createdBy.userId : ''}"
+                        data-product-image="${productImageForChat}"
+                        data-product-description="${escapeHtml(post.title || '')}"
+                        data-post-id="${post._id || ''}"
+                        ${post.isSold ? 'disabled' : ''}>
+                        <i class="fas fa-circle-dot"></i> ${post.isSold ? 'Unavailable' : 'Message Seller'}
                     </button>
                 `;
             } else if (!currentLoggedInUser) {
                 buttonContent = `
                     <button class="promoted-cta-button login-required" onclick="redirectToLogin()">
                         <i class="fas fa-shopping-cart"></i> Buy Now
+                    </button>
+                    <button class="promoted-cta-button login-required" onclick="redirectToLogin()">
+                        <i class="fas fa-paper-plane"></i> Message Seller
                     </button>
                 `;
             }
@@ -341,9 +399,9 @@ document.addEventListener('DOMContentLoaded', async function () {
                 </div>
             `;
             buttonContent = `
-                <a href="${post.productLink || '#'}" class="buy-now-button checkout-product-button" aria-label="Check out product ${escapeHtml(post.description || 'product')}" ${!post.productLink ? 'style="pointer-events: none; opacity: 0.6;"' : ''}>
-                    <i class="fas fa-shopping-cart"></i> Check Out Product
-                </a>
+                <button class="buy-now-button checkout-product-button" data-post-id="${post._id || ''}" ${post.isSold ? 'disabled' : ''}>
+                    <i class="fas fa-shopping-cart"></i> ${post.isSold ? 'Sold Out' : 'Check Out Product'}
+                </button>
             `;
         } else {
             mediaContent = `
@@ -385,7 +443,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             if (currentLoggedInUser) {
                 if (isPostCreator) {
                     buttonContent = !post.isPromoted ? `
-                        <button class="promote-button buy-now-button" data-post-id="${post._id || ''}" aria-label="Promote this post">
+                        <button class="promote-button" data-post-id="${post._id || ''}" aria-label="Promote this post">
                             <i class="fas fa-bullhorn"></i> Promote Post
                         </button>
                     ` : '';
@@ -422,7 +480,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 if (post.createdBy.userId === currentLoggedInUser) {
                     followButtonHtml = '';
                 } else {
-                    followButtonHtml = currentFollowingList.includes(post.createdBy.userId.toString()) ?
+                    followButtonHtml = isFollowing ?
                         `<button class="follow-button" data-user-id="${post.createdBy.userId}" style="background-color: #fff; color: #28a745;" disabled>
                             <i class="fas fa-user-check"></i> Following
                         </button>` :
@@ -513,6 +571,52 @@ document.addEventListener('DOMContentLoaded', async function () {
         return postElement;
     }
 
+    function createPromotedPostFiller() {
+        const fillerElement = document.createElement('div');
+        fillerElement.classList.add('promoted-post-filler');
+        fillerElement.style.cssText = `
+            flex: 0 0 auto;
+            width: calc((100% / 5) - 12px);
+            min-width: 200px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            padding: 20px;
+            color: white;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            scroll-snap-align: start;
+        `;
+        
+        fillerElement.innerHTML = `
+            <div style="font-size: 2em; margin-bottom: 10px;">
+                <i class="fas fa-star"></i>
+            </div>
+            <h4 style="margin: 0 0 8px 0; font-size: 1em;">Discover More</h4>
+            <p style="margin: 0; font-size: 0.85em; opacity: 0.9;">
+                Explore trending products and find amazing deals
+            </p>
+            <button style="
+                background: rgba(255,255,255,0.2);
+                border: 1px solid rgba(255,255,255,0.3);
+                color: white;
+                padding: 8px 16px;
+                border-radius: 20px;
+                margin-top: 10px;
+                cursor: pointer;
+                font-size: 0.8em;
+                transition: all 0.3s ease;
+            " onmouseover="this.style.background='rgba(255,255,255,0.3)'" 
+               onmouseout="this.style.background='rgba(255,255,255,0.2)'">
+                Browse All
+            </button>
+        `;
+        
+        return fillerElement;
+    }
+
     function createPromotedPostsRow(posts) {
         const wrapperContainer = document.createElement('div');
         wrapperContainer.classList.add('promoted-posts-wrapper');
@@ -524,9 +628,14 @@ document.addEventListener('DOMContentLoaded', async function () {
         headerElement.classList.add('promoted-posts-header');
         headerElement.innerHTML = '<h3>Things you may like</h3>';
         headerElement.style.cssText = `
-            font-size: 1em;
+            font-size: 1.1em;
             font-weight: 600;
             color: #333;
+            margin-bottom: 15px;
+            padding: 15px;
+            background-color: #fff;
+            border-radius: 8px 8px 0 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         `;
 
         const rowContainer = document.createElement('div');
@@ -556,13 +665,16 @@ document.addEventListener('DOMContentLoaded', async function () {
             rowContainer.appendChild(postElement);
         });
 
+        const fillerCount = Math.max(0, 5 - posts.length);
+        for (let i = 0; i < fillerCount; i++) {
+            const fillerElement = createPromotedPostFiller();
+            rowContainer.appendChild(fillerElement);
+        }
+
         wrapperContainer.appendChild(headerElement);
         wrapperContainer.appendChild(rowContainer);
 
-            
-
-            rowContainer.style.position = 'relative';
-    
+        rowContainer.style.position = 'relative';
 
         return wrapperContainer;
     }
@@ -570,136 +682,125 @@ document.addEventListener('DOMContentLoaded', async function () {
     // --- Main Post Loading Logic ---
 
     async function fetchAndRenderPosts(category = currentCategory, page = currentPage, clearExisting = false) {
-    const postsContainer = document.getElementById('posts-container');
-    if (!postsContainer) {
-        console.error('Posts container not found.');
-        return;
-    }
-
-    if (isLoading && !clearExisting) {
-        console.log('Posts are already loading. Skipping new request (unless clearing).');
-        return;
-    }
-    isLoading = true;
-
-    if (clearExisting) {
-        postsContainer.innerHTML = '';
-        postCounter = 0; // Reset post counter on clear or category change
-    }
-
-    try {
-        const allPosts = await salmartCache.getPostsByCategory(category);
-
-        if (!Array.isArray(allPosts) || allPosts.length === 0) {
-            if (postsContainer.children.length === 0) {
-                postsContainer.innerHTML = `
-                    <p style="text-align: center; padding: 20px; color: #666;">
-                        No posts yet for "${category === 'all' ? 'this category' : category}".
-                        Try a different category or create one!
-                    </p>
-                `;
-            }
-            isLoading = false;
+        const postsContainer = document.getElementById('posts-container');
+        if (!postsContainer) {
+            console.error('Posts container not found.');
             return;
         }
 
-        // Sort posts by creation date (newest first)
-        const sortedPosts = [...allPosts].sort((a, b) => {
-            const dateA = new Date(a.createdAt || 0);
-            const dateB = new Date(b.createdAt || 0);
-            return dateB - dateA; // Newest first
-        });
-
-        // Separate promoted and non-promoted posts
-        const promotedPosts = sortedPosts.filter(post => post.isPromoted);
-        const nonPromotedPosts = sortedPosts.filter(post => !post.isPromoted);
-
-        // Sort promoted posts by creation date too (newest promoted first)
-        promotedPosts.sort((a, b) => {
-            const dateA = new Date(a.createdAt || 0);
-            const dateB = new Date(b.createdAt || 0);
-            return dateB - dateA;
-        });
-
-        const postsPerPromotedRow = 5;
-        const postsBeforeSuggestion = 5;
-        const usersPerSuggestionRow = 8;
-
-        const fragment = document.createDocumentFragment();
-
-        // Get all user suggestions once at the beginning
-        let allUserSuggestions = [];
-        if (currentLoggedInUser && clearExisting) {
-            allUserSuggestions = await fetchUserSuggestions();
+        if (isLoading && !clearExisting) {
+            console.log('Posts are already loading. Skipping new request (unless clearing).');
+            return;
         }
-
-        // First, add promoted posts row at the very top (if we have promoted posts)
-        if (promotedPosts.length > 0) {
-            const promotedRow = createPromotedPostsRow(promotedPosts);
-            fragment.prepend(promotedRow);
-        }
-
-        // Track which suggestions we've already shown
-        let suggestionRowIndex = 0;
-        let suggestionCounter = 0;
-
-        // Then add non-promoted posts (newest first) with user suggestions interspersed
-        for (let i = 0; i < nonPromotedPosts.length; i++) {
-            const post = nonPromotedPosts[i];
-            const postElement = renderPost(post);
-            fragment.appendChild(postElement);
-            postCounter++;
-            suggestionCounter++;
-
-            // Inject user suggestions after every 5 posts, but only if we have suggestions left
-            if (suggestionCounter % postsBeforeSuggestion === 0 && 
-                currentLoggedInUser && 
-                allUserSuggestions.length > 0 && 
-                suggestionRowIndex * usersPerSuggestionRow < allUserSuggestions.length) {
-                
-                // Get the next batch of users for suggestion row
-                const startIndex = suggestionRowIndex * usersPerSuggestionRow;
-                const endIndex = Math.min(startIndex + usersPerSuggestionRow, allUserSuggestions.length);
-                const usersForThisRow = allUserSuggestions.slice(startIndex, endIndex);
-                
-                if (usersForThisRow.length > 0) {
-                    const userSuggestionsContainer = createUserSuggestionsContainer(usersForThisRow);
-                    if (userSuggestionsContainer) {
-                        fragment.appendChild(userSuggestionsContainer);
-                        suggestionRowIndex++; // Move to next batch for future rows
-                    }
-                }
-            }
-        }
+        isLoading = true;
 
         if (clearExisting) {
             postsContainer.innerHTML = '';
-            postsContainer.appendChild(fragment);
-        } else {
-            // For non-clearing loads, append new content
-            postsContainer.appendChild(fragment);
+            postCounter = 0; 
         }
 
-        if (postsContainer.children.length === 0) {
-            postsContainer.innerHTML = '<p style="text-align: center; margin: 2rem;">No posts available.</p>';
-        }
+        try {
+            const allPosts = await salmartCache.getPostsByCategory(category);
 
-        window.dispatchEvent(new Event('postsRendered'));
+            if (!Array.isArray(allPosts) || allPosts.length === 0) {
+                if (postsContainer.children.length === 0) {
+                    postsContainer.innerHTML = `
+                        <p style="text-align: center; padding: 20px; color: #666;">
+                            No posts yet for "${category === 'all' ? 'this category' : category}".
+                            Try a different category or create one!
+                        </p>
+                    `;
+                }
+                isLoading = false;
+                return;
+            }
 
-    } catch (error) {
-        console.error('Error fetching posts:', error);
-        if (!postsContainer.children.length) {
-            postsContainer.innerHTML = `
-                <p style="text-align: center; color: red; padding: 20px;">
-                    Error loading posts. Please check your internet connection or try again later.
-                    <br>Error: ${error.message || 'Unknown error'}
-                </p>
-            `;
+            const sortedPosts = [...allPosts].sort((a, b) => {
+                const dateA = new Date(a.createdAt || 0);
+                const dateB = new Date(b.createdAt || 0);
+                return dateB - dateA; 
+            });
+
+            const promotedPosts = sortedPosts.filter(post => post.isPromoted);
+            const nonPromotedPosts = sortedPosts.filter(post => !post.isPromoted);
+
+            promotedPosts.sort((a, b) => {
+                const dateA = new Date(a.createdAt || 0);
+                const dateB = new Date(b.createdAt || 0);
+                return dateB - dateA;
+            });
+
+            const postsBeforeSuggestion = 5; 
+            const usersPerSuggestionRow = 8;
+
+            const fragment = document.createDocumentFragment();
+
+            let allUserSuggestions = [];
+            if (currentLoggedInUser && clearExisting) {
+                allUserSuggestions = await fetchUserSuggestions();
+            }
+
+            if (promotedPosts.length > 0) {
+                const promotedRow = createPromotedPostsRow(promotedPosts);
+                fragment.prepend(promotedRow);
+            }
+
+            let suggestionRowIndex = 0;
+            let suggestionCounter = 0;
+
+            for (let i = 0; i < nonPromotedPosts.length; i++) {
+                const post = nonPromotedPosts[i];
+                const postElement = renderPost(post);
+                fragment.appendChild(postElement);
+                postCounter++;
+                suggestionCounter++;
+
+                if (suggestionCounter % postsBeforeSuggestion === 0 && 
+                    currentLoggedInUser && 
+                    allUserSuggestions.length > 0 && 
+                    suggestionRowIndex * usersPerSuggestionRow < allUserSuggestions.length) {
+
+                    const startIndex = suggestionRowIndex * usersPerSuggestionRow;
+                    const endIndex = Math.min(startIndex + usersPerSuggestionRow, allUserSuggestions.length);
+                    const usersForThisRow = allUserSuggestions.slice(startIndex, endIndex);
+
+                    if (usersForThisRow.length > 0) {
+                        const userSuggestionsContainer = createUserSuggestionsContainer(usersForThisRow);
+                        if (userSuggestionsContainer) {
+                            fragment.appendChild(userSuggestionsContainer);
+                            suggestionRowIndex++; 
+                        }
+                    }
+                }
+            }
+
+            if (clearExisting) {
+                postsContainer.innerHTML = '';
+                postsContainer.appendChild(fragment);
+            } else {
+                postsContainer.appendChild(fragment);
+            }
+
+            if (postsContainer.children.length === 0) {
+                postsContainer.innerHTML = '<p style="text-align: center; margin: 2rem;">No posts available.</p>';
+            }
+
+            window.dispatchEvent(new Event('postsRendered'));
+
+        } catch (error) {
+            console.error('Error fetching posts:', error);
+            if (!postsContainer.children.length) {
+                postsContainer.innerHTML = `
+                    <p style="text-align: center; color: red; padding: 20px;">
+                        Error loading posts. Please check your internet connection or try again later.
+                        <br>Error: ${error.message || 'Unknown error'}
+                    </p>
+                `;
+            }
+        } finally {
+            isLoading = false;
         }
-    } finally {
-        isLoading = false;
     }
-}
 
     // --- Global Utility Functions ---
 
@@ -718,7 +819,16 @@ document.addEventListener('DOMContentLoaded', async function () {
     // --- Event Delegates for Interactive Elements ---
 
     document.addEventListener('click', async (event) => {
-        const promoteButton = event.target.closest('.promote-button');
+        const target = event.target.closest('button'); // Capture clicks on buttons
+        if (!target) return;
+
+        const API_BASE_URL = window.API_BASE_URL || (window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart.onrender.com');
+        const showToast = window.showToast;
+        const authToken = localStorage.getItem('authToken');
+        const loggedInUser = localStorage.getItem('userId');
+
+        // Handle Promote Button
+        const promoteButton = target.closest('.promote-button');
         if (promoteButton) {
             const postId = promoteButton.dataset.postId;
             if (!postId) {
@@ -728,9 +838,126 @@ document.addEventListener('DOMContentLoaded', async function () {
                 return;
             }
             window.location.href = `promote.html?postId=${postId}`;
+            return; // Exit to prevent further processing
         }
-        
+
+        // Handle Buy Now Button (for both normal and promoted posts)
+        if (target.classList.contains('buy-now-button') && target.dataset.postId) {
+            const postId = target.dataset.postId;
+            const email = localStorage.getItem('email');
+            const buyerId = localStorage.getItem('userId');
+
+            if (!email || !buyerId || !postId) {
+                showToast("Please log in to make a purchase or complete your profile.", '#dc3545');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/pay`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, postId, buyerId, currency: 'NGN' }),
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success && result.url) {
+                    window.location.href = result.url;
+                } else {
+                    showToast(`Payment failed: ${result.message || 'Please try again.'}`, '#dc3545');
+                }
+            } catch (error) {
+                console.error('Payment error:', error);
+                showToast('Failed to process payment. Please try again.', '#dc3545');
+            }
+            return; // Exit to prevent further processing
+        }
+
+        // Handle Send Message Button (for both normal and promoted posts)
+        if (target.classList.contains('send-message-btn')) {
+            event.preventDefault(); // Prevent default button behavior
+            const recipientId = target.dataset.recipientId;
+            const postElement = target.closest('.post') || target.closest('.promoted-post');
+            
+            if (!postElement) {
+                console.error("Could not find parent post element for send message button.");
+                showToast('Error: Post information not found.', '#dc3545');
+                return;
+            }
+
+            const recipientUsername = postElement.querySelector('.post-user-name')?.textContent || postElement.querySelector('.promoted-user-name')?.textContent || 'Unknown';
+            const recipientProfilePictureUrl = postElement.querySelector('.post-avatar')?.src || postElement.querySelector('.promoted-avatar')?.src || 'default-avatar.png';
+            let productImage = target.dataset.productImage || '';
+            const productDescription = target.dataset.productDescription || '';
+            const postId = target.dataset.postId;
+
+            if (productImage && !productImage.match(/^https?:\/\//)) {
+                productImage = productImage.startsWith('/') ? `${API_BASE_URL}${productImage}` : `${API_BASE_URL}/${productImage}`;
+            }
+
+            const message = `Is this item still available?\n\nProduct: ${productDescription}`;
+            const encodedMessage = encodeURIComponent(message);
+            const encodedProductImage = encodeURIComponent(productImage);
+            const encodedRecipientUsername = encodeURIComponent(recipientUsername);
+            const encodedRecipientProfilePictureUrl = encodeURIComponent(recipientProfilePictureUrl);
+            const encodedProductDescription = encodeURIComponent(productDescription);
+
+            const chatUrl = `Chats.html?user_id=${loggedInUser}&recipient_id=${recipientId}&recipient_username=${encodedRecipientUsername}&recipient_profile_picture_url=${encodedRecipientProfilePictureUrl}&message=${encodedMessage}&product_image=${encodedProductImage}&product_id=${postId}&product_name=${encodedProductDescription}`;
+            window.location.href = chatUrl;
+            return; // Exit to prevent further processing
+        }
+
+        // Handle Follow Button
+        if (target.classList.contains('follow-button') && target.dataset.userId) {
+            const userIdToFollow = target.dataset.userId;
+            if (!authToken || !loggedInUser) {
+                showToast('Please log in to follow users.', '#dc3545');
+                return;
+            }
+
+            const isCurrentlyFollowing = target.textContent.includes('Following');
+
+            // Optimistic UI update
+            window.updateFollowButtonsUI(userIdToFollow, !isCurrentlyFollowing);
+
+            try {
+                const endpoint = isCurrentlyFollowing ? `${API_BASE_URL}/unfollow/${userIdToFollow}` : `${API_BASE_URL}/follow/${userIdToFollow}`;
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`,
+                    },
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Failed to update follow status');
+                }
+
+                const data = await response.json();
+                
+                // Update currentFollowingList based on successful action
+                if (isCurrentlyFollowing) {
+                    currentFollowingList = currentFollowingList.filter(id => id !== userIdToFollow);
+                } else {
+                    currentFollowingList.push(userIdToFollow);
+                }
+                
+                // Re-apply UI update for consistency with actual state
+                window.updateFollowButtonsUI(userIdToFollow, !isCurrentlyFollowing);
+                showToast(data.message || 'Follow status updated!', '#28a745');
+
+            } catch (error) {
+                console.error('Follow/Unfollow error:', error);
+                showToast(error.message || 'Failed to update follow status.', '#dc3545');
+                // Revert UI on error
+                window.updateFollowButtonsUI(userIdToFollow, isCurrentlyFollowing);
+            }
+            return; // Exit to prevent further processing
+        }
     });
+
     // --- Authentication and Initialization Logic ---
 
     async function initializeAuthStatusAndPosts() {
@@ -759,12 +986,10 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     window.fetchPosts = fetchAndRenderPosts;
 
-    
-       
     document.addEventListener('authStatusReady', async (event) => {
         currentLoggedInUser = event.detail.loggedInUser;
         console.log('Auth status ready event received. Logged in user:', currentLoggedInUser ? currentLoggedInUser : 'Not logged in');
-        currentFollowingList = await fetchFollowingList();
+        currentFollowingList = await fetchFollowingList(); // Re-fetch following list on auth status ready
         isAuthReady = true;
         await fetchAndRenderPosts(currentCategory, currentPage, true);
     });
@@ -783,7 +1008,6 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
     }, 2000);
 
-   
 
     const loadMoreBtn = document.getElementById('load-more-btn');
     if (loadMoreBtn) {
@@ -795,4 +1019,3 @@ document.addEventListener('DOMContentLoaded', async function () {
         });
     }
 });
-
