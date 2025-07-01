@@ -2273,3 +2273,7 @@
 {"level":"info","message":"Sending FCM notification to user 68431685432ee393a735a641 for message 685fdee8df25246e38bc578d","timestamp":"2025-06-28T12:24:09.071Z"}
 {"level":"info","message":"FCM notification sent to user 68431685432ee393a735a641","timestamp":"2025-06-28T12:24:12.097Z"}
 {"level":"info","message":"Triggering badge update for user 68431685432ee393a735a641","timestamp":"2025-06-28T12:24:12.099Z"}
+{"level":"info","message":"Fetched 1 messages between 685cfc99d8a56197d12a2534 and 68431685432ee393a735a641","timestamp":"2025-06-28T15:02:37.497Z"}
+{"level":"info","message":"Fetched 7 latest messages for user 68431685432ee393a735a641","timestamp":"2025-07-01T11:44:53.689Z"}
+{"level":"warn","message":"Missing senderId or receiverId in /messages","timestamp":"2025-07-01T11:44:54.470Z"}
+{"level":"info","message":"Fetched 6 latest messages for user 6843d062f457581752641ee3","timestamp":"2025-07-01T11:48:00.563Z"}

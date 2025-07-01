@@ -3003,3 +3003,22 @@
 {"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-28T11:23:46.243Z"}
 {"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-28T11:24:03.057Z"}
 {"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-28T11:24:08.376Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-28T15:02:49.318Z"}
+{"body":{"buyerId":"685cfc99d8a56197d12a2534","currency":"NGN","email":"jul@gmail.com","postId":"685fe70142264a11ae1eb951"},"level":"info","message":"Payment initiation started","requestId":"PAY_1751122969330","timestamp":"2025-06-28T15:02:49.331Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-06-28T15:02:49.366Z"}
+{"body":{"buyerId":"685cfc99d8a56197d12a2534","currency":"NGN","email":"jul@gmail.com","postId":"685fe70142264a11ae1eb951"},"level":"info","message":"Payment initiation started","requestId":"PAY_1751122969369","timestamp":"2025-06-28T15:02:49.369Z"}
+{"level":"info","message":"Payment initialized successfully","reference":"8bbzeudnna","requestId":"PAY_1751122969369","timestamp":"2025-06-28T15:02:51.248Z"}
+{"level":"info","message":"Payment initialized successfully","reference":"aiqbio0ur3","requestId":"PAY_1751122969330","timestamp":"2025-06-28T15:02:51.281Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-01T11:44:58.170Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-01T11:45:52.217Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-01T11:48:36.339Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-01T11:48:46.652Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-01T11:48:53.184Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-01T11:48:56.613Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-01T11:58:57.604Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-01T11:59:12.476Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-01T11:59:52.324Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-01T11:59:54.946Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-01T11:59:58.722Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-01T12:00:01.094Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-01T12:43:58.404Z"}

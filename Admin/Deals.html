@@ -150,10 +150,12 @@
       <img  alt="Profile" id="profile-picture6" class="profile-avatar" src="default-avater.png" onerror="this.src='default-avatar.png'">
     </div>
   </header>
-  <div class="tabs">
-    <div class="tab active" onclick="showTab('buying')">Buying</div>
-    <div class="tab" onclick="showTab('selling')">Selling</div>
-  </div>
+<div class="tabs">
+  <div class="tab active" onclick="showTab('buying')">Buying</div>
+  <div class="tab" onclick="showTab('selling')">Selling</div>
+  <div class="tab" onclick="showTab('pending')">Pending</div>
+  <div class="tab" onclick="showTab('paid')">Paid</div>
+</div>
 
   <div id="transaction-list"></div>
   <p id="no-transactions" style="display:none;">No transactions yet. Check back later!</p>
