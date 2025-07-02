@@ -39,6 +39,7 @@
     "node-fetch": "^3.3.2",
     "nodemailer": "^6.10.0",
     "nodemon": "^3.1.9",
+    "paystack": "^2.0.1",
     "paystack-api": "^2.0.6",
     "pdfkit": "^0.16.0",
     "redis": "^4.7.0",

@@ -15,6 +15,744 @@
 
 }
 
+/* General Post Styling */
+.post {
+    background-color: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08); /* Softer, more modern shadow */
+    margin-bottom: 25px;
+    overflow: hidden; /* Ensures rounded corners apply to children */
+    transition: transform 0.2s ease-in-out;
+    border: 1px solid #e0e0e0; /* Subtle border */
+}
+
+.post:hover {
+    transform: translateY(-5px); /* Slight lift on hover */
+}
+
+/* Post Header Styling */
+.post-header {
+    display: flex;
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.post-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 12px;
+    border: 2px solid #28a745; /* Brand color accent */
+}
+
+.post-user-info {
+    flex-grow: 1;
+}
+
+.post-user-name {
+    font-size: 1.1em;
+    font-weight: 600;
+    color: #333;
+    margin: 0;
+    text-decoration: none; /* For the anchor tag */
+}
+
+.post-user-name:hover {
+    text-decoration: underline;
+}
+
+.post-time {
+    font-size: 0.85em;
+    color: #888;
+}
+
+.follow-button {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 20px; /* Pill shape */
+    padding: 8px 15px;
+    cursor: pointer;
+    font-size: 0.85em;
+    font-weight: 500;
+    transition: background-color 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.follow-button:hover:not(:disabled) {
+    background-color: #218838;
+}
+
+.follow-button:disabled {
+    background-color: #f0f0f0;
+    color: #666;
+    cursor: not-allowed;
+}
+
+.post-options {
+    position: relative;
+    margin-left: 10px;
+}
+
+.post-options-button {
+    background: none;
+    border: none;
+    font-size: 1.2em;
+    color: #888;
+    cursor: pointer;
+    padding: 5px;
+}
+
+.post-options-menu {
+    display: none; /* Hidden by default */
+    position: absolute;
+    right: 0;
+    top: 100%; /* Position below the button */
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    min-width: 150px;
+    z-index: 100;
+    list-style: none; /* Remove bullet points */
+    padding: 5px 0;
+    margin: 0;
+}
+
+.post-options-menu ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.post-options-menu li button {
+    background: none;
+    border: none;
+    width: 100%;
+    text-align: left;
+    padding: 10px 15px;
+    color: #333;
+    font-size: 0.9em;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.post-options-menu li button:hover {
+    background-color: #f0f2f5;
+}
+
+/* Show menu when button is focused or clicked (handled by JS typically) */
+.post-options-button:focus + .post-options-menu,
+.post-options-button:active + .post-options-menu {
+    display: block;
+}
+
+/* --- New: Product Container Layout --- */
+.product-container {
+    display: flex; /* Arrange media and details side-by-side */
+    flex-direction: column; /* Default to column for small screens */
+    gap: 1px; /* Small gap between cards, border will handle separation */
+    background-color: #f8f8f8; /* Light background for the container */
+    border-top: 1px solid #f0f0f0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+@media (min-width: 768px) { /* Adjust breakpoint as needed */
+    .product-container {
+        flex-direction: row; /* Side-by-side on larger screens */
+    }
+}
+
+.media-card {
+    flex: 1; /* Allows media to take available space */
+    position: relative;
+    background-color: #000; /* Black background for images/videos */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    min-height: 250px; /* Ensure media card has a minimum height */
+}
+
+.post-image, .post-video {
+    width: 100%;
+    height: 100%;
+    object-fit: contain; /* Ensures entire image/video is visible */
+    display: block;
+    max-height: 450px; /* Max height for the media */
+    min-height: 250px;
+}
+
+.badge {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    background-color: #28a745;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 0.75em;
+    font-weight: bold;
+    z-index: 10;
+}
+
+.product-card {
+    flex: 1; /* Allows details to take available space */
+    padding: 20px;
+    background-color: #fff; /* White background for details */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* Pushes content and actions apart */
+}
+
+.product-title {
+    font-size: 1.4em;
+    font-weight: bold;
+    color: #333;
+    margin-top: 0;
+    margin-bottom: 15px;
+    line-height: 1.3;
+}
+
+.details-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Two columns */
+    gap: 15px; /* Gap between grid items */
+    margin-bottom: 20px;
+}
+
+.detail-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background-color: #f9f9f9; /* Light background for each detail item */
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #eee;
+}
+
+.detail-icon {
+    font-size: 1.2em;
+    color: #28a745; /* Icon color */
+    width: 25px;
+    height: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background-color: #e6f7ed; /* Light background for icon */
+}
+
+.detail-label {
+    font-size: 0.8em;
+    color: #888;
+    text-transform: uppercase;
+    font-weight: 500;
+}
+
+.detail-value {
+    font-size: 1em;
+    font-weight: 600;
+    color: #555;
+}
+
+.price-value {
+    color: #e44d3a; /* Distinct color for price */
+    font-weight: bold;
+}
+
+/* Action Buttons (Buy, Message) */
+.buy {
+    padding: 15px 20px;
+    border-top: 1px solid #f0f0f0;
+    background-color: #fff;
+    display: flex;
+    justify-content: flex-end; /* Align buttons to the right */
+    gap: 10px;
+}
+
+.btn {
+    padding: 10px 18px;
+    border-radius: 25px; /* More rounded buttons */
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.9em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-primary {
+    background-color: #28a745;
+    color: white;
+    border: 1px solid #28a745;
+}
+
+.btn-primary:hover:not(:disabled) {
+    background-color: #218838;
+    border-color: #218838;
+}
+
+.btn-secondary {
+    background-color: #f0f2f5;
+    color: #333;
+    border: 1px solid #dcdcdc;
+}
+
+.btn-secondary:hover:not(:disabled) {
+    background-color: #e0e2e5;
+    border-color: #d0d2d5;
+}
+
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Post Actions (Likes, Comments, Share) */
+.post-actions {
+    display: flex;
+    justify-content: space-around;
+    padding: 15px 20px;
+    border-top: 1px solid #f0f0f0;
+    background-color: #fff;
+}
+
+.action-button {
+    background: none;
+    border: none;
+    color: #666;
+    font-size: 1em;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.action-button:hover {
+    background-color: #f0f2f5;
+    color: #333;
+}
+
+.action-button i {
+    font-size: 1.2em;
+}
+
+.like-button .fas.fa-heart {
+    color: #e0245e; /* Red for liked hearts */
+}
+
+/* Specific styling for video ads if needed, beyond .post-video */
+.post-video {
+    width: 100%;
+    height: auto; /* Allow video to scale proportionally */
+}
+
+/* --- Promoted Post Specific Styles --- */
+.promoted-post {
+    background-color: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: 350px; /* Ensure promoted posts have a consistent minimum height */
+}
+
+.promoted-badge {
+    position: absolute;
+    top: 0;
+    left: 0;
+    background-color: #f0ad4e; /* Warning yellow */
+    color: white;
+    padding: 5px 10px;
+    border-bottom-right-radius: 8px;
+    font-size: 0.7em;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    z-index: 5;
+}
+
+.promoted-header {
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.promoted-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 10px;
+    border: 1px solid #ddd;
+}
+
+.promoted-user-info {
+    flex-grow: 1;
+}
+
+.promoted-user-name {
+    font-size: 0.9em;
+    font-weight: 600;
+    color: #333;
+    margin: 0;
+}
+
+.promoted-time {
+    font-size: 0.75em;
+    color: #999;
+}
+
+.promoted-media {
+    flex-grow: 1; /* Allow media to take remaining space */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    background-color: #000; /* For media backgrounds */
+    min-height: 120px; /* Minimum height for promoted media */
+}
+
+.promoted-image, .promoted-video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Cover for a tighter crop in promoted posts */
+    display: block;
+}
+
+.promoted-video-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.promoted-video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.promoted-video-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.4);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 1;
+    transition: opacity 0.3s ease;
+}
+
+.promoted-video-container:hover .promoted-video-overlay {
+    opacity: 0; /* Hide overlay on hover */
+}
+
+.promoted-play-btn {
+    background: rgba(255,255,255,0.8);
+    border: none;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    font-size: 1.5em;
+    color: #333;
+    transition: transform 0.2s ease;
+}
+
+.promoted-play-btn:hover {
+    transform: scale(1.1);
+}
+
+
+.promoted-product-info {
+    padding: 10px 15px;
+    background-color: #f9f9f9;
+}
+
+.promoted-title {
+    font-size: 1em;
+    font-weight: 600;
+    color: #333;
+    margin: 0 0 5px 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.promoted-price {
+    font-size: 0.9em;
+    color: #e44d3a;
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.promoted-location {
+    font-size: 0.8em;
+    color: #777;
+    margin-bottom: 0;
+}
+
+.promoted-actions {
+    padding: 10px 15px;
+    border-top: 1px solid #eee;
+    background-color: #fff;
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.promoted-cta-button {
+    flex: 1; /* Make buttons take equal space */
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 8px 10px;
+    cursor: pointer;
+    font-size: 0.85em;
+    font-weight: 500;
+    transition: background-color 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    text-decoration: none; /* For anchor tags used as buttons */
+}
+
+.promoted-cta-button:hover:not(:disabled) {
+    background-color: #0056b3;
+}
+
+.promoted-cta-button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+.promoted-cta-button.buy-now-button {
+    background-color: #28a745;
+}
+
+.promoted-cta-button.buy-now-button:hover:not(:disabled) {
+    background-color: #218838;
+}
+
+.promoted-cta-button.send-message-btn {
+    background-color: #6c757d;
+}
+
+.promoted-cta-button.send-message-btn:hover:not(:disabled) {
+    background-color: #5a6268;
+}
+
+
+/* --- User Suggestions Section --- */
+.user-suggestions-wrapper {
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.user-suggestions-wrapper h3 {
+    font-size: 1.1em;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.user-suggestions-row {
+    display: flex;
+    overflow-x: auto; /* Enable horizontal scrolling */
+    gap: 15px;
+    padding-bottom: 10px; /* Space for scrollbar */
+    scroll-snap-type: x mandatory; /* Smooth snapping effect */
+    -webkit-overflow-scrolling: touch; /* Improved scrolling on iOS */
+    -ms-overflow-style: none;  /* Hide scrollbar for IE/Edge */
+    scrollbar-width: none;  /* Hide scrollbar for Firefox */
+}
+
+/* Hide scrollbar for Chrome, Safari, Opera */
+.user-suggestions-row::-webkit-scrollbar {
+    display: none;
+}
+
+.user-suggestion-card {
+    flex: 0 0 auto; /* Prevent cards from growing/shrinking */
+    width: 150px; /* Fixed width for each card */
+    text-align: center;
+    scroll-snap-align: start; /* Snap to the beginning of cards */
+    background-color: #f0f2f5;
+    padding: 10px;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between; /* Push follow button to bottom */
+}
+
+.user-info-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    margin-bottom: 8px;
+}
+
+.user-suggestion-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 8px;
+    border: 2px solid #ddd;
+}
+
+.user-suggestion-name {
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: #333;
+    font-size: 0.9em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block;
+}
+
+.user-suggestion-follow-btn {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 0.85em;
+    width: 90%;
+    margin-top: 5px;
+    transition: background-color 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+}
+
+.user-suggestion-follow-btn:hover:not(:disabled) {
+    background-color: #218838;
+}
+
+.user-suggestion-follow-btn:disabled {
+    background-color: #fff;
+    color: #28a745;
+    border: 1px solid #28a745;
+    cursor: not-allowed;
+}
+
+/* --- Promoted Posts Row Container --- */
+.promoted-posts-wrapper {
+    margin-bottom: 20px;
+}
+
+.promoted-posts-header {
+    font-size: 1.1em;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 15px;
+    padding: 15px;
+    background-color: #fff;
+    border-radius: 8px 8px 0 0;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.promoted-posts-row-container {
+    display: flex;
+    overflow-x: auto;
+    gap: 15px;
+    padding: 10px 0;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    position: relative;
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+}
+
+.promoted-posts-row-container::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+}
+
+.promoted-post-filler {
+    flex: 0 0 auto;
+    width: calc((100% / 5) - 12px);
+    min-width: 200px;
+    background: linear-gradient(135deg, #28a745, #218838, #1e7e34);
+    border-radius: 8px;
+    padding: 20px;
+    color: white;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    scroll-snap-align: start;
+}
+
+.promoted-post-filler h4 {
+    margin: 0 0 8px 0;
+    font-size: 1em;
+}
+
+.promoted-post-filler p {
+    margin: 0;
+    font-size: 0.85em;
+    opacity: 0.9;
+}
+
+.promoted-post-filler button {
+    background: rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    margin-top: 10px;
+    cursor: pointer;
+    font-size: 0.8em;
+    transition: all 0.3s ease;
+}
+
+.promoted-post-filler button:hover {
+    background: rgba(255,255,255,0.3);
+}
+
+/* Global styles for utility/toast if applicable */
+/* Add your toast message styles here if you have a showToast function */
+
+
+
 /* Post Container Styles */
 .post-container {
     max-width: 400px;
@@ -2413,4 +3151,165 @@ h1 {
     background-color: #28a745; /* Green for 'Following' */
     color: #fff;
     cursor: default;
+}
+
+/* Payment Modal Styles */
+.payment-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.payment-modal {
+    background: white;
+    border-radius: 8px;
+    max-width: 500px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.payment-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid #eee;
+}
+
+.payment-modal-header h3 {
+    margin: 0;
+    color: #333;
+}
+
+.close-modal {
+    font-size: 24px;
+    cursor: pointer;
+    color: #999;
+    line-height: 1;
+}
+
+.close-modal:hover {
+    color: #333;
+}
+
+.payment-modal-body {
+    padding: 20px;
+}
+
+.bank-details {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 5px;
+    padding: 15px;
+    margin: 15px 0;
+}
+
+.bank-details h4 {
+    margin-top: 0;
+    color: #495057;
+}
+
+.account-info p {
+    margin: 8px 0;
+    font-size: 16px;
+}
+
+.copyable {
+    background: #e9ecef;
+    padding: 2px 8px;
+    border-radius: 3px;
+    cursor: pointer;
+    display: inline-block;
+    transition: background-color 0.2s;
+}
+
+.copyable:hover {
+    background: #dee2e6;
+}
+
+.payment-instructions {
+    margin: 20px 0;
+}
+
+.payment-instructions h4 {
+    color: #495057;
+    margin-bottom: 10px;
+}
+
+.payment-instructions ol {
+    padding-left: 20px;
+}
+
+.payment-instructions li {
+    margin: 8px 0;
+    line-height: 1.5;
+}
+
+.transaction-ref {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+    color: #6c757d;
+    font-size: 12px;
+}
+
+.payment-modal-footer {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 20px;
+    border-top: 1px solid #eee;
+    background: #f8f9fa;
+}
+
+.btn-primary, .btn-secondary {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s;
+}
+
+.btn-primary {
+    background: #007bff;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #0056b3;
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #545b62;
+}
+
+/* Responsive design */
+@media (max-width: 600px) {
+    .payment-modal {
+        width: 95%;
+        margin: 10px;
+    }
+    
+    .payment-modal-footer {
+        flex-direction: column;
+    }
+    
+    .btn-primary, .btn-secondary {
+        width: 100%;
+    }
 }
