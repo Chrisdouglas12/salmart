@@ -13,6 +13,18 @@ const userSchema = new mongoose.Schema({
 
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date },
+  phoneNumber: {
+  type: String,
+  trim: true,
+  default: '+2348012345678', // Replace with a default number you want
+  validate: {
+    validator: function (v) {
+      // Accepts +2348012345678 or 08012345678
+      return /^(\+234|0)[789][01]\d{8}$/.test(v);
+    },
+    message: props => `${props.value} is not a valid Nigerian phone number!`
+  }
+},
 
   // --- Start Paystack Integration Fields ---
   paystack: {
