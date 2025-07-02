@@ -289,12 +289,14 @@ document.addEventListener('DOMContentLoaded', async function () {
                 `;
             } else if (!currentLoggedInUser) {
                 buttonContent = `
+                <div class="button-container">
+                
                     <button class="promoted-cta-button login-required" onclick="redirectToLogin()">
-                        <i class="fas fa-shopping-cart"></i> Buy Now
+                        <i class="fas fa-shopping-cart"></i> Buy
                     </button>
                     <button class="promoted-cta-button login-required" onclick="redirectToLogin()">
-                        <i class="fas fa-circle-dot"></i> Message Seller
-                    </button>
+                        <i class="fas fa-paper-plane"></i> Message </button>
+                        </div>
                 `;
             } else { // Current user is the creator
                 buttonContent = `
@@ -317,8 +319,9 @@ document.addEventListener('DOMContentLoaded', async function () {
 
             if (currentLoggedInUser && !isPostCreator) {
                 buttonContent = `
+                <div class="button-container">
                     <button class="promoted-cta-button buy-now-button" data-post-id="${post._id || ''}" ${post.isSold ? 'disabled' : ''}>
-                        <i class="fas fa-shopping-cart"></i> ${post.isSold ? 'Sold Out' : 'Buy Now'}
+                        <i class="fas fa-shopping-cart"></i> ${post.isSold ? 'Sold Out' : 'Buy'}
                     </button>
                     <button class="promoted-cta-button send-message-btn"
                         data-recipient-id="${post.createdBy ? post.createdBy.userId : ''}"
@@ -326,7 +329,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                         data-product-description="${escapeHtml(post.title || '')}"
                         data-post-id="${post._id || ''}"
                         ${post.isSold ? 'disabled' : ''}>
-                        <i class="fas fa-circle-dot"></i> ${post.isSold ? 'Unavailable' : 'Message Seller'}
+                        <i class="fas fa-paper-plane"></i> ${post.isSold ? 'Unavailable' : 'Message'}
                     </button>
                 `;
             } else if (!currentLoggedInUser) {
@@ -594,7 +597,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             flex: 0 0 auto;
             width: calc((100% / 5) - 12px);
             min-width: 200px;
-            background: linear-gradient(135deg, #28a745, #218838, #1e7e34);
+            background: #28a745;
             border-radius: 8px;
             padding: 20px;
             color: white;
@@ -642,16 +645,12 @@ document.addEventListener('DOMContentLoaded', async function () {
 
         const headerElement = document.createElement('div');
         headerElement.classList.add('promoted-posts-header');
-        headerElement.innerHTML = '<h3>Things you may like</h3>';
+        headerElement.innerHTML = '<h3>Suggested products for you</h3>';
         headerElement.style.cssText = `
-            font-size: 1.1em;
-            font-weight: 600;
+            font-size: 16px;
             color: #333;
-            margin-bottom: 15px;
-            padding: 15px;
+            margin-bottom: 0;
             background-color: #fff;
-            border-radius: 8px 8px 0 0;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         `;
 
         const rowContainer = document.createElement('div');

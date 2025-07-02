@@ -3134,3 +3134,9 @@
 {"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-02T15:58:31.284Z"}
 {"body":{"buyerId":"68431685432ee393a735a641","currency":"NGN","email":"chrisdouglas1700@gmail.com","postId":"6863d6904fc31813729b8933"},"level":"info","message":"DVA payment initiation started","requestId":"DVA_PAY_INIT_1751471911287","timestamp":"2025-07-02T15:58:31.287Z"}
 {"existingAmount":200000,"level":"warn","message":"Buyer already has an outstanding awaiting_payment transaction via DVA","requestId":"DVA_PAY_INIT_1751471911287","timestamp":"2025-07-02T15:58:32.045Z","transactionId":"686556b986f625a5d427c698"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-02T17:09:32.790Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-02T17:10:24.413Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-02T17:10:49.723Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-02T23:03:13.188Z"}
+{"body":{"buyerId":"6865680685b3194e8bc38b92","currency":"NGN","email":"sam@gmail.com","postId":"686568d985b3194e8bc38bc6"},"level":"info","message":"Payment initiation started","requestId":"PAY_1751497393206","timestamp":"2025-07-02T23:03:13.209Z"}
+{"level":"info","message":"Payment initialized successfully","reference":"ac2e76su8a","requestId":"PAY_1751497393206","timestamp":"2025-07-02T23:03:14.386Z"}
