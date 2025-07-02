@@ -242,6 +242,8 @@ module.exports = (io) => {
 
 // routes/paymentRoutes.js
 
+
+  // Add this at the top of your file with other iz
 router.post('/pay', async (req, res) => {
     const requestId = `DVA_PAY_INIT_${Date.now()}`;
     logger.info('DVA payment initiation started', { requestId, body: req.body });
@@ -334,8 +336,12 @@ router.post('/pay', async (req, res) => {
         
         // CRITICAL FIX: Use proper bank for production
         const isTestMode = process.env.PAYSTACK_SECRET_KEY?.startsWith('sk_test_');
-        const preferredBank = isTestMode ? "test-bank" : "wema-bank"; // or "paystack-titan"
-        
+const preferredBank = process.env.PREFERRED_BANK || (isTestMode ? 'test-bank' : 'wema-bank');
+
+if (!isTestMode && preferredBank === 'test-bank') {
+  throw new Error('❌ Test bank cannot be used in production!');
+}
+
         console.log(`[${requestId}] Environment: ${isTestMode ? 'TEST' : 'PRODUCTION'}, Using bank: ${preferredBank}`);
         
         // Create dedicated virtual account using HTTPS request
