@@ -417,6 +417,8 @@ document.addEventListener('DOMContentLoaded', async function () {
         } else {
              // Added description content to appear before the image
              descriptionContent = `
+                               <h2 class="product-title">${escapeHtml(post.title || 'No description')}</h2>
+                    
                 <div class="post-description-text" style="margin-bottom: 10px; padding: 0 15px;">
                     <p>${escapeHtml(post.description || '')}</p>
                 </div>
@@ -430,8 +432,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             `;
             productDetails = `
                 <div class="content">
-                    <h2 class="product-title">${escapeHtml(post.title || 'No description')}</h2>
-                    
+
                     <div class="details-grid">
                         <div class="detail-item">
                             <div class="detail-icon price-icon">₦</div>
