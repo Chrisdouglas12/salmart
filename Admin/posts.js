@@ -3,16 +3,26 @@ import { salmartCache } from './salmartCache.js';
 document.addEventListener('DOMContentLoaded', async function () {
     let currentLoggedInUser = null;
     let currentFollowingList = [];
+    // isAuthReady is still relevant for dependent logic, but less critical for initial post display.
     let isAuthReady = false;
 
     // --- State variables for pagination/filtering ---
-    let userIdToFollow; // This variable seems unused in the original context, consider removing if not needed.
     let currentPage = 1;
     let currentCategory = 'all';
     let isLoading = false; // To prevent multiple simultaneous fetches
     let postCounter = 0; // Counter for normal posts to inject suggestions
 
-    // --- Helper Functions ---
+    // Get the posts container element
+    const postsContainer = document.getElementById('posts-container');
+    const promotedPostsContainer = document.getElementById('promoted-posts-container'); // Get the promoted posts container
+
+    // If containers aren't found, log an error and exit to prevent further issues.
+    if (!postsContainer || !promotedPostsContainer) {
+        console.error('Required post containers not found. Exiting posts.js initialization.');
+        return;
+    }
+
+    // --- Helper Functions (No changes needed for these, just for context) ---
 
     async function fetchFollowingList() {
         if (!currentLoggedInUser) {
@@ -29,7 +39,6 @@ document.addEventListener('DOMContentLoaded', async function () {
             });
             if (response.ok) {
                 const { following } = await response.json();
-                // Ensure unique IDs and convert to string for consistent comparison
                 return [...new Set(following.map(id => id.toString()))] || [];
             } else {
                 console.warn('Could not fetch following list. Status:', response.status);
@@ -56,7 +65,6 @@ document.addEventListener('DOMContentLoaded', async function () {
             });
             if (response.ok) {
                 const { suggestions } = await response.json();
-                // Filter out users already in currentFollowingList (ids are strings)
                 return suggestions.filter(user => !currentFollowingList.includes(user._id.toString()));
             } else {
                 console.warn('Could not fetch user suggestions. Status:', response.status);
@@ -102,28 +110,23 @@ document.addEventListener('DOMContentLoaded', async function () {
         return div.innerHTML;
     }
 
-    /**
-     * Updates the UI for all follow buttons on the page for a given user ID.
-     * @param {string} userId - The ID of the user whose follow buttons need to be updated.
-     * @param {boolean} isFollowing - True if the user is now followed, false if unfollowed.
-     */
     window.updateFollowButtonsUI = function(userId, isFollowing) {
         document.querySelectorAll(`.follow-button[data-user-id="${userId}"]`).forEach(button => {
             if (isFollowing) {
                 button.innerHTML = '<i class="fas fa-user-check"></i> Following';
                 button.style.backgroundColor = '#fff';
                 button.style.color = '#28a745';
-                button.disabled = true; // Disable if already following
+                button.disabled = true;
             } else {
                 button.innerHTML = '<i class="fas fa-user-plus"></i> Follow';
-                button.style.backgroundColor = ''; // Reset to default/CSS
-                button.style.color = ''; // Reset to default/CSS
+                button.style.backgroundColor = '';
+                button.style.color = '';
                 button.disabled = false;
             }
         });
     };
 
-    // --- Render Functions ---
+    // --- Render Functions (No significant changes needed for these) ---
 
     function renderUserSuggestion(user) {
         const suggestionElement = document.createElement('div');
@@ -138,7 +141,6 @@ document.addEventListener('DOMContentLoaded', async function () {
                 ${isFollowingUser ? '<i class="fas fa-user-check"></i> Following' : '<i class="fas fa-user-plus"></i> Follow'}
             </button>
         `;
-
         return suggestionElement;
     }
 
@@ -146,7 +148,6 @@ document.addEventListener('DOMContentLoaded', async function () {
         if (!users || users.length === 0) {
             return null;
         }
-
         const wrapperContainer = document.createElement('div');
         wrapperContainer.classList.add('user-suggestions-wrapper');
         wrapperContainer.style.cssText = `
@@ -156,7 +157,6 @@ document.addEventListener('DOMContentLoaded', async function () {
             border-radius: 8px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         `;
-
         const headerElement = document.createElement('h3');
         headerElement.textContent = 'Suggested People to Follow';
         headerElement.style.cssText = `
@@ -167,9 +167,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             text-align: center;
         `;
         wrapperContainer.appendChild(headerElement);
-
         const cardsPerRow = 8;
-
         for (let i = 0; i < users.length; i += cardsPerRow) {
             const rowContainer = document.createElement('div');
             rowContainer.classList.add('user-suggestions-row');
@@ -185,7 +183,6 @@ document.addEventListener('DOMContentLoaded', async function () {
                 scrollbar-width: none;
                 margin-bottom: ${i + cardsPerRow < users.length ? '10px' : '0'};
             `;
-
             const currentRowUsers = users.slice(i, i + cardsPerRow);
             currentRowUsers.forEach(user => {
                 const userCard = renderUserSuggestion(user);
@@ -197,7 +194,6 @@ document.addEventListener('DOMContentLoaded', async function () {
                 userCard.style.padding = '10px';
                 userCard.style.borderRadius = '8px';
                 userCard.style.boxShadow = '0 1px 3px rgba(0,0,0,0.08)';
-
                 userCard.querySelector('.user-suggestion-avatar').style.cssText = `
                     width: 80px;
                     height: 80px;
@@ -292,7 +288,6 @@ document.addEventListener('DOMContentLoaded', async function () {
             } else if (!currentLoggedInUser) {
                 buttonContent = `
                 <div class="button-container">
-                
                     <button class="promoted-cta-button login-required" onclick="redirectToLogin()">
                         <i class="fas fa-shopping-cart"></i> Buy
                     </button>
@@ -380,7 +375,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
         let mediaContent = '';
         let productDetails = '';
-        let descriptionContent = ''; // New variable for the description
+        let descriptionContent = '';
         let buttonContent = '';
 
         const productImageForChat = post.postType === 'video_ad' ? (post.thumbnail || '/salmart-192x192.png') : (post.photo || '/salmart-192x192.png');
@@ -415,7 +410,6 @@ document.addEventListener('DOMContentLoaded', async function () {
                 </div>
             `;
         } else {
-             // Added description content to appear before the image
              descriptionContent = `
                 <div class="post-description-text" style="margin-bottom: 10px; padding: 0 15px;">
                     <p>${escapeHtml(post.description || '')}</p>
@@ -623,7 +617,6 @@ document.addEventListener('DOMContentLoaded', async function () {
             align-items: center;
             scroll-snap-align: start;
         `;
-        
         fillerElement.innerHTML = `
             <div style="font-size: 2em; margin-bottom: 10px;">
                 <i class="fas fa-star"></i>
@@ -647,7 +640,6 @@ document.addEventListener('DOMContentLoaded', async function () {
                 Browse All
             </button>
         `;
-        
         return fillerElement;
     }
 
@@ -703,7 +695,6 @@ document.addEventListener('DOMContentLoaded', async function () {
 
         wrapperContainer.appendChild(headerElement);
         wrapperContainer.appendChild(rowContainer);
-
         rowContainer.style.position = 'relative';
 
         return wrapperContainer;
@@ -712,12 +703,6 @@ document.addEventListener('DOMContentLoaded', async function () {
     // --- Main Post Loading Logic ---
 
     async function fetchPostsByCategory(category = currentCategory, page = currentPage, clearExisting = false) {
-        const postsContainer = document.getElementById('posts-container');
-        if (!postsContainer) {
-            console.error('Posts container not found.');
-            return;
-        }
-
         if (isLoading && !clearExisting) {
             console.log('Posts are already loading. Skipping new request (unless clearing).');
             return;
@@ -725,15 +710,18 @@ document.addEventListener('DOMContentLoaded', async function () {
         isLoading = true;
 
         if (clearExisting) {
-            postsContainer.innerHTML = '';
-            postCounter = 0; 
+            postsContainer.innerHTML = ''; // Clear main posts
+            promotedPostsContainer.innerHTML = ''; // Clear promoted posts
+            postCounter = 0;
+            currentPage = 1; // Reset page when clearing existing
         }
 
         try {
             const allPosts = await salmartCache.getPostsByCategory(category);
 
             if (!Array.isArray(allPosts) || allPosts.length === 0) {
-                if (postsContainer.children.length === 0) {
+                // Only show "No posts" if *no* posts were fetched AND the container is currently empty.
+                if (postsContainer.children.length === 0 && promotedPostsContainer.children.length === 0) {
                     postsContainer.innerHTML = `
                         <p style="text-align: center; padding: 20px; color: #666;">
                             No posts yet for "${category === 'all' ? 'this category' : category}".
@@ -748,7 +736,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             const sortedPosts = [...allPosts].sort((a, b) => {
                 const dateA = new Date(a.createdAt || 0);
                 const dateB = new Date(b.createdAt || 0);
-                return dateB - dateA; 
+                return dateB - dateA;
             });
 
             const promotedPosts = sortedPosts.filter(post => post.isPromoted);
@@ -760,19 +748,23 @@ document.addEventListener('DOMContentLoaded', async function () {
                 return dateB - dateA;
             });
 
-            const postsBeforeSuggestion = 5; 
+            const postsBeforeSuggestion = 5;
             const usersPerSuggestionRow = 8;
 
             const fragment = document.createDocumentFragment();
 
             let allUserSuggestions = [];
+            // Fetch suggestions only if logged in and doing an initial clear (to avoid re-fetching on scroll)
             if (currentLoggedInUser && clearExisting) {
                 allUserSuggestions = await fetchUserSuggestions();
             }
 
+            // Append promoted posts to their dedicated container
             if (promotedPosts.length > 0) {
                 const promotedRow = createPromotedPostsRow(promotedPosts);
-                fragment.prepend(promotedRow);
+                promotedPostsContainer.appendChild(promotedRow);
+            } else {
+                promotedPostsContainer.innerHTML = ''; // Ensure promoted container is empty if no promoted posts
             }
 
             let suggestionRowIndex = 0;
@@ -785,9 +777,9 @@ document.addEventListener('DOMContentLoaded', async function () {
                 postCounter++;
                 suggestionCounter++;
 
-                if (suggestionCounter % postsBeforeSuggestion === 0 && 
-                    currentLoggedInUser && 
-                    allUserSuggestions.length > 0 && 
+                if (suggestionCounter % postsBeforeSuggestion === 0 &&
+                    currentLoggedInUser &&
+                    allUserSuggestions.length > 0 &&
                     suggestionRowIndex * usersPerSuggestionRow < allUserSuggestions.length) {
 
                     const startIndex = suggestionRowIndex * usersPerSuggestionRow;
@@ -798,20 +790,15 @@ document.addEventListener('DOMContentLoaded', async function () {
                         const userSuggestionsContainer = createUserSuggestionsContainer(usersForThisRow);
                         if (userSuggestionsContainer) {
                             fragment.appendChild(userSuggestionsContainer);
-                            suggestionRowIndex++; 
+                            suggestionRowIndex++;
                         }
                     }
                 }
             }
 
-            if (clearExisting) {
-                postsContainer.innerHTML = '';
-                postsContainer.appendChild(fragment);
-            } else {
-                postsContainer.appendChild(fragment);
-            }
+            postsContainer.appendChild(fragment); // Append all normal posts in one go
 
-            if (postsContainer.children.length === 0) {
+            if (postsContainer.children.length === 0 && promotedPostsContainer.children.length === 0) {
                 postsContainer.innerHTML = '<p style="text-align: center; margin: 2rem;">No posts available.</p>';
             }
 
@@ -819,7 +806,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
         } catch (error) {
             console.error('Error fetching posts:', error);
-            if (!postsContainer.children.length) {
+            if (postsContainer.children.length === 0 && promotedPostsContainer.children.length === 0) {
                 postsContainer.innerHTML = `
                     <p style="text-align: center; color: red; padding: 20px;">
                         Error loading posts. Please check your internet connection or try again later.
@@ -832,7 +819,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
     }
 
-    // --- Global Utility Functions ---
+    // --- Global Utility Functions (No changes needed) ---
 
     window.redirectToLogin = function() {
         if (window.showToast) {
@@ -845,11 +832,10 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
     };
 
-
-    // --- Event Delegates for Interactive Elements ---
+    // --- Event Delegates for Interactive Elements (No changes needed) ---
 
     document.addEventListener('click', async (event) => {
-        const target = event.target.closest('button'); // Capture clicks on buttons
+        const target = event.target.closest('button');
         if (!target) return;
 
         const API_BASE_URL = window.API_BASE_URL || (window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart.onrender.com');
@@ -857,7 +843,6 @@ document.addEventListener('DOMContentLoaded', async function () {
         const authToken = localStorage.getItem('authToken');
         const loggedInUser = localStorage.getItem('userId');
 
-        // Handle Promote Button
         const promoteButton = target.closest('.promote-button');
         if (promoteButton) {
             const postId = promoteButton.dataset.postId;
@@ -868,13 +853,11 @@ document.addEventListener('DOMContentLoaded', async function () {
                 return;
             }
             window.location.href = `promote.html?postId=${postId}`;
-            return; // Exit to prevent further processing
+            return;
         }
 
-
-        // Handle Send Message Button (for both normal and promoted posts)
         if (target.classList.contains('send-message-btn')) {
-            event.preventDefault(); // Prevent default button behavior
+            event.preventDefault();
             const recipientId = target.dataset.recipientId;
             const postElement = target.closest('.post') || target.closest('.promoted-post');
             
@@ -903,10 +886,9 @@ document.addEventListener('DOMContentLoaded', async function () {
 
             const chatUrl = `Chats.html?user_id=${loggedInUser}&recipient_id=${recipientId}&recipient_username=${encodedRecipientUsername}&recipient_profile_picture_url=${encodedRecipientProfilePictureUrl}&message=${encodedMessage}&product_image=${encodedProductImage}&product_id=${postId}&product_name=${encodedProductDescription}`;
             window.location.href = chatUrl;
-            return; // Exit to prevent further processing
+            return;
         }
 
-        // Handle Follow Button
         if (target.classList.contains('follow-button') && target.dataset.userId) {
             const userIdToFollow = target.dataset.userId;
             if (!authToken || !loggedInUser) {
@@ -915,8 +897,6 @@ document.addEventListener('DOMContentLoaded', async function () {
             }
 
             const isCurrentlyFollowing = target.textContent.includes('Following');
-
-            // Optimistic UI update
             window.updateFollowButtonsUI(userIdToFollow, !isCurrentlyFollowing);
 
             try {
@@ -935,25 +915,20 @@ document.addEventListener('DOMContentLoaded', async function () {
                 }
 
                 const data = await response.json();
-                
-                // Update currentFollowingList based on successful action
                 if (isCurrentlyFollowing) {
                     currentFollowingList = currentFollowingList.filter(id => id !== userIdToFollow);
                 } else {
                     currentFollowingList.push(userIdToFollow);
                 }
-                
-                // Re-apply UI update for consistency with actual state
                 window.updateFollowButtonsUI(userIdToFollow, !isCurrentlyFollowing);
                 showToast(data.message || 'Follow status updated!', '#28a745');
 
             } catch (error) {
                 console.error('Follow/Unfollow error:', error);
                 showToast(error.message || 'Failed to update follow status.', '#dc3545');
-                // Revert UI on error
                 window.updateFollowButtonsUI(userIdToFollow, isCurrentlyFollowing);
             }
-            return; // Exit to prevent further processing
+            return;
         }
     });
 
@@ -961,10 +936,11 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     async function initializeAuthStatusAndPosts() {
         try {
-            if (typeof window.loggedInUser !== 'undefined') {
+            // Attempt to get the logged-in user from localStorage immediately
+            currentLoggedInUser = localStorage.getItem('userId'); // Assuming 'userId' is stored here
+            if (typeof window.loggedInUser !== 'undefined' && !currentLoggedInUser) {
+                 // Fallback if localStorage isn't used consistently or 'window.loggedInUser' is set later
                 currentLoggedInUser = window.loggedInUser;
-            } else {
-                console.warn('window.loggedInUser is not yet defined. This may be set by another script.');
             }
 
             if (currentLoggedInUser) {
@@ -974,40 +950,56 @@ document.addEventListener('DOMContentLoaded', async function () {
             isAuthReady = true;
             console.log('Auth initialization complete. User:', currentLoggedInUser ? currentLoggedInUser : 'Not logged in');
 
+            // --- IMMEDIATE INITIAL POST FETCH ---
+            // Call fetchPostsByCategory with clearExisting = true to replace skeletons
             await fetchPostsByCategory(currentCategory, currentPage, true);
 
         } catch (error) {
             console.error('Error during initial auth or post fetch:', error);
             isAuthReady = true;
-            await fetchPostsByCategory(currentCategory, currentPage, true); // Still try to fetch posts even if auth has issues
+            // Even if auth fails, try to fetch posts (they might still display publicly)
+            await fetchPostsByCategory(currentCategory, currentPage, true);
         }
     }
 
-    window.fetchPosts = fetchPostsByCategory; // Make it globally accessible if needed elsewhere
+    window.fetchPosts = fetchPostsByCategory; // Make it globally accessible
 
+    // Listen for the 'authStatusReady' event to update user data, but don't block initial display
     document.addEventListener('authStatusReady', async (event) => {
         currentLoggedInUser = event.detail.loggedInUser;
         console.log('Auth status ready event received. Logged in user:', currentLoggedInUser ? currentLoggedInUser : 'Not logged in');
-        currentFollowingList = await fetchFollowingList(); // Re-fetch following list on auth status ready
+        
+        // Re-fetch following list as auth status is now confirmed
+        currentFollowingList = await fetchFollowingList(); 
         isAuthReady = true;
-        await fetchPostsByCategory(currentCategory, currentPage, true);
+
+        // Re-fetch posts to ensure personalized content (e.g., follow buttons) is updated
+        // This will effectively re-render the page with correct follow states and user-specific actions.
+        await fetchPostsByCategory(currentCategory, 1, true); // Reset page to 1 for a full refresh
     });
 
-    // Fallback if 'authStatusReady' event is not fired or takes too long
+    // --- Critical: Call initialization immediately on DOMContentLoaded ---
+    // This ensures posts start loading as soon as possible, replacing skeletons.
+    initializeAuthStatusAndPosts();
+
+    // The timeouts for auth status are less critical now since posts load immediately,
+    // but they can remain as a safeguard for very slow auth scripts.
+    // However, for immediate display, the direct call above is paramount.
     setTimeout(async () => {
         if (!isAuthReady) {
-            console.log('Auth status timeout (500ms) - proceeding with initialization.');
-            await initializeAuthStatusAndPosts();
+            console.log('Auth status timeout (500ms) - double checking auth and re-fetching.');
+            // This might trigger a second fetch, but it's okay for robustness.
+            // The first `fetchPostsByCategory` will have already populated content.
+            await initializeAuthStatusAndPosts(); 
         }
     }, 500);
 
     setTimeout(async () => {
         if (!isAuthReady) {
-            console.log('Auth status timeout (2000ms) - proceeding with initialization.');
+            console.log('Auth status timeout (2000ms) - final check for auth and re-fetching.');
             await initializeAuthStatusAndPosts();
         }
     }, 2000);
-
 
     const loadMoreBtn = document.getElementById('load-more-btn');
     if (loadMoreBtn) {
