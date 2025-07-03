@@ -380,12 +380,17 @@ document.addEventListener('DOMContentLoaded', async function () {
 
         let mediaContent = '';
         let productDetails = '';
-        let textContent = '';
+        let descriptionContent = ''; // New variable for the description
         let buttonContent = '';
 
         const productImageForChat = post.postType === 'video_ad' ? (post.thumbnail || '/salmart-192x192.png') : (post.photo || '/salmart-192x192.png');
 
         if (post.postType === 'video_ad') {
+            descriptionContent = `
+                <div class="post-description-text" style="margin-bottom: 10px;">
+                    <p>${escapeHtml(post.description || '')}</p>
+                </div>
+            `;
             mediaContent = `
                 <div class="product-image">
                     <div class="badge">New</div>
@@ -410,14 +415,14 @@ document.addEventListener('DOMContentLoaded', async function () {
                 </div>
             `;
         } else {
-             
-             textContent = `
-             <div style='margin-top: 15px; position: fixed; z-index: 60000'>
-            <p>${post.description}</p>
-               </div>`;
+             // Added description content to appear before the image
+             descriptionContent = `
+                <div class="post-description-text" style="margin-bottom: 10px; padding: 0 15px;">
+                    <p>${escapeHtml(post.description || '')}</p>
+                </div>
+            `;
                
             mediaContent = `
-            
                 <div class="product-image">
                     <div class="badge">${post.productCondition || 'New'}</div>
                     <img src="${productImageForChat}" class="post-image" onclick="window.openImage('${productImageForChat.replace(/'/g, "\\'")}')" alt="Product Image" onerror="this.src='/salmart-192x192.png'">
@@ -582,7 +587,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 </div>
             </div>
 
-            <div class="product-container">
+            ${descriptionContent} <div class="product-container">
                 <div class="media-card">
                     ${mediaContent}
                 </div>

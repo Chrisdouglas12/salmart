@@ -3141,3 +3141,4 @@
 {"body":{"buyerId":"6865680685b3194e8bc38b92","currency":"NGN","email":"sam@gmail.com","postId":"686568d985b3194e8bc38bc6"},"level":"info","message":"Payment initiation started","requestId":"PAY_1751497393206","timestamp":"2025-07-02T23:03:13.209Z"}
 {"level":"info","message":"Payment initialized successfully","reference":"ac2e76su8a","requestId":"PAY_1751497393206","timestamp":"2025-07-02T23:03:14.386Z"}
 {"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-02T23:23:16.767Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-03T00:44:22.105Z"}

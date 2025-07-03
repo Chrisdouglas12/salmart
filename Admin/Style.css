@@ -908,12 +908,12 @@ h1 {
  display: flex;
   justify-content: space-between;
   margin-top: 15px;
-  border-left: 1px solid #28a745;
-  border-right: 1px solid #28a745;
-  border-radius: 6px;
   height: 38px;
   margin-bottom: 6px;
-  background-color: #f3f8f1;
+  background-color: #ffff;
+}
+p{
+     font-weight: 450;
 }
 
 .post-actions button {
