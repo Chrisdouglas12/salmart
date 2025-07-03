@@ -275,8 +275,9 @@ document.addEventListener('DOMContentLoaded', async function () {
             `;
             if (currentLoggedInUser && !isPostCreator) {
                 buttonContent = `
+                <div class='button-container'>
                     <button class="promoted-cta-button buy-now-button" data-post-id="${post._id || ''}" ${post.isSold ? 'disabled' : ''}>
-                        <i class="fas fa-shopping-cart"></i> ${post.isSold ? 'Sold Out' : 'Buy Now'}
+                        <i class="fas fa-shopping-cart"></i> ${post.isSold ? 'Sold' : 'Buy'}
                     </button>
                      <button class="promoted-cta-button send-message-btn"
                         data-recipient-id="${post.createdBy ? post.createdBy.userId : ''}"
@@ -284,8 +285,9 @@ document.addEventListener('DOMContentLoaded', async function () {
                         data-product-description="${escapeHtml(post.description || '')}"
                         data-post-id="${post._id || ''}"
                         ${post.isSold ? 'disabled' : ''}>
-                        <i class="fas fa-paper-plane"></i> ${post.isSold ? 'Unavailable' : 'Message Seller'}
+                        <i class="fas fa-paper-plane"></i> ${post.isSold ? 'Unavailable' : 'Message'}
                     </button>
+                    </div>
                 `;
             } else if (!currentLoggedInUser) {
                 buttonContent = `
@@ -321,7 +323,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 buttonContent = `
                 <div class="button-container">
                     <button class="promoted-cta-button buy-now-button" data-post-id="${post._id || ''}" ${post.isSold ? 'disabled' : ''}>
-                        <i class="fas fa-shopping-cart"></i> ${post.isSold ? 'Sold Out' : 'Buy'}
+                        <i class="fas fa-shopping-cart"></i> ${post.isSold ? 'Sold' : 'Buy'}
                     </button>
                     <button class="promoted-cta-button send-message-btn"
                         data-recipient-id="${post.createdBy ? post.createdBy.userId : ''}"
@@ -378,6 +380,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
         let mediaContent = '';
         let productDetails = '';
+        let textContent = '';
         let buttonContent = '';
 
         const productImageForChat = post.postType === 'video_ad' ? (post.thumbnail || '/salmart-192x192.png') : (post.photo || '/salmart-192x192.png');
@@ -407,7 +410,14 @@ document.addEventListener('DOMContentLoaded', async function () {
                 </div>
             `;
         } else {
+             
+             textContent = `
+             <div style='margin-top: 15px; position: fixed; z-index: 60000'>
+            <p>${post.description}</p>
+               </div>`;
+               
             mediaContent = `
+            
                 <div class="product-image">
                     <div class="badge">${post.productCondition || 'New'}</div>
                     <img src="${productImageForChat}" class="post-image" onclick="window.openImage('${productImageForChat.replace(/'/g, "\\'")}')" alt="Product Image" onerror="this.src='/salmart-192x192.png'">
