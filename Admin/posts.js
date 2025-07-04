@@ -252,12 +252,12 @@ document.addEventListener('DOMContentLoaded', async function () {
         let productDetails = '';
         let buttonContent = '';
 
-        const productImageForChat = post.postType === 'video_ad' ? (post.thumbnail || '/salmart-192x192.png') : (post.photo || '/salmart-192x192.png');
+        const productImageForChat = post.postType === 'video_ad' ? (post.photo || '/salmart-192x192.png') : (post.photo || '/salmart-192x192.png'); // Using post.photo for image, thumbnail is removed
 
         if (post.postType === 'video_ad') {
             mediaContent = `
                 <div class="promoted-video-container">
-                    <video class="promoted-video" preload="metadata" muted aria-label="Promoted video ad for ${(post.description || 'product').replace(/"/g, '"')}" poster="${post.thumbnail || '/salmart-192x192.png'}">
+                    <video class="promoted-video" preload="metadata" muted aria-label="Promoted video ad for ${(post.description || 'product').replace(/"/g, '"')}" controls>
                         <source src="${post.video || ''}" type="video/mp4" />
                         Your browser does not support the video tag.
                     </video>
@@ -383,7 +383,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         let descriptionContent = ''; // New variable for the description
         let buttonContent = '';
 
-        const productImageForChat = post.postType === 'video_ad' ? (post.thumbnail || '/salmart-192x192.png') : (post.photo || '/salmart-192x192.png');
+        const productImageForChat = post.postType === 'video_ad' ? (post.photo || '/salmart-192x192.png') : (post.photo || '/salmart-192x192.png'); // Using post.photo for image, thumbnail is removed
 
         if (post.postType === 'video_ad') {
             descriptionContent = `
@@ -394,7 +394,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             mediaContent = `
                 <div class="product-image">
                     <div class="badge">New</div>
-                    <video class="post-video" preload="metadata" aria-label="Video ad for ${(post.description || 'product').replace(/"/g, '"')}" poster="${post.thumbnail || '/salmart-192x192.png'}">
+                    <video class="post-video" preload="metadata" aria-label="Video ad for ${(post.description || 'product').replace(/"/g, '"')}" controls>
                         <source src="${post.video || ''}" type="video/mp4" />
                         <source src="${post.video ? post.video.replace('.mp4', '.webm') : ''}" type="video/webm" />
                         <source src="${post.video ? post.video.replace('.mp4', '.ogg') : ''}" type="video/ogg" />
