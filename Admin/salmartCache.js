@@ -1,35 +1,39 @@
 // public/salmartCache.js
 
-// This file provides a centralized way to make API requests.
-// IMPORTANT: The actual caching of responses is handled by your Service Worker (e.g., service-worker.js).
-// Ensure your Service Worker is configured to cache responses from the API_BASE_URL
-// for optimal performance and offline capabilities.
+// IMPORTANT: This file now relies on 'idb-keyval' for IndexedDB operations.
+// Ensure you include idb-keyval.js script tag in your HTML files BEFORE this script.
+// Example: <script src="/idb-keyval-iife.js"></script>
 
-const API_BASE_URL = window.API_BASE_URL || (window.location.hostname === 'localhost' 
-    ? 'http://localhost:3000' 
+const API_BASE_URL = window.API_BASE_URL || (window.location.hostname === 'localhost'
+    ? 'http://localhost:3000'
     : 'https://salmart.onrender.com');
+
+// Using idb-keyval for IndexedDB operations
+// idb-keyval exposes `get` and `set` methods globally if using the IIFE version.
+// If using module version, you'd import { get, set } from './idb-keyval.js';
+// For the purpose of a full snippet, we'll assume the IIFE is loaded globally.
 
 class SalmartCache {
   constructor() {
-    // You can add initialization logic here if needed,
-    // e.g., for IndexedDB if you plan to use it alongside the service worker.
+    // Optionally set up default store names for idb-keyval if needed
+    // set('key', 'value', 'custom-store-name');
+    console.log('SalmartCache initialized with IndexedDB support.');
   }
 
   /**
    * Fetches data from the given URL and passes options (like headers) to the fetch request.
-   * This method relies on an active Service Worker to handle the actual caching of responses.
+   * This method still interacts with the network, which your Service Worker will intercept.
    * @param {string} url - The URL to fetch.
    * @param {object} options - Options for the fetch request (e.g., headers).
    * @returns {Promise<any>} - The JSON response from the server.
    */
-  async fetchWithCache(url, options = {}) {
+  async fetchWithNetworkFallback(url, options = {}) {
     const fetchOptions = {
-      ...options, // Spread existing options like 'priority'
-      headers: new Headers(options.headers || {}), // Ensure headers is a Headers object, default to empty if not provided
+      ...options,
+      headers: new Headers(options.headers || {}),
     };
 
     try {
-      // The service worker will intercept this fetch request if configured to do so.
       const response = await fetch(url, fetchOptions);
 
       if (!response.ok) {
@@ -42,11 +46,9 @@ class SalmartCache {
         }
         throw new Error(`API Error: ${response.status} - ${errorDetails}`);
       }
-
-      return response.json(); // Assuming all your API endpoints return JSON
+      return response.json();
     } catch (error) {
-      console.error(`❌ [SalmartCache] Error fetching from ${url}:`, error);
-      // Re-throw the error so the calling component can handle it (e.g., display an error message).
+      console.error(`❌ [SalmartCache] Network fetch failed for ${url}:`, error);
       throw error;
     }
   }
@@ -65,109 +67,185 @@ class SalmartCache {
   }
 
   /**
-   * Fetches posts by category.
+   * Generates a unique IndexedDB key for user-specific data.
+   * @param {string} baseKey - A descriptive base for the key (e.g., 'posts', 'messages').
+   * @returns {string} - The generated key.
+   */
+  _getPersonalizedDBKey(baseKey) {
+    const userId = localStorage.getItem('userId') || 'anonymous';
+    return `${baseKey}_${userId}`;
+  }
+
+  /**
+   * Fetches posts by category, prioritizing IndexedDB for offline access.
    * @param {string} category - The category of posts to fetch.
+   * @param {boolean} forceNetwork - If true, bypasses IndexedDB and fetches directly from network.
    * @returns {Promise<Array<object>>} - An array of post objects.
    */
-  async getPostsByCategory(category) {
-    const url = `${API_BASE_URL}/post?category=${encodeURIComponent(category)}`;
-    return this.fetchWithCache(url, { priority: 'high', headers: this._getAuthHeaders() });
+  async getPostsByCategory(category = 'all', forceNetwork = false) {
+    const dbKey = this._getPersonalizedDBKey(`posts_category_${category}`);
+    let dataFromDB = [];
+
+    // 1. Try to get from IndexedDB first
+    if (!forceNetwork && typeof get !== 'undefined') { // Check if idb-keyval 'get' is available
+      try {
+        dataFromDB = await get(dbKey) || [];
+        if (dataFromDB.length > 0) {
+          console.log(`✅ [SalmartCache] Serving ${dataFromDB.length} posts for category '${category}' from IndexedDB.`);
+          // If we have data, we can return it immediately for speed/offline,
+          // but also initiate a background network fetch to update the cache for next time.
+          this.fetchPostsAndUpdateDB(category, true).catch(e => console.warn('Background network update failed:', e));
+          return dataFromDB;
+        }
+      } catch (e) {
+        console.error('❌ [SalmartCache] Error reading posts from IndexedDB:', e);
+      }
+    }
+
+    // 2. If not in DB or forceNetwork is true, fetch from network and store in DB
+    return this.fetchPostsAndUpdateDB(category);
   }
 
   /**
-   * Fetches posts by a specific user ID.
-   * IMPORTANT: Your backend's /post route currently doesn't process a 'userId' query parameter for filtering.
-   * If this function is meant for a user's *own* posts (e.g., on a profile page),
-   * you likely need a dedicated backend route like `/api/user/:userId/posts` that handles this authentication internally.
-   * If it's meant to fetch *any* user's public posts, then the backend should be updated to filter by `userId`.
-   * @param {string} userId - The ID of the user whose posts to fetch.
+   * Internal method to fetch posts from network and update IndexedDB.
+   * @param {string} category - The category of posts to fetch.
+   * @param {boolean} silent - If true, suppress errors that are not critical (e.g., for background updates).
+   * @returns {Promise<Array<object>>} - An array of post objects.
+   */
+  async fetchPostsAndUpdateDB(category, silent = false) {
+    const url = `${API_BASE_URL}/post?category=${encodeURIComponent(category)}`;
+    const dbKey = this._getPersonalizedDBKey(`posts_category_${category}`);
+
+    try {
+      const data = await this.fetchWithNetworkFallback(url, { priority: 'high', headers: this._getAuthHeaders() });
+      if (typeof set !== 'undefined') { // Check if idb-keyval 'set' is available
+        await set(dbKey, data);
+        console.log(`🔄 [SalmartCache] Fetched and stored ${data.length} posts for category '${category}' in IndexedDB.`);
+      }
+      return data;
+    } catch (error) {
+      if (!silent) {
+        console.error(`❌ [SalmartCache] Failed to fetch posts for category '${category}' from network:`, error);
+        // If network fails, and it's not a silent update, try to retrieve from DB one last time
+        if (typeof get !== 'undefined') {
+            const fallbackData = await get(dbKey) || [];
+            if (fallbackData.length > 0) {
+                console.log(`⚠️ [SalmartCache] Network failed, serving ${fallbackData.length} posts from IndexedDB as fallback.`);
+                return fallbackData;
+            }
+        }
+        throw error; // Re-throw if no fallback data found
+      } else {
+          console.warn(`⚠️ [SalmartCache] Background fetch for category '${category}' failed:`, error.message);
+      }
+      return []; // Return empty array for silent failures
+    }
+  }
+
+  /**
+   * Fetches posts by a specific user ID, prioritizing IndexedDB.
+   * IMPORTANT: Ensure your backend /post route can filter by 'userId' if this is used for general user profiles.
+   * If it's for the currently logged-in user's posts, `_getAuthHeaders()` is sufficient.
+   * @param {string} targetUserId - The ID of the user whose posts to fetch.
+   * @param {boolean} forceNetwork - If true, bypasses IndexedDB.
    * @returns {Promise<Array<object>>} - An array of post objects belonging to the user.
    */
-  async getPostsByUserId(userId) {
-    // Assuming your backend /post endpoint can handle a 'userId' query parameter for filtering.
-    // If not, you might need a separate endpoint for user-specific posts.
-    const url = `${API_BASE_URL}/post?userId=${encodeURIComponent(userId)}`;
-    return this.fetchWithCache(url, { priority: 'high', headers: this._getAuthHeaders() });
+  async getPostsByUserId(targetUserId, forceNetwork = false) {
+      const dbKey = this._getPersonalizedDBKey(`posts_user_${targetUserId}`);
+      let dataFromDB = [];
+
+      if (!forceNetwork && typeof get !== 'undefined') {
+          try {
+              dataFromDB = await get(dbKey) || [];
+              if (dataFromDB.length > 0) {
+                  console.log(`✅ [SalmartCache] Serving ${dataFromDB.length} posts for user '${targetUserId}' from IndexedDB.`);
+                  this.fetchUserPostsAndUpdateDB(targetUserId, true).catch(e => console.warn('Background user posts update failed:', e));
+                  return dataFromDB;
+              }
+          } catch (e) {
+              console.error('❌ [SalmartCache] Error reading user posts from IndexedDB:', e);
+          }
+      }
+      return this.fetchUserPostsAndUpdateDB(targetUserId);
+  }
+
+  async fetchUserPostsAndUpdateDB(targetUserId, silent = false) {
+      const url = `${API_BASE_URL}/post?userId=${encodeURIComponent(targetUserId)}`; // Make sure backend handles this
+      const dbKey = this._getPersonalizedDBKey(`posts_user_${targetUserId}`);
+      try {
+          const data = await this.fetchWithNetworkFallback(url, { priority: 'high', headers: this._getAuthHeaders() });
+          if (typeof set !== 'undefined') {
+              await set(dbKey, data);
+              console.log(`🔄 [SalmartCache] Fetched and stored ${data.length} posts for user '${targetUserId}' in IndexedDB.`);
+          }
+          return data;
+      } catch (error) {
+          if (!silent) {
+              console.error(`❌ [SalmartCache] Failed to fetch posts for user '${targetUserId}' from network:`, error);
+              if (typeof get !== 'undefined') {
+                  const fallbackData = await get(dbKey) || [];
+                  if (fallbackData.length > 0) {
+                      console.log(`⚠️ [SalmartCache] Network failed, serving ${fallbackData.length} user posts from IndexedDB as fallback.`);
+                      return fallbackData;
+                  }
+              }
+              throw error;
+          } else {
+              console.warn(`⚠️ [SalmartCache] Background fetch for user '${targetUserId}' failed:`, error.message);
+          }
+          return [];
+      }
   }
 
   /**
-   * Fetches all posts (e.g., for a home feed).
+   * Fetches all posts (e.g., for a home feed), prioritizing IndexedDB.
+   * @param {boolean} forceNetwork - If true, bypasses IndexedDB.
    * @returns {Promise<Array<object>>} - An array of all post objects.
    */
-  async getAllPosts() {
-    const url = `${API_BASE_URL}/post`;
-    return this.fetchWithCache(url, { priority: 'high', headers: this._getAuthHeaders() });
+  async getAllPosts(forceNetwork = false) {
+    // This is essentially same as getPostsByCategory('all') if your backend handles it that way
+    return this.getPostsByCategory('all', forceNetwork);
   }
 
+  // --- Other Methods (mostly stay the same, some can use _getAuthHeaders directly) ---
 
-  /**
-   * Fetches transactions for a user.
-   * @param {string} userId - The ID of the user.
-   * @param {string} authToken - The authentication token. (Note: _getAuthHeaders is preferred)
-   * @returns {Promise<Array<object>>} - An array of transaction objects.
-   */
-  async getTransactions(userId, authToken) { // authToken parameter is redundant if you use _getAuthHeaders()
+  async getTransactions(userId) {
     const url = `${API_BASE_URL}/get-transactions/${userId}`;
-    // Using _getAuthHeaders() is cleaner and ensures consistency
-    return this.fetchWithCache(url, {
+    return this.fetchWithNetworkFallback(url, {
       priority: 'medium',
-      headers: this._getAuthHeaders() 
+      headers: this._getAuthHeaders()
     });
   }
 
-  /**
-   * Fetches messages between two users.
-   * @param {string} user1Id - The ID of the first user.
-   * @param {string} user2Id - The ID of the second user.
-   * @param {string} authToken - The authentication token. (Note: _getAuthHeaders is preferred)
-   * @returns {Promise<Array<object>>} - An array of message objects.
-   */
-  async getMessages(user1Id, user2Id, authToken) { // authToken parameter is redundant if you use _getAuthHeaders()
+  async getMessages(user1Id, user2Id) {
     const url = `${API_BASE_URL}/messages?user1=${user1Id}&user2=${user2Id}`;
-    return this.fetchWithCache(url, {
+    return this.fetchWithNetworkFallback(url, {
       priority: 'high',
       headers: this._getAuthHeaders()
     });
   }
 
-  /**
-   * Fetches notifications for the authenticated user.
-   * @param {string} authToken - The authentication token. (Note: _getAuthHeaders is preferred)
-   * @returns {Promise<Array<object>>} - An array of notification objects.
-   */
-  async getNotifications(authToken) { // authToken parameter is redundant if you use _getAuthHeaders()
+  async getNotifications() {
     const url = `${API_BASE_URL}/notifications`;
-    return this.fetchWithCache(url, {
+    return this.fetchWithNetworkFallback(url, {
       priority: 'high',
       headers: this._getAuthHeaders()
     });
   }
 
-  /**
-   * Fetches requests by category.
-   * @param {string} category - The category of requests to fetch.
-   * @returns {Promise<Array<object>>} - An array of request objects.
-   */
   async getRequests(category) {
     const url = `${API_BASE_URL}/requests?category=${encodeURIComponent(category)}&sort=-createdAt`;
-    // Requests are likely public, but if they can be personalized or require auth, add headers
-    return this.fetchWithCache(url, { priority: 'high', headers: this._getAuthHeaders() });
+    // Assuming requests can be public or auth is optional for them
+    return this.fetchWithNetworkFallback(url, { priority: 'high', headers: this._getAuthHeaders() });
   }
 
-  /**
-   * Handles liking a post.
-   * This sends a request to the server and updates cache if successful.
-   * @param {string} postId - The ID of the post to like/unlike.
-   * @param {string} authToken - The authentication token. (Note: _getAuthHeaders is preferred)
-   * @returns {Promise<object>} - The updated post object or a confirmation.
-   */
-  async likePost(postId, authToken) { // authToken parameter is redundant if you use _getAuthHeaders()
+  async likePost(postId) {
       const url = `${API_BASE_URL}/post/${postId}/like`;
       try {
-          const response = await fetch(url, {
+          const response = await fetch(url, { // Direct fetch here, let service worker handle cache
               method: 'POST',
               headers: {
-                  ...this._getAuthHeaders(), // Use the helper
+                  ...this._getAuthHeaders(),
                   'Content-Type': 'application/json'
               }
           });
@@ -176,9 +254,8 @@ class SalmartCache {
               throw new Error(errorBody.message || 'Failed to like post.');
           }
           const updatedPost = await response.json();
-          // After a successful like/unlike, you might want to refresh the cache for this post
-          // or update the existing cached post if you have an IndexedDB implementation.
-          // For now, this relies on the service worker's revalidation strategy or next fetch.
+          // After like/unlike, you might want to refresh the main post feed
+          // to reflect the updated like count (e.g., call getPostsByCategory again)
           return updatedPost;
       } catch (error) {
           console.error('Error liking post:', error);
@@ -186,19 +263,13 @@ class SalmartCache {
       }
   }
 
-  /**
-   * Toggles follow status for a user.
-   * @param {string} userIdToFollow - The ID of the user to follow/unfollow.
-   * @param {string} authToken - The authentication token. (Note: _getAuthHeaders is preferred)
-   * @returns {Promise<object>} - The updated follow status.
-   */
-  async toggleFollow(userIdToFollow, authToken) { // authToken parameter is redundant if you use _getAuthHeaders()
-      const url = `${API_BASE_URL}/follow/${userIdToFollow}`; // Changed from /user/:userId/follow based on your other script
+  async toggleFollow(userIdToFollow) {
+      const url = `${API_BASE_URL}/follow/${userIdToFollow}`;
       try {
-          const response = await fetch(url, {
+          const response = await fetch(url, { // Direct fetch here, let service worker handle cache
               method: 'POST',
               headers: {
-                  ...this._getAuthHeaders(), // Use the helper
+                  ...this._getAuthHeaders(),
                   'Content-Type': 'application/json'
               }
           });
@@ -207,7 +278,6 @@ class SalmartCache {
               throw new Error(errorBody.message || 'Failed to toggle follow status.');
           }
           const result = await response.json();
-          // No direct cache update needed here, as posts.js will re-fetch following list
           return result;
       } catch (error) {
           console.error('Error toggling follow status:', error);
@@ -215,26 +285,19 @@ class SalmartCache {
       }
   }
 
-  /**
-   * Deletes a post.
-   * @param {string} postId - The ID of the post to delete.
-   * @param {string} authToken - The authentication token. (Note: _getAuthHeaders is preferred)
-   * @returns {Promise<object>} - Confirmation of deletion.
-   */
-  async deletePost(postId, authToken) { // authToken parameter is redundant if you use _getAuthHeaders()
+  async deletePost(postId) {
       const url = `${API_BASE_URL}/post/${postId}`;
       try {
-          const response = await fetch(url, {
+          const response = await fetch(url, { // Direct fetch here
               method: 'DELETE',
-              headers: this._getAuthHeaders() // Use the helper
+              headers: this._getAuthHeaders()
           });
           if (!response.ok) {
               const errorBody = await response.json();
               throw new Error(errorBody.message || 'Failed to delete post.');
           }
-          // After deletion, the cache for posts should ideally be invalidated or refreshed.
-          // For now, posts.js will re-fetch all posts, which implicitly handles this.
-          return response.json(); // Or simply response.status
+          // After deletion, you should ideally invalidate or re-fetch the relevant post lists.
+          return response.json();
       } catch (error) {
           console.error('Error deleting post:', error);
           throw error;

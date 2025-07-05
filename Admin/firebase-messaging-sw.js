@@ -64,7 +64,8 @@ try {
   });
 
   function getNotificationUrl(type, postId, senderId) {
-    const baseUrl = 'https://salmart.vercel.app';
+    // Dynamically get the base URL from the service worker's scope
+    const baseUrl = self.location.origin;
     if (type === 'like' || type === 'comment') return `${baseUrl}/product.html?postId=${postId}`;
     if (type === 'message') return `${baseUrl}/Messages.html?userId=${senderId}`;
     return baseUrl;
@@ -75,8 +76,8 @@ try {
 }
 
 // ===== PWA Caching Configuration =====
-const CACHE_NAME = 'salmart-cache-v1.17.6'; // Incremented version
-const DYNAMIC_CACHE_NAME = 'salmart-dynamic-v1.17.6'; // Incremented version
+const CACHE_NAME = 'salmart-cache-v1.19.0'; // Incremented version
+const DYNAMIC_CACHE_NAME = 'salmart-dynamic-v1.19.0'; // Incremented version
 
 // Add all critical static assets here for comprehensive offline UI
 const urlsToCache = [
@@ -108,7 +109,7 @@ const urlsToCache = [
   '/salmart-512x512.png',
   '/manifest.json',
   '/Offline.html',
-  '/SignIn.html', 
+  '/SignIn.html',
   '/SignUp.html',
   '/create-post.html',
   '/promote.html',
@@ -118,8 +119,9 @@ const urlsToCache = [
   '/settings.html',
   '/upload-profile.html',
   '/salmartCache.js', // Crucial to cache your custom caching helper!
+  '/idb-keyval-iife.js', // NEW: Add idb-keyval to static cache
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css',
-  'https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;0&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap'
+  'https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;0&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;0,800;0,900&display=swap'
 ];
 
 // ===== Dynamic Content Cache Strategies =====
@@ -133,12 +135,13 @@ const CACHE_STRATEGIES = {
   '/requests': 180000,    // 3 minutes - Requests (e.g., /requests?category=...)
   '/user': 300000,          // 5 minutes - User profiles (e.g., /user/:userId, /user/:userId/follow)
   '/is-following-list': 120000, // 2 minutes - Following list
+  '/api/is-following-list': 120000, // Explicitly add this if used in your other scripts with /api prefix
+  '/api/user-suggestions': 120000, // For user suggestions
 };
 
 function getCacheTTL(url) {
-  const pathname = new URL(url).pathname; 
+  const pathname = new URL(url).pathname;
   for (const [path, ttl] of Object.entries(CACHE_STRATEGIES)) {
-    // Check if the request's pathname starts with any of our defined API paths
     if (pathname.startsWith(path)) {
       return ttl;
     }
@@ -148,8 +151,7 @@ function getCacheTTL(url) {
 
 function isCacheStale(cachedResponse, maxAge) {
   const timestamp = cachedResponse.headers.get('sw-cache-timestamp');
-  if (!timestamp) return true; // If no timestamp, assume stale
-  
+  if (!timestamp) return true;
   const age = Date.now() - parseInt(timestamp);
   return age > maxAge;
 }
@@ -157,67 +159,51 @@ function isCacheStale(cachedResponse, maxAge) {
 async function fetchAndCache(request, cacheName = DYNAMIC_CACHE_NAME) {
   try {
     const response = await fetch(request);
-    
-    // Only cache successful responses
-    // Also, avoid caching opaque responses (type 'opaque') as they can't be read later
-    // and might not be useful for replaying.
-    if (response && response.status === 200 && response.type === 'basic') { 
+    if (response && response.status === 200 && response.type === 'basic') {
       const responseClone = response.clone();
-      
-      // Add timestamp header for TTL tracking
       const headers = new Headers(responseClone.headers);
       headers.set('sw-cache-timestamp', Date.now().toString());
-      
+
       const modifiedResponse = new Response(responseClone.body, {
         status: responseClone.status,
         statusText: responseClone.statusText,
         headers: headers
       });
-      
+
       const cache = await caches.open(cacheName);
       await cache.put(request, modifiedResponse);
-      
       console.log(`🔄 [SW] Cached dynamic content: ${request.url}`);
     } else if (response && response.status !== 200) {
         console.warn(`⚠️ [SW] Not caching response for ${request.url} due to status: ${response.status}`);
     } else if (response && response.type !== 'basic') {
         console.warn(`⚠️ [SW] Not caching response for ${request.url} due to type: ${response.type}`);
     }
-    
     return response;
   } catch (error) {
     console.error(`❌ [SW] Network error for ${request.url}:`, error);
-    throw error; 
+    throw error;
   }
 }
 
 function isDynamicContent(requestUrl) {
-  // Determine if the request is for your backend API or other dynamic external content
-  // IMPORTANT: Assume your backend API is on the same origin as your frontend
-  // or that your `API_BASE_URL` in `salmartCache.js` correctly points to it.
-  const apiBaseUrlOrigin = new URL(self.location.origin).origin; // Get your app's origin
-  const requestOrigin = requestUrl.origin;
-
   // Check if it's your backend API by matching origin and path prefix
-  if (requestOrigin === apiBaseUrlOrigin) {
-    const apiPaths = Object.keys(CACHE_STRATEGIES);
-    for (const path of apiPaths) {
-      if (requestUrl.pathname.startsWith(path)) {
-        return true;
-      }
+  // This assumes your backend is on the same origin as your frontend, or its base URL
+  // is known and handled elsewhere (like your API_BASE_URL variable in salmartCache.js)
+  const apiPaths = Object.keys(CACHE_STRATEGIES);
+  for (const path of apiPaths) {
+    // Use requestUrl.pathname.startsWith for more robust matching of API routes
+    if (requestUrl.pathname.startsWith(path)) {
+      // Further refinement: Ensure it's for your API_BASE_URL origin
+      // if it's different from self.location.origin
+      // For now, assuming API_BASE_URL is generally on the same host or proxy.
+      return true;
     }
   }
-  
+
   // Include Firebase API calls (often dynamic and cross-origin)
   if (requestUrl.hostname.includes('firebaseio.com') || requestUrl.hostname.includes('googleapis.com')) {
     return true;
   }
-
-  // Add any other custom dynamic content flags if you use them
-  // if (requestUrl.searchParams.has('dynamic') || requestUrl.pathname.includes('data')) {
-  //   return true;
-  // }
-  
   return false;
 }
 
@@ -251,52 +237,44 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Skip non-GET requests and development/hot-reloading files
-  if (event.request.method !== 'GET' || 
-      event.request.url.includes('sockjs-node') || 
+  if (event.request.method !== 'GET' ||
+      event.request.url.includes('sockjs-node') ||
       event.request.url.includes('hot-update')) {
     return;
   }
 
   const requestUrl = new URL(event.request.url);
-  
-  // Apply dynamic content strategy for specific API paths and Firebase/Google APIs
+
   if (isDynamicContent(requestUrl)) {
     event.respondWith(
       caches.match(event.request).then(async (cachedResponse) => {
         const cacheTTL = getCacheTTL(event.request.url);
-        
-        // This promise fetches from network and updates cache
+
         const networkFetchPromise = fetchAndCache(event.request).catch(err => {
-            console.log(`⚠️ [SW] Network fetch/update failed for ${event.request.url}: ${err.message}`);
-            throw err; // Re-throw to propagate the error
+            console.warn(`⚠️ [SW] Network fetch/update failed for ${event.request.url}: ${err.message}`);
+            // This error is caught here, but for critical API calls, we need a fallback.
+            throw err; // Re-throw to propagate to the outer catch for offline fallbacks
         });
-        
-        // If we have cached content
+
         if (cachedResponse) {
           const isStale = isCacheStale(cachedResponse, cacheTTL);
-          
           if (!isStale) {
             console.log(`⚡ [SW] Serving fresh cached dynamic content: ${event.request.url}`);
-            // Serve fresh cache, but also try to update in background for next time
-            event.waitUntil(networkFetchPromise.catch(err => {})); // Don't block, but log
+            event.waitUntil(networkFetchPromise.catch(err => {})); // Update in background
             return cachedResponse;
           }
-          
-          // Content is stale - return it immediately but update in background
-          console.log(`🔄 [SW] Serving stale dynamic content, updating in background: ${event.request.url}`);
-          event.waitUntil(networkFetchPromise.catch(err => {})); // Don't block, but log
+          console.log(`🔄 [SW] Serving stale dynamic content, updating in background: ${event.url}`);
+          event.waitUntil(networkFetchPromise.catch(err => {})); // Update in background
           return cachedResponse;
         }
-        
-        // No cached content - wait for network response and cache it
+
         console.log(`📡 [SW] No cache, fetching dynamic content: ${event.request.url}`);
-        return networkFetchPromise; // This will return the response from the network and also cache it
+        return networkFetchPromise;
       }).catch(async (error) => {
         console.error(`❌ [SW] Dynamic fetch strategy failed for ${event.request.url}:`, error);
-        // If network failed AND no cache was found, return a generic offline JSON for API calls.
-        // Or, for specific API calls, you might want to return an empty array or default data.
-        if (event.request.headers.get('accept').includes('application/json')) {
+        // This is the true offline fallback for dynamic API calls
+        if (event.request.headers.get('accept')?.includes('application/json')) {
+            console.log(`🌐 [SW] Network/cache failed for JSON API, providing offline fallback data.`);
             return new Response(JSON.stringify({
                 error: 'Network unavailable and no cached content for API.',
                 offline: true,
@@ -307,16 +285,15 @@ self.addEventListener('fetch', (event) => {
                 headers: { 'Content-Type': 'application/json' }
             });
         }
-        // Fallback for non-JSON dynamic requests (e.g., images from Firebase storage if they were dynamic)
-        return new Response('Network error occurred for dynamic content', { 
-            status: 503, 
-            statusText: 'Service Unavailable' 
+        return new Response('Network error occurred for dynamic content', {
+            status: 503,
+            statusText: 'Service Unavailable'
         });
       })
     );
     return;
   }
-  
+
   // ===== Static Content Strategy (Cache-First, with network fallback) =====
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
@@ -328,7 +305,6 @@ self.addEventListener('fetch', (event) => {
       console.log(`📡 [SW] Fetching and caching static content: ${event.request.url}`);
       return fetch(event.request)
         .then((networkResponse) => {
-          // Check if we received a valid response and it's a 'basic' type (not opaque)
           if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
             const responseToCache = networkResponse.clone();
             caches.open(CACHE_NAME).then((cache) => {
@@ -338,14 +314,12 @@ self.addEventListener('fetch', (event) => {
           return networkResponse;
         })
         .catch(() => {
-          // Offline fallback for navigation requests to HTML pages
           if (event.request.mode === 'navigate') {
             return caches.match('/Offline.html');
           }
-          // For other failed static requests, return a generic error
-          return new Response('Network error occurred', { 
-            status: 503, 
-            statusText: 'Service Unavailable' 
+          return new Response('Network error occurred', {
+            status: 503,
+            statusText: 'Service Unavailable'
           });
         });
     })
@@ -353,47 +327,70 @@ self.addEventListener('fetch', (event) => {
 });
 
 // ===== Background Sync for Proactive Updates =====
+// IMPORTANT: For background sync to work, your web app must register a sync.
+// Example in posts.js (or similar):
+// if ('serviceWorker' in navigator && 'SyncManager' in window) {
+//   navigator.serviceWorker.ready.then(reg => {
+//     reg.sync.register('background-sync-posts'); // Use a specific tag
+//   }).catch(err => console.error('Background sync registration failed:', err));
+// }
+
 self.addEventListener('sync', (event) => {
-  if (event.tag === 'background-sync') {
-    console.log('🔄 [SW] Background sync triggered');
-    event.waitUntil(updateCriticalData());
+  if (event.tag === 'background-sync-posts') { // Match the tag from registration
+    console.log('🔄 [SW] Background sync triggered: background-sync-posts');
+    event.waitUntil(updateCriticalPostsData()); // Call a specific update function
   }
+  // Add other sync tags if needed, e.g., 'background-sync-messages'
 });
 
-async function updateCriticalData() {
-  // IMPORTANT: Ensure these endpoints exactly match the API calls you want to proactively update.
-  // For parameterized routes, you might list a typical example if you want to sync specific data.
-  // For general endpoints, just the base path.
-  const criticalEndpoints = [
-    '/post?category=all',         // Fetch all posts (common feed)
-    '/post?category=electronics', // Example: a specific important category
-    '/get-transactions',          // General endpoint for transactions
-    '/messages',                  // General endpoint for messages
-    '/notifications',             // General endpoint for notifications
-    '/requests?category=all',     // Fetch all requests
-    // '/user',                   // If you have a general user list or current user endpoint
-    '/is-following-list',         // To keep the following list up-to-date
-    // Add other critical API endpoints you want to proactively update on background sync
-    // e.g., if you have /deals, /chats, etc.
+async function updateCriticalPostsData() {
+  console.log('🔄 [SW] Attempting to update critical posts data in background...');
+  const userId = localStorage.getItem('userId'); // Cannot reliably get localStorage in SW for auth token
+  if (!userId) {
+      console.warn('Cannot perform personalized background sync: User not logged in or userId not available.');
+      return; // Cannot sync personalized data without user context
+  }
+
+  // --- Crucial limitation for Service Worker background sync with AUTHENTICATED requests ---
+  // A Service Worker cannot directly access localStorage or IndexedDB from the client.
+  // This means it cannot get the user's authToken directly.
+  // To perform authenticated background syncs, you need to:
+  // 1. Have your backend provide a "refresh token" or "long-lived token" specifically for SW,
+  //    or use a secure messaging channel from client to SW to pass the token.
+  // 2. OR, more simply for personalized feeds, background sync should trigger the
+  //    `salmartCache.getPostsByCategory` method from the *client* after it's back online.
+  //    The sync event just acts as a wake-up call for the client.
+
+  // For this example, we will assume a simplified approach:
+  // We'll call a general /post endpoint, but this WON'T be personalized by the SW itself
+  // because it lacks the auth token.
+  // The primary source of offline personalized data should come from salmartCache (IndexedDB).
+
+  const commonEndpointsToUpdate = [
+      '/post?category=all', // This will fetch public/generic posts if SW can't get auth
+      // Add other common, non-personalized endpoints here.
+      // For personalized updates, the client's IndexedDB approach is superior.
   ];
-  
-  console.log('🔄 [SW] Updating critical data in background...');
-  
-  const updatePromises = criticalEndpoints.map(async (endpoint) => {
-    try {
-      const response = await fetch(endpoint);
-      if (response.ok) {
-        const cache = await caches.open(DYNAMIC_CACHE_NAME);
-        await cache.put(endpoint, response.clone());
-        console.log(`✅ [SW] Updated cache for: ${endpoint}`);
-      } else {
-        console.log(`⚠️ [SW] Failed to update ${endpoint}: ${response.status} ${response.statusText}`);
+
+  const updatePromises = commonEndpointsToUpdate.map(async (endpoint) => {
+      try {
+          // In a real authenticated background sync, you'd need a mechanism
+          // for the SW to get the auth token (e.g., passed via `fetch` from client,
+          // or a background fetch API that can use credential parameters).
+          // For now, these SW-initiated fetches will be unauthenticated by default.
+          const response = await fetch(`${self.location.origin}${endpoint}`);
+          if (response.ok) {
+              const cache = await caches.open(DYNAMIC_CACHE_NAME);
+              await cache.put(new Request(`${self.location.origin}${endpoint}`), response.clone());
+              console.log(`✅ [SW] Updated cache for background sync: ${endpoint}`);
+          } else {
+              console.log(`⚠️ [SW] Failed background sync update for ${endpoint}: ${response.status} ${response.statusText}`);
+          }
+      } catch (error) {
+          console.log(`⚠️ [SW] Background sync network error for ${endpoint}: ${error.message}`);
       }
-    } catch (error) {
-      console.log(`⚠️ [SW] Failed to update ${endpoint} due to network error: ${error.message}`);
-    }
   });
-  
+
   await Promise.allSettled(updatePromises);
-  console.log('✅ [SW] Background sync completed');
+  console.log('✅ [SW] Background sync for posts completed (may not be personalized)');
 }
