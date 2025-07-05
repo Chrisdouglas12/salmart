@@ -157,7 +157,6 @@ body.dark-mode {
     width: 100%;
     max-height: 500px;
     object-fit: cover;
-    border-radius: 12px;
     margin: 12px 0;
     transition: transform 0.2s ease, opacity 0.2s ease;
 }

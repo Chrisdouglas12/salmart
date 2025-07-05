@@ -2,12 +2,15 @@
 import { salmartCache } from './salmartCache.js';
 
 document.addEventListener('DOMContentLoaded', async function () {
-    let currentLoggedInUser = null;
+    let currentLoggedInUser = localStorage.getItem('userId'); // Get user ID from localStorage immediately
     let isAuthReady = false;
 
     // --- State variables for pagination ---
     let currentPage = 1;
     let isLoading = false;
+
+    // Define API_BASE_URL once
+    const API_BASE_URL = window.API_BASE_URL || (window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart.onrender.com');
 
     // --- Helper Functions ---
 
@@ -18,9 +21,8 @@ document.addEventListener('DOMContentLoaded', async function () {
 
         if (diffInSeconds < 60) return "Just now";
         if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m`;
-        if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h`;
-        if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d`;
-        if (diffInSeconds < 2592000) return `${Math.floor(diffInSeconds / 604800)}w`;
+        if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 86400)}d`;
+        if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 604800)}w`;
 
         const currentYear = now.getFullYear();
         const postYear = postDate.getFullYear();
@@ -80,7 +82,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         switch(platform) {
             case 'copy':
                 copyToClipboard(postLink);
-                window.showToast('Link copied to clipboard!', '#28a745');
+                if (window.showToast) window.showToast('Link copied to clipboard!', '#28a745');
                 break;
             case 'whatsapp':
                 const whatsappUrl = `whatsapp://send?text=${encodeURIComponent(shareText + '\n' + postLink)}`;
@@ -103,6 +105,8 @@ document.addEventListener('DOMContentLoaded', async function () {
                 openAppOrWeb(telegramUrl, telegramWebUrl);
                 break;
             case 'instagram':
+                // Note: Instagram sharing via URL/deeplink for posts is complex and often restricted.
+                // This is a placeholder and might not work as expected for direct post sharing.
                 const instagramUrl = `instagram://library?AssetPath=${encodeURIComponent(postLink)}`;
                 openAppOrWeb(instagramUrl, `https://www.instagram.com/explore/tags/product/`);
                 break;
@@ -180,23 +184,248 @@ document.addEventListener('DOMContentLoaded', async function () {
 
         shareModal.querySelector('.copy-link-button').addEventListener('click', async () => {
             const success = await copyToClipboard(postLink);
-            window.showToast(success ? 'Link copied to clipboard!' : 'Failed to copy link', success ? '#28a745' : '#dc3545');
+            if (window.showToast) window.showToast(success ? 'Link copied to clipboard!' : 'Failed to copy link', success ? '#28a745' : '#dc3545');
         });
     }
 
+    // --- Video Controls Initialization Function ---
     function initializeVideoControls(postElement) {
-        const container = postElement.querySelector('.product-image');
+        const container = postElement.querySelector('.post-video-container');
         if (!container) return;
 
         const video = container.querySelector('.post-video');
-        if (!video) return;
+        const thumbnailCanvas = container.querySelector('.video-thumbnail');
+        const loadingSpinner = container.querySelector('.loading-spinner');
+        const playPauseBtn = container.querySelector('.play-pause');
+        const muteBtn = container.querySelector('.mute-button');
+        const fullscreenBtn = container.querySelector('.fullscreen-button');
+        const progressBar = container.querySelector('.progress-bar');
+        const bufferedBar = container.querySelector('.buffered-bar');
+        const progressContainer = container.querySelector('.progress-container');
+        const seekPreview = container.querySelector('.seek-preview');
+        const seekPreviewCanvas = container.querySelector('.seek-preview-canvas');
+        const volumeSlider = container.querySelector('.volume-slider');
+        const playbackSpeed = container.querySelector('.playback-speed');
+        const currentTimeDisplay = container.querySelector('.current-time');
+        const durationDisplay = container.querySelector('.duration');
 
         video.setAttribute('playsinline', '');
         video.setAttribute('webkit-playsinline', '');
         video.setAttribute('crossorigin', 'anonymous');
 
+        function formatVideoTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+        }
+
+        // Video metadata loaded: set initial time to generate thumbnail
+        video.addEventListener('loadedmetadata', () => {
+            if (!video.dataset.thumbnailGenerated) {
+                video.currentTime = 2; // Set time to generate thumbnail
+            }
+            durationDisplay.textContent = formatVideoTime(video.duration);
+        });
+
+        // Seeked event: generate thumbnail after seeking to 2 seconds
+        video.addEventListener('seeked', () => {
+            if (video.currentTime === 2 && !video.dataset.thumbnailGenerated) {
+                const ctx = thumbnailCanvas.getContext('2d');
+                thumbnailCanvas.width = video.videoWidth;
+                thumbnailCanvas.height = video.videoHeight;
+                ctx.drawImage(video, 0, 0, thumbnailCanvas.width, thumbnailCanvas.height);
+                video.poster = thumbnailCanvas.toDataURL('image/jpeg');
+                video.dataset.thumbnailGenerated = 'true';
+                video.currentTime = 0; // Reset to 0 after generating thumbnail
+            }
+        });
+
+        video.addEventListener('timeupdate', () => {
+            const progress = (video.currentTime / video.duration) * 100;
+            progressBar.style.width = `${progress}%`;
+            progressBar.setAttribute('aria-valuenow', progress);
+            currentTimeDisplay.textContent = formatVideoTime(video.currentTime);
+
+            if (video.buffered.length > 0) {
+                const bufferedEnd = video.buffered.end(video.buffered.length - 1);
+                const bufferedPercent = (bufferedEnd / video.duration) * 100;
+                bufferedBar.style.width = `${bufferedPercent}%`;
+            }
+        });
+
+        playPauseBtn.addEventListener('click', () => {
+            if (video.paused) {
+                loadingSpinner.style.display = 'block';
+                video.play().then(() => {
+                    loadingSpinner.style.display = 'none';
+                    playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
+                }).catch(e => {
+                    loadingSpinner.style.display = 'none';
+                    if (window.showToast) window.showToast('Error playing video.', '#dc3545');
+                    console.error('Play error:', e);
+                });
+            } else {
+                video.pause();
+                playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+            }
+        });
+
+        video.addEventListener('canplay', () => {
+            loadingSpinner.style.display = 'none';
+        });
+
+        muteBtn.addEventListener('click', () => {
+            video.muted = !video.muted;
+            muteBtn.innerHTML = video.muted ? '<i class="fas fa-volume-mute"></i>' : '<i class="fas fa-volume-up"></i>';
+            volumeSlider.value = video.muted ? 0 : video.volume * 100;
+        });
+
+        volumeSlider.addEventListener('input', () => {
+            video.volume = volumeSlider.value / 100;
+            video.muted = volumeSlider.value == 0;
+            muteBtn.innerHTML = video.muted ? '<i class="fas fa-volume-mute"></i>' : '<i class="fas fa-volume-up"></i>';
+        });
+
+        playbackSpeed.addEventListener('change', () => {
+            video.playbackRate = parseFloat(playbackSpeed.value);
+        });
+
+        fullscreenBtn.addEventListener('click', () => {
+            if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+                const elem = container;
+                if (elem.requestFullscreen) {
+                    elem.requestFullscreen().catch(e => console.error('Fullscreen error:', e));
+                } else if (elem.webkitRequestFullscreen) {
+                    elem.webkitRequestFullscreen();
+                }
+                fullscreenBtn.innerHTML = '<i class="fas fa-compress"></i>';
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen().catch(e => console.error('Exit fullscreen error:', e));
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                }
+                fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>';
+            }
+        });
+
+        document.addEventListener('fullscreenchange', () => {
+            if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+                fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>';
+            }
+        });
+
+        document.addEventListener('webkitfullscreenchange', () => {
+            if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+                fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>';
+            }
+        });
+
+        let isDragging = false;
+
+        const updateProgress = (e, isTouch = false) => {
+            const rect = progressContainer.getBoundingClientRect();
+            const posX = isTouch ? e.touches[0].clientX - rect.left : e.clientX - rect.left;
+            const width = rect.width;
+            let progress = posX / width;
+            progress = Math.max(0, Math.min(1, progress));
+            const seekTime = progress * video.duration;
+            video.currentTime = seekTime;
+            progressBar.style.width = `${progress * 100}%`;
+            progressBar.setAttribute('aria-valuenow', progress * 100);
+
+            seekPreview.style.left = `${posX}px`;
+            seekPreviewCanvas.width = 120;
+            seekPreviewCanvas.height = 68;
+            setTimeout(() => { // Using setTimeout as a common workaround for seek preview
+                const ctx = seekPreviewCanvas.getContext('2d');
+                ctx.drawImage(video, 0, 0, seekPreviewCanvas.width, seekPreviewCanvas.height);
+            }, 100);
+        };
+
+        progressContainer.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            updateProgress(e);
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (isDragging) updateProgress(e);
+        });
+
+        document.addEventListener('mouseup', () => {
+            isDragging = false;
+            seekPreview.style.display = 'none';
+        });
+
+        progressContainer.addEventListener('mousemove', (e) => {
+            if (!isDragging) {
+                const rect = progressContainer.getBoundingClientRect();
+                const posX = e.clientX - rect.left;
+                const width = rect.width;
+                let progress = posX / width;
+                progress = Math.max(0, Math.min(1, progress));
+                const seekTime = progress * video.duration;
+                seekPreview.style.display = 'block';
+                seekPreview.style.left = `${posX}px`;
+                seekPreviewCanvas.width = 120;
+                seekPreviewCanvas.height = 68;
+                video.currentTime = seekTime;
+                setTimeout(() => {
+                    const ctx = seekPreviewCanvas.getContext('2d');
+                    ctx.drawImage(video, 0, 0, seekPreviewCanvas.width, seekPreviewCanvas.height);
+                }, 100);
+            }
+        });
+
+        progressContainer.addEventListener('mouseleave', () => {
+            if (!isDragging) seekPreview.style.display = 'none';
+        });
+
+        progressContainer.addEventListener('click', (e) => {
+            updateProgress(e);
+        });
+
+        progressContainer.addEventListener('touchstart', (e) => {
+            isDragging = true;
+            updateProgress(e, true);
+        });
+
+        document.addEventListener('touchmove', (e) => {
+            if (isDragging) updateProgress(e, true);
+        });
+
+        document.addEventListener('touchend', () => {
+            isDragging = false;
+            seekPreview.style.display = 'none';
+        });
+
+        postElement.addEventListener('keydown', (e) => {
+            if (e.target === video || e.target === container) {
+                switch (e.key) {
+                    case ' ':
+                        e.preventDefault();
+                        playPauseBtn.click();
+                        break;
+                    case 'm':
+                        muteBtn.click();
+                        break;
+                    case 'f':
+                        fullscreenBtn.click();
+                        break;
+                }
+            }
+        });
+
         video.addEventListener('error', () => {
-            window.showToast('Failed to load video.', '#dc3545');
+            if (window.showToast) window.showToast('Failed to load video.', '#dc3545');
+            loadingSpinner.style.display = 'none';
+        });
+
+        video.addEventListener('ended', () => {
+            playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+            video.currentTime = 0;
+            progressBar.style.width = '0%';
+            progressBar.setAttribute('aria-valuenow', 0);
         });
     }
 
@@ -221,14 +450,47 @@ document.addEventListener('DOMContentLoaded', async function () {
                 </div>
             `;
             mediaContent = `
-                <div class="product-image">
-                    <div class="badge">New</div>
-                    <video class="post-video" preload="metadata" aria-label="Video ad for ${(post.description || 'product').replace(/"/g, '"')}" poster="${post.thumbnail || '/salmart-192x192.png'}">
+                <div class="post-video-container">
+                    <video class="post-video" preload="metadata" aria-label="Video ad for ${escapeHtml(post.description || 'product')}" poster="${post.thumbnail || '/salmart-192x192.png'}">
                         <source src="${post.video || ''}" type="video/mp4" />
                         <source src="${post.video ? post.video.replace('.mp4', '.webm') : ''}" type="video/webm" />
                         <source src="${post.video ? post.video.replace('.mp4', '.ogg') : ''}" type="video/ogg" />
                         Your browser does not support the video tag.
                     </video>
+                    <canvas class="video-thumbnail" style="display: none;"></canvas>
+                    <div class="loading-spinner" style="display: none;">
+                        <i class="fas fa-spinner fa-spin"></i>
+                    </div>
+                    <div class="custom-controls">
+                        <button class="control-button play-pause" aria-label="Play or pause video">
+                            <i class="fas fa-play"></i>
+                        </button>
+                        <div class="progress-container">
+                            <div class="buffered-bar"></div>
+                            <div class="progress-bar" role="slider" aria-label="Video progress" aria-valuemin="0" aria-valuemax="100"></div>
+                            <div class="seek-preview" style="display: none;">
+                                <canvas class="seek-preview-canvas"></canvas>
+                            </div>
+                        </div>
+                        <div class="time-display">
+                            <span class="current-time">0:00</span> / <span class="duration">0:00</span>
+                        </div>
+                        <button class="control-button mute-button" aria-label="Mute or unmute video">
+                            <i class="fas fa-volume-up"></i>
+                        </button>
+                        <div class="volume-control">
+                            <input type="range" class="volume-slider" min="0" max="100" value="100" aria-label="Volume control">
+                        </div>
+                        <select class="playback-speed" aria-label="Playback speed">
+                            <option value="0.5">0.5x</option>
+                            <option value="1" selected>1x</option>
+                            <option value="1.5">1.5x</option>
+                            <option value="2">2x</option>
+                        </select>
+                        <button class="control-button fullscreen-button" aria-label="Toggle fullscreen">
+                            <i class="fas fa-expand"></i>
+                        </button>
+                    </div>
                 </div>
             `;
             productDetails = `
@@ -243,9 +505,9 @@ document.addEventListener('DOMContentLoaded', async function () {
                     </a>
                 </div>
             `;
-        } else {
+        } else { // Regular image-based posts
             descriptionContent = `
-                                <h2 class="product-title">${escapeHtml(post.title || 'No description')}</h2>
+                <h2 class="product-title">${escapeHtml(post.title || 'No description')}</h2>
                 <div class="post-description-text" style="margin-bottom: 10px; padding: 0 15px;">
                     <p>${escapeHtml(post.description || '')}</p>
                 </div>
@@ -258,7 +520,6 @@ document.addEventListener('DOMContentLoaded', async function () {
             `;
             productDetails = `
                 <div class="content">
-
                     <div class="details-grid">
                         <div class="detail-item">
                             <div class="detail-icon price-icon">₦</div>
@@ -386,6 +647,11 @@ document.addEventListener('DOMContentLoaded', async function () {
             ${postActionsHtml}
         `;
 
+        // Initialize video controls if this is a video post
+        if (post.postType === 'video_ad') {
+            initializeVideoControls(postElement);
+        }
+
         return postElement;
     }
 
@@ -422,11 +688,11 @@ document.addEventListener('DOMContentLoaded', async function () {
 
         try {
             const API_BASE_URL = window.API_BASE_URL || (window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart.onrender.com');
-            const response = await fetch(`${API_BASE_URL}/post?userId=${profileOwnerId}`);
-            if (!response.ok) throw new Error('Failed to fetch posts');
+            // Assuming salmartCache.getPostsByUserId might exist for profile pages
+            // If not, you might need to fetch directly from API
+            const allPosts = await salmartCache.getPostsByUserId(profileOwnerId); // Assuming this method exists or you fetch directly
 
-            const posts = await response.json();
-            if (!Array.isArray(posts) || posts.length === 0) {
+            if (!Array.isArray(allPosts) || allPosts.length === 0) {
                 if (postsContainer.children.length === 0) {
                     postsContainer.innerHTML = `
                         <p style="text-align: center; padding: 20px; color: #666;">
@@ -438,7 +704,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 return;
             }
 
-            const sortedPosts = [...posts].sort((a, b) => {
+            const sortedPosts = [...allPosts].sort((a, b) => {
                 const dateA = new Date(a.createdAt || 0);
                 const dateB = new Date(b.createdAt || 0);
                 return dateB - dateA;
@@ -446,10 +712,11 @@ document.addEventListener('DOMContentLoaded', async function () {
 
             const fragment = document.createDocumentFragment();
             sortedPosts.forEach(post => {
+                // Ensure only posts by the profile owner are shown (if this is a profile page renderer)
+                // This check is important as salmartCache.getPostsByUserId might return all posts or none if not implemented
                 if (post.createdBy.userId === profileOwnerId) {
                     const postElement = renderPost(post);
                     fragment.appendChild(postElement);
-                    initializeVideoControls(postElement);
                 }
             });
 
@@ -508,14 +775,13 @@ document.addEventListener('DOMContentLoaded', async function () {
         const target = event.target.closest('button');
         if (!target) return;
 
-        const API_BASE_URL = window.API_BASE_URL || (window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart.onrender.com');
         const authToken = localStorage.getItem('authToken');
         const showToast = window.showToast;
 
         // Handle Like Button
         if (target.classList.contains('like-button') && target.dataset.postId) {
             if (!authToken || !currentLoggedInUser) {
-                showToast('Please log in to like posts.', '#dc3545');
+                if (showToast) showToast('Please log in to like posts.', '#dc3545');
                 return;
             }
 
@@ -552,10 +818,11 @@ document.addEventListener('DOMContentLoaded', async function () {
 
             } catch (error) {
                 console.error('Error liking/unliking post:', error);
+                // Revert UI on error
                 likeCountElement.textContent = parseInt(likeCountElement.textContent, 10) + (isCurrentlyLiked ? 1 : -1);
                 icon.classList.toggle('fas', isCurrentlyLiked);
                 icon.classList.toggle('far', !isCurrentlyLiked);
-                showToast(error.message || 'Failed to update like status.', '#dc3545');
+                if (showToast) showToast(error.message || 'Failed to update like status.', '#dc3545');
             } finally {
                 target.disabled = false;
             }
@@ -576,7 +843,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             const post = {
                 _id: postId,
                 description: postElement.querySelector('.product-title')?.textContent || '',
-                price: postElement.querySelector('.price-value')?.textContent.replace('₦', '').replace(/,/g, '') || null
+                price: postElement.querySelector('.price-value')?.textContent?.replace('₦', '').replace(/,/g, '') || null
             };
             showShareModal(post);
             return;
@@ -589,7 +856,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             const buyerId = localStorage.getItem('userId');
 
             if (!email || !buyerId) {
-                showToast("Please log in to make a purchase.", '#dc3545');
+                if (showToast) showToast("Please log in to make a purchase.", '#dc3545');
                 return;
             }
 
@@ -604,11 +871,11 @@ document.addEventListener('DOMContentLoaded', async function () {
                 if (response.ok && result.success && result.url) {
                     window.location.href = result.url;
                 } else {
-                    showToast(`Payment failed: ${result.message || 'Please try again.'}`, '#dc3545');
+                    if (showToast) showToast(`Payment failed: ${result.message || 'Please try again.'}`, '#dc3545');
                 }
             } catch (error) {
                 console.error("Error processing payment:", error);
-                showToast("Failed to process payment. Please try again.", '#dc3545');
+                if (showToast) showToast("Failed to process payment. Please try again.", '#dc3545');
             }
             return;
         }
@@ -620,7 +887,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             const postElement = target.closest('.post');
             if (!postElement) {
                 console.error("Could not find parent post element.");
-                showToast('Error: Post information not found.', '#dc3545');
+                if (showToast) showToast('Error: Post information not found.', '#dc3545');
                 return;
             }
 
@@ -649,7 +916,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         // Handle Report Post Button
         if (target.classList.contains('report-post-button') && target.dataset.postId) {
             if (!authToken) {
-                showToast("Please log in to report posts", '#dc3545');
+                if (showToast) showToast("Please log in to report posts", '#dc3545');
                 return;
             }
 
@@ -737,7 +1004,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             submitButton.addEventListener('click', async () => {
                 const selectedRadio = reportModal.querySelector('input[name="report-reason"]:checked');
                 if (!selectedRadio) {
-                    showToast("Please select a reason.", '#dc3545');
+                    if (showToast) showToast("Please select a reason.", '#dc3545');
                     return;
                 }
 
@@ -745,12 +1012,13 @@ document.addEventListener('DOMContentLoaded', async function () {
                 if (selectedRadio.value === 'Other') {
                     const otherDetails = otherReasonTextarea.value.trim();
                     if (!otherDetails) {
-                        showToast("Please provide details for your report", '#dc3545');
+                        if (showToast) showToast("Please provide details for your report", '#dc3545');
                         return;
                     }
                     reportDetails += `: ${otherDetails}`;
                 }
 
+                const postElement = target.closest('.post');
                 try {
                     const response = await fetch(`${API_BASE_URL}/post/report/${postId}`, {
                         method: 'POST',
@@ -772,11 +1040,11 @@ document.addEventListener('DOMContentLoaded', async function () {
                     target.innerHTML = '<i class="fas fa-flag"></i> Reported';
                     target.disabled = true;
                     target.style.color = '#ff0000';
-                    showToast(result.message || 'Post reported successfully! Admin will review it shortly.', '#28a745');
+                    if (showToast) showToast(result.message || 'Post reported successfully! Admin will review it shortly.', '#28a745');
                     closeModal();
                 } catch (error) {
                     console.error('Error reporting post:', error);
-                    showToast(error.message || 'Error reporting post. Please try again.', '#dc3545');
+                    if (showToast) showToast(error.message || 'Error reporting post. Please try again.', '#dc3545');
                 }
             });
             return;
@@ -838,12 +1106,12 @@ document.addEventListener('DOMContentLoaded', async function () {
                     postElement.style.transform = 'translateX(-20px)';
                     setTimeout(() => {
                         postElement.remove();
-                        showToast('Post deleted successfully!', '#28a745');
+                        if (showToast) showToast('Post deleted successfully!', '#28a745');
                     }, 300);
                     closeModal();
                 } catch (error) {
                     console.error('Error deleting post:', error);
-                    showToast(error.message || 'Error deleting post. Please try again.', '#dc3545');
+                    if (showToast) showToast(error.message || 'Error deleting post. Please try again.', '#dc3545');
                     closeModal();
                 }
             });
@@ -879,47 +1147,36 @@ document.addEventListener('DOMContentLoaded', async function () {
     // --- Authentication and Initialization Logic ---
 
     async function initializeAuthStatusAndPosts() {
-        try {
-            if (typeof window.loggedInUser !== 'undefined') {
-                currentLoggedInUser = window.loggedInUser;
-            } else {
-                console.warn('window.loggedInUser is not yet defined.');
-            }
+        if (isAuthReady) return; // Prevent double execution
 
-            isAuthReady = true;
-            console.log('Auth initialization complete. User:', currentLoggedInUser ? currentLoggedInUser : 'Not logged in');
-            await fetchPosts(currentPage, true);
-
-        } catch (error) {
-            console.error('Error during initial auth or post fetch:', error);
-            isAuthReady = true;
-            await fetchPosts(currentPage, true);
+        // Ensure currentLoggedInUser is based on localStorage at this point
+        if (!currentLoggedInUser) {
+            currentLoggedInUser = localStorage.getItem('userId');
         }
+
+        isAuthReady = true;
+        console.log('Auth initialization complete. User:', currentLoggedInUser ? currentLoggedInUser : 'Not logged in');
+        await fetchPosts(currentPage, true);
     }
 
-    window.fetchPosts = fetchPosts;
+    window.fetchPosts = fetchPosts; // Make it globally accessible if needed elsewhere
 
     document.addEventListener('authStatusReady', async (event) => {
-        currentLoggedInUser = event.detail.loggedInUser;
-        console.log('Auth status ready event received. Logged in user:', currentLoggedInUser ? currentLoggedInUser : 'Not logged in');
-        isAuthReady = true;
-        await fetchPosts(currentPage, true);
+        // Only proceed if app initialization hasn't happened yet
+        if (!isAuthReady) {
+            currentLoggedInUser = event.detail.loggedInUser; // Update loggedInUser from the event
+            console.log('Auth status ready event received. Logged in user:', currentLoggedInUser ? currentLoggedInUser : 'Not logged in');
+            await initializeAuthStatusAndPosts(); // Trigger full app initialization
+        } else {
+             // If already initialized, just update currentLoggedInUser if it changed
+            currentLoggedInUser = event.detail.loggedInUser;
+        }
     });
 
-    // Fallback if 'authStatusReady' event is not fired
-    setTimeout(async () => {
-        if (!isAuthReady) {
-            console.log('Auth status timeout (500ms) - proceeding with initialization.');
-            await initializeAuthStatusAndPosts();
-        }
-    }, 500);
-
-    setTimeout(async () => {
-        if (!isAuthReady) {
-            console.log('Auth status timeout (2000ms) - proceeding with initialization.');
-            await initializeAuthStatusAndPosts();
-        }
-    }, 2000);
+    // Execute initial load on DOMContentLoaded.
+    // The `isAuthReady` flag within `initializeAuthStatusAndPosts` prevents re-fetching
+    // if `authStatusReady` fires very quickly.
+    initializeAuthStatusAndPosts();
 
     // Load More Button
     const loadMoreBtn = document.getElementById('load-more-btn');

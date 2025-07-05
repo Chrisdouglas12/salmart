@@ -15,6 +15,29 @@
 
 }
 
+.checkout-product-btn {
+  background: #fff;
+  color: #28a745; 
+  border: solid 1px #fff; /* Removed border */
+  border-bottom: #28a745;
+  box-shadow: 0 0 10px #ddd;
+  padding: 8px 16px;
+  border-radius: 8px;
+  width: 100%;
+  font-size: 14px;
+  margin-top: 8px;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.1s ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 40px;
+}
+
+
+.checkout-product-btn i {
+  margin-right: 8px;
+}
 
 .media-card {
     flex: 1; /* Allows media to take available space */
@@ -1761,27 +1784,6 @@ p{
 }
 
 
-.checkout-product-button {
-  background: #28a745;
-  color: var(--primary-color);
-  border: 1px solid #fff;
-  box-shadow: 0 0 10px #ddd;
-  padding: 8px 16px;
-  border-radius: 8px;
-  width: 100%;
-  font-size: 14px;
-  margin-top: 8px;
-  cursor: pointer;
-  transition: background 0.2s ease, transform 0.1s ease;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 40px;
-}
-
-.checkout-product-button i {
-  margin-right: 8px;
-}
 
 .buy:hover {
   background: #f3f8f1;
