@@ -20448,3 +20448,59 @@
 {"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-05T07:16:29.662Z"}
 {"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-05T07:16:59.696Z"}
 {"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-05T07:17:29.692Z"}
+{"level":"info","message":"✅ Cloudinary configured in postRoutes","timestamp":"2025-07-05T07:41:22.005Z"}
+{"level":"info","message":"✅ Cloudinary configured in postRoutes","timestamp":"2025-07-05T07:43:47.230Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-05T07:44:35.857Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-05T07:44:36.326Z"}
+{"level":"info","message":"Distributed 26 posts for user 68431685432ee393a735a641 - Fresh: 3, Recent: 3, Older: 8","timestamp":"2025-07-05T07:44:38.419Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-05T07:45:05.370Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-05T07:45:05.507Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-05T07:45:35.836Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-05T07:46:01.216Z"}
+{"level":"info","message":"Distributed 26 posts for user 68431685432ee393a735a641 - Fresh: 3, Recent: 3, Older: 8","timestamp":"2025-07-05T07:46:39.923Z"}
+{"level":"info","message":"✅ Cloudinary configured in postRoutes","timestamp":"2025-07-05T07:47:13.960Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-05T07:48:17.023Z"}
+{"level":"error","message":"Error fetching posts: connection <monitor> to 65.62.31.187:27017 closed","timestamp":"2025-07-05T07:48:22.132Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-05T07:48:38.128Z"}
+{"level":"error","message":"Error fetching posts: connection timed out","timestamp":"2025-07-05T07:48:43.140Z"}
+{"level":"info","message":"✅ Cloudinary configured in postRoutes","timestamp":"2025-07-05T07:49:02.533Z"}
+{"level":"info","message":"✅ Cloudinary configured in postRoutes","timestamp":"2025-07-05T07:50:58.260Z"}
+{"level":"info","message":"✅ Cloudinary configured in postRoutes","timestamp":"2025-07-05T07:52:31.363Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-05T07:52:48.512Z"}
+{"level":"info","message":"Distributed 26 posts for user anonymous - Fresh: 3, Recent: 3, Older: 8","timestamp":"2025-07-05T07:52:49.958Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-05T07:53:01.699Z"}
+{"level":"error","message":"Error fetching posts: connection <monitor> to 65.62.31.187:27017 closed","timestamp":"2025-07-05T07:53:51.745Z"}
+{"level":"info","message":"✅ Cloudinary configured in postRoutes","timestamp":"2025-07-05T07:54:16.420Z"}
+{"level":"info","message":"✅ Cloudinary configured in postRoutes","timestamp":"2025-07-05T07:59:10.988Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-05T08:00:51.239Z"}
+{"level":"info","message":"Distributed 26 posts for user anonymous - Fresh: 3, Recent: 3, Older: 8","timestamp":"2025-07-05T08:00:52.294Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-05T08:01:02.451Z"}
+{"level":"info","message":"Distributed 26 posts for user anonymous - Fresh: 3, Recent: 3, Older: 8","timestamp":"2025-07-05T08:01:03.256Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-05T08:01:24.226Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-05T08:01:24.479Z"}
+{"level":"info","message":"Distributed 26 posts for user 68431685432ee393a735a641 - Fresh: 3, Recent: 3, Older: 8","timestamp":"2025-07-05T08:01:25.668Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-05T08:01:27.421Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-05T08:01:27.855Z"}
+{"level":"info","message":"Distributed 26 posts for user 68431685432ee393a735a641 - Fresh: 3, Recent: 3, Older: 8","timestamp":"2025-07-05T08:01:29.339Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-05T08:01:29.376Z"}
+{"level":"info","message":"Distributed 26 posts for user 68431685432ee393a735a641 - Fresh: 3, Recent: 3, Older: 8","timestamp":"2025-07-05T08:01:30.623Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-05T08:01:30.726Z"}
+{"level":"info","message":"Distributed 26 posts for user 68431685432ee393a735a641 - Fresh: 3, Recent: 3, Older: 8","timestamp":"2025-07-05T08:01:31.925Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-05T08:01:39.958Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-05T08:01:40.234Z"}
+{"level":"info","message":"Distributed 26 posts for user 68431685432ee393a735a641 - Fresh: 3, Recent: 3, Older: 8","timestamp":"2025-07-05T08:01:41.330Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-05T08:02:03.481Z"}
+{"level":"info","message":"Distributed 26 posts for user 68431685432ee393a735a641 - Fresh: 3, Recent: 3, Older: 8","timestamp":"2025-07-05T08:02:04.769Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-05T08:02:04.797Z"}
+{"level":"info","message":"Distributed 26 posts for user 68431685432ee393a735a641 - Fresh: 3, Recent: 3, Older: 8","timestamp":"2025-07-05T08:02:06.315Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-05T08:02:06.400Z"}
+{"level":"info","message":"Distributed 26 posts for user 68431685432ee393a735a641 - Fresh: 3, Recent: 3, Older: 8","timestamp":"2025-07-05T08:02:07.759Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-05T08:02:23.260Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-05T08:02:23.445Z"}
+{"level":"info","message":"Distributed 26 posts for user 68431685432ee393a735a641 - Fresh: 3, Recent: 3, Older: 8","timestamp":"2025-07-05T08:02:24.711Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-05T08:02:28.400Z"}
+{"level":"info","message":"Distributed 26 posts for user 68431685432ee393a735a641 - Fresh: 3, Recent: 3, Older: 8","timestamp":"2025-07-05T08:02:29.580Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-05T08:02:29.602Z"}
+{"level":"info","message":"Distributed 26 posts for user 68431685432ee393a735a641 - Fresh: 3, Recent: 3, Older: 8","timestamp":"2025-07-05T08:02:30.432Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-05T08:02:30.530Z"}
+{"level":"info","message":"Distributed 26 posts for user 68431685432ee393a735a641 - Fresh: 3, Recent: 3, Older: 8","timestamp":"2025-07-05T08:02:31.803Z"}

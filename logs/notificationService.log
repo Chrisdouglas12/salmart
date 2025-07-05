@@ -18592,3 +18592,26 @@
 {"level":"info","message":"Fetched counts for user 68431685432ee393a735a641: {\"notificationCount\":6,\"messagesCount\":0}","messagesCount":0,"notificationCount":6,"timestamp":"2025-07-05T07:17:30.227Z"}
 {"level":"info","message":"Emitting countsUpdate to user 68431685432ee393a735a641: {\"notificationCount\":6,\"messagesCount\":0}","messagesCount":0,"notificationCount":6,"timestamp":"2025-07-05T07:17:30.229Z","userId":"68431685432ee393a735a641"}
 {"level":"info","message":"Emitted countsUpdate to user 68431685432ee393a735a641","timestamp":"2025-07-05T07:17:30.231Z"}
+{"level":"info","message":"Fetched counts for user 68431685432ee393a735a641: {\"notificationCount\":6,\"messagesCount\":0}","messagesCount":0,"notificationCount":6,"timestamp":"2025-07-05T07:44:36.449Z"}
+{"level":"info","message":"Emitting countsUpdate to user 68431685432ee393a735a641: {\"notificationCount\":6,\"messagesCount\":0}","messagesCount":0,"notificationCount":6,"timestamp":"2025-07-05T07:44:36.455Z","userId":"68431685432ee393a735a641"}
+{"level":"info","message":"Emitted countsUpdate to user 68431685432ee393a735a641","timestamp":"2025-07-05T07:44:36.466Z"}
+{"level":"error","message":"MongoDB not connected: readyState=0","timestamp":"2025-07-05T07:45:05.415Z"}
+{"level":"error","message":"Error fetching notification counts for user 68431685432ee393a735a641: Database connection lost","timestamp":"2025-07-05T07:45:05.417Z"}
+{"level":"info","message":"Emitting countsUpdate to user 68431685432ee393a735a641: {\"notificationCount\":0,\"messagesCount\":0}","messagesCount":0,"notificationCount":0,"timestamp":"2025-07-05T07:45:05.420Z","userId":"68431685432ee393a735a641"}
+{"level":"info","message":"Emitted countsUpdate to user 68431685432ee393a735a641","timestamp":"2025-07-05T07:45:05.422Z"}
+{"level":"error","message":"MongoDB not connected: readyState=0","timestamp":"2025-07-05T07:45:35.847Z"}
+{"level":"error","message":"Error fetching notification counts for user 68431685432ee393a735a641: Database connection lost","timestamp":"2025-07-05T07:45:35.849Z"}
+{"level":"info","message":"Emitting countsUpdate to user 68431685432ee393a735a641: {\"notificationCount\":0,\"messagesCount\":0}","messagesCount":0,"notificationCount":0,"timestamp":"2025-07-05T07:45:35.851Z","userId":"68431685432ee393a735a641"}
+{"level":"info","message":"Emitted countsUpdate to user 68431685432ee393a735a641","timestamp":"2025-07-05T07:45:35.852Z"}
+{"level":"info","message":"Fetched counts for user 68431685432ee393a735a641: {\"notificationCount\":6,\"messagesCount\":0}","messagesCount":0,"notificationCount":6,"timestamp":"2025-07-05T08:01:24.827Z"}
+{"level":"info","message":"Emitting countsUpdate to user 68431685432ee393a735a641: {\"notificationCount\":6,\"messagesCount\":0}","messagesCount":0,"notificationCount":6,"timestamp":"2025-07-05T08:01:24.831Z","userId":"68431685432ee393a735a641"}
+{"level":"info","message":"Emitted countsUpdate to user 68431685432ee393a735a641","timestamp":"2025-07-05T08:01:24.840Z"}
+{"level":"info","message":"Fetched counts for user 68431685432ee393a735a641: {\"notificationCount\":6,\"messagesCount\":0}","messagesCount":0,"notificationCount":6,"timestamp":"2025-07-05T08:01:27.820Z"}
+{"level":"info","message":"Emitting countsUpdate to user 68431685432ee393a735a641: {\"notificationCount\":6,\"messagesCount\":0}","messagesCount":0,"notificationCount":6,"timestamp":"2025-07-05T08:01:27.822Z","userId":"68431685432ee393a735a641"}
+{"level":"info","message":"Emitted countsUpdate to user 68431685432ee393a735a641","timestamp":"2025-07-05T08:01:27.824Z"}
+{"level":"info","message":"Fetched counts for user 68431685432ee393a735a641: {\"notificationCount\":6,\"messagesCount\":0}","messagesCount":0,"notificationCount":6,"timestamp":"2025-07-05T08:01:40.445Z"}
+{"level":"info","message":"Emitting countsUpdate to user 68431685432ee393a735a641: {\"notificationCount\":6,\"messagesCount\":0}","messagesCount":0,"notificationCount":6,"timestamp":"2025-07-05T08:01:40.448Z","userId":"68431685432ee393a735a641"}
+{"level":"info","message":"Emitted countsUpdate to user 68431685432ee393a735a641","timestamp":"2025-07-05T08:01:40.452Z"}
+{"level":"info","message":"Fetched counts for user 68431685432ee393a735a641: {\"notificationCount\":6,\"messagesCount\":0}","messagesCount":0,"notificationCount":6,"timestamp":"2025-07-05T08:02:23.710Z"}
+{"level":"info","message":"Emitting countsUpdate to user 68431685432ee393a735a641: {\"notificationCount\":6,\"messagesCount\":0}","messagesCount":0,"notificationCount":6,"timestamp":"2025-07-05T08:02:23.713Z","userId":"68431685432ee393a735a641"}
+{"level":"info","message":"Emitted countsUpdate to user 68431685432ee393a735a641","timestamp":"2025-07-05T08:02:23.716Z"}
