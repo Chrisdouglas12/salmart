@@ -7,7 +7,6 @@ document.addEventListener('DOMContentLoaded', async function () {
     let isAuthReady = false; // Flag to ensure initial setup runs only once
 
     // --- State variables for pagination/filtering ---
-    // let userIdToFollow; // Removed - this variable was unused globally
     let currentPage = 1;
     let currentCategory = 'all';
     let isLoading = false; // To prevent multiple simultaneous fetches
@@ -16,12 +15,126 @@ document.addEventListener('DOMContentLoaded', async function () {
     // Define API_BASE_URL once
     const API_BASE_URL = window.API_BASE_URL || (window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart.onrender.com');
 
+    // --- Intersection Observer for Videos ---
+    let videoObserver;
+
+    const handleVideoIntersection = (entries) => {
+        entries.forEach(entry => {
+            const videoContainer = entry.target;
+            const video = videoContainer.querySelector('.post-video');
+            const playPauseBtn = videoContainer.querySelector('.play-pause');
+            const loadingSpinner = videoContainer.querySelector('.loading-spinner');
+            const muteBtn = videoContainer.querySelector('.mute-button');
+
+            if (!video) return;
+
+            if (entry.isIntersecting) {
+                // Video is in view
+                if (!video.dataset.srcLoaded) { // Only load if src hasn't been set
+                    // Set src for all source elements within the video tag
+                    video.querySelectorAll('source[data-src]').forEach(sourceElem => {
+                        sourceElem.src = sourceElem.dataset.src;
+                    });
+                    video.load(); // Load the video metadata and initial data
+                    video.dataset.srcLoaded = 'true';
+                }
+
+                if (!video.dataset.controlsInitialized) {
+                    // Pass the parent post element, not just the container, for initializeVideoControls
+                    initializeVideoControls(videoContainer.closest('.post'));
+                }
+
+                // Autoplay when in view, but muted by default
+                // Only attempt play if video is paused and ready enough (readyState 3 = HAVE_FUTURE_DATA)
+                // Use a slight delay to allow the video to be ready, improving smoothness
+                setTimeout(() => {
+                    if (video.paused && video.readyState >= 3) {
+                        video.muted = true; // Ensure muted on autoplay
+                        if (muteBtn) muteBtn.innerHTML = '<i class="fas fa-volume-mute"></i>'; // Update mute button icon
+
+                        video.play().then(() => {
+                            loadingSpinner.style.display = 'none';
+                            playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
+                        }).catch(e => {
+                            loadingSpinner.style.display = 'none';
+                            // Autoplay prevented. User might need to interact.
+                            if (window.showToast) window.showToast('Video autoplay prevented. Tap to play.', '#ffc107');
+                            console.log("Video autoplay prevented:", e);
+                        });
+                    }
+                }, 100); // Small delay to allow video to settle after loading
+            } else {
+                // Video is out of view - Aggressive Unload
+                if (!video.paused) {
+                    video.pause();
+                    video.currentTime = 0; // Reset to beginning
+                    if (playPauseBtn) {
+                        playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+                    }
+                }
+
+                // Aggressively remove src to free up memory
+                video.removeAttribute('src'); // Remove src from the video tag itself if it was set directly
+                video.querySelectorAll('source').forEach(sourceElem => {
+                    sourceElem.removeAttribute('src');
+                });
+                video.load(); // This is crucial to unload the current video data
+                video.dataset.srcLoaded = ''; // Reset flag so it reloads on re-entry
+                // Do not reset thumbnailGenerated. Once generated, it should persist.
+            }
+        });
+    };
+
+    // Initialize the Intersection Observer for videos
+    if ('IntersectionObserver' in window) {
+        videoObserver = new IntersectionObserver(handleVideoIntersection, {
+            root: null, // relative to the viewport
+            rootMargin: '0px',
+            threshold: 0.8 // Trigger when 80% of the video is visible for smoother experience
+        });
+    } else {
+        console.warn("Intersection Observer for videos not supported. Video lazy loading and auto-pause will not work.");
+    }
+
+    // --- NEW: Intersection Observer for Images ---
+    let imageObserver;
+
+    const handleImageIntersection = (entries, observer) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const img = entry.target;
+                const dataSrc = img.dataset.src;
+                if (dataSrc) {
+                    img.src = dataSrc;
+                    img.removeAttribute('data-src'); // Remove data-src once loaded
+                    observer.unobserve(img); // Stop observing once loaded
+                }
+            }
+        });
+    };
+
+    // Initialize the Intersection Observer for images
+    if ('IntersectionObserver' in window) {
+        imageObserver = new IntersectionObserver(handleImageIntersection, {
+            root: null, // relative to the viewport
+            rootMargin: '100px', // Load images when they are 100px away from the viewport
+            threshold: 0 // As soon as any part of the image is visible (or within rootMargin)
+        });
+    } else {
+        console.warn("Intersection Observer for images not supported. Image lazy loading will not work.");
+    }
+
     // Initialize video controls
     function initializeVideoControls(postElement) {
         const container = postElement.querySelector('.post-video-container');
         if (!container) return;
 
         const video = container.querySelector('.post-video');
+        // Prevent re-initialization if controls are already set up
+        if (video.dataset.controlsInitialized === 'true') {
+            return;
+        }
+
         const thumbnailCanvas = container.querySelector('.video-thumbnail');
         const loadingSpinner = container.querySelector('.loading-spinner');
         const playPauseBtn = container.querySelector('.play-pause');
@@ -40,25 +153,36 @@ document.addEventListener('DOMContentLoaded', async function () {
         video.setAttribute('playsinline', '');
         video.setAttribute('webkit-playsinline', '');
         video.setAttribute('crossorigin', 'anonymous');
+        video.muted = true; // Default to muted
 
         // Video metadata loaded: set initial time to generate thumbnail
+        // This will now only run once when the video is loaded (due to Intersection Observer)
         video.addEventListener('loadedmetadata', () => {
             if (!video.dataset.thumbnailGenerated) {
-                video.currentTime = 2; // Set time to generate thumbnail
+                // Ensure video is ready enough to seek and draw a frame
+                if (video.readyState >= 1) { // HAVE_METADATA
+                    video.currentTime = Math.min(2, video.duration / 2); // Get a middle frame if video is short
+                }
             }
             durationDisplay.textContent = formatVideoTime(video.duration);
+            loadingSpinner.style.display = 'none'; // Hide spinner once metadata is loaded
         });
 
-        // Seeked event: generate thumbnail after seeking to 2 seconds
+        // Seeked event: generate thumbnail after seeking for poster
         video.addEventListener('seeked', () => {
-            if (video.currentTime === 2 && !video.dataset.thumbnailGenerated) {
+            // Only generate thumbnail if we specifically sought to generate it and it hasn't been generated
+            if (!video.dataset.thumbnailGenerated) {
                 const ctx = thumbnailCanvas.getContext('2d');
                 thumbnailCanvas.width = video.videoWidth;
                 thumbnailCanvas.height = video.videoHeight;
                 ctx.drawImage(video, 0, 0, thumbnailCanvas.width, thumbnailCanvas.height);
-                video.poster = thumbnailCanvas.toDataURL('image/jpeg');
+                video.poster = thumbnailCanvas.toDataURL('image/jpeg'); // Set poster for future loads
                 video.dataset.thumbnailGenerated = 'true';
-                video.currentTime = 0; // Reset to 0 after generating thumbnail
+                // Reset to 0 only if it was for thumbnail generation, otherwise keep current time
+                if (video.currentTime !== 0) { // Check if not already at 0
+                    video.currentTime = 0;
+                }
+                loadingSpinner.style.display = 'none'; // Ensure spinner is hidden after thumbnail generation
             }
         });
 
@@ -89,7 +213,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                     playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
                 }).catch(e => {
                     loadingSpinner.style.display = 'none';
-                    if (window.showToast) window.showToast('Error playing video.', '#dc3545');
+                    if (window.showToast) window.showToast('Error playing video. User interaction may be required.', '#dc3545');
                     console.error('Play error:', e);
                 });
             } else {
@@ -98,7 +222,11 @@ document.addEventListener('DOMContentLoaded', async function () {
             }
         });
 
-        video.addEventListener('canplay', () => {
+        video.addEventListener('waiting', () => {
+            loadingSpinner.style.display = 'block';
+        });
+
+        video.addEventListener('playing', () => {
             loadingSpinner.style.display = 'none';
         });
 
@@ -162,14 +290,10 @@ document.addEventListener('DOMContentLoaded', async function () {
             progressBar.style.width = `${progress * 100}%`;
             progressBar.setAttribute('aria-valuenow', progress * 100);
 
-            seekPreview.style.left = `${posX}px`;
-            seekPreviewCanvas.width = 120;
-            seekPreviewCanvas.height = 68;
-            // The currentTime was set above, no need to set again or for seekTime
-            setTimeout(() => {
-                const ctx = seekPreviewCanvas.getContext('2d');
-                ctx.drawImage(video, 0, 0, seekPreviewCanvas.width, seekPreviewCanvas.height);
-            }, 100);
+            // Hide seek preview during active drag to avoid performance issues
+            if (isDragging) {
+                seekPreview.style.display = 'none';
+            }
         };
 
         progressContainer.addEventListener('mousedown', (e) => {
@@ -198,11 +322,16 @@ document.addEventListener('DOMContentLoaded', async function () {
                 seekPreview.style.left = `${posX}px`;
                 seekPreviewCanvas.width = 120;
                 seekPreviewCanvas.height = 68;
+
+                // Temporarily set currentTime to draw frame for preview
+                const originalCurrentTime = video.currentTime;
                 video.currentTime = seekTime;
-                setTimeout(() => {
+                // Use requestAnimationFrame for smoother seek preview drawing
+                requestAnimationFrame(() => {
                     const ctx = seekPreviewCanvas.getContext('2d');
                     ctx.drawImage(video, 0, 0, seekPreviewCanvas.width, seekPreviewCanvas.height);
-                }, 100);
+                    video.currentTime = originalCurrentTime; // Restore original time immediately after drawing
+                });
             }
         });
 
@@ -217,11 +346,11 @@ document.addEventListener('DOMContentLoaded', async function () {
         progressContainer.addEventListener('touchstart', (e) => {
             isDragging = true;
             updateProgress(e, true);
-        });
+        }, { passive: true }); // Use passive to avoid blocking scroll
 
         document.addEventListener('touchmove', (e) => {
             if (isDragging) updateProgress(e, true);
-        });
+        }, { passive: true });
 
         document.addEventListener('touchend', () => {
             isDragging = false;
@@ -256,6 +385,9 @@ document.addEventListener('DOMContentLoaded', async function () {
             progressBar.style.width = '0%';
             progressBar.setAttribute('aria-valuenow', 0);
         });
+
+        // Mark controls as initialized
+        video.dataset.controlsInitialized = 'true';
     }
 
     // --- Helper Functions ---
@@ -377,7 +509,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         const isFollowingUser = currentFollowingList.includes(user._id.toString());
         suggestionElement.innerHTML = `
             <a href="Profile.html?userId=${user._id}" class="user-info-link">
-                <img src="${user.profilePicture || '/salmart-192x192.png'}" alt="${escapeHtml(user.name)}'s profile picture" class="user-suggestion-avatar" onerror="this.src='/salmart-192x192.png'">
+                <img class="lazy-image user-suggestion-avatar" data-src="${user.profilePicture || '/salmart-192x192.png'}" alt="${escapeHtml(user.name)}'s profile picture" onerror="this.src='/salmart-192x192.png'">
                 <h5 class="user-suggestion-name">${escapeHtml(user.name)}</h5>
             </a>
             <button class="follow-button user-suggestion-follow-btn" data-user-id="${user._id}" ${isFollowingUser ? 'disabled' : ''}>
@@ -483,7 +615,6 @@ document.addEventListener('DOMContentLoaded', async function () {
             });
             wrapperContainer.appendChild(rowContainer); // This is correct, appends each row
         }
-        // Removed redundant wrapperContainer.appendChild(rowContainer);
         return wrapperContainer;
     }
 
@@ -504,8 +635,9 @@ document.addEventListener('DOMContentLoaded', async function () {
         const productImageForChat = post.photo || '/salmart-192x192.png';
 
         // This block will ONLY handle non-video ads (e.g., image ads) now.
+        // Lazy load the image for promoted posts
         mediaContent = `
-            <img src="${productImageForChat}" class="promoted-image" alt="Promoted Product" onerror="this.src='/salmart-192x192.png'">
+            <img class="lazy-image promoted-image" data-src="${productImageForChat}" alt="Promoted Product" onerror="this.src='/salmart-192x192.png'">
         `;
         productDetails = `
             <div class="promoted-product-info">
@@ -556,7 +688,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 <span>Promoted</span>
             </div>
             <div class="promoted-header">
-                <img src="${post.profilePicture || '/salmart-192x192.png'}" class="promoted-avatar" onerror="this.src='/salmart-192x192.png'" alt="User Avatar">
+                <img class="lazy-image promoted-avatar" data-src="${post.profilePicture || '/salmart-192x192.png'}" onerror="this.src='/salmart-192x192.png'" alt="User Avatar">
                 <div class="promoted-user-info">
                     <h5 class="promoted-user-name">${escapeHtml(post.createdBy ? post.createdBy.name : 'Unknown')}</h5>
                     <span class="promoted-time">${formatTime(post.createdAt || new Date())}</span>
@@ -587,21 +719,23 @@ document.addEventListener('DOMContentLoaded', async function () {
         let descriptionContent = '';
         let buttonContent = '';
 
+        // Ensure default image for chat is still correct but actual display image uses lazy-loading
         const productImageForChat = post.postType === 'video_ad' ? (post.thumbnail || 'default-video-poster.png') : (post.photo || 'default-image.png');
 
         if (post.postType === 'video_ad') {
-descriptionContent = `
+            descriptionContent = `
                 <h2 class="product-title">${escapeHtml(post.title)}</h2>
                 <div class="post-description-text" style="margin-bottom: 10px; padding: 0 15px;">
                     <p>${escapeHtml(post.description || '')}</p>
                 </div>
             `;
+            // Optimized video element: data-src for lazy loading, preload="none"
             mediaContent = `
                 <div class="post-video-container">
-                    <video class="post-video" preload="metadata" aria-label="Video ad for ${post.description || 'product'}">
-                        <source src="${post.video || ''}" type="video/mp4" />
-                        <source src="${post.video ? post.video.replace('.mp4', '.webm') : ''}" type="video/webm" />
-                        <source src="${post.video ? post.video.replace('.mp4', '.ogg') : ''}" type="video/ogg" />
+                    <video class="post-video" preload="none" aria-label="Video ad for ${post.description || 'product'}" poster="${post.thumbnail || ''}">
+                        <source data-src="${post.video || ''}" type="video/mp4" />
+                        <source data-src="${post.video ? post.video.replace('.mp4', '.webm') : ''}" type="video/webm" />
+                        <source data-src="${post.video ? post.video.replace('.mp4', '.ogg') : ''}" type="video/ogg" />
                         Your browser does not support the video tag.
                     </video>
                     <canvas class="video-thumbnail" style="display: none;"></canvas>
@@ -623,7 +757,7 @@ descriptionContent = `
                             <span class="current-time">0:00</span> / <span class="duration">0:00</span>
                         </div>
                         <button class="control-button mute-button" aria-label="Mute or unmute video">
-                            <i class="fas fa-volume-up"></i>
+                            <i class="fas fa-volume-mute"></i>
                         </button>
                         <div class="volume-control">
                             <input type="range" class="volume-slider" min="0" max="100" value="100" aria-label="Volume control">
@@ -640,7 +774,7 @@ descriptionContent = `
                     </div>
                 </div>
             `;
-            
+
             buttonContent = `
                     <a href="${post.productLink || '#'}" class=" checkout-product-btn" aria-label="Check out product ${post.description || 'product'}" ${!post.productLink ? 'disabled' : ''}>
                         <i class="fas fa-shopping-cart"></i>  Check Out Product
@@ -654,10 +788,11 @@ descriptionContent = `
                 </div>
             `;
 
+            // Lazy load the main post image
             mediaContent = `
                 <div class="product-image">
                     <div class="badge">${post.productCondition || 'New'}</div>
-                    <img src="${productImageForChat}" class="post-image" onclick="window.openImage('${productImageForChat.replace(/'/g, "\\'")}')" alt="Product Image" onerror="this.src='/salmart-192x192.png'">
+                    <img class="lazy-image post-image" data-src="${productImageForChat}" onclick="window.openImage('${productImageForChat.replace(/'/g, "\\'")}')" alt="Product Image" onerror="this.src='/salmart-192x192.png'">
                 </div>
             `;
             productDetails = `
@@ -741,6 +876,7 @@ descriptionContent = `
                 if (post.createdBy.userId === currentLoggedInUser) {
                     followButtonHtml = '';
                 } else {
+                    // Lazy load profile picture for the user who created the post
                     followButtonHtml = isFollowing ?
                         `<button class="follow-button" data-user-id="${post.createdBy.userId}" style="background-color: #fff; color: #28a745;" disabled>
                             <i class="fas fa-user-check"></i> Following
@@ -791,7 +927,7 @@ descriptionContent = `
         postElement.innerHTML = `
             <div class="post-header">
                 <a href="Profile.html?userId=${post.createdBy ? post.createdBy.userId : ''}">
-                    <img src="${post.profilePicture || '/salmart-192x192.png'}" class="post-avatar" onerror="this.src='/salmart-192x192.png'" alt="User Avatar">
+                    <img class="lazy-image post-avatar" data-src="${post.profilePicture || '/salmart-192x192.png'}" onerror="this.src='/salmart-192x192.png'" alt="User Avatar">
                 </a>
                 <div class="post-user-info">
                     <a href="Profile.html?userId=${post.createdBy ? post.createdBy.userId : ''}">
@@ -830,10 +966,7 @@ descriptionContent = `
             ${postActionsHtml}
         `;
 
-        // Initialize video controls if this is a video post
-        if (post.postType === 'video_ad') {
-            initializeVideoControls(postElement); // Correctly initialize for the specific postElement
-        }
+        // DO NOT initialize video controls here directly. Intersection Observer will handle it.
         return postElement; // Return the created post element
     }
 
@@ -958,6 +1091,18 @@ descriptionContent = `
         isLoading = true;
 
         if (clearExisting) {
+            // Disconnect old observers before clearing content
+            if (videoObserver) {
+                postsContainer.querySelectorAll('.post-video-container').forEach(container => {
+                    videoObserver.unobserve(container);
+                });
+            }
+            // Disconnect image observer from existing images
+            if (imageObserver) {
+                postsContainer.querySelectorAll('.lazy-image').forEach(img => {
+                    imageObserver.unobserve(img);
+                });
+            }
             postsContainer.innerHTML = '';
             suggestionCounter = 0; // Reset suggestion counter when clearing posts
         }
@@ -1004,18 +1149,42 @@ descriptionContent = `
                 allUserSuggestions = await fetchUserSuggestions();
             }
 
+            const imagesToObserve = []; // Collect image elements for observation
             if (promotedPosts.length > 0) {
                 const promotedRow = createPromotedPostsRow(promotedPosts);
                 fragment.prepend(promotedRow);
+                // Collect images within the promoted row for observation
+                promotedRow.querySelectorAll('.lazy-image').forEach(img => imagesToObserve.push(img));
             }
 
             let suggestionRowIndex = 0;
+            const videoContainersToObserve = []; // Collect video containers for observation
 
             for (let i = 0; i < nonPromotedPosts.length; i++) {
                 const post = nonPromotedPosts[i];
-                const postElement = renderPost(post); // renderPost now handles video init internally
+                const postElement = renderPost(post);
                 fragment.appendChild(postElement);
                 suggestionCounter++;
+
+                // If it's a video post, add its container to the list for observation
+                if (post.postType === 'video_ad') {
+                    const videoContainer = postElement.querySelector('.post-video-container');
+                    if (videoContainer) {
+                        videoContainersToObserve.push(videoContainer);
+                    }
+                } else {
+                    // It's a photo post, collect its image for lazy loading
+                    const postImage = postElement.querySelector('.post-image');
+                    if (postImage) {
+                        imagesToObserve.push(postImage);
+                    }
+                }
+
+                // Also collect avatar images for lazy loading
+                const postAvatar = postElement.querySelector('.post-avatar');
+                if (postAvatar) {
+                    imagesToObserve.push(postAvatar);
+                }
 
                 if (suggestionCounter % postsBeforeSuggestion === 0 &&
                     currentLoggedInUser &&
@@ -1031,6 +1200,8 @@ descriptionContent = `
                         if (userSuggestionsContainer) {
                             fragment.appendChild(userSuggestionsContainer);
                             suggestionRowIndex++;
+                            // Collect images within the user suggestions for observation
+                            userSuggestionsContainer.querySelectorAll('.lazy-image').forEach(img => imagesToObserve.push(img));
                         }
                     }
                 }
@@ -1046,6 +1217,21 @@ descriptionContent = `
             if (postsContainer.children.length === 0) {
                 postsContainer.innerHTML = '<p style="text-align: center; margin: 2rem;">No posts available.</p>';
             }
+
+            // Observe all newly added video containers
+            if (videoObserver) {
+                videoContainersToObserve.forEach(container => {
+                    videoObserver.observe(container);
+                });
+            }
+
+            // Observe all newly added image elements
+            if (imageObserver) {
+                imagesToObserve.forEach(img => {
+                    imageObserver.observe(img);
+                });
+            }
+
 
             window.dispatchEvent(new Event('postsRendered'));
 
@@ -1114,7 +1300,10 @@ descriptionContent = `
             }
 
             const recipientUsername = postElement.querySelector('.post-user-name')?.textContent || postElement.querySelector('.promoted-user-name')?.textContent || 'Unknown';
-            const recipientProfilePictureUrl = postElement.querySelector('.post-avatar')?.src || postElement.querySelector('.promoted-avatar')?.src || 'default-avatar.png';
+            // Important: For lazy-loaded images, the src might be empty, so get data-src if available.
+            const recipientProfilePictureEl = postElement.querySelector('.post-avatar') || postElement.querySelector('.promoted-avatar');
+            const recipientProfilePictureUrl = recipientProfilePictureEl?.dataset.src || recipientProfilePictureEl?.src || 'default-avatar.png';
+
             let productImage = target.dataset.productImage || '';
             const productDescription = target.dataset.productDescription || '';
             const postId = target.dataset.postId;

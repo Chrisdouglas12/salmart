@@ -15,6 +15,228 @@
 
 }
 
+/* --- Video Container and Controls --- */
+.post-video-container {
+    position: relative;
+    width: 100%;
+    /* Maintain aspect ratio - e.g., 16:9 for videos */
+    padding-bottom: 56.25%; /* For 16:9 aspect ratio (9 / 16 * 100%) */
+    background-color: #000; /* Ensures a black background for unrendered areas */
+    overflow: hidden;
+    border-radius: 8px; /* Match post container border-radius */
+    display: flex; /* For centering spinner */
+    justify-content: center;
+    align-items: center;
+}
+
+.post-video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain; /* Ensures the whole video is visible, letterboxing if necessary */
+    background-color: #000; /* Background behind video if aspect ratios don't match */
+    transition: opacity 0.3s ease-in-out; /* Smooth fade-in for video */
+}
+
+/* Hide the default HTML video controls */
+.post-video::-webkit-media-controls {
+    display: none !important;
+}
+
+.post-video::-webkit-media-controls-enclosure {
+    display: none !important;
+}
+
+.video-thumbnail {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    background-color: #000;
+    display: none; /* Only used programmatically to generate poster */
+}
+
+.loading-spinner {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 3em;
+    color: #fff;
+    z-index: 10; /* Above video, below controls when active */
+    animation: spin 1s linear infinite; /* Simple spin animation */
+}
+
+@keyframes spin {
+    0% { transform: translate(-50%, -50%) rotate(0deg); }
+    100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* Custom Controls */
+.custom-controls {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: linear-gradient(to top, rgba(0,0,0,0.8), rgba(0,0,0,0));
+    padding: 10px 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #fff;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+    z-index: 5; /* Below spinner, above video */
+}
+
+.custom-controls.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.control-button {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 1.2em;
+    cursor: pointer;
+    padding: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%; /* Make them circular */
+    transition: background-color 0.2s ease;
+}
+
+.control-button:hover {
+    background-color: rgba(255,255,255,0.2);
+}
+
+.progress-container {
+    flex-grow: 1;
+    height: 6px;
+    background-color: rgba(255,255,255,0.3);
+    border-radius: 3px;
+    position: relative;
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.buffered-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background-color: rgba(255,255,255,0.5);
+    width: 0%;
+    border-radius: 3px;
+}
+
+.progress-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background-color: #007bff; /* Progress blue */
+    width: 0%;
+    border-radius: 3px;
+}
+
+.time-display {
+    font-size: 0.85em;
+    white-space: nowrap;
+}
+
+.volume-control {
+    width: 80px; /* Adjust as needed */
+}
+
+.volume-slider {
+    width: 100%;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 4px;
+    background: rgba(255,255,255,0.4);
+    outline: none;
+    border-radius: 2px;
+    cursor: grab;
+}
+
+.volume-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    background: #007bff;
+    border-radius: 50%;
+    cursor: grab;
+}
+
+.volume-slider::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    background: #007bff;
+    border-radius: 50%;
+    cursor: grab;
+}
+
+.playback-speed {
+    background: rgba(255,255,255,0.2);
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    padding: 5px 8px;
+    font-size: 0.85em;
+    cursor: pointer;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23ffffff%22%20d%3D%22M287%2C197.914l-116-116c-4.7-4.7-12.3-4.7-17%2C0L18%2C197.914c-4.7%2C4.7-4.7%2C12.3%2C0%2C17l8.5%2C8.5c4.7%2C4.7%2C12.3%2C4.7%2C17%2C0l92.5-92.5l92.5%2C92.5c4.7%2C4.7%2C12.3%2C4.7%2C17%2C0l8.5-8.5C291.7%2C210.214%2C291.7%2C202.614%2C287%2C197.914z%22%2F%3E%3C%2Fsvg%3E'); /* White arrow */
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    background-size: 10px;
+    padding-right: 25px; /* Space for arrow */
+}
+
+/* Seek preview */
+.seek-preview {
+    position: absolute;
+    bottom: calc(100% + 5px); /* Position above the progress bar */
+    transform: translateX(-50%); /* Center horizontally */
+    background-color: rgba(0,0,0,0.8);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 4px;
+    padding: 5px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    pointer-events: none; /* So it doesn't block clicks on the progress bar */
+    display: none; /* Hidden by default */
+    z-index: 15; /* Above everything else */
+}
+
+.seek-preview-canvas {
+    width: 120px;
+    height: 68px; /* Maintain 16:9 aspect ratio for 120px width */
+    display: block;
+    border-radius: 2px;
+}
+
+/* General improvements for image loading */
+.lazy-image {
+    background-color: #f0f0f0; /* Placeholder background */
+    /* Add a subtle blur or shimmer effect before image loads if desired */
+    /* filter: blur(5px); */
+    /* transition: filter 0.3s ease-in-out; */
+}
+
+.lazy-image.loaded {
+    /* filter: blur(0); */
+}
+
 .checkout-product-btn {
   background: #fff;
   color: #28a745; 
