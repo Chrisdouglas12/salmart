@@ -3252,3 +3252,21 @@
 {"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-05T05:10:11.338Z"}
 {"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-05T05:12:34.012Z"}
 {"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-05T05:13:04.803Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-07T12:04:18.693Z"}
+{"body":{"buyerId":"68431685432ee393a735a641","currency":"NGN","email":"chrisdouglas1700@gmail.com","postId":"686bb72a71c88e21525d70b1"},"level":"info","message":"Payment initiation started","requestId":"PAY_1751889858704","timestamp":"2025-07-07T12:04:18.705Z"}
+{"level":"info","message":"Payment initialized successfully","reference":"my9w8oy2g5","requestId":"PAY_1751889858704","timestamp":"2025-07-07T12:04:20.769Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-07T12:04:39.581Z"}
+{"level":"info","message":"Payment verification started","reference":"my9w8oy2g5","requestId":"SUCCESS_1751889879589","timestamp":"2025-07-07T12:04:39.589Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-07T12:10:37.637Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-07T12:11:03.148Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-07T12:11:04.790Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-07T12:18:06.697Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-07T12:18:29.909Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-07T12:57:15.622Z"}
+{"body":{"buyerId":"68431685432ee393a735a641","currency":"NGN","email":"chrisdouglas1700@gmail.com","postId":"6868cbe261a26bddde56aada"},"level":"info","message":"Payment initiation started","requestId":"PAY_1751893035631","timestamp":"2025-07-07T12:57:15.632Z"}
+{"level":"info","message":"Payment initialized successfully","reference":"c8bz9cyemr","requestId":"PAY_1751893035631","timestamp":"2025-07-07T12:57:18.109Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-07T13:04:22.115Z"}
+{"body":{"buyerId":"68431685432ee393a735a641","currency":"NGN","email":"chrisdouglas1700@gmail.com","postId":"6868cbe261a26bddde56aada"},"level":"info","message":"Payment initiation started","requestId":"PAY_1751893462118","timestamp":"2025-07-07T13:04:22.119Z"}
+{"level":"info","message":"Payment initialized successfully","reference":"j1vg84he2m","requestId":"PAY_1751893462118","timestamp":"2025-07-07T13:04:23.295Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-07T13:07:55.816Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-07T13:08:19.379Z"}

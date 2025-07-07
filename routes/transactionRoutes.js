@@ -454,7 +454,7 @@ router.post('/confirm-delivery/:transactionId', verifyToken, async (req, res) =>
   }
 });
 
-// Update Bank Details
+// Update Bank Details using Paystack
 router.post('/update-bank-details', verifyToken, async (req, res) => {
   const { accountNumber, bankCode, bankName } = req.body;
   const userId = req.user.userId;
@@ -464,28 +464,56 @@ router.post('/update-bank-details', verifyToken, async (req, res) => {
   }
 
   try {
-    const response = await axios.post(
-      'https://api.flutterwave.com/v3/accounts/resolve',
-      { account_number: accountNumber, account_bank: bankCode },
-      { headers: { Authorization: `Bearer ${process.env.FLUTTERWAVE_SECRET_KEY}`, 'Content-Type': 'application/json' } }
-    );
+    // Resolve account name using Paystack
+    const response = await axios.get(`https://api.paystack.co/bank/resolve`, {
+      params: {
+        account_number: accountNumber,
+        bank_code: bankCode
+      },
+      headers: {
+        Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+        'Content-Type': 'application/json'
+      }
+    });
 
-    if (response.data.status !== 'success') {
-      return res.status(400).json({ success: false, message: response.data.message || 'Failed to verify account details' });
+    if (!response.data.status) {
+      return res.status(400).json({
+        success: false,
+        message: response.data.message || 'Failed to verify account details'
+      });
     }
 
+    const accountName = response.data.data.account_name;
+
+    // Update user record
     const updatedUser = await User.findByIdAndUpdate(
       userId,
-      { bankDetails: { accountNumber, bankCode, bankName, accountName: response.data.data.account_name } },
+      {
+        bankDetails: {
+          accountNumber,
+          bankCode,
+          bankName,
+          accountName
+        }
+      },
       { new: true }
     );
 
-    res.status(200).json({ success: true, message: 'Bank details updated successfully', bankDetails: updatedUser.bankDetails });
+    res.status(200).json({
+      success: true,
+      message: 'Bank details updated successfully',
+      bankDetails: updatedUser.bankDetails
+    });
   } catch (error) {
-    console.error('Update bank details error:', error.message);
-    res.status(500).json({ success: false, message: 'Failed to update bank details' });
+    console.error('Update bank details error:', error.response?.data || error.message);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update bank details'
+    });
   }
 });
+
+
 
 // Get Bank Details
 router.get('/get-bank-details', verifyToken, async (req, res) => {

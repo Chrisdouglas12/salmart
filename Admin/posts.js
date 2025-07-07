@@ -1,4 +1,3 @@
-
 // This file assumes post-video-controls.js is linked separately and correctly
 import { salmartCache } from './salmartCache.js';
 
@@ -50,7 +49,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 if (video.paused && video.readyState >= 3) {
                     video.muted = true; // Ensure muted on autoplay
                     if (muteBtn) muteBtn.innerHTML = '<i class="fas fa-volume-mute"></i>'; // Update mute button icon
-                    
+
                     video.play().then(() => {
                         loadingSpinner.style.display = 'none';
                         playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
@@ -70,7 +69,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                         playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
                     }
                 }
-                
+
                 // Aggressively remove src to free up memory
                 video.removeAttribute('src'); // Remove src from the video tag itself if it was set directly
                 video.querySelectorAll('source').forEach(sourceElem => {
@@ -736,9 +735,17 @@ document.addEventListener('DOMContentLoaded', async function () {
             `;
 
             buttonContent = `
-                    <a href="${post.productLink || '#'}" class=" checkout-product-btn" aria-label="Check out product ${post.description || 'product'}" ${!post.productLink ? 'disabled' : ''}>
+                    <button class="checkout-product-btn"
+                            data-post-id="${post._id || ''}"
+                            data-product-image="${post.thumbnail || 'default-video-poster.png'}"
+                            data-product-title="${escapeHtml(post.title)}"
+                            data-product-description="${escapeHtml(post.description || '')}"
+                            data-product-price="${post.price ? '₦' + Number(post.price).toLocaleString('en-NG') : 'Price not specified'}"
+                            data-product-location="${escapeHtml(post.location || 'N/A')}"
+                            data-product-condition="${escapeHtml(post.productCondition || 'N/A')}"
+                            ${!post.productLink ? 'disabled' : ''}>
                         <i class="fas fa-shopping-cart"></i>  Check Out Product
-                    </a>
+                    </button>
                 `;
         } else { // Regular image-based posts
             descriptionContent = `
@@ -809,7 +816,15 @@ document.addEventListener('DOMContentLoaded', async function () {
                                 ${post.isSold ? 'disabled' : ''}>
                                 ${post.isSold ? 'Unavailable' : 'Message'}
                             </button>
-                            <button class="btn btn-primary buy-now-button" data-post-id="${post._id || ''}" ${post.isSold ? 'disabled' : ''}>
+                            <button class="btn btn-primary buy-now-button"
+                                    data-post-id="${post._id || ''}"
+                                    data-product-image="${productImageForChat}"
+                                    data-product-title="${escapeHtml(post.title || 'Untitled Product')}"
+                                    data-product-description="${escapeHtml(post.description || 'No description available.')}"
+                                    data-product-location="${escapeHtml(post.location || 'N/A')}"
+                                    data-product-condition="${escapeHtml(post.productCondition || 'N/A')}"
+                                    data-product-price="${post.price ? '₦' + Number(post.price).toLocaleString('en-NG') : '₦0.00'}"
+                                    ${post.isSold ? 'disabled' : ''}>
                                 ${post.isSold ? 'Sold Out' : 'Buy Now'}
                             </button>
                         </div>
@@ -1247,6 +1262,55 @@ document.addEventListener('DOMContentLoaded', async function () {
             window.location.href = chatUrl;
             return; // Exit to prevent further processing
         }
+
+        // Handle Buy Now Button (for normal posts and promoted image posts)
+        if (target.classList.contains('buy-now-button')) {
+            event.preventDefault(); // Prevent default button behavior
+
+            const productImage = target.dataset.productImage;
+            const productTitle = target.dataset.productTitle;
+            const productDescription = target.dataset.productDescription;
+            const productLocation = target.dataset.productLocation;
+            const productCondition = target.dataset.productCondition;
+            const productPrice = target.dataset.productPrice;
+
+            // Encode parameters to handle special characters in URLs
+            const params = new URLSearchParams({
+                productImage: productImage,
+                productTitle: productTitle,
+                productDescription: productDescription,
+                productLocation: productLocation,
+                productCondition: productCondition,
+                productPrice: productPrice,
+            });
+
+            window.location.href = `checkout.html?${params.toString()}`;
+            return; // Exit to prevent further processing
+        }
+
+        // Handle Checkout Product Button (for video ads)
+        if (target.classList.contains('checkout-product-btn')) {
+            event.preventDefault();
+
+            const productImage = target.dataset.productImage;
+            const productTitle = target.dataset.productTitle;
+            const productDescription = target.dataset.productDescription;
+            const productPrice = target.dataset.productPrice;
+            const productLocation = target.dataset.productLocation;
+            const productCondition = target.dataset.productCondition;
+
+            const params = new URLSearchParams({
+                productImage: productImage,
+                productTitle: productTitle,
+                productDescription: productDescription,
+                productPrice: productPrice,
+                productLocation: productLocation,
+                productCondition: productCondition,
+            });
+            window.location.href = `checkout.html?${params.toString()}`;
+            return;
+        }
+
 
         // Handle Follow Button
         if (target.classList.contains('follow-button') && target.dataset.userId) {
