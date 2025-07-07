@@ -1,3 +1,4 @@
+
 // This file assumes post-video-controls.js is linked separately and correctly
 import { salmartCache } from './salmartCache.js';
 
@@ -24,7 +25,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             const video = videoContainer.querySelector('.post-video');
             const playPauseBtn = videoContainer.querySelector('.play-pause');
             const loadingSpinner = videoContainer.querySelector('.loading-spinner');
-            const muteBtn = videoContainer.querySelector('.mute-button');
+            const muteBtn = videoContainer.querySelector('.mute-button'); // Get mute button here
 
             if (!video) return;
 
@@ -46,23 +47,20 @@ document.addEventListener('DOMContentLoaded', async function () {
 
                 // Autoplay when in view, but muted by default
                 // Only attempt play if video is paused and ready enough (readyState 3 = HAVE_FUTURE_DATA)
-                // Use a slight delay to allow the video to be ready, improving smoothness
-                setTimeout(() => {
-                    if (video.paused && video.readyState >= 3) {
-                        video.muted = true; // Ensure muted on autoplay
-                        if (muteBtn) muteBtn.innerHTML = '<i class="fas fa-volume-mute"></i>'; // Update mute button icon
-
-                        video.play().then(() => {
-                            loadingSpinner.style.display = 'none';
-                            playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
-                        }).catch(e => {
-                            loadingSpinner.style.display = 'none';
-                            // Autoplay prevented. User might need to interact.
-                            if (window.showToast) window.showToast('Video autoplay prevented. Tap to play.', '#ffc107');
-                            console.log("Video autoplay prevented:", e);
-                        });
-                    }
-                }, 100); // Small delay to allow video to settle after loading
+                if (video.paused && video.readyState >= 3) {
+                    video.muted = true; // Ensure muted on autoplay
+                    if (muteBtn) muteBtn.innerHTML = '<i class="fas fa-volume-mute"></i>'; // Update mute button icon
+                    
+                    video.play().then(() => {
+                        loadingSpinner.style.display = 'none';
+                        playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
+                    }).catch(e => {
+                        loadingSpinner.style.display = 'none';
+                        // Autoplay prevented. User might need to interact.
+                        // if (window.showToast) window.showToast('Video autoplay prevented.', '#ffc107');
+                        console.log("Video autoplay prevented:", e);
+                    });
+                }
             } else {
                 // Video is out of view - Aggressive Unload
                 if (!video.paused) {
@@ -72,7 +70,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                         playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
                     }
                 }
-
+                
                 // Aggressively remove src to free up memory
                 video.removeAttribute('src'); // Remove src from the video tag itself if it was set directly
                 video.querySelectorAll('source').forEach(sourceElem => {
@@ -80,48 +78,20 @@ document.addEventListener('DOMContentLoaded', async function () {
                 });
                 video.load(); // This is crucial to unload the current video data
                 video.dataset.srcLoaded = ''; // Reset flag so it reloads on re-entry
-                // Do not reset thumbnailGenerated. Once generated, it should persist.
+                video.dataset.thumbnailGenerated = ''; // Allow re-generation if needed (though poster should stick)
             }
         });
     };
 
-    // Initialize the Intersection Observer for videos
+    // Initialize the Intersection Observer
     if ('IntersectionObserver' in window) {
         videoObserver = new IntersectionObserver(handleVideoIntersection, {
             root: null, // relative to the viewport
             rootMargin: '0px',
-            threshold: 0.8 // Trigger when 80% of the video is visible for smoother experience
+            threshold: 0.5 // Trigger when 50% of the video is visible
         });
     } else {
-        console.warn("Intersection Observer for videos not supported. Video lazy loading and auto-pause will not work.");
-    }
-
-    // --- NEW: Intersection Observer for Images ---
-    let imageObserver;
-
-    const handleImageIntersection = (entries, observer) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                const img = entry.target;
-                const dataSrc = img.dataset.src;
-                if (dataSrc) {
-                    img.src = dataSrc;
-                    img.removeAttribute('data-src'); // Remove data-src once loaded
-                    observer.unobserve(img); // Stop observing once loaded
-                }
-            }
-        });
-    };
-
-    // Initialize the Intersection Observer for images
-    if ('IntersectionObserver' in window) {
-        imageObserver = new IntersectionObserver(handleImageIntersection, {
-            root: null, // relative to the viewport
-            rootMargin: '100px', // Load images when they are 100px away from the viewport
-            threshold: 0 // As soon as any part of the image is visible (or within rootMargin)
-        });
-    } else {
-        console.warn("Intersection Observer for images not supported. Image lazy loading will not work.");
+        console.warn("Intersection Observer not supported. Video lazy loading and auto-pause will not work.");
     }
 
     // Initialize video controls
@@ -153,35 +123,28 @@ document.addEventListener('DOMContentLoaded', async function () {
         video.setAttribute('playsinline', '');
         video.setAttribute('webkit-playsinline', '');
         video.setAttribute('crossorigin', 'anonymous');
-        video.muted = true; // Default to muted
+        video.muted = false; // Default to muted
 
         // Video metadata loaded: set initial time to generate thumbnail
         // This will now only run once when the video is loaded (due to Intersection Observer)
         video.addEventListener('loadedmetadata', () => {
             if (!video.dataset.thumbnailGenerated) {
-                // Ensure video is ready enough to seek and draw a frame
-                if (video.readyState >= 1) { // HAVE_METADATA
-                    video.currentTime = Math.min(2, video.duration / 2); // Get a middle frame if video is short
-                }
+                video.currentTime = 2; // Set time to generate thumbnail
             }
             durationDisplay.textContent = formatVideoTime(video.duration);
             loadingSpinner.style.display = 'none'; // Hide spinner once metadata is loaded
         });
 
-        // Seeked event: generate thumbnail after seeking for poster
+        // Seeked event: generate thumbnail after seeking to 2 seconds
         video.addEventListener('seeked', () => {
-            // Only generate thumbnail if we specifically sought to generate it and it hasn't been generated
-            if (!video.dataset.thumbnailGenerated) {
+            if (video.currentTime === 2 && !video.dataset.thumbnailGenerated) {
                 const ctx = thumbnailCanvas.getContext('2d');
                 thumbnailCanvas.width = video.videoWidth;
                 thumbnailCanvas.height = video.videoHeight;
                 ctx.drawImage(video, 0, 0, thumbnailCanvas.width, thumbnailCanvas.height);
                 video.poster = thumbnailCanvas.toDataURL('image/jpeg'); // Set poster for future loads
                 video.dataset.thumbnailGenerated = 'true';
-                // Reset to 0 only if it was for thumbnail generation, otherwise keep current time
-                if (video.currentTime !== 0) { // Check if not already at 0
-                    video.currentTime = 0;
-                }
+                video.currentTime = 0; // Reset to 0 after generating thumbnail
                 loadingSpinner.style.display = 'none'; // Ensure spinner is hidden after thumbnail generation
             }
         });
@@ -326,12 +289,11 @@ document.addEventListener('DOMContentLoaded', async function () {
                 // Temporarily set currentTime to draw frame for preview
                 const originalCurrentTime = video.currentTime;
                 video.currentTime = seekTime;
-                // Use requestAnimationFrame for smoother seek preview drawing
-                requestAnimationFrame(() => {
+                setTimeout(() => {
                     const ctx = seekPreviewCanvas.getContext('2d');
                     ctx.drawImage(video, 0, 0, seekPreviewCanvas.width, seekPreviewCanvas.height);
                     video.currentTime = originalCurrentTime; // Restore original time immediately after drawing
-                });
+                }, 100); // Small delay to allow video to seek for drawing
             }
         });
 
@@ -346,11 +308,11 @@ document.addEventListener('DOMContentLoaded', async function () {
         progressContainer.addEventListener('touchstart', (e) => {
             isDragging = true;
             updateProgress(e, true);
-        }, { passive: true }); // Use passive to avoid blocking scroll
+        });
 
         document.addEventListener('touchmove', (e) => {
             if (isDragging) updateProgress(e, true);
-        }, { passive: true });
+        });
 
         document.addEventListener('touchend', () => {
             isDragging = false;
@@ -509,7 +471,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         const isFollowingUser = currentFollowingList.includes(user._id.toString());
         suggestionElement.innerHTML = `
             <a href="Profile.html?userId=${user._id}" class="user-info-link">
-                <img class="lazy-image user-suggestion-avatar" data-src="${user.profilePicture || '/salmart-192x192.png'}" alt="${escapeHtml(user.name)}'s profile picture" onerror="this.src='/salmart-192x192.png'">
+                <img src="${user.profilePicture || '/salmart-192x192.png'}" alt="${escapeHtml(user.name)}'s profile picture" class="user-suggestion-avatar" onerror="this.src='/salmart-192x192.png'">
                 <h5 class="user-suggestion-name">${escapeHtml(user.name)}</h5>
             </a>
             <button class="follow-button user-suggestion-follow-btn" data-user-id="${user._id}" ${isFollowingUser ? 'disabled' : ''}>
@@ -635,9 +597,8 @@ document.addEventListener('DOMContentLoaded', async function () {
         const productImageForChat = post.photo || '/salmart-192x192.png';
 
         // This block will ONLY handle non-video ads (e.g., image ads) now.
-        // Lazy load the image for promoted posts
         mediaContent = `
-            <img class="lazy-image promoted-image" data-src="${productImageForChat}" alt="Promoted Product" onerror="this.src='/salmart-192x192.png'">
+            <img src="${productImageForChat}" class="promoted-image" alt="Promoted Product" onerror="this.src='/salmart-192x192.png'">
         `;
         productDetails = `
             <div class="promoted-product-info">
@@ -688,7 +649,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 <span>Promoted</span>
             </div>
             <div class="promoted-header">
-                <img class="lazy-image promoted-avatar" data-src="${post.profilePicture || '/salmart-192x192.png'}" onerror="this.src='/salmart-192x192.png'" alt="User Avatar">
+                <img src="${post.profilePicture || '/salmart-192x192.png'}" class="promoted-avatar" onerror="this.src='/salmart-192x192.png'" alt="User Avatar">
                 <div class="promoted-user-info">
                     <h5 class="promoted-user-name">${escapeHtml(post.createdBy ? post.createdBy.name : 'Unknown')}</h5>
                     <span class="promoted-time">${formatTime(post.createdAt || new Date())}</span>
@@ -719,7 +680,6 @@ document.addEventListener('DOMContentLoaded', async function () {
         let descriptionContent = '';
         let buttonContent = '';
 
-        // Ensure default image for chat is still correct but actual display image uses lazy-loading
         const productImageForChat = post.postType === 'video_ad' ? (post.thumbnail || 'default-video-poster.png') : (post.photo || 'default-image.png');
 
         if (post.postType === 'video_ad') {
@@ -788,11 +748,10 @@ document.addEventListener('DOMContentLoaded', async function () {
                 </div>
             `;
 
-            // Lazy load the main post image
             mediaContent = `
                 <div class="product-image">
                     <div class="badge">${post.productCondition || 'New'}</div>
-                    <img class="lazy-image post-image" data-src="${productImageForChat}" onclick="window.openImage('${productImageForChat.replace(/'/g, "\\'")}')" alt="Product Image" onerror="this.src='/salmart-192x192.png'">
+                    <img src="${productImageForChat}" class="post-image" onclick="window.openImage('${productImageForChat.replace(/'/g, "\\'")}')" alt="Product Image" onerror="this.src='/salmart-192x192.png'">
                 </div>
             `;
             productDetails = `
@@ -876,7 +835,6 @@ document.addEventListener('DOMContentLoaded', async function () {
                 if (post.createdBy.userId === currentLoggedInUser) {
                     followButtonHtml = '';
                 } else {
-                    // Lazy load profile picture for the user who created the post
                     followButtonHtml = isFollowing ?
                         `<button class="follow-button" data-user-id="${post.createdBy.userId}" style="background-color: #fff; color: #28a745;" disabled>
                             <i class="fas fa-user-check"></i> Following
@@ -927,7 +885,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         postElement.innerHTML = `
             <div class="post-header">
                 <a href="Profile.html?userId=${post.createdBy ? post.createdBy.userId : ''}">
-                    <img class="lazy-image post-avatar" data-src="${post.profilePicture || '/salmart-192x192.png'}" onerror="this.src='/salmart-192x192.png'" alt="User Avatar">
+                    <img src="${post.profilePicture || '/salmart-192x192.png'}" class="post-avatar" onerror="this.src='/salmart-192x192.png'" alt="User Avatar">
                 </a>
                 <div class="post-user-info">
                     <a href="Profile.html?userId=${post.createdBy ? post.createdBy.userId : ''}">
@@ -1097,12 +1055,6 @@ document.addEventListener('DOMContentLoaded', async function () {
                     videoObserver.unobserve(container);
                 });
             }
-            // Disconnect image observer from existing images
-            if (imageObserver) {
-                postsContainer.querySelectorAll('.lazy-image').forEach(img => {
-                    imageObserver.unobserve(img);
-                });
-            }
             postsContainer.innerHTML = '';
             suggestionCounter = 0; // Reset suggestion counter when clearing posts
         }
@@ -1149,12 +1101,9 @@ document.addEventListener('DOMContentLoaded', async function () {
                 allUserSuggestions = await fetchUserSuggestions();
             }
 
-            const imagesToObserve = []; // Collect image elements for observation
             if (promotedPosts.length > 0) {
                 const promotedRow = createPromotedPostsRow(promotedPosts);
                 fragment.prepend(promotedRow);
-                // Collect images within the promoted row for observation
-                promotedRow.querySelectorAll('.lazy-image').forEach(img => imagesToObserve.push(img));
             }
 
             let suggestionRowIndex = 0;
@@ -1172,18 +1121,6 @@ document.addEventListener('DOMContentLoaded', async function () {
                     if (videoContainer) {
                         videoContainersToObserve.push(videoContainer);
                     }
-                } else {
-                    // It's a photo post, collect its image for lazy loading
-                    const postImage = postElement.querySelector('.post-image');
-                    if (postImage) {
-                        imagesToObserve.push(postImage);
-                    }
-                }
-
-                // Also collect avatar images for lazy loading
-                const postAvatar = postElement.querySelector('.post-avatar');
-                if (postAvatar) {
-                    imagesToObserve.push(postAvatar);
                 }
 
                 if (suggestionCounter % postsBeforeSuggestion === 0 &&
@@ -1200,8 +1137,6 @@ document.addEventListener('DOMContentLoaded', async function () {
                         if (userSuggestionsContainer) {
                             fragment.appendChild(userSuggestionsContainer);
                             suggestionRowIndex++;
-                            // Collect images within the user suggestions for observation
-                            userSuggestionsContainer.querySelectorAll('.lazy-image').forEach(img => imagesToObserve.push(img));
                         }
                     }
                 }
@@ -1224,14 +1159,6 @@ document.addEventListener('DOMContentLoaded', async function () {
                     videoObserver.observe(container);
                 });
             }
-
-            // Observe all newly added image elements
-            if (imageObserver) {
-                imagesToObserve.forEach(img => {
-                    imageObserver.observe(img);
-                });
-            }
-
 
             window.dispatchEvent(new Event('postsRendered'));
 
@@ -1300,10 +1227,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             }
 
             const recipientUsername = postElement.querySelector('.post-user-name')?.textContent || postElement.querySelector('.promoted-user-name')?.textContent || 'Unknown';
-            // Important: For lazy-loaded images, the src might be empty, so get data-src if available.
-            const recipientProfilePictureEl = postElement.querySelector('.post-avatar') || postElement.querySelector('.promoted-avatar');
-            const recipientProfilePictureUrl = recipientProfilePictureEl?.dataset.src || recipientProfilePictureEl?.src || 'default-avatar.png';
-
+            const recipientProfilePictureUrl = postElement.querySelector('.post-avatar')?.src || postElement.querySelector('.promoted-avatar')?.src || 'default-avatar.png';
             let productImage = target.dataset.productImage || '';
             const productDescription = target.dataset.productDescription || '';
             const postId = target.dataset.postId;

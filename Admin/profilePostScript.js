@@ -21,8 +21,9 @@ document.addEventListener('DOMContentLoaded', async function () {
 
         if (diffInSeconds < 60) return "Just now";
         if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m`;
-        if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 86400)}d`;
-        if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 604800)}w`;
+        if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h`;
+        if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d`;
+        if (diffInSeconds < 2592000) return `${Math.floor(diffInSeconds / 604800)}w`;
 
         const currentYear = now.getFullYear();
         const postYear = postDate.getFullYear();
@@ -493,14 +494,11 @@ document.addEventListener('DOMContentLoaded', async function () {
                     </div>
                 </div>
             `;
-            productDetails = `
-                <div class="content">
-                    <h2 class="product-title">${escapeHtml(post.description || 'No description')}</h2>
-                </div>
-            `;
+            
             buttonContent = `
                 <div class="actions">
-                    <a href="${post.productLink || '#'}" class="btn btn-primary checkout-product-button" aria-label="Check out product ${escapeHtml(post.description || 'product')}" ${!post.productLink ? 'style="pointer-events: none; opacity: 0.6;"' : ''}>
+                <i class="fa fas-shopping-cart"></i>
+                    <a href="${post.productLink || '#'}" class=" checkout-product-btn" aria-label="Check out product ${escapeHtml(post.description || 'product')}" ${!post.productLink ? 'style="pointer-events: none; opacity: 0.6;"' : ''}>
                         Check Out Product
                     </a>
                 </div>
