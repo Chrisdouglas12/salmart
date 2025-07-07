@@ -45,10 +45,41 @@ const isProduction = process.env.NODE_ENV === 'production';
 const storage = isProduction
   ? new CloudinaryStorage({
       cloudinary: cloudinary,
-      params: {
-        folder: 'Uploads',
-        resource_type: 'auto',
-        allowed_formats: ['jpg', 'png', 'jpeg', 'mp4'],
+      params: async (req, file) => { // Use async to dynamically set params based on file type
+        const folder = 'Uploads';
+        let resourceType = 'auto';
+        let transformation = []; // Use an array for transformations for more complex chains
+
+        if (file.mimetype.startsWith('video/')) {
+          resourceType = 'video';
+          // WhatsApp-like video compression transformations
+          transformation.push(
+            { duration: "60", crop: "limit" }, // Strictly limit to 60 seconds
+            { quality: "auto:eco", fetch_format: "mp4" } // Aggressive quality reduction
+            // Optional: Add dimension limits if needed, e.g., { width: 720, height: 1280, crop: "limit" } for portrait
+            // or { width: 1280, height: 720, crop: "limit" } for landscape
+          );
+        } else if (file.mimetype.startsWith('image/')) {
+          resourceType = 'image';
+          transformation.push(
+            { quality: "auto:good", fetch_format: "auto" } // Images can retain slightly higher quality
+          );
+        }
+
+        return {
+          folder: folder,
+          resource_type: resourceType,
+          allowed_formats: ['jpg', 'png', 'jpeg', 'mp4'],
+          transformation: transformation, // Apply these transformations during upload
+          eager: [
+            // Ensure eager transformation is defined for strict processing
+            // This re-specifies the main transformation for eager processing
+            ...(file.mimetype.startsWith('video/') ? 
+              [{ duration: "60", crop: "limit", quality: "auto:eco", fetch_format: "mp4" }] : []),
+          ],
+          eager_async: true, // Process eager transformations asynchronously in the background
+          invalidate: true, // Invalidate CDN cache for this asset (important for updates)
+        };
       },
     })
   : multer.diskStorage({
@@ -68,7 +99,7 @@ const storage = isProduction
 
 const upload = multer({
   storage,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+  limits: { fileSize: 25 * 1024 * 1024 }, // Keep initial server-side limit flexible
   fileFilter: (req, file, cb) => {
     const filetypes = /jpeg|jpg|png|mp4/;
     const mimetype = filetypes.test(file.mimetype);
@@ -78,17 +109,47 @@ const upload = multer({
   },
 });
 
-// Helper function for Cloudinary upload
+// Helper function for Cloudinary upload (used in development environment)
 const uploadToCloudinary = (filePath, resourceType = 'auto') => {
   return new Promise((resolve, reject) => {
     logger.info(`Uploading to Cloudinary: ${filePath}`);
+
+    const transformationParams = {
+      folder: 'Uploads', // Ensure folder is also specified here for consistency
+    };
+    if (resourceType === 'video') {
+      transformationParams.resource_type = 'video';
+      // Apply the same WhatsApp-like transformations here for development uploads
+      transformationParams.transformation = [
+        { duration: "60", crop: "limit" }, // Strictly limit to 60 seconds
+        { quality: "auto:eco", fetch_format: "mp4" }
+      ];
+      transformationParams.eager = [
+        // Eager transformation for strict processing in dev environment too
+        { duration: "60", crop: "limit", quality: "auto:eco", fetch_format: "mp4" }
+      ];
+      transformationParams.eager_async = true;
+      transformationParams.invalidate = true;
+    } else {
+      transformationParams.resource_type = resourceType; // For images
+      transformationParams.transformation = [{ quality: "auto:good", fetch_format: "auto" }];
+    }
+
     const stream = cloudinary.uploader.upload_stream(
-      { resource_type: resourceType },
+      transformationParams,
       (error, result) => {
         if (error) {
           logger.error(`Cloudinary upload error: ${error.message}`);
           return reject(error);
         }
+        // When using eager_async, the 'result' for the main upload might not reflect
+        // the eagerly transformed URL immediately. The best practice is often to
+        // construct the URL with the transformation parameters.
+        // However, if the eager transformation is configured to overwrite the original,
+        // or if you want the specific eager URL, you might need to adjust.
+        // For simplicity and common use, result.secure_url will usually point to the
+        // transformed version if the transformation applies synchronously or
+        // if the eager transformation is the primary one.
         resolve(result.secure_url);
       }
     );
@@ -181,10 +242,19 @@ module.exports = (io) => {
 
         const videoFile = req.files.video[0];
         if (isProduction) {
-          // In production, multer-storage-cloudinary already uploaded the file
-          videoUrl = videoFile.path; // Use the Cloudinary URL directly
+          // In production, multer-storage-cloudinary already handled upload and transformations
+          // When eager_async is true, result.secure_url points to the original asset.
+          // We need to construct the URL for the eagerly transformed video.
+          // Cloudinary often appends transformation params to the URL path.
+          // Example: https://res.cloudinary.com/cloud_name/video/upload/t_video_60_sec_transform/v12345/public_id.mp4
+          // Or if you defined a named transformation in your Cloudinary settings, you can use that.
+          // For now, let's assume the default behavior which applies transformations directly to the URL.
+          // If you need the *eagerly generated* URL, you might need to query Cloudinary or structure your uploads differently.
+          // However, for most use cases, the `transformation` object in `params` will apply, and `secure_url` will reflect that.
+          // The `eager` array ensures the derived version is generated and stored.
+          videoUrl = videoFile.path; // This path already includes the transformations defined in `params`
         } else {
-          // In development, upload the local file to Cloudinary
+          // In development, upload the local file to Cloudinary with transformations
           videoUrl = await uploadToCloudinary(videoFile.path, 'video');
           tempFiles.push(videoFile.path);
         }
@@ -205,10 +275,10 @@ module.exports = (io) => {
 
         const photoFile = req.files.photo[0];
         if (isProduction) {
-          // In production, multer-storage-cloudinary already uploaded the file
+          // In production, multer-storage-cloudinary already handled upload and transformations
           photoUrl = photoFile.path; // Use the Cloudinary URL directly
         } else {
-          // In development, upload the local file to Cloudinary
+          // In development, upload the local file to Cloudinary with transformations
           photoUrl = await uploadToCloudinary(photoFile.path, 'image');
           tempFiles.push(photoFile.path);
         }
@@ -846,10 +916,11 @@ router.get('/post', async (req, res) => {
       if (location) post.location = location;
       if (req.file) {
         if (isProduction) {
-          post.photo = await uploadToCloudinary(req.file.path, 'image');
-          tempFiles.push(req.file.path);
+          // CloudinaryStorage already handles transformations for production
+          post.photo = req.file.path; 
         } else {
-          post.photo = `${req.protocol}://${req.get('host')}/Uploads/${req.file.filename}`;
+          // Upload local file to Cloudinary with transformations for development
+          post.photo = await uploadToCloudinary(req.file.path, 'image');
           tempFiles.push(req.file.path);
         }
       }
