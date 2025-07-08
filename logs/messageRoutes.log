@@ -2338,3 +2338,9 @@
 {"level":"info","message":"Fetched 30 messages between 68431685432ee393a735a641 and 6843d062f457581752641ee3","timestamp":"2025-07-03T23:37:16.526Z"}
 {"level":"error","message":"Failed to send message from undefined to undefined: Message validation failed: messageType: `offerAccepted` is not a valid enum value for path `messageType`.","timestamp":"2025-07-03T23:37:24.226Z"}
 {"level":"info","message":"Fetched 30 messages between 68431685432ee393a735a641 and 6843d062f457581752641ee3","timestamp":"2025-07-03T23:37:46.594Z"}
+{"level":"info","message":"Fetched 8 latest messages for user 68431685432ee393a735a641","timestamp":"2025-07-08T15:46:23.653Z"}
+{"level":"warn","message":"Missing senderId or receiverId in /messages","timestamp":"2025-07-08T15:48:33.411Z"}
+{"level":"info","message":"Fetched 8 latest messages for user 68431685432ee393a735a641","timestamp":"2025-07-08T15:48:36.127Z"}
+{"level":"warn","message":"Missing senderId or receiverId in /messages","timestamp":"2025-07-08T21:08:01.079Z"}
+{"level":"info","message":"Fetched 7 latest messages for user 6843d062f457581752641ee3","timestamp":"2025-07-08T21:08:05.868Z"}
+{"level":"info","message":"Fetched 36 messages between 6843d062f457581752641ee3 and 68431685432ee393a735a641","timestamp":"2025-07-08T21:08:14.245Z"}

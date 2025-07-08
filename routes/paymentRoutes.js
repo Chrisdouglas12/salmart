@@ -381,7 +381,7 @@ module.exports = (io) => {
         new Transaction({
           buyerId: buyer._id,
           sellerId: seller._id,
-          productId: postId,
+          postId: postId,
           amount: amountPaid,
           status: 'pending',
           viewed: false,

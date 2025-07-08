@@ -279,7 +279,7 @@ router.post('/confirm-delivery/:transactionId', verifyToken, async (req, res) =>
   console.log('\n[CONFIRM DELIVERY INITIATED] Transaction ID:', transactionId);
 
   try {
-    const transaction = await Transaction.findById(transactionId).populate('buyerId sellerId productId');
+    const transaction = await Transaction.findById(transactionId).populate('buyerId sellerId postId');
     if (!transaction) return res.status(404).json({ error: "Transaction not found" });
 
     const seller = transaction.sellerId;
