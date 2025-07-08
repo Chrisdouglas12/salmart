@@ -113,10 +113,10 @@ async function fetchTransactions() {
       const card = document.createElement('div');
       card.className = 'transaction-card';
 
-      const product = t.productId || {};
-      const productImage = product.photo || 'Default.png';
-      const productDescription = product.title || 'Product';
-      const amount = t.amount || '0';
+      const product = t.postId || {};
+const productImage = product.photo || 'Default.png';
+const productDescription = product.title || 'Product';
+const amount = t.amount || 0;
 
       const statusBadge = `<span class="badge ${t.status}">${t.status}</span>`;
       let confirmBtn = '';
@@ -315,11 +315,9 @@ function closeResponseModal() {
   }
 }
 
-// Function to handle confirm delivery
 async function handleConfirmDelivery() {
   const transactionId = localStorage.getItem('transactionId');
   if (!transactionId) {
-    console.error('[HANDLE CONFIRM DELIVERY ERROR] No transaction ID found in localStorage');
     showToast('No transaction selected.');
     closeConfirmModal();
     return;
@@ -336,14 +334,21 @@ async function handleConfirmDelivery() {
     console.log('[CONFIRM DELIVERY INITIATED] Transaction ID:', transactionId);
     closeConfirmModal();
     openLoaderModal();
-    const response = await confirmDelivery(transactionId); // Await the API call
+
+    const response = await confirmDelivery(transactionId);
     closeLoaderModal();
-    openResponseModal(true, response.message);
+
+    if (response.queued) {
+      openResponseModal(true, 'Delivery confirmed! Payment is queued and will be released once available.');
+    } else {
+      openResponseModal(true, response.message || 'Delivery confirmed. Payment released successfully.');
+    }
+
     fetchTransactions();
   } catch (err) {
     console.error('[CONFIRM DELIVERY SERVER ERROR]', err.message);
     closeLoaderModal();
-    openResponseModal(false, err.message);
+    openResponseModal(false, err.message || 'Failed to confirm delivery.');
     if (confirmButton) {
       confirmButton.textContent = 'Confirm Delivery';
       confirmButton.classList.remove('processing-btn');
@@ -351,7 +356,6 @@ async function handleConfirmDelivery() {
     }
   }
 }
-
 // Function to show toast
 function showToast(message) {
   const toast = document.getElementById('toast');
