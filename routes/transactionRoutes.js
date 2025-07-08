@@ -10,6 +10,8 @@ const axios = require('axios')
 const Transaction = require('../models/transactionSchema.js')
 const router = express.Router()
 const Notification = require('../models/notificationSchema.js')
+const NotificationService = require('../services/notificationService.js');
+const { sendFCMNotification } = require('../services/notificationUtils.js');
 const winston = require('winston');
 // Logger configuration
 const logger = winston.createLogger({
