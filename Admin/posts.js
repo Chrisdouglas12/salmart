@@ -1263,53 +1263,30 @@ document.addEventListener('DOMContentLoaded', async function () {
             return; // Exit to prevent further processing
         }
 
-        // Handle Buy Now Button (for normal posts and promoted image posts)
-        if (target.classList.contains('buy-now-button')) {
-            event.preventDefault(); // Prevent default button behavior
+// Buy Now Button Handler
+if (target.classList.contains('buy-now-button')) {
+  event.preventDefault();
 
-            const productImage = target.dataset.productImage;
-            const productTitle = target.dataset.productTitle;
-            const productDescription = target.dataset.productDescription;
-            const productLocation = target.dataset.productLocation;
-            const productCondition = target.dataset.productCondition;
-            const productPrice = target.dataset.productPrice;
+  const postId = target.dataset.postId;
+  if (!postId) {
+    console.error("Post ID is missing");
+    return;
+  }
 
-            // Encode parameters to handle special characters in URLs
-            const params = new URLSearchParams({
-                productImage: productImage,
-                productTitle: productTitle,
-                productDescription: productDescription,
-                productLocation: productLocation,
-                productCondition: productCondition,
-                productPrice: productPrice,
-            });
+  const params = new URLSearchParams({
+    postId: target.dataset.postId || '',
+    productImage: target.dataset.productImage || '',
+    productTitle: target.dataset.productTitle || '',
+    productDescription: target.dataset.productDescription || '',
+    productLocation: target.dataset.productLocation || '',
+    productCondition: target.dataset.productCondition || '',
+    productPrice: target.dataset.productPrice || ''
+  });
 
-            window.location.href = `checkout.html?${params.toString()}`;
-            return; // Exit to prevent further processing
-        }
+  window.location.href = `checkout.html?${params.toString()}`;
+}
 
-        // Handle Checkout Product Button (for video ads)
-        if (target.classList.contains('checkout-product-btn')) {
-            event.preventDefault();
 
-            const productImage = target.dataset.productImage;
-            const productTitle = target.dataset.productTitle;
-            const productDescription = target.dataset.productDescription;
-            const productPrice = target.dataset.productPrice;
-            const productLocation = target.dataset.productLocation;
-            const productCondition = target.dataset.productCondition;
-
-            const params = new URLSearchParams({
-                productImage: productImage,
-                productTitle: productTitle,
-                productDescription: productDescription,
-                productPrice: productPrice,
-                productLocation: productLocation,
-                productCondition: productCondition,
-            });
-            window.location.href = `checkout.html?${params.toString()}`;
-            return;
-        }
 
 
         // Handle Follow Button

@@ -19,7 +19,7 @@ router.get('/get-transactions/:userId', verifyToken, async (req, res) => {
   try {
     const userId = req.params.userId;
     const transactions = await Transaction.find({ $or: [{ buyerId: userId }, { sellerId: userId }] })
-      .populate('buyerId sellerId productId')
+      .populate('buyerId sellerId postId')
       .sort({ createdAt: -1 });
     res.status(200).json({ success: true, transactions });
   } catch (error) {
@@ -27,6 +27,7 @@ router.get('/get-transactions/:userId', verifyToken, async (req, res) => {
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
+
 //Check payment status
 router.get('/check-payment-status', async (req, res) => {
   try {

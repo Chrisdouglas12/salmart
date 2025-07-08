@@ -113,10 +113,10 @@ async function fetchTransactions() {
       const card = document.createElement('div');
       card.className = 'transaction-card';
 
-      const product = t.productId || {};
-      const productImage = product.photo || 'Default.png';
-      const productDescription = product.title || 'Product';
-      const amount = t.amount || '0';
+      const product = t.postId || {};
+const productImage = product.photo || 'Default.png';
+const productDescription = product.title || 'Product';
+const amount = t.amount || 0;
 
       const statusBadge = `<span class="badge ${t.status}">${t.status}</span>`;
       let confirmBtn = '';
