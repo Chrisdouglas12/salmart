@@ -414,10 +414,6 @@
   </div>
 
   <script>
-    const API_BASE_URL = window.location.hostname === 'localhost'
-        ? 'http://localhost:3000'
-        : 'https://salmart.onrender.com';
-
     let paymentReference = '';
     let paymentCheckInterval = null;
 
@@ -436,9 +432,18 @@
         document.getElementById('productPrice').textContent = formatCurrency(query.get('productPrice') || 0);
 
         if (!postId || !buyerId || !email) {
-            showToast("Missing required info. Please log in and select a product.", 'error');
-            return;
-        }
+    let missingFields = [];
+    if (!postId) missingFields.push('postId');
+    if (!buyerId) missingFields.push('buyerId');
+    if (!email) missingFields.push('email');
+
+    console.error(`Missing required information: ${missingFields.join(', ')}. Please ensure all necessary data is provided.`);
+    showToast("An error occurred: Missing required information.", 'error'); // More generic for user
+    return;
+}
+
+        const API_BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart.onrender.com';
+
 
         try {
             const res = await fetch(`${API_BASE_URL}/pay`, {
@@ -535,6 +540,6 @@ Reference: ${paymentReference}
   </script>
     <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
     <script>eruda.init();</script>
-    <script type="module" src="firebase-app.js"></script>
+   
 </body>
 </html>
