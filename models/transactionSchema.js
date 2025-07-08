@@ -23,7 +23,7 @@ const transactionSchema = new mongoose.Schema({
       'transfer_initiated',  // payout started
       'confirmed_pending_payout',
       
-      'completed',           // payout successful
+      'released',           // payout successful
       'refund_requested',
       'refunded',
       'transfer_failed',

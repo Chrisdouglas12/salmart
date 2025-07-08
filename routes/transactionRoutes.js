@@ -10,6 +10,21 @@ const axios = require('axios')
 const Transaction = require('../models/transactionSchema.js')
 const router = express.Router()
 const Notification = require('../models/notificationSchema.js')
+const winston = require('winston');
+// Logger configuration
+const logger = winston.createLogger({
+  level: 'info',
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.json()
+  ),
+  transports: [
+    new winston.transports.File({ filename: 'logs/transactionRoutes.log' }),
+    new winston.transports.Console(),
+  ],
+});
+
+const COMMISSION_PERCENT = 2.5;
 
 module.exports = (io) => {
 
@@ -274,87 +289,188 @@ router.post('/request-refund/:transactionId', verifyToken, async (req, res) => {
   }
 });
 
+
 router.post('/confirm-delivery/:transactionId', verifyToken, async (req, res) => {
   const transactionId = req.params.transactionId;
-  console.log('\n[CONFIRM DELIVERY INITIATED] Transaction ID:', transactionId);
+  logger.info('[CONFIRM DELIVERY INITIATED]', { transactionId });
 
   try {
-    const transaction = await Transaction.findById(transactionId).populate('buyerId sellerId postId');
-    if (!transaction) return res.status(404).json({ error: "Transaction not found" });
+    const transaction = await Transaction.findById(transactionId)
+                                       .populate('buyerId sellerId postId');
+    
+    if (!transaction) {
+      logger.warn('[CONFIRM DELIVERY] Transaction not found', { transactionId });
+      return res.status(404).json({ error: "Transaction not found" });
+    }
 
     const seller = transaction.sellerId;
     const buyer = transaction.buyerId;
-    const product = transaction.productId;
+    const product = transaction.postId;
+
+    if (!product) {
+      logger.error('[CONFIRM DELIVERY] Post object not found via transaction.postId population', { transactionId, postId: transaction.postId });
+      return res.status(404).json({ error: "Product associated with transaction not found" });
+    }
+    if (!seller) {
+      logger.error('[CONFIRM DELIVERY] Seller object not found via transaction.sellerId population', { transactionId, sellerId: transaction.sellerId });
+      return res.status(404).json({ error: "Seller associated with transaction not found" });
+    }
+    if (!buyer) {
+      logger.error('[CONFIRM DELIVERY] Buyer object not found via transaction.buyerId population', { transactionId, buyerId: transaction.buyerId });
+      return res.status(404).json({ error: "Buyer associated with transaction not found" });
+    }
 
     if (!seller.bankDetails || !seller.bankDetails.accountNumber || !seller.bankDetails.bankCode) {
+      logger.warn('[CONFIRM DELIVERY] Seller missing bank details', { sellerId: seller._id });
       return res.status(400).json({
-        error: "Seller has not added valid bank details."
+        error: "Seller has not added valid bank details. Please update your profile to receive payments."
       });
     }
 
-    // === Ensure recipient exists ===
     let recipientCode = seller.paystackRecipientCode;
     if (!recipientCode) {
+      logger.info('[CONFIRM DELIVERY] Creating new Paystack recipient for seller', { sellerId: seller._id });
       const recipientPayload = {
         type: 'nuban',
-        name: `${seller.firstName} ${seller.lastName}`,
+        name: `${seller.firstName} ${seller.lastName}`.trim() || seller.username,
         account_number: seller.bankDetails.accountNumber,
         bank_code: seller.bankDetails.bankCode,
         currency: 'NGN'
       };
 
-      const recipientResponse = await axios.post(
-        'https://api.paystack.co/transferrecipient',
-        recipientPayload,
-        { headers: { Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}` } }
-      );
-
-      recipientCode = recipientResponse.data.data.recipient_code;
-      seller.paystackRecipientCode = recipientCode;
-      await seller.save();
+      try {
+        const recipientResponse = await axios.post(
+          'https://api.paystack.co/transferrecipient',
+          recipientPayload,
+          { headers: { Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}` } }
+        );
+        recipientCode = recipientResponse.data.data.recipient_code;
+        seller.paystackRecipientCode = recipientCode;
+        await seller.save();
+        logger.info('[CONFIRM DELIVERY] Paystack recipient created and saved', { sellerId: seller._id, recipientCode });
+      } catch (recipientError) {
+        logger.error('[CONFIRM DELIVERY] Failed to create Paystack recipient', { sellerId: seller._id, error: recipientError.message, responseData: recipientError.response?.data });
+        return res.status(500).json({
+          error: "Failed to set up seller for payout. Please try again later or contact support.",
+          details: recipientError.response?.data?.message || recipientError.message
+        });
+      }
     }
 
-    const productPrice = product?.price || 0;
-    const commissionPercent = 2.5;
-    const commission = Math.floor((commissionPercent / 100) * productPrice);
-    const amountToTransfer = productPrice - commission;
+    const amountPaidByBuyerNaira = transaction.amount;
+    
+    if (typeof amountPaidByBuyerNaira !== 'number' || amountPaidByBuyerNaira <= 0) {
+      logger.error('[CONFIRM DELIVERY] Invalid transaction amount for payout calculation', { transactionId, amount: amountPaidByBuyerNaira });
+      return res.status(400).json({
+        error: "Invalid transaction amount. Cannot process payout.",
+        details: `Transaction amount is ${amountPaidByBuyerNaira}. Expected a positive number.`
+      });
+    }
 
-    // === Check Paystack Balance ===
-    const balanceResponse = await axios.get(
-      'https://api.paystack.co/balance',
-      { headers: { Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}` } }
-    );
+    const commissionPercent = COMMISSION_PERCENT; // Assuming COMMISSION_PERCENT is correctly defined/imported
+    const commissionNaira = (commissionPercent / 100) * amountPaidByBuyerNaira;
+    const amountToTransferNaira = amountPaidByBuyerNaira - commissionNaira;
+    const neededAmountKobo = Math.round(amountToTransferNaira * 100);
 
-    const availableBalance = balanceResponse.data.data[0]?.balance || 0;
-    const neededAmountKobo = amountToTransfer * 100;
+    logger.debug('[CONFIRM DELIVERY] Payout Calculation', {
+      transactionId,
+      amountPaidByBuyerNaira,
+      commissionPercent,
+      commissionNaira,
+      amountToTransferNaira,
+      neededAmountKobo
+    });
+
+    if (neededAmountKobo <= 0) {
+      logger.warn('[CONFIRM DELIVERY] Calculated amount to transfer is non-positive', {
+        transactionId,
+        amountToTransferNaira,
+        neededAmountKobo
+      });
+      return res.status(400).json({
+        error: "Calculated payout amount is zero or negative. Cannot proceed.",
+        details: "This might occur if the product price is too low relative to commission."
+      });
+    }
+
+    let availableBalance = 0;
+    try {
+      const balanceResponse = await axios.get(
+        'https://api.paystack.co/balance',
+        { headers: { Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}` } }
+      );
+      availableBalance = balanceResponse.data.data[0]?.balance || 0;
+      logger.info('[CONFIRM DELIVERY] Paystack Balance Check', { availableBalance });
+    } catch (balanceError) {
+      logger.error('[CONFIRM DELIVERY] Failed to fetch Paystack balance', { error: balanceError.message, responseData: balanceError.response?.data });
+      
+      transaction.status = 'confirmed_pending_payout';
+      transaction.amountDue = amountToTransferNaira;
+      transaction.commission = commissionNaira;
+      transaction.transferRecipient = recipientCode;
+      await transaction.save();
+
+      const title = 'Delivery Confirmed – Payout Delayed (Balance Check Failed)';
+      const message = `The buyer confirmed delivery for "${product.title}". Payout of ₦${amountToTransferNaira.toLocaleString('en-NG')} is delayed as we couldn't check Paystack balance. We will retry.`;
+
+      // --- FIX for Notification: Add postId and senderId ---
+      await Notification.create({ 
+        userId: seller._id, 
+        senderId: buyer._id, // Add senderId
+        postId: product._id, // Add postId
+        title, 
+        message, 
+        type: 'payment_queued', 
+        metadata: { 
+          transactionId: transaction._id, 
+          productId: product._id, // Keep in metadata if schema allows, but also top-level if required
+          amountDue: amountToTransferNaira 
+        } 
+      });
+      // --- END FIX ---
+
+      await sendFCMNotification(seller._id, title, message, { type: 'payout_queued_balance_error', transactionId: transaction._id.toString(), productId: product._id.toString(), amountDue: amountToTransferNaira });
+
+      return res.status(200).json({
+        message: "Delivery confirmed. Payout is temporarily delayed as we could not verify our payment balance. It will be processed soon.",
+        queued: true,
+        balanceCheckFailed: true
+      });
+    }
+
 
     // ======================
     // === INSUFFICIENT BALANCE — Queue
     // ======================
     if (availableBalance < neededAmountKobo) {
+      logger.info('[CONFIRM DELIVERY] Insufficient Paystack balance, queuing payout', {
+        availableBalance, neededAmountKobo
+      });
       transaction.status = 'confirmed_pending_payout';
-      transaction.amountDue = amountToTransfer;
-      transaction.commission = commission;
+      transaction.amountDue = amountToTransferNaira;
+      transaction.commission = commissionNaira;
       transaction.transferRecipient = recipientCode;
       await transaction.save();
 
       const title = 'Delivery Confirmed – Payment Processing Soon';
-      const message = `The buyer confirmed delivery for "${product?.title}". You’ll receive ₦${amountToTransfer.toLocaleString()} once funds are available.`;
+      const message = `The buyer confirmed delivery for "${product.title}". You’ll receive ₦${amountToTransferNaira.toLocaleString('en-NG')} once funds are available.`;
 
-      // Save to Notification collection
+      // --- FIX for Notification: Add postId and senderId ---
       await Notification.create({
         userId: seller._id,
+        senderId: buyer._id, // Add senderId
+        postId: product._id, // Add postId
         title,
         message,
         type: 'payout_queued',
         metadata: {
           transactionId: transaction._id,
-          productId: product?._id,
-          amountDue: amountToTransfer
+          productId: product._id, // Keep in metadata if schema allows, but also top-level if required
+          amountDue: amountToTransferNaira
         }
       });
+      // --- END FIX ---
 
-      // Send FCM
       await sendFCMNotification(
         seller._id,
         title,
@@ -362,8 +478,8 @@ router.post('/confirm-delivery/:transactionId', verifyToken, async (req, res) =>
         {
           type: 'payout_queued',
           transactionId: transaction._id.toString(),
-          productId: product?._id.toString(),
-          amountDue: amountToTransfer
+          productId: product._id.toString(),
+          amountDue: amountToTransferNaira
         }
       );
 
@@ -376,11 +492,14 @@ router.post('/confirm-delivery/:transactionId', verifyToken, async (req, res) =>
     // ======================
     // === SUFFICIENT BALANCE — Transfer
     // ======================
+    logger.info('[CONFIRM DELIVERY] Attempting Paystack transfer', {
+      transactionId, neededAmountKobo, recipientCode
+    });
     const transferPayload = {
       source: 'balance',
       amount: neededAmountKobo,
       recipient: recipientCode,
-      reason: `Payment for product: ${product?.description}`
+      reason: `Payment for product: ${product.title}`
     };
 
     const transferResponse = await axios.post(
@@ -390,42 +509,48 @@ router.post('/confirm-delivery/:transactionId', verifyToken, async (req, res) =>
     );
 
     const transferStatus = transferResponse.data.data.status;
+    logger.info('[CONFIRM DELIVERY] Paystack transfer response', { transactionId, transferStatus, transferData: transferResponse.data.data });
 
     if (transferStatus === 'otp') {
       transaction.transferReference = transferResponse.data.data.transfer_code;
       transaction.otpRequired = true;
       await transaction.save();
+      logger.info('[CONFIRM DELIVERY] OTP required for transfer', { transactionId, transferReference: transaction.transferReference });
 
       return res.status(200).json({
-        message: "OTP is required to complete the transfer.",
+        message: "OTP is required to complete the transfer. Please provide the OTP from your Paystack dashboard.",
         otpRequired: true,
         transferReference: transaction.transferReference
       });
     }
 
-    // === Transfer succeeded
     transaction.status = 'released';
-    transaction.transferReference = transferResponse.data.data.reference;
+    transaction.transferReference = transferResponse.data.data.reference || transferResponse.data.data.transfer_code;
+    transaction.amountTransferred = amountToTransferNaira;
+    transaction.transferStatus = transferStatus;
     await transaction.save();
+    logger.info('[CONFIRM DELIVERY] Payout successful and transaction updated', { transactionId, newStatus: transaction.status, transferReference: transaction.transferReference });
 
     const title = 'Payment Released to Your Account';
-    const message = `₦${amountToTransfer.toLocaleString()} for "${product?.title}" has been released to your bank account.`;
+    const message = `₦${amountToTransferNaira.toLocaleString('en-NG')} for "${product.title}" has been released to your bank account.`;
 
-    // Save to Notification collection
+    // --- FIX for Notification: Add postId and senderId ---
     await Notification.create({
       userId: seller._id,
+      senderId: buyer._id, // Add senderId
+      postId: product._id, // Add postId
       title,
       message,
       type: 'payment_released',
       metadata: {
         transactionId: transaction._id,
-        productId: product?._id,
-        amountTransferred: amountToTransfer,
+        productId: product._id, // Keep in metadata if schema allows, but also top-level if required
+        amountTransferred: amountToTransferNaira,
         reference: transaction.transferReference
       }
     });
+    // --- END FIX ---
 
-    // Send FCM
     await sendFCMNotification(
       seller._id,
       title,
@@ -433,8 +558,8 @@ router.post('/confirm-delivery/:transactionId', verifyToken, async (req, res) =>
       {
         type: 'payment_released',
         transactionId: transaction._id.toString(),
-        productId: product?._id.toString(),
-        amountTransferred: amountToTransfer,
+        productId: product._id.toString(),
+        amountTransferred: amountToTransferNaira,
         reference: transaction.transferReference
       }
     );
@@ -442,95 +567,156 @@ router.post('/confirm-delivery/:transactionId', verifyToken, async (req, res) =>
     return res.status(200).json({
       message: "Delivery confirmed and payment released.",
       transferReference: transaction.transferReference,
-      amountTransferred: amountToTransfer
+      amountTransferred: amountToTransferNaira
     });
 
   } catch (err) {
-    console.error('[CONFIRM DELIVERY SERVER ERROR]', err);
-    return res.status(500).json({ error: "Something went wrong.", details: err.message });
+    logger.error('[CONFIRM DELIVERY SERVER ERROR]', { error: err.message, stack: err.stack, responseData: err.response?.data });
+    let errorMessage = "Something went wrong.";
+    let errorDetails = err.message;
+
+    if (err.response && err.response.data && err.response.data.message) {
+      errorMessage = `Paystack Error: ${err.response.data.message}`;
+      errorDetails = err.response.data.message;
+      if (err.response.data.errors) {
+        errorDetails += ' ' + JSON.stringify(err.response.data.errors);
+      }
+    } else if (err.response && err.response.status) {
+      errorMessage = `Paystack API responded with status: ${err.response.status} ${err.response.statusText}`;
+      errorDetails = `No specific message from Paystack. Status: ${err.response.status}`;
+    }
+
+    return res.status(500).json({ error: errorMessage, details: errorDetails });
   }
 });
 
 
-
 async function processQueuedPayouts() {
   try {
+
     const pendingTransactions = await Transaction.find({ status: 'confirmed_pending_payout' })
       .sort({ updatedAt: 1 })
-      .populate('sellerId productId');
+      .populate('sellerId buyerId productId'); 
 
-    if (!pendingTransactions.length) return;
+    if (!pendingTransactions.length) {
+      console.log('[PAYOUT JOB] No pending transactions to process.');
+      return; // Exit if no transactions
+    }
 
-    const balanceResponse = await axios.get(
-      'https://api.paystack.co/balance',
-      { headers: { Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}` } }
-    );
-
-    let availableBalance = balanceResponse.data.data[0]?.balance || 0;
+    let availableBalance = 0; // Initialize to avoid issues if balance check fails
+    try {
+      const balanceResponse = await axios.get(
+        'https://api.paystack.co/balance',
+        { headers: { Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}` } }
+      );
+      availableBalance = balanceResponse.data.data[0]?.balance || 0;
+      console.log(`[PAYOUT JOB] Current Paystack Balance: ${availableBalance} kobo`);
+    } catch (balanceError) {
+      console.error('[PAYOUT JOB ERROR] Failed to fetch Paystack balance:', balanceError.message);
+      // If balance check fails, we cannot proceed with payouts, so exit.
+      return;
+    }
 
     for (const tx of pendingTransactions) {
-      const amountKobo = tx.amountDue * 100;
+      // Basic checks for populated data needed for current iteration
+      if (!tx.sellerId || !tx.buyerId || !tx.productId) {
+        console.error(`[PAYOUT JOB ERROR] Skipping transaction ${tx._id} due to missing populated data (sellerId, buyerId, or productId).`);
+        continue; // Skip to the next transaction if critical data is missing
+      }
+
+      // Ensure amountDue is a valid number before calculating amountKobo
+      if (typeof tx.amountDue !== 'number' || tx.amountDue <= 0) {
+          console.warn(`[PAYOUT JOB WARNING] Skipping transaction ${tx._id} due to invalid amountDue: ${tx.amountDue}`);
+          continue; // Skip if amountDue is not valid for payout
+      }
+
+      const amountKobo = Math.round(tx.amountDue * 100); // Ensure it's a whole number in kobo
 
       if (availableBalance >= amountKobo) {
+        // --- FIX: Use product.title instead of description for reason ---
+        const transferReason = `Queued payout for product: ${tx.productId?.title || 'Unknown Product'}`;
         const transferPayload = {
           source: 'balance',
           amount: amountKobo,
           recipient: tx.transferRecipient,
-          reason: `Queued payout for product: ${tx.productId?.description || ''}`
+          reason: transferReason // UPDATED HERE
         };
 
-        const transferResponse = await axios.post(
-          'https://api.paystack.co/transfer',
-          transferPayload,
-          { headers: { Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}` } }
-        );
+        try {
+          const transferResponse = await axios.post(
+            'https://api.paystack.co/transfer',
+            transferPayload,
+            { headers: { Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}` } }
+          );
 
-        tx.status = 'released';
-        tx.transferReference = transferResponse.data.data.reference;
-        await tx.save();
+          // Update transaction status and reference
+          tx.status = 'released';
+          tx.transferReference = transferResponse.data.data.reference || transferResponse.data.data.transfer_code; // Use reference or transfer_code
+          tx.amountTransferred = tx.amountDue; // Store actual amount transferred in Naira
+          tx.transferStatus = transferResponse.data.data.status; // Store Paystack's status
+          await tx.save();
 
-        availableBalance -= amountKobo;
+          availableBalance -= amountKobo; // Deduct from available balance for subsequent transfers
 
-        // === FCM + DB Notification
-        const title = 'Payment Released to Your Account';
-        const message = `₦${tx.amountDue.toLocaleString()} for "${tx.productId?.title}" has been released to your bank account.`;
+          // === FCM + DB Notification ===
+          const title = 'Payment Released to Your Account';
+          const productName = tx.productId?.title || 'product'; // Fallback if title is missing
+          const message = `₦${tx.amountDue.toLocaleString('en-NG')} for "${productName}" has been released to your bank account.`;
 
-        await Notification.create({
-          userId: tx.sellerId._id,
-          title,
-          message,
-          type: 'payment_released',
-          metadata: {
-            transactionId: tx._id,
-            productId: tx.productId?._id,
-            amountTransferred: tx.amountDue,
-            reference: tx.transferReference
-          }
-        });
-
-        await sendFCMNotification(
-          tx.sellerId._id,
-          title,
-          message,
-          {
+          //  Add senderId and postId to Notification.create ---
+          await Notification.create({
+            userId: tx.sellerId._id,
+            senderId: tx.buyerId._id, // This requires 'buyerId' to be populated
+            postId: tx.productId._id, // This requires 'productId' to be populated
+            title,
+            message,
             type: 'payment_released',
-            transactionId: tx._id.toString(),
-            productId: tx.productId?._id.toString(),
-            amountTransferred: tx.amountDue,
-            reference: tx.transferReference
-          }
-        );
+            metadata: {
+              transactionId: tx._id,
+              productId: tx.productId?._id,
+              amountTransferred: tx.amountDue,
+              reference: tx.transferReference
+            }
+          });
 
-        console.log(`[PAYOUT SUCCESS] Transaction ${tx._id} released`);
+          await sendFCMNotification(
+            tx.sellerId._id,
+            title,
+            message,
+            {
+              type: 'payment_released',
+              transactionId: tx._id.toString(),
+              productId: tx.productId?._id.toString(),
+              amountTransferred: tx.amountDue,
+              reference: tx.transferReference
+            }
+          );
+
+          console.log(`[PAYOUT SUCCESS] Transaction ${tx._id} released (Ref: ${tx.transferReference})`);
+
+        } catch (transferErr) {
+          console.error(`[PAYOUT JOB ERROR] Failed to transfer for transaction ${tx._id}:`, transferErr.message);
+          console.error('Paystack Response Data:', transferErr.response?.data);
+
+          // Optionally, update transaction status to indicate transfer failure for manual review
+          // e.g., tx.status = 'transfer_failed'; await tx.save();
+          // You might also want to send a notification to admin or log more details.
+        }
+
       } else {
-        console.log(`[PAYOUT SKIPPED] Not enough balance for ${tx._id}`);
+        console.log(`[PAYOUT SKIPPED] Not enough balance for transaction ${tx._id} (Needed: ${amountKobo}, Available: ${availableBalance})`);
+        // Since it's sorted by updatedAt, if you can't process this one,
+        // you likely can't process subsequent ones in this run either
+        // unless they are significantly smaller. For simple logic, you might break here.
+        break; // Stop processing if balance is insufficient for the current transaction
       }
     }
 
   } catch (err) {
-    console.error('[PAYOUT JOB ERROR]', err.message);
+    console.error('[PAYOUT JOB ERROR] Unhandled error in processQueuedPayouts:', err.message, err.stack);
   }
 }
+
 
 // Run every 15 minutes
 cron.schedule('*/15 * * * *', () => {
