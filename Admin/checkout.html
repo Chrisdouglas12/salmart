@@ -421,7 +421,7 @@
         const postId = new URLSearchParams(window.location.search).get('postId');
         const token = localStorage.getItem('authToken')
         const buyerId = localStorage.getItem('userId');
-        const email = localStorage.getItem('userEmail')
+        const email = localStorage.getItem('email')
         const query = new URLSearchParams(window.location.search);
 
         document.getElementById('productImage').src = query.get('productImage') || '';
