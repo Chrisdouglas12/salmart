@@ -3429,3 +3429,15 @@
 {"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-08T05:27:37.819Z"}
 {"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-08T05:27:40.299Z"}
 {"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-08T05:28:08.321Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-08T06:25:00.159Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-08T06:25:01.526Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-08T06:25:04.060Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-08T06:25:26.980Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-08T06:25:28.193Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-08T06:25:30.646Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-08T06:53:58.599Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-08T06:53:59.629Z"}
+{"amount":50000,"buyer":"Kelechi Jacob","level":"info","message":"[PAY] New transaction created for post 684c510e687469f7369fca1b:","productTitle":"Cooker","reference":"SALM-ca1b-ce4v-E7A7","timestamp":"2025-07-08T06:53:59.669Z"}
+{"level":"info","message":"[PAY] Found existing pending transaction for post 684c510e687469f7369fca1b:","timestamp":"2025-07-08T06:54:00.246Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-08T06:54:02.306Z"}
+{"amount":50000,"level":"info","message":"[VERIFY PAYMENT] Found transaction:","productTitle":"Cooker","reference":"SALM-ca1b-ce4v-E7A7","status":"awaiting_payment","timestamp":"2025-07-08T06:54:02.961Z"}

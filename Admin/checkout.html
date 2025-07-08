@@ -416,6 +416,7 @@
   <script>
     let paymentReference = '';
     let paymentCheckInterval = null;
+const API_BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart.onrender.com';
 
     document.addEventListener('DOMContentLoaded', async () => {
         const postId = new URLSearchParams(window.location.search).get('postId');
@@ -442,8 +443,7 @@
     return;
 }
 
-        const API_BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart.onrender.com';
-
+       
 
         try {
             const res = await fetch(`${API_BASE_URL}/pay`, {

@@ -34,7 +34,17 @@ const transactionSchema = new mongoose.Schema({
   currency: { type: String, default: 'NGN' },
 
   viewed: { type: Boolean, default: false }, // used for UI status indicators
-
+productMetadata: {
+  productTitle: String,
+  productDescription: String,
+  productCategory: String,
+  productImages: [String],
+  productLocation: String,
+  productCondition: String,
+  createdAt: Date
+},
+paystackTransactionId: String,
+paymentMethod: { type: String, default: 'pt_account_transfer' },
   // Timestamps
   createdAt: { type: Date, default: Date.now },
   paidAt: { type: Date },
@@ -52,14 +62,7 @@ const transactionSchema = new mongoose.Schema({
   // If you ever want to OTP-guard delivery confirmation
   otpRequired: { type: Boolean, default: false },
 
-  // Optional: If you're using Dedicated Virtual Accounts (DVA) per transaction
-  dedicatedAccountDetails: {
-    accountName: String,
-    accountNumber: String,
-    bankName: String,
-    bankSlug: String,
-    customerCode: String
-  }
+
 
 }, { timestamps: true }); // adds updatedAt automatically
 

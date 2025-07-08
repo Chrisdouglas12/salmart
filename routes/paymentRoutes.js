@@ -8,7 +8,7 @@ const Jimp = require('jimp');
 const cloudinary = require('cloudinary').v2;
 const fs = require('fs').promises;
 const winston = require('winston');
-const crypto = require('crypto'); // For webhook signature verification
+const crypto = require('crypto');
 
 // Models
 const Post = require('../models/postSchema.js');
@@ -24,8 +24,6 @@ const NotificationService = require('../services/notificationService.js');
 
 // Paystack API
 const paystack = require('paystack')(process.env.PAYSTACK_SECRET_KEY);
-console.log('Available methods:', Object.keys(paystack));
-
 
 // Configure Winston logger
 const logger = winston.createLogger({
@@ -36,15 +34,23 @@ const logger = winston.createLogger({
     winston.format.metadata()
   ),
   transports: [
-    // FIX IS HERE: Add 'new'
-    new winston.transports.Console({ format: winston.format.simple() }), // Keep console logging for development
+    new winston.transports.Console({ format: winston.format.simple() }),
     new winston.transports.File({ filename: 'logs/paymentRoutes.log' }),
   ]
 });
 
 // Constants
-const COMMISSION_PERCENT = 3; // 2% commission
-const RECEIPT_TIMEOUT = 30000; // 30 seconds timeout for receipt generation
+const COMMISSION_PERCENT = 3;
+const RECEIPT_TIMEOUT = 30000;
+
+// PT Account Details
+const PT_ACCOUNT_DETAILS = {
+  accountNumber: '0000700239',
+  accountName: 'SALMART TECHNOLOGIES',
+  bankName: 'Titan Trust Bank',
+  bankCode: '58',
+  bankSlug: 'titan-trust-bank'
+};
 
 module.exports = (io) => {
   router.use((req, res, next) => {
@@ -53,9 +59,17 @@ module.exports = (io) => {
     next();
   });
 
-  // Helper function to validate required fields (Adjusted for direct payment)
+  // Helper function to generate product-specific reference
+  const generateProductReference = (postId) => {
+    const timestamp = Date.now().toString(36).slice(-4);
+    const random = Math.random().toString(36).substr(2, 4).toUpperCase();
+    const shortPostId = postId.slice(-4);
+    return `SALM-${shortPostId}-${timestamp}-${random}`;
+  };
+
+  // Helper function to validate payment request
   const validatePaymentRequest = (body) => {
-    const { email, postId, buyerId, amount } = body; // Add amount validation
+    const { email, postId, buyerId, amount } = body;
     const errors = [];
 
     if (!email) errors.push('Email is required');
@@ -66,7 +80,7 @@ module.exports = (io) => {
     return errors;
   };
 
-  // --- Receipt Functionality (Left as is, per your request) ---
+  // Enhanced receipt generation with product information
   const generateModernReceipt = async (receiptData) => {
     try {
       const {
@@ -76,21 +90,24 @@ module.exports = (io) => {
         buyerName,
         email,
         productTitle,
-        sellerName
+        sellerName,
+        productId,
+        productCategory
       } = receiptData;
 
       const receiptsDir = path.join(__dirname, 'receipts');
       await fs.mkdir(receiptsDir, { recursive: true });
 
       const imagePath = path.join(receiptsDir, `${reference}.png`);
-
       const image = new Jimp(650, 1000, 0xFFFFFFFF);
 
+      // Load fonts
       const fontSmall = await Jimp.loadFont(Jimp.FONT_SANS_14_BLACK);
       const fontRegular = await Jimp.loadFont(Jimp.FONT_SANS_16_BLACK);
       const fontBold = await Jimp.loadFont(Jimp.FONT_SANS_32_BLACK);
       const fontLarge = await Jimp.loadFont(Jimp.FONT_SANS_64_BLACK);
 
+      // Header gradient
       const headerHeight = 180;
       for (let y = 0; y < headerHeight; y++) {
         for (let x = 0; x < 650; x++) {
@@ -102,23 +119,27 @@ module.exports = (io) => {
         }
       }
 
+      // Logo
       const logoArea = await Jimp.create(100, 100, 0x1E3A8AFF);
       logoArea.print(fontLarge, 25, 20, 'S', 50, 60);
       image.composite(logoArea, 50, 40);
 
+      // Header text
       image.print(fontBold, 170, 50, 'SALMART', 400);
       image.print(fontRegular, 170, 85, 'Payment Receipt', 400);
       image.print(fontSmall, 170, 110, 'Digital Transaction Confirmation', 400);
 
+      // Success badge
       const successBadge = await Jimp.create(200, 50, 0x10B981FF);
       successBadge.print(fontRegular, 40, 15, '✓ VERIFIED', 120);
       image.composite(successBadge, 450, 65);
 
+      // Card background
       const cardY = 220;
-      const cardHeight = 600;
-
+      const cardHeight = 650;
       const card = await Jimp.create(590, cardHeight, 0xF9FAFBFF);
 
+      // Card borders
       for (let i = 0; i < 2; i++) {
         card.scan(i, 0, 1, cardHeight, function (x, y, idx) {
           this.bitmap.data[idx] = 229;
@@ -138,15 +159,18 @@ module.exports = (io) => {
       const leftMargin = 60;
       const lineHeight = 45;
 
+      // Transaction reference
       image.print(fontSmall, leftMargin, yPos, 'TRANSACTION REFERENCE', 300);
       image.print(fontRegular, leftMargin, yPos + 18, reference.toUpperCase(), 500);
       yPos += lineHeight + 10;
 
+      // Separator line
       for (let x = leftMargin; x < 590; x++) {
         image.setPixelColor(0xE5E7EBFF, x, yPos);
       }
       yPos += 25;
 
+      // Amount section
       const amountBg = await Jimp.create(530, 80, 0xF0F9FFFF);
       image.composite(amountBg, leftMargin, yPos);
 
@@ -154,6 +178,7 @@ module.exports = (io) => {
       image.print(fontBold, leftMargin + 20, yPos + 35, `₦${Number(amountPaid).toLocaleString('en-NG')}`, 400);
       yPos += 100;
 
+      // Enhanced details with product information
       const details = [
         { label: 'PAYMENT DATE', value: new Date(transactionDate).toLocaleDateString('en-NG', {
           year: 'numeric', month: 'long', day: 'numeric',
@@ -162,7 +187,10 @@ module.exports = (io) => {
         { label: 'BUYER NAME', value: buyerName },
         { label: 'BUYER EMAIL', value: email },
         { label: 'PRODUCT', value: productTitle },
+        { label: 'PRODUCT ID', value: productId ? productId.slice(-8) : 'N/A' },
+        { label: 'CATEGORY', value: productCategory || 'General' },
         { label: 'SELLER', value: sellerName },
+        { label: 'PAYMENT METHOD', value: 'Bank Transfer (PT Account)' },
         { label: 'STATUS', value: 'COMPLETED' }
       ];
 
@@ -172,8 +200,8 @@ module.exports = (io) => {
         yPos += lineHeight;
       });
 
+      // Footer
       yPos = 900;
-
       for (let x = 50; x < 600; x++) {
         image.setPixelColor(0xD1D5DBFF, x, yPos - 20);
       }
@@ -185,6 +213,7 @@ module.exports = (io) => {
 
       await image.writeAsync(imagePath);
 
+      // Upload to Cloudinary
       const cloudinaryResponse = await cloudinary.uploader.upload(imagePath, {
         public_id: `receipts/${reference}`,
         folder: 'salmart_receipts',
@@ -201,24 +230,27 @@ module.exports = (io) => {
     }
   };
 
+  // Enhanced receipt sender with product context
   const sendReceiptToSeller = async (receiptData, receiptImageUrl, io) => {
     try {
-      const { buyerId, sellerId, buyerName, productTitle, reference } = receiptData;
+      const { buyerId, sellerId, buyerName, productTitle, reference, productId } = receiptData;
 
       const message = new Message({
         senderId: buyerId,
         receiverId: sellerId,
         messageType: 'image',
         attachment: { url: receiptImageUrl },
-        text: `Payment Receipt - ${productTitle}`,
+        text: `✅ Payment Receipt - ${productTitle} (Product ID: ${productId?.slice(-8)})`,
         status: 'sent',
         timestamp: new Date()
       });
 
       await message.save();
 
+      // Send socket notification
       io.to(`user_${sellerId}`).emit('receiveMessage', message.toObject());
 
+      // Send FCM notification
       await sendFCMNotification(
         sellerId,
         'Payment Receipt Received',
@@ -227,7 +259,8 @@ module.exports = (io) => {
           type: 'payment_receipt',
           senderId: buyerId,
           receiptImageUrl,
-          reference
+          reference,
+          productId
         }
       );
 
@@ -237,161 +270,399 @@ module.exports = (io) => {
       return { success: false, error: error.message };
     }
   };
-  // --- End Receipt Functionality ---
 
-// POST /api/pay
-router.post('/pay', async (req, res) => {
-  try {
-    const { email, postId, buyerId, expectedPrice } = req.body;
+  // Enhanced POST /api/pay with product linking
+  router.post('/pay', async (req, res) => {
+    try {
+      const { email, postId, buyerId, expectedPrice } = req.body;
 
-    // Validate input
-    if (!postId || !buyerId || !email) {
-      return res.status(400).json({ message: 'Missing required fields' });
-    }
-
-    // Check if post exists
-    const post = await Post.findById(postId);
-    if (!post || post.isSold) {
-      return res.status(404).json({ message: 'Product not found or already sold' });
-    }
-
-    // Get sellerId from post
-    const sellerId = post.createdBy?.userId || post.createdBy;
-    if (!mongoose.isValidObjectId(sellerId)) {
-      return res.status(400).json({ message: 'Invalid seller ID' });
-    }
-
-    const amount = parseFloat(post.price);
-    if (isNaN(amount) || amount <= 0) {
-      return res.status(400).json({ message: 'Invalid amount' });
-    }
-
-    // 🛑 Check for existing pending transaction
-    const existingTxn = await Transaction.findOne({
-      postId,
-      buyerId,
-      status: 'awaiting_payment'
-    });
-
-    if (existingTxn) {
-      console.log('[PAY] Found existing pending transaction:', existingTxn.paymentReference);
-
-      return res.json({
-        success: true,
-        reference: existingTxn.paymentReference,
-        amount: existingTxn.amount,
-        accountNumber: '0000700239',
-        bankName: 'Titan Bank',
-        accountName: 'SALMART TECHNOLOGIES',
-        message: `Pay ₦${existingTxn.amount} to Titan Bank 0000700239. Use ${existingTxn.paymentReference} as narration.`,
-        callback_url: `https://salmartonline.com.ng/pay-success?ref=${existingTxn.paymentReference}`
-      });
-    }
-
-    // ✅ Create new transaction
-    const reference = `SALMART_${postId}_${buyerId}_${Date.now()}`;
-
-    await Transaction.create({
-      postId,
-      buyerId,
-      sellerId,
-      buyerEmail: email,
-      amount,
-      paymentReference: reference,
-      status: 'awaiting_payment',
-      dedicatedAccountDetails: {
-        accountName: 'SALMART TECHNOLOGIES',
-        accountNumber: '0000700239',
-        bankName: 'Titan Bank',
-        bankSlug: 'titan-bank'
+      // Validate input
+      if (!postId || !buyerId || !email) {
+        return res.status(400).json({ message: 'Missing required fields' });
       }
-    });
 
-    console.log('[PAY] New transaction created:', reference);
+      // Validate postId format
+      if (!mongoose.isValidObjectId(postId)) {
+        return res.status(400).json({ message: 'Invalid post ID format' });
+      }
 
-    res.json({
-      success: true,
-      reference,
-      amount,
-      accountNumber: '0000700239',
-      bankName: 'Titan Bank',
-      accountName: 'SALMART TECHNOLOGIES',
-      message: `Pay ₦${amount} to Titan Bank 0000700239. Use ${reference} as narration.`,
-      callback_url: `https://salmart.onrender.com/payment-success?ref=${reference}`
-    });
-  } catch (error) {
-    console.error('[PAY] Error:', error.message, error.stack);
-    res.status(500).json({ message: 'Server error while creating transaction' });
-  }
-});
+      // Check if post exists and get full details
+      const post = await Post.findById(postId);
+      if (!post) {
+        return res.status(404).json({ message: 'Product not found' });
+      }
 
-// Paystack Webhook
-router.post('/paystack/webhook', async (req, res) => {
-  const secret = process.env.PAYSTACK_SECRET_KEY;
-
-  const hash = crypto
-    .createHmac('sha512', secret)
-    .update(JSON.stringify(req.body))
-    .digest('hex');
-
-  if (hash !== req.headers['x-paystack-signature']) {
-    return res.status(401).send('Unauthorized webhook request');
-  }
-
-  const event = req.body;
-
-  try {
-    if (event.event === 'charge.success') {
-      const data = event.data;
-
-      const reference = data.reference;
-      const email = data.customer?.email;
-      const amount = data.amount / 100;
-      const channel = data.channel;
-      const narration = data?.narration || data?.log?.history?.[0]?.message || null;
-      const currency = data.currency || "NGN";
-
-      let txn = await Transaction.findOne({ paymentReference: reference });
-
-      if (!txn) {
-        txn = await Transaction.findOne({
-          buyerEmail: email,
-          amount,
-          status: 'awaiting_payment'
+      if (post.isSold) {
+        return res.status(400).json({ 
+          message: 'Product already sold',
+          productTitle: post.title,
+          soldAt: post.soldAt
         });
       }
 
-      if (txn && txn.status === 'awaiting_payment') {
-        txn.status = 'in_escrow';
-        txn.paidAt = new Date(data.paid_at || Date.now());
-        txn.paymentChannel = channel;
-        txn.narration = narration;
-        txn.currency = currency;
-        txn.buyerEmail = email;
-        await txn.save();
-
-        // ✅ Mark associated post as sold
-        if (txn.postId) {
-          await Post.findByIdAndUpdate(txn.postId, { isSold: true });
-          console.log(`✅ Post ${txn.postId} marked as sold due to payment [${reference}]`);
-        } else {
-          console.warn(`⚠️ Transaction has no postId to mark as sold`);
-        }
-
-        console.log(`✅ Transaction updated for reference: ${reference}`);
-      } else {
-        console.warn(`⚠️ No matching transaction found or already processed for reference: ${reference}`);
+      // Get seller information
+      const sellerId = post.createdBy?.userId || post.createdBy;
+      if (!mongoose.isValidObjectId(sellerId)) {
+        return res.status(400).json({ message: 'Invalid seller ID' });
       }
+
+      // Validate buyer exists
+      const buyer = await User.findById(buyerId);
+      if (!buyer) {
+        return res.status(404).json({ message: 'Buyer not found' });
+      }
+
+      // Price validation
+      const amount = parseFloat(post.price);
+      if (isNaN(amount) || amount <= 0) {
+        return res.status(400).json({ message: 'Invalid product price' });
+      }
+
+      // Price consistency check
+      if (expectedPrice && Math.abs(amount - expectedPrice) > 0.01) {
+        return res.status(400).json({ 
+          message: 'Price mismatch',
+          expected: expectedPrice,
+          actual: amount
+        });
+      }
+
+      // Check for existing pending transaction
+      const existingTxn = await Transaction.findOne({
+        postId,
+        buyerId,
+        status: 'awaiting_payment'
+      });
+
+      if (existingTxn) {
+        logger.info(`[PAY] Found existing pending transaction for post ${postId}:`, existingTxn.paymentReference);
+
+        return res.json({
+          success: true,
+          reference: existingTxn.paymentReference,
+          amount: existingTxn.amount,
+          productTitle: post.title,
+          productId: postId,
+          accountNumber: PT_ACCOUNT_DETAILS.accountNumber,
+          bankName: PT_ACCOUNT_DETAILS.bankName,
+          accountName: PT_ACCOUNT_DETAILS.accountName,
+          message: `Pay ₦${existingTxn.amount} for "${post.title}" to ${PT_ACCOUNT_DETAILS.bankName} ${PT_ACCOUNT_DETAILS.accountNumber}. Use ${existingTxn.paymentReference} as narration.`,
+          callback_url: `https://salmartonline.com.ng/pay-success?ref=${existingTxn.paymentReference}`,
+          paymentInstructions: {
+            step1: `Transfer ₦${existingTxn.amount} to ${PT_ACCOUNT_DETAILS.bankName}`,
+            step2: `Account Number: ${PT_ACCOUNT_DETAILS.accountNumber}`,
+            step3: `Account Name: ${PT_ACCOUNT_DETAILS.accountName}`,
+            step4: `Use "${existingTxn.paymentReference}" as transaction narration/description`,
+            step5: `Payment will be confirmed automatically within 2-5 minutes`
+          }
+        });
+      }
+
+      // Generate product-specific reference
+      const reference = generateProductReference(postId);
+
+      // Create new transaction with enhanced product linking
+      const newTransaction = await Transaction.create({
+        postId,
+        buyerId,
+        sellerId,
+        buyerEmail: email,
+        amount,
+        paymentReference: reference,
+        status: 'awaiting_payment',
+        productMetadata: {
+          productTitle: post.title,
+          productDescription: post.description,
+          productCategory: post.category,
+          productImages: post.images,
+          productLocation: post.location,
+          productCondition: post.condition,
+          createdAt: post.createdAt
+        },
+        dedicatedAccountDetails: {
+          accountName: PT_ACCOUNT_DETAILS.accountName,
+          accountNumber: PT_ACCOUNT_DETAILS.accountNumber,
+          bankName: PT_ACCOUNT_DETAILS.bankName,
+          bankCode: PT_ACCOUNT_DETAILS.bankCode,
+          bankSlug: PT_ACCOUNT_DETAILS.bankSlug
+        },
+        paymentMethod: 'pt_account_transfer',
+        createdAt: new Date()
+      });
+
+      logger.info(`[PAY] New transaction created for post ${postId}:`, {
+        reference,
+        amount,
+        productTitle: post.title,
+        buyer: buyer.firstName + ' ' + buyer.lastName
+      });
+
+      res.json({
+        success: true,
+        reference,
+        amount,
+        productTitle: post.title,
+        productId: postId,
+        accountNumber: PT_ACCOUNT_DETAILS.accountNumber,
+        bankName: PT_ACCOUNT_DETAILS.bankName,
+        accountName: PT_ACCOUNT_DETAILS.accountName,
+        message: `Pay ₦${amount} for "${post.title}" to ${PT_ACCOUNT_DETAILS.bankName} ${PT_ACCOUNT_DETAILS.accountNumber}. Use ${reference} as narration.`,
+        callback_url: `https://salmart.onrender.com/payment-success?ref=${reference}`,
+        paymentInstructions: {
+          step1: `Transfer ₦${amount} to ${PT_ACCOUNT_DETAILS.bankName}`,
+          step2: `Account Number: ${PT_ACCOUNT_DETAILS.accountNumber}`,
+          step3: `Account Name: ${PT_ACCOUNT_DETAILS.accountName}`,
+          step4: `Use "${reference}" as transaction narration/description`,
+          step5: `Payment will be confirmed automatically within 2-5 minutes`
+        }
+      });
+
+    } catch (error) {
+      logger.error('[PAY] Error creating transaction:', {
+        error: error.message,
+        stack: error.stack,
+        postId: req.body.postId
+      });
+      res.status(500).json({ 
+        message: 'Server error while creating transaction',
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  });
+
+  // Enhanced Paystack Webhook for PT Account
+  router.post('/paystack/webhook', async (req, res) => {
+    const secret = process.env.PAYSTACK_SECRET_KEY;
+
+    // Verify webhook signature
+    const hash = crypto
+      .createHmac('sha512', secret)
+      .update(JSON.stringify(req.body))
+      .digest('hex');
+
+    if (hash !== req.headers['x-paystack-signature']) {
+      logger.warn('Unauthorized webhook request received');
+      return res.status(401).send('Unauthorized webhook request');
     }
 
-    res.sendStatus(200);
-  } catch (err) {
-    console.error('❌ Webhook processing failed:', err);
-    res.sendStatus(500);
-  }
-});
+    const event = req.body;
+    logger.info(`[WEBHOOK] Received event: ${event.event}`, {
+      reference: event.data?.reference,
+      amount: event.data?.amount,
+      channel: event.data?.channel
+    });
 
-  router.get('/payment-success', async (req, res) => {
+    try {
+      if (event.event === 'charge.success') {
+        const data = event.data;
+        const reference = data.reference;
+        const email = data.customer?.email;
+        const amount = data.amount / 100; // Convert from kobo to naira
+        const channel = data.channel;
+        const narration = data?.narration || data?.log?.history?.[0]?.message || null;
+        const currency = data.currency || "NGN";
+
+        // Find transaction by reference
+        let txn = await Transaction.findOne({ paymentReference: reference });
+
+        if (!txn) {
+          // Fallback: try to find by email and amount
+          txn = await Transaction.findOne({
+            buyerEmail: email,
+            amount,
+            status: 'awaiting_payment'
+          });
+        }
+
+        if (txn && txn.status === 'awaiting_payment') {
+          // Update transaction status
+          txn.status = 'in_escrow';
+          txn.paidAt = new Date(data.paid_at || Date.now());
+          txn.paymentChannel = channel;
+          txn.narration = narration;
+          txn.currency = currency;
+          txn.buyerEmail = email;
+          txn.paystackTransactionId = data.id;
+          
+          await txn.save();
+
+          // 🎯 MARK POST AS SOLD
+          if (txn.postId) {
+            const updatedPost = await Post.findByIdAndUpdate(
+              txn.postId, 
+              { 
+                isSold: true,
+                soldAt: new Date(),
+                soldTo: txn.buyerId,
+                soldPrice: txn.amount,
+                soldReference: reference
+              },
+              { new: true }
+            );
+
+            if (updatedPost) {
+              logger.info(`✅ Post ${txn.postId} marked as sold:`, {
+                reference,
+                productTitle: updatedPost.title,
+                soldPrice: txn.amount,
+                buyer: txn.buyerId
+              });
+
+              // Emit real-time update to seller
+              req.io?.to(`user_${txn.sellerId}`).emit('productSold', {
+                postId: txn.postId,
+                productTitle: updatedPost.title,
+                soldPrice: txn.amount,
+                reference,
+                buyerId: txn.buyerId,
+                soldAt: updatedPost.soldAt
+              });
+            } else {
+              logger.warn(`⚠️ Post ${txn.postId} not found for marking as sold`);
+            }
+          } else {
+            logger.warn(`⚠️ Transaction has no postId to mark as sold`);
+          }
+
+          // Generate and send receipt
+          try {
+            const [buyer, seller, post] = await Promise.all([
+              User.findById(txn.buyerId),
+              User.findById(txn.sellerId),
+              Post.findById(txn.postId)
+            ]);
+
+            if (buyer && seller && post) {
+              const receiptData = {
+                reference: txn.paymentReference,
+                amountPaid: txn.amount,
+                transactionDate: txn.paidAt,
+                buyerName: `${buyer.firstName || ''} ${buyer.lastName || ''}`.trim(),
+                email: buyer.email,
+                productTitle: post.title || post.description || "Product",
+                productId: txn.postId,
+                productCategory: post.category,
+                sellerName: `${seller.firstName} ${seller.lastName}`,
+                buyerId: buyer._id.toString(),
+                sellerId: seller._id.toString()
+              };
+
+              // Generate receipt
+              const receiptImageUrl = await generateModernReceipt(receiptData);
+              
+              // Send receipt to seller
+              await sendReceiptToSeller(receiptData, receiptImageUrl, req.io);
+
+              // Update transaction with receipt URL
+              txn.receiptImageUrl = receiptImageUrl;
+              await txn.save();
+
+              logger.info(`✅ Receipt generated and sent for transaction: ${reference}`);
+            }
+          } catch (receiptError) {
+            logger.error('Receipt generation failed:', receiptError);
+          }
+
+          logger.info(`✅ Transaction processed successfully: ${reference}`);
+        } else if (txn && txn.status !== 'awaiting_payment') {
+          logger.warn(`⚠️ Transaction ${reference} already processed with status: ${txn.status}`);
+        } else {
+          logger.warn(`⚠️ No matching transaction found for reference: ${reference}`);
+        }
+      }
+
+      res.sendStatus(200);
+    } catch (err) {
+      logger.error('❌ Webhook processing failed:', {
+        error: err.message,
+        stack: err.stack,
+        event: event.event,
+        reference: event.data?.reference
+      });
+      res.sendStatus(500);
+    }
+  });
+
+  // Enhanced payment verification
+  router.get('/verify-payment/:reference', async (req, res) => {
+    const reference = req.params.reference;
+
+    try {
+      const txn = await Transaction.findOne({ paymentReference: reference })
+        .populate('postId', 'title description price category images isSold')
+        .populate('buyerId', 'firstName lastName email')
+        .populate('sellerId', 'firstName lastName email');
+
+      if (!txn) {
+        logger.warn(`[VERIFY PAYMENT] Reference not found: ${reference}`);
+        return res.status(404).json({
+          success: false,
+          message: 'Transaction not found'
+        });
+      }
+
+      logger.info(`[VERIFY PAYMENT] Found transaction:`, {
+        reference: txn.paymentReference,
+        status: txn.status,
+        amount: txn.amount,
+        productTitle: txn.postId?.title
+      });
+
+      const responseData = {
+        status: txn.status,
+        amount: txn.amount,
+        buyerId: txn.buyerId,
+        sellerId: txn.sellerId,
+        productId: txn.postId?._id,
+        productTitle: txn.postId?.title,
+        productSold: txn.postId?.isSold,
+        paymentChannel: txn.paymentChannel,
+        paidAt: txn.paidAt,
+        receiptUrl: txn.receiptImageUrl
+      };
+
+      if (
+        txn.status === 'in_escrow' ||
+        txn.status === 'transfer_initiated' ||
+        txn.status === 'completed'
+      ) {
+        return res.json({
+          success: true,
+          data: {
+            ...responseData,
+            message: 'Payment confirmed and product marked as sold'
+          }
+        });
+      }
+
+      if (txn.status === 'awaiting_payment') {
+        return res.json({
+          success: true,
+          data: {
+            ...responseData,
+            message: 'Payment pending confirmation'
+          }
+        });
+      }
+
+      return res.json({
+        success: true,
+        data: {
+          ...responseData,
+          message: `Payment status: ${txn.status}`
+        }
+      });
+
+    } catch (error) {
+      logger.error('[VERIFY PAYMENT] Failed:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Error verifying payment'
+      });
+    }
+  });
+
+    router.get('/payment-success', async (req, res) => {
     logger.info('Received redirect to /payment-success. Verifying transaction via reference.');
     const requestId = `REDIRECT_SUCCESS_${Date.now()}`;
     const { reference } = req.query; // This `reference` is the Paystack transaction reference
@@ -592,71 +863,6 @@ router.post('/paystack/webhook', async (req, res) => {
     }
   });
 
-// GET /verify-payment/:reference
-router.get('/verify-payment/:reference', async (req, res) => {
-  const reference = req.params.reference;
 
-  try {
-    const txn = await Transaction.findOne({ paymentReference: reference });
-
-    if (!txn) {
-      console.warn(`[VERIFY PAYMENT] Reference not found: ${reference}`);
-      return res.status(404).json({
-        success: false,
-        message: 'Transaction not found'
-      });
-    }
-
-    console.log(`[VERIFY PAYMENT] Found transaction:`, {
-      reference: txn.paymentReference,
-      status: txn.status,
-      amount: txn.amount
-    });
-
-    // Only check status, don't update anything here
-    if (
-      txn.status === 'in_escrow' ||
-      txn.status === 'transfer_initiated' ||
-      txn.status === 'completed'
-    ) {
-      return res.json({
-        success: true,
-        data: {
-          status: 'success',
-          message: 'Payment confirmed',
-          amount: txn.amount,
-          buyerId: txn.buyerId,
-          sellerId: txn.sellerId,
-          productId: txn.postId
-        }
-      });
-    }
-
-    if (txn.status === 'awaiting_payment') {
-      return res.json({
-        success: true,
-        data: {
-          status: 'pending',
-          message: 'Payment not yet confirmed'
-        }
-      });
-    }
-
-    // Any other status
-    return res.json({
-      success: true,
-      data: {
-        status: txn.status,
-        message: `Payment status: ${txn.status}`
-      }
-    });
-  } catch (error) {
-    console.error('[VERIFY PAYMENT] Failed:', error);
-    return res.status(500).json({
-      success: false,
-      message: 'Error verifying payment'
-    });
-  }
-});
   return router;
 };
