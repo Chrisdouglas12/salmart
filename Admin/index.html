@@ -299,7 +299,32 @@
 
 <button id="installBtn" class="install-btn"> Install Salmart</button>
 
- 
+ <div id="paymentChoiceModal" class="modal hidden">
+  <div class="modal-content">
+    <span class="close-btn" onclick="closeModal()">×</span>
+    <h2>Select Payment Method</h2>
+
+    <div class="payment-option">
+      <h3>Paystack Checkout</h3>
+      <ul>
+        <li>✔️ Instant confirmation</li>
+        <li>✔️ Faster support</li>
+        <li>✔️ Secured by Paystack</li>
+      </ul>
+      <button onclick="choosePaystack()">Pay with Paystack</button>
+    </div>
+
+    <div class="payment-option">
+      <h3>Manual Bank Transfer (PT Account)</h3>
+      <ul>
+        <li>✔️ No gateway fee</li>
+        <li>✔️ Use your mobile bank app</li>
+        <li>✔️ Admin will confirm your payment</li>
+      </ul>
+      <button onclick="choosePT()">Pay with Bank Transfer</button>
+    </div>
+  </div>
+</div>
 
     <script>
         let deferredPrompt;

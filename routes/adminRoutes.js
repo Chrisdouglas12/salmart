@@ -252,6 +252,56 @@ router.get('/admin/reports/pending', verifyToken, async (req, res) => {
   }
 });
 
+// GET /api/admin/transactions/pending
+router.get('/admin/transactions/pending', async (req, res) => {
+  try {
+    const pendingTxns = await Transaction.find({ 
+      status: 'awaiting_admin_review' 
+    })
+      .populate('postId', 'title images')
+      .populate('buyerId', 'firstName lastName email')
+      .sort({ createdAt: -1 });
+
+    res.json({ success: true, data: pendingTxns });
+  } catch (err) {
+    logger.error('[ADMIN TXNS] Error fetching pending txns:', err);
+    res.status(500).json({ success: false, message: 'Error loading transactions' });
+  }
+});
+
+// POST /api/admin/approve-payment
+router.post('/admin/approve-payment', async (req, res) => {
+  const { reference } = req.body;
+
+  try {
+    const txn = await Transaction.findOne({ 
+      paymentReference: new RegExp(`^${reference}$`, 'i') 
+    }).populate('postId');
+
+    if (!txn) {
+      return res.status(404).json({ success: false, message: 'Transaction not found' });
+    }
+
+    if (txn.status !== 'awaiting_admin_review') {
+      return res.status(400).json({ success: false, message: 'Transaction not in reviewable state' });
+    }
+
+    txn.status = 'in_escrow';
+    txn.paidAt = new Date();
+    txn.approvedByAdmin = true;
+    await txn.save();
+
+    // Mark product as sold
+    await markProductAsSold(txn, reference, req.io);
+
+    res.json({ success: true, message: 'Transaction approved and product marked as sold', data: txn });
+
+  } catch (err) {
+    logger.error('[ADMIN APPROVAL] Error approving txn:', err);
+    res.status(500).json({ success: false, message: 'Error approving payment' });
+  }
+});
+
 
 // Export router as a function that accepts io
 module.exports = (io) => {

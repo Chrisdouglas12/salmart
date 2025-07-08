@@ -205,6 +205,23 @@
       font-weight: 600;
       border: 1px solid #e9ecef;
     }
+    .confirm-payment-btn {
+  background-color: #10b981; /* Tailwind green-500 */
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  font-size: 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+.confirm-payment-btn:hover {
+  background-color: #059669; /* Tailwind green-600 */
+}
+.confirm-payment-btn:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
 
     .copy-button {
       width: 100%;
@@ -249,12 +266,6 @@
       border: 1px solid #c3e6cb;
     }
 
-    .status-error {
-      background: #f8d7da;
-      color: #721c24;
-      border: 1px solid #f5c6cb;
-    }
-
     .icon {
       width: 20px;
       height: 20px;
@@ -272,7 +283,6 @@
       z-index: 9999;
       font-size: 14px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      animation: fadeOut 4s forwards;
     }
 
     .toast.success {
@@ -281,12 +291,6 @@
 
     .toast.error {
       background: #dc3545;
-    }
-
-    @keyframes fadeOut {
-      0% { opacity: 1; transform: translateY(0); }
-      80% { opacity: 1; transform: translateY(0); }
-      100% { opacity: 0; transform: translateY(-20px); }
     }
 
     @media (max-width: 768px) {
@@ -418,9 +422,11 @@
         <button class="copy-button" onclick="copyBankDetails()">
           Copy Payment Details
         </button>
-
+<div id="confirmPaymentSection" style="margin-top: 20px; text-align: center;">
+  <button id="confirmPaymentBtn" class="confirm-payment-btn">I HAVE MADE THIS PAYMENT</button>
+</div>
         <div id="paymentStatus" class="payment-status status-waiting">
-          ⏳ Initiating payment...
+          ⏳ Waiting for payment confirmation...
         </div>
       </div>
     </div>
@@ -429,219 +435,143 @@
   <script>
     let paymentReference = '';
     let paymentCheckInterval = null;
-    // Set your API_BASE_URL here
-    const API_BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : 'https://salmart.onrender.com/api'; // Corrected to include /api
+    const API_BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart.onrender.com';
 
     document.addEventListener('DOMContentLoaded', async () => {
-        const query = new URLSearchParams(window.location.search);
-        const postId = query.get('postId');
-        const buyerId = localStorage.getItem('userId');
-        const email = localStorage.getItem('email');
-        const expectedPrice = parseFloat(query.get('productPrice')); // Get expected price from URL
+      const postId = new URLSearchParams(window.location.search).get('postId');
+      const buyerId = localStorage.getItem('userId');
+      const email = localStorage.getItem('email');
+      const query = new URLSearchParams(window.location.search);
 
-        // Populate product details from URL query parameters
-        document.getElementById('productImage').src = query.get('productImage') || 'placeholder.jpg'; // Add a placeholder
-        document.getElementById('productTitle').textContent = query.get('productTitle') || 'Product Title Not Found';
-        document.getElementById('productDescription').textContent = query.get('productDescription') || 'No description available.';
-        document.getElementById('productLocation').textContent = query.get('productLocation') || 'N/A';
-        document.getElementById('productCondition').textContent = query.get('productCondition') || 'N/A';
-        document.getElementById('productPrice').textContent = formatCurrency(expectedPrice || 0);
+      document.getElementById('productImage').src = query.get('productImage') || '';
+      document.getElementById('productTitle').textContent = query.get('productTitle') || '';
+      document.getElementById('productDescription').textContent = query.get('productDescription') || '';
+      document.getElementById('productLocation').textContent = query.get('productLocation') || '';
+      document.getElementById('productCondition').textContent = query.get('productCondition') || '';
+      document.getElementById('productPrice').textContent = formatCurrency(query.get('productPrice') || 0);
 
-        if (!postId || !buyerId || !email || isNaN(expectedPrice) || expectedPrice <= 0) {
-            let missingFields = [];
-            if (!postId) missingFields.push('postId');
-            if (!buyerId) missingFields.push('buyerId');
-            if (!email) missingFields.push('email');
-            if (isNaN(expectedPrice) || expectedPrice <= 0) missingFields.push('valid productPrice');
+      if (!postId || !buyerId || !email) {
+        let missingFields = [];
+        if (!postId) missingFields.push('postId');
+        if (!buyerId) missingFields.push('buyerId');
+        if (!email) missingFields.push('email');
+        showToast("An error occurred: Missing required information.", 'error');
+        return;
+      }
 
-            console.error(`Missing required information: ${missingFields.join(', ')}. Please ensure all necessary data is provided.`);
-            document.getElementById('paymentStatus').textContent = `❌ Error: Missing required info (${missingFields.join(', ')}).`;
-            document.getElementById('paymentStatus').className = 'payment-status status-error';
-            showToast("An error occurred: Missing or invalid product information.", 'error');
-            return;
+      try {
+        const res = await fetch(`${API_BASE_URL}/pay`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ postId, buyerId, email, expectedPrice: parseFloat(query.get('productPrice')) })
+        });
+
+        const data = await res.json();
+        if (!data.success) {
+          showToast(data.message || "Payment setup failed", 'error');
+          return;
         }
 
-        try {
-            const statusEl = document.getElementById('paymentStatus');
-            statusEl.textContent = '⏳ Setting up payment...';
-            statusEl.className = 'payment-status status-waiting';
+        paymentReference = data.reference;
+        sessionStorage.setItem('currentPaymentReference', paymentReference);
 
-            const res = await fetch(`${API_BASE_URL}/pay`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ postId, buyerId, email, expectedPrice }) // Pass expectedPrice
-            });
+        document.getElementById('accountNumber').textContent = data.accountNumber;
+        document.getElementById('bankName').textContent = data.bankName;
+        document.getElementById('accountName').textContent = data.accountName;
+        document.getElementById('amount').textContent = formatCurrency(data.amount);
+        document.getElementById('paymentReference').textContent = paymentReference;
 
-            const data = await res.json();
-            console.log("Backend /pay response:", data);
+        startPaymentMonitoring();
+      } catch (err) {
+        console.error('Payment setup error:', err);
+        showToast("Something went wrong while starting your payment.", 'error');
+      }
+    });
+    
+    document.getElementById('confirmPaymentBtn').addEventListener('click', async () => {
+  if (!paymentReference) {
+    showToast('No payment reference found', 'error');
+    return;
+  }
 
-            if (!res.ok) {
-                // If response is not OK (e.g., 400, 404, 500)
-                const errorMessage = data.message || "Failed to set up payment. Please try again.";
-                showToast(errorMessage, 'error');
-                statusEl.textContent = `❌ ${errorMessage}`;
-                statusEl.className = 'payment-status status-error';
-                return;
-            }
-
-            if (!data.success) {
-                // If success: false is explicitly returned with 200 OK
-                const errorMessage = data.message || "Payment setup failed.";
-                showToast(errorMessage, 'error');
-                statusEl.textContent = `❌ ${errorMessage}`;
-                statusEl.className = 'payment-status status-error';
-                return;
-            }
-
-            paymentReference = data.reference;
-            sessionStorage.setItem('currentPaymentReference', paymentReference);
-
-            // Update UI with payment instructions
-            document.getElementById('accountNumber').textContent = data.accountNumber;
-            document.getElementById('bankName').textContent = data.bankName;
-            document.getElementById('accountName').textContent = data.accountName;
-            document.getElementById('amount').textContent = formatCurrency(data.amount);
-            document.getElementById('paymentReference').textContent = paymentReference;
-
-            statusEl.textContent = '⏳ Waiting for payment confirmation...';
-            statusEl.className = 'payment-status status-waiting';
-
-            startPaymentMonitoring();
-        } catch (err) {
-            console.error('Payment setup error:', err);
-            showToast("Something went wrong while initiating your payment. Check console for details.", 'error');
-            const statusEl = document.getElementById('paymentStatus');
-            statusEl.textContent = '❌ Connection error. Please refresh.';
-            statusEl.className = 'payment-status status-error';
-        }
+  try {
+    const res = await fetch(`${API_BASE_URL}/confirm-payment`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reference: paymentReference })
     });
 
+    const result = await res.json();
+    if (result.success) {
+      showToast('Payment submitted. Awaiting admin approval.', 'success');
+      const btn = document.getElementById('confirmPaymentBtn');
+      btn.disabled = true;
+      btn.textContent = 'Waiting for Admin...';
+    } else {
+      showToast(result.message || 'Failed to submit payment', 'error');
+    }
+  } catch (err) {
+    console.error('Error confirming payment:', err);
+    showToast('Error confirming payment', 'error');
+  }
+});
+
     function formatCurrency(amount) {
-        // Ensure amount is a number and fallback to 0 if not
-        const numAmount = parseFloat(amount);
-        if (isNaN(numAmount)) {
-            console.warn("Invalid amount passed to formatCurrency:", amount);
-            return '₦0'; // Return a default value for invalid input
-        }
-        return new Intl.NumberFormat('en-NG', {
-            style: 'currency',
-            currency: 'NGN'
-        }).format(numAmount);
+      return new Intl.NumberFormat('en-NG', {
+        style: 'currency',
+        currency: 'NGN'
+      }).format(amount);
     }
 
     function copyBankDetails() {
-        const accountNumber = document.getElementById('accountNumber').textContent;
-        const bankName = document.getElementById('bankName').textContent;
-        const accountName = document.getElementById('accountName').textContent;
-        const amount = document.getElementById('amount').textContent; // Already formatted
-        const reference = paymentReference;
+      const details = `\nAccount Number: ${document.getElementById('accountNumber').textContent}\nBank: ${document.getElementById('bankName').textContent}\nAccount Name: ${document.getElementById('accountName').textContent}\nAmount: ${document.getElementById('amount').textContent}\nReference: ${paymentReference}`.trim();
 
-        const details = `
-Account Number: ${accountNumber}
-Bank: ${bankName}
-Account Name: ${accountName}
-Amount: ${amount}
-Reference: ${reference}
-        `.trim();
-
-        navigator.clipboard.writeText(details).then(() => {
-            showToast('Payment details copied to clipboard ✅', 'success');
-        }).catch((err) => {
-            console.error('Failed to copy text:', err);
-            showToast('Failed to copy details ❌', 'error');
-        });
+      navigator.clipboard.writeText(details).then(() => {
+        showToast('Payment details copied to clipboard ✅', 'success');
+      }).catch(() => {
+        showToast('Failed to copy details ❌', 'error');
+      });
     }
 
     function startPaymentMonitoring() {
-        // Clear any existing interval to prevent duplicates
-        if (paymentCheckInterval) {
-            clearInterval(paymentCheckInterval);
-        }
-        // Check immediately, then every 30 seconds
-        paymentCheckInterval = setInterval(checkPaymentStatus, 30000);
-        checkPaymentStatus(); // Initial check
+      paymentCheckInterval = setInterval(checkPaymentStatus, 30000);
+      setTimeout(checkPaymentStatus, 2000);
     }
 
     async function checkPaymentStatus() {
-        if (!paymentReference) {
-            console.warn("No payment reference available to check status.");
-            return;
+      if (!paymentReference) return;
+      try {
+        const res = await fetch(`${API_BASE_URL}/verify-payment/${paymentReference}`);
+        const result = await res.json();
+
+        if (result.success && result.data?.status === 'in_escrow') {
+          clearInterval(paymentCheckInterval);
+          const statusEl = document.getElementById('paymentStatus');
+          statusEl.textContent = '✅ Payment confirmed successfully!';
+          statusEl.className = 'payment-status status-success';
+          showToast('Payment successful! Redirecting...', 'success');
+          setTimeout(() => {
+            window.location.href = `/order-confirmation.html?ref=${paymentReference}`;
+          }, 3000);
         }
-
-        const statusEl = document.getElementById('paymentStatus');
-        
-        try {
-            console.log(`Checking payment status for reference: ${paymentReference}...`);
-            const res = await fetch(`${API_BASE_URL}/verify-payment/${paymentReference}`);
-            const result = await res.json();
-            console.log("Verification API response:", result);
-
-            if (!result.success) {
-                // Backend explicitly returned success: false
-                statusEl.textContent = `⚠️ ${result.message || 'Payment still pending.'}`;
-                statusEl.className = 'payment-status status-waiting'; // Still waiting, but with a more specific message
-                showToast(result.message || 'Payment not yet confirmed.', 'error'); // Use error toast for non-success
-                return;
-            }
-
-            // Handle different successful statuses from backend
-            if (result.data?.status === 'in_escrow' || result.data?.status === 'completed' || result.data?.productSold) {
-                clearInterval(paymentCheckInterval);
-                statusEl.textContent = '✅ Payment confirmed successfully! Redirecting...';
-                statusEl.className = 'payment-status status-success';
-                showToast('Payment successful! Your order is being processed.', 'success');
-                
-                // Redirect to order confirmation page
-                setTimeout(() => {
-                    window.location.href = `/order-confirmation.html?ref=${paymentReference}`;
-                }, 3000);
-            } else if (result.data?.status === 'awaiting_payment') {
-                statusEl.textContent = '⏳ Waiting for payment confirmation... (still pending)';
-                statusEl.className = 'payment-status status-waiting';
-                console.log("Payment still awaiting confirmation.");
-            } else {
-                // Any other unexpected status
-                statusEl.textContent = `❓ Unknown payment status: ${result.data?.status || 'N/A'}`;
-                statusEl.className = 'payment-status status-waiting'; // Keep waiting
-                console.warn("Received unknown payment status:", result.data?.status);
-            }
-
-        } catch (err) {
-            console.error('Error during payment verification:', err);
-            statusEl.textContent = '❌ Error verifying payment. Please refresh or contact support.';
-            statusEl.className = 'payment-status status-error';
-            showToast('Failed to verify payment status. Please check your internet connection.', 'error');
-            // Do NOT clearInterval here, as it might be a temporary network issue.
-            // Let the interval continue, or implement a retry limit.
-        }
+      } catch (err) {
+        console.error('Payment verification failed:', err);
+      }
     }
 
     function showToast(message, type) {
-        const toast = document.createElement('div');
-        toast.textContent = message;
-        toast.className = `toast ${type}`;
-        document.body.appendChild(toast);
-
-        // Remove the toast after the animation
-        toast.addEventListener('animationend', () => {
-            toast.remove();
-        });
+      const toast = document.createElement('div');
+      toast.textContent = message;
+      toast.className = `toast ${type}`;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 4000);
     }
 
     window.addEventListener('beforeunload', () => {
-        if (paymentCheckInterval) {
-            clearInterval(paymentCheckInterval);
-            console.log("Payment check interval cleared.");
-        }
+      if (paymentCheckInterval) clearInterval(paymentCheckInterval);
     });
-
-    // Eruda for debugging in mobile browsers
-    // Ensure to remove this in production!
-    // <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
-    // <script>eruda.init();</script>
-   
   </script>
-    <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
-    <script>eruda.init();</script>
+  <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+  <script>eruda.init();</script>
 </body>
 </html>
