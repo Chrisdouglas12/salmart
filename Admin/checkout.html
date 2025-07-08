@@ -423,6 +423,7 @@
 
     document.addEventListener('DOMContentLoaded', async () => {
         const postId = new URLSearchParams(window.location.search).get('postId');
+        const token = localStorage.getItem('authToken')
         const buyerId = localStorage.getItem('userId');
         const email = localStorage.getItem('userEmail')
         const query = new URLSearchParams(window.location.search);
@@ -532,5 +533,8 @@ Reference: ${paymentReference}
         if (paymentCheckInterval) clearInterval(paymentCheckInterval);
     });
   </script>
+    <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+    <script>eruda.init();</script>
+    <script type="module" src="firebase-app.js"></script>
 </body>
 </html>
