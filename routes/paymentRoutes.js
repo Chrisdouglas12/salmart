@@ -23,15 +23,15 @@ const { sendFCMNotification } = require('../services/notificationUtils.js');
 const NotificationService = require('../services/notificationService.js');
 
 // Paystack API
-const paystack = require('paystack')(process.env.PAYSTACK_SECRET_KEY);
+const paystack = require('paystack')(process.env.PAYSTACK_SECRET_KEY); // Note: The Paystack SDK is not directly used in these updated routes, but axios is for direct API calls.
 
 // Configure Winston logger
 const logger = winston.createLogger({
-  level: 'debug',
+  level: 'debug', // Ensure debug level to see detailed logs
   format: winston.format.combine(
     winston.format.timestamp(),
     winston.format.json(),
-    winston.format.metadata()
+    winston.format.metadata() // This is good for adding extra context
   ),
   transports: [
     new winston.transports.Console({ format: winston.format.simple() }),
@@ -41,7 +41,7 @@ const logger = winston.createLogger({
 
 // Constants
 const COMMISSION_PERCENT = 3;
-const RECEIPT_TIMEOUT = 30000;
+const RECEIPT_TIMEOUT = 30000; // Not directly used in this code path, but kept for context
 
 // PT Account Details
 const PT_ACCOUNT_DETAILS = {
@@ -63,11 +63,11 @@ module.exports = (io) => {
   const generateProductReference = (postId) => {
     const timestamp = Date.now().toString(36).slice(-4);
     const random = Math.random().toString(36).substr(2, 4).toUpperCase();
-    const shortPostId = postId.slice(-4);
+    const shortPostId = postId.slice(-4); // Use last 4 chars of ObjectId
     return `SALM-${shortPostId}-${timestamp}-${random}`;
   };
 
-  // Helper function to validate payment request
+  // Helper function to validate payment request (kept for compatibility, though not directly used in /pay)
   const validatePaymentRequest = (body) => {
     const { email, postId, buyerId, amount } = body;
     const errors = [];
@@ -225,7 +225,7 @@ module.exports = (io) => {
 
       return cloudinaryResponse.secure_url;
     } catch (error) {
-      logger.error('Receipt generation failed:', error);
+      logger.error('Receipt generation failed:', { error: error.message, stack: error.stack, receiptData });
       throw error;
     }
   };
@@ -266,7 +266,7 @@ module.exports = (io) => {
 
       return { success: true };
     } catch (error) {
-      logger.error('Failed to send receipt to seller:', error);
+      logger.error('Failed to send receipt to seller:', { error: error.message, stack: error.stack, receiptData });
       return { success: false, error: error.message };
     }
   };
@@ -335,7 +335,7 @@ module.exports = (io) => {
       });
 
       if (existingTxn) {
-        logger.info(`[PAY] Found existing pending transaction for post ${postId}:`, existingTxn.paymentReference);
+        logger.info(`[PAY] Found existing pending transaction for post ${postId}:`, { reference: existingTxn.paymentReference });
 
         return res.json({
           success: true,
@@ -430,6 +430,7 @@ module.exports = (io) => {
     }
   });
 
+
   // Enhanced Paystack Webhook for PT Account
   router.post('/paystack/webhook', async (req, res) => {
     const secret = process.env.PAYSTACK_SECRET_KEY;
@@ -441,71 +442,127 @@ module.exports = (io) => {
       .digest('hex');
 
     if (hash !== req.headers['x-paystack-signature']) {
-      logger.warn('Unauthorized webhook request received');
+      logger.warn('Unauthorized webhook request received', {
+        paystackSignature: req.headers['x-paystack-signature'],
+        calculatedHash: hash,
+        webhookBodySample: JSON.stringify(req.body).substring(0, 500) + '...' // Log a sample of the body
+      });
       return res.status(401).send('Unauthorized webhook request');
     }
 
     const event = req.body;
     logger.info(`[WEBHOOK] Received event: ${event.event}`, {
-      reference: event.data?.reference,
-      amount: event.data?.amount,
-      channel: event.data?.channel
+      paystack_event_id: event.id, // Unique ID for the event
+      paystack_internal_reference: event.data?.reference, // This is Paystack's own reference for the transaction
+      amount_kobo: event.data?.amount, // In kobo
+      channel: event.data?.channel,
+      narration_from_paystack: event.data?.narration, // THIS IS THE CRITICAL FIELD for user's input
+      customer_email: event.data?.customer?.email,
+      event_type: event.event,
+      payment_type: event.data?.payment_method
     });
 
     try {
       if (event.event === 'charge.success') {
         const data = event.data;
-        const reference = data.reference;
-        const email = data.customer?.email;
-        const amount = data.amount / 100; // Convert from kobo to naira
+        const paystackInternalRef = data.reference; // Paystack's unique transaction ID
+        const buyerEmail = data.customer?.email;
+        const receivedAmount = data.amount / 100; // Convert from kobo to naira
         const channel = data.channel;
-        const narration = data?.narration || data?.log?.history?.[0]?.message || null;
+        const fullNarration = data.narration; // The full narration string from the bank transfer
         const currency = data.currency || "NGN";
 
-        // Find transaction by reference
-        let txn = await Transaction.findOne({ paymentReference: reference });
+        // --- Step 1: Attempt to extract your SALM- reference from the narration ---
+        // Regex to find "SALM-XXXX-YYYY-ZZZZ" pattern (case-insensitive)
+        const salmRefRegex = /(SALM-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4}-[a-zA-Z0-9]{4})/i;
+        const match = fullNarration ? fullNarration.match(salmRefRegex) : null;
+        const extractedSalmRef = match ? match[1] : null; // This should be your paymentReference
 
-        if (!txn) {
-          // Fallback: try to find by email and amount
-          txn = await Transaction.findOne({
-            buyerEmail: email,
-            amount,
-            status: 'awaiting_payment'
-          });
+        logger.debug(`[WEBHOOK DEBUG] Raw Narration (data.narration): ${fullNarration}`, { extractedSalmRef, paystackInternalRef });
+        logger.debug(`[WEBHOOK DEBUG] Extracted SALM-Reference: ${extractedSalmRef}`);
+        logger.debug(`[WEBHOOK DEBUG] Paystack Internal Reference (data.reference): ${paystackInternalRef}`);
+        logger.debug(`[WEBHOOK DEBUG] Received Amount (Naira): ${receivedAmount}`);
+        
+        let txn = null;
+
+        // --- Step 2: Primary lookup by the extracted SALM- reference ---
+        if (extractedSalmRef) {
+          logger.debug(`[WEBHOOK DEBUG] Attempting primary lookup by extracted SALM-ref: ${extractedSalmRef}`);
+          txn = await Transaction.findOne({ paymentReference: extractedSalmRef });
+          if (txn) {
+            logger.debug(`[WEBHOOK DEBUG] Found transaction by extracted SALM-ref: ${txn._id}`);
+          } else {
+            logger.warn(`[WEBHOOK DEBUG] No transaction found for extracted SALM-ref: ${extractedSalmRef}`);
+          }
         }
 
+        // --- Step 3: Fallback lookup by Paystack's internal reference ---
+        // This relies on `paystackTransactionId` being stored on your Transaction model.
+        if (!txn && paystackInternalRef) {
+          logger.debug(`[WEBHOOK DEBUG] Attempting fallback lookup by Paystack Internal Ref: ${paystackInternalRef}`);
+          txn = await Transaction.findOne({ paystackTransactionId: paystackInternalRef });
+          if (txn) {
+             logger.debug(`[WEBHOOK DEBUG] Found transaction by Paystack Internal Ref: ${txn._id}`);
+          } else {
+            logger.warn(`[WEBHOOK DEBUG] No transaction found for Paystack Internal Ref: ${paystackInternalRef}`);
+          }
+        }
+
+        // --- Step 4: Final fallback lookup by buyer email and amount ---
+        // This is the least precise but can catch cases where references are totally missing.
+        if (!txn) {
+          logger.warn(`[WEBHOOK DEBUG] Both reference lookups failed. Attempting final fallback by email and amount.`);
+          txn = await Transaction.findOne({
+            buyerEmail: buyerEmail,
+            amount: receivedAmount,
+            status: 'awaiting_payment' // Only consider if still awaiting
+          });
+          if (txn) {
+            logger.debug(`[WEBHOOK DEBUG] Found transaction by email/amount fallback: ${txn._id}`);
+          } else {
+            logger.warn(`[WEBHOOK DEBUG] No transaction found via email/amount fallback for email: ${buyerEmail}, amount: ${receivedAmount}`);
+          }
+        }
+
+
+        // --- Step 5: Process the found transaction ---
         if (txn && txn.status === 'awaiting_payment') {
+          logger.info(`[WEBHOOK] Processing transaction ${txn.paymentReference} (ID: ${txn._id}) from 'awaiting_payment' to 'in_escrow'.`, {
+            paystackInternalRef,
+            extractedSalmRef: extractedSalmRef || 'N/A'
+          });
+          
           // Update transaction status
           txn.status = 'in_escrow';
           txn.paidAt = new Date(data.paid_at || Date.now());
           txn.paymentChannel = channel;
-          txn.narration = narration;
+          txn.narration = fullNarration; // Store the complete narration
           txn.currency = currency;
-          txn.buyerEmail = email;
-          txn.paystackTransactionId = data.id;
+          txn.buyerEmail = buyerEmail; // Update buyer email in case it was missing or changed
+          txn.paystackTransactionId = paystackInternalRef; // Store Paystack's unique ID for this transaction
           
           await txn.save();
 
           // 🎯 MARK POST AS SOLD
           if (txn.postId) {
             const updatedPost = await Post.findByIdAndUpdate(
-              txn.postId, 
+              txn.postId, // Assuming postId is just the ID string here
               { 
                 isSold: true,
                 soldAt: new Date(),
                 soldTo: txn.buyerId,
                 soldPrice: txn.amount,
-                soldReference: reference
+                soldReference: extractedSalmRef || paystackInternalRef // Use extracted ref or Paystack's ref
               },
               { new: true }
             );
 
             if (updatedPost) {
-              logger.info(`✅ Post ${txn.postId} marked as sold:`, {
-                reference,
+              logger.info(`✅ Post ${txn.postId} marked as sold via webhook.`, {
+                reference_used: extractedSalmRef || paystackInternalRef,
                 productTitle: updatedPost.title,
                 soldPrice: txn.amount,
-                buyer: txn.buyerId
+                buyerId: txn.buyerId
               });
 
               // Emit real-time update to seller
@@ -513,15 +570,15 @@ module.exports = (io) => {
                 postId: txn.postId,
                 productTitle: updatedPost.title,
                 soldPrice: txn.amount,
-                reference,
+                reference: extractedSalmRef || paystackInternalRef,
                 buyerId: txn.buyerId,
                 soldAt: updatedPost.soldAt
               });
             } else {
-              logger.warn(`⚠️ Post ${txn.postId} not found for marking as sold`);
+              logger.warn(`⚠️ Post ${txn.postId} not found for marking as sold via webhook`);
             }
           } else {
-            logger.warn(`⚠️ Transaction has no postId to mark as sold`);
+            logger.warn(`⚠️ Transaction has no postId to mark as sold (Txn ID: ${txn._id})`);
           }
 
           // Generate and send receipt
@@ -534,7 +591,7 @@ module.exports = (io) => {
 
             if (buyer && seller && post) {
               const receiptData = {
-                reference: txn.paymentReference,
+                reference: txn.paymentReference, // Use your internal SALM- reference for the receipt
                 amountPaid: txn.amount,
                 transactionDate: txn.paidAt,
                 buyerName: `${buyer.firstName || ''} ${buyer.lastName || ''}`.trim(),
@@ -557,122 +614,293 @@ module.exports = (io) => {
               txn.receiptImageUrl = receiptImageUrl;
               await txn.save();
 
-              logger.info(`✅ Receipt generated and sent for transaction: ${reference}`);
+              logger.info(`✅ Receipt generated and sent for transaction: ${txn.paymentReference}`);
+            } else {
+              logger.warn(`⚠️ Could not generate receipt for transaction ${txn.paymentReference}: Missing buyer, seller, or post data.`);
             }
           } catch (receiptError) {
-            logger.error('Receipt generation failed:', receiptError);
+            logger.error('Receipt generation or sending failed in webhook:', {
+              transactionId: txn._id,
+              error: receiptError.message,
+              stack: receiptError.stack
+            });
           }
 
-          logger.info(`✅ Transaction processed successfully: ${reference}`);
+          logger.info(`✅ Transaction ${txn.paymentReference} fully processed successfully by webhook.`);
         } else if (txn && txn.status !== 'awaiting_payment') {
-          logger.warn(`⚠️ Transaction ${reference} already processed with status: ${txn.status}`);
+          logger.warn(`⚠️ Transaction ${txn.paymentReference} already processed with status: ${txn.status}. No action taken by webhook.`);
         } else {
-          logger.warn(`⚠️ No matching transaction found for reference: ${reference}`);
+          logger.warn(`⚠️ No matching transaction found for any provided reference or fallback. Webhook did not process payment.`, {
+            paystackRef: paystackInternalRef,
+            extractedSalmRef: extractedSalmRef,
+            buyerEmail: buyerEmail,
+            amount: receivedAmount
+          });
         }
+      } else {
+        logger.info(`[WEBHOOK] Received non-charge.success event: ${event.event}. Not processing.`);
       }
 
-      res.sendStatus(200);
+      res.sendStatus(200); // Always respond with 200 OK to Paystack
     } catch (err) {
-      logger.error('❌ Webhook processing failed:', {
+      logger.error('❌ Webhook processing failed unexpectedly:', {
         error: err.message,
         stack: err.stack,
-        event: event.event,
-        reference: event.data?.reference
+        event_type: event.event,
+        paystack_internal_reference: event.data?.reference,
+        narration: event.data?.narration
       });
-      res.sendStatus(500);
+      res.sendStatus(500); // Respond with 500 if an unhandled error occurs
     }
   });
 
-  // Enhanced payment verification
+  // Enhanced payment verification route
   router.get('/verify-payment/:reference', async (req, res) => {
-    const reference = req.params.reference;
+    const reference = req.params.reference; // This 'reference' should be YOUR generated SALM- reference
 
     try {
-      const txn = await Transaction.findOne({ paymentReference: reference })
+      // 1. First, try to find the transaction in your database
+      let txn = await Transaction.findOne({ paymentReference: reference })
         .populate('postId', 'title description price category images isSold')
         .populate('buyerId', 'firstName lastName email')
         .populate('sellerId', 'firstName lastName email');
 
       if (!txn) {
-        logger.warn(`[VERIFY PAYMENT] Reference not found: ${reference}`);
+        logger.warn(`[VERIFY PAYMENT] Internal transaction not found for reference: ${reference}`);
         return res.status(404).json({
           success: false,
-          message: 'Transaction not found'
+          message: 'Transaction not found in our records.'
         });
       }
 
-      logger.info(`[VERIFY PAYMENT] Found transaction:`, {
+      logger.info(`[VERIFY PAYMENT] Found internal transaction:`, {
         reference: txn.paymentReference,
         status: txn.status,
         amount: txn.amount,
         productTitle: txn.postId?.title
       });
 
-      const responseData = {
-        status: txn.status,
-        amount: txn.amount,
-        buyerId: txn.buyerId,
-        sellerId: txn.sellerId,
-        productId: txn.postId?._id,
-        productTitle: txn.postId?.title,
-        productSold: txn.postId?.isSold,
-        paymentChannel: txn.paymentChannel,
-        paidAt: txn.paidAt,
-        receiptUrl: txn.receiptImageUrl
-      };
-
-      if (
-        txn.status === 'in_escrow' ||
-        txn.status === 'transfer_initiated' ||
-        txn.status === 'completed'
-      ) {
-        return res.json({
-          success: true,
-          data: {
-            ...responseData,
-            message: 'Payment confirmed and product marked as sold'
-          }
-        });
-      }
-
+      // 2. If transaction is awaiting payment, verify directly with Paystack
       if (txn.status === 'awaiting_payment') {
+        logger.info(`[VERIFY PAYMENT] Internal status is 'awaiting_payment'. Attempting direct Paystack verification for: ${reference}`);
+        
+        let paystackData;
+        try {
+          const paystackResponse = await axios.get(
+            `https://api.paystack.co/transaction/verify/${reference}`, // Verify using YOUR SALM- reference
+            {
+              headers: {
+                Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+                'Content-Type': 'application/json',
+              },
+            }
+          );
+          paystackData = paystackResponse.data.data; // The actual transaction data from Paystack
+
+          logger.info(`[VERIFY PAYMENT] Paystack verification response for ${reference}:`, {
+            paystackStatus: paystackData.status,
+            paystackAmount: paystackData.amount, // in kobo
+            paystackReference: paystackData.reference, // Paystack's internal ref
+            paystackNarration: paystackData.narration, // User-provided narration
+            paystackChannel: paystackData.channel
+          });
+
+        } catch (paystackError) {
+          logger.error(`[VERIFY PAYMENT] Error calling Paystack Verify API for ${reference}:`, {
+            message: paystackError.message,
+            statusCode: paystackError.response?.status,
+            data: paystackError.response?.data
+          });
+          // If Paystack returns 404, it means the reference was not found on their side,
+          // or the payment hasn't fully cleared/reconciled yet.
+          if (paystackError.response?.status === 404 || paystackError.response?.data?.message?.includes("Transaction not found")) {
+            return res.json({
+              success: false,
+              message: 'Payment still pending or not found on Paystack. Please wait a few minutes and try again.',
+              data: {
+                status: txn.status, // Return current internal status ('awaiting_payment')
+                productTitle: txn.postId?.title,
+                reference: txn.paymentReference
+              }
+            });
+          }
+          // For other errors, return a general server error.
+          return res.status(500).json({
+            success: false,
+            message: 'An error occurred while trying to verify payment with Paystack.',
+            error: process.env.NODE_ENV === 'development' ? paystackError.message : undefined
+          });
+        }
+
+        // 3. If Paystack confirms success for an 'awaiting_payment' internal transaction
+        if (paystackData.status === 'success' && paystackData.amount / 100 === txn.amount) { // Also check amount for security
+          logger.info(`[VERIFY PAYMENT] Paystack confirmed success for ${reference}. Updating internal transaction.`);
+          
+          // Update the internal transaction (similar logic to webhook)
+          txn.status = 'in_escrow';
+          txn.paidAt = new Date(paystackData.paid_at || Date.now());
+          txn.paymentChannel = paystackData.channel;
+          txn.narration = paystackData.narration; // Store the narration from Paystack
+          txn.currency = paystackData.currency || "NGN";
+          txn.buyerEmail = paystackData.customer?.email || txn.buyerEmail; // Update if needed
+          txn.paystackTransactionId = paystackData.id; // Paystack's internal transaction ID
+          
+          await txn.save();
+
+          // Mark post as sold
+          if (txn.postId) {
+            const updatedPost = await Post.findByIdAndUpdate(
+              txn.postId._id, // Use _id from populated postId
+              {
+                isSold: true,
+                soldAt: new Date(),
+                soldTo: txn.buyerId,
+                soldPrice: txn.amount,
+                soldReference: reference // Your SALM- reference
+              },
+              { new: true }
+            );
+
+            if (updatedPost) {
+              logger.info(`✅ Post ${txn.postId.title} marked as sold via manual verification.`);
+              req.io?.to(`user_${txn.sellerId}`).emit('productSold', {
+                postId: txn.postId._id,
+                productTitle: updatedPost.title,
+                soldPrice: txn.amount,
+                reference,
+                buyerId: txn.buyerId._id,
+                soldAt: updatedPost.soldAt
+              });
+            } else {
+              logger.warn(`⚠️ Post ${txn.postId._id} not found for marking as sold during manual verification.`);
+            }
+          }
+
+          // Generate and send receipt (can reuse existing helper functions)
+          try {
+            const receiptData = {
+              reference: txn.paymentReference,
+              amountPaid: txn.amount,
+              transactionDate: txn.paidAt,
+              buyerName: `${txn.buyerId.firstName || ''} ${txn.buyerId.lastName || ''}`.trim(),
+              email: txn.buyerId.email,
+              productTitle: txn.postId.title || "Product",
+              productId: txn.postId._id.toString(),
+              productCategory: txn.postId.category,
+              sellerName: `${txn.sellerId.firstName} ${txn.sellerId.lastName}`,
+              buyerId: txn.buyerId._id.toString(),
+              sellerId: txn.sellerId._id.toString()
+            };
+
+            const receiptImageUrl = await generateModernReceipt(receiptData);
+            await sendReceiptToSeller(receiptData, receiptImageUrl, req.io);
+
+            txn.receiptImageUrl = receiptImageUrl;
+            await txn.save();
+            logger.info(`✅ Receipt generated and sent via manual verification for ${reference}`);
+          } catch (receiptError) {
+            logger.error('Receipt generation/sending failed during manual verification:', {
+              transactionId: txn._id,
+              error: receiptError.message,
+              stack: receiptError.stack
+            });
+          }
+
+          // Return success response after updating everything
+          return res.json({
+            success: true,
+            message: 'Payment confirmed successfully!',
+            data: {
+              status: txn.status,
+              amount: txn.amount,
+              buyerId: txn.buyerId._id,
+              sellerId: txn.sellerId._id,
+              productId: txn.postId._id,
+              productTitle: txn.postId.title,
+              productSold: txn.postId.isSold,
+              paymentChannel: txn.paymentChannel,
+              paidAt: txn.paidAt,
+              receiptUrl: txn.receiptImageUrl
+            }
+          });
+
+        } else if (paystackData.status !== 'success') {
+          // Paystack did not confirm success
+          logger.info(`[VERIFY PAYMENT] Paystack status for ${reference} is ${paystackData.status}. Keeping internal status as awaiting_payment.`);
+          return res.json({
+            success: false,
+            message: `Payment status from Paystack is: ${paystackData.status}. Still pending or failed.`,
+            data: {
+              status: txn.status, // Still awaiting_payment
+              amount: txn.amount,
+              buyerId: txn.buyerId._id,
+              sellerId: txn.sellerId._id,
+              productId: txn.postId._id,
+              productTitle: txn.postId.title,
+              productSold: txn.postId.isSold,
+              paystackStatus: paystackData.status // Include Paystack's status
+            }
+          });
+        } else if (paystackData.amount / 100 !== txn.amount) {
+            logger.warn(`[VERIFY PAYMENT] Amount mismatch for ${reference}. Paystack: ${paystackData.amount / 100}, Internal: ${txn.amount}.`);
+            return res.json({
+                success: false,
+                message: 'Amount mismatch detected. Please contact support.',
+                data: {
+                    status: txn.status,
+                    paystackAmount: paystackData.amount / 100,
+                    internalAmount: txn.amount
+                }
+            });
+        }
+      }
+
+      // 4. If transaction is already processed (in_escrow, completed, etc.), just return its status
+      else {
+        logger.info(`[VERIFY PAYMENT] Transaction ${reference} is already ${txn.status}. No need for Paystack verification.`);
         return res.json({
           success: true,
+          message: 'Payment already confirmed.',
           data: {
-            ...responseData,
-            message: 'Payment pending confirmation'
+            status: txn.status,
+            amount: txn.amount,
+            buyerId: txn.buyerId._id,
+            sellerId: txn.sellerId._id,
+            productId: txn.postId._id,
+            productTitle: txn.postId.title,
+            productSold: txn.postId.isSold,
+            paymentChannel: txn.paymentChannel,
+            paidAt: txn.paidAt,
+            receiptUrl: txn.receiptImageUrl
           }
         });
       }
-
-      return res.json({
-        success: true,
-        data: {
-          ...responseData,
-          message: `Payment status: ${txn.status}`
-        }
-      });
 
     } catch (error) {
-      logger.error('[VERIFY PAYMENT] Failed:', error);
+      logger.error('[VERIFY PAYMENT] Failed unexpectedly:', {
+        error: error.message,
+        stack: error.stack,
+        reference: req.params.reference
+      });
       return res.status(500).json({
         success: false,
-        message: 'Error verifying payment'
+        message: 'Server error while verifying payment.'
       });
     }
   });
 
-    router.get('/payment-success', async (req, res) => {
+  router.get('/payment-success', async (req, res) => {
     logger.info('Received redirect to /payment-success. Verifying transaction via reference.');
     const requestId = `REDIRECT_SUCCESS_${Date.now()}`;
-    const { reference } = req.query; // This `reference` is the Paystack transaction reference
+    const { reference } = req.query; // This `reference` is the Paystack transaction reference (your SALM- ref)
 
     try {
       if (!reference) {
+        logger.error(`[PAYMENT SUCCESS] No payment reference found in query for requestId: ${requestId}`);
         throw new Error("No payment reference found for verification.");
       }
 
-      // Verify payment with Paystack
+      // Verify payment with Paystack using YOUR SALM- reference
       const paystackResponse = await axios.get(`https://api.paystack.co/transaction/verify/${reference}`, {
         headers: {
           Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
@@ -683,20 +911,61 @@ module.exports = (io) => {
       const data = paystackResponse.data;
 
       if (!data.status || data.data.status !== 'success') {
+        logger.warn(`[PAYMENT SUCCESS] Paystack verification failed for reference ${reference}: ${data.message}`, { requestId, paystackData: data.data });
         throw new Error(data.message || "Payment verification failed on redirect.");
       }
 
-      // Find the transaction in your database using the Paystack reference
-      const internalTransaction = await Transaction.findOne({ paymentReference: reference });
+      // Find the transaction in your database using YOUR SALM- reference
+      let internalTransaction = await Transaction.findOne({ paymentReference: reference });
+
+      // If internal transaction not found or not updated by webhook yet, attempt to update it here
+      if (internalTransaction && internalTransaction.status === 'awaiting_payment') {
+          logger.info(`[PAYMENT SUCCESS] Internal transaction ${reference} found but status is awaiting_payment. Updating via redirect verification.`, { requestId });
+          
+          internalTransaction.status = 'in_escrow';
+          internalTransaction.paidAt = new Date(data.data.paid_at || Date.now());
+          internalTransaction.paymentChannel = data.data.channel;
+          internalTransaction.narration = data.data.narration;
+          internalTransaction.currency = data.data.currency || "NGN";
+          internalTransaction.buyerEmail = data.data.customer?.email || internalTransaction.buyerEmail;
+          internalTransaction.paystackTransactionId = data.data.id;
+          await internalTransaction.save();
+
+          // Also mark post as sold if not already
+          if (internalTransaction.postId) {
+              const updatedPost = await Post.findByIdAndUpdate(
+                  internalTransaction.postId, 
+                  { isSold: true, soldAt: new Date(), soldTo: internalTransaction.buyerId, soldPrice: internalTransaction.amount, soldReference: reference },
+                  { new: true }
+              );
+              if (updatedPost) {
+                  logger.info(`✅ Post ${internalTransaction.postId} marked as sold via /payment-success redirect.`);
+                  req.io?.to(`user_${internalTransaction.sellerId}`).emit('productSold', {
+                      postId: internalTransaction.postId,
+                      productTitle: updatedPost.title,
+                      soldPrice: internalTransaction.amount,
+                      reference,
+                      buyerId: internalTransaction.buyerId,
+                      soldAt: updatedPost.soldAt
+                  });
+              }
+          }
+      } else if (!internalTransaction) {
+          logger.warn(`[PAYMENT SUCCESS] No internal transaction found for reference ${reference}. This might indicate a missing initial transaction or webhook failure.`, { requestId });
+          // Potentially create a placeholder transaction here if it's truly missing,
+          // though it's better to ensure /pay creates it reliably.
+      }
+
 
       let receiptData = {};
       let receiptStatus = { success: false, message: 'Receipt status unknown on redirect' };
 
-      if (internalTransaction) {
+      // Re-fetch or use updated internalTransaction for receipt data consistency
+      if (internalTransaction) { // Check again in case it was just updated
         const [buyer, seller, post] = await Promise.all([
           User.findById(internalTransaction.buyerId),
           User.findById(internalTransaction.sellerId),
-          Post.findById(internalTransaction.productId)
+          Post.findById(internalTransaction.postId)
         ]);
 
         if (buyer && seller && post) {
@@ -707,28 +976,51 @@ module.exports = (io) => {
             buyerName: `${buyer.firstName || ''} ${buyer.lastName || ''}`.trim(),
             email: buyer.email,
             productTitle: post.title || post.description || "Product",
+            productId: internalTransaction.postId,
+            productCategory: post.category,
             sellerName: `${seller.firstName} ${seller.lastName}`,
             buyerId: buyer._id.toString(),
             sellerId: seller._id.toString()
           };
-          // The webhook should have ideally processed the receipt generation.
-          // This path primarily serves as a confirmation page for the user.
-          receiptStatus.success = internalTransaction.receiptImageUrl ? true : false;
-          receiptStatus.message = internalTransaction.receiptImageUrl ? 'Digital receipt sent to seller.' : 'Receipt processing ongoing or failed. Check seller chat.';
+
+          // Try to generate and send receipt here if it wasn't already generated (e.g. by webhook)
+          if (!internalTransaction.receiptImageUrl) {
+            try {
+              const receiptImageUrl = await generateModernReceipt(receiptData);
+              await sendReceiptToSeller(receiptData, receiptImageUrl, req.io);
+              internalTransaction.receiptImageUrl = receiptImageUrl;
+              await internalTransaction.save();
+              logger.info(`✅ Receipt generated and sent via /payment-success redirect for ${reference}`);
+              receiptStatus.success = true;
+              receiptStatus.message = 'Digital receipt sent to seller.';
+            } catch (receiptGenError) {
+              logger.error('Receipt generation/sending failed during /payment-success redirect:', {
+                error: receiptGenError.message,
+                stack: receiptGenError.stack,
+                reference
+              });
+              receiptStatus.message = 'Receipt processing failed. Check seller chat.';
+            }
+          } else {
+             receiptStatus.success = true; // Receipt already exists
+             receiptStatus.message = 'Digital receipt already sent to seller.';
+          }
+        } else {
+          logger.warn(`[PAYMENT SUCCESS] Missing buyer, seller, or post data for receipt generation for ref ${reference}.`);
+          receiptStatus.message = 'Missing order details for receipt. Contact support.';
         }
       } else {
-        // Fallback if internal transaction isn't found (e.g., webhook delay)
-        logger.warn('Internal transaction not found by reference in /payment-success redirect. Webhook may be pending.', { requestId, reference });
+        // Fallback for receipt data if no internalTransaction could be found (edge case)
         receiptData = {
           reference: reference,
           amountPaid: data.data.amount / 100,
           transactionDate: data.data.paid_at,
-          buyerName: data.data.customer.first_name + ' ' + data.data.customer.last_name,
-          email: data.data.customer.email,
-          productTitle: metadata?.custom_fields?.find(f => f.variable_name === 'product_name')?.value || 'Unknown Product',
+          buyerName: data.data.customer?.first_name ? `${data.data.customer.first_name} ${data.data.customer.last_name || ''}`.trim() : data.data.customer?.email,
+          email: data.data.customer?.email,
+          productTitle: data.data.metadata?.custom_fields?.find(f => f.variable_name === 'product_name')?.value || 'Unknown Product', // Assuming metadata might hold product info
           sellerName: 'Unknown Seller'
         };
-        receiptStatus.message = 'No internal transaction found to confirm full processing. Please check your order status later.';
+        receiptStatus.message = 'No internal transaction found. Please check your order status later.';
       }
 
       // Send success response with modern HTML
