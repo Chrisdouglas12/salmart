@@ -3,27 +3,24 @@ const mongoose = require('mongoose');
 const transactionSchema = new mongoose.Schema({
   buyerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   sellerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  // IMPORTANT: Changed from productId to postId to match the schema definition
-  // and the variable name used in the route to fetch the Post.
   postId: { type: mongoose.Schema.Types.ObjectId, ref: 'Post', required: true }, 
-  buyerEmail: { type: String }, // useful for webhook fallback matching
 
-  amount: { type: Number, required: true }, // in Naira (not kobo)
+  buyerEmail: { type: String },
 
-  // Paystack transaction reference generated during `/pay`
+  amount: { type: Number, required: true }, // in Naira
+
   paymentReference: { type: String, required: true, unique: true },
+  paystackTransactionId: { type: String },
 
-  // Status flow
   status: {
     type: String,
     enum: [
       'awaiting_payment',
-      'pending',           // Added 'pending' as it's used in your /payment-success route
-      'in_escrow',           // paid and held
-      'transfer_initiated',  // payout started
+      'pending',
+      'in_escrow',
+      'transfer_initiated',
       'confirmed_pending_payout',
-      
-      'released',           // payout successful
+      'released',
       'refund_requested',
       'refunded',
       'transfer_failed',
@@ -34,11 +31,13 @@ const transactionSchema = new mongoose.Schema({
     required: true
   },
 
-  paymentChannel: { type: String }, // card, bank_transfer, ussd, etc. (from webhook)
-  narrationKey: { type: String }, // optional, for bank transfers
+  processing: { type: Boolean, default: false },
+  paymentChannel: { type: String }, // card, bank_transfer, etc.
+  narrationKey: { type: String },
   currency: { type: String, default: 'NGN' },
 
-  viewed: { type: Boolean, default: false }, // used for UI status indicators
+  viewed: { type: Boolean, default: false },
+
   productMetadata: {
     productTitle: String,
     productDescription: String,
@@ -48,26 +47,31 @@ const transactionSchema = new mongoose.Schema({
     productCondition: String,
     createdAt: Date
   },
-  // Added Paystack's internal transaction ID
-  paystackTransactionId: { type: String }, 
-  paymentMethod: { type: String, default: 'pt_account_transfer' },
-  // Timestamps
-  createdAt: { type: Date, default: Date.now },
-  paidAt: { type: Date },
+
+  // Payout-related fields
+  platformCommission: { type: Number, default: 0 }, // ₦ taken by platform
+  sellerAmount: { type: Number, default: 0 },       // ₦ to seller
+  amountDue: { type: Number },                      // fallback if not set
+  amountTransferred: { type: Number },              // confirmed payout amount
+  transferReference: { type: String },
+  transferStatus: { type: String },
+  transferStatusMessage: { type: String },
   dateReleased: { type: Date },
 
-  // Commission and payout
-  platformCommission: { type: Number, default: 0 },
-  sellerAmount: { type: Number, default: 0 },
-  transferReference: { type: String, default: null },
-  transferStatusMessage: { type: String },
+  // Refund tracking
+  refundReference: { type: String },
+  refundStatus: { type: String }, // Paystack refund status (e.g., success, failed)
+  refundedAt: { type: Date },
 
-  // Optional: Digital receipt
+  // Receipt + file references
   receiptImageUrl: { type: String },
 
-  // If you ever want to OTP-guard delivery confirmation
+  // Delivery protection
   otpRequired: { type: Boolean, default: false },
 
-}, { timestamps: true }); // adds updatedAt automatically
+  // Manual approval flag (for admins)
+  approvedByAdmin: { type: Boolean, default: false },
+
+}, { timestamps: true });
 
 module.exports = mongoose.model('Transaction', transactionSchema);

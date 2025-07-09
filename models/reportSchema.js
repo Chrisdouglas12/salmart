@@ -7,7 +7,10 @@ const reportSchema = new mongoose.Schema({
   status: { type: String, enum: ['pending', 'resolved'], default: 'pending' },
   resolution: { type: String, enum: ['warn', 'ban', 'dismiss'], default: null },
   resolvedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  createdAt: { type: Date, default: Date.now }
+  createdAt: { type: Date, default: Date.now },
+  
+  postId: { type: mongoose.Schema.Types.ObjectId, ref: 'Post' },
+
 });
 
 

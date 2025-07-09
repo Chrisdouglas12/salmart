@@ -1,18 +1,38 @@
 const express = require('express')
 const mongoose = require('mongoose');
 const router = express.Router();
+const axios = require('axios')
 const User = require('../models/userSchema.js');
 const Transaction = require('../models/transactionSchema');
 const Post = require('../models/postSchema');
 const Admin = require('../models/adminSchema.js')
-const Refund = require('../models/refundSchema.js')
+const RefundRequests = require('../models/refundSchema.js')
 const Report = require('../models/reportSchema.js')
-const Payout = require('../models/payoutSchema.js')
+ const Payout = require('../models/payoutSchema.js')
 const verifyToken = require('../middleware/auths.js')
 const Notification = require('../models/notificationSchema.js')
 const NotificationService = require('../services/notificationService.js');
 const { sendFCMNotification } = require('../services/notificationUtils.js')
+const winston = require('winston');
 
+// Logger configuration
+const logger = winston.createLogger({
+  level: 'info',
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.json()
+  ),
+  transports: [
+    new winston.transports.File({ filename: 'logs/postRoutes.log' }),
+    new winston.transports.Console(),
+  ],
+});
+module.exports = (io) => {
+  router.use((req, res, next) => {
+    req.io = io;
+    next();
+  });
+  
 //Endpoint to register admin
 router.post('/admin/register', async (req, res) => {
   try {
@@ -72,7 +92,7 @@ router.get('/admin/me', verifyToken, async (req, res) => {
 
 
 // Admin Routes
-router.get('/api/admin/refunds', verifyToken, async (req, res) => {
+router.get('/api/admin/refunds', async (req, res) => {
   try {
     const refunds = await RefundRequests.find()
       .populate('buyerId', 'firstName lastName')
@@ -87,7 +107,7 @@ router.get('/api/admin/refunds', verifyToken, async (req, res) => {
   }
 });
 
-router.get('/api/admin/users', verifyToken, async (req, res) => {
+router.get('/api/admin/users', async (req, res) => {
   try {
     const users = await User.find().select('firstName lastName email profilePicture createdAt isBanned').sort({ createdAt: -1 });
     res.status(200).json(users);
@@ -97,7 +117,7 @@ router.get('/api/admin/users', verifyToken, async (req, res) => {
   }
 });
 
-router.post('/api/admin/users/:id/ban', verifyToken, async (req, res) => {
+router.post('/api/admin/users/:id/ban', async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
     if (!user) {
@@ -115,7 +135,7 @@ router.post('/api/admin/users/:id/ban', verifyToken, async (req, res) => {
   }
 });
 
-router.get('/api/admin/users/banned', verifyToken, async (req, res) => {
+router.get('/api/admin/users/banned', async (req, res) => {
   try {
     const bannedUsers = await User.find({ isBanned: true }).select('firstName lastName email profilePicture createdAt').sort({ createdAt: -1 });
     res.status(200).json(bannedUsers);
@@ -125,7 +145,7 @@ router.get('/api/admin/users/banned', verifyToken, async (req, res) => {
   }
 });
 
-router.post('/api/admin/users/:id/unban', verifyToken, async (req, res) => {
+router.post('/api/admin/users/:id/unban', async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
     if (!user) {
@@ -143,13 +163,13 @@ router.post('/api/admin/users/:id/unban', verifyToken, async (req, res) => {
   }
 });
 
-router.get('/api/admin/transactions', verifyToken, async (req, res) => {
+router.get('/api/admin/transactions', async (req, res) => {
   try {
     const transactions = await Transaction.find()
       .populate('buyerId', 'firstName lastName email')
       .populate('sellerId', 'firstName lastName email')
-      .populate('productId', 'description')
-      .select('buyerId sellerId productId amount status createdAt refundRequested paymentReference')
+      .populate('postId', 'title')
+      .select('buyerId sellerId postId amount status createdAt refundRequested paymentReference')
       .sort({ createdAt: -1 });
     res.status(200).json(transactions);
   } catch (error) {
@@ -158,33 +178,143 @@ router.get('/api/admin/transactions', verifyToken, async (req, res) => {
   }
 });
 
-router.post('/api/admin/refunds/:id/:action', verifyToken, async (req, res) => {
+
+
+router.post('/api/admin/refunds/:id/:action', async (req, res) => {
   try {
     const { id, action } = req.params;
-    const transaction = await Transaction.findById(id);
-    if (!transaction || !transaction.refundRequested) {
+
+    const refund = await RefundRequests.findOne({ transactionId: id }).populate('transactionId buyerId sellerId description');
+    if (!refund) {
       return res.status(404).json({ success: false, message: 'Refund request not found' });
     }
 
-    if (action === 'approve') {
-      transaction.status = 'refunded';
-      transaction.refundRequested = false;
-    } else if (action === 'deny') {
-      transaction.refundRequested = false;
-    } else {
-      return res.status(400).json({ success: false, message: 'Invalid action' });
+    const transaction = await Transaction.findById(refund.transactionId);
+    if (!transaction || !transaction.paymentReference) {
+      return res.status(404).json({ success: false, message: 'Related transaction not found or missing payment reference' });
     }
 
-    await transaction.save();
-    res.status(200).json({ success: true, message: `Refund ${action}d successfully` });
-  } catch (error) {
-    console.error('Resolve refund error:', error.message);
+    const buyerId = refund.buyerId?._id || transaction.buyerId;
+    const postId = refund.description?._id || transaction.postId;
+    const amount = transaction.amount || 0;
+    const productTitle = refund.description?.title || 'product';
+
+    if (action === 'approve') {
+      // Call Paystack refund
+      try {
+        const refundResponse = await axios.post(
+          'https://api.paystack.co/refund',
+          {
+            transaction: transaction.paymentReference,
+            amount: Math.round(amount * 100) // In kobo
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+
+        const refundData = refundResponse.data.data;
+
+        // Update DB
+        refund.status = 'refunded';
+        refund.adminComment = 'Refund approved and processed';
+        await refund.save();
+
+        transaction.status = 'refunded';
+        transaction.refundedAt = new Date();
+        transaction.refundReference = refundData?.refund_reference || 'manual';
+        transaction.refundStatus = refundData?.status || 'initiated';
+        await transaction.save();
+
+        // Save in-app notification
+        await Notification.create({
+          userId: buyerId,
+          senderId: null,
+          postId,
+          title: 'Refund Approved',
+          message: `₦${amount.toLocaleString('en-NG')} has been refunded for your purchase of "${productTitle}".`,
+          type: 'refund_processed',
+          metadata: {
+            refundId: refund._id,
+            transactionId: transaction._id,
+            amount,
+            reference: transaction.refundReference
+          }
+        });
+
+        // Send FCM notification
+        await sendFCMNotification(
+          buyerId,
+          'Refund Approved',
+          `₦${amount.toLocaleString('en-NG')} refunded for "${productTitle}".`,
+          {
+            type: 'refund_processed',
+            refundId: refund._id.toString(),
+            transactionId: transaction._id.toString(),
+            amount,
+            reference: transaction.refundReference,
+            senderId: null,
+          }
+        );
+
+        return res.status(200).json({
+          success: true,
+          message: 'Refund approved and processed via Paystack',
+          data: refundData
+        });
+
+      } catch (paystackErr) {
+        console.error('[PAYSTACK REFUND ERROR]', paystackErr.response?.data || paystackErr.message);
+        return res.status(500).json({
+          success: false,
+          message: 'Refund failed on Paystack',
+          error: paystackErr.response?.data?.message || paystackErr.message
+        });
+      }
+
+    } else if (action === 'deny') {
+      refund.status = 'rejected';
+      refund.adminComment = 'Refund denied by admin';
+      await refund.save();
+
+      await Notification.create({
+        userId: buyerId,
+        postId,
+        title: 'Refund Denied',
+        message: `Your refund request for "${productTitle}" was denied by admin.`,
+        type: 'refund_rejected',
+        metadata: {
+          refundId: refund._id,
+          transactionId: transaction._id
+        }
+      });
+
+      await sendFCMNotification(
+        buyerId,
+        'Refund Denied',
+        `Your refund request for "${productTitle}" was rejected.`,
+        {
+          type: 'refund_rejected',
+          refundId: refund._id.toString(),
+          transactionId: transaction._id.toString()
+        }
+      );
+
+      return res.status(200).json({ success: true, message: 'Refund request denied' });
+    }
+
+    return res.status(400).json({ success: false, message: 'Invalid action' });
+
+  } catch (err) {
+    console.error('[ADMIN REFUND ERROR]', err.message);
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
-
 //Get reported users
-router.get('/api/reported-users', verifyToken, async (req, res) => {
+router.get('/api/reported-users', async (req, res) => {
   try {
     const reports = await Report.find({ status: 'pending' })
       .populate('reportedUser', 'firstName lastName email profilePicture createdAt')
@@ -197,7 +327,7 @@ router.get('/api/reported-users', verifyToken, async (req, res) => {
   }
 });
 
-router.post('/admin/resolve-report', verifyToken, async (req, res) => {
+router.post('/admin/resolve-report', async (req, res) => {
   try {
     const { reportId, action, adminNotes } = req.body;
     const adminId = req.user.userId;
@@ -241,12 +371,12 @@ router.post('/admin/resolve-report', verifyToken, async (req, res) => {
 });
 
 //Get pending reports
-router.get('/admin/reports/pending', verifyToken, async (req, res) => {
+router.get('/admin/reports/pending', async (req, res) => {
   try {
     const reports = await Report.find({ status: 'pending' })
       .populate('reportedUser', 'firstName lastName email profilePicture')
       .populate('reportedBy', 'firstName lastName email')
-      .populate('relatedPost', 'description photo')
+      .populate('postId', 'title photo')
       .sort({ createdAt: -1 });
     res.status(200).json({ success: true, reports });
   } catch (error) {
@@ -258,14 +388,14 @@ router.get('/admin/reports/pending', verifyToken, async (req, res) => {
 // GET /api/admin/transactions/pending
 router.get('/admin/transactions/pending', async (req, res) => {
   try {
-    const pendingTxns = await Transaction.find({ 
-      status: 'awaiting_admin_review' 
-    })
-      .populate('postId', 'title images')
-      .populate('buyerId', 'firstName lastName email')
-      .sort({ createdAt: -1 });
+    const pendingTxns = await Transaction.find({
+  status: { $in: ['confirmed_pending_payout', 'in_escrow'] }
+})
+.populate('postId', 'title photo')
+.populate('buyerId', 'firstName lastName email')
+.sort({ createdAt: -1 });
 
-    res.json({ success: true, data: pendingTxns });
+res.json({ success: true, data: pendingTxns });
   } catch (err) {
     logger.error('[ADMIN TXNS] Error fetching pending txns:', err);
     res.status(500).json({ success: false, message: 'Error loading transactions' });
@@ -277,40 +407,114 @@ router.post('/admin/approve-payment', async (req, res) => {
   const { reference } = req.body;
 
   try {
-    const txn = await Transaction.findOne({ 
-      paymentReference: new RegExp(`^${reference}$`, 'i') 
-    }).populate('postId');
+    const txn = await Transaction.findOne({
+      paymentReference: new RegExp(`^${reference}$`, 'i')
+    }).populate('postId buyerId sellerId');
 
     if (!txn) {
       return res.status(404).json({ success: false, message: 'Transaction not found' });
     }
 
-    if (txn.status !== 'awaiting_admin_review') {
-      return res.status(400).json({ success: false, message: 'Transaction not in reviewable state' });
+    if (!['confirmed_pending_payout', 'pending', 'in_escrow'].includes(txn.status)) {
+      return res.status(400).json({ success: false, message: 'Transaction not in payout-ready state' });
     }
 
-    txn.status = 'in_escrow';
+    // Fallbacks
+    if (!txn.transferRecipient && txn.sellerId?.transferRecipientCode) {
+      txn.transferRecipient = txn.sellerId.transferRecipientCode;
+    }
+
+    if (typeof txn.amountDue !== 'number' || txn.amountDue <= 0) {
+      txn.amountDue = txn.amount - (txn.platformCommission || 0);
+      await txn.save();
+    }
+
+    // Final safety checks
+    if (!txn.sellerId || !txn.transferRecipient || typeof txn.amountDue !== 'number') {
+      return res.status(400).json({ success: false, message: 'Missing seller or transfer details' });
+    }
+
+    const amountKobo = Math.round(txn.amountDue * 100);
+    const transferReason = `Manual payout for: ${txn.postId?.title || 'Product'}`;
+
+    const transferPayload = {
+      source: 'balance',
+      amount: amountKobo,
+      recipient: txn.transferRecipient,
+      reason: transferReason
+    };
+
+    const transferResponse = await axios.post(
+      'https://api.paystack.co/transfer',
+      transferPayload,
+      {
+        headers: { Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}` }
+      }
+    );
+
+    const paystackData = transferResponse.data.data;
+    const paystackRef = paystackData.reference || paystackData.transfer_code;
+
+    txn.status = 'released';
+    txn.transferReference = paystackRef;
+    txn.amountTransferred = txn.amountDue;
+    txn.transferStatus = paystackData.status;
+    txn.transferStatusMessage = paystackData.message || '';
+    txn.dateReleased = new Date();
     txn.paidAt = new Date();
     txn.approvedByAdmin = true;
     await txn.save();
 
-    // Mark product as sold
+    // Mark product as sold (emit socket event)
     await markProductAsSold(txn, reference, req.io);
 
-    res.json({ success: true, message: 'Transaction approved and product marked as sold', data: txn });
+    // === Notification + FCM ===
+    const title = 'Payment Released by Admin';
+    const productTitle = txn.postId?.title || 'product';
+    const message = `₦${txn.amountDue.toLocaleString('en-NG')} for "${productTitle}" has been released to your account.`;
+
+    await Notification.create({
+      userId: txn.sellerId._id,
+      senderId: txn.buyerId?._id || 'salmart',
+      postId: txn.postId?._id,
+      title,
+      message,
+      type: 'payment_released',
+      metadata: {
+        transactionId: txn._id,
+        amountTransferred: txn.amountDue,
+        reference: paystackRef
+      }
+    });
+
+    await sendFCMNotification(
+      txn.sellerId._id,
+      title,
+      message,
+      {
+        type: 'payment_released',
+        transactionId: txn._id.toString(),
+        amountTransferred: txn.amountDue,
+        reference: paystackRef
+      }
+    );
+
+    return res.json({
+      success: true,
+      message: 'Payment released and product marked as sold',
+      data: txn
+    });
 
   } catch (err) {
-    logger.error('[ADMIN APPROVAL] Error approving txn:', err);
-    res.status(500).json({ success: false, message: 'Error approving payment' });
+    console.error('[ADMIN PAYOUT ERROR]', err.message, err.stack);
+    return res.status(500).json({
+      success: false,
+      message: 'Error approving payment',
+      error: err.message
+    });
   }
 });
 
 
-// Export router as a function that accepts io
-module.exports = (io) => {
-  router.use((req, res, next) => {
-    req.io = io;
-    next();
-  });
   return router;
 };

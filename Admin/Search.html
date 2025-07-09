@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Search - SALMART</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflire.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     * {
       margin: 0;
@@ -15,451 +15,495 @@
 
     :root {
       --primary-color: #28a745;
-      --secondary-color: #fff;
-      --text-dark: #1a1a1a;
-      --text-light: #6b7280;
-      --border-color: #e5e7eb;
-      --hover-color: #f8f9fa;
-      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-      --gradient: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+      --secondary-color: #f3f8f1;
+      --success-color: #42b883;
+      --bg-color: #f0f2f5;
+      --white: #ffffff;
+      --text-primary: #1c1e21;
+      --text-secondary: #65676b;
+      --text-muted: #8a8d91;
+      --border-color: #dadde1;
+      --hover-color: #f2f3f4;
+      --shadow-light: 0 2px 4px rgba(0, 0, 0, 0.1);
+      --shadow-medium: 0 8px 16px rgba(0, 0, 0, 0.1);
+      --border-radius: 8px;
     }
 
     body {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-      min-height: 100vh;
-      color: var(--text-dark);
-      line-height: 1.6;
+      background: var(--bg-color);
+      color: var(--text-primary);
+      line-height: 1.5;
     }
 
-    .container {
+    /* Header */
+    .header {
+      background: var(--white);
+      border-bottom: 1px solid var(--border-color);
+      padding: 8px 0;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      box-shadow: var(--shadow-light);
+    }
+
+    .header-container {
       max-width: 1200px;
       margin: 0 auto;
-      padding: 0 20px;
-    }
-
-    /* Header Section */
-    .header {
-      background: var(--secondary-color);
-      box-shadow: var(--shadow-sm);
-      padding: 2rem 0;
-      margin-bottom: 3rem;
-    }
-
-    .header-content {
-      text-align: center;
+      padding: 0 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
 
     .logo {
-      font-size: 2rem;
-      font-weight: 700;
-      color: var(--primary-color);
-      margin-bottom: 0.5rem;
       display: flex;
       align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
+      gap: 8px;
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--primary-color);
     }
 
-    .logo i {
-      font-size: 1.8rem;
-    }
-
-    .subtitle {
-      color: var(--text-light);
-      font-size: 1.1rem;
-      font-weight: 400;
-    }
-
-    /* Search Section */
-    .search-section {
-      background: var(--secondary-color);
-      border-radius: 20px;
-      padding: 3rem 2rem;
-      box-shadow: var(--shadow-lg);
-      margin-bottom: 3rem;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .search-section::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 4px;
-      background: var(--gradient);
-    }
-
-    .search-form {
+    .search-header {
+      flex: 1;
       max-width: 600px;
-      margin: 0 auto;
-      position: relative;
+      margin: 0 32px;
     }
 
-    .search-input-wrapper {
+    .search-box {
       position: relative;
-      margin-bottom: 1.5rem;
+      width: 100%;
     }
 
     .search-input {
       width: 100%;
-      padding: 1rem 1.5rem 1rem 3.5rem;
-      font-size: 1.1rem;
-      border: 2px solid var(--border-color);
-      border-radius: 50px;
-      background: var(--secondary-color);
-      transition: all 0.3s ease;
-      font-family: inherit;
+      padding: 12px 16px 12px 48px;
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      background: var(--bg-color);
+      font-size: 16px;
+      transition: all 0.2s ease;
     }
 
     .search-input:focus {
       outline: none;
       border-color: var(--primary-color);
-      box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.1);
-      transform: translateY(-2px);
+      background: var(--white);
+      box-shadow: 0 2px 8px rgba(24, 119, 242, 0.1);
     }
 
     .search-icon {
       position: absolute;
-      left: 1.2rem;
+      left: 16px;
       top: 50%;
       transform: translateY(-50%);
-      color: var(--text-light);
-      font-size: 1.2rem;
+      color: var(--text-muted);
+      font-size: 16px;
     }
 
-    .search-button {
-      background: var(--gradient);
-      color: var(--secondary-color);
-      border: none;
-      padding: 1rem 2.5rem;
-      font-size: 1.1rem;
-      font-weight: 600;
-      border-radius: 50px;
+    /* Main Content */
+    .main-container {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    /* Search Results Filter */
+    .search-filter {
+      background: var(--white);
+      border-radius: var(--border-radius);
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow-light);
+    }
+
+    .filter-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .filter-tab {
+      padding: 8px 16px;
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      background: var(--white);
+      color: var(--text-secondary);
       cursor: pointer;
-      transition: all 0.3s ease;
-      position: relative;
+      transition: all 0.2s ease;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .filter-tab.active {
+      background: var(--primary-color);
+      color: var(--white);
+      border-color: var(--primary-color);
+    }
+
+    .filter-tab:hover:not(.active) {
+      background: var(--hover-color);
+    }
+
+    .search-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+
+    /* Post Cards */
+    .post-card {
+      background: var(--white);
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow-light);
+      margin-bottom: 16px;
       overflow: hidden;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+      transition: box-shadow 0.2s ease;
     }
 
-    .search-button:hover {
-      transform: translateY(-2px);
-      box-shadow: var(--shadow-lg);
+    .post-card:hover {
+      box-shadow: var(--shadow-medium);
     }
 
-    .search-button:active {
-      transform: translateY(0);
+    .post-header {
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
     }
 
-    .search-button i {
-      margin-left: 0.5rem;
+    .post-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .post-info {
+      flex: 1;
+    }
+
+    .post-author {
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 2px;
+    }
+
+    .post-type {
+      color: var(--text-secondary);
+      font-size: 12px;
+    }
+
+    .post-menu {
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 50%;
+      transition: background 0.2s ease;
+    }
+
+    .post-menu:hover {
+      background: var(--hover-color);
+    }
+
+    .post-content {
+      padding: 0 16px 16px;
+    }
+
+    .post-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+
+    .post-description {
+      color: var(--text-secondary);
+      font-size: 14px;
+      margin-bottom: 12px;
+    }
+
+    .post-image {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+      border-radius: var(--border-radius);
+      margin-bottom: 12px;
+    }
+
+    .post-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 12px;
+    }
+
+    .meta-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      color: var(--text-secondary);
+      font-size: 12px;
+    }
+
+    .meta-item i {
+      color: var(--text-muted);
+    }
+
+    .post-price {
+      display: inline-block;
+      background: var(--success-color);
+      color: var(--white);
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .post-actions {
+      border-top: 1px solid var(--border-color);
+      padding: 8px 16px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .action-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border: none;
+      background: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .action-btn:hover {
+      background: var(--hover-color);
+    }
+
+    .action-btn.interested {
+      color: var(--primary-color);
+    }
+
+    .action-btn.interested:hover {
+      background: rgba(24, 119, 242, 0.1);
+    }
+
+    /* User Profile Cards */
+    .user-card {
+      background: var(--white);
+      border-radius: var(--border-radius);
+      padding: 16px;
+      box-shadow: var(--shadow-light);
+      margin-bottom: 16px;
+    }
+
+    .user-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .user-avatar {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .user-info {
+      flex: 1;
+    }
+
+    .user-name {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+
+    .user-title {
+      color: var(--text-secondary);
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+
+    .user-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .user-btn {
+      padding: 8px 16px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      background: var(--white);
+      color: var(--text-primary);
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+
+    .user-btn.primary {
+      background: var(--primary-color);
+      color: var(--white);
+      border-color: var(--primary-color);
+    }
+
+    .user-btn:hover {
+      background: var(--hover-color);
+    }
+
+    .user-btn.primary:hover {
+      background: #1664c4;
     }
 
     /* Loading State */
     .loading {
       display: none;
       text-align: center;
-      padding: 2rem;
-      color: var(--text-light);
+      padding: 32px;
+      color: var(--text-secondary);
     }
 
-    .spinner {
-      display: inline-block;
-      width: 40px;
-      height: 40px;
-      border: 4px solid var(--border-color);
+    .loading-spinner {
+      width: 32px;
+      height: 32px;
+      border: 3px solid var(--border-color);
+      border-top: 3px solid var(--primary-color);
       border-radius: 50%;
-      border-top-color: var(--primary-color);
-      animation: spin 1s ease-in-out infinite;
-      margin-bottom: 1rem;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 16px;
     }
 
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
 
-    /* Results Section */
-    .results-section {
-      margin-top: 2rem;
-    }
-
-    .section-header {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      margin-bottom: 1.5rem;
-      padding-bottom: 1rem;
-      border-bottom: 2px solid var(--border-color);
-    }
-
-    .section-title {
-      font-size: 1.5rem;
-      font-weight: 600;
-      color: var(--text-dark);
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .section-title i {
-      color: var(--primary-color);
-    }
-
-    .results-count {
-      background: var(--primary-color);
-      color: var(--secondary-color);
-      padding: 0.25rem 0.75rem;
-      border-radius: 20px;
-      font-size: 0.9rem;
-      font-weight: 500;
-    }
-
-    /* Card Styles */
-    .results-grid {
-      display: grid;
-      gap: 1.5rem;
-      margin-bottom: 3rem;
-    }
-
-    .card {
-      background: var(--secondary-color);
-      border-radius: 16px;
-      padding: 1.5rem;
-      box-shadow: var(--shadow-md);
-      transition: all 0.3s ease;
-      border: 1px solid var(--border-color);
-      position: relative;
-      overflow: hidden;
-    }
-
-    .card:hover {
-      transform: translateY(-4px);
-      box-shadow: var(--shadow-lg);
-      border-color: var(--primary-color);
-    }
-
-    .card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 3px;
-      background: var(--gradient);
-      transform: scaleX(0);
-      transition: transform 0.3s ease;
-    }
-
-    .card:hover::before {
-      transform: scaleX(1);
-    }
-
-    .card-content {
-      display: flex;
-      align-items: center;
-      gap: 1.5rem;
-    }
-
-    .card-image {
-      width: 80px;
-      height: 80px;
-      border-radius: 12px;
-      object-fit: cover;
-      flex-shrink: 0;
-      border: 2px solid var(--border-color);
-    }
-
-    .card-info {
-      flex: 1;
-    }
-
-    .card-title {
-      font-size: 1.2rem;
-      font-weight: 600;
-      color: var(--text-dark);
-      margin-bottom: 0.5rem;
-    }
-
-    .card-description {
-      color: var(--text-light);
-      margin-bottom: 0.75rem;
-      line-height: 1.5;
-    }
-
-    .card-meta {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1rem;
-      font-size: 0.9rem;
-    }
-
-    .meta-item {
-      display: flex;
-      align-items: center;
-      gap: 0.25rem;
-      color: var(--text-light);
-    }
-
-    .meta-item i {
-      color: var(--primary-color);
-      font-size: 0.8rem;
-    }
-
-    .price-tag {
-      background: var(--gradient);
-      color: var(--secondary-color);
-      padding: 0.5rem 1rem;
-      border-radius: 20px;
-      font-weight: 600;
-      font-size: 1.1rem;
-      position: absolute;
-      top: 1rem;
-      right: 1rem;
-    }
-
     /* No Results */
     .no-results {
       text-align: center;
-      padding: 3rem 2rem;
-      background: var(--secondary-color);
-      border-radius: 16px;
-      box-shadow: var(--shadow-md);
+      padding: 48px 16px;
+      color: var(--text-secondary);
     }
 
     .no-results i {
-      font-size: 4rem;
-      color: var(--text-light);
-      margin-bottom: 1rem;
+      font-size: 48px;
+      color: var(--text-muted);
+      margin-bottom: 16px;
     }
 
     .no-results h3 {
-      font-size: 1.5rem;
-      color: var(--text-dark);
-      margin-bottom: 0.5rem;
-    }
-
-    .no-results p {
-      color: var(--text-light);
-      font-size: 1.1rem;
+      font-size: 20px;
+      margin-bottom: 8px;
     }
 
     /* Responsive Design */
     @media (max-width: 768px) {
-      .container {
-        padding: 0 15px;
+      .header-container {
+        padding: 0 12px;
       }
 
-      .search-section {
-        padding: 2rem 1.5rem;
-        margin-bottom: 2rem;
+      .search-header {
+        margin: 0 16px;
       }
 
-      .search-input {
-        font-size: 1rem;
-        padding: 0.875rem 1.25rem 0.875rem 3rem;
+      .main-container {
+        padding: 8px;
       }
 
-      .search-button {
-        padding: 0.875rem 2rem;
-        font-size: 1rem;
+      .filter-tabs {
+        flex-wrap: wrap;
       }
 
-      .card-content {
+      .post-image {
+        height: 150px;
+      }
+
+      .user-actions {
         flex-direction: column;
-        text-align: center;
-        gap: 1rem;
-      }
-
-      .card-image {
-        width: 100px;
-        height: 100px;
-      }
-
-      .price-tag {
-        position: static;
-        margin-top: 1rem;
-        display: inline-block;
-      }
-
-      .card-meta {
-        justify-content: center;
-      }
-    }
-
-    @media (max-width: 480px) {
-      .logo {
-        font-size: 1.5rem;
-      }
-
-      .subtitle {
-        font-size: 1rem;
-      }
-
-      .search-section {
-        padding: 1.5rem 1rem;
-      }
-
-      .section-title {
-        font-size: 1.3rem;
       }
     }
   </style>
 </head>
 <body>
   <div class="header">
-    <div class="container">
-      <div class="header-content">
-        <div class="logo">
-          <i class="fas fa-store"></i>
-          SALMART
+    <div class="header-container">
+      <div class="logo">
+        <i class="fas fa-store"></i>
+        SALMART
+      </div>
+      <div class="search-header">
+        <div class="search-box">
+          <i class="fas fa-search search-icon"></i>
+          <input type="text" id="searchInput" class="search-input" placeholder="Search SALMART">
         </div>
-        <p class="subtitle">Find products and connect with sellers</p>
       </div>
     </div>
   </div>
 
-  <div class="container">
-    <div class="search-section">
-      <div class="search-form">
-        <div class="search-input-wrapper">
-          <i class="fas fa-search search-icon"></i>
-          <input type="text" id="searchInput" class="search-input" placeholder="Search for products, users, or anything...">
-        </div>
-        <button class="search-button" onclick="performSearch()">
-          Search Now
-          <i class="fas fa-arrow-right"></i>
-        </button>
+  <div class="main-container">
+    <div class="search-filter">
+      <div class="filter-tabs">
+        <div class="filter-tab active" data-filter="all">All</div>
+        <div class="filter-tab" data-filter="posts">Posts</div>
+        <div class="filter-tab" data-filter="users">People</div>
+      </div>
+      <div class="search-info">
+        <i class="fas fa-info-circle"></i>
+        <span id="searchInfo">Enter a search term to see results</span>
       </div>
     </div>
 
     <div class="loading" id="loadingState">
-      <div class="spinner"></div>
-      <p>Searching for results...</p>
+      <div class="loading-spinner"></div>
+      <p>Searching...</p>
     </div>
 
-    <div class="results-section" id="searchResults"></div>
+    <div id="searchResults"></div>
   </div>
 
   <script>
+       const API_BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart.onrender.com';
+    let currentFilter = 'all';
+    let searchData = null;
+
+    // Filter functionality
+    document.querySelectorAll('.filter-tab').forEach(tab => {
+      tab.addEventListener('click', function() {
+        document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+        this.classList.add('active');
+        currentFilter = this.dataset.filter;
+        
+        if (searchData) {
+          displayResults(searchData);
+        }
+      });
+    });
+
     async function performSearch() {
       const query = document.getElementById('searchInput').value.trim();
-      if (!query) {
-        alert("Please enter something to search for.");
-        return;
-      }
+      if (!query) return;
 
       const loadingEl = document.getElementById('loadingState');
       const resultsEl = document.getElementById('searchResults');
+      const searchInfo = document.getElementById('searchInfo');
       
       // Show loading state
       loadingEl.style.display = 'block';
       resultsEl.innerHTML = '';
+      searchInfo.textContent = 'Searching...';
 
       try {
         const res = await fetch(`${API_BASE_URL}/search?q=${encodeURIComponent(query)}`);
@@ -468,115 +512,13 @@
         // Hide loading state
         loadingEl.style.display = 'none';
         
-        let output = '';
-
-        // Products Section
-        if (data.posts && data.posts.length > 0) {
-          output += `
-            <div class="section-header">
-              <h2 class="section-title">
-                <i class="fas fa-box"></i>
-                Products
-              </h2>
-              <span class="results-count">${data.posts.length} found</span>
-            </div>
-            <div class="results-grid">
-          `;
-          
-          data.posts.forEach(post => {
-            const productImage = post.photo || '/assets/default-product.png';
-            const price = post.price ? `₦${post.price.toLocaleString()}` : 'Price not set';
-            const creator = post.createdBy?.userId;
-            const sellerName = creator ? `${creator.firstName || ''} ${creator.lastName || ''}`.trim() : 'Unknown Seller';
-
-            output += `
-              <div class="card">
-                <div class="price-tag">${price}</div>
-                <div class="card-content">
-                  <img src="${productImage}" alt="Product Image" class="card-image">
-                  <div class="card-info">
-                    <h3 class="card-title">${post.title || 'Product'}</h3>
-                    <p class="card-description">${post.description || 'No description available'}</p>
-                    <div class="card-meta">
-                      <div class="meta-item">
-                        <i class="fas fa-map-marker-alt"></i>
-                        <span>${post.location || 'Location not specified'}</span>
-                      </div>
-                      <div class="meta-item">
-                        <i class="fas fa-star"></i>
-                        <span>${post.productCondition || 'Condition not specified'}</span>
-                      </div>
-                      <div class="meta-item">
-                        <i class="fas fa-user"></i>
-                        <span>${sellerName}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            `;
-          });
-          
-          output += `</div>`;
-        }
-
-        // Users Section
-        if (data.users && data.users.length > 0) {
-          output += `
-            <div class="section-header">
-              <h2 class="section-title">
-                <i class="fas fa-users"></i>
-                Users
-              </h2>
-              <span class="results-count">${data.users.length} found</span>
-            </div>
-            <div class="results-grid">
-          `;
-          
-          data.users.forEach(user => {
-            const profilePic = user.profilePicture || '/assets/default-user.png';
-            const fullName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Anonymous User';
-            
-            output += `
-              <div class="card">
-                <div class="card-content">
-                  <img src="${profilePic}" alt="User Profile" class="card-image">
-                  <div class="card-info">
-                    <h3 class="card-title">${fullName}</h3>
-                    <div class="card-meta">
-                      <div class="meta-item">
-                        <i class="fas fa-envelope"></i>
-                        <span>${user.email || 'Email not available'}</span>
-                      </div>
-                      <div class="meta-item">
-                        <i class="fas fa-calendar-alt"></i>
-                        <span>Member since ${user.createdAt ? new Date(user.createdAt).getFullYear() : 'Unknown'}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            `;
-          });
-          
-          output += `</div>`;
-        }
-
-        // No results found
-        if ((!data.posts || data.posts.length === 0) && (!data.users || data.users.length === 0)) {
-          output = `
-            <div class="no-results">
-              <i class="fas fa-search"></i>
-              <h3>No results found</h3>
-              <p>We couldn't find anything matching "${query}". Try different keywords or check your spelling.</p>
-            </div>
-          `;
-        }
-
-        resultsEl.innerHTML = output;
+        searchData = data;
+        displayResults(data);
+        
+        const totalResults = (data.posts?.length || 0) + (data.users?.length || 0);
+        searchInfo.textContent = `${totalResults} results for "${query}"`;
 
       } catch (err) {
-        // Hide loading state
         loadingEl.style.display = 'none';
         
         console.error('Search error:', err);
@@ -591,7 +533,127 @@
       }
     }
 
-    // Allow search on Enter key press
+    function displayResults(data) {
+      let output = '';
+      
+      // Filter and display posts
+      if (data.posts && data.posts.length > 0 && (currentFilter === 'all' || currentFilter === 'posts')) {
+        data.posts.forEach(post => {
+          const productImage = post.photo || 'https://via.placeholder.com/400x200/f0f2f5/8a8d91?text=No+Image';
+          const price = post.price ? `₦${post.price.toLocaleString()}` : 'Contact for price';
+          const creator = post.createdBy?.userId;
+          const sellerName = creator ? `${creator.firstName || ''} ${creator.lastName || ''}`.trim() : 'Unknown Seller';
+          const sellerAvatar = creator?.profilePicture || 'https://via.placeholder.com/40x40/1877f2/ffffff?text=U';
+
+          output += `
+            <div class="post-card">
+              <div class="post-header">
+                <img src="${sellerAvatar}" alt="Seller" class="post-avatar">
+                <div class="post-info">
+                  <div class="post-author">${sellerName}</div>
+                  <div class="post-type">Listed a product</div>
+                </div>
+                <div class="post-menu">
+                  <i class="fas fa-ellipsis-h"></i>
+                </div>
+              </div>
+              <div class="post-content">
+                <h3 class="post-title">${post.title || 'Product'}</h3>
+                <p class="post-description">${post.description || 'No description available'}</p>
+                <div class="post-price">${price}</div>
+                <img src="${productImage}" alt="Product" class="post-image">
+                <div class="post-meta">
+                  <div class="meta-item">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>${post.location || 'Location not specified'}</span>
+                  </div>
+                  <div class="meta-item">
+                    <i class="fas fa-star"></i>
+                    <span>${post.productCondition || 'New'}</span>
+                  </div>
+                  <div class="meta-item">
+                    <i class="fas fa-clock"></i>
+                    <span>${formatTime(post.createdAt)}</span>
+                  </div>
+                </div>
+              </div>
+              <div class="post-actions">
+                <button class="action-btn interested">
+                  <i class="far fa-heart"></i>
+                  Interested
+                </button>
+                <button class="action-btn">
+                  <i class="far fa-comment"></i>
+                  Message
+                </button>
+                <button class="action-btn">
+                  <i class="far fa-share-square"></i>
+                  Share
+                </button>
+              </div>
+            </div>
+          `;
+        });
+      }
+      
+      // Filter and display users
+      if (data.users && data.users.length > 0 && (currentFilter === 'all' || currentFilter === 'users')) {
+        data.users.forEach(user => {
+          const profilePic = user.profilePicture || 'https://via.placeholder.com/64x64/1877f2/ffffff?text=U';
+          const fullName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Anonymous User';
+          
+          output += `
+            <div class="user-card">
+              <div class="user-header">
+                <img src="${profilePic}" alt="User" class="user-avatar">
+                <div class="user-info">
+                  <div class="user-name">${fullName}</div>
+                  <div class="user-title">SALMART User</div>
+                </div>
+              </div>
+              <div class="user-actions">
+                <button class="user-btn primary">
+                  <i class="fas fa-user-plus"></i>
+                  Add Friend
+                </button>
+                <button class="user-btn">
+                  <i class="far fa-comment"></i>
+                  Message
+                </button>
+              </div>
+            </div>
+          `;
+        });
+      }
+
+      // No results
+      if (!output) {
+        output = `
+          <div class="no-results">
+            <i class="fas fa-search"></i>
+            <h3>No results found</h3>
+            <p>Try adjusting your search or filters</p>
+          </div>
+        `;
+      }
+
+      document.getElementById('searchResults').innerHTML = output;
+    }
+
+    function formatTime(timestamp) {
+      if (!timestamp) return 'Some time ago';
+      const date = new Date(timestamp);
+      const now = new Date();
+      const diff = now - date;
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      
+      if (days === 0) return 'Today';
+      if (days === 1) return 'Yesterday';
+      if (days < 7) return `${days} days ago`;
+      return date.toLocaleDateString();
+    }
+
+    // Search on Enter key
     document.getElementById('searchInput').addEventListener('keypress', function(e) {
       if (e.key === 'Enter') {
         performSearch();
