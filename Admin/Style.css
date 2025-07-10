@@ -191,6 +191,7 @@ a{
     background: #fff;
     border-radius: 15px;
     padding: 1rem;
+    width: 160px;
     min-height: 280px; /* Increased height to accommodate content */
     scrollbar-width: thin; /* Firefox scrollbar styling */
     scrollbar-color: rgba(255, 255, 255, 0.5) transparent; /* Firefox scrollbar color */
@@ -215,8 +216,8 @@ a{
     display: flex;
     gap: 1rem;
     transition: transform 0.5s ease-in-out; /* Keep for auto-rotation animations */
-    position: relative; /* Change from absolute to relative for natural flow */
-    top: 0; /* Remove absolute positioning offsets */
+    position: relative; 
+    top: 0; 
     left: 0;
     padding: 0;
 
@@ -230,8 +231,8 @@ a{
     border-radius: 12px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
     overflow: hidden;
-    width: 280px; /* Fixed width */
-    flex: 0 0 280px; /* Flex: grow shrink basis */
+    width: 300px; /* Fixed width */
+    flex: 0 0 300px; /* Flex: grow shrink basis */
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     position: relative;
 }
@@ -248,7 +249,7 @@ a{
     border-radius: 12px;
     font-size: 0.5rem;
     font-weight: bold;
-    z-index: 2;
+    z-index: 0;
     display: flex;
     align-items: center;
     gap: 4px;
@@ -569,7 +570,7 @@ body {
 }
 
 .buy-now-button:disabled {
-  background-color: #f3f8f1;
+  background-color: #a6d5b0;
   color: #fff;
   border: 1px solid #C8E6C9;
   cursor: not-allowed;
@@ -1222,9 +1223,16 @@ p{
 
 .buy button:hover {
   background-color: #f3f8f1;
+  color: #28a745;
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
 }
+     .buy button:disabled{
+     color: #ffff;
+     font-weight: 600;
+     background-color: #a6d5b0;
+}
+
 
 .buy button:active {
   transform: scale(0.96);

@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Search - SALMART</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflire.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
   <style>
     * {
       margin: 0;
@@ -101,6 +102,85 @@
       color: var(--text-muted);
       font-size: 16px;
     }
+    
+    /* User Profile Cards */
+.user-card {
+  background: var(--white);
+  border-radius: var(--border-radius);
+  padding: 16px;
+  box-shadow: var(--shadow-light);
+  margin-bottom: 16px;
+}
+
+.user-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.user-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.user-info {
+  flex: 1;
+}
+
+.user-name {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.user-title {
+  color: var(--text-secondary);
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.user-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.user-btn {
+  padding: 8px 16px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--white);
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.user-btn.primary {
+  background: var(--primary-color);
+  color: var(--white);
+  border-color: var(--primary-color);
+}
+
+.user-btn:hover {
+  background: var(--hover-color);
+}
+
+.user-btn.primary:hover {
+  background: #1664c4;
+}
+
+/* Responsive Design for User Cards */
+@media (max-width: 768px) {
+  .user-actions {
+    flex-direction: column;
+  }
+}
+
 
     /* Main Content */
     .main-container {
@@ -154,242 +234,6 @@
       font-size: 14px;
     }
 
-    /* Post Cards */
-    .post-card {
-      background: var(--white);
-      border-radius: var(--border-radius);
-      box-shadow: var(--shadow-light);
-      margin-bottom: 16px;
-      overflow: hidden;
-      transition: box-shadow 0.2s ease;
-    }
-
-    .post-card:hover {
-      box-shadow: var(--shadow-medium);
-    }
-
-    .post-header {
-      padding: 16px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .post-avatar {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      object-fit: cover;
-    }
-
-    .post-info {
-      flex: 1;
-    }
-
-    .post-author {
-      font-weight: 600;
-      color: var(--text-primary);
-      margin-bottom: 2px;
-    }
-
-    .post-type {
-      color: var(--text-secondary);
-      font-size: 12px;
-    }
-
-    .post-menu {
-      color: var(--text-muted);
-      cursor: pointer;
-      padding: 8px;
-      border-radius: 50%;
-      transition: background 0.2s ease;
-    }
-
-    .post-menu:hover {
-      background: var(--hover-color);
-    }
-
-    .post-content {
-      padding: 0 16px 16px;
-    }
-
-    .post-title {
-      font-size: 18px;
-      font-weight: 600;
-      color: var(--text-primary);
-      margin-bottom: 8px;
-    }
-
-    .post-description {
-      color: var(--text-secondary);
-      font-size: 14px;
-      margin-bottom: 12px;
-    }
-
-    .post-image {
-      width: 100%;
-      height: 200px;
-      object-fit: cover;
-      border-radius: var(--border-radius);
-      margin-bottom: 12px;
-    }
-
-    .post-meta {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 16px;
-      margin-bottom: 12px;
-    }
-
-    .meta-item {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      color: var(--text-secondary);
-      font-size: 12px;
-    }
-
-    .meta-item i {
-      color: var(--text-muted);
-    }
-
-    .post-price {
-      display: inline-block;
-      background: var(--success-color);
-      color: var(--white);
-      padding: 4px 12px;
-      border-radius: 12px;
-      font-size: 14px;
-      font-weight: 600;
-      margin-bottom: 12px;
-    }
-
-    .post-actions {
-      border-top: 1px solid var(--border-color);
-      padding: 8px 16px;
-      display: flex;
-      justify-content: space-between;
-    }
-
-    .action-btn {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 16px;
-      border: none;
-      background: none;
-      color: var(--text-secondary);
-      cursor: pointer;
-      border-radius: 6px;
-      transition: all 0.2s ease;
-      font-size: 14px;
-      font-weight: 500;
-    }
-
-    .action-btn:hover {
-      background: var(--hover-color);
-    }
-
-    .action-btn.interested {
-      color: var(--primary-color);
-    }
-
-    .action-btn.interested:hover {
-      background: rgba(24, 119, 242, 0.1);
-    }
-
-    /* User Profile Cards */
-    .user-card {
-      background: var(--white);
-      border-radius: var(--border-radius);
-      padding: 16px;
-      box-shadow: var(--shadow-light);
-      margin-bottom: 16px;
-    }
-
-    .user-header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 12px;
-    }
-
-    .user-avatar {
-      width: 64px;
-      height: 64px;
-      border-radius: 50%;
-      object-fit: cover;
-    }
-
-    .user-info {
-      flex: 1;
-    }
-
-    .user-name {
-      font-size: 20px;
-      font-weight: 600;
-      color: var(--text-primary);
-      margin-bottom: 4px;
-    }
-
-    .user-title {
-      color: var(--text-secondary);
-      font-size: 14px;
-      margin-bottom: 8px;
-    }
-
-    .user-actions {
-      display: flex;
-      gap: 8px;
-    }
-
-    .user-btn {
-      padding: 8px 16px;
-      border: 1px solid var(--border-color);
-      border-radius: 6px;
-      background: var(--white);
-      color: var(--text-primary);
-      cursor: pointer;
-      font-size: 14px;
-      font-weight: 500;
-      transition: all 0.2s ease;
-    }
-
-    .user-btn.primary {
-      background: var(--primary-color);
-      color: var(--white);
-      border-color: var(--primary-color);
-    }
-
-    .user-btn:hover {
-      background: var(--hover-color);
-    }
-
-    .user-btn.primary:hover {
-      background: #1664c4;
-    }
-
-    /* Loading State */
-    .loading {
-      display: none;
-      text-align: center;
-      padding: 32px;
-      color: var(--text-secondary);
-    }
-
-    .loading-spinner {
-      width: 32px;
-      height: 32px;
-      border: 3px solid var(--border-color);
-      border-top: 3px solid var(--primary-color);
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin: 0 auto 16px;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
 
     /* No Results */
     .no-results {
@@ -408,35 +252,15 @@
       font-size: 20px;
       margin-bottom: 8px;
     }
-
-    /* Responsive Design */
-    @media (max-width: 768px) {
-      .header-container {
-        padding: 0 12px;
-      }
-
-      .search-header {
-        margin: 0 16px;
-      }
-
-      .main-container {
-        padding: 8px;
-      }
-
-      .filter-tabs {
-        flex-wrap: wrap;
-      }
-
-      .post-image {
-        height: 150px;
-      }
-
-      .user-actions {
-        flex-direction: column;
-      }
-    }
+.promoted-post{
+     margin-bottom: 20px;
+}
+      
   </style>
+  <link rel="stylesheet" href="Style.css">
 </head>
+  <script src="posts-interaction.js"></script>
+<script src="posts-sharing.js"></script>
 <body>
   <div class="header">
     <div class="header-container">
@@ -468,16 +292,824 @@
 
     <div class="loading" id="loadingState">
       <div class="loading-spinner"></div>
-      <p>Searching...</p>
+      
     </div>
 
     <div id="searchResults"></div>
   </div>
 
-  <script>
-       const API_BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart.onrender.com';
+  
+   <script src="auth.js"></script>
+  <script type="module">
+    // Assume salmartCache.js is correctly linked or its content is here
+   
+     import { salmartCache } from './salmartCache.js'; 
+
+
+    const API_BASE_URL = window.API_BASE_URL || (window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart.onrender.com');
     let currentFilter = 'all';
     let searchData = null;
+    let currentLoggedInUser = localStorage.getItem('userId'); // Get user ID from localStorage
+    let currentFollowingList = [];
+    let videoObserver; // Declare videoObserver here
+
+    // --- Intersection Observer for Videos (Copied from home.js) ---
+    const handleVideoIntersection = (entries) => {
+        entries.forEach(entry => {
+            const videoContainer = entry.target;
+            const video = videoContainer.querySelector('.post-video');
+            const playPauseBtn = videoContainer.querySelector('.play-pause');
+            const loadingSpinner = videoContainer.querySelector('.loading-spinner');
+            const muteBtn = videoContainer.querySelector('.mute-button');
+
+            if (!video) return;
+
+            if (entry.isIntersecting) {
+                if (!video.dataset.srcLoaded) {
+                    video.querySelectorAll('source[data-src]').forEach(sourceElem => {
+                        sourceElem.src = sourceElem.dataset.src;
+                    });
+                    video.load();
+                    video.dataset.srcLoaded = 'true';
+                }
+
+                if (video.paused && video.readyState >= 3) {
+                    video.muted = true;
+                    if (muteBtn) muteBtn.innerHTML = '<i class="fas fa-volume-mute"></i>';
+
+                    video.play().then(() => {
+                        loadingSpinner.style.display = 'none';
+                        playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
+                    }).catch(e => {
+                        loadingSpinner.style.display = 'none';
+                        console.log("Video autoplay prevented:", e);
+                    });
+                }
+            } else {
+                if (!video.paused) {
+                    video.pause();
+                    video.currentTime = 0;
+                    if (playPauseBtn) {
+                        playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+                    }
+                }
+                video.removeAttribute('src');
+                video.querySelectorAll('source').forEach(sourceElem => {
+                    sourceElem.removeAttribute('src');
+                });
+                video.load();
+                video.dataset.srcLoaded = '';
+                video.dataset.thumbnailGenerated = '';
+            }
+        });
+    };
+
+    if ('IntersectionObserver' in window) {
+        videoObserver = new IntersectionObserver(handleVideoIntersection, {
+            root: null,
+            rootMargin: '0px',
+            threshold: 0.5
+        });
+    } else {
+        console.warn("Intersection Observer not supported. Video lazy loading and auto-pause will not work.");
+    }
+
+    // Initialize video controls (Copied from home.js)
+    function initializeVideoControls(postElement) {
+        const container = postElement.querySelector('.post-video-container');
+        if (!container) return;
+
+        const video = container.querySelector('.post-video');
+        if (video.dataset.controlsInitialized === 'true') {
+            return;
+        }
+
+        const thumbnailCanvas = container.querySelector('.video-thumbnail');
+        const loadingSpinner = container.querySelector('.loading-spinner');
+        const playPauseBtn = container.querySelector('.play-pause');
+        const muteBtn = container.querySelector('.mute-button');
+        const fullscreenBtn = container.querySelector('.fullscreen-button');
+        const progressBar = container.querySelector('.progress-bar');
+        const bufferedBar = container.querySelector('.buffered-bar');
+        const progressContainer = container.querySelector('.progress-container');
+        const seekPreview = container.querySelector('.seek-preview');
+        const seekPreviewCanvas = container.querySelector('.seek-preview-canvas');
+        const volumeSlider = container.querySelector('.volume-slider');
+        const playbackSpeed = container.querySelector('.playback-speed');
+        const currentTimeDisplay = container.querySelector('.current-time');
+        const durationDisplay = container.querySelector('.duration');
+
+        video.setAttribute('playsinline', '');
+        video.setAttribute('webkit-playsinline', '');
+        video.setAttribute('crossorigin', 'anonymous');
+        video.muted = true;
+
+        video.addEventListener('loadedmetadata', () => {
+            if (!video.dataset.thumbnailGenerated) {
+                video.currentTime = 2;
+            }
+            durationDisplay.textContent = formatVideoTime(video.duration);
+            loadingSpinner.style.display = 'none';
+        });
+
+        video.addEventListener('seeked', () => {
+            if (video.currentTime === 2 && !video.dataset.thumbnailGenerated && thumbnailCanvas) {
+                const ctx = thumbnailCanvas.getContext('2d');
+                thumbnailCanvas.width = video.videoWidth;
+                thumbnailCanvas.height = video.videoHeight;
+                ctx.drawImage(video, 0, 0, thumbnailCanvas.width, thumbnailCanvas.height);
+                video.poster = thumbnailCanvas.toDataURL('image/jpeg');
+                video.dataset.thumbnailGenerated = 'true';
+                video.currentTime = 0;
+                loadingSpinner.style.display = 'none';
+            }
+        });
+
+        function formatVideoTime(seconds) {
+            if (isNaN(seconds) || seconds < 0) return '0:00';
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+        }
+
+        video.addEventListener('timeupdate', () => {
+            const progress = (video.currentTime / video.duration) * 100;
+            progressBar.style.width = `${progress}%`;
+            progressBar.setAttribute('aria-valuenow', progress);
+            currentTimeDisplay.textContent = formatVideoTime(video.currentTime);
+
+            if (video.buffered.length > 0) {
+                const bufferedEnd = video.buffered.end(video.buffered.length - 1);
+                const bufferedPercent = (bufferedEnd / video.duration) * 100;
+                bufferedBar.style.width = `${bufferedPercent}%`;
+            }
+        });
+
+        playPauseBtn.addEventListener('click', () => {
+            if (video.paused) {
+                loadingSpinner.style.display = 'block';
+                video.play().then(() => {
+                    loadingSpinner.style.display = 'none';
+                    playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
+                }).catch(e => {
+                    loadingSpinner.style.display = 'none';
+                    if (window.showToast) window.showToast('Error playing video. User interaction may be required.', '#dc3545');
+                    console.error('Play error:', e);
+                });
+            } else {
+                video.pause();
+                playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+            }
+        });
+
+        video.addEventListener('waiting', () => {
+            loadingSpinner.style.display = 'block';
+        });
+
+        video.addEventListener('playing', () => {
+            loadingSpinner.style.display = 'none';
+        });
+
+        muteBtn.addEventListener('click', () => {
+            video.muted = !video.muted;
+            muteBtn.innerHTML = video.muted ? '<i class="fas fa-volume-mute"></i>' : '<i class="fas fa-volume-up"></i>';
+            volumeSlider.value = video.muted ? 0 : video.volume * 100;
+        });
+
+        volumeSlider.addEventListener('input', () => {
+            video.volume = volumeSlider.value / 100;
+            video.muted = volumeSlider.value == 0;
+            muteBtn.innerHTML = video.muted ? '<i class="fas fa-volume-mute"></i>' : '<i class="fas fa-volume-up"></i>';
+        });
+
+        playbackSpeed.addEventListener('change', () => {
+            video.playbackRate = parseFloat(playbackSpeed.value);
+        });
+
+        fullscreenBtn.addEventListener('click', () => {
+            if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+                const elem = container;
+                if (elem.requestFullscreen) {
+                    elem.requestFullscreen().catch(e => console.error('Fullscreen error:', e));
+                } else if (elem.webkitRequestFullscreen) {
+                    elem.webkitRequestFullscreen();
+                }
+                fullscreenBtn.innerHTML = '<i class="fas fa-compress"></i>';
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen().catch(e => console.error('Exit fullscreen error:', e));
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                }
+                fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>';
+            }
+        });
+
+        document.addEventListener('fullscreenchange', () => {
+            if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+                fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>';
+            }
+        });
+
+        document.addEventListener('webkitfullscreenchange', () => {
+            if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+                fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>';
+            }
+        });
+
+        let isDragging = false;
+        let lastSeekTime = 0;
+
+        const updateProgress = (e, isTouch = false) => {
+            const rect = progressContainer.getBoundingClientRect();
+            const posX = isTouch ? e.touches[0].clientX - rect.left : e.clientX - rect.left;
+            const width = rect.width;
+            let progress = posX / width;
+            progress = Math.max(0, Math.min(1, progress));
+            const seekTime = progress * video.duration;
+            video.currentTime = seekTime;
+            progressBar.style.width = `${progress * 100}%`;
+            progressBar.setAttribute('aria-valuenow', progress * 100);
+
+            if (isDragging) {
+                if (seekPreview) seekPreview.style.display = 'none';
+            }
+        };
+
+        progressContainer.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            updateProgress(e);
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (isDragging) updateProgress(e);
+        });
+
+        document.addEventListener('mouseup', () => {
+            isDragging = false;
+            if (seekPreview) seekPreview.style.display = 'none';
+        });
+
+        progressContainer.addEventListener('mousemove', (e) => {
+            if (!isDragging && seekPreview && seekPreviewCanvas && video.duration > 0) {
+                const rect = progressContainer.getBoundingClientRect();
+                const posX = e.clientX - rect.left;
+                const width = rect.width;
+                let progress = posX / width;
+                progress = Math.max(0, Math.min(1, progress));
+                const seekTime = progress * video.duration;
+
+                if (Date.now() - lastSeekTime > 100) {
+                    seekPreview.style.display = 'block';
+                    seekPreview.style.left = `${posX}px`;
+                    seekPreviewCanvas.width = 120;
+                    seekPreviewCanvas.height = 68;
+
+                    const originalCurrentTime = video.currentTime;
+                    video.currentTime = seekTime;
+                    video.requestVideoFrameCallback(() => {
+                        const ctx = seekPreviewCanvas.getContext('2d');
+                        ctx.drawImage(video, 0, 0, seekPreviewCanvas.width, seekPreviewCanvas.height);
+                        video.currentTime = originalCurrentTime;
+                    });
+                    lastSeekTime = Date.now();
+                }
+            }
+        });
+
+        progressContainer.addEventListener('mouseleave', () => {
+            if (!isDragging && seekPreview) seekPreview.style.display = 'none';
+        });
+
+        progressContainer.addEventListener('click', (e) => {
+            updateProgress(e);
+        });
+
+        progressContainer.addEventListener('touchstart', (e) => {
+            isDragging = true;
+            updateProgress(e, true);
+        });
+
+        document.addEventListener('touchmove', (e) => {
+            if (isDragging) updateProgress(e, true);
+        });
+
+        document.addEventListener('touchend', () => {
+            isDragging = false;
+            if (seekPreview) seekPreview.style.display = 'none';
+        });
+
+        postElement.addEventListener('keydown', (e) => {
+            const activeElement = document.activeElement;
+            const isInsideVideoControls = container.contains(activeElement);
+
+            if (e.target === video || isInsideVideoControls) {
+                switch (e.key) {
+                    case ' ':
+                        e.preventDefault();
+                        playPauseBtn.click();
+                        break;
+                    case 'm':
+                        muteBtn.click();
+                        break;
+                    case 'f':
+                        fullscreenBtn.click();
+                        break;
+                    case 'ArrowRight':
+                        video.currentTime += 5;
+                        break;
+                    case 'ArrowLeft':
+                        video.currentTime -= 5;
+                        break;
+                }
+            }
+        });
+
+        video.addEventListener('error', () => {
+            if (window.showToast) window.showToast('Failed to load video.', '#dc3545');
+            loadingSpinner.style.display = 'none';
+        });
+
+        video.addEventListener('ended', () => {
+            playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+            video.currentTime = 0;
+            progressBar.style.width = '0%';
+            progressBar.setAttribute('aria-valuenow', 0);
+        });
+
+        video.dataset.controlsInitialized = 'true';
+    }
+
+
+    // --- Helper Functions (Copied from home.js) ---
+    function formatTime(timestamp) {
+        const now = new Date();
+        const postDate = new Date(timestamp);
+        const diffInSeconds = Math.floor((now - postDate) / 1000);
+
+        if (diffInSeconds < 60) return "Just now";
+        if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m`;
+        if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h`;
+        if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d`;
+        if (diffInSeconds < 2592000) return `${Math.floor(diffInSeconds / 604800)}w`;
+
+        const currentYear = now.getFullYear();
+        const postYear = postDate.getFullYear();
+
+        if (postYear === currentYear) {
+            return postDate.toLocaleDateString(undefined, {
+                month: "short",
+                day: "numeric"
+            });
+        } else {
+            return postDate.toLocaleDateString(undefined, {
+                month: "short",
+                day: "numeric",
+                year: "numeric"
+            });
+        }
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    window.redirectToLogin = function() {
+        if (window.showToast) {
+            window.showToast('Please log in to access this feature', 'error');
+            setTimeout(() => {
+                window.location.href = 'SignIn.html';
+            }, 1000);
+        } else {
+            window.location.href = 'SignIn.html';
+        }
+    };
+
+    window.updateFollowButtonsUI = function(userId, isFollowing) {
+        document.querySelectorAll(`.follow-button[data-user-id="${userId}"]`).forEach(button => {
+            if (isFollowing) {
+                button.innerHTML = '<i class="fas fa-user-check"></i> Following';
+                button.style.backgroundColor = '#fff';
+                button.style.color = '#28a745';
+                button.disabled = true;
+            } else {
+                button.innerHTML = '<i class="fas fa-user-plus"></i> Follow';
+                button.style.backgroundColor = '';
+                button.style.color = '';
+                button.disabled = false;
+            }
+        });
+    };
+
+    async function fetchFollowingList() {
+        if (!currentLoggedInUser) {
+            return [];
+        }
+        const token = localStorage.getItem('authToken');
+        if (!token) return [];
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/is-following-list`, {
+                method: 'GET',
+                headers: { 'Authorization': `Bearer ${token}` },
+            });
+            if (response.ok) {
+                const { following } = await response.json();
+                return [...new Set(following.map(id => id.toString()))] || [];
+            } else {
+                console.warn('Could not fetch following list. Status:', response.status);
+                return [];
+            }
+        } catch (error) {
+            console.error('Error fetching following list:', error);
+            return [];
+        }
+    }
+
+
+    // --- Render Post Function (Copied from home.js) ---
+    function renderPost(post) {
+        const postElement = document.createElement('div');
+        postElement.classList.add('post');
+        postElement.dataset.createdAt = post.createdAt || new Date().toISOString();
+        postElement.dataset.postId = post._id || '';
+
+        const isFollowing = currentFollowingList.includes(post.createdBy?.userId?.toString());
+        const isPostCreator = post.createdBy && post.createdBy.userId === currentLoggedInUser;
+
+        let mediaContent = '';
+        let productDetails = '';
+        let descriptionContent = '';
+        let buttonContent = '';
+
+        const productImageForChat = post.postType === 'video_ad' ? (post.thumbnail || '/salmart-192x192.png') : (post.photo || '/salmart-192x192.png');
+
+        if (post.postType === 'video_ad') {
+            descriptionContent = `
+                <h2 class="product-title">${escapeHtml(post.title || '')}</h2>
+                <div class="post-description-text" style="margin-bottom: 10px; padding: 0 15px;">
+                    <p>${escapeHtml(post.description || '')}</p>
+                </div>
+            `;
+            mediaContent = `
+                <div class="post-video-container">
+                    <video class="post-video" preload="none" aria-label="Video ad for ${post.description || 'product'}" poster="${post.thumbnail || ''}">
+                        <source data-src="${post.video || ''}" type="video/mp4" />
+                        <source data-src="${post.video ? post.video.replace('.mp4', '.webm') : ''}" type="video/webm" />
+                        <source data-src="${post.video ? post.video.replace('.mp4', '.ogg') : ''}" type="video/ogg" />
+                        Your browser does not support the video tag.
+                    </video>
+                    <canvas class="video-thumbnail" style="display: none;"></canvas>
+                    <div class="loading-spinner" style="display: none;">
+                        <i class="fas fa-spinner fa-spin"></i>
+                    </div>
+                    <div class="custom-controls">
+                        <button class="control-button play-pause" aria-label="Play or pause video">
+                            <i class="fas fa-play"></i>
+                        </button>
+                        <div class="progress-container">
+                            <div class="buffered-bar"></div>
+                            <div class="progress-bar" role="slider" aria-label="Video progress" aria-valuemin="0" aria-valuemax="100"></div>
+                            <div class="seek-preview" style="display: none;">
+                                <canvas class="seek-preview-canvas"></canvas>
+                            </div>
+                        </div>
+                        <div class="time-display">
+                            <span class="current-time">0:00</span> / <span class="duration">0:00</span>
+                        </div>
+                        <button class="control-button mute-button" aria-label="Mute or unmute video">
+                            <i class="fas fa-volume-mute"></i>
+                        </button>
+                        <div class="volume-control">
+                            <input type="range" class="volume-slider" min="0" max="100" value="100" aria-label="Volume control">
+                        </div>
+                        <select class="playback-speed" aria-label="Playback speed">
+                            <option value="0.5">0.5x</option>
+                            <option value="1" selected>1x</option>
+                            <option value="1.5">1.5x</option>
+                            <option value="2">2x</option>
+                        </select>
+                        <button class="control-button fullscreen-button" aria-label="Toggle fullscreen">
+                            <i class="fas fa-expand"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            if (isPostCreator) {
+                buttonContent = ''; // Hide buy/send for creator
+            } else if (currentLoggedInUser) {
+                buttonContent = `
+                    <button class="checkout-product-btn buy-now-button"
+                            data-post-id="${post._id || ''}"
+                            data-product-image="${post.thumbnail || '/salmart-192x192.png'}"
+                            data-product-title="${escapeHtml(post.title || 'Untitled Product')}"
+                            data-product-description="${escapeHtml(post.description || 'No description available.')}"
+                            data-product-price="${post.price ? '₦' + Number(post.price).toLocaleString('en-NG') : 'Price not specified'}"
+                            data-product-location="${escapeHtml(post.location || 'N/A')}"
+                            data-product-condition="${escapeHtml(post.productCondition || 'N/A')}"
+                            ${post.isSold ? 'disabled' : ''}>
+                        <i class="fas fa-shopping-cart"></i>  ${post.isSold ? 'Sold Out' : 'Check Out Product'}
+                    </button>
+                `;
+            } else {
+                buttonContent = `
+                    <button class="checkout-product-btn login-required" onclick="redirectToLogin()">
+                        <i class="fas fa-shopping-cart"></i>  Check Out Product
+                    </button>
+                `;
+            }
+
+        } else { // Regular image-based posts
+            descriptionContent = `
+                <h2 class="product-title">${escapeHtml(post.title || 'No description')}</h2>
+                <div class="post-description-text" style="margin-bottom: 10px; padding: 0 15px;">
+                    <p>${escapeHtml(post.description || '')}</p>
+                </div>
+            `;
+
+            mediaContent = `
+                <div class="product-image">
+                    <div class="badge">${post.productCondition || 'New'}</div>
+                    <img src="${productImageForChat}" class="post-image" onclick="window.openImage('${productImageForChat.replace(/'/g, "\\'")}')" alt="Product Image" onerror="this.src='/salmart-192x192.png'">
+                </div>
+            `;
+            productDetails = `
+                <div class="content">
+                    <div class="details-grid">
+                        <div class="detail-item">
+                            <div class="detail-icon price-icon">₦</div>
+                            <div class="detail-text">
+                                <div class="detail-label">Price</div>
+                                <div class="detail-value price-value">${post.price ? '₦' + Number(post.price).toLocaleString('en-NG') : 'Price not specified'}</div>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-icon location-icon">📍</div>
+                            <div class="detail-text">
+                                <div class="detail-label">Location</div>
+                                <div class="detail-value location-value">${escapeHtml(post.location || 'N/A')}</div>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-icon condition-icon">✨</div>
+                            <div class="detail-text">
+                                <div class="detail-label">Condition</div>
+                                <div class="detail-value">${escapeHtml(post.productCondition || 'N/A')}</div>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-icon category-icon">📦</div>
+                            <div class="detail-text">
+                                <div class="detail-label">Category</div>
+                                <div class="detail-value">${escapeHtml(post.category || 'N/A')}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            if (currentLoggedInUser) {
+                if (isPostCreator) {
+                    buttonContent = !post.isPromoted ? `
+                        <div class="actions">
+                            <button class="btn btn-primary promote-button" data-post-id="${post._id || ''}" aria-label="Promote this post">
+                                Promote Post
+                            </button>
+                        </div>
+                    ` : ''; // If promoted, no buttons for creator
+                } else {
+                    buttonContent = `
+                        <div class="actions">
+                            <button class="btn btn-secondary send-message-btn"
+                                data-recipient-id="${post.createdBy ? post.createdBy.userId : ''}"
+                                data-product-image="${productImageForChat}"
+                                data-product-description="${escapeHtml(post.title || '')}"
+                                data-post-id="${post._id || ''}"
+                                ${post.isSold ? 'disabled' : ''}>
+                                ${post.isSold ? 'Unavailable' : 'Message'}
+                            </button>
+                            <button class="btn btn-primary buy-now-button"
+                                    data-post-id="${post._id || ''}"
+                                    data-product-image="${productImageForChat}"
+                                    data-product-title="${escapeHtml(post.title || 'Untitled Product')}"
+                                    data-product-description="${escapeHtml(post.description || 'No description available.')}"
+                                    data-product-location="${escapeHtml(post.location || 'N/A')}"
+                                    data-product-condition="${escapeHtml(post.productCondition || 'N/A')}"
+                                    data-product-price="${post.price ? '₦' + Number(post.price).toLocaleString('en-NG') : '₦0.00'}"
+                                    ${post.isSold ? 'disabled' : ''}>
+                                ${post.isSold ? 'Sold Out' : 'Buy Now'}
+                            </button>
+                        </div>
+                    `;
+                }
+            } else {
+                buttonContent = `
+                    <div class="actions">
+                        <button class="btn btn-secondary login-required" onclick="redirectToLogin()">
+                            Message
+                        </button>
+                        <button class="btn btn-primary login-required" onclick="redirectToLogin()">
+                            Buy Now
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        let followButtonHtml = '';
+        if (post.createdBy && post.createdBy.userId) {
+            if (currentLoggedInUser) {
+                if (post.createdBy.userId === currentLoggedInUser) {
+                    followButtonHtml = '';
+                } else {
+                    followButtonHtml = isFollowing ?
+                        `<button class="follow-button" data-user-id="${post.createdBy.userId}" style="background-color: #fff; color: #28a745;" disabled>
+                            <i class="fas fa-user-check"></i> Following
+                        </button>` :
+                        `<button class="follow-button" data-user-id="${post.createdBy.userId}">
+                            <i class="fas fa-user-plus"></i> Follow
+                        </button>`;
+                }
+            } else {
+                followButtonHtml = `
+                    <button class="follow-button login-required" onclick="redirectToLogin()">
+                        <i class="fas fa-user-plus"></i> Follow
+                    </button>
+                `;
+            }
+        }
+
+        const postActionsHtml = currentLoggedInUser ? `
+            <div class="post-actions">
+                <button class="action-button like-button" data-post-id="${post._id || ''}">
+                    <i class="${post.likes && post.likes.includes(currentLoggedInUser) ? 'fas' : 'far'} fa-heart"></i>
+                    <span class="like-count">${post.likes ? post.likes.length : 0}</span> <span>Likes</span>
+                </button>
+                <button class="action-button reply-button" data-post-id="${post._id || ''}">
+                    <i class="far fa-comment-alt"></i>
+                    <span class="comment-count">${post.comments ? post.comments.length : 0}</span> <span>Comments</span>
+                </button>
+                <button class="action-button share-button" data-post-id="${post._id || ''}">
+                    <i class="fas fa-share"></i>
+                </button>
+            </div>
+        ` : `
+            <div class="post-actions">
+                <button class="action-button login-required" onclick="redirectToLogin()">
+                    <i class="far fa-heart"></i>
+                    <span class="like-count">${post.likes ? post.likes.length : 0}</span> <span>Likes</span>
+                </button>
+                <button class="action-button login-required" onclick="redirectToLogin()">
+                    <i class="far fa-comment-alt"></i>
+                    <span class="comment-count">${post.comments ? post.comments.length : 0}</span> <span>Comments</span>
+                </button>
+                <button class="action-button share-button" data-post-id="${post._id || ''}">
+                    <i class="fas fa-share"></i>
+                </button>
+            </div>
+        `;
+
+        postElement.innerHTML = `
+            <div class="post-header">
+                <a href="Profile.html?userId=${post.createdBy ? post.createdBy.userId : ''}">
+                    <img src="${post.profilePicture || '/salmart-192x192.png'}" class="post-avatar" onerror="this.src='/salmart-192x192.png'" alt="User Avatar">
+                </a>
+                <div class="post-user-info">
+                    <a href="Profile.html?userId=${post.createdBy ? post.createdBy.userId : ''}">
+                        <h4 class="post-user-name">${escapeHtml(post.createdBy ? post.createdBy.name : 'Unknown')}</h4>
+                    </a>
+                    <p class="post-time">${formatTime(post.createdAt || new Date())}</p>
+                </div>
+                ${followButtonHtml}
+                <div class="post-options">
+                    <button class="post-options-button" type="button"><i class="fas fa-ellipsis-h"></i></button>
+                    <div class="post-options-menu">
+                        <ul>
+                            ${isPostCreator ? `
+                                <li><button class="delete-post-button" data-post-id="${post._id || ''}" type="button">Delete Post</button></li>
+                                <li><button class="edit-post-button" data-post-id="${post._id || ''}" type="button">Edit Post</button></li>
+                            ` : ''}
+                            <li><button class="report-post-button" data-post-id="${post._id || ''}" type="button">Report Post</button></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            ${descriptionContent} <div class="product-container">
+                <div class="media-card">
+                    ${mediaContent}
+                </div>
+                <div class="product-card">
+                    ${productDetails}
+                </div>
+            </div>
+
+            <div class="buy" style="text-align: center">
+                ${buttonContent}
+            </div>
+
+            ${postActionsHtml}
+        `;
+
+        return postElement;
+    }
+
+    // --- Render Promoted Post Function (Copied from home.js) ---
+    function renderPromotedPost(post) {
+        const postElement = document.createElement('div');
+        postElement.classList.add('promoted-post');
+        postElement.dataset.createdAt = post.createdAt || new Date().toISOString();
+        postElement.dataset.postId = post._id || '';
+
+        const isPostCreator = post.createdBy && post.createdBy.userId === currentLoggedInUser;
+
+        let mediaContent = '';
+        let productDetails = '';
+        let buttonContent = '';
+
+        const productImageForChat = post.photo || '/salmart-192x192.png';
+
+        mediaContent = `
+            <img src="${productImageForChat}" class="promoted-image" alt="Promoted Product" onerror="this.src='/salmart-192x192.png'">
+        `;
+        productDetails = `
+            <div class="promoted-product-info">
+                <h4 class="promoted-title">${escapeHtml(post.title || 'No description')}</h4>
+                <p class="promoted-price">${post.price ? '₦' + Number(post.price).toLocaleString('en-NG') : 'Price not specified'}</p>
+                <p class="promoted-location">${escapeHtml(post.location || 'N/A')}</p>
+            </div>
+        `;
+
+        if (currentLoggedInUser) {
+            if (isPostCreator) {
+                buttonContent = `
+                    <a href="#" class="promoted-cta-button" aria-label="Check out product " style="pointer-events: none; color: #28a745; font-size: 14px; font-weight: 400; ">
+                        <i class="fas fa-toggle-on"></i> Active
+                    </a>
+                `;
+            } else {
+                buttonContent = `
+                    <div class="button-container">
+                        <button class="promoted-cta-button buy-now-button" data-post-id="${post._id || ''}"
+                            data-product-image="${productImageForChat}"
+                            data-product-title="${escapeHtml(post.title || 'Untitled Product')}"
+                            data-product-description="${escapeHtml(post.description || 'No description available.')}"
+                            data-product-location="${escapeHtml(post.location || 'N/A')}"
+                            data-product-condition="${escapeHtml(post.productCondition || 'N/A')}"
+                            data-product-price="${post.price ? '₦' + Number(post.price).toLocaleString('en-NG') : '₦0.00'}"
+                            ${post.isSold ? 'disabled' : ''}>
+                            <i class="fas fa-shopping-cart"></i> ${post.isSold ? 'Sold' : 'Buy'}
+                        </button>
+                        <button class="promoted-cta-button send-message-btn"
+                            data-recipient-id="${post.createdBy ? post.createdBy.userId : ''}"
+                            data-product-image="${productImageForChat}"
+                            data-product-description="${escapeHtml(post.title || '')}"
+                            data-post-id="${post._id || ''}"
+                            ${post.isSold ? 'disabled' : ''}>
+                            <i class="fas fa-paper-plane"></i> ${post.isSold ? 'Unavailable' : 'Message'}
+                        </button>
+                    </div>
+                `;
+            }
+        } else { // Not logged in
+            buttonContent = `
+                <div class="button-container">
+                    <button class="promoted-cta-button login-required" onclick="redirectToLogin()">
+                        <i class="fas fa-shopping-cart"></i> Buy Now
+                    </button>
+                    <button class="promoted-cta-button login-required" onclick="redirectToLogin()">
+                        <i class="fas fa-paper-plane"></i> Message Seller
+                    </button>
+                </div>
+            `;
+        }
+
+        postElement.innerHTML = `
+            <div class="promoted-badge">
+                <i class="fas fa-bullhorn"></i>
+                <span>Promoted</span>
+            </div>
+            <div class="promoted-header">
+                <img src="${post.profilePicture || '/salmart-192x192.png'}" class="promoted-avatar" onerror="this.src='/salmart-192x192.png'" alt="User Avatar">
+                <div class="promoted-user-info">
+                    <h5 class="promoted-user-name">${escapeHtml(post.createdBy ? post.createdBy.name : 'Unknown')}</h5>
+                    <span class="promoted-time">${formatTime(post.createdAt || new Date())}</span>
+                </div>
+            </div>
+            <div class="promoted-media">
+                ${mediaContent}
+            </div>
+            ${productDetails}
+            <div class="promoted-actions">
+                ${buttonContent}
+            </div>
+        `;
+        return postElement;
+    }
+
 
     // Filter functionality
     document.querySelectorAll('.filter-tab').forEach(tab => {
@@ -494,22 +1126,46 @@
 
     async function performSearch() {
       const query = document.getElementById('searchInput').value.trim();
-      if (!query) return;
+      if (!query) {
+        document.getElementById('searchResults').innerHTML = `
+          <div class="no-results">
+            <i class="fas fa-search"></i>
+            <h3>Start your search</h3>
+            <p>Type something in the search bar above to find posts and people.</p>
+          </div>
+        `;
+        document.getElementById('searchInfo').textContent = 'Enter a search term to see results';
+        return;
+      }
 
       const loadingEl = document.getElementById('loadingState');
       const resultsEl = document.getElementById('searchResults');
       const searchInfo = document.getElementById('searchInfo');
       
-      // Show loading state
       loadingEl.style.display = 'block';
-      resultsEl.innerHTML = '';
+      resultsEl.innerHTML = ''; // Clear previous results
       searchInfo.textContent = 'Searching...';
 
+      // Disconnect all existing video observers before clearing content
+      if (videoObserver) {
+          document.querySelectorAll('.post-video-container').forEach(container => {
+              videoObserver.unobserve(container);
+          });
+      }
+
       try {
-        const res = await fetch(`${API_BASE_URL}/search?q=${encodeURIComponent(query)}`);
+        const token = localStorage.getItem('authToken');
+        const headers = {};
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        // Fetch user's following list (if logged in)
+        currentFollowingList = await fetchFollowingList();
+
+        const res = await fetch(`${API_BASE_URL}/search?q=${encodeURIComponent(query)}`, { headers });
         const data = await res.json();
         
-        // Hide loading state
         loadingEl.style.display = 'none';
         
         searchData = data;
@@ -533,125 +1189,470 @@
       }
     }
 
+    function interleavePromotedPosts(normalPosts, promotedPosts) {
+        const result = [];
+        let normalIndex = 0;
+        let promotedIndex = 0;
+        const promotedCount = promotedPosts.length;
+
+        // First, add all promoted posts that should appear at the very beginning (up to 5)
+        for (let i = 0; i < Math.min(promotedCount, 5); i++) {
+            result.push(promotedPosts[promotedIndex++]);
+        }
+
+        // Then, interleave the rest
+        while (normalIndex < normalPosts.length || promotedIndex < promotedCount) {
+            // Add two normal posts
+            for (let i = 0; i < 2 && normalIndex < normalPosts.length; i++) {
+                result.push(normalPosts[normalIndex++]);
+            }
+            // Add one promoted post if available
+            if (promotedIndex < promotedCount) {
+                result.push(promotedPosts[promotedIndex++]);
+            }
+        }
+        return result;
+    }
+
+
     function displayResults(data) {
-      let output = '';
+        const resultsEl = document.getElementById('searchResults');
+        const fragment = document.createDocumentFragment();
+        const videoContainersToObserve = [];
+
+        // Separate posts into promoted (non-video) and other posts
+        let promotedPosts = [];
+        let nonPromotedPosts = [];
+
+        if (data.posts && data.posts.length > 0) {
+            promotedPosts = data.posts.filter(post => post.isPromoted && post.postType !== 'video_ad');
+            nonPromotedPosts = data.posts.filter(post => !post.isPromoted || post.postType === 'video_ad');
+        }
+
+        let combinedPosts = [];
+
+        if (currentFilter === 'all' || currentFilter === 'posts') {
+            // Interleave if there are promoted posts
+            if (promotedPosts.length > 0) {
+                combinedPosts = interleavePromotedPosts(nonPromotedPosts, promotedPosts);
+            } else {
+                combinedPosts = nonPromotedPosts;
+            }
+
+            combinedPosts.forEach(post => {
+                let postElement;
+                if (post.isPromoted && post.postType !== 'video_ad') {
+                    postElement = renderPromotedPost(post);
+                } else {
+                    postElement = renderPost(post);
+                }
+                fragment.appendChild(postElement);
+
+                // If it's a video post, add its container to the list for observation
+                if (post.postType === 'video_ad') {
+                    const videoContainer = postElement.querySelector('.post-video-container');
+                    if (videoContainer) {
+                        videoContainersToObserve.push(videoContainer);
+                        initializeVideoControls(postElement); // Initialize video controls
+                    }
+                }
+            });
+        }
       
-      // Filter and display posts
-      if (data.posts && data.posts.length > 0 && (currentFilter === 'all' || currentFilter === 'posts')) {
-        data.posts.forEach(post => {
-          const productImage = post.photo || 'https://via.placeholder.com/400x200/f0f2f5/8a8d91?text=No+Image';
-          const price = post.price ? `₦${post.price.toLocaleString()}` : 'Contact for price';
-          const creator = post.createdBy?.userId;
-          const sellerName = creator ? `${creator.firstName || ''} ${creator.lastName || ''}`.trim() : 'Unknown Seller';
-          const sellerAvatar = creator?.profilePicture || 'https://via.placeholder.com/40x40/1877f2/ffffff?text=U';
+        // Filter and display users
+        if (data.users && data.users.length > 0 && (currentFilter === 'all' || currentFilter === 'users')) {
+            data.users.forEach(user => {
+                const profilePic = user.profilePicture || '/salmart-192x192.png';
+                const fullName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Anonymous User';
+                const isFollowingUser = currentFollowingList.includes(user._id?.toString());
+                const isCurrentUser = user._id === currentLoggedInUser;
 
-          output += `
-            <div class="post-card">
-              <div class="post-header">
-                <img src="${sellerAvatar}" alt="Seller" class="post-avatar">
-                <div class="post-info">
-                  <div class="post-author">${sellerName}</div>
-                  <div class="post-type">Listed a product</div>
-                </div>
-                <div class="post-menu">
-                  <i class="fas fa-ellipsis-h"></i>
-                </div>
-              </div>
-              <div class="post-content">
-                <h3 class="post-title">${post.title || 'Product'}</h3>
-                <p class="post-description">${post.description || 'No description available'}</p>
-                <div class="post-price">${price}</div>
-                <img src="${productImage}" alt="Product" class="post-image">
-                <div class="post-meta">
-                  <div class="meta-item">
-                    <i class="fas fa-map-marker-alt"></i>
-                    <span>${post.location || 'Location not specified'}</span>
-                  </div>
-                  <div class="meta-item">
-                    <i class="fas fa-star"></i>
-                    <span>${post.productCondition || 'New'}</span>
-                  </div>
-                  <div class="meta-item">
-                    <i class="fas fa-clock"></i>
-                    <span>${formatTime(post.createdAt)}</span>
-                  </div>
-                </div>
-              </div>
-              <div class="post-actions">
-                <button class="action-btn interested">
-                  <i class="far fa-heart"></i>
-                  Interested
-                </button>
-                <button class="action-btn">
-                  <i class="far fa-comment"></i>
-                  Message
-                </button>
-                <button class="action-btn">
-                  <i class="far fa-share-square"></i>
-                  Share
-                </button>
-              </div>
-            </div>
-          `;
-        });
-      }
-      
-      // Filter and display users
-      if (data.users && data.users.length > 0 && (currentFilter === 'all' || currentFilter === 'users')) {
-        data.users.forEach(user => {
-          const profilePic = user.profilePicture || 'https://via.placeholder.com/64x64/1877f2/ffffff?text=U';
-          const fullName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Anonymous User';
-          
-          output += `
-            <div class="user-card">
-              <div class="user-header">
-                <img src="${profilePic}" alt="User" class="user-avatar">
-                <div class="user-info">
-                  <div class="user-name">${fullName}</div>
-                  <div class="user-title">SALMART User</div>
-                </div>
-              </div>
-              <div class="user-actions">
-                <button class="user-btn primary">
-                  <i class="fas fa-user-plus"></i>
-                  Add Friend
-                </button>
-                <button class="user-btn">
-                  <i class="far fa-comment"></i>
-                  Message
-                </button>
-              </div>
-            </div>
-          `;
-        });
-      }
+                const userCard = document.createElement('div');
+                userCard.classList.add('user-card');
+                userCard.innerHTML = `
+                    <div class="user-header">
+                        <a href="Profile.html?userId=${user._id}">
+                            <img src="${profilePic}" alt="User" class="user-avatar" onerror="this.src='/salmart-192x192.png'">
+                        </a>
+                        <div class="user-info">
+                            <a href="Profile.html?userId=${user._id}">
+                                <div class="user-name">${fullName}</div>
+                            </a>
+                            <div class="user-title">SALMART User</div>
+                        </div>
+                    </div>
+                    <div class="user-actions">
+                        ${isCurrentUser ? '' : `
+                            <button class="user-btn primary follow-button" data-user-id="${user._id}" ${isFollowingUser ? 'disabled' : ''}>
+                                ${isFollowingUser ? '<i class="fas fa-user-check"></i> Following' : '<i class="fas fa-user-plus"></i> Follow'}
+                            </button>
+                            <button class="user-btn send-message-btn" data-recipient-id="${user._id}" data-recipient-username="${escapeHtml(fullName)}" data-recipient-profile-picture-url="${profilePic}">
+                                <i class="far fa-comment"></i> Message
+                            </button>
+                        `}
+                    </div>
+                `;
+                fragment.appendChild(userCard);
+            });
+        }
 
-      // No results
-      if (!output) {
-        output = `
-          <div class="no-results">
-            <i class="fas fa-search"></i>
-            <h3>No results found</h3>
-            <p>Try adjusting your search or filters</p>
-          </div>
-        `;
-      }
+        resultsEl.innerHTML = ''; // Clear previous results
+        resultsEl.appendChild(fragment);
 
-      document.getElementById('searchResults').innerHTML = output;
+        // No results message
+        if (resultsEl.children.length === 0) {
+            resultsEl.innerHTML = `
+              <div class="no-results">
+                <i class="fas fa-search"></i>
+                <h3>No results found</h3>
+                <p>Try adjusting your search or filters</p>
+              </div>
+            `;
+        }
+
+        // Observe all newly added video containers
+        if (videoObserver) {
+            videoContainersToObserve.forEach(container => {
+                videoObserver.observe(container);
+            });
+        }
     }
 
-    function formatTime(timestamp) {
-      if (!timestamp) return 'Some time ago';
-      const date = new Date(timestamp);
-      const now = new Date();
-      const diff = now - date;
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-      
-      if (days === 0) return 'Today';
-      if (days === 1) return 'Yesterday';
-      if (days < 7) return `${days} days ago`;
-      return date.toLocaleDateString();
+
+    // --- Event Delegates for Interactive Elements (Copied from home.js and adapted) ---
+    document.addEventListener('click', async (event) => {
+        const target = event.target.closest('button, a'); // Capture clicks on buttons and links
+        if (!target) return;
+
+        const showToast = window.showToast || ((msg, type) => console.log(`Toast: ${type} - ${msg}`)); // Fallback toast
+        const authToken = localStorage.getItem('authToken');
+        const loggedInUser = localStorage.getItem('userId');
+
+        // Handle Promote Button
+        if (target.classList.contains('promote-button')) {
+            const postId = target.dataset.postId;
+            if (!postId) {
+                showToast('Invalid post ID for promotion', 'error');
+                return;
+            }
+            window.location.href = `promote.html?postId=${postId}`;
+            return;
+        }
+
+        // Handle Send Message Button (for both normal and promoted posts, and user cards)
+        if (target.classList.contains('send-message-btn')) {
+            event.preventDefault();
+            const recipientId = target.dataset.recipientId;
+            let productImage = target.dataset.productImage || '';
+            const productDescription = target.dataset.productDescription || '';
+            const postId = target.dataset.postId || '';
+
+            // For user cards, product details might not be present, so use user info
+            const recipientUsername = target.dataset.recipientUsername || 'Unknown User';
+            const recipientProfilePictureUrl = target.dataset.recipientProfilePictureUrl || '/salmart-192x192.png';
+
+            if (!loggedInUser) {
+                redirectToLogin();
+                return;
+            }
+
+            if (productImage && !productImage.match(/^https?:\/\//)) {
+                productImage = productImage.startsWith('/') ? `${API_BASE_URL}${productImage}` : `${API_BASE_URL}/${productImage}`;
+            }
+
+            const message = productDescription ? `Is this item still available?\n\nProduct: ${productDescription}` : 'Hello';
+            const encodedMessage = encodeURIComponent(message);
+            const encodedProductImage = encodeURIComponent(productImage);
+            const encodedRecipientUsername = encodeURIComponent(recipientUsername);
+            const encodedRecipientProfilePictureUrl = encodeURIComponent(recipientProfilePictureUrl);
+            const encodedProductDescription = encodeURIComponent(productDescription);
+
+            const chatUrl = `Chats.html?user_id=${loggedInUser}&recipient_id=${recipientId}&recipient_username=${encodedRecipientUsername}&recipient_profile_picture_url=${encodedRecipientProfilePictureUrl}&message=${encodedMessage}&product_image=${encodedProductImage}&product_id=${postId}&product_name=${encodedProductDescription}`;
+            window.location.href = chatUrl;
+            return;
+        }
+
+        // Buy Now Button Handler
+        if (target.classList.contains('buy-now-button')) {
+          event.preventDefault();
+
+          if (!loggedInUser) {
+              redirectToLogin();
+              return;
+          }
+
+          const postId = target.dataset.postId;
+          if (!postId) {
+            console.error("Post ID is missing");
+            showToast('Error: Post ID not found for purchase.', '#dc3545');
+            return;
+          }
+
+          const productData = {
+            postId: target.dataset.postId || '',
+            productImage: target.dataset.productImage || '',
+            productTitle: target.dataset.productTitle || '',
+            productDescription: target.dataset.productDescription || '',
+            productLocation: target.dataset.productLocation || '',
+            productCondition: target.dataset.productCondition || '',
+            productPrice: target.dataset.productPrice || ''
+          };
+
+          window.__selectedProduct = productData;
+
+          const paymentChoiceModal = document.getElementById('paymentChoiceModal');
+          if (paymentChoiceModal) {
+            paymentChoiceModal.classList.remove('hidden');
+          } else {
+            console.error("Payment choice modal not found.");
+            showToast('Payment modal not available.', '#dc3545');
+          }
+          return;
+        }
+
+        // Handle Like Button
+        if (target.classList.contains('like-button')) {
+            if (!loggedInUser) {
+                redirectToLogin();
+                return;
+            }
+            const postId = target.dataset.postId;
+            if (postId && window.handleLikePost) {
+                window.handleLikePost(postId);
+            }
+            return;
+        }
+
+        // Handle Reply (Comments) Button
+        if (target.classList.contains('reply-button')) {
+            if (!loggedInUser) {
+                redirectToLogin();
+                return;
+            }
+            const postId = target.dataset.postId;
+            if (postId) {
+                window.location.href = `product.html?postId=${postId}`;
+            }
+            return;
+        }
+
+        // Handle Share Button
+        if (target.classList.contains('share-button')) {
+            const postId = target.dataset.postId;
+            if (postId && window.handleSharePost) {
+                window.handleSharePost(postId);
+            }
+            return;
+        }
+
+
+        // Handle Follow Button
+        if (target.classList.contains('follow-button') && target.dataset.userId) {
+            const userIdToFollow = target.dataset.userId;
+            if (!authToken || !loggedInUser) {
+                showToast('Please log in to follow users.', '#dc3545');
+                return;
+            }
+
+            const isCurrentlyFollowing = target.textContent.includes('Following');
+
+            window.updateFollowButtonsUI(userIdToFollow, !isCurrentlyFollowing);
+
+            try {
+                const endpoint = isCurrentlyFollowing ? `${API_BASE_URL}/unfollow/${userIdToFollow}` : `${API_BASE_URL}/follow/${userIdToFollow}`;
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`,
+                    },
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Failed to update follow status');
+                }
+
+                const data = await response.json();
+
+                if (isCurrentlyFollowing) {
+                    currentFollowingList = currentFollowingList.filter(id => id !== userIdToFollow);
+                } else {
+                    currentFollowingList.push(userIdToFollow);
+                }
+
+                window.updateFollowButtonsUI(userIdToFollow, !isCurrentlyFollowing);
+                showToast(data.message || 'Follow status updated!', '#28a745');
+
+            } catch (error) {
+                console.error('Follow/Unfollow error:', error);
+                showToast(error.message || 'Failed to update follow status.', '#dc3545');
+                window.updateFollowButtonsUI(userIdToFollow, isCurrentlyFollowing);
+            }
+            return;
+        }
+
+        // Handle Post Options Menu (ellipsis button)
+        if (target.classList.contains('post-options-button')) {
+            const optionsMenu = target.nextElementSibling; // The .post-options-menu
+            if (optionsMenu) {
+                // Toggle visibility
+                optionsMenu.parentElement.classList.toggle('active-menu');
+
+                // Close other open menus
+                document.querySelectorAll('.post-options.active-menu').forEach(menuParent => {
+                    if (menuParent !== optionsMenu.parentElement) {
+                        menuParent.classList.remove('active-menu');
+                    }
+                });
+            }
+            return;
+        }
+
+        // Handle Delete Post Button
+        if (target.classList.contains('delete-post-button')) {
+            const postId = target.dataset.postId;
+            if (confirm('Are you sure you want to delete this post?')) {
+                try {
+                    const token = localStorage.getItem('authToken');
+                    const response = await fetch(`${API_BASE_URL}/api/posts/${postId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+                    if (response.ok) {
+                        showToast('Post deleted successfully!', 'success');
+                        target.closest('.post').remove(); // Remove the post from the DOM
+                    } else {
+                        const errorData = await response.json();
+                        throw new Error(errorData.message || 'Failed to delete post');
+                    }
+                } catch (error) {
+                    console.error('Delete post error:', error);
+                    showToast(error.message || 'Error deleting post.', 'error');
+                }
+            }
+            return;
+        }
+
+        // Handle Edit Post Button
+        if (target.classList.contains('edit-post-button')) {
+            const postId = target.dataset.postId;
+            window.location.href = `create-post.html?edit=${postId}`; // Redirect to create-post page with edit parameter
+            return;
+        }
+
+        // Handle Report Post Button
+        if (target.classList.contains('report-post-button')) {
+            if (!loggedInUser) {
+                redirectToLogin();
+                return;
+            }
+            const postId = target.dataset.postId;
+            // Implement your report post logic here (e.g., show a modal)
+            showToast(`Reporting post: ${postId}`, 'info');
+            return;
+        }
+    });
+
+    // Close options menu if clicked outside
+    document.addEventListener('click', (event) => {
+        if (!event.target.closest('.post-options')) {
+            document.querySelectorAll('.post-options.active-menu').forEach(menuParent => {
+                menuParent.classList.remove('active-menu');
+            });
+        }
+    });
+
+
+
+
+    // --- Modal functions (Copied from home.js) ---
+    window.closeModal = function() {
+        const paymentChoiceModal = document.getElementById('paymentChoiceModal');
+        if (paymentChoiceModal) {
+            paymentChoiceModal.classList.add('hidden');
+        }
     }
+
+    window.choosePT = function() {
+        const product = window.__selectedProduct;
+        if (!product || !product.postId) {
+            if (window.showToast) window.showToast('Product data missing for in-app payment.', 'error');
+            console.error('Product data is missing for PT payment.');
+            return;
+        }
+        const query = new URLSearchParams(product).toString();
+        window.location.href = `checkout.html?${query}`;
+    }
+
+    window.choosePaystack = function() {
+        const product = window.__selectedProduct;
+        const userId = localStorage.getItem('userId');
+        const email = localStorage.getItem('email');
+
+        if (!userId || !email) {
+            if (window.showToast) window.showToast("Missing user information. Please log in.", 'error');
+            console.error("Missing user information for Paystack payment.");
+            return;
+        }
+
+        if (!product || !product.postId || !product.productPrice) {
+            if (window.showToast) window.showToast('Product data missing for Paystack payment.', 'error');
+            console.error('Product data is missing for Paystack payment.');
+            return;
+        }
+
+        const rawPrice = product.productPrice.replace('₦', '').replace(/,/g, '');
+        const amountInKobo = Math.round(parseFloat(rawPrice) * 100);
+
+        if (isNaN(amountInKobo) || amountInKobo <= 0) {
+            if (window.showToast) window.showToast('Invalid product price for payment.', 'error');
+            console.error('Invalid amount for Paystack:', product.productPrice);
+            return;
+        }
+
+        fetch(`${API_BASE_URL}/pay`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                postId: product.postId,
+                buyerId: userId,
+                email,
+                amount: amountInKobo
+            })
+        })
+        .then(res => {
+            if (!res.ok) {
+                return res.json().then(errorData => {
+                    throw new Error(errorData.message || 'Failed to initiate Paystack payment on server.');
+                });
+            }
+            return res.json();
+        })
+        .then(data => {
+            if (!data.success) {
+                if (window.showToast) window.showToast(data.message || "Payment setup failed.", 'error');
+                return;
+            }
+
+            const redirectParams = new URLSearchParams({
+                ref: data.reference,
+                productTitle: product.productTitle,
+                amount: data.amount
+            });
+
+            sessionStorage.setItem('paystackProductDetails', JSON.stringify(product));
+
+            window.location.href = `paystack.html?${redirectParams.toString()}`;
+        })
+        .catch(err => {
+            console.error('Error starting Paystack payment:', err);
+            if (window.showToast) window.showToast(err.message || 'Something went wrong with payment initiation.', 'error');
+        });
+    }
+
 
     // Search on Enter key
     document.getElementById('searchInput').addEventListener('keypress', function(e) {
@@ -660,8 +1661,35 @@
       }
     });
 
-    // Auto-focus search input
-    document.getElementById('searchInput').focus();
+    // Initial search prompt on load
+    document.addEventListener('DOMContentLoaded', () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const initialQuery = urlParams.get('q');
+        if (initialQuery) {
+            document.getElementById('searchInput').value = initialQuery;
+            performSearch();
+        } else {
+            document.getElementById('searchResults').innerHTML = `
+                <div class="no-results">
+                    <i class="fas fa-search"></i>
+                    <h3>Start your search</h3>
+                    <p>Type something in the search bar above to find posts and people.</p>
+                </div>
+            `;
+            document.getElementById('searchInfo').textContent = 'Enter a search term to see results';
+        }
+        document.getElementById('searchInput').focus();
+
+        // Initialize currentFollowingList for logged in users on page load
+        if (currentLoggedInUser) {
+            fetchFollowingList().then(list => {
+                currentFollowingList = list;
+            });
+        }
+    });
+
   </script>
+  
+ <script src="/idb-keyval-iife.js"></script>
 </body>
 </html>

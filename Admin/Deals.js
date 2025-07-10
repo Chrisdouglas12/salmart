@@ -114,9 +114,9 @@ async function fetchTransactions() {
       card.className = 'transaction-card';
 
       const product = t.postId || {};
-const productImage = product.photo || 'Default.png';
-const productDescription = product.title || 'Product';
-const amount = t.amount || 0;
+      const productImage = product.photo || 'Default.png';
+      const productDescription = product.title || 'Product';
+      const amount = t.amount || 0;
 
       const statusBadge = `<span class="badge ${t.status}">${t.status}</span>`;
       let confirmBtn = '';
@@ -220,7 +220,8 @@ async function confirmDelivery(transactionId) {
       return data;
     } else {
       console.error('[CONFIRM DELIVERY FAILED]', data);
-      throw new Error(data.error || 'Failed to confirm delivery');
+      // Ensure that if backend sends data.error, it's used
+      throw new Error(data.error || data.message || 'Failed to confirm delivery');
     }
   } catch (err) {
     console.error('[CONFIRM DELIVERY ERROR]', err);
@@ -292,13 +293,13 @@ function openResponseModal(success, message) {
 
   if (success) {
     responseIcon.innerHTML = '<i class="fas fa-check-circle"></i>';
-    responseTitle.textContent = 'Transfer Successful!';
-    responseMessage.textContent = message || 'Your delivery confirmation has been processed successfully.';
+    responseTitle.textContent = 'Action Successful!'; // More general title
+    responseMessage.textContent = message || 'Your request has been processed successfully.';
     responseButton.className = 'success-btn';
   } else {
     responseIcon.innerHTML = '<i class="fas fa-times-circle"></i>';
-    responseTitle.textContent = 'Transfer Failed';
-    responseMessage.textContent = message || 'Failed to confirm delivery. Please try again.';
+    responseTitle.textContent = 'Action Failed'; // More general title
+    responseMessage.textContent = message || 'Failed to complete the action. Please try again.';
     responseButton.className = 'error-btn';
   }
 
@@ -338,17 +339,20 @@ async function handleConfirmDelivery() {
     const response = await confirmDelivery(transactionId);
     closeLoaderModal();
 
+    // Specific handling for different success scenarios
     if (response.queued) {
-      openResponseModal(true, 'Delivery confirmed! Payment is queued and will be released once available.');
+      openResponseModal(true, 'Delivery confirmed! Payment is queued and will be released once available. You will be notified.');
+    } else if (response.balanceCheckFailed) {
+      openResponseModal(true, 'Delivery confirmed. Payout is temporarily delayed as we could not verify our payment balance. It will be processed soon.');
     } else {
       openResponseModal(true, response.message || 'Delivery confirmed. Payment released successfully.');
     }
 
-    fetchTransactions();
+    fetchTransactions(); // Re-fetch to update transaction status instantly
   } catch (err) {
     console.error('[CONFIRM DELIVERY SERVER ERROR]', err.message);
     closeLoaderModal();
-    openResponseModal(false, err.message || 'Failed to confirm delivery.');
+    openResponseModal(false, err.message || 'Failed to confirm delivery. Please try again.');
     if (confirmButton) {
       confirmButton.textContent = 'Confirm Delivery';
       confirmButton.classList.remove('processing-btn');
@@ -356,6 +360,7 @@ async function handleConfirmDelivery() {
     }
   }
 }
+
 // Function to show toast
 function showToast(message) {
   const toast = document.getElementById('toast');
@@ -389,7 +394,11 @@ function closeRefundModal() {
     refundModal.style.display = 'none';
     document.getElementById('reason').value = '';
     document.getElementById('refundNote').value = '';
-    document.getElementById('refundEvidence').value = '';
+    // Reset file input value properly for security reasons (cannot set value directly)
+    const refundEvidenceInput = document.getElementById('refundEvidence');
+    if (refundEvidenceInput) {
+        refundEvidenceInput.value = ''; // Clears selected file
+    }
     localStorage.removeItem('refundTransactionId');
   }
 }
@@ -407,6 +416,9 @@ async function submitRefund() {
     return;
   }
 
+  // Optionally, show a loader while processing refund
+  openLoaderModal();
+
   const formData = new FormData();
   formData.append('reason', reason);
   if (note) formData.append('note', note);
@@ -417,20 +429,31 @@ async function submitRefund() {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${token}`,
+        // 'Content-Type': 'application/json', // Do NOT set Content-Type for FormData, browser sets it correctly
       },
       body: formData,
     });
 
+    closeLoaderModal(); // Close loader regardless of success/failure
+
     if (!res.ok) {
-      throw new Error(`HTTP error! status: ${res.status}`);
+      let errorMessage = 'Error requesting refund.';
+      try {
+        const errorBody = await res.json();
+        errorMessage = errorBody.message || errorBody.error || `HTTP error! status: ${res.status}`;
+      } catch (parseError) {
+        errorMessage = `HTTP error! status: ${res.status}`;
+      }
+      throw new Error(errorMessage);
     }
 
     const data = await res.json();
     showToast(data.message || 'Refund requested successfully.');
     closeRefundModal();
-    fetchTransactions();
+    fetchTransactions(); // <--- THIS IS THE KEY FIX for instant update
   } catch (err) {
     console.error('Refund request error:', err);
+    closeLoaderModal(); // Ensure loader is closed on error
     showToast(err.message || 'Error requesting refund. Please try again.');
   }
 }

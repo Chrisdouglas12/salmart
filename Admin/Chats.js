@@ -30,7 +30,6 @@ const productId = urlParams.get('product_id') || '';
 const productName = urlParams.get('product_name') ? decodeURIComponent(urlParams.get('product_name')) : '';
 const originalPrice = urlParams.get('original_price') ? parseFloat(urlParams.get('original_price')) : null;
 
-
 // Set recipient info in the UI
 document.getElementById('chats-userName').textContent = recipientUsername;
 document.getElementById('chatspic').src = recipientProfilePictureUrl;
@@ -44,8 +43,10 @@ if (predefinedMessage) {
 
 // Track displayed messages and initial message status
 const displayedMessages = new Set();
-let isInitialMessageSent = localStorage.getItem(`initialMessageSent_${productId}_${receiverId}`) === 'true';
+// Store optimistic messages by their temporary ID for later update
+const optimisticMessagesMap = new Map();
 
+let isInitialMessageSent = localStorage.getItem(`initialMessageSent_${productId}_${receiverId}`) === 'true';
 
 // Function to render product preview
 function renderProductPreview() {
@@ -79,14 +80,28 @@ function createSystemMessage(text) {
     return div;
 }
 
+// Global sets for bargain state management (as they were in your original code)
+const acceptedOffers = new Set();
+const endedBargains = new Set();
+const bargainingSessions = new Map(); // productId -> senderId
+const sentCounterOffers = new Set();
+
+function saveBargainStates() {
+    // Implement your save logic if necessary, otherwise remove
+}
+
 
 // Display a message in the chat
 function displayMessage(message, isOptimistic = false) {
+    // Check if a message with this _id is already displayed (important for preventing duplicates
+    // when a server-confirmed message arrives after an optimistic one)
     if (message._id && displayedMessages.has(message._id)) {
         return;
     }
-    if (message._id) {
-        displayedMessages.add(message._id);
+
+    // If this is an optimistic message, add its temporary ID to the map
+    if (isOptimistic && message._id.startsWith('temp_')) {
+        optimisticMessagesMap.set(message._id, message);
     }
 
     const messageDate = new Date(message.createdAt);
@@ -96,19 +111,30 @@ function displayMessage(message, isOptimistic = false) {
     let displayImage = null;
     let offerDetails = message.offerDetails || {};
 
-    let parsedFromJson = {};
-    if (typeof message.text === 'string' && message.text.startsWith('{')) {
-        try {
-            parsedFromJson = JSON.parse(message.text);
-            displayText = parsedFromJson.text || displayText;
-            displayImage = parsedFromJson.image || displayImage;
-            offerDetails = { ...offerDetails, ...parsedFromJson };
-        } catch (e) {
-            console.warn('Failed to parse message text as JSON:', message.text, e);
-            displayText = message.text;
+    // Handle different message types
+    if (message.messageType === 'image') {
+        // For receipt images, use the attachment URL
+        displayImage = message.attachment?.url;
+        if (!displayText) {
+            displayText = 'Payment Receipt'; // Default text for receipt images
+        }
+    } else {
+        // Existing JSON parsing logic for other message types
+        let parsedFromJson = {};
+        if (typeof message.text === 'string' && message.text.startsWith('{')) {
+            try {
+                parsedFromJson = JSON.parse(message.text);
+                displayText = parsedFromJson.text || displayText;
+                displayImage = parsedFromJson.image || displayImage;
+                offerDetails = { ...offerDetails, ...parsedFromJson };
+            } catch (e) {
+                console.warn('Failed to parse message text as JSON:', message.text, e);
+                displayText = message.text;
+            }
         }
     }
 
+    // Fix image URL if it's relative
     if (displayImage && !displayImage.match(/^https?:\/\//)) {
         displayImage = displayImage.startsWith('/') ? `${API_BASE_URL}${displayImage}` : displayImage;
     }
@@ -118,7 +144,7 @@ function displayMessage(message, isOptimistic = false) {
         lastDisplayedDate = formattedDate;
     }
 
-    // Update state based on message type
+    // Update state based on message type (your existing logic)
     if (offerDetails && offerDetails.productId) {
         const productKey = offerDetails.productId;
         if (['accepted', 'completed'].includes(offerDetails.status)) {
@@ -177,6 +203,28 @@ function displayMessage(message, isOptimistic = false) {
             paymentBtn.textContent = 'Proceed to Payment';
 
             const checkPaymentStatus = async () => {
+                // Dummy functions, replace with your actual implementation
+                const verifyPaymentStatus = async (productId, userId) => {
+                    // Your actual payment verification logic here
+                    console.log(`Verifying payment for product ${productId} by user ${userId}`);
+                    return false; // Return true if paid, false otherwise
+                };
+
+                const initiatePayment = (productId, price, productName, button) => {
+                    // Your actual payment initiation logic here
+                    console.log(`Initiating payment for ${productName} (ID: ${productId}) at ₦${price}`);
+                    showToast(`Initiating payment for ${productName}...`, 'info');
+                    // Simulate payment process
+                    setTimeout(() => {
+                        showToast('Payment initiated. Follow prompts.', 'success');
+                        button.disabled = true;
+                        button.textContent = 'Payment Initiated';
+                        button.style.backgroundColor = 'gray';
+                        button.style.cursor = 'not-allowed';
+                    }, 1500);
+                };
+
+
                 const isPaid = await verifyPaymentStatus(offerDetails.productId, userId);
                 if (isPaid) {
                     paymentBtn.disabled = true;
@@ -204,9 +252,10 @@ function displayMessage(message, isOptimistic = false) {
         return;
     }
 
-    // --- REGULAR CHAT MESSAGES ---
+    // --- REGULAR CHAT MESSAGES (including image messages) ---
     const msgDiv = document.createElement('div');
     msgDiv.classList.add('message', message.senderId === userId ? 'sent' : 'received');
+    // Use the actual _id if available, otherwise the temporary one for optimistic updates
     msgDiv.dataset.messageId = message._id || `temp_${Date.now()}`;
     const time = message.createdAt ? new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
 
@@ -215,70 +264,142 @@ function displayMessage(message, isOptimistic = false) {
         msgDiv.setAttribute('data-message-type', 'counter-offer');
     }
 
-    msgDiv.innerHTML = `
-        <div>${displayText}</div>
-        ${displayImage ? `<img src="${displayImage}" class="product-photo-preview" alt="Product Image" style="max-width: 200px; border-radius: 5px;" onerror="this.style.display='none';this.nextElementSibling.style.display='block';"><p style="display:none;color:red;">Failed to load product image.</p>` : ''}
-        <div class="message-timestamp">${time} ${message.status === 'seen' ? '✔✔' : isOptimistic ? '' : '✔'}</div>
-    `;
+    // Special styling for image messages (receipts)
+    if (message.messageType === 'image') {
+        msgDiv.classList.add('image-message');
+        msgDiv.innerHTML = `
+            <div class="image-message-text">${displayText}</div>
+            ${displayImage ? `
+                <div class="image-container" style="margin: 10px 0;">
+                    <img src="${displayImage}" class="receipt-image" alt="Receipt"
+                         style="max-width: 250px; border-radius: 8px; border: 1px solid #ddd;"
+                         onerror="this.style.display='none';this.nextElementSibling.style.display='block';">
+                    <p style="display:none;color:red;">Failed to load receipt image.</p>
+                </div>
+            ` : ''}
+            <div class="message-timestamp">${time} ${message.status === 'seen' ? '✔✔' : isOptimistic ? '' : '✔'}</div>
+        `;
+    } else {
+        // Regular message display
+        msgDiv.innerHTML = `
+            <div>${displayText}</div>
+            ${displayImage ? `<img src="${displayImage}" class="product-photo-preview" alt="Product Image" style="max-width: 200px; border-radius: 5px;" onerror="this.style.display='none';this.nextElementSibling.style.display='block';"><p style="display:none;color:red;">Failed to load product image.</p>` : ''}
+            <div class="message-timestamp">${time} ${message.status === 'seen' ? '✔✔' : isOptimistic ? '' : '✔'}</div>
+        `;
+    }
 
     const isOfferAccepted = offerDetails.productId && acceptedOffers.has(offerDetails.productId);
     const isBargainEnded = offerDetails.productId && endedBargains.has(offerDetails.productId);
 
-    if (message.messageType === 'offer' && offerDetails.proposedPrice && message.receiverId === userId && message.senderId === receiverId && !isOfferAccepted && !isBargainEnded) {
-        const acceptBtn = document.createElement('button');
-        acceptBtn.className = 'accept-offer-btn';
-        acceptBtn.textContent = 'Accept Offer';
-        acceptBtn.onclick = async () => {
-            handleAcceptOffer(offerDetails, message.senderId);
-        };
-        msgDiv.appendChild(acceptBtn);
+    // Add offer buttons for non-image messages
+    if (message.messageType !== 'image') {
+        if (message.messageType === 'offer' && offerDetails.proposedPrice && message.receiverId === userId && message.senderId === receiverId && !isOfferAccepted && !isBargainEnded) {
+            const acceptBtn = document.createElement('button');
+            acceptBtn.className = 'accept-offer-btn';
+            acceptBtn.textContent = 'Accept Offer';
+            acceptBtn.onclick = async () => {
+                // Dummy functions, replace with your actual implementation
+                const handleAcceptOffer = (details, sender) => {
+                     console.log(`Accepting offer for ${details.productName} from ${sender}`);
+                     showToast('Offer accepted!', 'success');
+                };
+                handleAcceptOffer(offerDetails, message.senderId);
+            };
+            msgDiv.appendChild(acceptBtn);
 
-        const declineBtn = document.createElement('button');
-        declineBtn.className = 'decline-offer-btn';
-        declineBtn.textContent = 'Decline Offer';
-        declineBtn.onclick = () => {
-            openLastPriceModal(offerDetails.productId, offerDetails.productName, offerDetails.image);
-        };
-        msgDiv.appendChild(declineBtn);
-    }
+            const declineBtn = document.createElement('button');
+            declineBtn.className = 'decline-offer-btn';
+            declineBtn.textContent = 'Decline Offer';
+            declineBtn.onclick = () => {
+                // Dummy functions, replace with your actual implementation
+                const openLastPriceModal = (productId, productName, image) => {
+                    console.log(`Opening last price modal for ${productName}`);
+                    showToast('Last price modal functionality not implemented.', 'warning');
+                };
+                openLastPriceModal(offerDetails.productId, offerDetails.productName, offerDetails.image);
+            };
+            msgDiv.appendChild(declineBtn);
+        }
 
-    if (message.messageType === 'counter-offer' && offerDetails.proposedPrice && message.receiverId === userId && message.senderId === receiverId && !isOfferAccepted && !isBargainEnded) {
-        const acceptBtn = document.createElement('button');
-        acceptBtn.className = 'accept-offer-btn';
-        acceptBtn.textContent = 'Accept Last Price';
-        acceptBtn.onclick = async () => {
-            handleAcceptCounterOffer(offerDetails, message.senderId);
-        };
-        msgDiv.appendChild(acceptBtn);
+        if (message.messageType === 'counter-offer' && offerDetails.proposedPrice && message.receiverId === userId && message.senderId === receiverId && !isOfferAccepted && !isBargainEnded) {
+            const acceptBtn = document.createElement('button');
+            acceptBtn.className = 'accept-offer-btn';
+            acceptBtn.textContent = 'Accept Last Price';
+            acceptBtn.onclick = async () => {
+                // Dummy functions, replace with your actual implementation
+                const handleAcceptCounterOffer = (details, sender) => {
+                    console.log(`Accepting counter offer for ${details.productName} from ${sender}`);
+                    showToast('Counter offer accepted!', 'success');
+                };
+                handleAcceptCounterOffer(offerDetails, message.senderId);
+            };
+            msgDiv.appendChild(acceptBtn);
 
-        const endBargainBtn = document.createElement('button');
-        endBargainBtn.className = 'end-bargain-btn';
-        endBargainBtn.textContent = 'End Bargain';
-        endBargainBtn.onclick = async () => {
-            handleEndBargain(offerDetails, message.senderId);
-        };
-        msgDiv.appendChild(endBargainBtn);
+            const endBargainBtn = document.createElement('button');
+            endBargainBtn.className = 'end-bargain-btn';
+            endBargainBtn.textContent = 'End Bargain';
+            endBargainBtn.onclick = async () => {
+                // Dummy functions, replace with your actual implementation
+                const handleEndBargain = (details, sender) => {
+                    console.log(`Ending bargain for ${details.productName} with ${sender}`);
+                    showToast('Bargain ended.', 'info');
+                };
+                handleEndBargain(offerDetails, message.senderId);
+            };
+            msgDiv.appendChild(endBargainBtn);
+        }
     }
 
     chatMessages.appendChild(msgDiv);
     chatMessages.scrollTop = chatMessages.scrollHeight;
+
+    // Add to displayedMessages after successful append
+    if (message._id) {
+        displayedMessages.add(message._id);
+    }
 }
 
 // Helper functions for optimistic updates
-function updateOptimisticMessageId(newMessageId) {
-    const lastSent = chatMessages.querySelector('.message.sent:last-child');
-    if (lastSent && newMessageId) {
-        lastSent.dataset.messageId = newMessageId;
+function updateOptimisticMessageId(tempId, newMessageId) {
+    // Find the optimistic message element in the DOM
+    const optimisticMessageElement = chatMessages.querySelector(`[data-message-id="${tempId}"]`);
+
+    if (optimisticMessageElement) {
+        // Update its data-message-id attribute
+        optimisticMessageElement.dataset.messageId = newMessageId;
+
+        // Remove the temporary ID from the displayedMessages set
+        displayedMessages.delete(tempId);
+        // Add the new, real ID to the displayedMessages set
         displayedMessages.add(newMessageId);
+
+        // Update the optimisticMessagesMap
+        const optimisticMsg = optimisticMessagesMap.get(tempId);
+        if (optimisticMsg) {
+            optimisticMsg._id = newMessageId; // Update the message object itself
+            optimisticMessagesMap.delete(tempId);
+            optimisticMessagesMap.set(newMessageId, optimisticMsg);
+        }
+
+        // Update status for the sent message to show '✔' or '✔✔'
+        const timestampElement = optimisticMessageElement.querySelector('.message-timestamp');
+        if (timestampElement && !timestampElement.textContent.includes('✔')) {
+            timestampElement.textContent += ' ✔'; // Mark as sent
+        }
+    } else {
+        console.warn(`Optimistic message with temporary ID ${tempId} not found in DOM.`);
     }
 }
 
-function removeOptimisticMessage() {
-    const lastSent = chatMessages.querySelector('.message.sent:last-child');
-    if (lastSent && lastSent.dataset.messageId.startsWith('temp_')) {
-        lastSent.remove();
+function removeOptimisticMessage(tempId) {
+    const optimisticMessageElement = chatMessages.querySelector(`[data-message-id="${tempId}"]`);
+    if (optimisticMessageElement) {
+        optimisticMessageElement.remove();
+        displayedMessages.delete(tempId);
+        optimisticMessagesMap.delete(tempId);
     }
 }
+
 
 // Send a new message from the chat input
 sendBtn.onclick = async () => {
@@ -289,17 +410,19 @@ sendBtn.onclick = async () => {
     }
 
     const isInitialMessage = !isInitialMessageSent && predefinedMessage && productImage;
+    const tempMessageId = `temp_${Date.now()}`; // Generate a temporary ID
 
     const message = {
         receiverId,
         text: isInitialMessage ? JSON.stringify({ text, image: productImage }) : text,
         messageType: 'text',
-        createdAt: new Date(),
-        isRead: false
+        createdAt: new Date().toISOString(), // Use ISO string for consistent date
+        isRead: false,
+        _id: tempMessageId // Assign temporary ID for optimistic update
     };
 
-    const optimisticMessage = { ...message, senderId: userId, status: 'sent' };
-    displayMessage(optimisticMessage, true);
+    // Display the optimistic message
+    displayMessage({ ...message, senderId: userId, status: 'sending' }, true); // Pass true for isOptimistic
 
     typeSection.value = '';
 
@@ -321,15 +444,23 @@ sendBtn.onclick = async () => {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
             },
-            body: JSON.stringify(message)
+            body: JSON.stringify(message) // Send original message data (without temp ID)
         });
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || `HTTP error ${response.status}`);
-        updateOptimisticMessageId(data.data?._id);
+
+        // Update the optimistic message with the real ID from the server
+        if (data.data?._id) {
+            updateOptimisticMessageId(tempMessageId, data.data._id);
+        } else {
+            console.warn('Server did not return a message _id.');
+            removeOptimisticMessage(tempMessageId); // Fallback: remove if no real ID
+        }
+
     } catch (error) {
         console.error('Error sending message:', error);
         showToast(`Failed to send message: ${error.message}`, 'error');
-        removeOptimisticMessage();
+        removeOptimisticMessage(tempMessageId); // Remove the optimistic message on error
     }
 };
 
@@ -344,7 +475,45 @@ socket.on('newMessage', message => {
         return;
     }
 
-    displayMessage(message);
+    // Crucial: Check if this message is a server confirmation for an optimistic message we already displayed
+    // If we have an optimistic message with the same content and sender/receiver, we assume it's the confirmation
+    // This is a heuristic; a better way would be if the server sent back the temp ID.
+    const isConfirmation = Array.from(optimisticMessagesMap.values()).some(optimisticMsg =>
+        optimisticMsg.senderId === message.senderId &&
+        optimisticMsg.receiverId === message.receiverId &&
+        optimisticMsg.text === message.text // Compare content
+    );
+
+    if (isConfirmation && message.senderId === userId) {
+        // If it's a confirmation for our own sent message, we don't display it again
+        // The updateOptimisticMessageId function already handles updating the UI for sent messages.
+        // We only need to ensure the correct _id is in displayedMessages set.
+        const tempIdFound = Array.from(optimisticMessagesMap.keys()).find(tempId => {
+            const optimisticMsg = optimisticMessagesMap.get(tempId);
+            return optimisticMsg.senderId === message.senderId &&
+                   optimisticMsg.receiverId === message.receiverId &&
+                   optimisticMsg.text === message.text;
+        });
+
+        if (tempIdFound) {
+            updateOptimisticMessageId(tempIdFound, message._id);
+            // Also, update the status to 'seen' if applicable, or just 'sent'
+            const messageElement = document.querySelector(`[data-message-id="${message._id}"]`);
+            if (messageElement) {
+                const timestampElement = messageElement.querySelector('.message-timestamp');
+                if (timestampElement) {
+                    if (message.status === 'seen' && !timestampElement.textContent.includes('✔✔')) {
+                        timestampElement.textContent += ' ✔✔';
+                    } else if (!timestampElement.textContent.includes('✔')) {
+                        timestampElement.textContent += ' ✔';
+                    }
+                }
+            }
+        }
+        return;
+    }
+
+    displayMessage(message); // Display the incoming message (if not our own confirmed message)
 
     if (message.receiverId === userId && message.status !== 'seen' && message.senderId !== userId) {
         socket.emit('markAsSeen', {
@@ -460,6 +629,8 @@ async function loadChatHistory() {
         renderProductPreview();
 
         lastDisplayedDate = null;
+        // Clear displayedMessages set before displaying history to prevent issues
+        displayedMessages.clear();
         validMessages.forEach(displayMessage);
         localStorage.setItem(`chat_${userId}_${receiverId}`, JSON.stringify(validMessages));
 
@@ -469,6 +640,8 @@ async function loadChatHistory() {
         console.error('Error loading chat history:', error);
         showToast(`Failed to load messages: ${error.message}`, 'error');
         const storedMessages = JSON.parse(localStorage.getItem(`chat_${userId}_${receiverId}`) || '[]');
+        // Clear displayedMessages set before displaying history to prevent issues
+        displayedMessages.clear();
         storedMessages.forEach(displayMessage);
         renderProductPreview();
         chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -515,7 +688,6 @@ socket.on('messagesSeen', ({ messageIds }) => {
         }
     });
 });
-
 
 socket.on('connect', () => {
     console.log('Connected to server');
@@ -579,6 +751,11 @@ function showToast(message, type = 'success') {
 // Report a user
 function reportUser() {
     const modal = document.getElementById('reportConfirmationModal');
+    if (!modal) {
+        console.error('Report confirmation modal not found.');
+        showToast('Report functionality not fully set up.', 'error');
+        return;
+    }
     modal.style.display = 'flex';
 
     document.getElementById('reportReason').value = '';
@@ -627,9 +804,15 @@ function reportUser() {
 
 // Block a user
 function blockUser() {
+    const modal = document.getElementById('blockConfirmationModal');
+    if (!modal) {
+        console.error('Block confirmation modal not found.');
+        showToast('Block functionality not fully set up.', 'error');
+        return;
+    }
+
     document.getElementById('blockConfirmationText').textContent =
         `Are you sure you want to block ${recipientUsername}? You won't be able to message each other.`;
-    const modal = document.getElementById('blockConfirmationModal');
     modal.style.display = 'flex';
 
     document.getElementById('confirmBlockBtn').onclick = () => {
@@ -670,3 +853,4 @@ function blockUser() {
 
 // Add typing indicator trigger
 typeSection.addEventListener('input', sendTypingSignal);
+

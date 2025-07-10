@@ -1,6 +1,9 @@
-
 // This file assumes post-video-controls.js is linked separately and correctly
 import { salmartCache } from './salmartCache.js';
+
+// Define API_BASE_URL globally or ensure it's window.API_BASE_URL if set in HTML
+// If not set in HTML, this provides a fallback based on hostname
+const API_BASE_URL = window.API_BASE_URL || (window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart.onrender.com');
 
 document.addEventListener('DOMContentLoaded', async function () {
     let currentLoggedInUser = localStorage.getItem('userId'); // Get user ID from localStorage immediately
@@ -12,9 +15,6 @@ document.addEventListener('DOMContentLoaded', async function () {
     let currentCategory = 'all';
     let isLoading = false; // To prevent multiple simultaneous fetches
     let suggestionCounter = 0; // Renamed from postCounter to reflect its actual use for suggestions
-
-    // Define API_BASE_URL once
-    const API_BASE_URL = window.API_BASE_URL || (window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart.onrender.com');
 
     // --- Intersection Observer for Videos ---
     let videoObserver;
@@ -40,17 +40,12 @@ document.addEventListener('DOMContentLoaded', async function () {
                     video.dataset.srcLoaded = 'true';
                 }
 
-                if (!video.dataset.controlsInitialized) {
-                    // Pass the parent post element, not just the container, for initializeVideoControls
-                    initializeVideoControls(videoContainer.closest('.post'));
-                }
-
                 // Autoplay when in view, but muted by default
                 // Only attempt play if video is paused and ready enough (readyState 3 = HAVE_FUTURE_DATA)
                 if (video.paused && video.readyState >= 3) {
                     video.muted = true; // Ensure muted on autoplay
                     if (muteBtn) muteBtn.innerHTML = '<i class="fas fa-volume-mute"></i>'; // Update mute button icon
-                    
+
                     video.play().then(() => {
                         loadingSpinner.style.display = 'none';
                         playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
@@ -70,7 +65,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                         playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
                     }
                 }
-                
+
                 // Aggressively remove src to free up memory
                 video.removeAttribute('src'); // Remove src from the video tag itself if it was set directly
                 video.querySelectorAll('source').forEach(sourceElem => {
@@ -123,13 +118,12 @@ document.addEventListener('DOMContentLoaded', async function () {
         video.setAttribute('playsinline', '');
         video.setAttribute('webkit-playsinline', '');
         video.setAttribute('crossorigin', 'anonymous');
-        video.muted = false; // Default to muted
+        video.muted = true; // Default to muted on load
 
         // Video metadata loaded: set initial time to generate thumbnail
-        // This will now only run once when the video is loaded (due to Intersection Observer)
         video.addEventListener('loadedmetadata', () => {
             if (!video.dataset.thumbnailGenerated) {
-                video.currentTime = 2; // Set time to generate thumbnail
+                video.currentTime = 2; // Set time to generate thumbnail for poster
             }
             durationDisplay.textContent = formatVideoTime(video.duration);
             loadingSpinner.style.display = 'none'; // Hide spinner once metadata is loaded
@@ -137,7 +131,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
         // Seeked event: generate thumbnail after seeking to 2 seconds
         video.addEventListener('seeked', () => {
-            if (video.currentTime === 2 && !video.dataset.thumbnailGenerated) {
+            if (video.currentTime === 2 && !video.dataset.thumbnailGenerated && thumbnailCanvas) {
                 const ctx = thumbnailCanvas.getContext('2d');
                 thumbnailCanvas.width = video.videoWidth;
                 thumbnailCanvas.height = video.videoHeight;
@@ -150,6 +144,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         });
 
         function formatVideoTime(seconds) {
+            if (isNaN(seconds) || seconds < 0) return '0:00';
             const mins = Math.floor(seconds / 60);
             const secs = Math.floor(seconds % 60);
             return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
@@ -241,6 +236,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         });
 
         let isDragging = false;
+        let lastSeekTime = 0; // To debounce seek preview drawing
 
         const updateProgress = (e, isTouch = false) => {
             const rect = progressContainer.getBoundingClientRect();
@@ -255,7 +251,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
             // Hide seek preview during active drag to avoid performance issues
             if (isDragging) {
-                seekPreview.style.display = 'none';
+                if (seekPreview) seekPreview.style.display = 'none';
             }
         };
 
@@ -270,35 +266,40 @@ document.addEventListener('DOMContentLoaded', async function () {
 
         document.addEventListener('mouseup', () => {
             isDragging = false;
-            seekPreview.style.display = 'none';
+            if (seekPreview) seekPreview.style.display = 'none';
         });
 
         progressContainer.addEventListener('mousemove', (e) => {
-            if (!isDragging) {
+            if (!isDragging && seekPreview && seekPreviewCanvas && video.duration > 0) {
                 const rect = progressContainer.getBoundingClientRect();
                 const posX = e.clientX - rect.left;
                 const width = rect.width;
                 let progress = posX / width;
                 progress = Math.max(0, Math.min(1, progress));
                 const seekTime = progress * video.duration;
-                seekPreview.style.display = 'block';
-                seekPreview.style.left = `${posX}px`;
-                seekPreviewCanvas.width = 120;
-                seekPreviewCanvas.height = 68;
 
-                // Temporarily set currentTime to draw frame for preview
-                const originalCurrentTime = video.currentTime;
-                video.currentTime = seekTime;
-                setTimeout(() => {
-                    const ctx = seekPreviewCanvas.getContext('2d');
-                    ctx.drawImage(video, 0, 0, seekPreviewCanvas.width, seekPreviewCanvas.height);
-                    video.currentTime = originalCurrentTime; // Restore original time immediately after drawing
-                }, 100); // Small delay to allow video to seek for drawing
+                // Debounce the seek preview drawing
+                if (Date.now() - lastSeekTime > 100) { // Only update preview every 100ms
+                    seekPreview.style.display = 'block';
+                    seekPreview.style.left = `${posX}px`;
+                    seekPreviewCanvas.width = 120;
+                    seekPreviewCanvas.height = 68;
+
+                    // Temporarily set currentTime to draw frame for preview
+                    const originalCurrentTime = video.currentTime;
+                    video.currentTime = seekTime; // This can be expensive; consider pre-generated thumbnails or a dedicated hidden video for previews.
+                    video.requestVideoFrameCallback(() => { // Use requestVideoFrameCallback for better sync
+                        const ctx = seekPreviewCanvas.getContext('2d');
+                        ctx.drawImage(video, 0, 0, seekPreviewCanvas.width, seekPreviewCanvas.height);
+                        video.currentTime = originalCurrentTime; // Restore original time immediately after drawing
+                    });
+                    lastSeekTime = Date.now();
+                }
             }
         });
 
         progressContainer.addEventListener('mouseleave', () => {
-            if (!isDragging) seekPreview.style.display = 'none';
+            if (!isDragging && seekPreview) seekPreview.style.display = 'none';
         });
 
         progressContainer.addEventListener('click', (e) => {
@@ -316,14 +317,18 @@ document.addEventListener('DOMContentLoaded', async function () {
 
         document.addEventListener('touchend', () => {
             isDragging = false;
-            seekPreview.style.display = 'none';
+            if (seekPreview) seekPreview.style.display = 'none';
         });
 
         postElement.addEventListener('keydown', (e) => {
-            if (e.target === video || e.target === container) {
+            // Check if the event target is within the video controls or the video itself
+            const activeElement = document.activeElement;
+            const isInsideVideoControls = container.contains(activeElement);
+
+            if (e.target === video || isInsideVideoControls) {
                 switch (e.key) {
                     case ' ':
-                        e.preventDefault();
+                        e.preventDefault(); // Prevent page scrolling
                         playPauseBtn.click();
                         break;
                     case 'm':
@@ -331,6 +336,12 @@ document.addEventListener('DOMContentLoaded', async function () {
                         break;
                     case 'f':
                         fullscreenBtn.click();
+                        break;
+                    case 'ArrowRight':
+                        video.currentTime += 5; // Seek forward 5 seconds
+                        break;
+                    case 'ArrowLeft':
+                        video.currentTime -= 5; // Seek backward 5 seconds
                         break;
                 }
             }
@@ -348,7 +359,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             progressBar.setAttribute('aria-valuenow', 0);
         });
 
-        // Mark controls as initialized
+        // Mark controls as initialized AFTER all listeners are added
         video.dataset.controlsInitialized = 'true';
     }
 
@@ -611,7 +622,14 @@ document.addEventListener('DOMContentLoaded', async function () {
         if (currentLoggedInUser && !isPostCreator) {
             buttonContent = `
             <div class="button-container">
-                <button class="promoted-cta-button buy-now-button" data-post-id="${post._id || ''}" ${post.isSold ? 'disabled' : ''}>
+                <button class="promoted-cta-button buy-now-button" data-post-id="${post._id || ''}"
+                    data-product-image="${productImageForChat}"
+                    data-product-title="${escapeHtml(post.title || 'Untitled Product')}"
+                    data-product-description="${escapeHtml(post.description || 'No description available.')}"
+                    data-product-location="${escapeHtml(post.location || 'N/A')}"
+                    data-product-condition="${escapeHtml(post.productCondition || 'N/A')}"
+                    data-product-price="${post.price ? '₦' + Number(post.price).toLocaleString('en-NG') : '₦0.00'}"
+                    ${post.isSold ? 'disabled' : ''}>
                     <i class="fas fa-shopping-cart"></i> ${post.isSold ? 'Sold' : 'Buy'}
                 </button>
                 <button class="promoted-cta-button send-message-btn"
@@ -637,8 +655,8 @@ document.addEventListener('DOMContentLoaded', async function () {
             `;
         } else { // Current user is the creator
             buttonContent = `
-                <a href="${post.productLink || '#'}" class="promoted-cta-button" aria-label="Check out product ${escapeHtml(post.description || 'product')}" ${!post.productLink ? 'style="pointer-events: none; opacity: 0.6;"' : ''}>
-                    <i class="fas fa-shopping-cart"></i> Check Out Product
+                <a href=" class="promoted-cta-button" aria-label="Check out product " ${!post.productLink ? 'style="pointer-events: none; color: #28a745; font-size: 14px; font-weight: 400; "' : ''}>
+                    <i class="fas fa-toggle-on"></i> Active
                 </a>
             `;
         }
@@ -680,11 +698,11 @@ document.addEventListener('DOMContentLoaded', async function () {
         let descriptionContent = '';
         let buttonContent = '';
 
-        const productImageForChat = post.postType === 'video_ad' ? (post.thumbnail || 'default-video-poster.png') : (post.photo || 'default-image.png');
+        const productImageForChat = post.postType === 'video_ad' ? (post.thumbnail || '/salmart-192x192.png') : (post.photo || '/salmart-192x192.png');
 
         if (post.postType === 'video_ad') {
             descriptionContent = `
-                <h2 class="product-title">${escapeHtml(post.title)}</h2>
+                <h2 class="product-title">${escapeHtml(post.title || '')}</h2>
                 <div class="post-description-text" style="margin-bottom: 10px; padding: 0 15px;">
                     <p>${escapeHtml(post.description || '')}</p>
                 </div>
@@ -736,9 +754,17 @@ document.addEventListener('DOMContentLoaded', async function () {
             `;
 
             buttonContent = `
-                    <a href="${post.productLink || '#'}" class=" checkout-product-btn" aria-label="Check out product ${post.description || 'product'}" ${!post.productLink ? 'disabled' : ''}>
-                        <i class="fas fa-shopping-cart"></i>  Check Out Product
-                    </a>
+                    <button class="checkout-product-btn buy-now-button"
+                            data-post-id="${post._id || ''}"
+                            data-product-image="${post.thumbnail || '/salmart-192x192.png'}"
+                            data-product-title="${escapeHtml(post.title || 'Untitled Product')}"
+                            data-product-description="${escapeHtml(post.description || 'No description available.')}"
+                            data-product-price="${post.price ? '₦' + Number(post.price).toLocaleString('en-NG') : 'Price not specified'}"
+                            data-product-location="${escapeHtml(post.location || 'N/A')}"
+                            data-product-condition="${escapeHtml(post.productCondition || 'N/A')}"
+                            ${post.isSold ? 'disabled' : ''}>
+                        <i class="fas fa-shopping-cart"></i>  ${post.isSold ? 'Sold Out' : 'Check Out Product'}
+                    </button>
                 `;
         } else { // Regular image-based posts
             descriptionContent = `
@@ -782,7 +808,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                             <div class="detail-icon category-icon">📦</div>
                             <div class="detail-text">
                                 <div class="detail-label">Category</div>
-                                <div class="detail-value">Electronics</div>
+                                <div class="detail-value">${escapeHtml(post.category || 'N/A')}</div>
                             </div>
                         </div>
                     </div>
@@ -809,7 +835,15 @@ document.addEventListener('DOMContentLoaded', async function () {
                                 ${post.isSold ? 'disabled' : ''}>
                                 ${post.isSold ? 'Unavailable' : 'Message'}
                             </button>
-                            <button class="btn btn-primary buy-now-button" data-post-id="${post._id || ''}" ${post.isSold ? 'disabled' : ''}>
+                            <button class="btn btn-primary buy-now-button"
+                                    data-post-id="${post._id || ''}"
+                                    data-product-image="${productImageForChat}"
+                                    data-product-title="${escapeHtml(post.title || 'Untitled Product')}"
+                                    data-product-description="${escapeHtml(post.description || 'No description available.')}"
+                                    data-product-location="${escapeHtml(post.location || 'N/A')}"
+                                    data-product-condition="${escapeHtml(post.productCondition || 'N/A')}"
+                                    data-product-price="${post.price ? '₦' + Number(post.price).toLocaleString('en-NG') : '₦0.00'}"
+                                    ${post.isSold ? 'disabled' : ''}>
                                 ${post.isSold ? 'Sold Out' : 'Buy Now'}
                             </button>
                         </div>
@@ -1120,6 +1154,8 @@ document.addEventListener('DOMContentLoaded', async function () {
                     const videoContainer = postElement.querySelector('.post-video-container');
                     if (videoContainer) {
                         videoContainersToObserve.push(videoContainer);
+                        // Initialize video controls for newly rendered video posts
+                        initializeVideoControls(postElement);
                     }
                 }
 
@@ -1205,9 +1241,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         if (promoteButton) {
             const postId = promoteButton.dataset.postId;
             if (!postId) {
-                if (window.showToast) {
-                    window.showToast('Invalid post ID for promotion', 'error');
-                }
+                if (showToast) showToast('Invalid post ID for promotion', 'error');
                 return;
             }
             window.location.href = `promote.html?postId=${postId}`;
@@ -1246,6 +1280,42 @@ document.addEventListener('DOMContentLoaded', async function () {
             const chatUrl = `Chats.html?user_id=${loggedInUser}&recipient_id=${recipientId}&recipient_username=${encodedRecipientUsername}&recipient_profile_picture_url=${encodedRecipientProfilePictureUrl}&message=${encodedMessage}&product_image=${encodedProductImage}&product_id=${postId}&product_name=${encodedProductDescription}`;
             window.location.href = chatUrl;
             return; // Exit to prevent further processing
+        }
+
+        // Buy Now Button Handler
+        if (target.classList.contains('buy-now-button')) {
+          event.preventDefault();
+
+          const postId = target.dataset.postId;
+          if (!postId) {
+            console.error("Post ID is missing");
+            if (showToast) showToast('Error: Post ID not found for purchase.', '#dc3545');
+            return;
+          }
+
+          // Store product info for use in modal actions
+          const productData = {
+            postId: target.dataset.postId || '',
+            productImage: target.dataset.productImage || '',
+            productTitle: target.dataset.productTitle || '',
+            productDescription: target.dataset.productDescription || '',
+            productLocation: target.dataset.productLocation || '',
+            productCondition: target.dataset.productCondition || '',
+            productPrice: target.dataset.productPrice || ''
+          };
+
+          // Save to a temporary object for modal actions
+          window.__selectedProduct = productData;
+
+          // Show modal
+          const paymentChoiceModal = document.getElementById('paymentChoiceModal');
+          if (paymentChoiceModal) {
+            paymentChoiceModal.classList.remove('hidden');
+          } else {
+            console.error("Payment choice modal not found.");
+            if (showToast) showToast('Payment modal not available.', '#dc3545');
+          }
+          return; // Exit to prevent further processing
         }
 
         // Handle Follow Button
@@ -1320,16 +1390,12 @@ document.addEventListener('DOMContentLoaded', async function () {
     window.fetchPosts = fetchPostsByCategory; // Make it globally accessible if needed elsewhere
 
     document.addEventListener('authStatusReady', async (event) => {
-        // Only proceed if app initialization hasn't happened yet
-        if (!isAuthReady) {
+        // Only proceed if app initialization hasn't happened yet or user status significantly changed
+        // (e.g., user just logged in/out from another part of the app)
+        if (!isAuthReady || currentLoggedInUser !== event.detail.loggedInUser) {
             currentLoggedInUser = event.detail.loggedInUser; // Update loggedInUser from the event
             console.log('Auth status ready event received. Logged in user:', currentLoggedInUser ? currentLoggedInUser : 'Not logged in');
             await initializeAppData(); // Trigger full app initialization
-        } else {
-             // If already initialized, just update currentLoggedInUser if it changed
-            currentLoggedInUser = event.detail.loggedInUser;
-            // You might want to re-fetch currentFollowingList here if user status changed significantly
-            // but for typical login/logout, a full re-init is handled above.
         }
     });
 
@@ -1348,3 +1414,90 @@ document.addEventListener('DOMContentLoaded', async function () {
         });
     }
 });
+
+function closeModal() {
+  const paymentChoiceModal = document.getElementById('paymentChoiceModal');
+  if (paymentChoiceModal) {
+    paymentChoiceModal.classList.add('hidden');
+  }
+}
+
+function choosePT() {
+  const product = window.__selectedProduct; // Get the selected product data
+  if (!product || !product.postId) {
+      if (window.showToast) window.showToast('Product data missing for in-app payment.', 'error');
+      console.error('Product data is missing for PT payment.');
+      return;
+  }
+  // Construct query parameters from the product object
+  const query = new URLSearchParams(product).toString();
+  window.location.href = `checkout.html?${query}`;
+}
+
+function choosePaystack() {
+  const product = window.__selectedProduct;
+  const userId = localStorage.getItem('userId');
+  const email = localStorage.getItem('email');
+
+  if (!userId || !email) {
+    if (window.showToast) window.showToast("Missing user information. Please log in.", 'error');
+    console.error("Missing user information for Paystack payment.");
+    return;
+  }
+
+  if (!product || !product.postId || !product.productPrice) {
+      if (window.showToast) window.showToast('Product data missing for Paystack payment.', 'error');
+      console.error('Product data is missing for Paystack payment.');
+      return;
+  }
+
+  // Parse the price, remove '₦' and commas, then convert to kobo (for Paystack)
+  const rawPrice = product.productPrice.replace('₦', '').replace(/,/g, '');
+  const amountInKobo = Math.round(parseFloat(rawPrice) * 100); // Ensure it's a number and convert to kobo
+
+  if (isNaN(amountInKobo) || amountInKobo <= 0) {
+      if (window.showToast) window.showToast('Invalid product price for payment.', 'error');
+      console.error('Invalid amount for Paystack:', product.productPrice);
+      return;
+  }
+
+  fetch(`${API_BASE_URL}/pay`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      postId: product.postId,
+      buyerId: userId,
+      email,
+      amount: amountInKobo // Send amount in kobo
+    })
+  })
+  .then(res => {
+    if (!res.ok) {
+        return res.json().then(errorData => {
+            throw new Error(errorData.message || 'Failed to initiate Paystack payment on server.');
+        });
+    }
+    return res.json();
+  })
+  .then(data => {
+    if (!data.success) {
+      if (window.showToast) window.showToast(data.message || "Payment setup failed.", 'error');
+      return;
+    }
+
+    const redirectParams = new URLSearchParams({
+      ref: data.reference,
+      productTitle: product.productTitle,
+      amount: data.amount // This amount should also be in kobo from backend
+    });
+
+    // Store product details in session storage for the paystack.html page
+    sessionStorage.setItem('paystackProductDetails', JSON.stringify(product));
+
+    window.location.href = `paystack.html?${redirectParams.toString()}`;
+  })
+  .catch(err => {
+    console.error('Error starting Paystack payment:', err);
+    if (window.showToast) window.showToast(err.message || 'Something went wrong with payment initiation.', 'error');
+  });
+}

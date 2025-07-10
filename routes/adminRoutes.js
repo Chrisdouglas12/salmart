@@ -33,6 +33,28 @@ module.exports = (io) => {
     next();
   });
   
+  
+  async function markProductAsSold(txn, reference, io) {
+  if (!txn || !txn.postId) return;
+
+  try {
+    await Post.findByIdAndUpdate(txn.postId._id || txn.postId, {
+      status: 'sold',
+      soldAt: new Date()
+    });
+
+    // Optionally emit real-time update
+    if (io) {
+      io.emit('product-sold', {
+        postId: txn.postId._id || txn.postId,
+        status: 'sold'
+      });
+    }
+
+  } catch (err) {
+    console.error('[markProductAsSold ERROR]', err.message);
+  }
+}
 //Endpoint to register admin
 router.post('/admin/register', async (req, res) => {
   try {
@@ -283,6 +305,7 @@ router.post('/api/admin/refunds/:id/:action', async (req, res) => {
       await Notification.create({
         userId: buyerId,
         postId,
+        senderId: null,
         title: 'Refund Denied',
         message: `Your refund request for "${productTitle}" was denied by admin.`,
         type: 'refund_rejected',
@@ -299,7 +322,8 @@ router.post('/api/admin/refunds/:id/:action', async (req, res) => {
         {
           type: 'refund_rejected',
           refundId: refund._id.toString(),
-          transactionId: transaction._id.toString()
+          transactionId: transaction._id.toString(),
+          senderId: null,
         }
       );
 
@@ -419,28 +443,56 @@ router.post('/admin/approve-payment', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Transaction not in payout-ready state' });
     }
 
-    // Fallbacks
-    if (!txn.transferRecipient && txn.sellerId?.transferRecipientCode) {
-      txn.transferRecipient = txn.sellerId.transferRecipientCode;
+    const seller = txn.sellerId;
+
+    // ✅ Validate bank details
+    if (
+      !seller.bankDetails ||
+      !seller.bankDetails.accountNumber ||
+      !seller.bankDetails.bankCode ||
+      !seller.bankDetails.accountName
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: 'Seller bank details missing. Cannot create recipient.'
+      });
     }
 
-    if (typeof txn.amountDue !== 'number' || txn.amountDue <= 0) {
-      txn.amountDue = txn.amount - (txn.platformCommission || 0);
-      await txn.save();
+    // ✅ Create recipient if missing
+    let recipientCode = seller?.paystack?.recipientCode;
+    if (!recipientCode) {
+      const recipientResponse = await axios.post(
+        'https://api.paystack.co/transferrecipient',
+        {
+          type: 'nuban',
+          name: seller.bankDetails.accountName,
+          account_number: seller.bankDetails.accountNumber,
+          bank_code: seller.bankDetails.bankCode,
+          currency: 'NGN'
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`
+          }
+        }
+      );
+
+      recipientCode = recipientResponse.data.data.recipient_code;
+
+      // ✅ Save it in user schema
+      seller.paystack = seller.paystack || {};
+      seller.paystack.recipientCode = recipientCode;
+      await seller.save();
     }
 
-    // Final safety checks
-    if (!txn.sellerId || !txn.transferRecipient || typeof txn.amountDue !== 'number') {
-      return res.status(400).json({ success: false, message: 'Missing seller or transfer details' });
-    }
-
+    // ✅ Initiate payout
     const amountKobo = Math.round(txn.amountDue * 100);
     const transferReason = `Manual payout for: ${txn.postId?.title || 'Product'}`;
 
     const transferPayload = {
       source: 'balance',
       amount: amountKobo,
-      recipient: txn.transferRecipient,
+      recipient: recipientCode,
       reason: transferReason
     };
 
@@ -452,37 +504,34 @@ router.post('/admin/approve-payment', async (req, res) => {
       }
     );
 
-    const paystackData = transferResponse.data.data;
-    const paystackRef = paystackData.reference || paystackData.transfer_code;
+    const paystackRef = transferResponse.data.data.reference;
 
     txn.status = 'released';
     txn.transferReference = paystackRef;
     txn.amountTransferred = txn.amountDue;
-    txn.transferStatus = paystackData.status;
-    txn.transferStatusMessage = paystackData.message || '';
-    txn.dateReleased = new Date();
+    txn.transferStatus = transferResponse.data.data.status;
     txn.paidAt = new Date();
     txn.approvedByAdmin = true;
+    txn.transferRecipient = recipientCode;
     await txn.save();
 
-    // Mark product as sold (emit socket event)
+    // ✅ Mark product as sold
     await markProductAsSold(txn, reference, req.io);
 
-    // === Notification + FCM ===
+    // ✅ FCM + in-app notification
     const title = 'Payment Released by Admin';
     const productTitle = txn.postId?.title || 'product';
     const message = `₦${txn.amountDue.toLocaleString('en-NG')} for "${productTitle}" has been released to your account.`;
 
     await Notification.create({
       userId: txn.sellerId._id,
-      senderId: txn.buyerId?._id || 'salmart',
+      senderId: txn.buyerId?._id,
       postId: txn.postId?._id,
       title,
       message,
       type: 'payment_released',
       metadata: {
         transactionId: txn._id,
-        amountTransferred: txn.amountDue,
         reference: paystackRef
       }
     });
@@ -494,7 +543,6 @@ router.post('/admin/approve-payment', async (req, res) => {
       {
         type: 'payment_released',
         transactionId: txn._id.toString(),
-        amountTransferred: txn.amountDue,
         reference: paystackRef
       }
     );
@@ -507,11 +555,7 @@ router.post('/admin/approve-payment', async (req, res) => {
 
   } catch (err) {
     console.error('[ADMIN PAYOUT ERROR]', err.message, err.stack);
-    return res.status(500).json({
-      success: false,
-      message: 'Error approving payment',
-      error: err.message
-    });
+    return res.status(500).json({ success: false, message: 'Error approving payment', error: err.message });
   }
 });
 
