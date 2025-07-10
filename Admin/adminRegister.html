@@ -1,111 +1,262 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Registration</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Portal - Salmart</title>
   <style>
-    body { font-family: Poppins, sans-serif; background-color: #f8f8f8; display: flex; align-items: center; justify-content: center; height: 100vh; }
-    .container { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); width: 350px; }
-    h2 { text-align: center; color: #28a745; }
-    .form-group { margin-bottom: 15px; }
-    label { font-weight: 600; font-size: 14px; display: block; }
-    input { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ddd; border-radius: 5px; }
-    .btn { width: 100%; padding: 10px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
-    .btn:hover { background: #218838; }
-    .error { color: red; font-size: 14px; text-align: center; margin-top: 10px; }
-    .loading { text-align: center; font-size: 14px; color: #007bff; display: none; }
+    :root {
+      --primary: #28a745;
+      --white: #fff;
+      --bg: #f4f6f8;
+      --gray: #ccc;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: var(--bg);
+      color: #333;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    .auth-container {
+      background: var(--white);
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .auth-container h2 {
+      color: var(--primary);
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+    }
+
+    input {
+      width: 100%;
+      padding: 0.7rem;
+      border: 1px solid var(--gray);
+      border-radius: 6px;
+      font-size: 1rem;
+    }
+
+    .auth-button {
+      background-color: var(--primary);
+      color: var(--white);
+      border: none;
+      padding: 0.75rem;
+      width: 100%;
+      border-radius: 6px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .auth-button:disabled {
+      background-color: #94d3a2;
+      cursor: not-allowed;
+    }
+
+    .toggle-link {
+      margin-top: 1rem;
+      text-align: center;
+      font-size: 0.9rem;
+    }
+
+    .toggle-link a {
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .message {
+      margin-top: 1rem;
+      text-align: center;
+      font-size: 0.9rem;
+    }
+
+    .error {
+      color: red;
+    }
+
+    .success {
+      color: var(--primary);
+    }
+
+    #preview {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin: 0 auto 1rem auto;
+      display: none;
+    }
   </style>
 </head>
 <body>
-
-  <div class="container">
-    <h2>Admin Registration</h2>
-    <form id="adminRegisterForm">
-      <div class="form-group">
-        <label for="name">Full Name</label>
-        <input type="text" id="name" required>
+  <div class="auth-container">
+    <h2 id="form-title">Admin Login</h2>
+    <form id="auth-form">
+      <div id="name-fields" style="display: none;">
+        <div class="form-group">
+          <label for="firstName">First Name</label>
+          <input type="text" id="firstName" />
+        </div>
+        <div class="form-group">
+          <label for="lastName">Last Name</label>
+          <input type="text" id="lastName" />
+        </div>
+        <div class="form-group">
+          <label for="profilePicture">Profile Picture</label>
+          <input type="file" id="profilePicture" accept="image/*" />
+          <img id="preview" />
+        </div>
       </div>
+
       <div class="form-group">
         <label for="email">Email</label>
-        <input type="email" id="email" required>
+        <input type="email" id="email" required />
       </div>
+
       <div class="form-group">
         <label for="password">Password</label>
-        <input type="password" id="password" required>
+        <input type="password" id="password" required />
       </div>
-      <div class="form-group">
-        <label for="adminCode">Admin Secret Code</label>
-        <input type="password" id="adminCode" required>
+
+      <div class="form-group" id="admin-code-field" style="display: none;">
+        <label for="adminCode">Admin Code</label>
+        <input type="text" id="adminCode" />
       </div>
-      <p class="loading" id="loadingMessage">Registering admin...</p>
-      <button type="submit" class="btn" id="submitButton">Register</button>
+
+      <button type="submit" class="auth-button" id="submitBtn">Login</button>
     </form>
-    <p class="error" id="errorMessage"></p>
+
+    <div class="toggle-link">
+      <span id="toggleText">Don't have an account?</span>
+      <a href="#" id="toggleLink">Register</a>
+    </div>
+
+    <div id="message" class="message"></div>
   </div>
 
   <script>
-    document.addEventListener("DOMContentLoaded", function () {
-      console.log("Admin registration page loaded.");
+    const API_BASE_URL = window.location.hostname === 'localhost'
+      ? 'http://localhost:3000'
+      : 'https://salmart.onrender.com';
 
-      document.getElementById("adminRegisterForm").addEventListener("submit", async function (e) {
-        e.preventDefault();
+    const form = document.getElementById('auth-form');
+    const toggleLink = document.getElementById('toggleLink');
+    const toggleText = document.getElementById('toggleText');
+    const formTitle = document.getElementById('form-title');
+    const submitBtn = document.getElementById('submitBtn');
+    const message = document.getElementById('message');
+    const nameFields = document.getElementById('name-fields');
+    const preview = document.getElementById('preview');
+    const adminCodeField = document.getElementById('admin-code-field');
 
-        const name = document.getElementById("name").value.trim();
-        const email = document.getElementById("email").value.trim();
-        const password = document.getElementById("password").value.trim();
-        const adminCode = document.getElementById("adminCode").value.trim();
-        const errorMessage = document.getElementById("errorMessage");
-        const loadingMessage = document.getElementById("loadingMessage");
-        const submitButton = document.getElementById("submitButton");
+    let isLogin = true;
 
-        // Clear previous error message
-        errorMessage.innerText = "";
+    toggleLink.addEventListener('click', () => {
+      isLogin = !isLogin;
+      formTitle.textContent = isLogin ? 'Admin Login' : 'Admin Registration';
+      submitBtn.textContent = isLogin ? 'Login' : 'Register';
+      toggleText.textContent = isLogin ? "Don't have an account?" : 'Already registered?';
+      toggleLink.textContent = isLogin ? 'Register' : 'Login';
+      nameFields.style.display = isLogin ? 'none' : 'block';
+      adminCodeField.style.display = isLogin ? 'none' : 'block';
+      preview.style.display = 'none';
+      message.textContent = '';
+    });
 
-        // Validate inputs
-        if (!name || !email || !password || !adminCode) {
-          errorMessage.innerText = "All fields are required.";
-          return;
-        }
+    document.getElementById('profilePicture').addEventListener('change', function () {
+      const file = this.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = () => {
+          preview.src = reader.result;
+          preview.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+      }
+    });
 
-        if (password.length < 6) {
-          errorMessage.innerText = "Password must be at least 6 characters.";
-          return;
-        }
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      submitBtn.disabled = true;
+      message.textContent = '';
 
-        // Disable button and show loading message
-        submitButton.disabled = true;
-        loadingMessage.style.display = "block";
+      const endpoint = isLogin ? `${API_BASE_URL}/admin/login` : `${API_BASE_URL}/admin/register`;
 
-        try {
-          const response = await fetch("http://localhost:3000/admin/register", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name, email, password, adminCode }),
-          });
+      let body;
+      let headers = {};
 
-          const data = await response.json();
-          console.log("Server response:", data);
+      if (isLogin) {
+        body = JSON.stringify({
+          email: document.getElementById('email').value.trim(),
+          password: document.getElementById('password').value.trim()
+        });
+        headers['Content-Type'] = 'application/json';
+      } else {
+        body = new FormData();
+        body.append('firstName', document.getElementById('firstName').value.trim());
+        body.append('lastName', document.getElementById('lastName').value.trim());
+        body.append('email', document.getElementById('email').value.trim());
+        body.append('password', document.getElementById('password').value.trim());
+        body.append('adminCode', document.getElementById('adminCode').value.trim());
 
-          if (response.ok) {
-            alert("Admin registered successfully!");
-            window.location.href = "adminLogin.html"; // Redirect to login
-          } else {
-            errorMessage.innerText = data.message || "Registration failed.";
+        const file = document.getElementById('profilePicture').files[0];
+        if (file) body.append('profilePicture', file);
+      }
+
+      try {
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers,
+          body
+        });
+
+        const result = await res.json();
+        if (result.success) {
+          message.className = 'message success';
+          message.textContent = result.message;
+          if (isLogin) {
+            localStorage.setItem('adminToken', result.token);
+            setTimeout(() => {
+              window.location.href = '/admin/dashboard.html';
+            }, 1000);
           }
-        } catch (error) {
-          console.error("Error during registration:", error);
-          errorMessage.innerText = "Failed to connect to the server.";
+        } else {
+          message.className = 'message error';
+          message.textContent = result.message || 'An error occurred';
         }
-
-        // Enable button and hide loading message
-        submitButton.disabled = false;
-        loadingMessage.style.display = "none";
-      });
+      } catch (err) {
+        message.className = 'message error';
+        message.textContent = 'Network error. Please try again.';
+      } finally {
+        submitBtn.disabled = false;
+      }
     });
   </script>
-
 </body>
 </html>

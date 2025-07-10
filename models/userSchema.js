@@ -59,6 +59,7 @@ const userSchema = new mongoose.Schema({
   isReported: { type: Boolean, default: false },
   isBanned: { type: Boolean, default: false },
   isAdmin: { type: Boolean, default: false },
+  isSystemUser: { type: Boolean, default: false },
   fcmToken: { type: String, default: null },
   viewCount: {
     type: Number,

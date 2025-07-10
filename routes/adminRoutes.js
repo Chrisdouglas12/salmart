@@ -2,6 +2,13 @@ const express = require('express')
 const mongoose = require('mongoose');
 const router = express.Router();
 const axios = require('axios')
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const User = require('../models/userSchema.js');
 const Transaction = require('../models/transactionSchema');
 const Post = require('../models/postSchema');
@@ -55,49 +62,126 @@ module.exports = (io) => {
     console.error('[markProductAsSold ERROR]', err.message);
   }
 }
-//Endpoint to register admin
-router.post('/admin/register', async (req, res) => {
+
+
+const JWT_SECRET = process.env.JWT_SECRET 
+
+
+// Set up storage dynamically
+const uploadDir = path.join(__dirname, 'Uploads');
+let storage;
+const isProduction = process.env.NODE_ENV === 'production';
+if (isProduction) {
+  storage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+      folder: 'Uploads',
+      allowed_formats: ['jpg', 'png', 'jpeg'],
+    },
+  });
+} else {
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+  }
+  storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+      cb(null, uploadDir);
+    },
+    filename: (req, file, cb) => {
+      const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+      const fileExt = path.extname(file.originalname);
+      cb(null, `${uniqueSuffix}${fileExt}`);
+    },
+  });
+}
+const upload = multer({ storage });
+
+// Upload Route
+router.post('/upload', upload.single('image'), (req, res) => {
   try {
-    const { name, email, password, adminCode } = req.body;
-    if (adminCode !== process.env.SECRET_ADMIN_CODE) {
-      return res.status(403).json({ success: false, message: 'Invalid admin code' });
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
     }
-
-    const existingAdmin = await Admin.findOne({ email });
-    if (existingAdmin) {
-      return res.status(400).json({ success: false, message: 'Admin already exists' });
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const admin = new Admin({ name, email, password: hashedPassword });
-    await admin.save();
-    res.status(201).json({ success: true, message: 'Admin registered successfully' });
+    const imageUrl = isProduction ? req.file.path : `/Uploads/${req.file.filename}`;
+    res.json({ imageUrl });
   } catch (error) {
-    console.error('Admin register error:', error.message);
-    res.status(500).json({ success: false, message: 'Server error' });
+    console.error('Upload error:', error.message);
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
-router.post('/admin/login', async (req, res) => {
+
+const SECRET_ADMIN_CODE = process.env.SECRET_ADMIN_CODE;
+
+// === Admin Registration ===
+router.post('/admin/register', upload.single('profilePicture'), async (req, res) => {
+  const { firstName, lastName, email, password, adminCode } = req.body;
+
   try {
-    const { email, password } = req.body;
+    // Verify admin code
+    if (adminCode !== SECRET_ADMIN_CODE) {
+      return res.status(403).json({ success: false, message: 'Invalid admin code' });
+    }
+
+    const existing = await Admin.findOne({ email });
+    if (existing) {
+      return res.status(400).json({ success: false, message: 'Email already registered' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const profilePicUrl = isProduction
+      ? req.file?.path || null
+      : req.file
+      ? `/Uploads/${req.file.filename}`
+      : null;
+
+    const newAdmin = new Admin({
+      firstName,
+      lastName,
+      email,
+      password: hashedPassword,
+      profilePicture: profilePicUrl,
+      adminCode
+    });
+
+    await newAdmin.save();
+
+    res.json({ success: true, message: 'Admin registered successfully' });
+  } catch (err) {
+    console.error('[ADMIN REGISTER ERROR]', err.message);
+    res.status(500).json({ success: false, message: 'Server error during registration' });
+  }
+});
+
+// === Admin Login ===
+router.post('/admin/login', async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
     const admin = await Admin.findOne({ email });
     if (!admin) {
-      return res.status(400).json({ success: false, message: 'Invalid email or password' });
+      return res.status(404).json({ success: false, message: 'Admin not found' });
     }
 
     const isMatch = await bcrypt.compare(password, admin.password);
     if (!isMatch) {
-      return res.status(400).json({ success: false, message: 'Invalid email or password' });
+      return res.status(401).json({ success: false, message: 'Invalid password' });
     }
 
-    const token = jwt.sign({ adminId: admin._id }, process.env.JWT_SECRET || 'ghgh6rrjrfhteldwb', { expiresIn: '1w' });
-    res.status(200).json({ success: true, token, message: 'Login successful' });
-  } catch (error) {
-    console.error('Admin login error:', error.message);
-    res.status(500).json({ success: false, message: 'Server error' });
+    const token = jwt.sign(
+      { adminId: admin._id },
+      process.env.JWT_SECRET || 'fallback_secret',
+      { expiresIn: '2d' }
+    );
+
+    res.json({ success: true, token, message: 'Login successful' });
+  } catch (err) {
+    console.error('[ADMIN LOGIN ERROR]', err.message);
+    res.status(500).json({ success: false, message: 'Server error during login' });
   }
 });
+
 
 router.get('/admin/me', verifyToken, async (req, res) => {
   try {
@@ -114,7 +198,7 @@ router.get('/admin/me', verifyToken, async (req, res) => {
 
 
 // Admin Routes
-router.get('/api/admin/refunds', async (req, res) => {
+router.get('/api/admin/refunds', verifyToken, async (req, res) => {
   try {
     const refunds = await RefundRequests.find()
       .populate('buyerId', 'firstName lastName')
@@ -129,7 +213,7 @@ router.get('/api/admin/refunds', async (req, res) => {
   }
 });
 
-router.get('/api/admin/users', async (req, res) => {
+router.get('/api/admin/users', verifyToken, async (req, res) => {
   try {
     const users = await User.find().select('firstName lastName email profilePicture createdAt isBanned').sort({ createdAt: -1 });
     res.status(200).json(users);
@@ -139,7 +223,7 @@ router.get('/api/admin/users', async (req, res) => {
   }
 });
 
-router.post('/api/admin/users/:id/ban', async (req, res) => {
+router.post('/api/admin/users/:id/ban', verifyToken, async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
     if (!user) {
@@ -157,7 +241,7 @@ router.post('/api/admin/users/:id/ban', async (req, res) => {
   }
 });
 
-router.get('/api/admin/users/banned', async (req, res) => {
+router.get('/api/admin/users/banned', verifyToken, async (req, res) => {
   try {
     const bannedUsers = await User.find({ isBanned: true }).select('firstName lastName email profilePicture createdAt').sort({ createdAt: -1 });
     res.status(200).json(bannedUsers);
@@ -167,7 +251,7 @@ router.get('/api/admin/users/banned', async (req, res) => {
   }
 });
 
-router.post('/api/admin/users/:id/unban', async (req, res) => {
+router.post('/api/admin/users/:id/unban', verifyToken, async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
     if (!user) {
@@ -185,7 +269,7 @@ router.post('/api/admin/users/:id/unban', async (req, res) => {
   }
 });
 
-router.get('/api/admin/transactions', async (req, res) => {
+router.get('/api/admin/transactions', verifyToken, async (req, res) => {
   try {
     const transactions = await Transaction.find()
       .populate('buyerId', 'firstName lastName email')
@@ -202,7 +286,7 @@ router.get('/api/admin/transactions', async (req, res) => {
 
 
 
-router.post('/api/admin/refunds/:id/:action', async (req, res) => {
+router.post('/api/admin/refunds/:id/:action', verifyToken, async (req, res) => {
   try {
     const { id, action } = req.params;
 
@@ -338,7 +422,7 @@ router.post('/api/admin/refunds/:id/:action', async (req, res) => {
   }
 });
 //Get reported users
-router.get('/api/reported-users', async (req, res) => {
+router.get('/api/reported-users', verifyToken, async (req, res) => {
   try {
     const reports = await Report.find({ status: 'pending' })
       .populate('reportedUser', 'firstName lastName email profilePicture createdAt')
@@ -351,7 +435,7 @@ router.get('/api/reported-users', async (req, res) => {
   }
 });
 
-router.post('/admin/resolve-report', async (req, res) => {
+router.post('/admin/resolve-report',  verifyToken, async (req, res) => {
   try {
     const { reportId, action, adminNotes } = req.body;
     const adminId = req.user.userId;
@@ -395,7 +479,7 @@ router.post('/admin/resolve-report', async (req, res) => {
 });
 
 //Get pending reports
-router.get('/admin/reports/pending', async (req, res) => {
+router.get('/admin/reports/pending', verifyToken, async (req, res) => {
   try {
     const reports = await Report.find({ status: 'pending' })
       .populate('reportedUser', 'firstName lastName email profilePicture')
@@ -410,7 +494,7 @@ router.get('/admin/reports/pending', async (req, res) => {
 });
 
 // GET /api/admin/transactions/pending
-router.get('/admin/transactions/pending', async (req, res) => {
+router.get('/admin/transactions/pending', verifyToken, async (req, res) => {
   try {
     const pendingTxns = await Transaction.find({
   status: { $in: ['confirmed_pending_payout', 'in_escrow'] }
@@ -427,7 +511,7 @@ res.json({ success: true, data: pendingTxns });
 });
 
 // POST /api/admin/approve-payment
-router.post('/admin/approve-payment', async (req, res) => {
+router.post('/admin/approve-payment', verifyToken, async (req, res) => {
   const { reference } = req.body;
 
   try {

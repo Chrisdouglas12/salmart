@@ -295,7 +295,11 @@ router.post('/request-refund/:transactionId', verifyToken, async (req, res) => {
 router.post('/confirm-delivery/:transactionId', verifyToken, async (req, res) => {
   const transactionId = req.params.transactionId;
   logger.info('[CONFIRM DELIVERY INITIATED]', { transactionId });
-
+const systemUser = await User.findOne({ isSystemUser: true });
+if (!systemUser) {
+  logger.error('[SYSTEM USER NOT FOUND]');
+  return res.status(500).json({ error: 'System user not found' });
+}
   try {
     const transaction = await Transaction.findById(transactionId)
                                        .populate('buyerId sellerId postId');
@@ -325,7 +329,7 @@ router.post('/confirm-delivery/:transactionId', verifyToken, async (req, res) =>
     if (!seller.bankDetails || !seller.bankDetails.accountNumber || !seller.bankDetails.bankCode) {
       logger.warn('[CONFIRM DELIVERY] Seller missing bank details', { sellerId: seller._id });
       return res.status(400).json({
-        error: "Seller has not added valid bank details. Please update your profile to receive payments."
+        error: "Seller has not added valid bank details. Please inform the seller to update bank details to recieve funds."
       });
     }
 
@@ -413,23 +417,23 @@ router.post('/confirm-delivery/:transactionId', verifyToken, async (req, res) =>
       await transaction.save();
 
       const title = 'Delivery Confirmed – Payout Delayed (Balance Check Failed)';
-      const message = `The buyer confirmed delivery for "${product.title}". Payout of ₦${amountToTransferNaira.toLocaleString('en-NG')} is delayed as we couldn't check Paystack balance. We will retry.`;
+      const message = `Your delivery of "${product.title}" has been confirmed. Payout of ₦${amountToTransferNaira.toLocaleString('en-NG')} shall be sent to you within 24 hours time.`;
 
-      // --- FIX for Notification: Add postId and senderId ---
+      
       await Notification.create({ 
         userId: seller._id, 
-        senderId: buyer._id, // Add senderId
-        postId: product._id, // Add postId
+        senderId: systemUser._id,
+        postId: product._id,
         title, 
         message, 
         type: 'payment_queued', 
         metadata: { 
           transactionId: transaction._id, 
-          productId: product._id, // Keep in metadata if schema allows, but also top-level if required
+          productId: product._id, 
           amountDue: amountToTransferNaira 
         } 
       });
-      // --- END FIX ---
+      
 
       await sendFCMNotification(seller._id, title, message, { type: 'payout_queued_balance_error', transactionId: transaction._id.toString(), productId: product._id.toString(), amountDue: amountToTransferNaira });
 
@@ -455,12 +459,12 @@ router.post('/confirm-delivery/:transactionId', verifyToken, async (req, res) =>
       await transaction.save();
 
       const title = 'Delivery Confirmed – Payment Processing Soon';
-      const message = `The buyer confirmed delivery for "${product.title}". You’ll receive ₦${amountToTransferNaira.toLocaleString('en-NG')} once funds are available.`;
+      const message = `Your delivery of "${product.title}" has been Confirmed by the buyer. You’ll receive ₦${amountToTransferNaira.toLocaleString('en-NG')} within 24 hours time.`;
 
       // --- FIX for Notification: Add postId and senderId ---
       await Notification.create({
         userId: seller._id,
-        senderId: buyer._id, // Add senderId
+        senderId: systemUser._id, // Add senderId
         postId: product._id, // Add postId
         title,
         message,
@@ -536,12 +540,12 @@ await transaction.save();
     logger.info('[CONFIRM DELIVERY] Payout successful and transaction updated', { transactionId, newStatus: transaction.status, transferReference: transaction.transferReference });
 
     const title = 'Payment Released to Your Account';
-    const message = `₦${amountToTransferNaira.toLocaleString('en-NG')} for "${product.title}" has been released to your bank account.`;
+    const message = `₦${amountToTransferNaira.toLocaleString('en-NG')} for "${product.title}" has been released to your bank account. Thanks for using Salmart`;
 
     // --- FIX for Notification: Add postId and senderId ---
     await Notification.create({
       userId: seller._id,
-      senderId: buyer._id, // Add senderId
+      senderId: systemUser._id, // Add senderId
       postId: product._id, // Add postId
       title,
       message,

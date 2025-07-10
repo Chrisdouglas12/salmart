@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SALMART Admin Dashboard</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      line-height: 1.6;
+      color: #333;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    /* Header */
+    header {
+      background: linear-gradient(135deg, #28a745 0%, #20a13a 100%);
+      color: #fff;
+      padding: 2rem 0;
+      box-shadow: 0 4px 20px rgba(40, 167, 69, 0.3);
+      position: relative;
+      overflow: hidden;
+    }
+
+    header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="2" fill="rgba(255,255,255,0.1)"/></svg>') repeat;
+      opacity: 0.3;
+    }
+
+    .header-content {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+
+    .logo {
+      font-size: 2.2rem;
+      font-weight: 700;
+      letter-spacing: -1px;
+    }
+
+    .admin-info {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      font-size: 0.95rem;
+    }
+
+    .admin-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      overflow: hidden; /* To ensure image fits */
+    }
+    
+    .admin-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    /* Navigation Tabs */
+    .nav-container {
+      background: #fff;
+      border-radius: 15px;
+      padding: 8px;
+      margin: 30px 0;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      border: 1px solid rgba(40, 167, 69, 0.1);
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .tab {
+      background: transparent;
+      color: #666;
+      padding: 12px 24px;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      font-weight: 500;
+      font-size: 0.95rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .tab::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(40, 167, 69, 0.1), transparent);
+      transition: left 0.5s;
+    }
+
+    .tab:hover::before {
+      left: 100%;
+    }
+
+    .tab.active {
+      background: linear-gradient(135deg, #28a745 0%, #20a13a 100%);
+      color: #fff;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(40, 167, 69, 0.3);
+    }
+
+    .tab:hover:not(.active) {
+      background: rgba(40, 167, 69, 0.1);
+      color: #28a745;
+      transform: translateY(-1px);
+    }
+
+    /* Content Panels */
+    .panel {
+      display: none;
+      animation: fadeIn 0.5s ease-in-out;
+    }
+
+    .panel.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .panel-header {
+      background: #fff;
+      padding: 20px;
+      border-radius: 15px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      border-left: 4px solid #28a745;
+    }
+
+    .panel-title {
+      font-size: 1.4rem;
+      font-weight: 600;
+      color: #28a745;
+      margin-bottom: 5px;
+    }
+
+    .panel-description {
+      color: #666;
+      font-size: 0.95rem;
+    }
+
+    /* List Items */
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    li {
+      background: #fff;
+      border: 1px solid rgba(40, 167, 69, 0.1);
+      padding: 20px;
+      margin-bottom: 15px;
+      border-radius: 12px;
+      position: relative;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      overflow: hidden;
+    }
+
+    li::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background: linear-gradient(180deg, #28a745 0%, #20a13a 100%);
+      transform: scaleY(0);
+      transition: transform 0.3s ease;
+    }
+
+    li:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+      border-color: rgba(40, 167, 69, 0.2);
+    }
+
+    li:hover::before {
+      transform: scaleY(1);
+    }
+
+    .user-list-item-content {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        flex-wrap: wrap;
+    }
+
+    .user-list-item-content .avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: #e0e0e0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        flex-shrink: 0;
+    }
+
+    .user-list-item-content .avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .user-list-item-content .user-details {
+        flex-grow: 1;
+    }
+
+    /* Buttons */
+    button {
+      margin: 5px 8px 5px 0;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    button::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      transition: width 0.6s, height 0.6s;
+    }
+
+    button:active::before {
+      width: 300px;
+      height: 300px;
+    }
+
+    button.primary {
+      background: linear-gradient(135deg, #28a745 0%, #20a13a 100%);
+      color: #fff;
+      box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+    }
+
+    button.primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(40, 167, 69, 0.4);
+    }
+
+    button.danger {
+      background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+      color: #fff;
+      box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
+    }
+
+    button.danger:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(220, 53, 69, 0.4);
+    }
+
+    button.success {
+      background: linear-gradient(135deg, #28a745 0%, #20a13a 100%);
+      color: #fff;
+      box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+    }
+
+    button.success:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(40, 167, 69, 0.4);
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(5px);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      animation: modalFadeIn 0.3s ease-out;
+    }
+
+    @keyframes modalFadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .modal-content {
+      background: #fff;
+      padding: 30px;
+      border-radius: 20px;
+      width: 90%;
+      max-width: 700px;
+      max-height: 80vh;
+      overflow-y: auto;
+      position: relative;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      animation: modalSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    @keyframes modalSlideIn {
+      from { transform: translateY(-50px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .close-btn {
+      position: absolute;
+      top: 20px;
+      right: 25px;
+      cursor: pointer;
+      font-size: 1.8rem;
+      font-weight: bold;
+      color: #666;
+      transition: all 0.3s ease;
+      width: 35px;
+      height: 35px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background: rgba(220, 53, 69, 0.1);
+    }
+
+    .close-btn:hover {
+      background: rgba(220, 53, 69, 0.2);
+      color: #dc3545;
+      transform: rotate(90deg);
+    }
+
+    .evidence-img {
+      max-width: 100%;
+      margin-top: 15px;
+      border: 2px solid #e9ecef;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s ease;
+    }
+
+    .evidence-img:hover {
+      transform: scale(1.02);
+    }
+
+    .no-data {
+      padding: 40px;
+      text-align: center;
+      color: #666;
+      font-size: 1.1rem;
+      background: #fff;
+      border-radius: 15px;
+      border: 2px dashed #e9ecef;
+    }
+
+    /* Status badges */
+    .status-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      margin-left: 10px;
+    }
+
+    .status-active {
+      background: rgba(40, 167, 69, 0.1);
+      color: #28a745;
+    }
+
+    .status-banned {
+      background: rgba(220, 53, 69, 0.1);
+      color: #dc3545;
+    }
+
+    .status-pending {
+      background: rgba(255, 193, 7, 0.1);
+      color: #ffc107;
+    }
+
+    .status-in_escrow, .status-completed {
+        background: rgba(40, 167, 69, 0.1);
+        color: #28a745;
+    }
+    .status-refunded {
+        background: rgba(0, 123, 255, 0.1);
+        color: #007bff;
+    }
+    .status-awaiting_admin_review {
+        background: rgba(255, 193, 7, 0.1);
+        color: #ffc107;
+    }
+    .status-cancelled {
+        background: rgba(108, 117, 125, 0.1);
+        color: #6c757d;
+    }
+
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .header-content {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+      }
+
+      .tabs {
+        flex-direction: column;
+      }
+
+      .tab {
+        width: 100%;
+        text-align: center;
+      }
+
+      .modal-content {
+        width: 95%;
+        padding: 20px;
+      }
+
+      li {
+        padding: 15px;
+      }
+    }
+
+    /* Loading animation */
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 2px solid #f3f3f3;
+      border-top: 2px solid #28a745;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="header-content">
+        <div class="logo">SALMART Admin Dashboard</div>
+        <div class="admin-info">
+          <div class="admin-avatar">A</div>
+          <div>
+            <div>Administrator</div>
+            <div style="opacity: 0.8; font-size: 0.85rem;">System Manager</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="nav-container">
+      <div class="tabs">
+        <button class="tab active" data-panel="users">Reported Users</button>
+        <button class="tab" data-panel="posts">Reported Posts</button>
+        <button class="tab" data-panel="refunds">Refund Requests</button>
+        <button class="tab" data-panel="transactions">All Transactions</button>
+        <button class="tab" data-panel="pending-transactions">Pending Transactions</button>
+        <button class="tab" data-panel="all-users">All Users</button>
+        <button class="tab" data-panel="banned-users">Banned Users</button>
+      </div>
+    </div>
+
+    <div class="panel active" id="users">
+      <div class="panel-header">
+        <div class="panel-title">Reported Users</div>
+        <div class="panel-description">Manage user reports and take appropriate actions</div>
+      </div>
+      <ul id="reported-users"></ul>
+    </div>
+
+    <div class="panel" id="posts">
+      <div class="panel-header">
+        <div class="panel-title">Reported Posts</div>
+        <div class="panel-description">Review and moderate reported content</div>
+      </div>
+      <ul id="reported-posts"></ul>
+    </div>
+
+    <div class="panel" id="refunds">
+      <div class="panel-header">
+        <div class="panel-title">Refund Requests</div>
+        <div class="panel-description">Process refund requests and manage disputes</div>
+      </div>
+      <ul id="refund-requests"></ul>
+    </div>
+
+    <div class="panel" id="transactions">
+      <div class="panel-header">
+        <div class="panel-title">All Transactions</div>
+        <div class="panel-description">Monitor all platform transactions</div>
+      </div>
+      <ul id="transactions-list"></ul>
+    </div>
+
+    <div class="panel" id="pending-transactions">
+        <div class="panel-header">
+            <div class="panel-title">Pending Transactions</div>
+            <div class="panel-description">Review transactions awaiting admin approval</div>
+        </div>
+        <ul id="pending-transactions-list"></ul>
+    </div>
+
+    <div class="panel" id="all-users">
+      <div class="panel-header">
+        <div class="panel-title">All Users</div>
+        <div class="panel-description">Manage all registered users</div>
+      </div>
+      <ul id="all-users-list"></ul>
+    </div>
+
+    <div class="panel" id="banned-users">
+      <div class="panel-header">
+        <div class="panel-title">Banned Users</div>
+        <div class="panel-description">Manage banned users and review cases</div>
+      </div>
+      <ul id="banned-users-list"></ul>
+    </div>
+  </div>
+
+  <div class="modal" id="detail-modal">
+    <div class="modal-content">
+      <span class="close-btn" onclick="closeModal()">×</span>
+      <div id="modal-body"></div>
+    </div>
+  </div>
+
+  <script>
+    // API Base URL configuration
+    const API_BASE_URL = window.location.hostname === 'localhost'
+      ? 'http://localhost:3000'
+      : 'https://salmart.onrender.com';
+
+    // Tab switching logic
+    const tabs = document.querySelectorAll('.tab');
+    const panels = document.querySelectorAll('.panel');
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => t.classList.remove('active'));
+        panels.forEach(p => p.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById(tab.dataset.panel).classList.add('active');
+        // Re-fetch data for the newly active panel
+        switch(tab.dataset.panel) {
+            case 'users':
+                fetchRender('/api/reported-users', 'reported-users', userItem);
+                break;
+            case 'posts':
+                fetchRender('/admin/reports/pending', 'reported-posts', postItem); // Assuming pending reports can be posts
+                break;
+            case 'refunds':
+                fetchRender('/api/admin/refunds', 'refund-requests', refundItem);
+                break;
+            case 'transactions':
+                fetchRender('/api/admin/transactions', 'transactions-list', transactionItem);
+                break;
+            case 'pending-transactions':
+                fetchRender('/admin/transactions/pending', 'pending-transactions-list', pendingTransactionItem);
+                break;
+            case 'all-users':
+                fetchRender('/api/admin/users', 'all-users-list', allUsersItem);
+                break;
+            case 'banned-users':
+                fetchRender('/api/admin/users/banned', 'banned-users-list', bannedUsersItem);
+                break;
+        }
+      });
+    });
+
+    // Modal controls
+    function openModal(content) {
+      document.getElementById('modal-body').innerHTML = content;
+      document.getElementById('detail-modal').style.display = 'flex';
+    }
+
+    function closeModal() {
+      document.getElementById('detail-modal').style.display = 'none';
+    }
+
+    // Close modal when clicking outside
+    document.getElementById('detail-modal').addEventListener('click', (e) => {
+      if (e.target === document.getElementById('detail-modal')) {
+        closeModal();
+      }
+    });
+
+    // Fetch and render data
+    async function fetchRender(endpoint, elementId, formatter) {
+      const container = document.getElementById(elementId);
+      container.innerHTML = '<li class="no-data"><div class="loading"></div> Loading...</li>';
+      
+      try {
+        const response = await fetch(`${API_BASE_URL}${endpoint}`);
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+        }
+        let data = await response.json();
+        
+        // Handle specific endpoint structures
+        if (elementId === 'reported-users' || elementId === 'reported-posts' || elementId === 'pending-transactions-list') {
+            data = data.reports || data.data; // Adjust for { success: true, reports: [...] } or { success: true, data: [...] }
+        }
+
+        container.innerHTML = data.length
+          ? data.map(formatter).join('')
+          : '<li class="no-data">No data found.</li>';
+      } catch (error) {
+        console.error(`Fetch error for ${endpoint}:`, error);
+        container.innerHTML = `<li class="no-data">Error loading data: ${error.message}. Please try again.</li>`;
+      }
+    }
+
+    // Handle actions (resolve, approve, deny, ban, unban, approve-payment)
+    async function resolveAction(endpoint, btn, elementId, formatter, actionType = 'default') {
+      const originalText = btn.textContent;
+      btn.disabled = true;
+      btn.innerHTML = '<div class="loading"></div> Processing...';
+      
+      try {
+        let options = { method: 'POST' };
+        if (actionType === 'approve-payment') {
+            const reference = btn.dataset.reference; // Get reference from button data attribute
+            options.headers = { 'Content-Type': 'application/json' };
+            options.body = JSON.stringify({ reference });
+        }
+
+        const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
+        const data = await response.json();
+        if (!data.success) {
+            throw new Error(data.message || 'Action failed');
+        }
+        
+        // Refresh the data for the current panel
+        let refreshEndpoint;
+        if (elementId === 'all-users-list') {
+            refreshEndpoint = '/api/admin/users';
+        } else if (elementId === 'banned-users-list') {
+            refreshEndpoint = '/api/admin/users/banned';
+        } else if (elementId === 'reported-users') {
+            refreshEndpoint = '/api/reported-users';
+        } else if (elementId === 'reported-posts') {
+            refreshEndpoint = '/admin/reports/pending'; // Assuming this fetches both user and post reports if combined
+        } else if (elementId === 'refund-requests') {
+            refreshEndpoint = '/api/admin/refunds';
+        } else if (elementId === 'transactions-list') {
+            refreshEndpoint = '/api/admin/transactions';
+        } else if (elementId === 'pending-transactions-list') {
+            refreshEndpoint = '/admin/transactions/pending';
+        }
+
+        if (refreshEndpoint) {
+             // Use a timeout to give the backend a moment to update
+            setTimeout(() => {
+                fetchRender(refreshEndpoint, elementId, formatter);
+            }, 500); 
+        }
+        alert(data.message || 'Action successful!');
+      } catch (error) {
+        console.error('Action error:', error);
+        alert(`Action failed: ${error.message}`);
+        btn.disabled = false;
+        btn.textContent = originalText;
+      }
+    }
+
+    // Formatters for each panel
+    function userItem(report) {
+      const user = report.reportedUser;
+      const reportedBy = report.reportedBy;
+      const details = `
+        <h3 style="color: #28a745; margin-bottom: 20px;">User Report Details</h3>
+        <div style="line-height: 1.8;">
+          <strong>User:</strong> ${user.firstName} ${user.lastName}<br>
+          <strong>Email:</strong> ${user.email}<br>
+          <strong>Reported By:</strong> ${reportedBy.firstName} ${reportedBy.lastName} (${reportedBy.email})<br>
+          <strong>Reason:</strong> ${report.reason}<br>
+          <strong>Reported At:</strong> ${new Date(report.createdAt).toLocaleString()}<br>
+          ${user.profilePicture ? `<img src="${user.profilePicture}" class="evidence-img" alt="Profile Picture">` : ''}
+        </div>
+      `;
+      return `
+        <li>
+          <div class="user-list-item-content">
+            <div class="avatar">
+                ${user.profilePicture ? `<img src="${user.profilePicture}" alt="Avatar">` : 'A'}
+            </div>
+            <div class="user-details">
+                <strong style="color: #28a745;">${user.firstName} ${user.lastName}</strong> (${user.email})<br>
+                <strong>Reason:</strong> ${report.reason}<br>
+                <small style="color: #666;">Reported: ${new Date(report.createdAt).toLocaleString()}</small>
+            </div>
+            <div style="margin-top: 10px;">
+              <button class="primary" onclick="openModal(\`${details.replace(/'/g, '\\\'')}\`)">View Details</button>
+              <button class="success" onclick="resolveAction('/admin/resolve-report', this, 'reported-users', userItem, 'resolve_user_report', '${report._id}')">Resolve</button>
+            </div>
+          </div>
+        </li>
+      `;
+    }
+
+    function postItem(report) { // Changed to 'report' as per backend structure for pending reports
+      const post = report.relatedPost;
+      const reportedBy = report.reportedBy;
+      const details = `
+        <h3 style="color: #28a745; margin-bottom: 20px;">Post Report Details</h3>
+        <div style="line-height: 1.8;">
+          <strong>Report ID:</strong> ${report._id}<br>
+          <strong>Post ID:</strong> ${post?._id || 'N/A'}<br>
+          <strong>Post Description:</strong> ${post?.description || 'No description'}<br>
+          <strong>Reported By:</strong> ${reportedBy?.firstName} ${reportedBy?.lastName} (${reportedBy?.email})<br>
+          <strong>Reason:</strong> ${report.reason}<br>
+          <strong>Reported At:</strong> ${new Date(report.createdAt).toLocaleString()}
+          ${post?.images && post.images.length ? post.images.map(img => `<img src="${img}" class="evidence-img" alt="Post Image">`).join('') : 'No post images provided'}
+        </div>
+      `;
+      return `
+        <li>
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap;">
+            <div>
+              <strong style="color: #28a745;">Report ID:</strong> ${report._id}<br>
+              <strong>Reason:</strong> ${report.reason}<br>
+              <small style="color: #666;">Reported: ${new Date(report.createdAt).toLocaleString()}</small>
+            </div>
+            <div style="margin-top: 10px;">
+              <button class="primary" onclick="openModal(\`${details.replace(/'/g, '\\\'')}\`)">View Details</button>
+              <button class="success" onclick="resolveAction('/admin/resolve-report', this, 'reported-posts', postItem, 'resolve_post_report', '${report._id}')">Resolve</button>
+            </div>
+          </div>
+        </li>
+      `;
+    }
+
+    function refundItem(refund) {
+      const images = refund.evidence?.length
+        ? refund.evidence.map(url => `<img src="${url}" class="evidence-img" alt="Evidence">`).join('')
+        : 'No evidence provided';
+      const details = `
+        <h3 style="color: #28a745; margin-bottom: 20px;">Refund Request Details</h3>
+        <div style="line-height: 1.8;">
+          <strong>Transaction ID:</strong> ${refund.transactionId?._id || 'N/A'}<br>
+          <strong>Buyer:</strong> ${refund.buyerId?.firstName} ${refund.buyerId?.lastName || 'N/A'}<br>
+          <strong>Seller:</strong> ${refund.sellerId?.firstName} ${refund.sellerId?.lastName || 'N/A'}<br>
+          <strong>Amount:</strong> ₦${refund.transactionId?.amount || 'N/A'}<br>
+          <strong>Reason:</strong> ${refund.reason}<br>
+          <strong>Status:</strong> ${refund.status}<br>
+          <strong>Admin Comment:</strong> ${refund.adminComment || 'None'}<br>
+          <strong>Transaction Description:</strong> ${refund.transactionId?.description || 'None'}<br>
+          <strong>Transaction Date:</strong> ${new Date(refund.transactionId?.date || refund.createdAt).toLocaleString()}<br>
+          <strong>Created At:</strong> ${new Date(refund.createdAt).toLocaleString()}<br>
+          <strong>Evidence:</strong><br>${images}
+        </div>
+      `;
+      return `
+        <li>
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap;">
+            <div>
+              <strong style="color: #28a745;">Transaction ID:</strong> ${refund.transactionId?._id || 'N/A'}<br>
+              <strong>Buyer:</strong> ${refund.buyerId?.firstName} → <strong>Seller:</strong> ${refund.sellerId?.firstName}<br>
+              <strong>Amount:</strong> ₦${refund.transactionId?.amount || 'N/A'}<br>
+              <strong>Reason:</strong> ${refund.reason}<br>
+              <span class="status-badge status-${refund.status.toLowerCase().replace(/ /g, '_')}">${refund.status}</span>
+            </div>
+            <div style="margin-top: 10px;">
+              <button class="primary" onclick="openModal(\`${details.replace(/'/g, '\\\'')}\`)">View Details</button>
+              ${refund.status === 'pending' ? `
+                <button class="success" onclick="resolveAction('/api/admin/refunds/${refund.transactionId._id}/approve', this, 'refund-requests', refundItem)">Approve</button>
+                <button class="danger" onclick="resolveAction('/api/admin/refunds/${refund.transactionId._id}/deny', this, 'refund-requests', refundItem)">Deny</button>
+              ` : ''}
+            </div>
+          </div>
+        </li>
+      `;
+    }
+
+    function transactionItem(tx) {
+      const details = `
+        <h3 style="color: #28a745; margin-bottom: 20px;">Transaction Details</h3>
+        <div style="line-height: 1.8;">
+          <strong>Transaction ID:</strong> ${tx._id}<br>
+          <strong>Buyer:</strong> ${tx.buyerId?.firstName} ${tx.buyerId?.lastName} (${tx.buyerId?.email})<br>
+          <strong>Seller:</strong> ${tx.sellerId?.firstName} ${tx.sellerId?.lastName} (${tx.sellerId?.email})<br>
+          <strong>Product:</strong> ${tx.postId?.title || 'N/A'}<br>
+          <strong>Amount:</strong> ₦${tx.amount}<br>
+          <strong>Status:</strong> ${tx.status}<br>
+          <strong>Payment Reference:</strong> ${tx.paymentReference}<br>
+          <strong>Refund Requested:</strong> ${tx.refundRequested ? 'Yes' : 'No'}<br>
+          ${tx.refundRequested ? `<strong>Refund Reason:</strong> ${tx.refundReason || 'N/A'}<br>` : ''}
+          <strong>Created At:</strong> ${new Date(tx.createdAt).toLocaleString()}
+        </div>
+      `;
+      return `
+        <li>
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap;">
+            <div>
+              <strong style="color: #28a745;">Transaction ID:</strong> ${tx._id}<br>
+              <strong>Buyer:</strong> ${tx.buyerId?.firstName} → <strong>Seller:</strong> ${tx.sellerId?.firstName}<br>
+              <strong>Product:</strong> ${tx.postId?.title || 'N/A'}<br>
+              <strong>Amount:</strong> ₦${tx.amount}<br>
+              <span class="status-badge status-${tx.status.toLowerCase().replace(/ /g, '_')}">${tx.status}</span>
+            </div>
+            <div style="margin-top: 10px;">
+              <button class="primary" onclick="openModal(\`${details.replace(/'/g, '\\\'')}\`)">View Details</button>
+            </div>
+          </div>
+        </li>
+      `;
+    }
+
+    function pendingTransactionItem(txn) {
+      const details = `
+        <h3 style="color: #28a745; margin-bottom: 20px;">Pending Transaction Details</h3>
+        <div style="line-height: 1.8;">
+          <strong>Transaction ID:</strong> ${txn._id}<br>
+          <strong>Buyer:</strong> ${txn.buyerId?.firstName} ${txn.buyerId?.lastName} (${txn.buyerId?.email})<br>
+          <strong>Seller:</strong> ${txn.sellerId?.firstName} ${txn.sellerId?.lastName} (${txn.sellerId?.email})<br>
+          <strong>Product:</strong> ${txn.postId?.title || 'N/A'}<br>
+          <strong>Amount:</strong> ₦${txn.amount}<br>
+          <strong>Status:</strong> ${txn.status}<br>
+          <strong>Payment Reference:</strong> ${txn.paymentReference}<br>
+          <strong>Created At:</strong> ${new Date(txn.createdAt).toLocaleString()}
+        </div>
+      `;
+      return `
+        <li>
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap;">
+            <div>
+              <strong style="color: #28a745;">Transaction ID:</strong> ${txn._id}<br>
+              <strong>Buyer:</strong> ${txn.buyerId?.firstName} → <strong>Seller:</strong> ${txn.sellerId?.firstName}<br>
+              <strong>Product:</strong> ${txn.postId?.title || 'N/A'}<br>
+              <strong>Amount:</strong> ₦${txn.amount}<br>
+              <span class="status-badge status-${txn.status.toLowerCase().replace(/ /g, '_')}">${txn.status}</span>
+            </div>
+            <div style="margin-top: 10px;">
+              <button class="primary" onclick="openModal(\`${details.replace(/'/g, '\\\'')}\`)">View Details</button>
+              <button class="success" data-reference="${txn.paymentReference}" onclick="resolveAction('/admin/approve-payment', this, 'pending-transactions-list', pendingTransactionItem, 'approve-payment')">Approve Payment</button>
+            </div>
+          </div>
+        </li>
+      `;
+    }
+
+    function allUsersItem(user) {
+      const details = `
+        <h3 style="color: #28a745; margin-bottom: 20px;">User Details</h3>
+        <div style="line-height: 1.8;">
+          <strong>Name:</strong> ${user.firstName} ${user.lastName}<br>
+          <strong>Email:</strong> ${user.email}<br>
+          <strong>Status:</strong> ${user.isBanned ? 'Banned' : 'Active'}<br>
+          <strong>Created At:</strong> ${new Date(user.createdAt).toLocaleString()}<br>
+          ${user.profilePicture ? `<img src="${user.profilePicture}" class="evidence-img" alt="Profile Picture">` : ''}
+        </div>
+      `;
+      return `
+        <li>
+          <div class="user-list-item-content">
+            <div class="avatar">
+                ${user.profilePicture ? `<img src="${user.profilePicture}" alt="Avatar">` : 'A'}
+            </div>
+            <div class="user-details">
+                <strong style="color: #28a745;">${user.firstName} ${user.lastName}</strong><br>
+                <strong>Email:</strong> ${user.email}<br>
+                <span class="status-badge status-${user.isBanned ? 'banned' : 'active'}">${user.isBanned ? 'Banned' : 'Active'}</span>
+            </div>
+            <div style="margin-top: 10px;">
+              <button class="primary" onclick="openModal(\`${details.replace(/'/g, '\\\'')}\`)">View Details</button>
+              ${user.isBanned
+                ? `<button class="success" onclick="resolveAction('/api/admin/users/${user._id}/unban', this, 'all-users-list', allUsersItem)">Unban</button>`
+                : `<button class="danger" onclick="resolveAction('/api/admin/users/${user._id}/ban', this, 'all-users-list', allUsersItem)">Ban</button>`
+              }
+            </div>
+          </div>
+        </li>
+      `;
+    }
+
+    function bannedUsersItem(user) {
+      const details = `
+        <h3 style="color: #28a745; margin-bottom: 20px;">Banned User Details</h3>
+        <div style="line-height: 1.8;">
+          <strong>Name:</strong> ${user.firstName} ${user.lastName}<br>
+          <strong>Email:</strong> ${user.email}<br>
+          <strong>Status:</strong> Banned<br>
+          <strong>Created At:</strong> ${new Date(user.createdAt).toLocaleString()}<br>
+          ${user.profilePicture ? `<img src="${user.profilePicture}" class="evidence-img" alt="Profile Picture">` : ''}
+        </div>
+      `;
+      return `
+        <li>
+          <div class="user-list-item-content">
+            <div class="avatar">
+                ${user.profilePicture ? `<img src="${user.profilePicture}" alt="Avatar">` : 'B'}
+            </div>
+            <div class="user-details">
+                <strong style="color: #28a745;">${user.firstName} ${user.lastName}</strong><br>
+                <strong>Email:</strong> ${user.email}<br>
+                <span class="status-badge status-banned">Banned</span>
+            </div>
+            <div style="margin-top: 10px;">
+              <button class="primary" onclick="openModal(\`${details.replace(/'/g, '\\\'')}\`)">View Details</button>
+              <button class="success" onclick="resolveAction('/api/admin/users/${user._id}/unban', this, 'banned-users-list', bannedUsersItem)">Unban</button>
+            </div>
+          </div>
+        </li>
+      `;
+    }
+
+    // Initial data fetch for the first active panel
+    fetchRender('/api/reported-users', 'reported-users', userItem);
+  </script>
+</body>
+</html>
