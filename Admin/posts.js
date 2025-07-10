@@ -754,17 +754,9 @@ document.addEventListener('DOMContentLoaded', async function () {
             `;
 
             buttonContent = `
-                    <button class="checkout-product-btn buy-now-button"
-                            data-post-id="${post._id || ''}"
-                            data-product-image="${post.thumbnail || '/salmart-192x192.png'}"
-                            data-product-title="${escapeHtml(post.title || 'Untitled Product')}"
-                            data-product-description="${escapeHtml(post.description || 'No description available.')}"
-                            data-product-price="${post.price ? '₦' + Number(post.price).toLocaleString('en-NG') : 'Price not specified'}"
-                            data-product-location="${escapeHtml(post.location || 'N/A')}"
-                            data-product-condition="${escapeHtml(post.productCondition || 'N/A')}"
-                            ${post.isSold ? 'disabled' : ''}>
-                        <i class="fas fa-shopping-cart"></i>  ${post.isSold ? 'Sold Out' : 'Check Out Product'}
-                    </button>
+                    <a href="${post.productLink || '#'}" class=" checkout-product-btn" aria-label="Check out product ${post.description || 'product'}" ${!post.productLink ? 'disabled' : ''}>
+                        <i class="fas fa-shopping-cart"></i>  Check Out Product
+                    </a>
                 `;
         } else { // Regular image-based posts
             descriptionContent = `
