@@ -7,9 +7,11 @@ const jwt = require('jsonwebtoken');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+require('dotenv').config();
 const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const User = require('../models/userSchema.js');
+const PlatformWallet = require('../models/platformWallet.js')
 const Transaction = require('../models/transactionSchema');
 const Post = require('../models/postSchema');
 const Admin = require('../models/adminSchema.js')
@@ -111,12 +113,12 @@ router.post('/upload', upload.single('image'), (req, res) => {
 });
 
 
-const SECRET_ADMIN_CODE = process.env.SECRET_ADMIN_CODE;
+const SECRET_ADMIN_CODE = process.env.SECRET_ADMIN_CODE
 
 // === Admin Registration ===
 router.post('/admin/register', upload.single('profilePicture'), async (req, res) => {
   const { firstName, lastName, email, password, adminCode } = req.body;
-
+console.log("Expected ADMIN CODE:", SECRET_ADMIN_CODE);
   try {
     // Verify admin code
     if (adminCode !== SECRET_ADMIN_CODE) {
@@ -304,7 +306,11 @@ router.post('/api/admin/refunds/:id/:action', verifyToken, async (req, res) => {
     const postId = refund.description?._id || transaction.postId;
     const amount = transaction.amount || 0;
     const productTitle = refund.description?.title || 'product';
-
+const systemUser = await User.findOne({ isSystemUser: true });
+if (!systemUser) {
+  logger.error('[SYSTEM USER NOT FOUND]');
+  return res.status(500).json({ error: 'System user not found' });
+}
     if (action === 'approve') {
       // Call Paystack refund
       try {
@@ -338,7 +344,7 @@ router.post('/api/admin/refunds/:id/:action', verifyToken, async (req, res) => {
         // Save in-app notification
         await Notification.create({
           userId: buyerId,
-          senderId: null,
+          senderId: systemUser._id,
           postId,
           title: 'Refund Approved',
           message: `₦${amount.toLocaleString('en-NG')} has been refunded for your purchase of "${productTitle}".`,
@@ -388,6 +394,7 @@ router.post('/api/admin/refunds/:id/:action', verifyToken, async (req, res) => {
 
       await Notification.create({
         userId: buyerId,
+        senderId: systemUser._id,
         postId,
         senderId: null,
         title: 'Refund Denied',
@@ -643,6 +650,63 @@ router.post('/admin/approve-payment', verifyToken, async (req, res) => {
   }
 });
 
+router.get('/admin/platform-wallet', verifyToken, async (req, res) => {
+  try {
+    const wallet = await PlatformWallet.findOne({ type: 'commission' });
+    res.json({
+      balance: wallet?.balance || 0,
+      lastUpdated: wallet?.lastUpdated || null
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to retrieve wallet info' });
+  }
+});
 
+router.post('/admin/withdraw-commission', verifyToken, async (req, res) => {
+  const amountToWithdraw = req.body.amount; // in Naira
+
+  if (!amountToWithdraw || amountToWithdraw <= 0) {
+    return res.status(400).json({ error: 'Invalid withdrawal amount' });
+  }
+
+  const amountKobo = Math.round(amountToWithdraw * 100);
+  const platformWallet = await PlatformWallet.findOne({ type: 'commission' });
+
+  if (!platformWallet || platformWallet.balance < amountToWithdraw) {
+    return res.status(400).json({ error: 'Insufficient commission balance' });
+  }
+
+  // Transfer to your own bank
+  const platformRecipientCode = process.env.PLATFORM_RECIPIENT_CODE;
+
+  try {
+    const transfer = await axios.post('https://api.paystack.co/transfer', {
+      source: 'balance',
+      amount: amountKobo,
+      recipient: platformRecipientCode,
+      reason: 'Withdrawal of platform commission'
+    }, {
+      headers: {
+        Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`
+      }
+    });
+
+    // Reduce commission balance in Mongo
+    platformWallet.balance -= amountToWithdraw;
+    platformWallet.lastUpdated = new Date();
+    await platformWallet.save();
+
+    res.status(200).json({
+      message: 'Commission withdrawn successfully',
+      transferReference: transfer.data.data.reference
+    });
+  } catch (err) {
+    console.error('[WITHDRAW COMMISSION ERROR]', err.response?.data || err.message);
+    res.status(500).json({
+      error: 'Paystack transfer failed',
+      details: err.response?.data?.message || err.message
+    });
+  }
+});
   return router;
 };

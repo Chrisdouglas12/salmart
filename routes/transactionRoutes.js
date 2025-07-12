@@ -3,6 +3,7 @@ const mongoose = require('mongoose')
 const Post = require('../models/postSchema.js')
 const User = require('../models/userSchema.js')
 const Report = require('../models/reportSchema.js')
+const PlatformWallet = require('../models/platformWallet'); 
 const cron = require('node-cron')
 const RefundRequests = require('../models/refundSchema.js')
 const verifyToken = require('../middleware/auths.js')
@@ -372,11 +373,33 @@ if (!systemUser) {
         details: `Transaction amount is ${amountPaidByBuyerNaira}. Expected a positive number.`
       });
     }
-
-    const commissionPercent = COMMISSION_PERCENT; // Assuming COMMISSION_PERCENT is correctly defined/imported
+// == Calculate platform's commission == //
+    const commissionPercent = COMMISSION_PERCENT; 
     const commissionNaira = (commissionPercent / 100) * amountPaidByBuyerNaira;
     const amountToTransferNaira = amountPaidByBuyerNaira - commissionNaira;
     const neededAmountKobo = Math.round(amountToTransferNaira * 100);
+    // === Record platform commission ===
+try {
+  await PlatformWallet.updateOne(
+    { type: 'commission' },
+    {
+      $inc: { balance: commissionNaira },
+      $set: { lastUpdated: new Date() }
+    },
+    { upsert: true }
+  );
+  logger.info('[PLATFORM COMMISSION RECORDED]', {
+    transactionId,
+    commission: commissionNaira
+  });
+} catch (walletErr) {
+  logger.error('[FAILED TO RECORD PLATFORM COMMISSION]', {
+    transactionId,
+    commission: commissionNaira,
+    error: walletErr.message
+  });
+}
+    
 
     logger.debug('[CONFIRM DELIVERY] Payout Calculation', {
       transactionId,
@@ -686,7 +709,7 @@ async function processQueuedPayouts() {
 
         await Notification.create({
           userId: tx.sellerId._id,
-          senderId: tx.buyerId._id,
+          senderId: tx.systemUser._id,
           postId: tx.postId._id,
           title,
           message,

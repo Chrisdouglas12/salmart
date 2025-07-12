@@ -176,11 +176,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </div>
                 <div class="product-container">
                     <div class="product-card">
-                        <p class="post-description"><b>Product:</b> ${post.description || 'No description'}</p>
+                        <p class="post-description"><b></b> ${post.description || 'No description'}</p>
                         ${post.postType !== 'video_ad' ? `
-                            <p class="post-description"><b>Condition:</b> ${post.productCondition || 'N/A'}</p>
-                            <p class="post-description"><b>Price:</b> ${post.price ? '₦' + Number(post.price).toLocaleString('en-Ng') : 'Price not specified'}</p>
-                            <p class="post-description"><b>Location:</b> ${post.location || 'N/A'}</p>
+                            
                         ` : ''}
                     </div>
                     <div class="media-card">

@@ -569,12 +569,17 @@ router.get('/api/user-suggestions', verifyToken, async (req, res) => {
       return res.status(404).json({ message: 'Logged-in user not found' });
     }
 
-    // Combine following + self for exclusion
-    const excludedUserIds = new Set(
-      [...(loggedInUser.following || []), loggedInUserId].map(id =>
-        new mongoose.Types.ObjectId(id)
-      )
-    );
+    // Exclude logged-in user + following + system user
+    const excludedUserIds = new Set([
+      ...(loggedInUser.following || []),
+      loggedInUserId
+    ].map(id => new mongoose.Types.ObjectId(id)));
+
+    // Find the system user and exclude them
+    const systemUser = await User.findOne({ isSystemUser: true }).lean();
+    if (systemUser) {
+      excludedUserIds.add(new mongoose.Types.ObjectId(systemUser._id));
+    }
 
     const suggestions = await User.aggregate([
       {
@@ -600,12 +605,8 @@ router.get('/api/user-suggestions', verifyToken, async (req, res) => {
           followersCount: 1,
         },
       },
-      {
-        $sort: { followersCount: -1 },
-      },
-      {
-        $limit: limit,
-      },
+      { $sort: { followersCount: -1 } },
+      { $limit: limit },
     ]);
 
     return res.status(200).json({ suggestions });

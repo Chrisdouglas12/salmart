@@ -130,7 +130,11 @@ app.use(adminRoutes(io));
 app.use(promoteRoutes(io));
 
 
-// Search Endpoint
+const escapeRegex = (text) => {
+  return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+};
+
+// === Search Endpoint ===
 app.get('/search', async (req, res) => {
   try {
     const { q } = req.query;
@@ -139,24 +143,46 @@ app.get('/search', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Search query is required' });
     }
 
-    const searchQuery = new RegExp(q.trim(), 'i');
+    const searchQuery = escapeRegex(q.trim());
+    const fuzzyRegex = new RegExp(searchQuery.split('').join('.*'), 'i'); // Basic fuzzy match
+
+    // Find and exclude Salmart system user
+    const systemUser = await User.findOne({ isSystemUser: true }).lean();
+    const systemUserId = systemUser?._id?.toString();
+
     const [users, posts] = await Promise.all([
       User.find({
-        $or: [{ firstName: searchQuery }, { lastName: searchQuery }, { email: searchQuery }],
-      }).select('firstName lastName email profilePicture'),
+        $and: [
+          {
+            $or: [
+              { firstName: fuzzyRegex },
+              { lastName: fuzzyRegex },
+              { email: fuzzyRegex },
+              { username: fuzzyRegex },
+            ],
+          },
+          systemUserId ? { _id: { $ne: systemUserId } } : {}, // Exclude system user
+        ],
+      }).select('firstName lastName username email profilePicture'),
+
       Post.find({
-        $or: [{ description: searchQuery }, { location: searchQuery }, { productCondition: searchQuery }],
+        $or: [
+          { description: fuzzyRegex },
+          { location: fuzzyRegex },
+          { productCondition: fuzzyRegex },
+        ],
       }).populate('createdBy.userId', 'firstName lastName profilePicture'),
     ]);
 
     logger.info(`Search executed for query: ${q}, found ${users.length} users, ${posts.length} posts`);
+
     res.status(200).json({ success: true, users, posts });
+
   } catch (error) {
-    logger.error(`Search error: ${error.message}`);
+    logger.error(`Search error: ${error.message}`, { stack: error.stack });
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
-
 // Root Endpoint
 app.get('/', (req, res) => {
   res.send('Salmart API is running');

@@ -2407,3 +2407,10 @@
 {"level":"warn","message":"Invalid senderId 6843d062f457581752641ee3 or receiverId [object Object] format","timestamp":"2025-07-10T07:01:07.018Z"}
 {"level":"warn","message":"Invalid senderId 6843d062f457581752641ee3 or receiverId [object Object] format","timestamp":"2025-07-10T07:01:43.893Z"}
 {"level":"warn","message":"Invalid senderId 6843d062f457581752641ee3 or receiverId [object Object] format","timestamp":"2025-07-10T07:28:26.520Z"}
+{"level":"info","message":"Fetched 1 messages between 6843d062f457581752641ee3 and 68656965acd2bfa6ba68f861","timestamp":"2025-07-10T21:35:08.945Z"}
+{"level":"info","message":"Message sent from 6843d062f457581752641ee3 to 68656965acd2bfa6ba68f861: 68703210f8552e8917894acb","timestamp":"2025-07-10T21:35:13.295Z"}
+{"level":"info","message":"Emitting receiveMessage to user 68656965acd2bfa6ba68f861: {\"_id\":\"68703210f8552e8917894acb\",\"senderId\":\"6843d062f457581752641ee3\",\"receiverId\":\"68656965acd2bfa6ba68f861\",\"text\":\"Is this item still available?Product: 5 KVA generator\",\"messageType\":\"text\",\"offerDetails\":null,\"attachment\":null,\"chatPartnerName\":\"Debbie James\",\"status\":\"sent\",\"createdAt\":\"2025-07-10T21:35:12.966Z\"}","timestamp":"2025-07-10T21:35:13.306Z"}
+{"level":"info","message":"Emitting newMessage to user 6843d062f457581752641ee3: {\"_id\":\"68703210f8552e8917894acb\",\"senderId\":\"6843d062f457581752641ee3\",\"receiverId\":\"68656965acd2bfa6ba68f861\",\"text\":\"Is this item still available?Product: 5 KVA generator\",\"messageType\":\"text\",\"offerDetails\":null,\"attachment\":null,\"chatPartnerName\":\"Debbie James\",\"status\":\"sent\",\"createdAt\":\"2025-07-10T21:35:12.966Z\"}","timestamp":"2025-07-10T21:35:13.313Z"}
+{"level":"info","message":"Sending FCM notification to user 68656965acd2bfa6ba68f861 for message 68703210f8552e8917894acb","timestamp":"2025-07-10T21:35:13.317Z"}
+{"level":"info","message":"FCM notification sent to user 68656965acd2bfa6ba68f861","timestamp":"2025-07-10T21:35:16.233Z"}
+{"level":"info","message":"Triggering badge update for user 68656965acd2bfa6ba68f861","timestamp":"2025-07-10T21:35:16.235Z"}
