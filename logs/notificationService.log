@@ -21168,3 +21168,86 @@
 {"level":"info","message":"Triggered count update for user 68431685432ee393a735a641: {\"notificationCount\":9,\"messagesCount\":4}","messagesCount":4,"notificationCount":9,"timestamp":"2025-07-13T09:48:26.943Z","userId":"68431685432ee393a735a641"}
 {"level":"error","message":"Error triggering count update for user [object Object]: Converting circular structure to JSON\n    --> starting at object with constructor 'Server'\n    |     property 'sockets' -> object with constructor 'Namespace'\n    --- property 'server' closes the circle","timestamp":"2025-07-13T09:49:09.991Z"}
 {"level":"info","message":"Fetched counts for user 68431685432ee393a735a641: {\"notificationCount\":10,\"messagesCount\":4}","messagesCount":4,"notificationCount":10,"timestamp":"2025-07-13T09:49:11.268Z"}
+{"level":"info","message":"Fetched counts for user 6865680685b3194e8bc38b92: {\"notificationCount\":3,\"messagesCount\":0}","messagesCount":0,"notificationCount":3,"timestamp":"2025-07-13T09:57:02.747Z"}
+{"level":"info","message":"Emitting countsUpdate to user 6865680685b3194e8bc38b92: {\"notificationCount\":3,\"messagesCount\":0}","messagesCount":0,"notificationCount":3,"timestamp":"2025-07-13T09:57:02.751Z","userId":"6865680685b3194e8bc38b92"}
+{"level":"info","message":"Emitted countsUpdate to user 6865680685b3194e8bc38b92","timestamp":"2025-07-13T09:57:02.764Z"}
+{"level":"info","message":"Fetched counts for user 6865680685b3194e8bc38b92: {\"notificationCount\":3,\"messagesCount\":0}","messagesCount":0,"notificationCount":3,"timestamp":"2025-07-13T09:57:31.369Z"}
+{"level":"info","message":"Emitting countsUpdate to user 6865680685b3194e8bc38b92: {\"notificationCount\":3,\"messagesCount\":0}","messagesCount":0,"notificationCount":3,"timestamp":"2025-07-13T09:57:31.372Z","userId":"6865680685b3194e8bc38b92"}
+{"level":"info","message":"Emitted countsUpdate to user 6865680685b3194e8bc38b92","timestamp":"2025-07-13T09:57:31.377Z"}
+{"level":"info","message":"Fetched counts for user 6865680685b3194e8bc38b92: {\"notificationCount\":3,\"messagesCount\":0}","messagesCount":0,"notificationCount":3,"timestamp":"2025-07-13T09:58:01.300Z"}
+{"level":"info","message":"Emitting countsUpdate to user 6865680685b3194e8bc38b92: {\"notificationCount\":3,\"messagesCount\":0}","messagesCount":0,"notificationCount":3,"timestamp":"2025-07-13T09:58:01.303Z","userId":"6865680685b3194e8bc38b92"}
+{"level":"info","message":"Emitted countsUpdate to user 6865680685b3194e8bc38b92","timestamp":"2025-07-13T09:58:01.307Z"}
+{"level":"info","message":"Fetched counts for user 68431685432ee393a735a641: {\"notificationCount\":11,\"messagesCount\":4}","messagesCount":4,"notificationCount":11,"timestamp":"2025-07-13T09:59:41.507Z"}
+{"level":"info","message":"Triggering count update for user 68431685432ee393a735a641","timestamp":"2025-07-13T09:59:41.518Z"}
+{"level":"info","message":"Fetched counts for user 6843d062f457581752641ee3: {\"notificationCount\":7,\"messagesCount\":0}","messagesCount":0,"notificationCount":7,"timestamp":"2025-07-13T09:59:41.608Z"}
+{"level":"info","message":"Triggering count update for user 6843d062f457581752641ee3","timestamp":"2025-07-13T09:59:41.614Z"}
+{"level":"info","message":"Fetched counts for user 68431685432ee393a735a641: {\"notificationCount\":11,\"messagesCount\":4}","messagesCount":4,"notificationCount":11,"timestamp":"2025-07-13T09:59:41.915Z"}
+{"level":"info","message":"Emitting countsUpdate to user 68431685432ee393a735a641: {\"notificationCount\":11,\"messagesCount\":4}","messagesCount":4,"notificationCount":11,"timestamp":"2025-07-13T09:59:41.918Z","userId":"68431685432ee393a735a641"}
+{"level":"info","message":"Emitted countsUpdate to user 68431685432ee393a735a641","timestamp":"2025-07-13T09:59:41.926Z"}
+{"level":"info","message":"Triggered count update for user 68431685432ee393a735a641: {\"notificationCount\":11,\"messagesCount\":4}","messagesCount":4,"notificationCount":11,"timestamp":"2025-07-13T09:59:41.929Z","userId":"68431685432ee393a735a641"}
+{"level":"info","message":"Fetched counts for user 6843d062f457581752641ee3: {\"notificationCount\":7,\"messagesCount\":0}","messagesCount":0,"notificationCount":7,"timestamp":"2025-07-13T09:59:41.983Z"}
+{"level":"info","message":"Emitting countsUpdate to user 6843d062f457581752641ee3: {\"notificationCount\":7,\"messagesCount\":0}","messagesCount":0,"notificationCount":7,"timestamp":"2025-07-13T09:59:41.985Z","userId":"6843d062f457581752641ee3"}
+{"level":"info","message":"Emitted countsUpdate to user 6843d062f457581752641ee3","timestamp":"2025-07-13T09:59:41.989Z"}
+{"level":"info","message":"Triggered count update for user 6843d062f457581752641ee3: {\"notificationCount\":7,\"messagesCount\":0}","messagesCount":0,"notificationCount":7,"timestamp":"2025-07-13T09:59:41.991Z","userId":"6843d062f457581752641ee3"}
+{"level":"info","message":"Fetched counts for user 6865680685b3194e8bc38b92: {\"notificationCount\":3,\"messagesCount\":0}","messagesCount":0,"notificationCount":3,"timestamp":"2025-07-13T09:59:45.876Z"}
+{"level":"info","message":"Emitting countsUpdate to user 6865680685b3194e8bc38b92: {\"notificationCount\":3,\"messagesCount\":0}","messagesCount":0,"notificationCount":3,"timestamp":"2025-07-13T09:59:45.879Z","userId":"6865680685b3194e8bc38b92"}
+{"level":"info","message":"Emitted countsUpdate to user 6865680685b3194e8bc38b92","timestamp":"2025-07-13T09:59:45.882Z"}
+{"level":"info","message":"Fetched counts for user 6865680685b3194e8bc38b92: {\"notificationCount\":3,\"messagesCount\":0}","messagesCount":0,"notificationCount":3,"timestamp":"2025-07-13T10:00:14.858Z"}
+{"level":"info","message":"Emitting countsUpdate to user 6865680685b3194e8bc38b92: {\"notificationCount\":3,\"messagesCount\":0}","messagesCount":0,"notificationCount":3,"timestamp":"2025-07-13T10:00:14.862Z","userId":"6865680685b3194e8bc38b92"}
+{"level":"info","message":"Emitted countsUpdate to user 6865680685b3194e8bc38b92","timestamp":"2025-07-13T10:00:14.869Z"}
+{"level":"info","message":"Fetched counts for user 6865680685b3194e8bc38b92: {\"notificationCount\":3,\"messagesCount\":0}","messagesCount":0,"notificationCount":3,"timestamp":"2025-07-13T10:00:45.367Z"}
+{"level":"info","message":"Emitting countsUpdate to user 6865680685b3194e8bc38b92: {\"notificationCount\":3,\"messagesCount\":0}","messagesCount":0,"notificationCount":3,"timestamp":"2025-07-13T10:00:45.372Z","userId":"6865680685b3194e8bc38b92"}
+{"level":"info","message":"Emitted countsUpdate to user 6865680685b3194e8bc38b92","timestamp":"2025-07-13T10:00:45.375Z"}
+{"level":"info","message":"Fetched counts for user 6865680685b3194e8bc38b92: {\"notificationCount\":3,\"messagesCount\":0}","messagesCount":0,"notificationCount":3,"timestamp":"2025-07-13T10:01:15.793Z"}
+{"level":"info","message":"Emitting countsUpdate to user 6865680685b3194e8bc38b92: {\"notificationCount\":3,\"messagesCount\":0}","messagesCount":0,"notificationCount":3,"timestamp":"2025-07-13T10:01:15.795Z","userId":"6865680685b3194e8bc38b92"}
+{"level":"info","message":"Emitted countsUpdate to user 6865680685b3194e8bc38b92","timestamp":"2025-07-13T10:01:15.819Z"}
+{"level":"info","message":"Fetched counts for user 6865680685b3194e8bc38b92: {\"notificationCount\":4,\"messagesCount\":0}","messagesCount":0,"notificationCount":4,"timestamp":"2025-07-13T10:02:07.630Z"}
+{"level":"error","message":"Error triggering count update for user [object Object]: Converting circular structure to JSON\n    --> starting at object with constructor 'Server'\n    |     property 'sockets' -> object with constructor 'Namespace'\n    --- property 'server' closes the circle","timestamp":"2025-07-13T10:02:07.646Z"}
+{"level":"info","message":"Fetched counts for user 6846e9cc91c8d81ee744f910: {\"notificationCount\":8,\"messagesCount\":0}","messagesCount":0,"notificationCount":8,"timestamp":"2025-07-13T10:02:41.796Z"}
+{"level":"info","message":"Triggering count update for user 6846e9cc91c8d81ee744f910","timestamp":"2025-07-13T10:02:41.801Z"}
+{"level":"info","message":"Fetched counts for user 6846e9cc91c8d81ee744f910: {\"notificationCount\":8,\"messagesCount\":0}","messagesCount":0,"notificationCount":8,"timestamp":"2025-07-13T10:02:42.155Z"}
+{"level":"info","message":"Emitting countsUpdate to user 6846e9cc91c8d81ee744f910: {\"notificationCount\":8,\"messagesCount\":0}","messagesCount":0,"notificationCount":8,"timestamp":"2025-07-13T10:02:42.158Z","userId":"6846e9cc91c8d81ee744f910"}
+{"level":"info","message":"Emitted countsUpdate to user 6846e9cc91c8d81ee744f910","timestamp":"2025-07-13T10:02:42.162Z"}
+{"level":"info","message":"Triggered count update for user 6846e9cc91c8d81ee744f910: {\"notificationCount\":8,\"messagesCount\":0}","messagesCount":0,"notificationCount":8,"timestamp":"2025-07-13T10:02:42.164Z","userId":"6846e9cc91c8d81ee744f910"}
+{"level":"info","message":"Fetched counts for user 6865680685b3194e8bc38b92: {\"notificationCount\":4,\"messagesCount\":0}","messagesCount":0,"notificationCount":4,"timestamp":"2025-07-13T10:02:43.942Z"}
+{"level":"info","message":"Emitting countsUpdate to user 6865680685b3194e8bc38b92: {\"notificationCount\":4,\"messagesCount\":0}","messagesCount":0,"notificationCount":4,"timestamp":"2025-07-13T10:02:43.947Z","userId":"6865680685b3194e8bc38b92"}
+{"level":"info","message":"Emitted countsUpdate to user 6865680685b3194e8bc38b92","timestamp":"2025-07-13T10:02:43.952Z"}
+{"level":"info","message":"Fetched counts for user 6865680685b3194e8bc38b92: {\"notificationCount\":4,\"messagesCount\":0}","messagesCount":0,"notificationCount":4,"timestamp":"2025-07-13T10:03:14.004Z"}
+{"level":"info","message":"Emitting countsUpdate to user 6865680685b3194e8bc38b92: {\"notificationCount\":4,\"messagesCount\":0}","messagesCount":0,"notificationCount":4,"timestamp":"2025-07-13T10:03:14.007Z","userId":"6865680685b3194e8bc38b92"}
+{"level":"info","message":"Emitted countsUpdate to user 6865680685b3194e8bc38b92","timestamp":"2025-07-13T10:03:14.010Z"}
+{"level":"info","message":"Fetched counts for user 6843d062f457581752641ee3: {\"notificationCount\":8,\"messagesCount\":0}","messagesCount":0,"notificationCount":8,"timestamp":"2025-07-13T10:03:39.122Z"}
+{"level":"info","message":"Triggering count update for user 6843d062f457581752641ee3","timestamp":"2025-07-13T10:03:39.125Z"}
+{"level":"info","message":"Fetched counts for user 6843d062f457581752641ee3: {\"notificationCount\":8,\"messagesCount\":0}","messagesCount":0,"notificationCount":8,"timestamp":"2025-07-13T10:03:39.577Z"}
+{"level":"info","message":"Emitting countsUpdate to user 6843d062f457581752641ee3: {\"notificationCount\":8,\"messagesCount\":0}","messagesCount":0,"notificationCount":8,"timestamp":"2025-07-13T10:03:39.579Z","userId":"6843d062f457581752641ee3"}
+{"level":"info","message":"Emitted countsUpdate to user 6843d062f457581752641ee3","timestamp":"2025-07-13T10:03:39.581Z"}
+{"level":"info","message":"Triggered count update for user 6843d062f457581752641ee3: {\"notificationCount\":8,\"messagesCount\":0}","messagesCount":0,"notificationCount":8,"timestamp":"2025-07-13T10:03:39.582Z","userId":"6843d062f457581752641ee3"}
+{"level":"info","message":"Fetched counts for user 6865680685b3194e8bc38b92: {\"notificationCount\":4,\"messagesCount\":0}","messagesCount":0,"notificationCount":4,"timestamp":"2025-07-13T10:03:43.936Z"}
+{"level":"info","message":"Emitting countsUpdate to user 6865680685b3194e8bc38b92: {\"notificationCount\":4,\"messagesCount\":0}","messagesCount":0,"notificationCount":4,"timestamp":"2025-07-13T10:03:43.939Z","userId":"6865680685b3194e8bc38b92"}
+{"level":"info","message":"Emitted countsUpdate to user 6865680685b3194e8bc38b92","timestamp":"2025-07-13T10:03:43.942Z"}
+{"level":"info","message":"Fetched counts for user 6865680685b3194e8bc38b92: {\"notificationCount\":4,\"messagesCount\":0}","messagesCount":0,"notificationCount":4,"timestamp":"2025-07-13T10:09:01.649Z"}
+{"level":"info","message":"Emitting countsUpdate to user 6865680685b3194e8bc38b92: {\"notificationCount\":4,\"messagesCount\":0}","messagesCount":0,"notificationCount":4,"timestamp":"2025-07-13T10:09:01.651Z","userId":"6865680685b3194e8bc38b92"}
+{"level":"info","message":"Emitted countsUpdate to user 6865680685b3194e8bc38b92","timestamp":"2025-07-13T10:09:01.653Z"}
+{"level":"info","message":"Fetched counts for user 6843d062f457581752641ee3: {\"notificationCount\":9,\"messagesCount\":0}","messagesCount":0,"notificationCount":9,"timestamp":"2025-07-13T10:09:17.471Z"}
+{"level":"info","message":"Triggering count update for user 6843d062f457581752641ee3","timestamp":"2025-07-13T10:09:17.476Z"}
+{"level":"info","message":"Fetched counts for user 6843d062f457581752641ee3: {\"notificationCount\":9,\"messagesCount\":0}","messagesCount":0,"notificationCount":9,"timestamp":"2025-07-13T10:09:17.920Z"}
+{"level":"info","message":"Emitting countsUpdate to user 6843d062f457581752641ee3: {\"notificationCount\":9,\"messagesCount\":0}","messagesCount":0,"notificationCount":9,"timestamp":"2025-07-13T10:09:17.922Z","userId":"6843d062f457581752641ee3"}
+{"level":"info","message":"Emitted countsUpdate to user 6843d062f457581752641ee3","timestamp":"2025-07-13T10:09:17.925Z"}
+{"level":"info","message":"Triggered count update for user 6843d062f457581752641ee3: {\"notificationCount\":9,\"messagesCount\":0}","messagesCount":0,"notificationCount":9,"timestamp":"2025-07-13T10:09:17.926Z","userId":"6843d062f457581752641ee3"}
+{"level":"info","message":"Fetched counts for user 6865680685b3194e8bc38b92: {\"notificationCount\":4,\"messagesCount\":0}","messagesCount":0,"notificationCount":4,"timestamp":"2025-07-13T10:09:31.380Z"}
+{"level":"info","message":"Emitting countsUpdate to user 6865680685b3194e8bc38b92: {\"notificationCount\":4,\"messagesCount\":0}","messagesCount":0,"notificationCount":4,"timestamp":"2025-07-13T10:09:31.382Z","userId":"6865680685b3194e8bc38b92"}
+{"level":"info","message":"Emitted countsUpdate to user 6865680685b3194e8bc38b92","timestamp":"2025-07-13T10:09:31.384Z"}
+{"level":"info","message":"Fetched counts for user 6865680685b3194e8bc38b92: {\"notificationCount\":4,\"messagesCount\":0}","messagesCount":0,"notificationCount":4,"timestamp":"2025-07-13T10:10:01.502Z"}
+{"level":"info","message":"Emitting countsUpdate to user 6865680685b3194e8bc38b92: {\"notificationCount\":4,\"messagesCount\":0}","messagesCount":0,"notificationCount":4,"timestamp":"2025-07-13T10:10:01.507Z","userId":"6865680685b3194e8bc38b92"}
+{"level":"info","message":"Emitted countsUpdate to user 6865680685b3194e8bc38b92","timestamp":"2025-07-13T10:10:01.510Z"}
+{"level":"info","message":"Fetched counts for user 6865680685b3194e8bc38b92: {\"notificationCount\":4,\"messagesCount\":0}","messagesCount":0,"notificationCount":4,"timestamp":"2025-07-13T10:10:31.437Z"}
+{"level":"info","message":"Emitting countsUpdate to user 6865680685b3194e8bc38b92: {\"notificationCount\":4,\"messagesCount\":0}","messagesCount":0,"notificationCount":4,"timestamp":"2025-07-13T10:10:31.440Z","userId":"6865680685b3194e8bc38b92"}
+{"level":"info","message":"Emitted countsUpdate to user 6865680685b3194e8bc38b92","timestamp":"2025-07-13T10:10:31.442Z"}
+{"level":"info","message":"Fetched counts for user 6865680685b3194e8bc38b92: {\"notificationCount\":4,\"messagesCount\":0}","messagesCount":0,"notificationCount":4,"timestamp":"2025-07-13T10:11:01.359Z"}
+{"level":"info","message":"Emitting countsUpdate to user 6865680685b3194e8bc38b92: {\"notificationCount\":4,\"messagesCount\":0}","messagesCount":0,"notificationCount":4,"timestamp":"2025-07-13T10:11:01.360Z","userId":"6865680685b3194e8bc38b92"}
+{"level":"info","message":"Emitted countsUpdate to user 6865680685b3194e8bc38b92","timestamp":"2025-07-13T10:11:01.362Z"}
+{"level":"info","message":"Fetched counts for user 6865680685b3194e8bc38b92: {\"notificationCount\":4,\"messagesCount\":0}","messagesCount":0,"notificationCount":4,"timestamp":"2025-07-13T10:11:31.407Z"}
+{"level":"info","message":"Emitting countsUpdate to user 6865680685b3194e8bc38b92: {\"notificationCount\":4,\"messagesCount\":0}","messagesCount":0,"notificationCount":4,"timestamp":"2025-07-13T10:11:31.408Z","userId":"6865680685b3194e8bc38b92"}
+{"level":"info","message":"Emitted countsUpdate to user 6865680685b3194e8bc38b92","timestamp":"2025-07-13T10:11:31.410Z"}
+{"level":"info","message":"Fetched counts for user 6865680685b3194e8bc38b92: {\"notificationCount\":4,\"messagesCount\":0}","messagesCount":0,"notificationCount":4,"timestamp":"2025-07-13T10:12:06.258Z"}
+{"level":"info","message":"Emitting countsUpdate to user 6865680685b3194e8bc38b92: {\"notificationCount\":4,\"messagesCount\":0}","messagesCount":0,"notificationCount":4,"timestamp":"2025-07-13T10:12:06.261Z","userId":"6865680685b3194e8bc38b92"}
+{"level":"info","message":"Emitted countsUpdate to user 6865680685b3194e8bc38b92","timestamp":"2025-07-13T10:12:06.264Z"}

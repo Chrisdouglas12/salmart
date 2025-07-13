@@ -1431,7 +1431,7 @@ async function withdrawWallet(buttonElement, type) {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
             },
-            body: JSON.stringify({ type, amount })  // Send amount in naira
+            body: JSON.stringify({ type, amount }) // ✅ amount in naira (not kobo)
         });
 
         const data = await response.json();
@@ -1440,7 +1440,7 @@ async function withdrawWallet(buttonElement, type) {
             throw new Error(data.error || `Failed to initiate ${type} withdrawal`);
         }
 
-        showAlert(data.message || `${type.charAt(0).toUpperCase() + type.slice(1)} withdrawal successful`, 'success');
+        showAlert(data.message || `${type} withdrawal successful`, 'success');
         amountInput.value = '';
         fetchPlatformWallet(type);
 
