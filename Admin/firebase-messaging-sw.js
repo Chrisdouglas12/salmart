@@ -1,9 +1,7 @@
-// This file is firebase-messaging-sw.js
-
 // ===== Firebase 8.x for Service Worker Notifications =====
 try {
   console.log('🔥 [ServiceWorker] Loading Firebase scripts...');
-  // Ensure these paths are correct relative to where your service worker is located
+  
   importScripts('https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js');
   importScripts('https://www.gstatic.com/firebasejs/8.10.0/firebase-messaging.js');
   console.log('✅ [ServiceWorker] Firebase scripts loaded');
@@ -20,6 +18,7 @@ try {
   const messaging = firebase.messaging();
   console.log('✅ [ServiceWorker] Firebase Messaging initialized');
 
+  // Enhanced WhatsApp-like notification handler
   messaging.setBackgroundMessageHandler((payload) => {
     console.log('📩 [ServiceWorker] Background message received:', payload);
 
@@ -28,43 +27,124 @@ try {
     const { title = 'Salmart', body = 'New notification', image } = notification;
     const { type, postId, senderId } = data;
 
+    // Enhanced WhatsApp-like notification options
     const notificationOptions = {
       body,
       icon: '/salmart-192x192.png',
       badge: '/salmart-192x192.png',
       image: image || '/salmart-192x192.png',
-      vibrate: [100, 50, 100],
-      requireInteraction: true,
+      vibrate: [200, 100, 200], // More pronounced vibration
+      requireInteraction: false, // Allow auto-dismiss like WhatsApp
+      silent: false, // Enable sound
       tag: `salmart-${type}-${postId || senderId || Date.now()}`,
+      renotify: true, // Show even if tag exists
+      timestamp: Date.now(),
       data: {
         type,
         postId,
         senderId,
         url: getNotificationUrl(type, postId, senderId),
+        timestamp: Date.now()
       },
       actions: [
-        { action: 'view', title: 'View' },
-        { action: 'dismiss', title: 'Dismiss' },
+        { 
+          action: 'view', 
+          title: '👁️ View',
+          icon: '/icons/view.png' 
+        },
+        { 
+          action: 'dismiss', 
+          title: '❌ Dismiss',
+          icon: '/icons/dismiss.png' 
+        }
       ],
-      priority: 'high',
-      renotify: true,
-      silent: false,
-      visibility: 'public',
+      dir: 'auto',
+      lang: 'en'
     };
 
+    console.log('🔔 [ServiceWorker] Showing notification:', title, notificationOptions);
     return self.registration.showNotification(title, notificationOptions);
   });
 
+  // Enhanced notification click handler
   self.addEventListener('notificationclick', (event) => {
-    event.notification.close();
-    const { url } = event.notification.data || {};
+    console.log('🖱️ [ServiceWorker] Notification clicked:', event);
+    
+    const { action, notification } = event;
+    const { url, type, postId, senderId } = notification.data || {};
+    
+    // Close the notification
+    notification.close();
+    
+    if (action === 'dismiss') {
+      console.log('❌ [ServiceWorker] Notification dismissed');
+      return;
+    }
+    
+    // Handle view action or default click
     if (url) {
-      event.waitUntil(clients.openWindow(url));
+      event.waitUntil(
+        clients.matchAll({ type: 'window', includeUncontrolled: true })
+          .then((clientList) => {
+            // Check if app is already open
+            for (const client of clientList) {
+              if (client.url.includes(self.location.origin)) {
+                console.log('🔍 [ServiceWorker] Found existing client, focusing and navigating');
+                client.focus();
+                client.postMessage({
+                  type: 'NOTIFICATION_CLICKED',
+                  url,
+                  action,
+                  data: { type, postId, senderId }
+                });
+                return;
+              }
+            }
+            
+            // Open new window if none exists
+            console.log('🆕 [ServiceWorker] Opening new window:', url);
+            return clients.openWindow(url);
+          })
+      );
     }
   });
 
+  // Enhanced notification close handler
+  self.addEventListener('notificationclose', (event) => {
+    console.log('🔔 [ServiceWorker] Notification closed:', event);
+    
+    // Optional: Track notification dismissal
+    const { type, postId, senderId } = event.notification.data || {};
+    console.log('📊 [ServiceWorker] Notification dismissed:', { type, postId, senderId });
+  });
+
+  // Auto-dismiss notifications after 5 seconds (WhatsApp-like behavior)
+  self.addEventListener('push', (event) => {
+    console.log('📨 [ServiceWorker] Push event received');
+    
+    // Auto-dismiss notifications after 5 seconds
+    event.waitUntil(
+      new Promise((resolve) => {
+        setTimeout(() => {
+          self.registration.getNotifications().then((notifications) => {
+            notifications.forEach((notification) => {
+              // Check if notification is older than 5 seconds
+              const notificationTime = notification.data?.timestamp || 0;
+              const currentTime = Date.now();
+              
+              if (currentTime - notificationTime >= 5000) {
+                console.log('⏰ [ServiceWorker] Auto-dismissing notification after 5 seconds');
+                notification.close();
+              }
+            });
+          });
+          resolve();
+        }, 5000);
+      })
+    );
+  });
+
   function getNotificationUrl(type, postId, senderId) {
-    // Dynamically get the base URL from the service worker's scope
     const baseUrl = self.location.origin;
     if (type === 'like' || type === 'comment') return `${baseUrl}/product.html?postId=${postId}`;
     if (type === 'message') return `${baseUrl}/Messages.html?userId=${senderId}`;
@@ -76,10 +156,9 @@ try {
 }
 
 // ===== PWA Caching Configuration =====
-const CACHE_NAME = 'salmart-cache-v1.40.4'; // Incremented version
-const DYNAMIC_CACHE_NAME = 'salmart-dynamic-v1.40.4'; // Incremented version
+const CACHE_NAME = 'salmart-cache-v1.40.5';
+const DYNAMIC_CACHE_NAME = 'salmart-dynamic-v1.40.5';
 
-// Add all critical static assets here for comprehensive offline UI
 const urlsToCache = [
   '/',
   '/index.html',
@@ -118,25 +197,27 @@ const urlsToCache = [
   '/notifications.html',
   '/settings.html',
   '/upload-profile.html',
-  '/salmartCache.js', // Crucial to cache your custom caching helper!
-  '/idb-keyval-iife.js', // NEW: Add idb-keyval to static cache
+  '/salmartCache.js',
+  '/idb-keyval-iife.js',
+  // Add notification assets
+  '/sounds/notification.mp3',
+  '/icons/view.png',
+  '/icons/dismiss.png',
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css',
   'https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;0&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;0,800;0,900&display=swap'
 ];
 
 // ===== Dynamic Content Cache Strategies =====
-// Use pathname prefixes for better matching of API routes,
-// even if they have query parameters or dynamic IDs.
 const CACHE_STRATEGIES = {
-  '/post': 120000,          // 2 minutes - Posts (e.g., /post, /post?category=..., /post/:id)
-  '/get-transactions': 300000,     // 5 minutes - User transactions (e.g., /get-transactions/:userId)
-  '/messages': 60000,        // 1 minute - Messages (e.g., /messages?user1=...)
-  '/notifications': 90000,          // 1.5 minutes - User notifications
-  '/requests': 180000,    // 3 minutes - Requests (e.g., /requests?category=...)
-  '/user': 300000,          // 5 minutes - User profiles (e.g., /user/:userId, /user/:userId/follow)
-  '/is-following-list': 120000, // 2 minutes - Following list
-  '/api/is-following-list': 120000, // Explicitly add this if used in your other scripts with /api prefix
-  '/api/user-suggestions': 120000, // For user suggestions
+  '/post': 120000,
+  '/get-transactions': 300000,
+  '/messages': 60000,
+  '/notifications': 90000,
+  '/requests': 180000,
+  '/user': 300000,
+  '/is-following-list': 120000,
+  '/api/is-following-list': 120000,
+  '/api/user-suggestions': 120000,
 };
 
 function getCacheTTL(url) {
@@ -146,7 +227,7 @@ function getCacheTTL(url) {
       return ttl;
     }
   }
-  return 300000; // Default 5 minutes for unknown dynamic content
+  return 300000;
 }
 
 function isCacheStale(cachedResponse, maxAge) {
@@ -186,21 +267,13 @@ async function fetchAndCache(request, cacheName = DYNAMIC_CACHE_NAME) {
 }
 
 function isDynamicContent(requestUrl) {
-  // Check if it's your backend API by matching origin and path prefix
-  // This assumes your backend is on the same origin as your frontend, or its base URL
-  // is known and handled elsewhere (like your API_BASE_URL variable in salmartCache.js)
   const apiPaths = Object.keys(CACHE_STRATEGIES);
   for (const path of apiPaths) {
-    // Use requestUrl.pathname.startsWith for more robust matching of API routes
     if (requestUrl.pathname.startsWith(path)) {
-      // Further refinement: Ensure it's for your API_BASE_URL origin
-      // if it's different from self.location.origin
-      // For now, assuming API_BASE_URL is generally on the same host or proxy.
       return true;
     }
   }
 
-  // Include Firebase API calls (often dynamic and cross-origin)
   if (requestUrl.hostname.includes('firebaseio.com') || requestUrl.hostname.includes('googleapis.com')) {
     return true;
   }
@@ -252,19 +325,18 @@ self.addEventListener('fetch', (event) => {
 
         const networkFetchPromise = fetchAndCache(event.request).catch(err => {
             console.warn(`⚠️ [SW] Network fetch/update failed for ${event.request.url}: ${err.message}`);
-            // This error is caught here, but for critical API calls, we need a fallback.
-            throw err; // Re-throw to propagate to the outer catch for offline fallbacks
+            throw err;
         });
 
         if (cachedResponse) {
           const isStale = isCacheStale(cachedResponse, cacheTTL);
           if (!isStale) {
             console.log(`⚡ [SW] Serving fresh cached dynamic content: ${event.request.url}`);
-            event.waitUntil(networkFetchPromise.catch(err => {})); // Update in background
+            event.waitUntil(networkFetchPromise.catch(err => {}));
             return cachedResponse;
           }
-          console.log(`🔄 [SW] Serving stale dynamic content, updating in background: ${event.url}`);
-          event.waitUntil(networkFetchPromise.catch(err => {})); // Update in background
+          console.log(`🔄 [SW] Serving stale dynamic content, updating in background: ${event.request.url}`);
+          event.waitUntil(networkFetchPromise.catch(err => {}));
           return cachedResponse;
         }
 
@@ -272,13 +344,12 @@ self.addEventListener('fetch', (event) => {
         return networkFetchPromise;
       }).catch(async (error) => {
         console.error(`❌ [SW] Dynamic fetch strategy failed for ${event.request.url}:`, error);
-        // This is the true offline fallback for dynamic API calls
         if (event.request.headers.get('accept')?.includes('application/json')) {
             console.log(`🌐 [SW] Network/cache failed for JSON API, providing offline fallback data.`);
             return new Response(JSON.stringify({
                 error: 'Network unavailable and no cached content for API.',
                 offline: true,
-                data: [] // Provide an empty array as a fallback for data endpoints
+                data: []
             }), {
                 status: 503,
                 statusText: 'Service Unavailable',
@@ -294,7 +365,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // ===== Static Content Strategy (Cache-First, with network fallback) =====
+  // Static Content Strategy
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       if (cachedResponse) {
@@ -326,58 +397,41 @@ self.addEventListener('fetch', (event) => {
   );
 });
 
-// ===== Background Sync for Proactive Updates =====
-// IMPORTANT: For background sync to work, your web app must register a sync.
-// Example in posts.js (or similar):
-// if ('serviceWorker' in navigator && 'SyncManager' in window) {
-//   navigator.serviceWorker.ready.then(reg => {
-//     reg.sync.register('background-sync-posts'); // Use a specific tag
-//   }).catch(err => console.error('Background sync registration failed:', err));
-// }
-
-self.addEventListener('sync', (event) => {
-  if (event.tag === 'background-sync-posts') { // Match the tag from registration
-    console.log('🔄 [SW] Background sync triggered: background-sync-posts');
-    event.waitUntil(updateCriticalPostsData()); // Call a specific update function
+// ===== Enhanced Message Handling =====
+self.addEventListener('message', (event) => {
+  console.log('📨 [ServiceWorker] Message from main thread:', event.data);
+  
+  if (event.data && event.data.type === 'CLEAR_NOTIFICATIONS') {
+    // Clear all notifications
+    self.registration.getNotifications().then((notifications) => {
+      notifications.forEach((notification) => notification.close());
+      console.log('🧹 [ServiceWorker] Cleared all notifications');
+    });
   }
-  // Add other sync tags if needed, e.g., 'background-sync-messages'
+  
+  if (event.data && event.data.type === 'UPDATE_NOTIFICATION_SETTINGS') {
+    // Handle notification settings updates
+    console.log('⚙️ [ServiceWorker] Updating notification settings:', event.data.settings);
+  }
+});
+
+// ===== Background Sync for Proactive Updates =====
+self.addEventListener('sync', (event) => {
+  if (event.tag === 'background-sync-posts') {
+    console.log('🔄 [SW] Background sync triggered: background-sync-posts');
+    event.waitUntil(updateCriticalPostsData());
+  }
 });
 
 async function updateCriticalPostsData() {
   console.log('🔄 [SW] Attempting to update critical posts data in background...');
-  const userId = localStorage.getItem('userId'); // Cannot reliably get localStorage in SW for auth token
-  if (!userId) {
-      console.warn('Cannot perform personalized background sync: User not logged in or userId not available.');
-      return; // Cannot sync personalized data without user context
-  }
-
-  // --- Crucial limitation for Service Worker background sync with AUTHENTICATED requests ---
-  // A Service Worker cannot directly access localStorage or IndexedDB from the client.
-  // This means it cannot get the user's authToken directly.
-  // To perform authenticated background syncs, you need to:
-  // 1. Have your backend provide a "refresh token" or "long-lived token" specifically for SW,
-  //    or use a secure messaging channel from client to SW to pass the token.
-  // 2. OR, more simply for personalized feeds, background sync should trigger the
-  //    `salmartCache.getPostsByCategory` method from the *client* after it's back online.
-  //    The sync event just acts as a wake-up call for the client.
-
-  // For this example, we will assume a simplified approach:
-  // We'll call a general /post endpoint, but this WON'T be personalized by the SW itself
-  // because it lacks the auth token.
-  // The primary source of offline personalized data should come from salmartCache (IndexedDB).
-
+  
   const commonEndpointsToUpdate = [
-      '/post?category=all', // This will fetch public/generic posts if SW can't get auth
-      // Add other common, non-personalized endpoints here.
-      // For personalized updates, the client's IndexedDB approach is superior.
+      '/post?category=all',
   ];
 
   const updatePromises = commonEndpointsToUpdate.map(async (endpoint) => {
       try {
-          // In a real authenticated background sync, you'd need a mechanism
-          // for the SW to get the auth token (e.g., passed via `fetch` from client,
-          // or a background fetch API that can use credential parameters).
-          // For now, these SW-initiated fetches will be unauthenticated by default.
           const response = await fetch(`${self.location.origin}${endpoint}`);
           if (response.ok) {
               const cache = await caches.open(DYNAMIC_CACHE_NAME);
@@ -392,9 +446,28 @@ async function updateCriticalPostsData() {
   });
 
   await Promise.allSettled(updatePromises);
-  console.log('✅ [SW] Background sync for posts completed (may not be personalized)');
+  console.log('✅ [SW] Background sync for posts completed');
 }
 
+// ===== Notification Management =====
+self.addEventListener('pushsubscriptionchange', (event) => {
+  console.log('🔄 [ServiceWorker] Push subscription changed');
+  // Handle push subscription changes
+  event.waitUntil(
+    // Re-register push subscription
+    self.registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: 'BCtAsyYJYCSfpg_kXL2aO59szQsPFE3DvmqqLOnW03JTVR88Jb435-jDnUgj0j0mL5VCWLiGGfErTuwQ-XUArho'
+    }).then((subscription) => {
+      console.log('✅ [ServiceWorker] Push subscription renewed');
+      // Send new subscription to server
+      return fetch('/api/update-push-subscription', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(subscription)
+      });
+    })
+  );
+});
 
-
-
+console.log('✅ [ServiceWorker] Enhanced Firebase Messaging Service Worker loaded with WhatsApp-like features');
