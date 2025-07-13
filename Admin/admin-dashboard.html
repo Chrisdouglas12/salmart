@@ -1394,10 +1394,13 @@ async function fetchPlatformWallet(type) {
     }
 
     const data = await response.json();
-    balanceEl.textContent = `₦${(data.balance || 0).toLocaleString('en-NG', {
+
+    // ✅ Convert balance from Kobo to Naira
+    balanceEl.textContent = `₦${((data.balance || 0) / 100).toLocaleString('en-NG', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2
     })}`;
+
     lastUpdatedEl.textContent = data.lastUpdated
       ? new Date(data.lastUpdated).toLocaleString()
       : 'N/A';
@@ -1424,7 +1427,7 @@ async function withdrawWallet(buttonElement, type) {
     buttonElement.innerHTML = '<div class="loading"></div><span>Withdrawing...</span>';
 
     try {
-        const token = localStorage.getItem('authToken');
+        const token = localStorage.getItem('adminToken');
         const response = await fetch(`${API_BASE_URL}/admin/platform-wallet/withdraw`, {
             method: 'POST',
             headers: {

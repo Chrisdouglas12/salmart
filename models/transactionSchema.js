@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const transactionSchema = new mongoose.Schema({
   buyerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   sellerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  postId: { type: mongoose.Schema.Types.ObjectId, ref: 'Post', required: true }, 
+  postId: { type: mongoose.Schema.Types.ObjectId, ref: 'Post', required: true },
 
   buyerEmail: { type: String },
 
@@ -16,13 +16,12 @@ const transactionSchema = new mongoose.Schema({
     type: String,
     enum: [
       'awaiting_payment',
-      'pending',
-      'in_escrow',
-      'transfer_initiated',
-      'confirmed_pending_payout',
-      'released',
-      'refund_requested',
-      'refunded',
+      'pending', // e.g., product delivered, awaiting buyer confirmation
+      'in_escrow', // funds held by platform
+      'transfer_initiated', // payout transfer started
+      'confirmed_pending_payout', // buyer confirmed, payout pending
+      'released', // funds released to seller
+      'refunded', // transaction fully refunded
       'transfer_failed',
       'reversed',
       'cancelled'
@@ -62,6 +61,9 @@ const transactionSchema = new mongoose.Schema({
   refundReference: { type: String },
   refundStatus: { type: String }, // Paystack refund status (e.g., success, failed)
   refundedAt: { type: Date },
+
+  // ADD THIS FIELD FOR REFUND REQUEST STATUS
+  refundRequested: { type: Boolean, default: false }, // Flag to indicate if a refund has been requested
 
   // Receipt + file references
   receiptImageUrl: { type: String },

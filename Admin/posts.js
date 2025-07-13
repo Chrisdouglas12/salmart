@@ -673,7 +673,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             `;
         } else { // Current user is the creator
             buttonContent = `
-                <a href="javascript:void(0);" class="promoted-cta-button" aria-label="Check out product " style="pointer-events: none; color: #28a745; font-size: 14px; font-weight: 400; ">
+                <a href="javascript:void(0);"  style="pointer-events: none; color: #28a745; font-size: 14px; font-weight: 400; ">
                     <i class="fas fa-toggle-on"></i> Active
                 </a>
             `;
@@ -842,7 +842,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                                 data-product-image="${productImageForChat}"
                                 data-product-description="${escapeHtml(post.title || '')}"
                                 data-post-id="${post._id || ''}"
-                                ${post.isSold ? 'disabled' : ''}>
+                                ${post.isSold ? 'disabled' : ''}> <i class="fas fa-paper-plane"></i>
                                 ${post.isSold ? 'Unavailable' : 'Message'}
                             </button>
                             <button class="btn btn-primary buy-now-button"
@@ -853,7 +853,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                                     data-product-location="${escapeHtml(post.location || 'N/A')}"
                                     data-product-condition="${escapeHtml(post.productCondition || 'N/A')}"
                                     data-product-price="${post.price ? '₦' + Number(post.price).toLocaleString('en-NG') : '₦0.00'}"
-                                    ${post.isSold ? 'disabled' : ''}>
+                                    ${post.isSold ? 'disabled' : ''}> <i class="fas fa-shopping-cart"></i>
                                 ${post.isSold ? 'Sold Out' : 'Buy Now'}
                             </button>
                         </div>

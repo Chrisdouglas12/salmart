@@ -118,19 +118,33 @@ async function fetchTransactions() {
       const productDescription = product.title || 'Product';
       const amount = t.amount || 0;
 
+      // Note: `t.status` refers to the main transaction status (e.g., 'pending', 'completed')
+      // `t.refundRequested` is the new flag for when a refund has been initiated for this transaction.
       const statusBadge = `<span class="badge ${t.status}">${t.status}</span>`;
       let confirmBtn = '';
       let refundBtn = '';
 
       if (currentTab === 'buying') {
-        if (t.status === 'pending' && !t.refundRequested && t._id) {
-          confirmBtn = `<button class="confirm-btn" onclick="openConfirmModal('${t._id}')">Confirm Delivery</button>`;
-        }
+        // **Confirm Delivery Button Logic**
+        // The button should be shown only if the transaction is 'pending' AND no refund has been requested.
+        // If a refund has been requested, the confirm button should be disabled or hidden.
         if (t.status === 'pending' && !t.refundRequested) {
-          refundBtn = `<button class="refund-btn" onclick="openRefundModal('${t._id}')">Request Refund</button>`;
+          confirmBtn = `<button class="confirm-btn" onclick="openConfirmModal('${t._id}')">Confirm Delivery</button>`;
         } else if (t.refundRequested) {
-          refundBtn = `<span class="badge refund-requested">Refund Requested</span>`;
+          // Display a disabled button to inform the user
+          confirmBtn = `<button class="confirm-btn disabled" disabled>Delivery Confirmation Locked</button>`;
         }
+
+        // **Refund Button Logic**
+        // If a refund has already been requested, show the "Refund Requested" badge.
+        // Otherwise, if the transaction is still 'pending', allow a refund request.
+        if (t.refundRequested) {
+          refundBtn = `<span class="badge refund-requested">Refund Requested</span>`;
+        } else if (t.status === 'pending') {
+          // Only show 'Request Refund' if not already requested and status is pending
+          refundBtn = `<button class="refund-btn" onclick="openRefundModal('${t._id}')">Request Refund</button>`;
+        }
+        // If the transaction is completed, refunded, or cancelled, the refund button should not appear.
       }
 
       const date = new Date(t.createdAt).toLocaleString();
@@ -220,7 +234,6 @@ async function confirmDelivery(transactionId) {
       return data;
     } else {
       console.error('[CONFIRM DELIVERY FAILED]', data);
-      // Ensure that if backend sends data.error, it's used
       throw new Error(data.error || data.message || 'Failed to confirm delivery');
     }
   } catch (err) {
@@ -293,12 +306,12 @@ function openResponseModal(success, message) {
 
   if (success) {
     responseIcon.innerHTML = '<i class="fas fa-check-circle"></i>';
-    responseTitle.textContent = 'Action Successful!'; // More general title
+    responseTitle.textContent = 'Action Successful!';
     responseMessage.textContent = message || 'Your request has been processed successfully.';
     responseButton.className = 'success-btn';
   } else {
     responseIcon.innerHTML = '<i class="fas fa-times-circle"></i>';
-    responseTitle.textContent = 'Action Failed'; // More general title
+    responseTitle.textContent = 'Action Failed';
     responseMessage.textContent = message || 'Failed to complete the action. Please try again.';
     responseButton.className = 'error-btn';
   }
@@ -339,7 +352,6 @@ async function handleConfirmDelivery() {
     const response = await confirmDelivery(transactionId);
     closeLoaderModal();
 
-    // Specific handling for different success scenarios
     if (response.queued) {
       openResponseModal(true, 'Delivery confirmed! Payment is queued and will be released once available. You will be notified.');
     } else if (response.balanceCheckFailed) {
@@ -394,7 +406,6 @@ function closeRefundModal() {
     refundModal.style.display = 'none';
     document.getElementById('reason').value = '';
     document.getElementById('refundNote').value = '';
-    // Reset file input value properly for security reasons (cannot set value directly)
     const refundEvidenceInput = document.getElementById('refundEvidence');
     if (refundEvidenceInput) {
         refundEvidenceInput.value = ''; // Clears selected file
@@ -416,7 +427,6 @@ async function submitRefund() {
     return;
   }
 
-  // Optionally, show a loader while processing refund
   openLoaderModal();
 
   const formData = new FormData();
@@ -429,12 +439,11 @@ async function submitRefund() {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${token}`,
-        // 'Content-Type': 'application/json', // Do NOT set Content-Type for FormData, browser sets it correctly
       },
       body: formData,
     });
 
-    closeLoaderModal(); // Close loader regardless of success/failure
+    closeLoaderModal();
 
     if (!res.ok) {
       let errorMessage = 'Error requesting refund.';
@@ -450,10 +459,11 @@ async function submitRefund() {
     const data = await res.json();
     showToast(data.message || 'Refund requested successfully.');
     closeRefundModal();
-    fetchTransactions(); // <--- THIS IS THE KEY FIX for instant update
+    // Re-fetch transactions to update the UI with the new refund status
+    fetchTransactions();
   } catch (err) {
     console.error('Refund request error:', err);
-    closeLoaderModal(); // Ensure loader is closed on error
+    closeLoaderModal();
     showToast(err.message || 'Error requesting refund. Please try again.');
   }
 }

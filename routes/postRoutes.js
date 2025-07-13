@@ -215,7 +215,7 @@ module.exports = (io) => {
       let videoUrl = null;
 
       // Validate productLink for video ads
-      const validDomain = isProduction ? 'salmart.vercel.app' : 'localhost';
+      const validDomain = isProduction ? 'salmartonline.com.ng' : 'localhost';
       const isValidSalmartLink = (link) => {
         try {
           const url = new URL(link);
@@ -236,7 +236,7 @@ module.exports = (io) => {
         if (!isValidSalmartLink(productLink)) {
           logger.warn(`Invalid product link ${productLink} by user ${userId}`);
           return res.status(400).json({ 
-            message: 'Product link must be a valid Salmart URL (e.g., https://salmart.vercel.app/posts/123)' 
+            message: 'Product link must be a valid Salmart URL (e.g., https://salmartonline.com.ng/product/123)' 
           });
         }
 

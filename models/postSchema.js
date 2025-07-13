@@ -43,13 +43,13 @@ const postSchema = new mongoose.Schema({
         if (this.postType !== 'video_ad') return true;
         try {
           const url = new URL(value);
-          const validDomain = process.env.NODE_ENV === 'production' ? 'salmart.vercel.app' : 'localhost';
+          const validDomain = process.env.NODE_ENV === 'production' ? 'salmartonline.com.ng' : 'localhost';
           return url.hostname === validDomain;
         } catch (e) {
           return false;
         }
       },
-      message: 'Product link must be a valid Salmart URL (e.g., https://salmart.vercel.app)',
+      message: 'Product link must be a valid Salmart URL (e.g., https://salmartonline.com.ng)',
     },
   },
   location: {

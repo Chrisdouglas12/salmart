@@ -251,11 +251,26 @@ router.put('/posts/:postId/update-price', verifyToken, async (req, res) => {
   }
 });
 
-// Request Refund
+
+// Refunds
 router.post('/request-refund/:transactionId', verifyToken, async (req, res) => {
   try {
     const { transactionId } = req.params;
-    const { reason, evidence } = req.body;
+    const { reason, note } = req.body; // 'note' from frontend is 'description' in schema
+
+    // If you're handling file uploads, process them here
+    let evidenceUrls = [];
+    if (req.files && req.files.evidence) {
+      const evidenceFile = req.files.evidence;
+      // Example: Upload to Cloudinary
+      // const uploadResult = await cloudinary.uploader.upload(evidenceFile.tempFilePath);
+      // evidenceUrls.push(uploadResult.secure_url);
+      // Replace with your actual file upload logic (e.g., to S3, local storage)
+      console.log('Evidence file received:', evidenceFile.name);
+      // For now, let's just simulate:
+      evidenceUrls.push(`/uploads/${evidenceFile.name}`); // Placeholder URL
+    }
+
     const userId = req.user.userId;
 
     const transaction = await Transaction.findById(transactionId);
@@ -263,34 +278,50 @@ router.post('/request-refund/:transactionId', verifyToken, async (req, res) => {
       return res.status(404).json({ success: false, message: 'Transaction not found' });
     }
 
+    // Ensure the request is coming from the buyer of the transaction
     if (transaction.buyerId.toString() !== userId) {
-      return res.status(403).json({ success: false, message: 'Unauthorized' });
+      return res.status(403).json({ success: false, message: 'Unauthorized: You are not the buyer of this transaction.' });
     }
 
-    if (transaction.status !== 'pending') {
-      return res.status(400).json({ success: false, message: 'Refund not applicable' });
+    // Crucial change: Check if a refund has *already* been requested for this transaction
+    if (transaction.refundRequested) {
+      return res.status(400).json({ success: false, message: 'Refund has already been requested for this transaction.' });
     }
 
-    const existingRefund = await RefundRequests.findOne({ transactionId });
-    if (existingRefund) {
-      return res.status(400).json({ success: false, message: 'Refund already requested' });
-    }
+    // You might also want to check the current status of the transaction
+    // For instance, if it's already 'completed' or 'refunded', you might not allow new requests.
+    // However, if the refund process starts while 'pending', this is fine.
+    // if (transaction.status === 'completed' || transaction.status === 'refunded') {
+    //   return res.status(400).json({ success: false, message: 'Refund not applicable for this transaction status.' });
+    // }
 
+    // Create the refund request document
     const refund = new RefundRequests({
       transactionId,
       buyerId: userId,
+      sellerId: transaction.sellerId, // Link to seller as well
       reason,
-      evidence,
-      status: 'pending',
+      evidence: evidenceUrls, // Store uploaded evidence URLs
+      description: note, // Map 'note' from frontend to 'description' in schema
+      // photo and description (for product details) can be populated from transaction.postId if needed
+      status: 'Refund Requested', // Initial status for the refund request document
     });
 
-    await Promise.all([refund.save(), transaction.updateOne({ refundRequested: true })]);
-    res.status(200).json({ success: true, message: 'Refund requested successfully' });
+    // Update the original transaction to mark that a refund has been requested
+    transaction.refundRequested = true;
+    // transaction.status could optionally be updated to 'Refund Under Review' or similar
+    // but the 'refundRequested' flag is sufficient for frontend logic.
+
+    await Promise.all([refund.save(), transaction.save()]); // Save both documents
+
+    res.status(200).json({ success: true, message: 'Refund requested successfully.' });
   } catch (error) {
     console.error('Request refund error:', error.message);
-    res.status(500).json({ success: false, message: 'Server error' });
+    res.status(500).json({ success: false, message: 'Server error. Please try again.' });
   }
 });
+
+
 
 
 router.post('/confirm-delivery/:transactionId', verifyToken, async (req, res) => {

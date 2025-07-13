@@ -8,7 +8,7 @@ const refundSchema = new mongoose.Schema({
   evidence: [String], // URLs of images/screenshots
   description: {type: mongoose.Schema.Types.ObjectId, ref: 'Post' },
   photo: { type: mongoose.Schema.Types.ObjectId, ref: 'Post' },
-  status: { type: String, enum: ['pending', 'approved', 'rejected', 'refunded'], default: 'pending' },
+  status: { type: String, enum: ['pending', 'approved', 'rejected', 'refunded', 'Refund Requested'], default: 'Refund Requested' },
   adminComment: String
 }, { timestamps: true });
 
