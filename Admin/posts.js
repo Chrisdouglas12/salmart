@@ -16,6 +16,11 @@ document.addEventListener('DOMContentLoaded', async function () {
     let isLoading = false; // To prevent multiple simultaneous fetches
     let suggestionCounter = 0; // Renamed from postCounter to reflect its actual use for suggestions
 
+    // Set to keep track of promoted post IDs already inserted to avoid duplicates across fetches
+    // IMPORTANT: This set MUST be cleared when the entire display is reset (e.g., changing category or initial load)
+    const promotedPostIdsInserted = new Set();
+
+
     // --- Intersection Observer for Videos ---
     let videoObserver;
 
@@ -89,17 +94,28 @@ document.addEventListener('DOMContentLoaded', async function () {
         console.warn("Intersection Observer not supported. Video lazy loading and auto-pause will not work.");
     }
 
+    // Function to show toast notification (copied for independence, or can be passed from main script)
+    function showToast(message, bgColor = '#333') {
+        const toast = document.querySelector('.toast-message') || document.createElement('div');
+        if (!toast.parentNode) {
+            toast.className = 'toast-message';
+            document.body.appendChild(toast);
+        }
+        toast.textContent = message;
+        toast.style.backgroundColor = bgColor;
+        toast.classList.add('show');
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 500);
+        }, 3000);
+    }
+
     // Initialize video controls
     function initializeVideoControls(postElement) {
         const container = postElement.querySelector('.post-video-container');
         if (!container) return;
 
         const video = container.querySelector('.post-video');
-        // Prevent re-initialization if controls are already set up
-        if (video.dataset.controlsInitialized === 'true') {
-            return;
-        }
-
         const thumbnailCanvas = container.querySelector('.video-thumbnail');
         const loadingSpinner = container.querySelector('.loading-spinner');
         const playPauseBtn = container.querySelector('.play-pause');
@@ -115,36 +131,45 @@ document.addEventListener('DOMContentLoaded', async function () {
         const currentTimeDisplay = container.querySelector('.current-time');
         const durationDisplay = container.querySelector('.duration');
 
+        // Check if controls are already initialized to prevent double-binding
+        if (video.dataset.controlsInitialized) {
+            return;
+        }
+        video.dataset.controlsInitialized = 'true';
+
+
         video.setAttribute('playsinline', '');
         video.setAttribute('webkit-playsinline', '');
         video.setAttribute('crossorigin', 'anonymous');
-        video.muted = true; // Default to muted on load
 
-        // Video metadata loaded: set initial time to generate thumbnail
         video.addEventListener('loadedmetadata', () => {
-            if (!video.dataset.thumbnailGenerated) {
-                video.currentTime = 2; // Set time to generate thumbnail for poster
-            }
             durationDisplay.textContent = formatVideoTime(video.duration);
-            loadingSpinner.style.display = 'none'; // Hide spinner once metadata is loaded
+            // Only set current time for thumbnail generation if not already generated
+            if (!video.dataset.thumbnailGenerated && video.duration > 2) {
+                video.currentTime = 2; // Set a brief time for thumbnail generation
+            } else if (!video.dataset.thumbnailGenerated) {
+                // For very short videos, use 0 or first frame
+                video.currentTime = 0;
+            }
         });
 
-        // Seeked event: generate thumbnail after seeking to 2 seconds
         video.addEventListener('seeked', () => {
-            if (video.currentTime === 2 && !video.dataset.thumbnailGenerated && thumbnailCanvas) {
+            // Ensure thumbnail is only generated once and after metadata is loaded
+            if (!video.dataset.thumbnailGenerated && video.readyState >= 1 /* HAVE_METADATA */) {
                 const ctx = thumbnailCanvas.getContext('2d');
                 thumbnailCanvas.width = video.videoWidth;
                 thumbnailCanvas.height = video.videoHeight;
                 ctx.drawImage(video, 0, 0, thumbnailCanvas.width, thumbnailCanvas.height);
-                video.poster = thumbnailCanvas.toDataURL('image/jpeg'); // Set poster for future loads
+                video.poster = thumbnailCanvas.toDataURL('image/jpeg');
                 video.dataset.thumbnailGenerated = 'true';
-                video.currentTime = 0; // Reset to 0 after generating thumbnail
-                loadingSpinner.style.display = 'none'; // Ensure spinner is hidden after thumbnail generation
+                // Reset to beginning only if it was temporarily changed for thumbnail
+                if (video.currentTime === 2 || video.duration <= 2) {
+                    video.currentTime = 0;
+                }
             }
         });
 
         function formatVideoTime(seconds) {
-            if (isNaN(seconds) || seconds < 0) return '0:00';
             const mins = Math.floor(seconds / 60);
             const secs = Math.floor(seconds % 60);
             return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
@@ -171,7 +196,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                     playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
                 }).catch(e => {
                     loadingSpinner.style.display = 'none';
-                    if (window.showToast) window.showToast('Error playing video. User interaction may be required.', '#dc3545');
+                    showToast('Error playing video.', '#dc3545');
                     console.error('Play error:', e);
                 });
             } else {
@@ -180,11 +205,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             }
         });
 
-        video.addEventListener('waiting', () => {
-            loadingSpinner.style.display = 'block';
-        });
-
-        video.addEventListener('playing', () => {
+        video.addEventListener('canplay', () => {
             loadingSpinner.style.display = 'none';
         });
 
@@ -236,7 +257,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         });
 
         let isDragging = false;
-        let lastSeekTime = 0; // To debounce seek preview drawing
+        let originalVideoTime = 0; // To store video's current time before seeking for preview
 
         const updateProgress = (e, isTouch = false) => {
             const rect = progressContainer.getBoundingClientRect();
@@ -245,18 +266,32 @@ document.addEventListener('DOMContentLoaded', async function () {
             let progress = posX / width;
             progress = Math.max(0, Math.min(1, progress));
             const seekTime = progress * video.duration;
-            video.currentTime = seekTime;
-            progressBar.style.width = `${progress * 100}%`;
-            progressBar.setAttribute('aria-valuenow', progress * 100);
 
-            // Hide seek preview during active drag to avoid performance issues
             if (isDragging) {
-                if (seekPreview) seekPreview.style.display = 'none';
+                video.currentTime = seekTime;
+                progressBar.style.width = `${progress * 100}%`;
+                progressBar.setAttribute('aria-valuenow', progress * 100);
             }
+
+            seekPreview.style.left = `${posX}px`;
+            seekPreviewCanvas.width = 120;
+            seekPreviewCanvas.height = 68;
+
+            // Draw preview frame
+            const tempVideo = video.cloneNode(true);
+            tempVideo.muted = true; // Don't make noise during preview
+            tempVideo.currentTime = seekTime;
+            tempVideo.addEventListener('seeked', () => {
+                const ctx = seekPreviewCanvas.getContext('2d');
+                ctx.drawImage(tempVideo, 0, 0, seekPreviewCanvas.width, seekPreviewCanvas.height);
+                tempVideo.remove(); // Clean up temporary video
+            }, { once: true });
         };
+
 
         progressContainer.addEventListener('mousedown', (e) => {
             isDragging = true;
+            originalVideoTime = video.currentTime; // Store original time
             updateProgress(e);
         });
 
@@ -265,49 +300,33 @@ document.addEventListener('DOMContentLoaded', async function () {
         });
 
         document.addEventListener('mouseup', () => {
+            if (isDragging) {
+                // If dragging ends, ensure the video is at the final scrubbed time
+                // This is already done in updateProgress when isDragging is true.
+            }
             isDragging = false;
-            if (seekPreview) seekPreview.style.display = 'none';
+            seekPreview.style.display = 'none';
         });
 
         progressContainer.addEventListener('mousemove', (e) => {
-            if (!isDragging && seekPreview && seekPreviewCanvas && video.duration > 0) {
-                const rect = progressContainer.getBoundingClientRect();
-                const posX = e.clientX - rect.left;
-                const width = rect.width;
-                let progress = posX / width;
-                progress = Math.max(0, Math.min(1, progress));
-                const seekTime = progress * video.duration;
-
-                // Debounce the seek preview drawing
-                if (Date.now() - lastSeekTime > 100) { // Only update preview every 100ms
-                    seekPreview.style.display = 'block';
-                    seekPreview.style.left = `${posX}px`;
-                    seekPreviewCanvas.width = 120;
-                    seekPreviewCanvas.height = 68;
-
-                    // Temporarily set currentTime to draw frame for preview
-                    const originalCurrentTime = video.currentTime;
-                    video.currentTime = seekTime; // This can be expensive; consider pre-generated thumbnails or a dedicated hidden video for previews.
-                    video.requestVideoFrameCallback(() => { // Use requestVideoFrameCallback for better sync
-                        const ctx = seekPreviewCanvas.getContext('2d');
-                        ctx.drawImage(video, 0, 0, seekPreviewCanvas.width, seekPreviewCanvas.height);
-                        video.currentTime = originalCurrentTime; // Restore original time immediately after drawing
-                    });
-                    lastSeekTime = Date.now();
-                }
+            if (!isDragging) {
+                seekPreview.style.display = 'block';
+                updateProgress(e); // This will update the preview
             }
         });
 
         progressContainer.addEventListener('mouseleave', () => {
-            if (!isDragging && seekPreview) seekPreview.style.display = 'none';
+            if (!isDragging) seekPreview.style.display = 'none';
         });
 
         progressContainer.addEventListener('click', (e) => {
-            updateProgress(e);
+            // If not dragging, and a click occurs, jump to position
+            if (!isDragging) updateProgress(e);
         });
 
         progressContainer.addEventListener('touchstart', (e) => {
             isDragging = true;
+            originalVideoTime = video.currentTime; // Store original time
             updateProgress(e, true);
         });
 
@@ -317,18 +336,18 @@ document.addEventListener('DOMContentLoaded', async function () {
 
         document.addEventListener('touchend', () => {
             isDragging = false;
-            if (seekPreview) seekPreview.style.display = 'none';
+            seekPreview.style.display = 'none';
         });
 
         postElement.addEventListener('keydown', (e) => {
-            // Check if the event target is within the video controls or the video itself
-            const activeElement = document.activeElement;
-            const isInsideVideoControls = container.contains(activeElement);
+            // Check if the event target is within the video container's direct children
+            // or the video itself. This prevents global hotkeys from interfering with other inputs.
+            const isTargetInVideoContainer = container.contains(e.target);
 
-            if (e.target === video || isInsideVideoControls) {
+            if (isTargetInVideoContainer) {
                 switch (e.key) {
                     case ' ':
-                        e.preventDefault(); // Prevent page scrolling
+                        e.preventDefault(); // Prevent page scroll
                         playPauseBtn.click();
                         break;
                     case 'm':
@@ -337,18 +356,20 @@ document.addEventListener('DOMContentLoaded', async function () {
                     case 'f':
                         fullscreenBtn.click();
                         break;
-                    case 'ArrowRight':
-                        video.currentTime += 5; // Seek forward 5 seconds
-                        break;
                     case 'ArrowLeft':
-                        video.currentTime -= 5; // Seek backward 5 seconds
+                        e.preventDefault();
+                        video.currentTime = Math.max(0, video.currentTime - 5); // Rewind 5 seconds
+                        break;
+                    case 'ArrowRight':
+                        e.preventDefault();
+                        video.currentTime = Math.min(video.duration, video.currentTime + 5); // Forward 5 seconds
                         break;
                 }
             }
         });
 
         video.addEventListener('error', () => {
-            if (window.showToast) window.showToast('Failed to load video.', '#dc3545');
+            showToast('Failed to load video.', '#dc3545');
             loadingSpinner.style.display = 'none';
         });
 
@@ -358,9 +379,6 @@ document.addEventListener('DOMContentLoaded', async function () {
             progressBar.style.width = '0%';
             progressBar.setAttribute('aria-valuenow', 0);
         });
-
-        // Mark controls as initialized AFTER all listeners are added
-        video.dataset.controlsInitialized = 'true';
     }
 
     // --- Helper Functions ---
@@ -519,7 +537,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         `;
         wrapperContainer.appendChild(headerElement);
 
-        const cardsPerRow = 8;
+        const cardsPerRow = 8; // Display 8 cards per row for suggestions
 
         for (let i = 0; i < users.length; i += cardsPerRow) {
             const rowContainer = document.createElement('div');
@@ -586,7 +604,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 `;
                 rowContainer.appendChild(userCard);
             });
-            wrapperContainer.appendChild(rowContainer); // This is correct, appends each row
+            wrapperContainer.appendChild(rowContainer);
         }
         return wrapperContainer;
     }
@@ -655,7 +673,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             `;
         } else { // Current user is the creator
             buttonContent = `
-                <a href=" class="promoted-cta-button" aria-label="Check out product " ${!post.productLink ? 'style="pointer-events: none; color: #28a745; font-size: 14px; font-weight: 400; "' : ''}>
+                <a href="javascript:void(0);" class="promoted-cta-button" aria-label="Check out product " style="pointer-events: none; color: #28a745; font-size: 14px; font-weight: 400; ">
                     <i class="fas fa-toggle-on"></i> Active
                 </a>
             `;
@@ -1036,16 +1054,21 @@ document.addEventListener('DOMContentLoaded', async function () {
             scrollbar-width: none;
         `;
 
-        posts.forEach(post => {
+        // Only add posts that haven't been inserted yet
+        const postsToRender = posts.filter(post => !promotedPostIdsInserted.has(post._id));
+
+        postsToRender.forEach(post => {
             const postElement = renderPromotedPost(post);
             postElement.style.flex = '0 0 auto';
             postElement.style.width = `calc((100% / 5) - 12px)`;
             postElement.style.minWidth = '200px';
             postElement.style.scrollSnapAlign = 'start';
             rowContainer.appendChild(postElement);
+            promotedPostIdsInserted.add(post._id); // Add to set of inserted IDs
         });
 
-        const fillerCount = Math.max(0, 5 - posts.length);
+        // Add filler elements if there are less than 5 promoted posts
+        const fillerCount = Math.max(0, 5 - postsToRender.length);
         for (let i = 0; i < fillerCount; i++) {
             const fillerElement = createPromotedPostFiller();
             rowContainer.appendChild(fillerElement);
@@ -1083,6 +1106,12 @@ document.addEventListener('DOMContentLoaded', async function () {
             }
             postsContainer.innerHTML = '';
             suggestionCounter = 0; // Reset suggestion counter when clearing posts
+            // *** THE CRUCIAL FIX IS HERE ***
+            // Clear the set of promoted post IDs that have been inserted.
+            // This ensures that when the feed is entirely reset (e.g., category change, initial load),
+            // promoted posts can be re-inserted.
+            promotedPostIdsInserted.clear();
+            // *** END OF FIX ***
         }
 
         try {
@@ -1108,10 +1137,11 @@ document.addEventListener('DOMContentLoaded', async function () {
             });
 
             // Filter out promoted video posts (they are regular posts, not 'promoted' visually this way)
-            const promotedPosts = sortedPosts.filter(post => post.isPromoted && post.postType !== 'video_ad');
+            const availablePromotedPosts = sortedPosts.filter(post => post.isPromoted && post.postType !== 'video_ad');
             const nonPromotedPosts = sortedPosts.filter(post => !post.isPromoted || post.postType === 'video_ad'); // Regular posts (can be video or image)
 
-            promotedPosts.sort((a, b) => {
+            // Ensure promoted posts are sorted for consistent insertion if needed
+            availablePromotedPosts.sort((a, b) => {
                 const dateA = new Date(a.createdAt || 0);
                 const dateB = new Date(b.createdAt || 0);
                 return dateB - dateA;
@@ -1119,27 +1149,35 @@ document.addEventListener('DOMContentLoaded', async function () {
 
             const postsBeforeSuggestion = 5;
             const usersPerSuggestionRow = 8;
+            const promotedPostsPerInsert = 5; // How many promoted posts to attempt to insert in a row
+            const normalPostsBeforePromotedRow = 2; // Insert promoted row after every X normal posts
 
             const fragment = document.createDocumentFragment();
 
             let allUserSuggestions = [];
-            if (currentLoggedInUser && clearExisting) {
+            if (currentLoggedInUser && clearExisting) { // Fetch suggestions only on a clear load
                 allUserSuggestions = await fetchUserSuggestions();
             }
 
-            if (promotedPosts.length > 0) {
-                const promotedRow = createPromotedPostsRow(promotedPosts);
-                fragment.prepend(promotedRow);
+            // Insert promoted posts row at the very beginning if available and not already inserted
+            // Only take the first `promotedPostsPerInsert` that haven't been inserted
+            const initialPromotedPosts = availablePromotedPosts.filter(post => !promotedPostIdsInserted.has(post._id)).slice(0, promotedPostsPerInsert);
+
+            if (initialPromotedPosts.length > 0) {
+                const promotedRow = createPromotedPostsRow(initialPromotedPosts);
+                fragment.appendChild(promotedRow);
             }
 
-            let suggestionRowIndex = 0;
+            let normalPostCount = 0; // Track normal posts to insert promoted row or suggestions
+            let promotedPostsInsertedIndex = initialPromotedPosts.length; // Index to keep track of where we are in availablePromotedPosts
+
             const videoContainersToObserve = []; // Collect video containers for observation
 
             for (let i = 0; i < nonPromotedPosts.length; i++) {
                 const post = nonPromotedPosts[i];
                 const postElement = renderPost(post);
                 fragment.appendChild(postElement);
-                suggestionCounter++;
+                normalPostCount++;
 
                 // If it's a video post, add its container to the list for observation
                 if (post.postType === 'video_ad') {
@@ -1151,12 +1189,13 @@ document.addEventListener('DOMContentLoaded', async function () {
                     }
                 }
 
-                if (suggestionCounter % postsBeforeSuggestion === 0 &&
+                // Insert user suggestion row
+                if (normalPostCount % postsBeforeSuggestion === 0 &&
                     currentLoggedInUser &&
                     allUserSuggestions.length > 0 &&
-                    suggestionRowIndex * usersPerSuggestionRow < allUserSuggestions.length) {
+                    suggestionCounter * usersPerSuggestionRow < allUserSuggestions.length) {
 
-                    const startIndex = suggestionRowIndex * usersPerSuggestionRow;
+                    const startIndex = suggestionCounter * usersPerSuggestionRow;
                     const endIndex = Math.min(startIndex + usersPerSuggestionRow, allUserSuggestions.length);
                     const usersForThisRow = allUserSuggestions.slice(startIndex, endIndex);
 
@@ -1164,18 +1203,31 @@ document.addEventListener('DOMContentLoaded', async function () {
                         const userSuggestionsContainer = createUserSuggestionsContainer(usersForThisRow);
                         if (userSuggestionsContainer) {
                             fragment.appendChild(userSuggestionsContainer);
-                            suggestionRowIndex++;
+                            suggestionCounter++;
                         }
+                    }
+                }
+
+                // Insert promoted posts row after 'normalPostsBeforePromotedRow' normal posts,
+                // ensuring no duplicates and that we don't insert more than available.
+                if (normalPostCount % normalPostsBeforePromotedRow === 0) {
+                    const nextPromotedPosts = availablePromotedPosts
+                        .slice(promotedPostsInsertedIndex) // Start from where we left off
+                        .filter(post => !promotedPostIdsInserted.has(post._id)) // Filter out duplicates
+                        .slice(0, promotedPostsPerInsert); // Take up to 5 posts
+
+                    if (nextPromotedPosts.length > 0) {
+                        const promotedRow = createPromotedPostsRow(nextPromotedPosts);
+                        fragment.appendChild(promotedRow);
+                        promotedPostsInsertedIndex += nextPromotedPosts.length; // Advance the index
                     }
                 }
             }
 
-            if (clearExisting) {
-                postsContainer.innerHTML = '';
-                postsContainer.appendChild(fragment);
-            } else {
-                postsContainer.appendChild(fragment);
-            }
+
+            // Append all collected elements to the DOM at once
+            postsContainer.appendChild(fragment);
+
 
             if (postsContainer.children.length === 0) {
                 postsContainer.innerHTML = '<p style="text-align: center; margin: 2rem;">No posts available.</p>';
@@ -1376,6 +1428,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
         isAuthReady = true;
         console.log('App initialization complete. User:', currentLoggedInUser ? currentLoggedInUser : 'Not logged in');
+        // Initial fetch, force clearing existing content
         await fetchPostsByCategory(currentCategory, currentPage, true);
     }
 
