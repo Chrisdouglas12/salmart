@@ -3,8 +3,7 @@ const mongoose = require('mongoose');
 const platformWalletSchema = new mongoose.Schema({
   type: {
     type: String,
-    enum: ['commission'],
-    default: 'commission',
+    enum: ['commission', 'promotion'],
     required: true,
     unique: true
   },
@@ -12,10 +11,21 @@ const platformWalletSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
+  transactions: [
+    {
+      amount: Number,
+      reference: String,
+      type: { type: String, enum: ['credit', 'debit'], default: 'credit' },
+      purpose: String,
+      userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+      timestamp: { type: Date, default: Date.now }
+    }
+  ],
   lastUpdated: {
     type: Date,
     default: Date.now
   }
 });
 
-module.exports = mongoose.model('PlatformWallet', platformWalletSchema);
+// ✅ Prevent OverwriteModelError
+module.exports = mongoose.models.PlatformWallet || mongoose.model('PlatformWallet', platformWalletSchema);

@@ -14,15 +14,17 @@
   <div class="container">
     <div class="form-bg">
       <div class="h2-bg">
-        <h4 style="font-size: 17px" id="form-title">Create an ad</h4><br />
+        <h4 style="font-size: 17px">Create an ad</h4><br />
         <img src="default.png" id="profile-picture2" alt="Profile Picture" />
       </div>
 
+      <!-- Tab Controls -->
       <div class="tab-header">
         <button class="tab-button active" id="normal-tab" type="button">Normal Ad</button>
         <button class="tab-button" id="video-tab" type="button">Video Ad</button>
       </div>
 
+      <!-- Normal Ad Form -->
       <form id="normal-ad-form" class="ad-form" enctype="multipart/form-data" novalidate>
         <div class="input-form">
           <label for="title">Enter product title</label>
@@ -70,11 +72,11 @@
           <input class="media-input" type="file" id="photo-input" name="photo" accept="image/jpeg,image/png" />
           <div class="error" id="normal-photo-error"></div>
           <div id="photo-preview-container" class="preview-container"></div>
-          <input type="hidden" id="existing-photo-url" name="existingPhotoUrl" />
         </div>
         <input type="hidden" name="postType" value="regular" />
       </form>
 
+      <!-- Video Ad Form -->
       <form id="video-ad-form" class="ad-form" enctype="multipart/form-data" style="display: none;" novalidate>
         <div class="input-form">
           <label for="video-description">Video Description</label>
@@ -122,6 +124,7 @@
     </div>
   </div>
 
+  <!-- Loading Modal -->
   <div id="loading-modal" class="loading-modal">
     <div class="loading-content">
       <div class="spinner"></div>
@@ -129,6 +132,7 @@
     </div>
   </div>
 
+  <!-- Video Processing Modal -->
   <div id="video-processing-modal" class="loading-modal" style="display: none;">
     <div class="loading-content">
       <div class="spinner"></div>
@@ -158,95 +162,10 @@
     const videoProcessingModal = document.getElementById('video-processing-modal');
     const videoInput = document.getElementById('video-input');
     const videoProcessingStatus = document.getElementById('video-processing-status');
-    const formTitle = document.getElementById('form-title'); // Added for edit mode
-    const photoInput = document.getElementById('photo-input'); // Already exists, just making sure we reference it
-    const photoPreviewContainer = document.getElementById('photo-preview-container'); // Already exists
-    const existingPhotoUrlInput = document.getElementById('existing-photo-url'); // Added hidden input
 
     // Track state
     let activeTab = 'normal';
     let processedVideoFile = null;
-    let isEditMode = false; // New state variable
-    let currentProductId = null; // New state variable
-
-    // --- Edit Mode Logic (New) ---
-    function getUrlParams() {
-      const params = new URLSearchParams(window.location.search);
-      return {
-        mode: params.get('mode'),
-        postId: params.get('id')
-      };
-    }
-
-    async function initializeEditMode() {
-      const { mode, postId } = getUrlParams();
-      if (mode === 'edit' && postId) {
-        isEditMode = true;
-        currentPostId = postId;
-        formTitle.textContent = 'Edit Ad';
-        publishButton.textContent = 'Update Ad';
-        normalTab.disabled = true; // Disable tab switching in edit mode for now
-        videoTab.disabled = true; // Video ads cannot be edited via this route currently
-
-        showLoadingModal();
-        try {
-          const token = localStorage.getItem('authToken');
-          if (!token) {
-            showToast('Please log in to edit an ad.', '#dc3545');
-            hideLoadingModal();
-            return;
-          }
-
-          const response = await fetch(`${API_BASE_URL}/post/${postId}`, {
-            headers: {
-              Authorization: `Bearer ${token}`
-            }
-          });
-          const postData = await response.json();
-
-          if (response.ok) {
-            populateFormForEdit(postData); // Changed productData to postData
-            switchTab('normal'); // Ensure normal tab is active for editing product details
-          } else {
-            showToast(postData.message || 'Failed to load product for editing.', '#dc3545');
-            console.error('Error fetching product for edit:', postData); // Changed productData to postData
-          }
-        } catch (error) {
-          console.error('Network error fetching product for edit:', error);
-          showToast('Network error loading product. Please try again.', '#dc3545');
-        } finally {
-          hideLoadingModal();
-        }
-      }
-    }
-
-    function populateFormForEdit(post) {
-      // Assuming product object structure matches your form fields
-      document.getElementById('title').value = post.title || '';
-      document.getElementById('description').value = post.description || '';
-      document.getElementById('productCondition').value = post.condition || '';
-      
-      const price = post.price || 0;
-      document.getElementById('price-display').value = formatPriceInput(price.toString());
-      document.getElementById('price').value = price.toFixed(2);
-
-      document.getElementById('location').value = post.location || '';
-      document.getElementById('category').value = post.category || '';
-
-      // Handle existing photo
-      if (post.imageUrl) {
-        const img = document.createElement('img');
-        img.src = post.imageUrl;
-        img.alt = 'Existing Product Image';
-        img.style.maxWidth = '100%';
-        img.style.maxHeight = '200px';
-        img.style.marginTop = '10px';
-        photoPreviewContainer.innerHTML = ''; // Clear any existing previews
-        photoPreviewContainer.appendChild(img);
-        existingPhotoUrlInput.value = post.imageUrl; // Store existing URL
-      }
-    }
-    // --- End Edit Mode Logic ---
 
     // Video processing functions
     function showVideoProcessingModal(text = 'Processing your video...') {
@@ -295,6 +214,78 @@
       });
     }
 
+    // Fixed video compression without auto-play
+    async function compressVideo(file, targetSize = MAX_FILE_SIZE) {
+      return new Promise((resolve, reject) => {
+        const video = document.createElement('video');
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        video.muted = true; // Ensure video is muted
+        video.preload = 'metadata';
+        
+        video.onloadedmetadata = () => {
+          const duration = Math.min(video.duration, MAX_VIDEO_DURATION);
+          canvas.width = Math.min(video.videoWidth, 720);
+          canvas.height = Math.min(video.videoHeight, 480);
+          
+          const stream = canvas.captureStream(30);
+          const mediaRecorder = new MediaRecorder(stream, {
+            mimeType: 'video/webm',
+            videoBitsPerSecond: 1000000
+          });
+          
+          const chunks = [];
+          mediaRecorder.ondataavailable = (e) => chunks.push(e.data);
+          mediaRecorder.onstop = () => {
+            const blob = new Blob(chunks, { type: 'video/webm' });
+            const compressedFile = new File([blob], file.name.replace('.mp4', '_compressed.webm'), {
+              type: 'video/webm'
+            });
+            resolve(compressedFile);
+          };
+          
+          // Start recording first
+          mediaRecorder.start();
+          
+          // Set up frame drawing
+          let frameCount = 0;
+          const totalFrames = Math.floor(duration * 30); // 30 FPS
+          
+          const drawFrame = () => {
+            if (frameCount >= totalFrames) {
+              mediaRecorder.stop();
+              return;
+            }
+            
+            // Seek to specific time without playing
+            const currentTime = (frameCount / 30);
+            video.currentTime = currentTime;
+            
+            frameCount++;
+          };
+          
+          video.onseeked = () => {
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            setTimeout(drawFrame, 1000 / 30); // 30 FPS
+          };
+          
+          // Start the process
+          drawFrame();
+          
+          // Fallback timeout
+          setTimeout(() => {
+            if (mediaRecorder.state === 'recording') {
+              mediaRecorder.stop();
+            }
+          }, (duration + 2) * 1000);
+        };
+        
+        video.onerror = reject;
+        video.src = URL.createObjectURL(file);
+      });
+    }
+
     // Alternative simpler compression method
     async function simpleVideoProcess(file) {
       return new Promise((resolve, reject) => {
@@ -311,6 +302,10 @@
               resolve(file);
               return;
             }
+            
+            // For now, if video needs processing but we can't auto-play,
+            // we'll trim it using a different approach or accept it as-is
+            // and let the server handle the processing
             
             console.warn('Video needs processing but cannot auto-play. Accepting original file.');
             resolve(file);
@@ -398,10 +393,10 @@
     function resetButtons() {
       if (publishButton) {
         publishButton.disabled = false;
-        publishButton.textContent = isEditMode ? 'Update Ad' : 'Publish ad'; // Dynamic button text
+        publishButton.textContent = 'Publish ad';
       }
-      if (normalTab) normalTab.disabled = isEditMode; // Disable if in edit mode
-      if (videoTab) videoTab.disabled = isEditMode; // Disable if in edit mode
+      if (normalTab) normalTab.disabled = false;
+      if (videoTab) videoTab.disabled = false;
       hideLoadingModal();
     }
 
@@ -443,11 +438,13 @@
       });
     }
 
-    // Photo preview and validation (updated for edit mode)
+    // Photo preview and validation
+    const photoInput = document.getElementById('photo-input');
     if (photoInput) {
       photoInput.addEventListener('change', function (e) {
         const photoError = document.getElementById('normal-photo-error');
-        photoPreviewContainer.innerHTML = ''; // Clear previous preview
+        const previewContainer = document.getElementById('photo-preview-container');
+        previewContainer.innerHTML = '';
         photoError.style.display = 'none';
         const file = e.target.files[0];
         if (file) {
@@ -466,18 +463,7 @@
           const img = document.createElement('img');
           img.src = URL.createObjectURL(file);
           img.alt = 'Image Preview';
-          photoPreviewContainer.appendChild(img);
-          existingPhotoUrlInput.value = ''; // Clear existing photo URL if new photo is uploaded
-        } else if (isEditMode && existingPhotoUrlInput.value) {
-          // If in edit mode and no new file selected, but there was an existing one,
-          // re-display the existing one. This covers cases where user clicks cancel file selection.
-          const img = document.createElement('img');
-          img.src = existingPhotoUrlInput.value;
-          img.alt = 'Existing Product Image';
-          img.style.maxWidth = '100%';
-          img.style.maxHeight = '200px';
-          img.style.marginTop = '10px';
-          photoPreviewContainer.appendChild(img);
+          previewContainer.appendChild(img);
         }
       });
     }
@@ -525,7 +511,7 @@
     }
 
     function isValidSalmartLink(link) {
-      const VALID_BASE_DOMAIN = 'salmartonline.com.ng';
+      const VALID_BASE_DOMAIN = 'salmart.vercel.app';
 
       try {
         const url = new URL(link);
@@ -534,7 +520,7 @@
         const isSecure = url.protocol === 'https:' || (isLocalhost && url.protocol === 'http:');
 
         if (!(isLocalhost || isSalmartDomain)) {
-          return { valid: false, error: 'Link must be from Salmart (e.g., https://salmartonline.com.ng/product.html?id=123)' };
+          return { valid: false, error: 'Link must be from Salmart (e.g., https://salmart.vercel.app/product.html?id=123)' };
         }
 
         if (!isSecure) {
@@ -556,7 +542,7 @@
 
     // Switch tabs
     function switchTab(type) {
-      if (publishButton.disabled || isEditMode) return; // Prevent tab switching in edit mode
+      if (publishButton.disabled) return;
       activeTab = type;
       if (type === 'normal') {
         normalForm.style.display = 'block';
@@ -576,7 +562,7 @@
       processedVideoFile = null;
     }
 
-    // Submit ad (updated for edit mode)
+    // Submit ad
     async function submitAd() {
       const isNormalTab = activeTab === 'normal';
       const form = isNormalTab ? normalForm : videoForm;
@@ -585,18 +571,17 @@
 
       const token = localStorage.getItem('authToken');
       if (!token) {
-        showToast('Please log in to create/update an ad', '#dc3545');
+        showToast('Please log in to create an ad', '#dc3545');
         resetButtons();
         return;
       }
 
       showLoadingModal();
       publishButton.disabled = true;
-      publishButton.textContent = isEditMode ? 'Updating...' : 'Processing...';
+      publishButton.textContent = 'Processing...';
       normalTab.disabled = true;
       videoTab.disabled = true;
 
-      // --- Validation (existing logic) ---
       if (isNormalTab) {
         const title = form.querySelector('#title').value.trim();
         const description = form.querySelector('#description').value.trim();
@@ -605,9 +590,6 @@
         const location = form.querySelector('#location').value.trim();
         const category = form.querySelector('#category').value;
         const photo = form.querySelector('#photo-input').files[0];
-        
-        // In edit mode, photo is optional if an existing one is present
-        const hasExistingPhoto = existingPhotoUrlInput.value && !photo;
 
         if (!title) {
           showFieldError('normal-title-error', 'Title is required');
@@ -641,15 +623,11 @@
           showFieldError('normal-category-error', 'Category is required');
           return resetAfterError();
         }
-        // Only require photo if it's not edit mode OR if it's edit mode and no existing photo is present
-        if (!photo && !hasExistingPhoto && !isEditMode) { // For create mode, photo is always required
-            showFieldError('normal-photo-error', 'Image is required');
-            return resetAfterError();
-        } else if (isEditMode && !photo && !hasExistingPhoto) { // For edit mode, if no new photo and no existing photo
-             showFieldError('normal-photo-error', 'An image is required for the product.');
-             return resetAfterError();
+        if (!photo) {
+          showFieldError('normal-photo-error', 'Image is required');
+          return resetAfterError();
         }
-      } else { // Video tab validation
+      } else {
         const description = form.querySelector('#video-description').value.trim();
         const category = form.querySelector('#video-category').value;
         const video = form.querySelector('#video-input').files[0];
@@ -699,24 +677,9 @@
         if (!isNormalTab && processedVideoFile) {
           formData.set('video', processedVideoFile);
         }
-
-        let url = `${API_BASE_URL}/post/${postId}`;
-        let method = 'POST';
-
-        if (isEditMode) {
-          url = `${API_BASE_URL}/post/edit/${currentPostId}`; // Assuming /product/:id for update
-          method = 'PUT'; // Or PATCH, depending on your API
-          // If no new photo is uploaded, but there was an existing one,
-          // ensure the server knows to keep the existing one.
-          // This can be done by sending a specific flag or the imageUrl itself.
-          // For now, if photo input is empty, the existingPhotoUrl hidden input will handle it.
-          if (!photoInput.files[0] && existingPhotoUrlInput.value) {
-            formData.append('keepExistingPhoto', 'true'); // Or pass the URL itself
-          }
-        }
         
-        const response = await fetch(url, {
-          method: method,
+        const response = await fetch(`${API_BASE_URL}/post`, {
+          method: 'POST',
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -725,23 +688,19 @@
         const result = await response.json();
 
         if (response.ok) {
-          showToast(isEditMode ? 'Ad updated successfully!' : 'Ad created successfully!', '#28a745');
+          showToast('Ad created successfully!', '#28a745');
           form.reset();
           document.getElementById('photo-preview-container').innerHTML = '';
           document.getElementById('video-preview-container').innerHTML = '';
           hideProcessingStatus();
           processedVideoFile = null;
-          existingPhotoUrlInput.value = ''; // Clear after successful submission
-          if (!isEditMode) { // Only switch tab if not in edit mode
-            switchTab('normal');
-          }
+          switchTab('normal');
           resetButtons();
           setTimeout(() => {
-            // Redirect to index or product page after successful operation
-            window.location.href = isEditMode ? `index.html?id=${currentProductId}` : 'index.html';
+            window.location.href = 'index.html';
           }, 1000);
         } else {
-          showToast(result.message || (isEditMode ? 'Failed to update ad' : 'Failed to create ad'), '#dc3545');
+          showToast(result.message || 'Failed to create ad', '#dc3545');
           resetButtons();
         }
       } catch (error) {
@@ -779,9 +738,6 @@
     } else {
       console.log('[PROFILE FETCH] Fetching profile for userId:', userId);
     }
-
-    // --- Initialize edit mode on page load ---
-    document.addEventListener('DOMContentLoaded', initializeEditMode);
   </script>
   <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
   <script>eruda.init();</script>

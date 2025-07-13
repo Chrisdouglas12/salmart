@@ -4,6 +4,7 @@ const axios = require('axios');
 const { body, validationResult } = require('express-validator');
 const User = require('../models/userSchema.js');
 const Notification = require('../models/notificationSchema')
+const PlatformWallet = require('../models/PlatformWallet.js')
 const NotificationService = require('../services/notificationService.js');
 const { sendFCMNotification } = require('../services/notificationUtils.js');
 const Post = require('../models/postSchema.js');
@@ -276,6 +277,25 @@ router.post('/initiate', verifyToken, async (req, res) => {
       payment.paidAt = new Date(paid_at);
       payment.paystackData = transactionData;
       await payment.save();
+      
+      await PlatformWallet.findOneAndUpdate(
+  { type: 'promotion' },
+  {
+    $inc: { balance: amount },
+    $push: {
+      transactions: {
+        amount,
+        reference,
+        purpose: 'ad_promotion',
+        userId,
+        type: 'credit',
+        timestamp: new Date()
+      }
+    },
+    $set: { lastUpdated: new Date() }
+  },
+  { upsert: true }
+);
 
       // Update post promotion status
       const post = await Post.findById(payment.postId);
@@ -521,6 +541,25 @@ router.get('/promotion-success', async (req, res) => {
       productTitle: `Promotion for Post: ${post.title || post.description || 'Untitled Post'}`,
       durationDays: payment.durationDays
     };
+    
+    await PlatformWallet.findOneAndUpdate(
+  { type: 'promotion' },
+  {
+    $inc: { balance: amountPaid },
+    $push: {
+      transactions: {
+        amountPaid,
+        reference,
+        purpose: 'ad_promotion',
+        userId,
+        type: 'credit',
+        timestamp: new Date()
+      }
+    },
+    $set: { lastUpdated: new Date() }
+  },
+  { upsert: true }
+);
 
     // Create notification
     const notification = new Notification({

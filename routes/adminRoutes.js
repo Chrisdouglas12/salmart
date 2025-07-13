@@ -652,31 +652,43 @@ router.post('/admin/approve-payment', verifyToken, async (req, res) => {
 
 router.get('/admin/platform-wallet', verifyToken, async (req, res) => {
   try {
-    const wallet = await PlatformWallet.findOne({ type: 'commission' });
+    const { type } = req.query; // Get the type from query parameter
+
+    if (!type || (type !== 'commission' && type !== 'promotion')) {
+      return res.status(400).json({ error: 'Invalid wallet type specified.' });
+    }
+
+    const wallet = await PlatformWallet.findOne({ type }); // Find only the requested type
+
     res.json({
       balance: wallet?.balance || 0,
       lastUpdated: wallet?.lastUpdated || null
     });
   } catch (err) {
-    res.status(500).json({ error: 'Failed to retrieve wallet info' });
+    console.error('[WALLET FETCH ERROR]', err.message);
+    res.status(500).json({ error: 'Failed to retrieve platform wallet info' });
   }
 });
 
-router.post('/admin/withdraw-commission', verifyToken, async (req, res) => {
-  const amountToWithdraw = req.body.amount; // in Naira
 
-  if (!amountToWithdraw || amountToWithdraw <= 0) {
+router.post('/admin/platform-wallet/withdraw', verifyToken, async (req, res) => {
+  const { amount, type } = req.body; // type = 'commission' or 'promotion'
+
+  if (!amount || amount <= 0) {
     return res.status(400).json({ error: 'Invalid withdrawal amount' });
   }
 
-  const amountKobo = Math.round(amountToWithdraw * 100);
-  const platformWallet = await PlatformWallet.findOne({ type: 'commission' });
-
-  if (!platformWallet || platformWallet.balance < amountToWithdraw) {
-    return res.status(400).json({ error: 'Insufficient commission balance' });
+  if (!['commission', 'promotion'].includes(type)) {
+    return res.status(400).json({ error: 'Invalid wallet type specified' });
   }
 
-  // Transfer to your own bank
+  const amountKobo = Math.round(amount * 100);
+  const platformWallet = await PlatformWallet.findOne({ type });
+
+  if (!platformWallet || platformWallet.balance < amount) {
+    return res.status(400).json({ error: `Insufficient ${type} balance` });
+  }
+
   const platformRecipientCode = process.env.PLATFORM_RECIPIENT_CODE;
 
   try {
@@ -684,24 +696,31 @@ router.post('/admin/withdraw-commission', verifyToken, async (req, res) => {
       source: 'balance',
       amount: amountKobo,
       recipient: platformRecipientCode,
-      reason: 'Withdrawal of platform commission'
+      reason: `Withdrawal of platform ${type}`
     }, {
       headers: {
         Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`
       }
     });
 
-    // Reduce commission balance in Mongo
-    platformWallet.balance -= amountToWithdraw;
+    // Deduct from wallet and save transaction
+    platformWallet.balance -= amount;
     platformWallet.lastUpdated = new Date();
+    platformWallet.transactions.push({
+      amount,
+      reference: transfer.data.data.reference,
+      type: 'debit',
+      purpose: `withdraw_${type}`
+    });
+
     await platformWallet.save();
 
     res.status(200).json({
-      message: 'Commission withdrawn successfully',
+      message: `${type.charAt(0).toUpperCase() + type.slice(1)} withdrawal successful`,
       transferReference: transfer.data.data.reference
     });
   } catch (err) {
-    console.error('[WITHDRAW COMMISSION ERROR]', err.response?.data || err.message);
+    console.error(`[WITHDRAW ${type.toUpperCase()} ERROR]`, err.response?.data || err.message);
     res.status(500).json({
       error: 'Paystack transfer failed',
       details: err.response?.data?.message || err.message

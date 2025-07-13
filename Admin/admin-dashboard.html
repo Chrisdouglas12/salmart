@@ -722,38 +722,71 @@
       <ul id="banned-users-list"></ul>
     </div>
 
-    <div class="panel" id="platform-wallet">
-      <div class="panel-header">
-        <div class="panel-title">Platform Wallet & Commission</div>
-        <div class="panel-description">Monitor the platform's commission balance and initiate withdrawals.</div>
-      </div>
-      <div class="wallet-info">
-        <p>Current Commission Balance:</p>
-        <p class="wallet-balance" id="commission-balance">₦0.00</p>
-        <p><small>Last Updated: <span id="last-updated">N/A</span></small></p>
-      </div>
-      <div class="transfer-section">
-        <h3>Withdraw Commission</h3>
-        <p>Transfer funds from the platform commission wallet to the designated bank account.</p>
-        <input type="number" id="withdrawal-amount" placeholder="Enter amount to withdraw (Naira)" min="0" step="0.01" />
-        <button class="primary" id="withdraw-button" onclick="withdrawCommission(this)"><span>Initiate Withdrawal</span></button>
-      </div>
+<div class="panel" id="platform-wallet">
+  <div class="panel-header">
+    <div class="panel-title">Platform Wallet</div>
+    <div class="panel-description">Monitor wallet balances and withdraw platform funds.</div>
+  </div>
+
+  <!-- Tabs for wallet types -->
+  <div class="wallet-tabs">
+    <button class="tab-btn active" onclick="switchWalletTab('commission')">Commission</button>
+    <button class="tab-btn" onclick="switchWalletTab('promotion')">Promotion</button>
+  </div>
+
+  <!-- Commission Wallet Panel -->
+  <div class="wallet-panel" id="commission-wallet" style="display: block;">
+    <div class="wallet-info">
+      <p>Current Commission Balance:</p>
+      <p class="wallet-balance" id="commission-balance">₦0.00</p>
+      <p><small>Last Updated: <span id="commission-last-updated">N/A</span></small></p>
+    </div>
+    <div class="transfer-section">
+      <h3>Withdraw Commission</h3>
+      <p>Transfer funds from the platform commission wallet to your bank account.</p>
+      <input type="number" id="commission-withdrawal-amount" placeholder="Enter amount (₦)" min="0" step="0.01" />
+      <button class="primary" onclick="withdrawWallet(this, 'commission')"><span>Initiate Withdrawal</span></button>
     </div>
   </div>
 
-  <div class="modal" id="detail-modal">
-    <div class="modal-content">
-      <span class="close-btn" onclick="closeModal()">×</span>
-      <div id="modal-body"></div>
+  <!-- Promotion Wallet Panel -->
+  <div class="wallet-panel" id="promotion-wallet" style="display: none;">
+    <div class="wallet-info">
+      <p>Current Promotion Balance:</p>
+      <p class="wallet-balance" id="promotion-balance">₦0.00</p>
+      <p><small>Last Updated: <span id="promotion-last-updated">N/A</span></small></p>
+    </div>
+    <div class="transfer-section">
+      <h3>Withdraw Promotion Funds</h3>
+      <p>Transfer funds collected from promoted ads to your bank account.</p>
+      <input type="number" id="promotion-withdrawal-amount" placeholder="Enter amount (₦)" min="0" step="0.01" />
+      <button class="primary" onclick="withdrawWallet(this, 'promotion')"><span>Initiate Withdrawal</span></button>
     </div>
   </div>
+</div>
+
+<!-- Modal -->
+<div class="modal" id="detail-modal">
+  <div class="modal-content">
+    <span class="close-btn" onclick="closeModal()">×</span>
+    <div id="modal-body"></div>
+  </div>
+</div>
 
   <script>
     // API Base URL configuration
     const API_BASE_URL = window.location.hostname === 'localhost'
       ? 'http://localhost:3000'
       : 'https://salmart.onrender.com';
+      
+      
+      const authToken = localStorage.getItem('authToken');
+const urlParams = new URLSearchParams(window.location.search);
 
+if (urlParams.toString() && !authToken) {
+  alert('Restricted route');
+  window.location.href = 'adminRegister.html';
+}
     // Helper for showing alerts
     function showAlert(message, type = 'success') {
         const alertBox = document.createElement('div');
@@ -804,16 +837,20 @@
 
     // Tab switching logic
     const tabs = document.querySelectorAll('.tab');
-    const panels = document.querySelectorAll('.panel');
+    const panels = document.querySelectorAll('.panel, .wallet-panel'); // Keep .wallet-panel here, it's used in the initial panel setup if a wallet panel is default
 
     tabs.forEach(tab => {
       tab.addEventListener('click', () => {
         tabs.forEach(t => t.classList.remove('active'));
-        panels.forEach(p => p.classList.remove('active'));
+        // Deactivate all main panels
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
         tab.classList.add('active');
-        document.getElementById(tab.dataset.panel).classList.add('active');
+
+        const targetPanelId = tab.dataset.panel;
+        document.getElementById(targetPanelId).classList.add('active');
+
         // Re-fetch data for the newly active panel
-        switch(tab.dataset.panel) {
+        switch(targetPanelId) {
             case 'users':
                 fetchRender('/api/reported-users', 'reported-users', userItem);
                 break;
@@ -836,11 +873,74 @@
                 fetchRender('/api/admin/users/banned', 'banned-users-list', bannedUsersItem);
                 break;
             case 'platform-wallet':
-                fetchPlatformWallet();
+                // *** THIS IS THE CRUCIAL ADDITION ***
+                // When the 'Platform Wallet' main tab is clicked, ensure its sub-tabs are correctly initialized
+                switchWalletTab('commission'); // Default to 'commission' when 'Platform Wallet' is activated
                 break;
         }
       });
     });
+
+    // Wallet sub-tab switching logic (this function was already mostly correct)
+    function switchWalletTab(type) {
+        const walletTabs = document.querySelectorAll('.wallet-tabs .tab-btn');
+        const walletPanels = document.querySelectorAll('.wallet-panel');
+
+        // Remove 'active' from all wallet sub-tab buttons
+        walletTabs.forEach(tabBtn => {
+            tabBtn.classList.remove('active');
+        });
+
+        // Hide all wallet sub-panels
+        walletPanels.forEach(panel => {
+            panel.style.display = 'none';
+        });
+
+        // Show the selected wallet sub-panel and activate its button
+        document.getElementById(`${type}-wallet`).style.display = 'block';
+        document.querySelector(`.wallet-tabs .tab-btn[onclick="switchWalletTab('${type}')"]`).classList.add('active');
+
+        // Fetch the balance for the activated wallet type
+        fetchPlatformWallet(type);
+    }
+
+
+    // Initial data fetch for the first active panel on page load
+    // This ensures that when the page loads, the correct data for the default tab is displayed.
+    document.addEventListener('DOMContentLoaded', () => {
+        const initialActiveTab = document.querySelector('.tab.active');
+        if (initialActiveTab) {
+            const initialPanelId = initialActiveTab.dataset.panel;
+            switch(initialPanelId) {
+                case 'users':
+                    fetchRender('/api/reported-users', 'reported-users', userItem);
+                    break;
+                case 'posts':
+                    // Add fetch for posts if 'posts' is your initial default
+                    // fetchRender('/admin/reports/pending', 'reported-posts', postItem);
+                    break;
+                // ... include other cases for panels that might be active on initial load
+                case 'platform-wallet':
+                    // If 'platform-wallet' is the default active tab on load,
+                    // ensure its internal tabs are also initialized.
+                    switchWalletTab('commission');
+                    break;
+                default:
+                    // Fallback if no specific default behavior
+                    // You might want to ensure 'users' is always the initial default if nothing else is specified.
+                    if (initialPanelId === 'users') { // Redundant if 'users' is always default, but good for clarity
+                       fetchRender('/api/reported-users', 'reported-users', userItem);
+                    }
+                    break;
+            }
+        } else {
+            // If no active tab is set by default in HTML, you might want to explicitly set one
+            // For example, activate the 'users' tab and fetch its data
+            // document.querySelector('.tab[data-panel="users"]').click(); // This would trigger the click event
+        }
+    });
+
+
 
     // Modal controls
     function openModal(content) {
@@ -1276,81 +1376,82 @@
       `;
     }
 
-    // New functions for Platform Wallet
-    async function fetchPlatformWallet() {
-        const balanceEl = document.getElementById('commission-balance');
-        const lastUpdatedEl = document.getElementById('last-updated');
-        balanceEl.innerHTML = '<div class="loading"></div>';
-        lastUpdatedEl.textContent = 'Loading...';
-        const token = localStorage.getItem('adminToken');
+async function fetchPlatformWallet(type) {
+  const balanceEl = document.getElementById(`${type}-balance`);
+  const lastUpdatedEl = document.getElementById(`${type}-last-updated`);
+  balanceEl.innerHTML = '<div class="loading"></div>';
+  lastUpdatedEl.textContent = 'Loading...';
+  const token = localStorage.getItem('adminToken');
 
-        try {
-            const response = await fetch(`${API_BASE_URL}/admin/platform-wallet`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(`HTTP error! Status: ${response.status} - ${errorText}`);
-            }
-            const data = await response.json();
-            
-            balanceEl.textContent = `₦${(data.balance || 0).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-            lastUpdatedEl.textContent = data.lastUpdated ? new Date(data.lastUpdated).toLocaleString() : 'N/A';
-        } catch (error) {
-            console.error('Error fetching platform wallet:', error.message);
-            balanceEl.textContent = 'Error';
-            lastUpdatedEl.textContent = 'Failed to load';
-            showAlert(`Error fetching wallet: ${error.message}`, 'error');
-        }
+  try {
+    const response = await fetch(`${API_BASE_URL}/admin/platform-wallet?type=${type}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`HTTP error! Status: ${response.status} - ${errorText}`);
     }
 
-    async function withdrawCommission(btn) {
-        const amountInput = document.getElementById('withdrawal-amount');
-        const amount = parseFloat(amountInput.value);
+    const data = await response.json();
+    balanceEl.textContent = `₦${(data.balance || 0).toLocaleString('en-NG', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    })}`;
+    lastUpdatedEl.textContent = data.lastUpdated
+      ? new Date(data.lastUpdated).toLocaleString()
+      : 'N/A';
+  } catch (error) {
+    console.error(`Error fetching ${type} wallet:`, error.message);
+    balanceEl.textContent = 'Error';
+    lastUpdatedEl.textContent = 'Failed to load';
+    showAlert(`Error fetching ${type} wallet: ${error.message}`, 'error');
+  }
+}
 
-        if (isNaN(amount) || amount <= 0) {
-            showAlert('Please enter a valid amount to withdraw.', 'error');
-            return;
-        }
+async function withdrawWallet(buttonElement, type) {
+    const amountInputId = `${type}-withdrawal-amount`;
+    const amountInput = document.getElementById(amountInputId);
+    let amount = parseFloat(amountInput.value);
 
-        if (!confirm(`Are you sure you want to withdraw ₦${amount.toLocaleString('en-NG')} from the platform commission?`)) {
-            return;
-        }
-
-        const originalText = btn.textContent;
-        btn.disabled = true;
-        btn.innerHTML = '<div class="loading"></div><span>Processing...</span>';
-        const token = localStorage.getItem('adminToken');
-
-        try {
-            const response = await fetch(`${API_BASE_URL}/admin/withdraw-commission`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ amount })
-            });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.error || 'Failed to withdraw commission');
-            }
-
-            showAlert(data.message || 'Commission withdrawal successful!', 'success');
-            amountInput.value = ''; // Clear input
-            fetchPlatformWallet(); // Refresh balance
-        } catch (error) {
-            console.error('Withdraw commission error:', error.message);
-            showAlert(`Withdrawal failed: ${error.message}`, 'error');
-        } finally {
-            btn.disabled = false;
-            btn.innerHTML = `<span>${originalText}</span>`;
-        }
+    if (isNaN(amount) || amount <= 0) {
+        showAlert('Please enter a valid amount to withdraw.', 'error');
+        return;
     }
 
+    const originalButtonText = buttonElement.innerHTML;
+    buttonElement.disabled = true;
+    buttonElement.innerHTML = '<div class="loading"></div><span>Withdrawing...</span>';
 
+    try {
+        const token = localStorage.getItem('authToken');
+        const response = await fetch(`${API_BASE_URL}/admin/platform-wallet/withdraw`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ type, amount })  // Send amount in naira
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || `Failed to initiate ${type} withdrawal`);
+        }
+
+        showAlert(data.message || `${type.charAt(0).toUpperCase() + type.slice(1)} withdrawal successful`, 'success');
+        amountInput.value = '';
+        fetchPlatformWallet(type);
+
+    } catch (error) {
+        console.error(`Error during ${type} withdrawal:`, error);
+        showAlert(`Withdrawal failed: ${error.message}`, 'error');
+    } finally {
+        buttonElement.disabled = false;
+        buttonElement.innerHTML = originalButtonText;
+    }
+}
     // Initial data fetch for the first active panel
     fetchRender('/api/reported-users', 'reported-users', userItem);
   </script>
