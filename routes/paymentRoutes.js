@@ -2,7 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
-const axios = require('axios');
+const axios = require('axios'); // Not used in provided code, but kept if you use it elsewhere
 const path = require('path');
 const Jimp = require('jimp');
 const cloudinary = require('cloudinary').v2;
@@ -20,7 +20,7 @@ const paystack = require('paystack-api')(process.env.PAYSTACK_SECRET_KEY);
 
 // Configure Winston logger
 const logger = winston.createLogger({
-  level: 'debug',
+  level: 'debug', // Set to 'info' or 'warn' for less verbose production logs, but 'debug' is good for debugging this issue
   format: winston.format.combine(
     winston.format.timestamp(),
     winston.format.json(),
@@ -33,7 +33,7 @@ const logger = winston.createLogger({
 });
 
 // Constants
-const COMMISSION_PERCENT = 2;
+const COMMISSION_PERCENT = 2.5;
 const RECEIPT_TIMEOUT = 30000; // 30 seconds timeout for receipt generation
 
 module.exports = (io) => {
@@ -57,6 +57,7 @@ module.exports = (io) => {
 
   // Helper function to generate modern receipt image
   const generateModernReceipt = async (receiptData) => {
+    logger.debug('Starting receipt generation', { receiptDataRef: receiptData.reference });
     try {
       const {
         reference,
@@ -192,6 +193,7 @@ module.exports = (io) => {
 
       // Save image
       await image.writeAsync(imagePath);
+      logger.debug('Receipt image saved locally', { imagePath });
       
       // Upload to Cloudinary
       const cloudinaryResponse = await cloudinary.uploader.upload(imagePath, {
@@ -200,19 +202,22 @@ module.exports = (io) => {
         quality: 'auto:good',
         format: 'png'
       });
+      logger.debug('Receipt image uploaded to Cloudinary', { url: cloudinaryResponse.secure_url });
 
       // Clean up local file
       await fs.unlink(imagePath);
+      logger.debug('Local receipt image deleted', { imagePath });
       
       return cloudinaryResponse.secure_url;
     } catch (error) {
-      logger.error('Receipt generation failed:', error);
+      logger.error('Receipt generation failed:', { error: error.message, stack: error.stack, reference: receiptData.reference });
       throw error;
     }
   };
 
   // Helper function to send receipt to seller
   const sendReceiptToSeller = async (receiptData, receiptImageUrl, io) => {
+    logger.debug('Starting send receipt to seller', { buyerId: receiptData.buyerId, sellerId: receiptData.sellerId, reference: receiptData.reference });
     try {
       const { buyerId, sellerId, buyerName, productTitle, reference } = receiptData;
 
@@ -227,9 +232,11 @@ module.exports = (io) => {
       });
 
       await message.save();
+      logger.debug('Receipt message saved to DB', { messageId: message._id });
       
       // Emit to seller in real-time
       io.to(`user_${sellerId}`).emit('receiveMessage', message.toObject());
+      logger.debug('Emitted receiveMessage to seller via socket', { sellerId });
       
       // Send FCM notification
       await sendFCMNotification(
@@ -243,10 +250,11 @@ module.exports = (io) => {
           reference 
         }
       );
+      logger.debug('FCM notification sent for receipt', { sellerId });
 
       return { success: true };
     } catch (error) {
-      logger.error('Failed to send receipt to seller:', error);
+      logger.error('Failed to send receipt to seller:', { error: error.message, stack: error.stack, reference: receiptData.reference });
       return { success: false, error: error.message };
     }
   };
@@ -259,6 +267,7 @@ module.exports = (io) => {
     try {
       const validationErrors = validatePaymentRequest(req.body);
       if (validationErrors.length > 0) {
+        logger.warn('Payment initiation validation failed', { requestId, errors: validationErrors });
         return res.status(400).json({ 
           success: false, 
           message: validationErrors.join(', ') 
@@ -270,6 +279,7 @@ module.exports = (io) => {
       
       const post = await Post.findById(trimmedPostId);
       if (!post) {
+        logger.warn('Payment initiation: Product not found', { requestId, postId: trimmedPostId });
         return res.status(404).json({ 
           success: false, 
           message: "Product not found" 
@@ -277,6 +287,7 @@ module.exports = (io) => {
       }
 
       if (post.isSold) {
+        logger.warn('Payment initiation: Product already sold', { requestId, postId: trimmedPostId });
         return res.status(400).json({ 
           success: false, 
           message: "Product is already sold" 
@@ -284,13 +295,14 @@ module.exports = (io) => {
       }
 
       const amount = parseFloat(post.price) * 100;
-      const sellerId = post.createdBy;
+      const sellerId = post.createdBy.userId.toString(); // Ensure you're getting the ID string
+
 
       const protocol = req.secure ? 'https' : 'http';
       const host = req.get('host');
       const API_BASE_URL = `${protocol}://${host}`;
 
-      const response = await paystack.transaction.initialize({
+      const paystackInitializeResponse = await paystack.transaction.initialize({
         email,
         amount: amount,
         callback_url: `${API_BASE_URL}/payment-success?postId=${trimmedPostId}&buyerId=${buyerId}`,
@@ -298,26 +310,27 @@ module.exports = (io) => {
           postId: trimmedPostId,
           email,
           buyerId,
-          sellerId,
+          sellerId: sellerId.toString(), // Ensure sellerId is string for metadata
         },
       });
 
-      logger.info('Payment initialized successfully', { requestId, reference: response.data.reference });
-      res.json({ success: true, url: response.data.authorization_url });
+      logger.info('Payment initialized successfully with Paystack', { requestId, reference: paystackInitializeResponse.data.reference });
+      res.json({ success: true, url: paystackInitializeResponse.data.authorization_url });
     } catch (error) {
-      logger.error('Payment initiation failed', { requestId, error: error.message });
+      logger.error('Payment initiation failed', { requestId, error: error.message, stack: error.stack, body: req.body });
       res.status(500).json({ success: false, message: "Payment initialization failed" });
     }
   });
 
   router.get('/payment-success', async (req, res) => {
     const requestId = `SUCCESS_${Date.now()}`;
-    const { reference, postId, buyerId } = req.query;
+    const { reference } = req.query; // Only reference is reliable from Paystack query
 
-    logger.info('Payment verification started', { requestId, reference });
+    logger.info('Payment verification started', { requestId, reference, queryParams: req.query });
 
     try {
-      // Verify payment with Paystack
+      // Step 1: Verify payment with Paystack
+      logger.debug('Attempting Paystack verification', { requestId, reference });
       const paystackResponse = await fetch(`https://api.paystack.co/transaction/verify/${reference}`, {
         method: "GET",
         headers: {
@@ -327,25 +340,75 @@ module.exports = (io) => {
       });
 
       const data = await paystackResponse.json();
+      logger.debug('Paystack verification raw response', { requestId, data });
       
       if (!data.status || data.data.status !== 'success') {
+        logger.error('Paystack verification failed: Status not success', { requestId, reference, paystackData: data });
         throw new Error(data.message || "Payment verification failed");
       }
 
-      // Fetch required data
+      // Extract IDs from Paystack metadata (more reliable than query params for consistency)
+      const retrievedPostId = data.data.metadata.postId;
+      const retrievedBuyerId = data.data.metadata.buyerId; // Use this if you want to find buyer by ID
+      const buyerEmailFromPaystack = data.data.customer.email;
+      const sellerIdFromPaystackMetadata = data.data.metadata.sellerId;
+
+      logger.debug('Extracted IDs from Paystack metadata', { 
+        requestId, 
+        retrievedPostId, 
+        retrievedBuyerId, 
+        buyerEmailFromPaystack,
+        sellerIdFromPaystackMetadata 
+      });
+
+      // Step 2: Fetch required data (Post, Buyer, Seller)
+      logger.debug('Attempting to find post, buyer, and seller from DB', { 
+        requestId, 
+        postId: retrievedPostId, 
+        buyerEmail: buyerEmailFromPaystack,
+        sellerId: sellerIdFromPaystackMetadata 
+      });
+
       const [post, buyer] = await Promise.all([
-        Post.findById(postId),
-        User.findOne({ email: data.data.customer.email })
+        Post.findById(retrievedPostId),
+        User.findOne({ email: buyerEmailFromPaystack }) // Finding by email from Paystack is generally more robust for the buyer
       ]);
 
-      if (!post || !buyer) {
-        throw new Error("Post or buyer not found");
+      if (!post) {
+        logger.error('Post not found during payment verification', { requestId, retrievedPostId, reference });
+        throw new Error(`Post not found with ID: ${retrievedPostId}. Please contact support.`);
+      }
+      if (!buyer) {
+        logger.error('Buyer not found during payment verification', { requestId, buyerEmail: buyerEmailFromPaystack, reference });
+        throw new Error(`Buyer not found with email: ${buyerEmailFromPaystack}. Please contact support.`);
       }
 
-      const seller = await User.findById(post.createdBy.userId);
+      let seller;
+if (sellerIdFromPaystackMetadata) {
+  // We're fixing the metadata generation, so this should now be a proper ObjectId string
+  seller = await User.findById(sellerIdFromPaystackMetadata); 
+} else {
+  // Ensure post.createdBy.userId is explicitly converted to a string if it's an ObjectId object
+  seller = await User.findById(post.createdBy.userId.toString()); 
+}
+
+      
       if (!seller) {
-        throw new Error("Seller not found");
+        logger.error('Seller not found for post', { 
+          requestId, 
+          sellerIdAttempted: sellerIdFromPaystackMetadata || post.createdBy.userId, 
+          postId: post._id, 
+          reference 
+        });
+        throw new Error(`Seller not found for product ID: ${post._id}. Please contact support.`);
       }
+
+      logger.info('Found post, buyer, and seller from DB', { 
+        requestId, 
+        postId: post._id, 
+        buyerId: buyer._id, 
+        sellerId: seller._id 
+      });
 
       // Calculate amounts
       const amountPaid = data.data.amount / 100;
@@ -364,11 +427,13 @@ module.exports = (io) => {
         buyerId: buyer._id.toString(),
         sellerId: seller._id.toString()
       };
+      logger.debug('Prepared receipt data', { requestId, receiptDataRef: reference });
 
       // Create database records
+      logger.debug('Attempting to create Escrow, Transaction, and Notification records', { requestId });
       const [escrow, transaction, notification] = await Promise.all([
         new Escrow({
-          product: postId,
+          product: post._id, // Use post._id
           buyer: buyer._id,
           seller: seller._id,
           amount: amountPaid,
@@ -381,9 +446,9 @@ module.exports = (io) => {
         new Transaction({
           buyerId: buyer._id,
           sellerId: seller._id,
-          postId: postId,
+          postId: post._id, // Use post._id
           amount: amountPaid,
-          status: 'pending',
+          status: 'pending', // Keeps status as pending until escrow is managed
           viewed: false,
           paymentReference: reference,
           receiptImageUrl: '' // Will be updated after receipt generation
@@ -393,35 +458,44 @@ module.exports = (io) => {
           userId: seller._id,
           senderId: buyer._id,
           type: 'payment',
-          postId: postId,
+          postId: post._id, // Use post._id
           payment: post.title,
           message: `${receiptData.buyerName} just paid for your product: "${post.description}"`,
           createdAt: new Date()
         }).save()
       ]);
+      logger.info('Escrow, Transaction, and Notification records created', { 
+        requestId, 
+        escrowId: escrow._id, 
+        transactionId: transaction._id, 
+        notificationId: notification._id 
+      });
 
       // Mark post as sold
+      logger.debug('Attempting to mark post as sold', { requestId, postId: post._id });
       post.isSold = true;
       await post.save();
+      logger.info('Post marked as sold successfully', { requestId, postId: post._id });
 
       // Send initial notifications
+      logger.debug('Sending initial FCM notifications and updating notification count', { requestId });
       await Promise.all([
         sendFCMNotification(
           seller._id.toString(),
           'Payment Received',
           `${receiptData.buyerName} paid for your product: "${receiptData.productTitle}"`,
-          { type: 'payment', postId: postId.toString() },
+          { type: 'payment', postId: post._id.toString() }, // Use post._id
           req.io,
           post.photo,
           buyer.profilePicture
         ),
         NotificationService.triggerCountUpdate(seller._id.toString(), req.io)
       ]);
-
-      req.io.to(seller._id.toString()).emit('notification', notification);
+      logger.info('Initial notifications sent to seller', { requestId });
 
       // Generate receipt and send to seller (with timeout)
       let receiptStatus = { success: false, message: 'Receipt generation timed out' };
+      logger.debug('Attempting receipt generation and sending with timeout', { requestId });
       
       try {
         const receiptPromise = Promise.race([
@@ -432,21 +506,27 @@ module.exports = (io) => {
               // Update transaction with receipt URL
               transaction.receiptImageUrl = receiptImageUrl;
               await transaction.save();
+              logger.debug('Transaction updated with receipt URL', { requestId, transactionId: transaction._id });
               
               // Send receipt to seller
               return await sendReceiptToSeller({...receiptData, reference}, receiptImageUrl, req.io);
             } catch (error) {
+              logger.error('Error within receipt generation promise', { requestId, error: error.message, stack: error.stack });
               throw error;
             }
           })(),
           new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Receipt generation timeout')), RECEIPT_TIMEOUT)
+            setTimeout(() => {
+              logger.warn('Receipt generation timeout triggered', { requestId });
+              reject(new Error('Receipt generation timeout'));
+            }, RECEIPT_TIMEOUT)
           )
         ]);
 
         receiptStatus = await receiptPromise;
+        logger.info('Receipt generation and sending completed', { requestId, receiptStatus });
       } catch (error) {
-        logger.error('Receipt generation/sending failed', { requestId, error: error.message });
+        logger.error('Receipt generation/sending failed (outer catch)', { requestId, error: error.message, stack: error.stack });
         receiptStatus = { success: false, message: error.message };
       }
 
@@ -754,14 +834,19 @@ module.exports = (io) => {
         </html>
       `);
 
-      logger.info('Payment verification completed successfully', { 
+      logger.info('Payment verification completed successfully and success page rendered', { 
         requestId, 
         reference, 
         receiptSent: receiptStatus.success 
       });
 
     } catch (error) {
-      logger.error('Payment verification failed', { requestId, error: error.message });
+      logger.error('Payment verification failed in main catch block', { 
+        requestId, 
+        error: error.message, 
+        stack: error.stack, 
+        reference 
+      });
       res.status(500).send(`
         <!DOCTYPE html>
         <html lang="en">
