@@ -1,0 +1,216 @@
+/* product-details.css */
+
+.product-details-container {
+    display: flex;
+    flex-direction: column;
+    max-width: 900px;
+    margin: 10px auto;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.product-image-section {
+    width: 100%;
+    max-height: 400px;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #f0f2f5;
+}
+
+.product-image-section img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    object-fit: contain; /* Ensures the whole image is visible */
+}
+
+.product-info-section {
+    padding: 25px;
+}
+
+.product-info-section h1 {
+    font-size: 2.2em;
+    color: #333;
+    margin-bottom: 10px;
+    word-wrap: break-word; /* Ensures long titles break correctly */
+}
+
+.product-price {
+    font-size: 1.8em;
+    font-weight: bold;
+    color: #28a745; /* Green color for price */
+    margin-bottom: 20px;
+}
+
+.product-info-section p {
+    font-size: 1.1em;
+    color: #555;
+    line-height: 1.6;
+    margin-bottom: 15px;
+    word-wrap: break-word;
+}
+
+.product-meta {
+    margin-top: 20px;
+    border-top: 1px solid #eee;
+    padding-top: 20px;
+}
+
+.product-meta p {
+    margin-bottom: 10px;
+    font-size: 1em;
+    color: #666;
+}
+
+.product-meta strong {
+    color: #333;
+}
+
+.product-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 30px;
+    flex-wrap: wrap; /* Allow buttons to wrap on smaller screens */
+}
+
+.product-actions .btn {
+    padding: 12px 25px;
+    font-size: 1.1em;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    flex-grow: 1; /* Allow buttons to grow and fill space */
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.product-actions .btn i {
+    margin-right: 8px;
+}
+
+.buy-escrow-btn {
+    background-color: #28a745; /* Blue for primary action */
+    color: white;
+    border: none;
+}
+
+.buy-escrow-btn:hover {
+    background-color: #28a745;
+    transform: translateY(-2px);
+}
+
+.chat-seller-btn {
+    background-color: #fff; /* Grey for secondary action */
+    color: #28a745;
+    border: 1px #fff solid;
+    box-shadow: 0 0 10px #ddd;
+}
+
+.chat-seller-btn:hover {
+    background-color: #545b62;
+    transform: translateY(-2px);
+}
+
+.back-button {
+    display: inline-flex;
+    align-items: center;
+    color: #28a745;
+    text-decoration: none;
+    font-weight: 500;
+    margin-left: 20px;
+    margin-top: 10px;
+}
+
+.back-button i {
+    margin-right: 5px;
+}
+
+.back-button:hover {
+    text-decoration: underline;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .product-details-container {
+        margin: 10px;
+        box-shadow: none;
+        border-radius: 0;
+    }
+
+    .product-image-section {
+        max-height: 300px;
+    }
+
+    .product-info-section {
+        padding: 15px;
+    }
+
+    .product-info-section h1 {
+        font-size: 1.8em;
+    }
+
+    .product-price {
+        font-size: 1.5em;
+    }
+
+    .product-info-section p {
+        font-size: 1em;
+    }
+
+    .product-actions {
+        flex-direction: column; /* Stack buttons on small screens */
+        gap: 10px;
+    }
+
+    .product-actions .btn {
+        width: 100%; /* Full width buttons */
+    }
+
+    header nav {
+        padding: 10px;
+    }
+
+    .back-button {
+        margin-left: 10px;
+    }
+}
+
+
+.safety-rules {
+        background-color: #fff;
+        border-left: 1px solid #28a745;
+        padding: 5px;
+        margin-top: 20px;
+        border-radius: 8px;
+        font-family: 'Poppins', sans-serif;
+    }
+
+    .safety-rules h3 {
+        color: #28a745;
+        margin-bottom: 10px;
+    }
+
+    .safety-rules ol {
+        padding-left: 20px;
+        margin: 0;
+    }
+
+    .safety-rules li {
+        margin-bottom: 10px;
+        line-height: 1.6;
+    }
+
+    .safety-rules a {
+        color: #28a745;
+        text-decoration: underline;
+    }
+
+    .safety-rules a:hover {
+        text-decoration: none;
+    }

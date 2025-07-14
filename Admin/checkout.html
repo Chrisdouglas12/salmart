@@ -1,577 +1,62 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Checkout - Salmart</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: #f8f9fa;
-      color: #333;
-      line-height: 1.6;
-      min-height: 100vh;
-    }
-
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-
-    .checkout-header {
-      background: #fff;
-      padding: 16px 0;
-      border-bottom: 1px solid #e9ecef;
-      margin-bottom: 20px;
-      border-radius: 8px 8px 0 0;
-    }
-
-    .checkout-header h1 {
-      font-size: 24px;
-      color: #28a745;
-      text-align: center;
-      font-weight: 600;
-    }
-
-    .checkout-layout {
-      display: grid;
-      grid-template-columns: 1fr 400px;
-      gap: 20px;
-      align-items: start;
-    }
-
-    .product-section {
-      background: #fff;
-      border-radius: 8px;
-      padding: 24px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-      border: 1px solid #e9ecef;
-    }
-
-    .product-header {
-      display: flex;
-      align-items: center;
-      margin-bottom: 20px;
-      padding-bottom: 16px;
-      border-bottom: 1px solid #f1f3f4;
-    }
-
-    .product-header h2 {
-      font-size: 18px;
-      color: #333;
-      margin-left: 8px;
-    }
-
-    .product-card {
-      display: flex;
-      gap: 16px;
-      padding: 16px;
-      border: 1px solid #e9ecef;
-      border-radius: 8px;
-      background: #fafafa;
-    }
-
-    .product-image {
-      width: 120px;
-      height: 120px;
-      object-fit: cover;
-      border-radius: 6px;
-      border: 1px solid #e9ecef;
-    }
-
-    .product-info {
-      flex: 1;
-    }
-
-    .product-title {
-      font-size: 16px;
-      font-weight: 600;
-      color: #333;
-      margin-bottom: 8px;
-      line-height: 1.4;
-    }
-
-    .product-description {
-      color: #666;
-      font-size: 14px;
-      margin-bottom: 8px;
-      line-height: 1.4;
-    }
-
-    .product-meta {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 16px;
-      margin-bottom: 12px;
-    }
-
-    .meta-item {
-      display: flex;
-      align-items: center;
-      font-size: 14px;
-      color: #666;
-    }
-
-    .meta-item strong {
-      color: #333;
-      margin-right: 4px;
-    }
-
-    .product-price {
-      font-size: 20px;
-      font-weight: 700;
-      color: #28a745;
-    }
-
-    .payment-section {
-      background: #fff;
-      border-radius: 8px;
-      padding: 24px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-      border: 1px solid #e9ecef;
-      position: sticky;
-      top: 20px;
-    }
-
-    .payment-header {
-      display: flex;
-      align-items: center;
-      margin-bottom: 20px;
-      padding-bottom: 16px;
-      border-bottom: 1px solid #f1f3f4;
-    }
-
-    .payment-header h2 {
-      font-size: 18px;
-      color: #333;
-      margin-left: 8px;
-    }
-
-    .security-badge {
-      display: flex;
-      align-items: center;
-      background: #f8f9fa;
-      padding: 8px 12px;
-      border-radius: 6px;
-      margin-bottom: 20px;
-      font-size: 14px;
-      color: #28a745;
-    }
-
-    .payment-details {
-      margin-bottom: 20px;
-    }
-
-    .detail-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 12px 0;
-      border-bottom: 1px solid #f1f3f4;
-    }
-
-    .detail-row:last-child {
-      border-bottom: none;
-    }
-
-    .detail-label {
-      font-weight: 500;
-      color: #333;
-      font-size: 14px;
-    }
-
-    .detail-value {
-      font-weight: 600;
-      color: #333;
-      font-size: 14px;
-      text-align: right;
-      word-break: break-word;
-    }
-
-    .payment-reference {
-      background: #f8f9fa;
-      padding: 8px 12px;
-      border-radius: 6px;
-      font-family: 'Courier New', monospace;
-      font-size: 13px;
-      color: #28a745;
-      font-weight: 600;
-      border: 1px solid #e9ecef;
-    }
-    .confirm-payment-btn {
-  background-color: #10b981; /* Tailwind green-500 */
-  color: white;
-  border: none;
-  padding: 12px 24px;
-  font-size: 16px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-.confirm-payment-btn:hover {
-  background-color: #059669; /* Tailwind green-600 */
-}
-.confirm-payment-btn:disabled {
-  background-color: #ccc;
-  cursor: not-allowed;
-}
-
-    .copy-button {
-      width: 100%;
-      background: #28a745;
-      color: #fff;
-      padding: 14px;
-      border: none;
-      border-radius: 6px;
-      font-size: 16px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      margin-bottom: 16px;
-    }
-
-    .copy-button:hover {
-      background: #218838;
-      transform: translateY(-1px);
-    }
-
-    .copy-button:active {
-      transform: translateY(0);
-    }
-
-    .payment-status {
-      text-align: center;
-      padding: 16px;
-      border-radius: 6px;
-      font-weight: 600;
-      font-size: 14px;
-    }
-
-    .status-waiting {
-      background: #fff3cd;
-      color: #856404;
-      border: 1px solid #ffeaa7;
-    }
-
-    .status-success {
-      background: #d4edda;
-      color: #155724;
-      border: 1px solid #c3e6cb;
-    }
-
-    .icon {
-      width: 20px;
-      height: 20px;
-      margin-right: 8px;
-    }
-
-    .toast {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      padding: 12px 20px;
-      border-radius: 6px;
-      color: white;
-      font-weight: 600;
-      z-index: 9999;
-      font-size: 14px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    }
-
-    .toast.success {
-      background: #28a745;
-    }
-
-    .toast.error {
-      background: #dc3545;
-    }
-
-    @media (max-width: 768px) {
-      .checkout-layout {
-        grid-template-columns: 1fr;
-        gap: 16px;
-      }
-
-      .product-card {
-        flex-direction: column;
-        gap: 12px;
-      }
-
-      .product-image {
-        width: 100%;
-        height: 200px;
-        align-self: center;
-      }
-
-      .product-meta {
-        flex-direction: column;
-        gap: 8px;
-      }
-
-      .payment-section {
-        position: static;
-      }
-
-      .container {
-        padding: 16px;
-      }
-    }
-
-    @media (max-width: 480px) {
-      .checkout-header h1 {
-        font-size: 20px;
-      }
-
-      .product-section,
-      .payment-section {
-        padding: 16px;
-      }
-
-      .detail-row {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 4px;
-      }
-
-      .detail-value {
-        text-align: left;
-      }
-    }
-  </style>
-</head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Details - Salmart</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href=""> <link rel="stylesheet" href="checkout.css"> </head>
 <body>
-  <div class="container">
-    <div class="checkout-header">
-      <h1>Secure Checkout</h1>
-    </div>
+    <header>
+        <nav>
+            <a href="index.html" class="back-button"><i class="fas fa-arrow-left"></i> Back</a>
+            </nav>
+    </header>
 
-    <div class="checkout-layout">
-      <div class="product-section">
-        <div class="product-header">
-          <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M19 7h-1V6a4 4 0 0 0-8 0v1H9a1 1 0 0 0-1 1v11a3 3 0 0 0 3 3h8a3 3 0 0 0 3-3V8a1 1 0 0 0-1-1zM10.91 6a2 2 0 0 1 3.09 0v1H10.91zm7.09 13a1 1 0 0 1-1 1H11a1 1 0 0 1-1-1V9h8z"/>
-          </svg>
-          <h2>Order Summary</h2>
+    <main class="product-details-container">
+        <div class="product-image-section">
+            <img id="productImage" src="" alt="Product Image">
         </div>
 
-        <div class="product-card">
-          <img id="productImage" class="product-image" src="" alt="Product" />
-          <div class="product-info">
-            <h3 id="productTitle" class="product-title">Loading...</h3>
-            <p id="productDescription" class="product-description"></p>
+        <div class="product-info-section">
+            <h1 id="productTitle"></h1>
+            <p class="product-price" id="productPrice"></p>
+            <p id="productDescription"></p>
+
             <div class="product-meta">
-              <div class="meta-item">
-                <strong>Location:</strong> <span id="productLocation"></span>
-              </div>
-              <div class="meta-item">
-                <strong>Condition:</strong> <span id="productCondition"></span>
-              </div>
-            </div>
-            <div id="productPrice" class="product-price">₦0</div>
-          </div>
-        </div>
-      </div>
+                <p><strong>Location:</strong> <span id="productLocation"></span></p>
+                <p><strong>Condition:</strong> <span id="productCondition"></span></p>
+                </div>
+                
+            
+   
 
-      <div class="payment-section">
-        <div class="payment-header">
-          <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/>
-          </svg>
-          <h2>Payment Details</h2>
-        </div>
-
-        <div class="security-badge">
-          <svg class="icon" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M18,8A6,6 0 0,0 12,2A6,6 0 0,0 6,8H4A2,2 0 0,0 2,10V20A2,2 0 0,0 4,22H20A2,2 0 0,0 22,20V10A2,2 0 0,0 20,8H18M8,8A4,4 0 0,1 12,4A4,4 0 0,1 16,8H8Z"/>
-          </svg>
-          Secure Bank Transfer
-        </div>
-
-        <div class="payment-details">
-          <div class="detail-row">
-            <span class="detail-label">Account Number</span>
-            <span id="accountNumber" class="detail-value">Loading...</span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Bank</span>
-            <span id="bankName" class="detail-value">Loading...</span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Account Name</span>
-            <span id="accountName" class="detail-value">Loading...</span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Amount</span>
-            <span id="amount" class="detail-value">₦0</span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Payment Reference</span>
-            <div class="detail-value">
-              <div id="paymentReference" class="payment-reference">Loading...</div>
-            </div>
-          </div>
-        </div>
-
-        <button class="copy-button" onclick="copyBankDetails()">
-          Copy Payment Details
-        </button>
-<div id="confirmPaymentSection" style="margin-top: 20px; text-align: center;">
-  <button id="confirmPaymentBtn" class="confirm-payment-btn">I HAVE MADE THIS PAYMENT</button>
+<div class="safety-rules">
+    <h3><i class="fas fa-shield-alt"></i> Buyer Safety Rules</h3>
+    <ol>
+        <li>Before making payment, confirm with the seller that the product is still available.</li>
+        <li><strong>Never pay directly</strong> into a seller's personal bank account. Payments must go through Salmart's escrow system for your protection.</li>
+        <li>Do not pay for delivery or waybill to the seller. Arrange pay-on-delivery with the logistics provider/Driver.</li>
+        <li>Click the <strong>“Confirm Delivery”</strong> button only after you have received and verified your order.</li>
+        <li>If the seller does not deliver or becomes unresponsive after payment, you can request a refund <a href="Deals.html">here</a>.</li>
+        <li>Always communicate through Salmart chat to keep a record of your conversation in case of disputes.</li>
+        <li>Inspect your product immediately upon delivery before confirming receipt.</li>
+    </ol>
 </div>
-        <div id="paymentStatus" class="payment-status status-waiting">
-          ⏳ Waiting for payment confirmation...
+            <div class="product-actions">
+                <button id="buyWithEscrowBtn" class="btn btn-primary buy-escrow-btn">
+                    <i class="fas fa-handshake"></i> Buy with Escrow
+                </button>
+                <button id="chatSellerBtn" class="btn btn-secondary chat-seller-btn">
+                    <i class="fas fa-comment-dots"></i> Chat Seller
+                </button>
+            </div>
         </div>
-      </div>
-    </div>
-  </div>
+        <p style="text-align: center; font-size: 14px; font-weight: 600px;">All Payments are processed by Paystack</p>
+    </main>
 
-  <script>
-    let paymentReference = '';
-    let paymentCheckInterval = null;
-    const API_BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart.onrender.com';
+    <div id="toast-message" class="toast-message"></div>
 
-    document.addEventListener('DOMContentLoaded', async () => {
-      const postId = new URLSearchParams(window.location.search).get('postId');
-      const buyerId = localStorage.getItem('userId');
-      const email = localStorage.getItem('email');
-      const query = new URLSearchParams(window.location.search);
-
-      document.getElementById('productImage').src = query.get('productImage') || '';
-      document.getElementById('productTitle').textContent = query.get('productTitle') || '';
-      document.getElementById('productDescription').textContent = query.get('productDescription') || '';
-      document.getElementById('productLocation').textContent = query.get('productLocation') || '';
-      document.getElementById('productCondition').textContent = query.get('productCondition') || '';
-      document.getElementById('productPrice').textContent = formatCurrency(query.get('productPrice') || 0);
-
-      if (!postId || !buyerId || !email) {
-        let missingFields = [];
-        if (!postId) missingFields.push('postId');
-        if (!buyerId) missingFields.push('buyerId');
-        if (!email) missingFields.push('email');
-        showToast("An error occurred: Missing required information.", 'error');
-        return;
-      }
-
-      try {
-        const res = await fetch(`${API_BASE_URL}/pay`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ postId, buyerId, email, expectedPrice: parseFloat(query.get('productPrice')) })
-        });
-
-        const data = await res.json();
-        if (!data.success) {
-          showToast(data.message || "Payment setup failed", 'error');
-          return;
-        }
-
-        paymentReference = data.reference;
-        sessionStorage.setItem('currentPaymentReference', paymentReference);
-
-        document.getElementById('accountNumber').textContent = data.accountNumber;
-        document.getElementById('bankName').textContent = data.bankName;
-        document.getElementById('accountName').textContent = data.accountName;
-        document.getElementById('amount').textContent = formatCurrency(data.amount);
-        document.getElementById('paymentReference').textContent = paymentReference;
-
-        startPaymentMonitoring();
-      } catch (err) {
-        console.error('Payment setup error:', err);
-        showToast("Something went wrong while starting your payment.", 'error');
-      }
-    });
-    
-    document.getElementById('confirmPaymentBtn').addEventListener('click', async () => {
-  if (!paymentReference) {
-    showToast('No payment reference found', 'error');
-    return;
-  }
-
-  try {
-    const res = await fetch(`${API_BASE_URL}/confirm-payment`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ reference: paymentReference })
-    });
-
-    const result = await res.json();
-    if (result.success) {
-      showToast('Payment submitted. Awaiting admin approval.', 'success');
-      const btn = document.getElementById('confirmPaymentBtn');
-      btn.disabled = true;
-      btn.textContent = 'Waiting for Admin...';
-    } else {
-      showToast(result.message || 'Failed to submit payment', 'error');
-    }
-  } catch (err) {
-    console.error('Error confirming payment:', err);
-    showToast('Error confirming payment', 'error');
-  }
-});
-
-    function formatCurrency(amount) {
-      return new Intl.NumberFormat('en-NG', {
-        style: 'currency',
-        currency: 'NGN'
-      }).format(amount);
-    }
-
-    function copyBankDetails() {
-      const details = `\nAccount Number: ${document.getElementById('accountNumber').textContent}\nBank: ${document.getElementById('bankName').textContent}\nAccount Name: ${document.getElementById('accountName').textContent}\nAmount: ${document.getElementById('amount').textContent}\nReference: ${paymentReference}`.trim();
-
-      navigator.clipboard.writeText(details).then(() => {
-        showToast('Payment details copied to clipboard ✅', 'success');
-      }).catch(() => {
-        showToast('Failed to copy details ❌', 'error');
-      });
-    }
-
-    function startPaymentMonitoring() {
-      paymentCheckInterval = setInterval(checkPaymentStatus, 30000);
-      setTimeout(checkPaymentStatus, 2000);
-    }
-
-    async function checkPaymentStatus() {
-      if (!paymentReference) return;
-      try {
-        const res = await fetch(`${API_BASE_URL}/verify-payment/${paymentReference}`);
-        const result = await res.json();
-
-        if (result.success && result.data?.status === 'in_escrow') {
-          clearInterval(paymentCheckInterval);
-          const statusEl = document.getElementById('paymentStatus');
-          statusEl.textContent = '✅ Payment confirmed successfully!';
-          statusEl.className = 'payment-status status-success';
-          showToast('Payment successful! Redirecting...', 'success');
-          setTimeout(() => {
-            window.location.href = `/order-confirmation.html?ref=${paymentReference}`;
-          }, 3000);
-        }
-      } catch (err) {
-        console.error('Payment verification failed:', err);
-      }
-    }
-
-    function showToast(message, type) {
-      const toast = document.createElement('div');
-      toast.textContent = message;
-      toast.className = `toast ${type}`;
-      document.body.appendChild(toast);
-      setTimeout(() => toast.remove(), 4000);
-    }
-
-    window.addEventListener('beforeunload', () => {
-      if (paymentCheckInterval) clearInterval(paymentCheckInterval);
-    });
-  </script>
-  <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
-  <script>eruda.init();</script>
+    <script src="checkout.js"></script>
 </body>
 </html>

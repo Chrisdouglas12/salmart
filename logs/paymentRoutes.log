@@ -4455,3 +4455,165 @@
 {"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-14T06:38:00.147Z"}
 {"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-14T06:38:54.454Z"}
 {"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-14T06:40:45.475Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-14T11:45:12.456Z"}
+{"body":{"buyerId":"68431685432ee393a735a641","currency":"NGN","email":"chrisdouglas1700@gmail.com","postId":"687411f66dd03500b01cbc4f"},"level":"info","message":"Payment initiation started","requestId":"PAY_1752493512468","timestamp":"2025-07-14T11:45:12.469Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-14T11:45:35.855Z"}
+{"body":{"amount":10000,"buyerId":"68431685432ee393a735a641","email":"chrisdouglas1700@gmail.com","postId":"687411f66dd03500b01cbc4f","sellerId":"6865680685b3194e8bc38b92"},"level":"info","message":"Payment initiation started","requestId":"PAY_1752493535860","timestamp":"2025-07-14T11:45:35.860Z"}
+{"level":"info","message":"Payment initialized successfully with Paystack","reference":"qo2iaax40q","requestId":"PAY_1752493535860","timestamp":"2025-07-14T11:45:37.103Z"}
+{"level":"info","message":"Payment initialized successfully with Paystack","reference":"nzwxseyzci","requestId":"PAY_1752493512468","timestamp":"2025-07-14T11:45:37.317Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-14T11:46:04.158Z"}
+{"body":{"buyerId":"68431685432ee393a735a641","currency":"NGN","email":"chrisdouglas1700@gmail.com","postId":"687411f66dd03500b01cbc4f"},"level":"info","message":"Payment initiation started","requestId":"PAY_1752493564162","timestamp":"2025-07-14T11:46:04.162Z"}
+{"level":"info","message":"Payment initialized successfully with Paystack","reference":"xlztuxnxxf","requestId":"PAY_1752493564162","timestamp":"2025-07-14T11:46:19.586Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-14T11:46:20.466Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-14T12:01:34.259Z"}
+{"body":{"buyerId":"68431685432ee393a735a641","currency":"NGN","email":"chrisdouglas1700@gmail.com","postId":"687383885113e14d0f96cf10"},"level":"info","message":"Payment initiation started","requestId":"PAY_1752494494264","timestamp":"2025-07-14T12:01:34.265Z"}
+{"level":"info","message":"Payment initialized successfully with Paystack","reference":"zn6bajfcbw","requestId":"PAY_1752494494264","timestamp":"2025-07-14T12:01:35.439Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-14T12:06:50.867Z"}
+{"body":{"buyerId":"68431685432ee393a735a641","currency":"NGN","email":"chrisdouglas1700@gmail.com","postId":"687383885113e14d0f96cf10"},"level":"info","message":"Payment initiation started","requestId":"PAY_1752494810871","timestamp":"2025-07-14T12:06:50.872Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-14T12:06:55.623Z"}
+{"body":{"buyerId":"68431685432ee393a735a641","currency":"NGN","email":"chrisdouglas1700@gmail.com","postId":"687383885113e14d0f96cf10"},"level":"info","message":"Payment initiation started","requestId":"PAY_1752494815624","timestamp":"2025-07-14T12:06:55.624Z"}
+{"level":"info","message":"Payment initialized successfully with Paystack","reference":"ud2n8330uq","requestId":"PAY_1752494815624","timestamp":"2025-07-14T12:07:04.695Z"}
+{"level":"info","message":"Payment initialized successfully with Paystack","reference":"11sb5lru0d","requestId":"PAY_1752494810871","timestamp":"2025-07-14T12:07:06.025Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-14T12:17:07.131Z"}
+{"body":{"buyerId":"68431685432ee393a735a641","currency":"NGN","email":"chrisdouglas1700@gmail.com","postId":"687383885113e14d0f96cf10"},"level":"info","message":"Payment initiation started","requestId":"PAY_1752495427134","timestamp":"2025-07-14T12:17:07.134Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-14T12:17:17.662Z"}
+{"body":{"buyerId":"68431685432ee393a735a641","currency":"NGN","email":"chrisdouglas1700@gmail.com","postId":"687383885113e14d0f96cf10"},"level":"info","message":"Payment initiation started","requestId":"PAY_1752495437665","timestamp":"2025-07-14T12:17:17.665Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-14T12:17:18.529Z"}
+{"body":{"buyerId":"68431685432ee393a735a641","currency":"NGN","email":"chrisdouglas1700@gmail.com","postId":"687383885113e14d0f96cf10"},"level":"info","message":"Payment initiation started","requestId":"PAY_1752495438531","timestamp":"2025-07-14T12:17:18.531Z"}
+{"level":"info","message":"Payment initialized successfully with Paystack","reference":"7ivqtsbs4m","requestId":"PAY_1752495437665","timestamp":"2025-07-14T12:17:22.986Z"}
+{"level":"info","message":"Payment initialized successfully with Paystack","reference":"7r1j07e6a6","requestId":"PAY_1752495438531","timestamp":"2025-07-14T12:17:23.496Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-14T12:17:23.780Z"}
+{"body":{"buyerId":"68431685432ee393a735a641","currency":"NGN","email":"chrisdouglas1700@gmail.com","postId":"687383885113e14d0f96cf10"},"level":"info","message":"Payment initiation started","requestId":"PAY_1752495443783","timestamp":"2025-07-14T12:17:23.784Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-14T12:17:24.402Z"}
+{"body":{"buyerId":"68431685432ee393a735a641","currency":"NGN","email":"chrisdouglas1700@gmail.com","postId":"687383885113e14d0f96cf10"},"level":"info","message":"Payment initiation started","requestId":"PAY_1752495444405","timestamp":"2025-07-14T12:17:24.405Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-14T12:17:24.622Z"}
+{"body":{"buyerId":"68431685432ee393a735a641","currency":"NGN","email":"chrisdouglas1700@gmail.com","postId":"687383885113e14d0f96cf10"},"level":"info","message":"Payment initiation started","requestId":"PAY_1752495444624","timestamp":"2025-07-14T12:17:24.624Z"}
+{"level":"info","message":"Payment initialized successfully with Paystack","reference":"5m4prdfluk","requestId":"PAY_1752495443783","timestamp":"2025-07-14T12:17:24.669Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-14T12:17:24.799Z"}
+{"body":{"buyerId":"68431685432ee393a735a641","currency":"NGN","email":"chrisdouglas1700@gmail.com","postId":"687383885113e14d0f96cf10"},"level":"info","message":"Payment initiation started","requestId":"PAY_1752495444801","timestamp":"2025-07-14T12:17:24.802Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-14T12:17:24.988Z"}
+{"body":{"buyerId":"68431685432ee393a735a641","currency":"NGN","email":"chrisdouglas1700@gmail.com","postId":"687383885113e14d0f96cf10"},"level":"info","message":"Payment initiation started","requestId":"PAY_1752495444991","timestamp":"2025-07-14T12:17:24.991Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-14T12:17:25.153Z"}
+{"body":{"buyerId":"68431685432ee393a735a641","currency":"NGN","email":"chrisdouglas1700@gmail.com","postId":"687383885113e14d0f96cf10"},"level":"info","message":"Payment initiation started","requestId":"PAY_1752495445155","timestamp":"2025-07-14T12:17:25.155Z"}
+{"level":"info","message":"Payment initialized successfully with Paystack","reference":"kyhk3nw53j","requestId":"PAY_1752495444405","timestamp":"2025-07-14T12:17:25.186Z"}
+{"level":"info","message":"Payment initialized successfully with Paystack","reference":"p2hig5npze","requestId":"PAY_1752495427134","timestamp":"2025-07-14T12:17:25.228Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-14T12:17:25.336Z"}
+{"body":{"buyerId":"68431685432ee393a735a641","currency":"NGN","email":"chrisdouglas1700@gmail.com","postId":"687383885113e14d0f96cf10"},"level":"info","message":"Payment initiation started","requestId":"PAY_1752495445339","timestamp":"2025-07-14T12:17:25.339Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-14T12:17:25.536Z"}
+{"body":{"buyerId":"68431685432ee393a735a641","currency":"NGN","email":"chrisdouglas1700@gmail.com","postId":"687383885113e14d0f96cf10"},"level":"info","message":"Payment initiation started","requestId":"PAY_1752495445539","timestamp":"2025-07-14T12:17:25.539Z"}
+{"level":"info","message":"Payment initialized successfully with Paystack","reference":"nzyxv08hmv","requestId":"PAY_1752495445155","timestamp":"2025-07-14T12:17:25.896Z"}
+{"level":"info","message":"Payment initialized successfully with Paystack","reference":"wfj2l74q9p","requestId":"PAY_1752495444801","timestamp":"2025-07-14T12:17:25.934Z"}
+{"level":"info","message":"Payment initialized successfully with Paystack","reference":"ek37il9ola","requestId":"PAY_1752495445339","timestamp":"2025-07-14T12:17:26.026Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-14T12:17:26.058Z"}
+{"body":{"buyerId":"68431685432ee393a735a641","currency":"NGN","email":"chrisdouglas1700@gmail.com","postId":"687383885113e14d0f96cf10"},"level":"info","message":"Payment initiation started","requestId":"PAY_1752495446060","timestamp":"2025-07-14T12:17:26.060Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-14T12:17:26.508Z"}
+{"body":{"buyerId":"68431685432ee393a735a641","currency":"NGN","email":"chrisdouglas1700@gmail.com","postId":"687383885113e14d0f96cf10"},"level":"info","message":"Payment initiation started","requestId":"PAY_1752495446510","timestamp":"2025-07-14T12:17:26.510Z"}
+{"level":"info","message":"Payment initialized successfully with Paystack","reference":"vvpytyip8o","requestId":"PAY_1752495444991","timestamp":"2025-07-14T12:17:26.658Z"}
+{"level":"info","message":"Payment initialized successfully with Paystack","reference":"laovfjrmtp","requestId":"PAY_1752495445539","timestamp":"2025-07-14T12:17:26.710Z"}
+{"level":"info","message":"Payment initialized successfully with Paystack","reference":"p466zg4alw","requestId":"PAY_1752495444624","timestamp":"2025-07-14T12:17:26.850Z"}
+{"level":"info","message":"Payment initialized successfully with Paystack","reference":"h4ra9kfme0","requestId":"PAY_1752495446060","timestamp":"2025-07-14T12:17:26.855Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-14T12:17:27.118Z"}
+{"body":{"buyerId":"68431685432ee393a735a641","currency":"NGN","email":"chrisdouglas1700@gmail.com","postId":"687383885113e14d0f96cf10"},"level":"info","message":"Payment initiation started","requestId":"PAY_1752495447121","timestamp":"2025-07-14T12:17:27.122Z"}
+{"level":"info","message":"Payment initialized successfully with Paystack","reference":"pzpwz2ztqp","requestId":"PAY_1752495446510","timestamp":"2025-07-14T12:17:27.694Z"}
+{"level":"info","message":"Payment initialized successfully with Paystack","reference":"gerxjegb0i","requestId":"PAY_1752495447121","timestamp":"2025-07-14T12:17:27.851Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-14T12:29:03.963Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-14T12:29:06.305Z"}
+{"body":{"buyerId":"68431685432ee393a735a641","currency":"NGN","email":"chrisdouglas1700@gmail.com","postId":"687383885113e14d0f96cf10"},"level":"info","message":"Payment initiation started","requestId":"PAY_1752496146313","timestamp":"2025-07-14T12:29:06.314Z"}
+{"level":"info","message":"Payment initialized successfully with Paystack","reference":"qzcd7wywqm","requestId":"PAY_1752496146313","timestamp":"2025-07-14T12:29:09.941Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-14T12:29:38.619Z"}
+{"body":{"buyerId":"68431685432ee393a735a641","currency":"NGN","email":"chrisdouglas1700@gmail.com","postId":"687383885113e14d0f96cf10"},"level":"info","message":"Payment initiation started","requestId":"PAY_1752496178622","timestamp":"2025-07-14T12:29:38.623Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-14T12:29:39.508Z"}
+{"body":{"buyerId":"68431685432ee393a735a641","currency":"NGN","email":"chrisdouglas1700@gmail.com","postId":"687383885113e14d0f96cf10"},"level":"info","message":"Payment initiation started","requestId":"PAY_1752496179511","timestamp":"2025-07-14T12:29:39.511Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-14T12:29:39.742Z"}
+{"body":{"buyerId":"68431685432ee393a735a641","currency":"NGN","email":"chrisdouglas1700@gmail.com","postId":"687383885113e14d0f96cf10"},"level":"info","message":"Payment initiation started","requestId":"PAY_1752496179744","timestamp":"2025-07-14T12:29:39.744Z"}
+{"level":"info","message":"Payment initialized successfully with Paystack","reference":"phwcugus86","requestId":"PAY_1752496178622","timestamp":"2025-07-14T12:29:39.891Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-14T12:29:39.955Z"}
+{"body":{"buyerId":"68431685432ee393a735a641","currency":"NGN","email":"chrisdouglas1700@gmail.com","postId":"687383885113e14d0f96cf10"},"level":"info","message":"Payment initiation started","requestId":"PAY_1752496179957","timestamp":"2025-07-14T12:29:39.958Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-14T12:29:40.141Z"}
+{"body":{"buyerId":"68431685432ee393a735a641","currency":"NGN","email":"chrisdouglas1700@gmail.com","postId":"687383885113e14d0f96cf10"},"level":"info","message":"Payment initiation started","requestId":"PAY_1752496180142","timestamp":"2025-07-14T12:29:40.143Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-14T12:29:40.340Z"}
+{"body":{"buyerId":"68431685432ee393a735a641","currency":"NGN","email":"chrisdouglas1700@gmail.com","postId":"687383885113e14d0f96cf10"},"level":"info","message":"Payment initiation started","requestId":"PAY_1752496180342","timestamp":"2025-07-14T12:29:40.342Z"}
+{"level":"info","message":"Payment initialized successfully with Paystack","reference":"e58vrt9lty","requestId":"PAY_1752496179744","timestamp":"2025-07-14T12:29:40.561Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-14T12:29:40.951Z"}
+{"body":{"buyerId":"68431685432ee393a735a641","currency":"NGN","email":"chrisdouglas1700@gmail.com","postId":"687383885113e14d0f96cf10"},"level":"info","message":"Payment initiation started","requestId":"PAY_1752496180952","timestamp":"2025-07-14T12:29:40.952Z"}
+{"level":"info","message":"Payment initialized successfully with Paystack","reference":"b2ee5nnsyj","requestId":"PAY_1752496179511","timestamp":"2025-07-14T12:29:41.098Z"}
+{"level":"info","message":"Payment initialized successfully with Paystack","reference":"bnim8ylqla","requestId":"PAY_1752496179957","timestamp":"2025-07-14T12:29:41.112Z"}
+{"level":"info","message":"Payment initialized successfully with Paystack","reference":"lugoa045xu","requestId":"PAY_1752496180142","timestamp":"2025-07-14T12:29:41.299Z"}
+{"level":"info","message":"Payment initialized successfully with Paystack","reference":"exj4cbgu9w","requestId":"PAY_1752496180342","timestamp":"2025-07-14T12:29:41.520Z"}
+{"level":"info","message":"Payment initialized successfully with Paystack","reference":"0m1mp3zgcr","requestId":"PAY_1752496180952","timestamp":"2025-07-14T12:29:41.663Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-14T12:29:41.949Z"}
+{"body":{"buyerId":"68431685432ee393a735a641","currency":"NGN","email":"chrisdouglas1700@gmail.com","postId":"687383885113e14d0f96cf10"},"level":"info","message":"Payment initiation started","requestId":"PAY_1752496181952","timestamp":"2025-07-14T12:29:41.952Z"}
+{"level":"info","message":"Payment initialized successfully with Paystack","reference":"6fhz5jc3wq","requestId":"PAY_1752496181952","timestamp":"2025-07-14T12:29:43.064Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-14T12:36:46.230Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-14T12:36:48.555Z"}
+{"body":{"buyerId":"68431685432ee393a735a641","currency":"NGN","email":"chrisdouglas1700@gmail.com","postId":"687383885113e14d0f96cf10"},"level":"info","message":"Payment initiation started","requestId":"PAY_1752496608557","timestamp":"2025-07-14T12:36:48.558Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-14T12:36:54.438Z"}
+{"body":{"buyerId":"68431685432ee393a735a641","currency":"NGN","email":"chrisdouglas1700@gmail.com","postId":"687383885113e14d0f96cf10"},"level":"info","message":"Payment initiation started","requestId":"PAY_1752496614439","timestamp":"2025-07-14T12:36:54.440Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-14T12:36:55.123Z"}
+{"body":{"buyerId":"68431685432ee393a735a641","currency":"NGN","email":"chrisdouglas1700@gmail.com","postId":"687383885113e14d0f96cf10"},"level":"info","message":"Payment initiation started","requestId":"PAY_1752496615125","timestamp":"2025-07-14T12:36:55.125Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-14T12:36:55.340Z"}
+{"body":{"buyerId":"68431685432ee393a735a641","currency":"NGN","email":"chrisdouglas1700@gmail.com","postId":"687383885113e14d0f96cf10"},"level":"info","message":"Payment initiation started","requestId":"PAY_1752496615342","timestamp":"2025-07-14T12:36:55.342Z"}
+{"level":"info","message":"Payment initialized successfully with Paystack","reference":"mwizdc3sz8","requestId":"PAY_1752496614439","timestamp":"2025-07-14T12:36:55.457Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-14T12:36:55.546Z"}
+{"body":{"buyerId":"68431685432ee393a735a641","currency":"NGN","email":"chrisdouglas1700@gmail.com","postId":"687383885113e14d0f96cf10"},"level":"info","message":"Payment initiation started","requestId":"PAY_1752496615549","timestamp":"2025-07-14T12:36:55.549Z"}
+{"level":"info","message":"Payment initialized successfully with Paystack","reference":"iv3a7jkejx","requestId":"PAY_1752496615342","timestamp":"2025-07-14T12:36:56.040Z"}
+{"level":"info","message":"Payment initialized successfully with Paystack","reference":"lsl4bemn64","requestId":"PAY_1752496615125","timestamp":"2025-07-14T12:36:56.236Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-14T12:36:56.294Z"}
+{"body":{"buyerId":"68431685432ee393a735a641","currency":"NGN","email":"chrisdouglas1700@gmail.com","postId":"687383885113e14d0f96cf10"},"level":"info","message":"Payment initiation started","requestId":"PAY_1752496616296","timestamp":"2025-07-14T12:36:56.296Z"}
+{"level":"info","message":"Payment initialized successfully with Paystack","reference":"3g2omlnl0n","requestId":"PAY_1752496615549","timestamp":"2025-07-14T12:36:56.871Z"}
+{"level":"info","message":"Payment initialized successfully with Paystack","reference":"19hepv0mmt","requestId":"PAY_1752496616296","timestamp":"2025-07-14T12:36:56.919Z"}
+{"level":"info","message":"Payment initialized successfully with Paystack","reference":"fw1q0qjfcr","requestId":"PAY_1752496608557","timestamp":"2025-07-14T12:37:01.738Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-14T12:37:14.638Z"}
+{"body":{"buyerId":"68431685432ee393a735a641","currency":"NGN","email":"chrisdouglas1700@gmail.com","postId":"687383885113e14d0f96cf10"},"level":"info","message":"Payment initiation started","requestId":"PAY_1752496634642","timestamp":"2025-07-14T12:37:14.643Z"}
+{"level":"info","message":"Payment initialized successfully with Paystack","reference":"vhi8oyn75q","requestId":"PAY_1752496634642","timestamp":"2025-07-14T12:37:18.686Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-14T12:37:31.663Z"}
+{"level":"info","message":"Payment verification started","queryParams":{"buyerId":"68431685432ee393a735a641","postId":"687383885113e14d0f96cf10","reference":"vhi8oyn75q","trxref":"vhi8oyn75q"},"reference":"vhi8oyn75q","requestId":"SUCCESS_1752496651683","timestamp":"2025-07-14T12:37:31.684Z"}
+{"level":"debug","message":"Attempting Paystack verification","reference":"vhi8oyn75q","requestId":"SUCCESS_1752496651683","timestamp":"2025-07-14T12:37:31.891Z"}
+{"data":{"data":{"amount":12000000,"authorization":{"account_name":null,"authorization_code":"AUTH_3vn9zy6tmg","bank":"TEST BANK","bin":"408408","brand":"visa","card_type":"visa ","channel":"card","country_code":"NG","exp_month":"12","exp_year":"2030","last4":"4081","receiver_bank":null,"receiver_bank_account_number":null,"reusable":true,"signature":"SIG_oo6j1jRxJU5RwIf1lLHK"},"channel":"card","connect":null,"createdAt":"2025-07-14T12:37:20.000Z","created_at":"2025-07-14T12:37:20.000Z","currency":"NGN","customer":{"customer_code":"CUS_39jjnxsa4xtn85z","email":"chrisdouglas1700@gmail.com","first_name":"Christian","id":241385727,"international_format_phone":null,"last_name":"Friday","metadata":null,"phone":null,"risk_action":"default"},"domain":"test","fees":190000,"fees_breakdown":null,"fees_split":null,"gateway_response":"Successful","id":5146049505,"ip_address":"102.91.103.114","log":{"attempts":1,"errors":0,"history":[{"message":"Set payment method to: card","time":2,"type":"action"},{"message":"Attempted to pay with card","time":4,"type":"action"},{"message":"Successfully paid with card","time":5,"type":"success"}],"input":[],"mobile":true,"start_time":1752496645,"success":true,"time_spent":5},"message":null,"metadata":{"buyerId":"68431685432ee393a735a641","email":"chrisdouglas1700@gmail.com","postId":"687383885113e14d0f96cf10","sellerId":"6865680685b3194e8bc38b92"},"order_id":null,"paidAt":"2025-07-14T12:37:32.000Z","paid_at":"2025-07-14T12:37:32.000Z","plan":null,"plan_object":{},"pos_transaction_data":null,"receipt_number":null,"reference":"vhi8oyn75q","requested_amount":12000000,"source":null,"split":{},"status":"success","subaccount":{},"transaction_date":"2025-07-14T12:37:20.000Z"},"message":"Verification successful","status":true},"level":"debug","message":"Paystack verification raw response","requestId":"SUCCESS_1752496651683","timestamp":"2025-07-14T12:37:33.632Z"}
+{"buyerEmailFromPaystack":"chrisdouglas1700@gmail.com","level":"debug","message":"Extracted IDs from Paystack metadata","requestId":"SUCCESS_1752496651683","retrievedBuyerId":"68431685432ee393a735a641","retrievedPostId":"687383885113e14d0f96cf10","sellerIdFromPaystackMetadata":"6865680685b3194e8bc38b92","timestamp":"2025-07-14T12:37:33.638Z"}
+{"buyerEmail":"chrisdouglas1700@gmail.com","level":"debug","message":"Attempting to find post, buyer, and seller from DB","postId":"687383885113e14d0f96cf10","requestId":"SUCCESS_1752496651683","sellerId":"6865680685b3194e8bc38b92","timestamp":"2025-07-14T12:37:33.640Z"}
+{"buyerId":"68431685432ee393a735a641","level":"info","message":"Found post, buyer, and seller from DB","postId":"687383885113e14d0f96cf10","requestId":"SUCCESS_1752496651683","sellerId":"6865680685b3194e8bc38b92","timestamp":"2025-07-14T12:37:34.239Z"}
+{"level":"debug","message":"Prepared receipt data","receiptDataRef":"vhi8oyn75q","requestId":"SUCCESS_1752496651683","timestamp":"2025-07-14T12:37:34.241Z"}
+{"level":"debug","message":"Attempting to create Escrow, Transaction, and Notification records","requestId":"SUCCESS_1752496651683","timestamp":"2025-07-14T12:37:34.243Z"}
+{"escrowId":"6874fa0ed6b2d45556bf0ff2","level":"info","message":"Escrow, Transaction, and Notification records created","notificationId":"6874fa0ed6b2d45556bf0ff4","requestId":"SUCCESS_1752496651683","timestamp":"2025-07-14T12:37:34.682Z","transactionId":"6874fa0ed6b2d45556bf0ff3"}
+{"level":"debug","message":"Attempting to mark post as sold","postId":"687383885113e14d0f96cf10","requestId":"SUCCESS_1752496651683","timestamp":"2025-07-14T12:37:34.685Z"}
+{"level":"info","message":"Post marked as sold successfully","postId":"687383885113e14d0f96cf10","requestId":"SUCCESS_1752496651683","timestamp":"2025-07-14T12:37:35.022Z"}
+{"level":"debug","message":"Sending initial FCM notifications and updating notification count","requestId":"SUCCESS_1752496651683","timestamp":"2025-07-14T12:37:35.024Z"}
+{"level":"info","message":"Initial notifications sent to seller","requestId":"SUCCESS_1752496651683","timestamp":"2025-07-14T12:37:37.066Z"}
+{"level":"debug","message":"Attempting receipt generation and sending with timeout","requestId":"SUCCESS_1752496651683","timestamp":"2025-07-14T12:37:37.069Z"}
+{"level":"debug","message":"Starting receipt generation","receiptDataRef":"vhi8oyn75q","timestamp":"2025-07-14T12:37:37.081Z"}
+{"imagePath":"/storage/emulated/0/Download/My web/Backend/routes/receipts/vhi8oyn75q.png","level":"debug","message":"Receipt image saved locally","timestamp":"2025-07-14T12:37:39.953Z"}
+{"level":"debug","message":"Receipt image uploaded to Cloudinary","timestamp":"2025-07-14T12:37:45.935Z","url":"https://res.cloudinary.com/dp7shydjh/image/upload/v1752496667/salmart_receipts/receipts/vhi8oyn75q.png"}
+{"imagePath":"/storage/emulated/0/Download/My web/Backend/routes/receipts/vhi8oyn75q.png","level":"debug","message":"Local receipt image deleted","timestamp":"2025-07-14T12:37:45.940Z"}
+{"level":"debug","message":"Transaction updated with receipt URL","requestId":"SUCCESS_1752496651683","timestamp":"2025-07-14T12:37:46.206Z","transactionId":"6874fa0ed6b2d45556bf0ff3"}
+{"buyerId":"68431685432ee393a735a641","level":"debug","message":"Starting send receipt to seller","reference":"vhi8oyn75q","sellerId":"6865680685b3194e8bc38b92","timestamp":"2025-07-14T12:37:46.215Z"}
+{"level":"debug","message":"Receipt message saved to DB","messageId":"6874fa1ad6b2d45556bf0ffd","timestamp":"2025-07-14T12:37:46.472Z"}
+{"level":"debug","message":"Emitted receiveMessage to seller via socket","sellerId":"6865680685b3194e8bc38b92","timestamp":"2025-07-14T12:37:46.478Z"}
+{"level":"debug","message":"FCM notification sent for receipt","sellerId":"6865680685b3194e8bc38b92","timestamp":"2025-07-14T12:37:48.115Z"}
+{"level":"info","message":"Receipt generation and sending completed","receiptStatus":{"success":true},"requestId":"SUCCESS_1752496651683","timestamp":"2025-07-14T12:37:48.119Z"}
+{"level":"info","message":"Payment verification completed successfully and success page rendered","receiptSent":true,"reference":"vhi8oyn75q","requestId":"SUCCESS_1752496651683","timestamp":"2025-07-14T12:37:48.133Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-14T12:37:48.653Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-14T12:38:03.302Z"}
+{"body":{"buyerId":"68431685432ee393a735a641","currency":"NGN","email":"chrisdouglas1700@gmail.com","postId":"687383885113e14d0f96cf10"},"level":"info","message":"Payment initiation started","requestId":"PAY_1752496683305","timestamp":"2025-07-14T12:38:03.306Z"}
+{"level":"warn","message":"Payment initiation: Product already sold","postId":"687383885113e14d0f96cf10","requestId":"PAY_1752496683305","timestamp":"2025-07-14T12:38:03.567Z"}
+{"level":"warn","message":"Receipt generation timeout triggered","requestId":"SUCCESS_1752496651683","timestamp":"2025-07-14T12:38:07.095Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-14T12:38:12.385Z"}
+{"body":{"buyerId":"68431685432ee393a735a641","currency":"NGN","email":"chrisdouglas1700@gmail.com","postId":"687383885113e14d0f96cf10"},"level":"info","message":"Payment initiation started","requestId":"PAY_1752496692388","timestamp":"2025-07-14T12:38:12.388Z"}
+{"level":"warn","message":"Payment initiation: Product already sold","postId":"687383885113e14d0f96cf10","requestId":"PAY_1752496692388","timestamp":"2025-07-14T12:38:12.649Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-14T12:38:13.903Z"}
+{"body":{"buyerId":"68431685432ee393a735a641","currency":"NGN","email":"chrisdouglas1700@gmail.com","postId":"687383885113e14d0f96cf10"},"level":"info","message":"Payment initiation started","requestId":"PAY_1752496693905","timestamp":"2025-07-14T12:38:13.905Z"}
+{"level":"warn","message":"Payment initiation: Product already sold","postId":"687383885113e14d0f96cf10","requestId":"PAY_1752496693905","timestamp":"2025-07-14T12:38:14.294Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-14T12:38:14.648Z"}
+{"body":{"buyerId":"68431685432ee393a735a641","currency":"NGN","email":"chrisdouglas1700@gmail.com","postId":"687383885113e14d0f96cf10"},"level":"info","message":"Payment initiation started","requestId":"PAY_1752496694650","timestamp":"2025-07-14T12:38:14.650Z"}
+{"level":"warn","message":"Payment initiation: Product already sold","postId":"687383885113e14d0f96cf10","requestId":"PAY_1752496694650","timestamp":"2025-07-14T12:38:14.881Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-14T13:08:55.402Z"}
+{"body":{"buyerId":"68431685432ee393a735a641","currency":"NGN","email":"chrisdouglas1700@gmail.com","postId":"687501305504af65bc98e865"},"level":"info","message":"Payment initiation started","requestId":"PAY_1752498535414","timestamp":"2025-07-14T13:08:55.415Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-14T13:08:56.341Z"}
+{"level":"info","message":"Payment initialized successfully with Paystack","reference":"0wuqzwczf5","requestId":"PAY_1752498535414","timestamp":"2025-07-14T13:08:56.791Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-14T13:10:20.205Z"}
+{"body":{"buyerId":"68431685432ee393a735a641","currency":"NGN","email":"chrisdouglas1700@gmail.com","postId":"687501305504af65bc98e865"},"level":"info","message":"Payment initiation started","requestId":"PAY_1752498620207","timestamp":"2025-07-14T13:10:20.208Z"}
+{"level":"info","message":"Payment initialized successfully with Paystack","reference":"sh0vo37yz7","requestId":"PAY_1752498620207","timestamp":"2025-07-14T13:10:22.281Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-14T13:11:06.653Z"}
+{"body":{"buyerId":"68431685432ee393a735a641","currency":"NGN","email":"chrisdouglas1700@gmail.com","postId":"687501305504af65bc98e865"},"level":"info","message":"Payment initiation started","requestId":"PAY_1752498666657","timestamp":"2025-07-14T13:11:06.657Z"}
+{"level":"info","message":"Payment initialized successfully with Paystack","reference":"szs1zv5p8i","requestId":"PAY_1752498666657","timestamp":"2025-07-14T13:11:07.800Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-14T14:49:22.107Z"}

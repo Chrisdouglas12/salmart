@@ -653,8 +653,11 @@ await transaction.save();
 });
 
 
+
 async function processQueuedPayouts() {
   try {
+    console.log('[CRON] Checking for queued payouts...');
+
     const pendingTransactions = await Transaction.find({
       status: 'confirmed_pending_payout',
       processing: false
@@ -667,12 +670,16 @@ async function processQueuedPayouts() {
       return;
     }
 
-    // === Step 1: Check Paystack balance ===
+    // === Step 1: Get Paystack available balance
     let availableBalance = 0;
     try {
       const balanceResponse = await axios.get(
         'https://api.paystack.co/balance',
-        { headers: { Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}` } }
+        {
+          headers: {
+            Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`
+          }
+        }
       );
       availableBalance = balanceResponse.data.data[0]?.balance || 0;
       console.log(`[PAYOUT JOB] Available Balance: ${availableBalance} kobo`);
@@ -681,11 +688,25 @@ async function processQueuedPayouts() {
       return;
     }
 
-    // === Step 2: Process in FIFO order ===
+    // === Step 2: Process transactions FIFO
     for (const tx of pendingTransactions) {
       if (!tx.sellerId || !tx.buyerId || !tx.postId) {
         console.warn(`[PAYOUT SKIPPED] Missing populated fields for tx ${tx._id}`);
         continue;
+      }
+
+      // Fix missing transferRecipient from seller if needed
+      if (!tx.transferRecipient) {
+        if (tx.sellerId.paystackRecipientCode) {
+          tx.transferRecipient = tx.sellerId.paystackRecipientCode;
+          await tx.save();
+          console.log(`[PAYOUT FIXED] Populated missing recipient for tx ${tx._id}`);
+        } else {
+          console.warn(`[PAYOUT SKIPPED] No transferRecipient for tx ${tx._id}`);
+          tx.processing = false;
+          await tx.save();
+          continue;
+        }
       }
 
       tx.processing = true;
@@ -710,9 +731,10 @@ async function processQueuedPayouts() {
           console.log(`[PAYOUT HALTED] Insufficient balance for tx ${tx._id}`);
           tx.processing = false;
           await tx.save();
-          break;
+          break; // Stop and retry later when more funds are available
         }
 
+        // === Proceed with transfer
         const transferPayload = {
           source: 'balance',
           amount: amountKobo,
@@ -723,7 +745,11 @@ async function processQueuedPayouts() {
         const transferResponse = await axios.post(
           'https://api.paystack.co/transfer',
           transferPayload,
-          { headers: { Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}` } }
+          {
+            headers: {
+              Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`
+            }
+          }
         );
 
         tx.status = 'released';
@@ -740,7 +766,7 @@ async function processQueuedPayouts() {
 
         await Notification.create({
           userId: tx.sellerId._id,
-          senderId: tx.systemUser._id,
+          senderId: tx.systemUser?._id, // optional if saved earlier
           postId: tx.postId._id,
           title,
           message,
@@ -763,19 +789,18 @@ async function processQueuedPayouts() {
         );
 
         console.log(`[PAYOUT SUCCESS] Transaction ${tx._id} completed`);
-
       } catch (transferErr) {
         console.error(`[PAYOUT FAILED] Tx ${tx._id}:`, transferErr.message);
-        console.error(transferErr.response?.data);
+        console.error(transferErr.response?.data || {});
         tx.processing = false;
         await tx.save();
       }
     }
-
   } catch (err) {
     console.error('[PAYOUT ERROR] processQueuedPayouts crashed:', err.message);
   }
 }
+
 
 // Run every 15 minutes
 cron.schedule('*/15 * * * *', () => {

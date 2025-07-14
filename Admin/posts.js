@@ -237,8 +237,8 @@ document.addEventListener('DOMContentLoaded', async function () {
             } else {
                 if (document.exitFullscreen) {
                     document.exitFullscreen().catch(e => console.error('Exit fullscreen error:', e));
-                } else if (document.webkitExitFullscreen) {
-                    document.webkitExitFullscreen();
+                } else if (elem.webkitExitFullscreen) {
+                    elem.webkitExitFullscreen();
                 }
                 fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>';
             }
@@ -616,6 +616,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         postElement.classList.add('promoted-post');
         postElement.dataset.createdAt = post.createdAt || new Date().toISOString();
         postElement.dataset.postId = post._id || '';
+        postElement.dataset.sellerId = post.createdBy ? post.createdBy.userId : ''; // Add seller ID
 
         const isPostCreator = post.createdBy && post.createdBy.userId === currentLoggedInUser;
 
@@ -647,6 +648,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                     data-product-location="${escapeHtml(post.location || 'N/A')}"
                     data-product-condition="${escapeHtml(post.productCondition || 'N/A')}"
                     data-product-price="${post.price ? '₦' + Number(post.price).toLocaleString('en-NG') : '₦0.00'}"
+                    data-seller-id="${post.createdBy ? post.createdBy.userId : ''}"
                     ${post.isSold ? 'disabled' : ''}>
                     <i class="fas fa-shopping-cart"></i> ${post.isSold ? 'Sold' : 'Buy'}
                 </button>
@@ -707,6 +709,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         postElement.classList.add('post');
         postElement.dataset.createdAt = post.createdAt || new Date().toISOString();
         postElement.dataset.postId = post._id || '';
+        postElement.dataset.sellerId = post.createdBy ? post.createdBy.userId : ''; // Add seller ID
 
         const isFollowing = currentFollowingList.includes(post.createdBy?.userId?.toString());
         const isPostCreator = post.createdBy && post.createdBy.userId === currentLoggedInUser;
@@ -853,6 +856,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                                     data-product-location="${escapeHtml(post.location || 'N/A')}"
                                     data-product-condition="${escapeHtml(post.productCondition || 'N/A')}"
                                     data-product-price="${post.price ? '₦' + Number(post.price).toLocaleString('en-NG') : '₦0.00'}"
+                                    data-seller-id="${post.createdBy ? post.createdBy.userId : ''}"
                                     ${post.isSold ? 'disabled' : ''}> <i class="fas fa-shopping-cart"></i>
                                 ${post.isSold ? 'Sold Out' : 'Buy Now'}
                             </button>
@@ -1314,7 +1318,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 productImage = productImage.startsWith('/') ? `${API_BASE_URL}${productImage}` : `${API_BASE_URL}/${productImage}`;
             }
 
-            const message = `Is this item still available?\n\nProduct: ${productDescription}`;
+            const message = `I'm ready to pay for this now, is it still available?\n\nProduct: ${productDescription}`;
             const encodedMessage = encodeURIComponent(message);
             const encodedProductImage = encodeURIComponent(productImage);
             const encodedRecipientUsername = encodeURIComponent(recipientUsername);
@@ -1326,40 +1330,35 @@ document.addEventListener('DOMContentLoaded', async function () {
             return; // Exit to prevent further processing
         }
 
-        // Buy Now Button Handler
+        // Buy Now Button Handler - MODIFIED
         if (target.classList.contains('buy-now-button')) {
-          event.preventDefault();
+            event.preventDefault();
 
-          const postId = target.dataset.postId;
-          if (!postId) {
-            console.error("Post ID is missing");
-            if (showToast) showToast('Error: Post ID not found for purchase.', '#dc3545');
-            return;
-          }
+            const postId = target.dataset.postId;
+            if (!postId) {
+                console.error("Post ID is missing");
+                if (showToast) showToast('Error: Post ID not found.', '#dc3545');
+                return;
+            }
 
-          // Store product info for use in modal actions
-          const productData = {
-            postId: target.dataset.postId || '',
-            productImage: target.dataset.productImage || '',
-            productTitle: target.dataset.productTitle || '',
-            productDescription: target.dataset.productDescription || '',
-            productLocation: target.dataset.productLocation || '',
-            productCondition: target.dataset.productCondition || '',
-            productPrice: target.dataset.productPrice || ''
-          };
+            // Collect all product data attributes
+            const productData = {
+                postId: postId,
+                productImage: target.dataset.productImage || '',
+                productTitle: target.dataset.productTitle || '',
+                productDescription: target.dataset.productDescription || '',
+                productLocation: target.dataset.productLocation || '',
+                productCondition: target.dataset.productCondition || '',
+                productPrice: target.dataset.productPrice || '',
+                sellerId: target.dataset.sellerId || ''
+            };
 
-          // Save to a temporary object for modal actions
-          window.__selectedProduct = productData;
+            // Encode all parameters for the URL
+            const queryParams = new URLSearchParams(productData).toString();
 
-          // Show modal
-          const paymentChoiceModal = document.getElementById('paymentChoiceModal');
-          if (paymentChoiceModal) {
-            paymentChoiceModal.classList.remove('hidden');
-          } else {
-            console.error("Payment choice modal not found.");
-            if (showToast) showToast('Payment modal not available.', '#dc3545');
-          }
-          return; // Exit to prevent further processing
+            // Navigate to the new product details page
+            window.location.href = `checkout.html?${queryParams}`;
+            return; // Exit to prevent further processing
         }
 
         // Handle Follow Button
@@ -1400,7 +1399,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 }
 
                 // Re-apply UI update for consistency with actual state
-                window.updateFollowButtonsUI(userIdToFollow, !isCurrentlyFollowing);
+                window.updateFollowButtonsUI(userIdToFollow, isCurrentlyFollowing);
                 if (showToast) showToast(data.message || 'Follow status updated!', '#28a745');
 
             } catch (error) {
@@ -1459,90 +1458,3 @@ document.addEventListener('DOMContentLoaded', async function () {
         });
     }
 });
-
-function closeModal() {
-  const paymentChoiceModal = document.getElementById('paymentChoiceModal');
-  if (paymentChoiceModal) {
-    paymentChoiceModal.classList.add('hidden');
-  }
-}
-
-function choosePT() {
-  const product = window.__selectedProduct; // Get the selected product data
-  if (!product || !product.postId) {
-      if (window.showToast) window.showToast('Product data missing for in-app payment.', 'error');
-      console.error('Product data is missing for PT payment.');
-      return;
-  }
-  // Construct query parameters from the product object
-  const query = new URLSearchParams(product).toString();
-  window.location.href = `checkout.html?${query}`;
-}
-
-function choosePaystack() {
-  const product = window.__selectedProduct;
-  const userId = localStorage.getItem('userId');
-  const email = localStorage.getItem('email');
-
-  if (!userId || !email) {
-    if (window.showToast) window.showToast("Missing user information. Please log in.", 'error');
-    console.error("Missing user information for Paystack payment.");
-    return;
-  }
-
-  if (!product || !product.postId || !product.productPrice) {
-      if (window.showToast) window.showToast('Product data missing for Paystack payment.', 'error');
-      console.error('Product data is missing for Paystack payment.');
-      return;
-  }
-
-  // Parse the price, remove '₦' and commas, then convert to kobo (for Paystack)
-  const rawPrice = product.productPrice.replace('₦', '').replace(/,/g, '');
-  const amountInKobo = Math.round(parseFloat(rawPrice) * 100); // Ensure it's a number and convert to kobo
-
-  if (isNaN(amountInKobo) || amountInKobo <= 0) {
-      if (window.showToast) window.showToast('Invalid product price for payment.', 'error');
-      console.error('Invalid amount for Paystack:', product.productPrice);
-      return;
-  }
-
-  fetch(`${API_BASE_URL}/pay`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      postId: product.postId,
-      buyerId: userId,
-      email,
-      amount: amountInKobo // Send amount in kobo
-    })
-  })
-  .then(res => {
-    if (!res.ok) {
-        return res.json().then(errorData => {
-            throw new Error(errorData.message || 'Failed to initiate Paystack payment on server.');
-        });
-    }
-    return res.json();
-  })
-  .then(data => {
-    if (!data.success) {
-      if (window.showToast) window.showToast(data.message || "Payment setup failed.", 'error');
-      return;
-    }
-
-    const redirectParams = new URLSearchParams({
-      ref: data.reference,
-      productTitle: product.productTitle,
-      amount: data.amount // This amount should also be in kobo from backend
-    });
-
-    // Store product details in session storage for the paystack.html page
-    sessionStorage.setItem('paystackProductDetails', JSON.stringify(product));
-
-    window.location.href = `paystack.html?${redirectParams.toString()}`;
-  })
-  .catch(err => {
-    console.error('Error starting Paystack payment:', err);
-    if (window.showToast) window.showToast(err.message || 'Something went wrong with payment initiation.', 'error');
-  });
-}
