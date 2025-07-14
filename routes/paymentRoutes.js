@@ -75,7 +75,7 @@ module.exports = (io) => {
       const imagePath = path.join(receiptsDir, `${reference}.png`);
       
       // Create modern receipt with professional design
-      const image = new Jimp(650, 1000, 0xFFFFFFFF);
+      const image = new Jimp(650, 1000, 0xFFFFFFFF); // White background
       
       // Load fonts
       const fontSmall = await Jimp.loadFont(Jimp.FONT_SANS_14_BLACK);
@@ -83,20 +83,23 @@ module.exports = (io) => {
       const fontBold = await Jimp.loadFont(Jimp.FONT_SANS_32_BLACK);
       const fontLarge = await Jimp.loadFont(Jimp.FONT_SANS_64_BLACK);
 
-      // Header gradient background
+      // Header gradient background (Green tones)
       const headerHeight = 180;
+      const startColor = Jimp.cssColorToHex('#218838'); // Darker green
+      const endColor = Jimp.cssColorToHex('#28a745'); // Your specified green
+      
       for (let y = 0; y < headerHeight; y++) {
         for (let x = 0; x < 650; x++) {
           const ratio = y / headerHeight;
-          const r = Math.floor(24 + (76 - 24) * ratio);
-          const g = Math.floor(119 + (175 - 119) * ratio);
-          const b = Math.floor(242 + (80 - 242) * ratio);
+          const r = Math.floor(Jimp.intToRGBA(startColor).r + (Jimp.intToRGBA(endColor).r - Jimp.intToRGBA(startColor).r) * ratio);
+          const g = Math.floor(Jimp.intToRGBA(startColor).g + (Jimp.intToRGBA(endColor).g - Jimp.intToRGBA(startColor).g) * ratio);
+          const b = Math.floor(Jimp.intToRGBA(startColor).b + (Jimp.intToRGBA(endColor).b - Jimp.intToRGBA(startColor).b) * ratio);
           image.setPixelColor(Jimp.rgbaToInt(r, g, b, 255), x, y);
         }
       }
 
-      // Company logo area (modern design)
-      const logoArea = await Jimp.create(100, 100, 0x1E3A8AFF);
+      // Company logo area (modern design - Darker Green)
+      const logoArea = await Jimp.create(100, 100, Jimp.cssColorToHex('#1e7e34FF')); // Darker green for logo area
       logoArea.print(fontLarge, 25, 20, 'S', 50, 60);
       image.composite(logoArea, 50, 40);
 
@@ -105,8 +108,8 @@ module.exports = (io) => {
       image.print(fontRegular, 170, 85, 'Payment Receipt', 400);
       image.print(fontSmall, 170, 110, 'Digital Transaction Confirmation', 400);
 
-      // Success indicator with modern styling
-      const successBadge = await Jimp.create(200, 50, 0x10B981FF);
+      // Success indicator with modern styling (Your specified green)
+      const successBadge = await Jimp.create(200, 50, Jimp.cssColorToHex('#28a745FF')); // Your specified green
       successBadge.print(fontRegular, 40, 15, '✓ VERIFIED', 120);
       image.composite(successBadge, 450, 65);
 
@@ -114,20 +117,21 @@ module.exports = (io) => {
       const cardY = 220;
       const cardHeight = 600;
       
-      // Card background with subtle shadow effect
-      const card = await Jimp.create(590, cardHeight, 0xF9FAFBFF);
+      // Card background (White - F9FAFBFF)
+      const card = await Jimp.create(590, cardHeight, 0xF9FAFBFF); // Keeping light background for readability
       
-      // Add subtle border
+      // Add subtle border (Light green-grey)
+      const borderColor = Jimp.cssColorToHex('#D4EDDAFF'); // Light green-grey border
       for (let i = 0; i < 2; i++) {
         card.scan(i, 0, 1, cardHeight, function (x, y, idx) {
-          this.bitmap.data[idx] = 229; // Light gray border
-          this.bitmap.data[idx + 1] = 231;
-          this.bitmap.data[idx + 2] = 235;
+          this.bitmap.data[idx] = Jimp.intToRGBA(borderColor).r;
+          this.bitmap.data[idx + 1] = Jimp.intToRGBA(borderColor).g;
+          this.bitmap.data[idx + 2] = Jimp.intToRGBA(borderColor).b;
         });
         card.scan(590 - 1 - i, 0, 1, cardHeight, function (x, y, idx) {
-          this.bitmap.data[idx] = 229;
-          this.bitmap.data[idx + 1] = 231;
-          this.bitmap.data[idx + 2] = 235;
+          this.bitmap.data[idx] = Jimp.intToRGBA(borderColor).r;
+          this.bitmap.data[idx + 1] = Jimp.intToRGBA(borderColor).g;
+          this.bitmap.data[idx + 2] = Jimp.intToRGBA(borderColor).b;
         });
       }
       
@@ -144,18 +148,19 @@ module.exports = (io) => {
       image.print(fontRegular, leftMargin, yPos + 18, reference.toUpperCase(), 500);
       yPos += lineHeight + 10;
 
-      // Divider line
+      // Divider line (Light green-grey)
       for (let x = leftMargin; x < 590; x++) {
-        image.setPixelColor(0xE5E7EBFF, x, yPos);
+        image.setPixelColor(Jimp.cssColorToHex('#D4EDDAFF'), x, yPos);
       }
       yPos += 25;
 
-      // Amount section with emphasis
-      const amountBg = await Jimp.create(530, 80, 0xF0F9FFFF);
+      // Amount section with emphasis (Light green background, darker green text)
+      const amountBg = await Jimp.create(530, 80, Jimp.cssColorToHex('#EAF7EDFF')); // Very light green
       image.composite(amountBg, leftMargin, yPos);
       
+      const amountTextColor = Jimp.cssColorToHex('#1e7e34FF'); // Darker green for text
       image.print(fontSmall, leftMargin + 20, yPos + 15, 'AMOUNT PAID', 300);
-      image.print(fontBold, leftMargin + 20, yPos + 35, `₦${Number(amountPaid).toLocaleString('en-NG')}`, 400);
+      image.print(fontBold, leftMargin + 20, yPos + 35, `₦${Number(amountPaid).toLocaleString('en-NG')}`, 400, amountTextColor);
       yPos += 100;
 
       // Transaction details grid
@@ -180,9 +185,9 @@ module.exports = (io) => {
       // Footer section
       yPos = 900;
       
-      // Footer divider
+      // Footer divider (Light green-grey)
       for (let x = 50; x < 600; x++) {
-        image.setPixelColor(0xD1D5DBFF, x, yPos - 20);
+        image.setPixelColor(Jimp.cssColorToHex('#D4EDDAFF'), x, yPos - 20);
       }
 
       // Footer text
@@ -329,6 +334,304 @@ module.exports = (io) => {
     logger.info('Payment verification started', { requestId, reference, queryParams: req.query });
 
     try {
+      // --- IMPORTANT: Idempotency Check ---
+      const existingTransaction = await Transaction.findOne({ paymentReference: reference });
+      if (existingTransaction) {
+          logger.warn('Duplicate payment reference detected. Transaction already processed.', { 
+              requestId, 
+              reference, 
+              transactionId: existingTransaction._id 
+          });
+
+          // Fetch related data for rendering the "already processed" page
+          const [post, buyer, seller] = await Promise.all([
+              Post.findById(existingTransaction.postId),
+              User.findById(existingTransaction.buyerId),
+              User.findById(existingTransaction.sellerId)
+          ]);
+
+          const receiptDataForDisplay = {
+              reference: existingTransaction.paymentReference,
+              amountPaid: existingTransaction.amount,
+              transactionDate: existingTransaction.createdAt, // Or the actual paid_at from original Paystack data if stored
+              buyerName: buyer ? `${buyer.firstName || ''} ${buyer.lastName || ''}`.trim() : 'N/A',
+              email: buyer ? buyer.email : 'N/A',
+              productTitle: post ? (post.title || post.description || "Product") : 'N/A',
+              sellerName: seller ? `${seller.firstName || ''} ${seller.lastName || ''}`.trim() : 'N/A',
+          };
+          
+          return res.send(`
+              <!DOCTYPE html>
+              <html lang="en">
+              <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Payment Already Processed - Salmart</title>
+                <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+                <style>
+                  * {
+                    margin: 0;
+                    padding: 0;
+                    box-sizing: border-box;
+                  }
+                  body {
+                    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                    background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%); /* Green gradient */
+                    min-height: 100vh;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    padding: 20px;
+                  }
+                  .container {
+                    background: white;
+                    border-radius: 24px;
+                    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+                    overflow: hidden;
+                    max-width: 480px;
+                    width: 100%;
+                    position: relative;
+                  }
+                  .header {
+                    background: linear-gradient(135deg, #1e7e34 0%, #28a745 100%); /* Green gradient */
+                    color: white;
+                    padding: 40px 30px 30px;
+                    text-align: center;
+                    position: relative;
+                  }
+                  .header::before {
+                    content: '';
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="20" cy="20" r="1" fill="white" opacity="0.1"/><circle cx="80" cy="40" r="1" fill="white" opacity="0.1"/><circle cx="40" cy="80" r="1" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+                    opacity: 0.3;
+                  }
+                  .logo {
+                    width: 80px;
+                    height: 80px;
+                    background: rgba(255, 255, 255, 0.2);
+                    border-radius: 20px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    margin: 0 auto 20px;
+                    font-size: 32px;
+                    font-weight: 700;
+                    backdrop-filter: blur(10px);
+                    position: relative;
+                    z-index: 1;
+                  }
+                  .title {
+                    font-size: 28px;
+                    font-weight: 700;
+                    margin-bottom: 8px;
+                    position: relative;
+                    z-index: 1;
+                  }
+                  .subtitle {
+                    font-size: 16px;
+                    opacity: 0.9;
+                    font-weight: 400;
+                    position: relative;
+                    z-index: 1;
+                  }
+                  .status-badge {
+                    background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%); /* Green gradient */
+                    color: white;
+                    padding: 16px 24px;
+                    margin: 30px;
+                    border-radius: 16px;
+                    text-align: center;
+                    font-weight: 600;
+                    font-size: 18px;
+                    box-shadow: 0 10px 20px rgba(40, 167, 69, 0.3); /* Green shadow */
+                  }
+                  .receipt-section {
+                    padding: 30px;
+                  }
+                  .section-title {
+                    font-size: 20px;
+                    font-weight: 600;
+                    color: #1f2937;
+                    margin-bottom: 20px;
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                  }
+                  .detail-card {
+                    background: #f8fafc;
+                    border-radius: 12px;
+                    padding: 20px;
+                    margin-bottom: 20px;
+                    border: 1px solid #d4edda; /* Light green border */
+                  }
+                  .detail-row {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: flex-start;
+                    margin-bottom: 12px;
+                  }
+                  .detail-row:last-child {
+                    margin-bottom: 0;
+                  }
+                  .detail-label {
+                    font-size: 14px;
+                    color: #64748b;
+                    font-weight: 500;
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+                  }
+                  .detail-value {
+                    font-size: 16px;
+                    color: #1e293b;
+                    font-weight: 600;
+                    text-align: right;
+                    max-width: 60%;
+                    word-break: break-word;
+                  }
+                  .amount-highlight {
+                    background: linear-gradient(135deg, #eaf7ed 0%, #d4edda 100%); /* Light green gradient */
+                    border-radius: 12px;
+                    padding: 20px;
+                    margin: 20px 0;
+                    text-align: center;
+                  }
+                  .amount-label {
+                    font-size: 14px;
+                    color: #155724; /* Darker green */
+                    font-weight: 500;
+                    margin-bottom: 8px;
+                  }
+                  .amount-value {
+                    font-size: 32px;
+                    color: #155724; /* Darker green */
+                    font-weight: 700;
+                  }
+                  .receipt-status {
+                    padding: 20px 30px;
+                    background: #f0fdf4; /* Very light green */
+                    border-top: 1px solid #bbf7d0; /* Light green */
+                    text-align: center;
+                  }
+                  .status-icon {
+                    font-size: 24px;
+                    margin-bottom: 8px;
+                  }
+                  .status-text {
+                    font-size: 16px;
+                    font-weight: 600;
+                    color: #166534; /* Dark green */
+                    margin-bottom: 4px;
+                  }
+                  .status-detail {
+                    font-size: 14px;
+                    color: #15803d; /* Dark green */
+                  }
+                  .footer {
+                    background: #f8fafc;
+                    padding: 20px 30px;
+                    text-align: center;
+                    border-top: 1px solid #e2e8f0;
+                  }
+                  .footer-text {
+                    font-size: 12px;
+                    color: #64748b;
+                    line-height: 1.5;
+                  }
+                  @media (max-width: 480px) {
+                    .container {
+                      margin: 10px;
+                      border-radius: 16px;
+                    }
+                    .header {
+                      padding: 30px 20px 20px;
+                    }
+                    .receipt-section {
+                      padding: 20px;
+                    }
+                    .detail-row {
+                      flex-direction: column;
+                      gap: 4px;
+                    }
+                    .detail-value {
+                      text-align: left;
+                      max-width: 100%;
+                    }
+                  }
+                </style>
+              </head>
+              <body>
+                <div class="container">
+                  <div class="header">
+                    <div class="logo">S</div>
+                    <h1 class="title">Payment Already Processed</h1>
+                    <p class="subtitle">This transaction has already been successfully completed.</p>
+                  </div>
+                  
+                  <div class="status-badge">
+                    ✓ Transaction Confirmed
+                  </div>
+                  
+                  <div class="receipt-section">
+                    <h2 class="section-title">
+                      <span>📄</span>
+                      Transaction Details
+                    </h2>
+                    
+                    <div class="detail-card">
+                      <div class="detail-row">
+                        <span class="detail-label">Reference</span>
+                        <span class="detail-value">${receiptDataForDisplay.reference}</span>
+                      </div>
+                      <div class="detail-row">
+                        <span class="detail-label">Date</span>
+                        <span class="detail-value">${new Date(receiptDataForDisplay.transactionDate).toLocaleString('en-NG')}</span>
+                      </div>
+                      <div class="detail-row">
+                        <span class="detail-label">Buyer</span>
+                        <span class="detail-value">${receiptDataForDisplay.buyerName}</span>
+                      </div>
+                      <div class="detail-row">
+                        <span class="detail-label">Email</span>
+                        <span class="detail-value">${receiptDataForDisplay.email}</span>
+                      </div>
+                      <div class="detail-row">
+                        <span class="detail-label">Product</span>
+                        <span class="detail-value">${receiptDataForDisplay.productTitle}</span>
+                      </div>
+                    </div>
+                    
+                    <div class="amount-highlight">
+                      <div class="amount-label">Amount (already) Paid</div>
+                      <div class="amount-value">₦${Number(receiptDataForDisplay.amountPaid).toLocaleString('en-NG')}</div>
+                    </div>
+                  </div>
+                  
+                  <div class="receipt-status">
+                    <div class="status-icon">✅</div>
+                    <div class="status-text">
+                      No Action Needed
+                    </div>
+                    <div class="status-detail">
+                      This payment was already verified and processed.
+                    </div>
+                  </div>
+                  
+                  <div class="footer">
+                    <p class="footer-text">
+                      © 2025 Salmart Technologies<br>
+                      Secure Digital Commerce Platform
+                    </p>
+                  </div>
+                </div>
+              </body>
+              </html>
+          `);
+      }
+
       // Step 1: Verify payment with Paystack
       logger.debug('Attempting Paystack verification', { requestId, reference });
       const paystackResponse = await fetch(`https://api.paystack.co/transaction/verify/${reference}`, {
@@ -384,14 +687,13 @@ module.exports = (io) => {
       }
 
       let seller;
-if (sellerIdFromPaystackMetadata) {
-  // We're fixing the metadata generation, so this should now be a proper ObjectId string
-  seller = await User.findById(sellerIdFromPaystackMetadata); 
-} else {
-  // Ensure post.createdBy.userId is explicitly converted to a string if it's an ObjectId object
-  seller = await User.findById(post.createdBy.userId.toString()); 
-}
-
+      if (sellerIdFromPaystackMetadata) {
+        // We're fixing the metadata generation, so this should now be a proper ObjectId string
+        seller = await User.findById(sellerIdFromPaystackMetadata); 
+      } else {
+        // Ensure post.createdBy.userId is explicitly converted to a string if it's an ObjectId object
+        seller = await User.findById(post.createdBy.userId.toString()); 
+      }
       
       if (!seller) {
         logger.error('Seller not found for post', { 
@@ -548,7 +850,7 @@ if (sellerIdFromPaystackMetadata) {
             
             body {
               font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+              background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%); /* Green gradient */
               min-height: 100vh;
               display: flex;
               align-items: center;
@@ -567,7 +869,7 @@ if (sellerIdFromPaystackMetadata) {
             }
             
             .header {
-              background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+              background: linear-gradient(135deg, #1e7e34 0%, #28a745 100%); /* Green gradient */
               color: white;
               padding: 40px 30px 30px;
               text-align: center;
@@ -618,7 +920,7 @@ if (sellerIdFromPaystackMetadata) {
             }
             
             .status-badge {
-              background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+              background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%); /* Green gradient */
               color: white;
               padding: 16px 24px;
               margin: 30px;
@@ -626,7 +928,7 @@ if (sellerIdFromPaystackMetadata) {
               text-align: center;
               font-weight: 600;
               font-size: 18px;
-              box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3);
+              box-shadow: 0 10px 20px rgba(40, 167, 69, 0.3); /* Green shadow */
             }
             
             .receipt-section {
@@ -648,7 +950,7 @@ if (sellerIdFromPaystackMetadata) {
               border-radius: 12px;
               padding: 20px;
               margin-bottom: 20px;
-              border: 1px solid #e2e8f0;
+              border: 1px solid #d4edda; /* Light green border */
             }
             
             .detail-row {
@@ -680,7 +982,7 @@ if (sellerIdFromPaystackMetadata) {
             }
             
             .amount-highlight {
-              background: linear-gradient(135deg, #fef3c7 0%, #fcd34d 100%);
+              background: linear-gradient(135deg, #eaf7ed 0%, #d4edda 100%); /* Light green gradient */
               border-radius: 12px;
               padding: 20px;
               margin: 20px 0;
@@ -689,14 +991,14 @@ if (sellerIdFromPaystackMetadata) {
             
             .amount-label {
               font-size: 14px;
-              color: #92400e;
+              color: #155724; /* Darker green */
               font-weight: 500;
               margin-bottom: 8px;
             }
             
             .amount-value {
               font-size: 32px;
-              color: #92400e;
+              color: #155724; /* Darker green */
               font-weight: 700;
             }
             
