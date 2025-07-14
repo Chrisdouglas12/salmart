@@ -16,6 +16,7 @@ const Escrow = require('../models/escrowSchema.js');
 const Notification = require('../models/notificationSchema.js');
 const { sendFCMNotification } = require('../services/notificationUtils.js');
 const NotificationService = require('../services/notificationService.js');
+
 const paystack = require('paystack-api')(process.env.PAYSTACK_SECRET_KEY);
 
 // Configure Winston logger
@@ -303,21 +304,21 @@ module.exports = (io) => {
       const sellerId = post.createdBy.userId.toString(); // Ensure you're getting the ID string
 
 
-      const protocol = req.secure ? 'https' : 'http';
-      const host = req.get('host');
-      const API_BASE_URL = `${protocol}://${host}`;
+      const protocol = req.headers['x-forwarded-proto'] === 'https' ? 'https' : 'http';
+const host = req.get('host');
+const API_BASE_URL = process.env.BASE_URL || `${protocol}://${host}`;
 
-      const paystackInitializeResponse = await paystack.transaction.initialize({
-        email,
-        amount: amount,
-        callback_url: `${API_BASE_URL}/payment-success?postId=${trimmedPostId}&buyerId=${buyerId}`,
-        metadata: {
-          postId: trimmedPostId,
-          email,
-          buyerId,
-          sellerId: sellerId.toString(), // Ensure sellerId is string for metadata
-        },
-      });
+const paystackInitializeResponse = await paystack.transaction.initialize({
+  email,
+  amount: amount,
+  callback_url: `${API_BASE_URL}/payment-success?postId=${trimmedPostId}&buyerId=${buyerId}`,
+  metadata: {
+    postId: trimmedPostId,
+    email,
+    buyerId,
+    sellerId: sellerId.toString(), // Ensure sellerId is string for metadata
+  },
+});
 
       logger.info('Payment initialized successfully with Paystack', { requestId, reference: paystackInitializeResponse.data.reference });
       res.json({ success: true, url: paystackInitializeResponse.data.authorization_url });

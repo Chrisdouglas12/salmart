@@ -149,27 +149,26 @@ router.post('/initiate', verifyToken, async (req, res) => {
         });
         await payment.save();
 
-        // Get base URL for callback
-        const protocol = req.secure ? 'https' : 'http';
-        const host = req.get('host');
-        const API_BASE_URL = `${protocol}://${host}`;
+// Get base URL for callback
+const protocol = req.headers['x-forwarded-proto'] === 'https' ? 'https' : 'http';
+const host = req.get('host');
+const API_BASE_URL = process.env.BASE_URL || `${protocol}://${host}`;
 
-        // Initialize Paystack payment
-        const response = await paystack.transaction.initialize({
-            email: userEmail,
-            amount: amount,
-            reference,
-            callback_url: `${API_BASE_URL}/promotion-success?postId=${trimmedPostId}&userId=${userId}`,
-            metadata: {
-                postId: trimmedPostId,
-                email: userEmail,
-                userId,
-                duration,
-                dailyRate,
-                type: 'promotion'
-            }
-        });
-
+// Initialize Paystack payment
+const response = await paystack.transaction.initialize({
+    email: userEmail,
+    amount: amount,
+    reference,
+    callback_url: `${API_BASE_URL}/promotion-success?postId=${trimmedPostId}&userId=${userId}`,
+    metadata: {
+        postId: trimmedPostId,
+        email: userEmail,
+        userId,
+        duration,
+        dailyRate,
+        type: 'promotion'
+    }
+});
         logger.info('Promotion payment initialized successfully', { 
             requestId, 
             reference: response.data.reference,

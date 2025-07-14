@@ -59,6 +59,7 @@ const app = express();
 
 // Middleware
 app.use(express.json());
+app.set('trust proxy', true);
 app.use(cors({
   origin: ['http://localhost:8158', 'https://salmart.onrender.com', 'https://salmart.vercel.app', 'https://salmartonline.com.ng'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
@@ -69,6 +70,7 @@ app.use((req, res, next) => {
   logger.info(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
   next();
 });
+
 
 // Serve static files
 app.use('/Uploads', express.static(path.join(__dirname, 'Uploads')));

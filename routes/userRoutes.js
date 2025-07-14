@@ -3,6 +3,8 @@ const mongoose = require('mongoose');
 const User = require('../models/userSchema.js');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
+const nodemailer = require('nodemailer');
 const jwt = require('jsonwebtoken');
 const Post = require('../models/postSchema.js');
 const Review = require('../models/reviewSchema.js');
@@ -15,6 +17,15 @@ const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
 require('dotenv').config();
+
+// Configure nodemailer (add this near the top of your file after other requires)
+const transporter = nodemailer.createTransporter({
+  service: 'Zoho', 
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
+  }
+});
 
 // Set up storage dynamically
 const uploadDir = path.join(__dirname, 'Uploads');
@@ -618,6 +629,113 @@ router.get('/api/user-suggestions', verifyToken, async (req, res) => {
     return res.status(500).json({ message: 'Failed to fetch user suggestions' });
   }
 });
+
+
+
+
+// Password reset request
+router.post('/api/password-reset/request', async (req, res) => {
+  try {
+    const { email } = req.body;
+    
+    if (!email) {
+      return res.status(400).json({ message: 'Email is required' });
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Generate reset token
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const resetTokenExpiry = Date.now() + 3600000; // 1 hour
+
+    // Save token to user
+    user.resetPasswordToken = resetToken;
+    user.resetPasswordExpiry = resetTokenExpiry;
+    await user.save();
+
+    // Send email
+    const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${resetToken}`;
+    
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: 'Password Reset - Salmart',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #28a745;">Password Reset Request</h2>
+          <p>Hi ${user.firstName},</p>
+          <p>You requested to reset your password. Click the button below to reset it:</p>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${resetUrl}" style="background-color: #28a745; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block;">Reset Password</a>
+          </div>
+          <p>Or copy and paste this link in your browser:</p>
+          <p style="word-break: break-all; color: #666;">${resetUrl}</p>
+          <p>This link will expire in 1 hour.</p>
+          <p>If you didn't request this, please ignore this email.</p>
+          <hr style="margin: 30px 0;">
+          <p style="color: #666; font-size: 12px;">Best regards,<br>Salmart Online Team</p>
+        </div>
+      `
+    };
+
+    await transporter.sendMail(mailOptions);
+    
+    res.status(200).json({ 
+      message: 'Password reset link sent to your email',
+      success: true 
+    });
+
+  } catch (error) {
+    console.error('Password reset request error:', error.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Password reset
+router.post('/api/password-reset/reset', async (req, res) => {
+  try {
+    const { token, newPassword } = req.body;
+    
+    if (!token || !newPassword) {
+      return res.status(400).json({ message: 'Token and new password are required' });
+    }
+
+    if (newPassword.length < 8) {
+      return res.status(400).json({ message: 'Password must be at least 8 characters long' });
+    }
+
+    const user = await User.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpiry: { $gt: Date.now() }
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: 'Invalid or expired reset token' });
+    }
+
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Update user password and clear reset token
+    user.password = hashedPassword;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpiry = undefined;
+    await user.save();
+
+    res.status(200).json({ 
+      message: 'Password reset successful',
+      success: true 
+    });
+
+  } catch (error) {
+    console.error('Password reset error:', error.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 
   return router;
 };

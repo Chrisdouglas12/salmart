@@ -65,6 +65,14 @@ const userSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
+  resetPasswordToken: {
+       type: String,
+       default: undefined
+  },
+  resetPasswordExpiry: {
+       type: Date,
+       default: undefined
+  },
   userRelevanceScores: [{
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     score: Number,
