@@ -19,7 +19,7 @@ const { CloudinaryStorage } = require('multer-storage-cloudinary');
 require('dotenv').config();
 
 // Configure nodemailer (add this near the top of your file after other requires)
-const transporter = nodemailer.createTransporter({
+const transporter = nodemailer.createTransport({
   service: 'Zoho', 
   auth: {
     user: process.env.EMAIL_USER,
