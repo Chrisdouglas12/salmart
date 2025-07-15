@@ -148,7 +148,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 `;
                 buttonContent = `
                     <button class="buy-now-button" data-post-id="${post._id || ''}" ${post.isSold ? 'disabled' : ''}>
-                        <i class="fas fa-shopping-cart" style="margin-right: 8px;"></i>  ${post.isSold ? 'Sold Out' : 'Buy Now'}
+                        <i class="fas fa-shopping-cart" style="margin-right: 0x; font-size: 14px;"></i> ${post.isSold ? 'Sold Out' : 'Buy Now'}
                     </button>
                 `;
             }
@@ -176,7 +176,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </div>
                 <div class="product-container">
                     <div class="product-card">
-                        <p class="post-description"><b></b> ${post.description || 'No description'}</p>
+                                            <p class="post-title"><b></b> ${post.title}</p>
+                        <p class="post-description"><b></b> ${post.description}</p>
+                        
                         ${post.postType !== 'video_ad' ? `
                             
                         ` : ''}

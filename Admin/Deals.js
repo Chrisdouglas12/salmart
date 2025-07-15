@@ -118,33 +118,53 @@ async function fetchTransactions() {
       const productDescription = product.title || 'Product';
       const amount = t.amount || 0;
 
-      // Note: `t.status` refers to the main transaction status (e.g., 'pending', 'completed')
-      // `t.refundRequested` is the new flag for when a refund has been initiated for this transaction.
       const statusBadge = `<span class="badge ${t.status}">${t.status}</span>`;
       let confirmBtn = '';
       let refundBtn = '';
 
       if (currentTab === 'buying') {
         // **Confirm Delivery Button Logic**
-        // The button should be shown only if the transaction is 'pending' AND no refund has been requested.
-        // If a refund has been requested, the confirm button should be disabled or hidden.
         if (t.status === 'pending' && !t.refundRequested) {
           confirmBtn = `<button class="confirm-btn" onclick="openConfirmModal('${t._id}')">Confirm Delivery</button>`;
         } else if (t.refundRequested) {
-          // Display a disabled button to inform the user
           confirmBtn = `<button class="confirm-btn disabled" disabled>Delivery Confirmation Locked</button>`;
         }
 
         // **Refund Button Logic**
-        // If a refund has already been requested, show the "Refund Requested" badge.
-        // Otherwise, if the transaction is still 'pending', allow a refund request.
-        if (t.refundRequested) {
-          refundBtn = `<span class="badge refund-requested">Refund Requested</span>`;
-        } else if (t.status === 'pending') {
-          // Only show 'Request Refund' if not already requested and status is pending
+        if (t.refundRequested && t.refundStatus) {
+          let refundStatusClass = '';
+          let refundStatusText = '';
+          
+          switch (t.refundStatus) {
+            case 'Refund Requested':
+              refundStatusClass = 'refund-requested';
+              refundStatusText = 'Refund Requested';
+              break;
+            case 'pending':
+              refundStatusClass = 'refund-pending';
+              refundStatusText = 'Refund Pending';
+              break;
+            case 'approved':
+              refundStatusClass = 'refund-approved';
+              refundStatusText = 'Refund Approved';
+              break;
+            case 'rejected':
+              refundStatusClass = 'refund-rejected';
+              refundStatusText = 'Refund Rejected';
+              break;
+            case 'refunded':
+              refundStatusClass = 'refund-completed';
+              refundStatusText = 'Refunded';
+              break;
+            default:
+              refundStatusClass = 'refund-requested';
+              refundStatusText = 'Refund Requested';
+          }
+          
+          refundBtn = `<span class="badge ${refundStatusClass}">${refundStatusText}</span>`;
+        } else if (t.status === 'pending' && !t.refundRequested) {
           refundBtn = `<button class="refund-btn" onclick="openRefundModal('${t._id}')">Request Refund</button>`;
         }
-        // If the transaction is completed, refunded, or cancelled, the refund button should not appear.
       }
 
       const date = new Date(t.createdAt).toLocaleString();
@@ -172,6 +192,7 @@ async function fetchTransactions() {
       `;
       list.append(card);
     });
+    
     await markDealsAsViewed();
   } catch (err) {
     console.error('Error fetching transactions:', err);
@@ -360,7 +381,7 @@ async function handleConfirmDelivery() {
       openResponseModal(true, response.message || 'Delivery confirmed. Payment released successfully.');
     }
 
-    fetchTransactions(); // Re-fetch to update transaction status instantly
+    fetchTransactions();
   } catch (err) {
     console.error('[CONFIRM DELIVERY SERVER ERROR]', err.message);
     closeLoaderModal();
@@ -376,27 +397,34 @@ async function handleConfirmDelivery() {
 // Function to show toast
 function showToast(message) {
   const toast = document.getElementById('toast');
-  toast.textContent = message;
-  toast.className = 'toast show';
-  setTimeout(() => {
-    toast.className = 'toast';
-  }, 5000);
+  if (toast) {
+    toast.textContent = message;
+    toast.className = 'toast show';
+    setTimeout(() => {
+      toast.className = 'toast';
+    }, 5000);
+  }
 }
 
 // Function to show snackbar
 function showSnackbar(message) {
   const snackbar = document.getElementById('snackbar');
-  snackbar.textContent = message;
-  snackbar.classList.add('show');
-  setTimeout(() => {
-    snackbar.classList.remove('show');
-  }, 3000);
+  if (snackbar) {
+    snackbar.textContent = message;
+    snackbar.classList.add('show');
+    setTimeout(() => {
+      snackbar.classList.remove('show');
+    }, 3000);
+  }
 }
 
 // Function to open refund modal
 function openRefundModal(transactionId) {
   localStorage.setItem('refundTransactionId', transactionId);
-  document.getElementById('refundModal').style.display = 'flex';
+  const refundModal = document.getElementById('refundModal');
+  if (refundModal) {
+    refundModal.style.display = 'flex';
+  }
 }
 
 // Function to close refund modal
@@ -404,21 +432,32 @@ function closeRefundModal() {
   const refundModal = document.getElementById('refundModal');
   if (refundModal) {
     refundModal.style.display = 'none';
-    document.getElementById('reason').value = '';
-    document.getElementById('refundNote').value = '';
+    const reasonSelect = document.getElementById('reason');
+    const refundNoteInput = document.getElementById('refundNote');
     const refundEvidenceInput = document.getElementById('refundEvidence');
-    if (refundEvidenceInput) {
-        refundEvidenceInput.value = ''; // Clears selected file
-    }
+    
+    if (reasonSelect) reasonSelect.value = '';
+    if (refundNoteInput) refundNoteInput.value = '';
+    if (refundEvidenceInput) refundEvidenceInput.value = '';
+    
     localStorage.removeItem('refundTransactionId');
   }
 }
 
 // Function to submit refund
 async function submitRefund() {
-  const reason = document.getElementById('reason').value;
-  const note = document.getElementById('refundNote').value;
-  const file = document.getElementById('refundEvidence').files[0];
+  const reasonSelect = document.getElementById('reason');
+  const refundNoteInput = document.getElementById('refundNote');
+  const refundEvidenceInput = document.getElementById('refundEvidence');
+  
+  if (!reasonSelect || !refundNoteInput || !refundEvidenceInput) {
+    showToast('Error: Refund form elements not found.');
+    return;
+  }
+
+  const reason = reasonSelect.value;
+  const note = refundNoteInput.value;
+  const file = refundEvidenceInput.files[0];
   const transactionId = localStorage.getItem('refundTransactionId');
   const token = localStorage.getItem('authToken');
 
@@ -459,7 +498,6 @@ async function submitRefund() {
     const data = await res.json();
     showToast(data.message || 'Refund requested successfully.');
     closeRefundModal();
-    // Re-fetch transactions to update the UI with the new refund status
     fetchTransactions();
   } catch (err) {
     console.error('Refund request error:', err);
@@ -469,4 +507,6 @@ async function submitRefund() {
 }
 
 // Initialize on page load
-document.addEventListener('DOMContentLoaded', fetchTransactions);
+document.addEventListener('DOMContentLoaded', function() {
+  fetchTransactions();
+});

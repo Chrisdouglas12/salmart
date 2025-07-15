@@ -34,13 +34,29 @@ module.exports = (io) => {
 
 //Get Transaction
 router.get('/get-transactions/:userId', verifyToken, async (req, res) => {
- console.log("fecting tx")
+  console.log("fetching tx")
   try {
     const userId = req.params.userId;
     const transactions = await Transaction.find({ $or: [{ buyerId: userId }, { sellerId: userId }] })
       .populate('buyerId sellerId postId')
       .sort({ createdAt: -1 });
-    res.status(200).json({ success: true, transactions });
+
+    // Add refund status to each transaction
+    const transactionsWithRefundStatus = await Promise.all(
+      transactions.map(async (transaction) => {
+        const refundRequest = await RefundRequests.findOne({ 
+          transactionId: transaction._id 
+        });
+        
+        return {
+          ...transaction.toObject(),
+          refundStatus: refundRequest ? refundRequest.status : null,
+          refundRequestId: refundRequest ? refundRequest._id : null
+        };
+      })
+    );
+
+    res.status(200).json({ success: true, transactions: transactionsWithRefundStatus });
   } catch (error) {
     console.error('Fetch transactions error:', error.message);
     res.status(500).json({ success: false, message: 'Server error' });
@@ -262,10 +278,7 @@ router.post('/request-refund/:transactionId', verifyToken, async (req, res) => {
     let evidenceUrls = [];
     if (req.files && req.files.evidence) {
       const evidenceFile = req.files.evidence;
-      // Example: Upload to Cloudinary
-      // const uploadResult = await cloudinary.uploader.upload(evidenceFile.tempFilePath);
-      // evidenceUrls.push(uploadResult.secure_url);
-      // Replace with your actual file upload logic (e.g., to S3, local storage)
+
       console.log('Evidence file received:', evidenceFile.name);
       // For now, let's just simulate:
       evidenceUrls.push(`/uploads/${evidenceFile.name}`); // Placeholder URL
@@ -288,12 +301,6 @@ router.post('/request-refund/:transactionId', verifyToken, async (req, res) => {
       return res.status(400).json({ success: false, message: 'Refund has already been requested for this transaction.' });
     }
 
-    // You might also want to check the current status of the transaction
-    // For instance, if it's already 'completed' or 'refunded', you might not allow new requests.
-    // However, if the refund process starts while 'pending', this is fine.
-    // if (transaction.status === 'completed' || transaction.status === 'refunded') {
-    //   return res.status(400).json({ success: false, message: 'Refund not applicable for this transaction status.' });
-    // }
 
     // Create the refund request document
     const refund = new RefundRequests({
@@ -302,15 +309,13 @@ router.post('/request-refund/:transactionId', verifyToken, async (req, res) => {
       sellerId: transaction.sellerId, // Link to seller as well
       reason,
       evidence: evidenceUrls, // Store uploaded evidence URLs
-      description: note, // Map 'note' from frontend to 'description' in schema
-      // photo and description (for product details) can be populated from transaction.postId if needed
+      description: note, 
       status: 'Refund Requested', // Initial status for the refund request document
     });
 
     // Update the original transaction to mark that a refund has been requested
     transaction.refundRequested = true;
-    // transaction.status could optionally be updated to 'Refund Under Review' or similar
-    // but the 'refundRequested' flag is sufficient for frontend logic.
+    
 
     await Promise.all([refund.save(), transaction.save()]); // Save both documents
 

@@ -1,4 +1,4 @@
-// product-details.js
+// checkout.js
 const API_BASE_URL = window.API_BASE_URL || (window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart.onrender.com');
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -11,15 +11,41 @@ document.addEventListener('DOMContentLoaded', async () => {
     const productLocation = params.get('productLocation');
     const productCondition = params.get('productCondition');
     const productPrice = params.get('productPrice');
-    const sellerId = params.get('sellerId');
+    const sellerId = params.get('sellerId'); // Corrected from 'createdBy' to match index.js
 
     // Populate the HTML elements
     document.getElementById('productImage').src = productImage || '/salmart-192x192.png';
-    document.getElementById('productTitle').textContent = productTitle;
-    document.getElementById('productPrice').textContent = productPrice;
-    document.getElementById('productDescription').textContent = productDescription;
-    document.getElementById('productLocation').textContent = productLocation;
-    document.getElementById('productCondition').textContent = productCondition;
+    document.getElementById('productTitle').textContent = productTitle || 'Untitled Product';
+    document.getElementById('productPrice').textContent = productPrice || 'Price not specified';
+    document.getElementById('productDescription').textContent = productDescription || 'No description available';
+    document.getElementById('productLocation').textContent = productLocation || 'N/A';
+    document.getElementById('productCondition').textContent = productCondition || 'N/A';
+
+    // Fetch seller details
+    let sellerUsername = 'User';
+    let sellerProfilePicture = '/salmart-192x192.png';
+    const authToken = localStorage.getItem('authToken');
+
+    if (sellerId && authToken) {
+        try {
+            const response = await fetch(`${API_BASE_URL}/user/${sellerId}`, {
+                headers: {
+                    'Authorization': `Bearer ${authToken}`,
+                },
+            });
+            if (response.ok) {
+                const user = await response.json();
+                sellerUsername = `${user.firstName} ${user.lastName}` || 'User';
+                sellerProfilePicture = user.profilePicture || '/salmart-192x192.png';
+            } else {
+                console.warn(`Failed to fetch seller details for ID ${sellerId}. Status: ${response.status}`);
+                window.showToast('Could not load seller details.', '#dc3545');
+            }
+        } catch (error) {
+            console.error('Error fetching seller details:', error);
+            window.showToast('Error loading seller information.', '#dc3545');
+        }
+    }
 
     // Make product data available for buttons
     const productData = {
@@ -30,35 +56,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         productLocation: productLocation,
         productCondition: productCondition,
         productPrice: productPrice,
-        sellerId: sellerId
+        sellerId: sellerId, // Use correct field name
     };
-
-    // --- Optional: Fetch Seller Details for Chat if not passed via URL ---
-    let sellerUsername = "Seller"; // Default
-    let sellerProfilePicture = "/salmart-192x192.png"; // Default
-
-    if (sellerId) {
-        try {
-            const response = await fetch(`${API_BASE_URL}/api/users/${sellerId}`);
-            if (response.ok) {
-                const sellerInfo = await response.json();
-                sellerUsername = sellerInfo.name || "Seller";
-                sellerProfilePicture = sellerInfo.profilePicture || "/salmart-192x192.png";
-            } else {
-                console.warn(`Could not fetch seller info for ID: ${sellerId}. Status: ${response.status}`);
-            }
-        } catch (error) {
-            console.error('Error fetching seller details:', error);
-        }
-    }
-    // --- End Optional Seller Details Fetch ---
 
     // Add event listeners for the new buttons
     const buyWithEscrowBtn = document.getElementById('buyWithEscrowBtn');
     const chatSellerBtn = document.getElementById('chatSellerBtn');
 
     if (buyWithEscrowBtn) {
-        // Pass productData, as the handleBuyWithEscrow function needs it
         buyWithEscrowBtn.addEventListener('click', () => handleBuyWithEscrow(productData));
     }
 
@@ -67,12 +72,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         chatSellerBtn.addEventListener('click', () => handleChatSeller(productData, sellerUsername, sellerProfilePicture));
     }
 
-    // Toast message function (copy-pasted for independence, or link a shared utility)
+    // Toast message function
     function showToast(message, bgColor = '#333') {
         const toast = document.getElementById('toast-message');
         if (!toast) {
             console.error('Toast message element not found.');
-            // Fallback for development if toast element is missing in HTML
             const tempToast = document.createElement('div');
             tempToast.className = 'toast-message';
             tempToast.style.position = 'fixed';
@@ -93,7 +97,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 tempToast.style.opacity = '1';
                 setTimeout(() => tempToast.style.opacity = '0', 3000);
             };
-            window.showToast(message, bgColor); // Call the newly created toast
+            window.showToast(message, bgColor);
             return;
         }
         toast.textContent = message;
@@ -101,19 +105,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         toast.classList.add('show');
         setTimeout(() => {
             toast.classList.remove('show');
-            // setTimeout(() => toast.remove(), 500); // Only if you create it dynamically
         }, 3000);
     }
-    window.showToast = showToast; // Make it globally available for consistency
+    window.showToast = showToast;
 });
-
 
 async function handleBuyWithEscrow(product) {
     const email = localStorage.getItem('email');
     const buyerId = localStorage.getItem('userId');
-    const authToken = localStorage.getItem('authToken'); // Get auth token
+    const authToken = localStorage.getItem('authToken');
 
-    if (!email || !buyerId || !product.postId || !authToken) { // Check for authToken
+    if (!email || !buyerId || !product.postId || !authToken) {
         window.showToast("Please log in to make a purchase or complete your profile.", '#dc3545');
         return;
     }
@@ -123,7 +125,7 @@ async function handleBuyWithEscrow(product) {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${authToken}`, // Added Authorization header
+                'Authorization': `Bearer ${authToken}`,
             },
             body: JSON.stringify({
                 email,
@@ -135,11 +137,9 @@ async function handleBuyWithEscrow(product) {
 
         const result = await response.json();
 
-        // Redirect to result.url on success, as per your request
         if (response.ok && result.success && result.url) {
             window.location.href = result.url;
         } else {
-            // Show message if payment initiation failed or no URL was provided
             window.showToast(`Payment failed: ${result.message || 'Please try again.'}`, '#dc3545');
         }
     } catch (error) {
@@ -158,24 +158,23 @@ async function handleChatSeller(product, recipientUsername, recipientProfilePict
         return;
     }
 
-    if (!product || !product.sellerId || !product.productTitle || !product.productImage || !product.postId) {
+    if (!product || !product.sellerId || !product.postId) {
         window.showToast('Seller or product information missing.', '#dc3545');
         console.error('Missing seller or product info for chat:', product);
         return;
     }
 
     let productImage = product.productImage;
-    // Ensure product image URL is absolute if it's relative
     if (productImage && !productImage.match(/^https?:\/\//)) {
         productImage = productImage.startsWith('/') ? `${API_BASE_URL}${productImage}` : `${API_BASE_URL}/${productImage}`;
     }
 
     const message = `I'm ready to pay for this now, is it still available?\n\nProduct: ${product.productDescription || product.productTitle}`;
     const encodedMessage = encodeURIComponent(message);
-    const encodedProductImage = encodeURIComponent(productImage);
-    const encodedRecipientUsername = encodeURIComponent(recipientUsername);
-    const encodedRecipientProfilePictureUrl = encodeURIComponent(recipientProfilePictureUrl);
-    const encodedProductDescription = encodeURIComponent(product.productDescription || product.productTitle);
+    const encodedProductImage = encodeURIComponent(productImage || '');
+    const encodedRecipientUsername = encodeURIComponent(recipientUsername || 'User');
+    const encodedRecipientProfilePictureUrl = encodeURIComponent(recipientProfilePictureUrl || '/salmart-192x192.png');
+    const encodedProductDescription = encodeURIComponent(product.productDescription || product.productTitle || '');
 
     const chatUrl = `Chats.html?user_id=${loggedInUser}&recipient_id=${product.sellerId}&recipient_username=${encodedRecipientUsername}&recipient_profile_picture_url=${encodedRecipientProfilePictureUrl}&message=${encodedMessage}&product_image=${encodedProductImage}&product_id=${product.postId}&product_name=${encodedProductDescription}`;
     window.location.href = chatUrl;

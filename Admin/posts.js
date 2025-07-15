@@ -1,100 +1,20 @@
-// This file assumes post-video-controls.js is linked separately and correctly
+// main.js
+
+// Assumes video-controls.js is loaded and provides window.videoObserver and window.initializeVideoControls
 import { salmartCache } from './salmartCache.js';
 
-// Define API_BASE_URL globally or ensure it's window.API_BASE_URL if set in HTML
-// If not set in HTML, this provides a fallback based on hostname
 const API_BASE_URL = window.API_BASE_URL || (window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart.onrender.com');
 
 document.addEventListener('DOMContentLoaded', async function () {
-    let currentLoggedInUser = localStorage.getItem('userId'); // Get user ID from localStorage immediately
+    let currentLoggedInUser = localStorage.getItem('userId');
     let currentFollowingList = [];
-    let isAuthReady = false; // Flag to ensure initial setup runs only once
-
-    // --- State variables for pagination/filtering ---
+    let isAuthReady = false;
     let currentPage = 1;
     let currentCategory = 'all';
-    let isLoading = false; // To prevent multiple simultaneous fetches
-    let suggestionCounter = 0; // Renamed from postCounter to reflect its actual use for suggestions
-
-    // Set to keep track of promoted post IDs already inserted to avoid duplicates across fetches
-    // IMPORTANT: This set MUST be cleared when the entire display is reset (e.g., changing category or initial load)
+    let isLoading = false;
+    let suggestionCounter = 0;
     const promotedPostIdsInserted = new Set();
 
-
-    // --- Intersection Observer for Videos ---
-    let videoObserver;
-
-    const handleVideoIntersection = (entries) => {
-        entries.forEach(entry => {
-            const videoContainer = entry.target;
-            const video = videoContainer.querySelector('.post-video');
-            const playPauseBtn = videoContainer.querySelector('.play-pause');
-            const loadingSpinner = videoContainer.querySelector('.loading-spinner');
-            const muteBtn = videoContainer.querySelector('.mute-button'); // Get mute button here
-
-            if (!video) return;
-
-            if (entry.isIntersecting) {
-                // Video is in view
-                if (!video.dataset.srcLoaded) { // Only load if src hasn't been set
-                    // Set src for all source elements within the video tag
-                    video.querySelectorAll('source[data-src]').forEach(sourceElem => {
-                        sourceElem.src = sourceElem.dataset.src;
-                    });
-                    video.load(); // Load the video metadata and initial data
-                    video.dataset.srcLoaded = 'true';
-                }
-
-                // Autoplay when in view, but muted by default
-                // Only attempt play if video is paused and ready enough (readyState 3 = HAVE_FUTURE_DATA)
-                if (video.paused && video.readyState >= 3) {
-                    video.muted = true; // Ensure muted on autoplay
-                    if (muteBtn) muteBtn.innerHTML = '<i class="fas fa-volume-mute"></i>'; // Update mute button icon
-
-                    video.play().then(() => {
-                        loadingSpinner.style.display = 'none';
-                        playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
-                    }).catch(e => {
-                        loadingSpinner.style.display = 'none';
-                        // Autoplay prevented. User might need to interact.
-                        // if (window.showToast) window.showToast('Video autoplay prevented.', '#ffc107');
-                        console.log("Video autoplay prevented:", e);
-                    });
-                }
-            } else {
-                // Video is out of view - Aggressive Unload
-                if (!video.paused) {
-                    video.pause();
-                    video.currentTime = 0; // Reset to beginning
-                    if (playPauseBtn) {
-                        playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
-                    }
-                }
-
-                // Aggressively remove src to free up memory
-                video.removeAttribute('src'); // Remove src from the video tag itself if it was set directly
-                video.querySelectorAll('source').forEach(sourceElem => {
-                    sourceElem.removeAttribute('src');
-                });
-                video.load(); // This is crucial to unload the current video data
-                video.dataset.srcLoaded = ''; // Reset flag so it reloads on re-entry
-                video.dataset.thumbnailGenerated = ''; // Allow re-generation if needed (though poster should stick)
-            }
-        });
-    };
-
-    // Initialize the Intersection Observer
-    if ('IntersectionObserver' in window) {
-        videoObserver = new IntersectionObserver(handleVideoIntersection, {
-            root: null, // relative to the viewport
-            rootMargin: '0px',
-            threshold: 0.5 // Trigger when 50% of the video is visible
-        });
-    } else {
-        console.warn("Intersection Observer not supported. Video lazy loading and auto-pause will not work.");
-    }
-
-    // Function to show toast notification (copied for independence, or can be passed from main script)
     function showToast(message, bgColor = '#333') {
         const toast = document.querySelector('.toast-message') || document.createElement('div');
         if (!toast.parentNode) {
@@ -109,279 +29,6 @@ document.addEventListener('DOMContentLoaded', async function () {
             setTimeout(() => toast.remove(), 500);
         }, 3000);
     }
-
-    // Initialize video controls
-    function initializeVideoControls(postElement) {
-        const container = postElement.querySelector('.post-video-container');
-        if (!container) return;
-
-        const video = container.querySelector('.post-video');
-        const thumbnailCanvas = container.querySelector('.video-thumbnail');
-        const loadingSpinner = container.querySelector('.loading-spinner');
-        const playPauseBtn = container.querySelector('.play-pause');
-        const muteBtn = container.querySelector('.mute-button');
-        const fullscreenBtn = container.querySelector('.fullscreen-button');
-        const progressBar = container.querySelector('.progress-bar');
-        const bufferedBar = container.querySelector('.buffered-bar');
-        const progressContainer = container.querySelector('.progress-container');
-        const seekPreview = container.querySelector('.seek-preview');
-        const seekPreviewCanvas = container.querySelector('.seek-preview-canvas');
-        const volumeSlider = container.querySelector('.volume-slider');
-        const playbackSpeed = container.querySelector('.playback-speed');
-        const currentTimeDisplay = container.querySelector('.current-time');
-        const durationDisplay = container.querySelector('.duration');
-
-        // Check if controls are already initialized to prevent double-binding
-        if (video.dataset.controlsInitialized) {
-            return;
-        }
-        video.dataset.controlsInitialized = 'true';
-
-
-        video.setAttribute('playsinline', '');
-        video.setAttribute('webkit-playsinline', '');
-        video.setAttribute('crossorigin', 'anonymous');
-
-        video.addEventListener('loadedmetadata', () => {
-            durationDisplay.textContent = formatVideoTime(video.duration);
-            // Only set current time for thumbnail generation if not already generated
-            if (!video.dataset.thumbnailGenerated && video.duration > 2) {
-                video.currentTime = 2; // Set a brief time for thumbnail generation
-            } else if (!video.dataset.thumbnailGenerated) {
-                // For very short videos, use 0 or first frame
-                video.currentTime = 0;
-            }
-        });
-
-        video.addEventListener('seeked', () => {
-            // Ensure thumbnail is only generated once and after metadata is loaded
-            if (!video.dataset.thumbnailGenerated && video.readyState >= 1 /* HAVE_METADATA */) {
-                const ctx = thumbnailCanvas.getContext('2d');
-                thumbnailCanvas.width = video.videoWidth;
-                thumbnailCanvas.height = video.videoHeight;
-                ctx.drawImage(video, 0, 0, thumbnailCanvas.width, thumbnailCanvas.height);
-                video.poster = thumbnailCanvas.toDataURL('image/jpeg');
-                video.dataset.thumbnailGenerated = 'true';
-                // Reset to beginning only if it was temporarily changed for thumbnail
-                if (video.currentTime === 2 || video.duration <= 2) {
-                    video.currentTime = 0;
-                }
-            }
-        });
-
-        function formatVideoTime(seconds) {
-            const mins = Math.floor(seconds / 60);
-            const secs = Math.floor(seconds % 60);
-            return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
-        }
-
-        video.addEventListener('timeupdate', () => {
-            const progress = (video.currentTime / video.duration) * 100;
-            progressBar.style.width = `${progress}%`;
-            progressBar.setAttribute('aria-valuenow', progress);
-            currentTimeDisplay.textContent = formatVideoTime(video.currentTime);
-
-            if (video.buffered.length > 0) {
-                const bufferedEnd = video.buffered.end(video.buffered.length - 1);
-                const bufferedPercent = (bufferedEnd / video.duration) * 100;
-                bufferedBar.style.width = `${bufferedPercent}%`;
-            }
-        });
-
-        playPauseBtn.addEventListener('click', () => {
-            if (video.paused) {
-                loadingSpinner.style.display = 'block';
-                video.play().then(() => {
-                    loadingSpinner.style.display = 'none';
-                    playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
-                }).catch(e => {
-                    loadingSpinner.style.display = 'none';
-                    showToast('Error playing video.', '#dc3545');
-                    console.error('Play error:', e);
-                });
-            } else {
-                video.pause();
-                playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
-            }
-        });
-
-        video.addEventListener('canplay', () => {
-            loadingSpinner.style.display = 'none';
-        });
-
-        muteBtn.addEventListener('click', () => {
-            video.muted = !video.muted;
-            muteBtn.innerHTML = video.muted ? '<i class="fas fa-volume-mute"></i>' : '<i class="fas fa-volume-up"></i>';
-            volumeSlider.value = video.muted ? 0 : video.volume * 100;
-        });
-
-        volumeSlider.addEventListener('input', () => {
-            video.volume = volumeSlider.value / 100;
-            video.muted = volumeSlider.value == 0;
-            muteBtn.innerHTML = video.muted ? '<i class="fas fa-volume-mute"></i>' : '<i class="fas fa-volume-up"></i>';
-        });
-
-        playbackSpeed.addEventListener('change', () => {
-            video.playbackRate = parseFloat(playbackSpeed.value);
-        });
-
-        fullscreenBtn.addEventListener('click', () => {
-            if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-                const elem = container;
-                if (elem.requestFullscreen) {
-                    elem.requestFullscreen().catch(e => console.error('Fullscreen error:', e));
-                } else if (elem.webkitRequestFullscreen) {
-                    elem.webkitRequestFullscreen();
-                }
-                fullscreenBtn.innerHTML = '<i class="fas fa-compress"></i>';
-            } else {
-                if (document.exitFullscreen) {
-                    document.exitFullscreen().catch(e => console.error('Exit fullscreen error:', e));
-                } else if (elem.webkitExitFullscreen) {
-                    elem.webkitExitFullscreen();
-                }
-                fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>';
-            }
-        });
-
-        document.addEventListener('fullscreenchange', () => {
-            if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-                fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>';
-            }
-        });
-
-        document.addEventListener('webkitfullscreenchange', () => {
-            if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-                fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>';
-            }
-        });
-
-        let isDragging = false;
-        let originalVideoTime = 0; // To store video's current time before seeking for preview
-
-        const updateProgress = (e, isTouch = false) => {
-            const rect = progressContainer.getBoundingClientRect();
-            const posX = isTouch ? e.touches[0].clientX - rect.left : e.clientX - rect.left;
-            const width = rect.width;
-            let progress = posX / width;
-            progress = Math.max(0, Math.min(1, progress));
-            const seekTime = progress * video.duration;
-
-            if (isDragging) {
-                video.currentTime = seekTime;
-                progressBar.style.width = `${progress * 100}%`;
-                progressBar.setAttribute('aria-valuenow', progress * 100);
-            }
-
-            seekPreview.style.left = `${posX}px`;
-            seekPreviewCanvas.width = 120;
-            seekPreviewCanvas.height = 68;
-
-            // Draw preview frame
-            const tempVideo = video.cloneNode(true);
-            tempVideo.muted = true; // Don't make noise during preview
-            tempVideo.currentTime = seekTime;
-            tempVideo.addEventListener('seeked', () => {
-                const ctx = seekPreviewCanvas.getContext('2d');
-                ctx.drawImage(tempVideo, 0, 0, seekPreviewCanvas.width, seekPreviewCanvas.height);
-                tempVideo.remove(); // Clean up temporary video
-            }, { once: true });
-        };
-
-
-        progressContainer.addEventListener('mousedown', (e) => {
-            isDragging = true;
-            originalVideoTime = video.currentTime; // Store original time
-            updateProgress(e);
-        });
-
-        document.addEventListener('mousemove', (e) => {
-            if (isDragging) updateProgress(e);
-        });
-
-        document.addEventListener('mouseup', () => {
-            if (isDragging) {
-                // If dragging ends, ensure the video is at the final scrubbed time
-                // This is already done in updateProgress when isDragging is true.
-            }
-            isDragging = false;
-            seekPreview.style.display = 'none';
-        });
-
-        progressContainer.addEventListener('mousemove', (e) => {
-            if (!isDragging) {
-                seekPreview.style.display = 'block';
-                updateProgress(e); // This will update the preview
-            }
-        });
-
-        progressContainer.addEventListener('mouseleave', () => {
-            if (!isDragging) seekPreview.style.display = 'none';
-        });
-
-        progressContainer.addEventListener('click', (e) => {
-            // If not dragging, and a click occurs, jump to position
-            if (!isDragging) updateProgress(e);
-        });
-
-        progressContainer.addEventListener('touchstart', (e) => {
-            isDragging = true;
-            originalVideoTime = video.currentTime; // Store original time
-            updateProgress(e, true);
-        });
-
-        document.addEventListener('touchmove', (e) => {
-            if (isDragging) updateProgress(e, true);
-        });
-
-        document.addEventListener('touchend', () => {
-            isDragging = false;
-            seekPreview.style.display = 'none';
-        });
-
-        postElement.addEventListener('keydown', (e) => {
-            // Check if the event target is within the video container's direct children
-            // or the video itself. This prevents global hotkeys from interfering with other inputs.
-            const isTargetInVideoContainer = container.contains(e.target);
-
-            if (isTargetInVideoContainer) {
-                switch (e.key) {
-                    case ' ':
-                        e.preventDefault(); // Prevent page scroll
-                        playPauseBtn.click();
-                        break;
-                    case 'm':
-                        muteBtn.click();
-                        break;
-                    case 'f':
-                        fullscreenBtn.click();
-                        break;
-                    case 'ArrowLeft':
-                        e.preventDefault();
-                        video.currentTime = Math.max(0, video.currentTime - 5); // Rewind 5 seconds
-                        break;
-                    case 'ArrowRight':
-                        e.preventDefault();
-                        video.currentTime = Math.min(video.duration, video.currentTime + 5); // Forward 5 seconds
-                        break;
-                }
-            }
-        });
-
-        video.addEventListener('error', () => {
-            showToast('Failed to load video.', '#dc3545');
-            loadingSpinner.style.display = 'none';
-        });
-
-        video.addEventListener('ended', () => {
-            playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
-            video.currentTime = 0;
-            progressBar.style.width = '0%';
-            progressBar.setAttribute('aria-valuenow', 0);
-        });
-    }
-
-    // --- Helper Functions ---
 
     async function fetchFollowingList() {
         if (!currentLoggedInUser) {
@@ -398,7 +45,6 @@ document.addEventListener('DOMContentLoaded', async function () {
             });
             if (response.ok) {
                 const { following } = await response.json();
-                // Ensure unique IDs and convert to string for consistent comparison
                 return [...new Set(following.map(id => id.toString()))] || [];
             } else {
                 console.warn('Could not fetch following list. Status:', response.status);
@@ -425,7 +71,6 @@ document.addEventListener('DOMContentLoaded', async function () {
             });
             if (response.ok) {
                 const { suggestions } = await response.json();
-                // Filter out users already in currentFollowingList (ids are strings)
                 return suggestions.filter(user => !currentFollowingList.includes(user._id.toString()));
             } else {
                 console.warn('Could not fetch user suggestions. Status:', response.status);
@@ -471,28 +116,21 @@ document.addEventListener('DOMContentLoaded', async function () {
         return div.innerHTML;
     }
 
-    /**
-     * Updates the UI for all follow buttons on the page for a given user ID.
-     * @param {string} userId - The ID of the user whose follow buttons need to be updated.
-     * @param {boolean} isFollowing - True if the user is now followed, false if unfollowed.
-     */
     window.updateFollowButtonsUI = function(userId, isFollowing) {
         document.querySelectorAll(`.follow-button[data-user-id="${userId}"]`).forEach(button => {
             if (isFollowing) {
                 button.innerHTML = '<i class="fas fa-user-check"></i> Following';
                 button.style.backgroundColor = '#fff';
                 button.style.color = '#28a745';
-                button.disabled = true; // Disable if already following
+                button.disabled = true;
             } else {
                 button.innerHTML = '<i class="fas fa-user-plus"></i> Follow';
-                button.style.backgroundColor = ''; // Reset to default/CSS
-                button.style.color = ''; // Reset to default/CSS
+                button.style.backgroundColor = '';
+                button.style.color = '';
                 button.disabled = false;
             }
         });
     };
-
-    // --- Render Functions ---
 
     function renderUserSuggestion(user) {
         const suggestionElement = document.createElement('div');
@@ -537,7 +175,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         `;
         wrapperContainer.appendChild(headerElement);
 
-        const cardsPerRow = 8; // Display 8 cards per row for suggestions
+        const cardsPerRow = 8;
 
         for (let i = 0; i < users.length; i += cardsPerRow) {
             const rowContainer = document.createElement('div');
@@ -610,13 +248,11 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 
     function renderPromotedPost(post) {
-        // This function now only handles non-video promoted posts.
-        // Promoted video posts are filtered out before this function is called.
         const postElement = document.createElement('div');
         postElement.classList.add('promoted-post');
         postElement.dataset.createdAt = post.createdAt || new Date().toISOString();
         postElement.dataset.postId = post._id || '';
-        postElement.dataset.sellerId = post.createdBy ? post.createdBy.userId : ''; // Add seller ID
+        postElement.dataset.sellerId = post.createdBy ? post.createdBy.userId : '';
 
         const isPostCreator = post.createdBy && post.createdBy.userId === currentLoggedInUser;
 
@@ -626,7 +262,6 @@ document.addEventListener('DOMContentLoaded', async function () {
 
         const productImageForChat = post.photo || '/salmart-192x192.png';
 
-        // This block will ONLY handle non-video ads (e.g., image ads) now.
         mediaContent = `
             <img src="${productImageForChat}" class="promoted-image" alt="Promoted Product" onerror="this.src='/salmart-192x192.png'">
         `;
@@ -673,9 +308,9 @@ document.addEventListener('DOMContentLoaded', async function () {
                     </button>
                 </div>
             `;
-        } else { // Current user is the creator
+        } else {
             buttonContent = `
-                <a href="javascript:void(0);"  style="pointer-events: none; color: #28a745; font-size: 14px; font-weight: 400; ">
+                <a href="javascript:void(0);" style="pointer-events: none; color: #28a745; font-size: 14px; font-weight: 400;">
                     <i class="fas fa-toggle-on"></i> Active
                 </a>
             `;
@@ -709,7 +344,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         postElement.classList.add('post');
         postElement.dataset.createdAt = post.createdAt || new Date().toISOString();
         postElement.dataset.postId = post._id || '';
-        postElement.dataset.sellerId = post.createdBy ? post.createdBy.userId : ''; // Add seller ID
+        postElement.dataset.sellerId = post.createdBy ? post.createdBy.userId : '';
 
         const isFollowing = currentFollowingList.includes(post.createdBy?.userId?.toString());
         const isPostCreator = post.createdBy && post.createdBy.userId === currentLoggedInUser;
@@ -728,7 +363,6 @@ document.addEventListener('DOMContentLoaded', async function () {
                     <p>${escapeHtml(post.description || '')}</p>
                 </div>
             `;
-            // Optimized video element: data-src for lazy loading, preload="none"
             mediaContent = `
                 <div class="post-video-container">
                     <video class="post-video" preload="none" aria-label="Video ad for ${post.description || 'product'}" poster="${post.thumbnail || ''}">
@@ -773,20 +407,18 @@ document.addEventListener('DOMContentLoaded', async function () {
                     </div>
                 </div>
             `;
-
             buttonContent = `
-                    <a href="${post.productLink || '#'}" class=" checkout-product-btn" aria-label="Check out product ${post.description || 'product'}" ${!post.productLink ? 'disabled' : ''}>
-                        <i class="fas fa-shopping-cart"></i>  Check Out Product
-                    </a>
-                `;
-        } else { // Regular image-based posts
+                <a href="${post.productLink || '#'}" class="checkout-product-btn" aria-label="Check out product ${post.description || 'product'}" ${!post.productLink ? 'disabled' : ''}>
+                    <i class="fas fa-shopping-cart"></i> Check Out Product
+                </a>
+            `;
+        } else {
             descriptionContent = `
                 <h2 class="product-title">${escapeHtml(post.title || 'No description')}</h2>
                 <div class="post-description-text" style="margin-bottom: 10px; padding: 0 15px;">
                     <p>${escapeHtml(post.description || '')}</p>
                 </div>
             `;
-
             mediaContent = `
                 <div class="product-image">
                     <div class="badge">${post.productCondition || 'New'}</div>
@@ -827,7 +459,6 @@ document.addEventListener('DOMContentLoaded', async function () {
                     </div>
                 </div>
             `;
-
             if (currentLoggedInUser) {
                 if (isPostCreator) {
                     buttonContent = !post.isPromoted ? `
@@ -955,8 +586,8 @@ document.addEventListener('DOMContentLoaded', async function () {
                     </div>
                 </div>
             </div>
-
-            ${descriptionContent} <div class="product-container">
+            ${descriptionContent}
+            <div class="product-container">
                 <div class="media-card">
                     ${mediaContent}
                 </div>
@@ -964,16 +595,13 @@ document.addEventListener('DOMContentLoaded', async function () {
                     ${productDetails}
                 </div>
             </div>
-
             <div class="buy" style="text-align: center">
                 ${buttonContent}
             </div>
-
             ${postActionsHtml}
         `;
 
-        // DO NOT initialize video controls here directly. Intersection Observer will handle it.
-        return postElement; // Return the created post element
+        return postElement;
     }
 
     function createPromotedPostFiller() {
@@ -1023,7 +651,6 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 
     function createPromotedPostsRow(posts) {
-        // This function now only receives and renders non-video promoted posts.
         const wrapperContainer = document.createElement('div');
         wrapperContainer.classList.add('promoted-posts-wrapper');
         wrapperContainer.style.cssText = `
@@ -1058,7 +685,6 @@ document.addEventListener('DOMContentLoaded', async function () {
             scrollbar-width: none;
         `;
 
-        // Only add posts that haven't been inserted yet
         const postsToRender = posts.filter(post => !promotedPostIdsInserted.has(post._id));
 
         postsToRender.forEach(post => {
@@ -1068,10 +694,9 @@ document.addEventListener('DOMContentLoaded', async function () {
             postElement.style.minWidth = '200px';
             postElement.style.scrollSnapAlign = 'start';
             rowContainer.appendChild(postElement);
-            promotedPostIdsInserted.add(post._id); // Add to set of inserted IDs
+            promotedPostIdsInserted.add(post._id);
         });
 
-        // Add filler elements if there are less than 5 promoted posts
         const fillerCount = Math.max(0, 5 - postsToRender.length);
         for (let i = 0; i < fillerCount; i++) {
             const fillerElement = createPromotedPostFiller();
@@ -1085,8 +710,6 @@ document.addEventListener('DOMContentLoaded', async function () {
 
         return wrapperContainer;
     }
-
-    // --- Main Post Loading Logic ---
 
     async function fetchPostsByCategory(category = currentCategory, page = currentPage, clearExisting = false) {
         const postsContainer = document.getElementById('posts-container');
@@ -1102,20 +725,14 @@ document.addEventListener('DOMContentLoaded', async function () {
         isLoading = true;
 
         if (clearExisting) {
-            // Disconnect old observers before clearing content
-            if (videoObserver) {
+            if (window.videoObserver) {
                 postsContainer.querySelectorAll('.post-video-container').forEach(container => {
-                    videoObserver.unobserve(container);
+                    window.videoObserver.unobserve(container);
                 });
             }
             postsContainer.innerHTML = '';
-            suggestionCounter = 0; // Reset suggestion counter when clearing posts
-            // *** THE CRUCIAL FIX IS HERE ***
-            // Clear the set of promoted post IDs that have been inserted.
-            // This ensures that when the feed is entirely reset (e.g., category change, initial load),
-            // promoted posts can be re-inserted.
+            suggestionCounter = 0;
             promotedPostIdsInserted.clear();
-            // *** END OF FIX ***
         }
 
         try {
@@ -1140,11 +757,9 @@ document.addEventListener('DOMContentLoaded', async function () {
                 return dateB - dateA;
             });
 
-            // Filter out promoted video posts (they are regular posts, not 'promoted' visually this way)
             const availablePromotedPosts = sortedPosts.filter(post => post.isPromoted && post.postType !== 'video_ad');
-            const nonPromotedPosts = sortedPosts.filter(post => !post.isPromoted || post.postType === 'video_ad'); // Regular posts (can be video or image)
+            const nonPromotedPosts = sortedPosts.filter(post => !post.isPromoted || post.postType === 'video_ad');
 
-            // Ensure promoted posts are sorted for consistent insertion if needed
             availablePromotedPosts.sort((a, b) => {
                 const dateA = new Date(a.createdAt || 0);
                 const dateB = new Date(b.createdAt || 0);
@@ -1153,18 +768,16 @@ document.addEventListener('DOMContentLoaded', async function () {
 
             const postsBeforeSuggestion = 5;
             const usersPerSuggestionRow = 8;
-            const promotedPostsPerInsert = 5; // How many promoted posts to attempt to insert in a row
-            const normalPostsBeforePromotedRow = 2; // Insert promoted row after every X normal posts
+            const promotedPostsPerInsert = 5;
+            const normalPostsBeforePromotedRow = 2;
 
             const fragment = document.createDocumentFragment();
 
             let allUserSuggestions = [];
-            if (currentLoggedInUser && clearExisting) { // Fetch suggestions only on a clear load
+            if (currentLoggedInUser && clearExisting) {
                 allUserSuggestions = await fetchUserSuggestions();
             }
 
-            // Insert promoted posts row at the very beginning if available and not already inserted
-            // Only take the first `promotedPostsPerInsert` that haven't been inserted
             const initialPromotedPosts = availablePromotedPosts.filter(post => !promotedPostIdsInserted.has(post._id)).slice(0, promotedPostsPerInsert);
 
             if (initialPromotedPosts.length > 0) {
@@ -1172,10 +785,9 @@ document.addEventListener('DOMContentLoaded', async function () {
                 fragment.appendChild(promotedRow);
             }
 
-            let normalPostCount = 0; // Track normal posts to insert promoted row or suggestions
-            let promotedPostsInsertedIndex = initialPromotedPosts.length; // Index to keep track of where we are in availablePromotedPosts
-
-            const videoContainersToObserve = []; // Collect video containers for observation
+            let normalPostCount = 0;
+            let promotedPostsInsertedIndex = initialPromotedPosts.length;
+            const videoContainersToObserve = [];
 
             for (let i = 0; i < nonPromotedPosts.length; i++) {
                 const post = nonPromotedPosts[i];
@@ -1183,17 +795,16 @@ document.addEventListener('DOMContentLoaded', async function () {
                 fragment.appendChild(postElement);
                 normalPostCount++;
 
-                // If it's a video post, add its container to the list for observation
                 if (post.postType === 'video_ad') {
                     const videoContainer = postElement.querySelector('.post-video-container');
                     if (videoContainer) {
                         videoContainersToObserve.push(videoContainer);
-                        // Initialize video controls for newly rendered video posts
-                        initializeVideoControls(postElement);
+                        if (window.initializeVideoControls) {
+                            window.initializeVideoControls(postElement);
+                        }
                     }
                 }
 
-                // Insert user suggestion row
                 if (normalPostCount % postsBeforeSuggestion === 0 &&
                     currentLoggedInUser &&
                     allUserSuggestions.length > 0 &&
@@ -1212,35 +823,29 @@ document.addEventListener('DOMContentLoaded', async function () {
                     }
                 }
 
-                // Insert promoted posts row after 'normalPostsBeforePromotedRow' normal posts,
-                // ensuring no duplicates and that we don't insert more than available.
                 if (normalPostCount % normalPostsBeforePromotedRow === 0) {
                     const nextPromotedPosts = availablePromotedPosts
-                        .slice(promotedPostsInsertedIndex) // Start from where we left off
-                        .filter(post => !promotedPostIdsInserted.has(post._id)) // Filter out duplicates
-                        .slice(0, promotedPostsPerInsert); // Take up to 5 posts
+                        .slice(promotedPostsInsertedIndex)
+                        .filter(post => !promotedPostIdsInserted.has(post._id))
+                        .slice(0, promotedPostsPerInsert);
 
                     if (nextPromotedPosts.length > 0) {
                         const promotedRow = createPromotedPostsRow(nextPromotedPosts);
                         fragment.appendChild(promotedRow);
-                        promotedPostsInsertedIndex += nextPromotedPosts.length; // Advance the index
+                        promotedPostsInsertedIndex += nextPromotedPosts.length;
                     }
                 }
             }
 
-
-            // Append all collected elements to the DOM at once
             postsContainer.appendChild(fragment);
-
 
             if (postsContainer.children.length === 0) {
                 postsContainer.innerHTML = '<p style="text-align: center; margin: 2rem;">No posts available.</p>';
             }
 
-            // Observe all newly added video containers
-            if (videoObserver) {
+            if (window.videoObserver) {
                 videoContainersToObserve.forEach(container => {
-                    videoObserver.observe(container);
+                    window.videoObserver.observe(container);
                 });
             }
 
@@ -1261,8 +866,6 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
     }
 
-    // --- Global Utility Functions ---
-
     window.redirectToLogin = function() {
         if (window.showToast) {
             window.showToast('Please log in to access this feature', 'error');
@@ -1274,31 +877,26 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
     };
 
-    // --- Event Delegates for Interactive Elements ---
-
     document.addEventListener('click', async (event) => {
-        const target = event.target.closest('button'); // Capture clicks on buttons
+        const target = event.target.closest('button');
         if (!target) return;
 
         const showToast = window.showToast;
         const authToken = localStorage.getItem('authToken');
         const loggedInUser = localStorage.getItem('userId');
 
-        // Handle Promote Button
-        const promoteButton = target.closest('.promote-button');
-        if (promoteButton) {
-            const postId = promoteButton.dataset.postId;
+        if (target.classList.contains('promote-button')) {
+            const postId = target.dataset.postId;
             if (!postId) {
                 if (showToast) showToast('Invalid post ID for promotion', 'error');
                 return;
             }
             window.location.href = `promote.html?postId=${postId}`;
-            return; // Exit to prevent further processing
+            return;
         }
 
-        // Handle Send Message Button (for both normal and promoted posts)
         if (target.classList.contains('send-message-btn')) {
-            event.preventDefault(); // Prevent default button behavior
+            event.preventDefault();
             const recipientId = target.dataset.recipientId;
             const postElement = target.closest('.post') || target.closest('.promoted-post');
 
@@ -1327,13 +925,11 @@ document.addEventListener('DOMContentLoaded', async function () {
 
             const chatUrl = `Chats.html?user_id=${loggedInUser}&recipient_id=${recipientId}&recipient_username=${encodedRecipientUsername}&recipient_profile_picture_url=${encodedRecipientProfilePictureUrl}&message=${encodedMessage}&product_image=${encodedProductImage}&product_id=${postId}&product_name=${encodedProductDescription}`;
             window.location.href = chatUrl;
-            return; // Exit to prevent further processing
+            return;
         }
 
-        // Buy Now Button Handler - MODIFIED
         if (target.classList.contains('buy-now-button')) {
             event.preventDefault();
-
             const postId = target.dataset.postId;
             if (!postId) {
                 console.error("Post ID is missing");
@@ -1341,7 +937,12 @@ document.addEventListener('DOMContentLoaded', async function () {
                 return;
             }
 
-            // Collect all product data attributes
+            const postElement = target.closest('.post') || target.closest('.promoted-post');
+            const recipientUsername = postElement.querySelector('.post-user-name')?.textContent ||
+                                     postElement.querySelector('.promoted-user-name')?.textContent || 'Unknown';
+            const recipientProfilePictureUrl = postElement.querySelector('.post-avatar')?.src ||
+                                              postElement.querySelector('.promoted-avatar')?.src || '/salmart-192x192.png';
+
             const productData = {
                 postId: postId,
                 productImage: target.dataset.productImage || '',
@@ -1350,18 +951,16 @@ document.addEventListener('DOMContentLoaded', async function () {
                 productLocation: target.dataset.productLocation || '',
                 productCondition: target.dataset.productCondition || '',
                 productPrice: target.dataset.productPrice || '',
-                sellerId: target.dataset.sellerId || ''
+                sellerId: target.dataset.sellerId || '',
+                recipient_username: encodeURIComponent(recipientUsername),
+                recipient_profile_picture_url: encodeURIComponent(recipientProfilePictureUrl)
             };
 
-            // Encode all parameters for the URL
             const queryParams = new URLSearchParams(productData).toString();
-
-            // Navigate to the new product details page
             window.location.href = `checkout.html?${queryParams}`;
-            return; // Exit to prevent further processing
+            return;
         }
 
-        // Handle Follow Button
         if (target.classList.contains('follow-button') && target.dataset.userId) {
             const userIdToFollow = target.dataset.userId;
             if (!authToken || !loggedInUser) {
@@ -1370,8 +969,6 @@ document.addEventListener('DOMContentLoaded', async function () {
             }
 
             const isCurrentlyFollowing = target.textContent.includes('Following');
-
-            // Optimistic UI update
             window.updateFollowButtonsUI(userIdToFollow, !isCurrentlyFollowing);
 
             try {
@@ -1390,34 +987,25 @@ document.addEventListener('DOMContentLoaded', async function () {
                 }
 
                 const data = await response.json();
-
-                // Update currentFollowingList based on successful action
                 if (isCurrentlyFollowing) {
                     currentFollowingList = currentFollowingList.filter(id => id !== userIdToFollow);
                 } else {
                     currentFollowingList.push(userIdToFollow);
                 }
-
-                // Re-apply UI update for consistency with actual state
                 window.updateFollowButtonsUI(userIdToFollow, isCurrentlyFollowing);
                 if (showToast) showToast(data.message || 'Follow status updated!', '#28a745');
-
             } catch (error) {
                 console.error('Follow/Unfollow error:', error);
                 if (showToast) showToast(error.message || 'Failed to update follow status.', '#dc3545');
-                // Revert UI on error
                 window.updateFollowButtonsUI(userIdToFollow, isCurrentlyFollowing);
             }
-            return; // Exit to prevent further processing
+            return;
         }
     });
 
-    // --- Authentication and Initialization Logic ---
-
     async function initializeAppData() {
-        if (isAuthReady) return; // Prevent double execution
+        if (isAuthReady) return;
 
-        // Ensure currentLoggedInUser is based on localStorage at this point
         if (!currentLoggedInUser) {
             currentLoggedInUser = localStorage.getItem('userId');
         }
@@ -1427,25 +1015,19 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
         isAuthReady = true;
         console.log('App initialization complete. User:', currentLoggedInUser ? currentLoggedInUser : 'Not logged in');
-        // Initial fetch, force clearing existing content
         await fetchPostsByCategory(currentCategory, currentPage, true);
     }
 
-    window.fetchPosts = fetchPostsByCategory; // Make it globally accessible if needed elsewhere
+    window.fetchPosts = fetchPostsByCategory;
 
     document.addEventListener('authStatusReady', async (event) => {
-        // Only proceed if app initialization hasn't happened yet or user status significantly changed
-        // (e.g., user just logged in/out from another part of the app)
         if (!isAuthReady || currentLoggedInUser !== event.detail.loggedInUser) {
-            currentLoggedInUser = event.detail.loggedInUser; // Update loggedInUser from the event
+            currentLoggedInUser = event.detail.loggedInUser;
             console.log('Auth status ready event received. Logged in user:', currentLoggedInUser ? currentLoggedInUser : 'Not logged in');
-            await initializeAppData(); // Trigger full app initialization
+            await initializeAppData();
         }
     });
 
-    // Execute initial load on DOMContentLoaded.
-    // The `isAuthReady` flag within `initializeAppData` prevents re-fetching
-    // if `authStatusReady` fires very quickly.
     initializeAppData();
 
     const loadMoreBtn = document.getElementById('load-more-btn');
@@ -1453,7 +1035,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         loadMoreBtn.addEventListener('click', () => {
             if (!isLoading) {
                 currentPage++;
-                fetchPostsByCategory(currentCategory, currentPage, false); // Don't clear existing posts
+                fetchPostsByCategory(currentCategory, currentPage, false);
             }
         });
     }
