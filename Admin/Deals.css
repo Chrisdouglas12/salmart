@@ -294,7 +294,7 @@ body {
   border-color: #dc3545;
 }
 
-    .confirm-btn, .refund-btn {
+    .confirm-btn, .refund-btn, .cancel-btn{
       margin-top: 10px;
       border: none;
       padding: 8px 12px;
@@ -306,7 +306,10 @@ body {
     .confirm-btn:hover { background-color: #218838; }
     .refund-btn { background-color: #dc3545; color: white; }
     .refund-btn:hover { background-color: #c82333; }
-
+    .cancel-btn{
+         background-color: #28a745;
+         color: #fff;
+    }
 .confirm-btn {
   background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
   color: white;
@@ -635,7 +638,7 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.2) !important;
   opacity: 1 !important;
   visibility: visible !important;
-  animation: modalSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+ 
 }
 
 .modal-content input {

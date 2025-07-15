@@ -161,7 +161,7 @@ module.exports = (io) => {
       
       const amountTextColor = Jimp.cssColorToHex('#1e7e34FF'); // Darker green for text
       image.print(fontSmall, leftMargin + 20, yPos + 15, 'AMOUNT PAID', 300);
-      image.print(fontBold, leftMargin + 20, yPos + 35, `₦${Number(amountPaid).toLocaleString('en-NG')}`, 400, amountTextColor);
+      image.print(fontBold, leftMargin + 20, yPos + 35, `${Number(amountPaid).toLocaleString('en-NG')}`, 400, amountTextColor);
       yPos += 100;
 
       // Transaction details grid

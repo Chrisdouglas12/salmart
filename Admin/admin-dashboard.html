@@ -1218,7 +1218,7 @@ if (urlParams.toString() && !authToken) {
             </div>
             <div class="list-item-actions">
               <button class="primary" onclick="openModal(\`${details.replace(/`/g, '\\`').replace(/\$/g, '\\$')}\`)"><span>View Details</span></button>
-              ${refund.status === 'pending' ? `
+              ${refund.status === 'Refund Requested' ? `
                 <button class="success" onclick="resolveAction('/api/admin/refunds/${refund.transactionId._id}/approve', this, 'refund-requests', refundItem)"><span>Approve Refund</span></button>
                 <button class="danger" onclick="resolveAction('/api/admin/refunds/${refund.transactionId._id}/deny', this, 'refund-requests', refundItem)"><span>Deny Refund</span></button>
               ` : ''}

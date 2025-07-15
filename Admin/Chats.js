@@ -272,7 +272,7 @@ function displayMessage(message, isOptimistic = false) {
             ${displayImage ? `
                 <div class="image-container" style="margin: 10px 0;">
                     <img src="${displayImage}" class="receipt-image" alt="Receipt"
-                         style="max-width: 250px; border-radius: 8px; border: 1px solid #ddd;"
+                         style="max-width: 200px; border-radius: 8px; border: 1px solid #ddd;"
                          onerror="this.style.display='none';this.nextElementSibling.style.display='block';">
                     <p style="display:none;color:red;">Failed to load receipt image.</p>
                 </div>
@@ -287,6 +287,8 @@ function displayMessage(message, isOptimistic = false) {
             <div class="message-timestamp">${time} ${message.status === 'seen' ? '✔✔' : isOptimistic ? '' : '✔'}</div>
         `;
     }
+    
+    
 
     const isOfferAccepted = offerDetails.productId && acceptedOffers.has(offerDetails.productId);
     const isBargainEnded = offerDetails.productId && endedBargains.has(offerDetails.productId);
@@ -851,6 +853,39 @@ function blockUser() {
     };
 }
 
+document.getElementById('chat-messages').addEventListener('click', (e) => {
+  if (e.target.classList.contains('receipt-image') || e.target.classList.contains('product-photo-preview')) {
+    const image = e.target;
+    const modal = document.createElement('div');
+    modal.style.position = 'fixed';
+    modal.style.top = '0';
+    modal.style.left = '0';
+    modal.style.width = '100%';
+    modal.style.height = '100%';
+    modal.style.backgroundColor = 'rgba(0, 0, 0, 0.85)';
+    modal.style.display = 'flex';
+    modal.style.justifyContent = 'center';
+    modal.style.alignItems = 'center';
+    modal.style.zIndex = '10000';
+
+    const img = document.createElement('img');
+    img.src = image.src;
+    img.style.maxWidth = '90%';
+    img.style.maxHeight = '90%';
+    img.style.borderRadius = '10px';
+
+    img.addEventListener('click', (event) => {
+      event.stopPropagation();
+    });
+
+    modal.appendChild(img);
+    document.body.appendChild(modal);
+
+    modal.addEventListener('click', () => {
+      document.body.removeChild(modal);
+    });
+  }
+});
 // Add typing indicator trigger
 typeSection.addEventListener('input', sendTypingSignal);
 

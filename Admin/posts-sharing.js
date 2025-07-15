@@ -78,8 +78,9 @@ document.addEventListener('DOMContentLoaded', function () {
     function showShareModal(post) {
         const shareModal = document.createElement('div');
         shareModal.className = 'share-modal';
-        const postLink = `${window.location.origin}/product.html?postId=${post._id}`;
-
+        
+        const postLink = `${window.location.origin}/product.html?postId=${post._id}${post.images && post.images.length > 0 ? `&photo=${encodeURIComponent(post.images[0])}` : ''}${post.video ? `&video=${encodeURIComponent(post.video)}` : ''}`;
+        
         shareModal.innerHTML = `
             <div class="share-modal-content">
                 <div class="share-modal-header">

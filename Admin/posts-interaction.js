@@ -65,117 +65,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         });
     }
 
-    // Function to display the payment details modal (DVA)
-    function showPaymentDetailsModal(paymentDetails) {
-        // Ensure modal is unique or removed before adding a new one
-        closePaymentModal(); 
-
-        const modal = document.createElement('div');
-        modal.className = 'payment-modal-overlay';
-        modal.innerHTML = `
-            <div class="payment-modal">
-                <div class="payment-modal-header">
-                    <h3>Complete Your Payment</h3>
-                    <span class="close-modal">&times;</span>
-                </div>
-                <div class="payment-modal-body">
-                    <p><strong>Product:</strong> ${paymentDetails.productTitle}</p>
-                    <p><strong>Amount:</strong> ₦${paymentDetails.amount.toLocaleString()}</p>
-                    
-                    <div class="bank-details">
-                        <h4>Transfer to this account:</h4>
-                        <div class="account-info">
-                            <p><strong>Bank:</strong> ${paymentDetails.bankName}</p>
-                            <p><strong>Account Number:</strong> 
-                                <span class="copyable" onclick="copyToClipboard('${paymentDetails.accountNumber}')">
-                                    ${paymentDetails.accountNumber} 📋
-                                </span>
-                            </p>
-                            <p><strong>Account Name:</strong> ${paymentDetails.accountName}</p>
-                        </div>
-                    </div>
-                    
-                    <div class="payment-instructions">
-                        <h4>Instructions:</h4>
-                        <ol>
-                            <li>Transfer exactly ₦${paymentDetails.amount.toLocaleString()} to the account above</li>
-                            <li>Your payment will be automatically confirmed</li>
-                            <li>You'll receive a notification once confirmed</li>
-                        </ol>
-                    </div>
-                    
-                    <div class="transaction-ref">
-                        <small>Transaction ID: ${paymentDetails.transactionId}</small>
-                    </div>
-                </div>
-                <div class="payment-modal-footer">
-                    <button class="btn-secondary" onclick="closePaymentModal()">Close</button>
-                    <button class="btn-primary" onclick="checkPaymentStatus('${paymentDetails.transactionId}')">Check Payment Status</button>
-                </div>
-            </div>
-        `;
-        
-        document.body.appendChild(modal);
-        // Add class to body to prevent scrolling when modal is open
-        document.body.style.overflow = 'hidden'; 
-        
-        // Close modal when clicking outside
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                closePaymentModal();
-            }
-        });
-        
-        // Close modal when clicking X
-        modal.querySelector('.close-modal').addEventListener('click', closePaymentModal);
-    }
-
-    // Function to close payment details modal
-    function closePaymentModal() {
-        const modal = document.querySelector('.payment-modal-overlay');
-        if (modal) {
-            document.body.removeChild(modal);
-            document.body.style.overflow = ''; // Restore scrolling
-        }
-    }
-
-    // Function to copy text to clipboard
-    function copyToClipboard(text) {
-        navigator.clipboard.writeText(text).then(() => {
-            showToast('Account number copied!', '#28a745');
-        }).catch(() => {
-            // Fallback for older browsers (less reliable, but a good attempt)
-            const textArea = document.createElement('textarea');
-            textArea.value = text;
-            document.body.appendChild(textArea);
-            textArea.select();
-            document.execCommand('copy');
-            document.body.removeChild(textArea);
-            showToast('Account number copied (fallback)!', '#28a745');
-        });
-    }
-
-    // Function to check payment status
-    function checkPaymentStatus(transactionId) {
-        fetch(`${API_BASE_URL}/payment-success/${transactionId}`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.success && data.status === 'completed') {
-                    showToast('Payment confirmed! Your item is now available.', '#28a745');
-                    closePaymentModal();
-                    // Optionally, trigger a refresh or update UI here
-                    location.reload(); 
-                } else {
-                    showToast('Payment not yet confirmed. Please wait a moment and try again.', '#ffc107');
-                }
-            })
-            .catch(error => {
-                console.error('Error checking payment status:', error);
-                showToast('Could not check payment status. Please try again.', '#dc3545');
-            });
-    }
-
-
+   
     // --- Main Event Listener for Posts Container ---
     const postsContainer = document.getElementById('posts-container');
 
@@ -184,11 +74,8 @@ document.addEventListener('DOMContentLoaded', async function () {
     window.addEventListener('postsRendered', () => {
         document.querySelectorAll('.post').forEach(postElement => {
             // Ensure initializeVideoControls is available globally or imported
-            if (window.initializeVideoControls) {
-                window.initializeVideoControls(postElement);
-            } else {
-                console.warn('initializeVideoControls not found. Make sure video-controls.js is loaded.');
-            }
+            
+            
         });
     });
 
@@ -240,57 +127,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 window.location.href = chatUrl;
 
             }
-            // --- Buy Now Button ---
-            else if (target.classList.contains('buy-now-button') && target.dataset.postId) {
-                const postId = target.dataset.postId;
-                const email = localStorage.getItem('email');
-                const buyerId = localStorage.getItem('userId');
 
-                if (!email || !buyerId || !postId) {
-                    showToast("Please log in to make a purchase or complete your profile.", '#dc3545');
-                    return;
-                }
-
-                try {
-                    const response = await fetch(`${API_BASE_URL}/pay`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ email, postId, buyerId, currency: 'NGN' }),
-                    });
-
-                    const result = await response.json();
-
-                    if (response.ok && result.success) {
-                        // Check if this is a DVA response (bank transfer)
-                        if (result.paymentDetails) {
-                            showPaymentDetailsModal(result.paymentDetails);
-                            showToast(result.message, '#28a745'); // Success for DVA initiated
-                        }
-                        // Check if this is a redirect URL response (hosted payment page)
-                        else if (result.url) {
-                            window.location.href = result.url;
-                        }
-                        // Handle existing pending payment (if message is specific)
-                        else if (result.message && result.message.includes('existing pending payment')) {
-                            showToast(result.message, '#ffc107'); // Warning color
-                            // If you want to show the details of the existing payment again:
-                            if (result.paymentDetails) {
-                                showPaymentDetailsModal(result.paymentDetails);
-                            }
-                        } else {
-                            // Generic success, but no specific action like DVA or redirect
-                            showToast(result.message || 'Payment initiation successful, awaiting further instructions.', '#28a745');
-                        }
-                    } else {
-                        // Backend indicated an error (response.ok is false or result.success is false)
-                        showToast(`Payment failed: ${result.message || 'Please try again.'}`, '#dc3545');
-                    }
-                } catch (error) {
-                    console.error('Payment error:', error);
-                    showToast('Failed to process payment. Please try again.', '#dc3545');
-                }
-            }
-            
             // --- Like Button ---
             else if (target.classList.contains('like-button')) {
                 if (!authToken || !loggedInUser) {
