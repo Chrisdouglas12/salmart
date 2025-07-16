@@ -24,6 +24,9 @@ const NotificationService = require('../services/notificationService.js');
 const { sendFCMNotification } = require('../services/notificationUtils.js')
 const winston = require('winston');
 
+const paystack = require('paystack-api')
+(process.env.PAYSTACK_SECRET_KEY)
+
 // Logger configuration
 const logger = winston.createLogger({
   level: 'info',
