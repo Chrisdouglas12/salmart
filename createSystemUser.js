@@ -1,35 +1,38 @@
-// utils/initWallets.js
-require('dotenv').config(); // ✅ Load .env variables
-
 const mongoose = require('mongoose');
-const PlatformWallet = require('./models/PlatformWallet');
+const User = require('./models/userSchema.js'); 
+require('dotenv').config()
 
-async function initWallets() {
-  await mongoose.connect(process.env.MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-    serverSelectionTimeoutMS: 5000,
-    socketTimeoutMS: 45000,
-  })
-    .then(() => console.log('✅ MongoDB connected successfully'))
-    .catch((err) => {
-      console.error(`❌ MongoDB connection error: ${err.message}`);
-      process.exit(1); // Exit if MongoDB fails to connect
-    });
+// MongoDB Connection
+mongoose.connect(process.env.MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  serverSelectionTimeoutMS: 5000,
+  socketTimeoutMS: 45000,
+})
 
-  const existing = await PlatformWallet.findOne({ type: 'promotion' });
-  if (existing) {
-    console.log('✅ Promotion wallet already exists.');
-  } else {
-    await PlatformWallet.create({
-      type: 'promotion',
-      balance: 0,
-      transactions: [],
-    });
-    console.log('✅ Promotion wallet created successfully.');
+  .then(() => console.log('✅ MongoDB connected successfully'))
+  .catch((err) => {
+    console.error(`❌ MongoDB connection error: ${err.message}`);
+    process.exit(1); // Exit if MongoDB fails to connect
+  });
+  
+async function normalizeEmails() {
+  try {
+    const users = await User.find();
+    for (const user of users) {
+      const lowerEmail = user.email.toLowerCase();
+      if (user.email !== lowerEmail) {
+        user.email = lowerEmail;
+        await user.save();
+        console.log(`Updated email for user: ${user._id}`);
+      }
+    }
+    console.log('✅ Email normalization complete.');
+  } catch (error) {
+    console.error('❌ Error normalizing emails:', error);
+  } finally {
+    mongoose.disconnect();
   }
-
-  mongoose.connection.close();
 }
 
-initWallets();
+normalizeEmails();

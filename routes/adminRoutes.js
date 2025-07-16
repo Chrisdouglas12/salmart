@@ -529,10 +529,18 @@ router.post('/admin/approve-payment', verifyToken, async (req, res) => {
     if (!txn) {
       return res.status(404).json({ success: false, message: 'Transaction not found' });
     }
+    
+    
 
     if (!['confirmed_pending_payout', 'pending', 'in_escrow'].includes(txn.status)) {
       return res.status(400).json({ success: false, message: 'Transaction not in payout-ready state' });
     }
+    
+    const systemUser = await User.findOne({ isSystemUser: true });
+if (!systemUser) {
+  logger.error('[SYSTEM USER NOT FOUND]');
+  return res.status(500).json({ error: 'System user not found' });
+}
 
     const seller = txn.sellerId;
 
@@ -616,7 +624,7 @@ router.post('/admin/approve-payment', verifyToken, async (req, res) => {
 
     await Notification.create({
       userId: txn.sellerId._id,
-      senderId: txn.buyerId?._id,
+      senderId: systemUser._id,
       postId: txn.postId?._id,
       title,
       message,
@@ -671,8 +679,9 @@ router.get('/admin/platform-wallet', verifyToken, async (req, res) => {
 });
 
 
+
 router.post('/admin/platform-wallet/withdraw', verifyToken, async (req, res) => {
-  const { amount, type } = req.body; // type = 'commission' or 'promotion'
+  const { amount, type } = req.body;
 
   if (!amount || amount <= 0) {
     return res.status(400).json({ error: 'Invalid withdrawal amount' });
@@ -689,13 +698,43 @@ router.post('/admin/platform-wallet/withdraw', verifyToken, async (req, res) => 
     return res.status(400).json({ error: `Insufficient ${type} balance` });
   }
 
-  const platformRecipientCode = process.env.PLATFORM_RECIPIENT_CODE;
-
   try {
+    // Check if recipient code exists (from env or db)
+    let recipientCode = process.env.PLATFORM_RECIPIENT_CODE;
+
+    if (!recipientCode) {
+      // Optional: Store platform account details in env or database
+      const platformAccountNumber = process.env.PLATFORM_ACCOUNT_NUMBER;
+      const platformBankCode = process.env.PLATFORM_BANK_CODE;
+      const platformAccountName = process.env.PLATFORM_ACCOUNT_NAME || 'Salmart Technologies';
+
+      if (!platformAccountNumber || !platformBankCode) {
+        return res.status(500).json({ error: 'Platform account details are not set' });
+      }
+
+      // Create transfer recipient
+      const recipientRes = await paystack.recipient.create({
+        type: 'nuban',
+        name: platformAccountName,
+        account_number: platformAccountNumber,
+        bank_code: platformBankCode,
+        currency: 'NGN'
+      });
+
+      recipientCode = recipientRes.data.recipient_code;
+      console.log('✅ Created new platform recipient code:', recipientCode);
+
+      // Optionally: update environment variable or store in DB
+      // NOTE: you cannot update .env file at runtime directly unless using a config store
+      platformWallet.recipientCode = recipientCode;
+      await platformWallet.save();
+    }
+
+    // Initiate transfer
     const transfer = await axios.post('https://api.paystack.co/transfer', {
       source: 'balance',
       amount: amountKobo,
-      recipient: platformRecipientCode,
+      recipient: recipientCode,
       reason: `Withdrawal of platform ${type}`
     }, {
       headers: {
@@ -703,7 +742,7 @@ router.post('/admin/platform-wallet/withdraw', verifyToken, async (req, res) => 
       }
     });
 
-    // Deduct from wallet and save transaction
+    // Deduct from wallet and log transaction
     platformWallet.balance -= amount;
     platformWallet.lastUpdated = new Date();
     platformWallet.transactions.push({
@@ -719,6 +758,7 @@ router.post('/admin/platform-wallet/withdraw', verifyToken, async (req, res) => 
       message: `${type.charAt(0).toUpperCase() + type.slice(1)} withdrawal successful`,
       transferReference: transfer.data.data.reference
     });
+
   } catch (err) {
     console.error(`[WITHDRAW ${type.toUpperCase()} ERROR]`, err.response?.data || err.message);
     res.status(500).json({

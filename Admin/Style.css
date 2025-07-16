@@ -50,6 +50,7 @@
     align-items: center;
     overflow: hidden;
     min-height: 40px; /* Ensure media card has a minimum height */
+    scroll-behavior: smooth;
 }
 
 .product-image {
@@ -59,6 +60,7 @@
     display: block;
     max-height: 350px; /* Max height for the media */
     min-height: 50px;
+    scroll-behavior: smooth;
 }
 
 
@@ -69,6 +71,7 @@
     display: flex;
     flex-direction: column;
     justify-content: space-between; /* Pushes content and actions apart */
+    scroll-behavior: smooth;
 }
 
 .product-title {
@@ -1596,6 +1599,7 @@ p{
   background-color: #000;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Softer shadow */
   transition: box-shadow 0.3s ease;
+  scroll-behavior: smooth;
 }
 
 .post-video-container:hover {
@@ -1607,6 +1611,7 @@ p{
   height: 100%;
   display: block;
   object-fit: contain;
+  scroll-behavior: smooth;
 }
 
 .post-video::-webkit-media-controls {

@@ -700,19 +700,57 @@ async function processQueuedPayouts() {
         continue;
       }
 
-      // Fix missing transferRecipient from seller if needed
-      if (!tx.transferRecipient) {
-        if (tx.sellerId.paystackRecipientCode) {
-          tx.transferRecipient = tx.sellerId.paystackRecipientCode;
-          await tx.save();
-          console.log(`[PAYOUT FIXED] Populated missing recipient for tx ${tx._id}`);
-        } else {
-          console.warn(`[PAYOUT SKIPPED] No transferRecipient for tx ${tx._id}`);
-          tx.processing = false;
-          await tx.save();
-          continue;
-        }
+if (!tx.transferRecipient) {
+  if (tx.sellerId.paystackRecipientCode) {
+    tx.transferRecipient = tx.sellerId.paystackRecipientCode;
+    await tx.save();
+    console.log(`[PAYOUT FIXED] Populated missing recipient for tx ${tx._id}`);
+  } else {
+    // Try creating the recipient using user.bankDetails
+    try {
+      const user = tx.sellerId;
+
+      if (!user.bankDetails?.accountNumber || !user.bankDetails?.bankCode || !user.firstName) {
+        console.warn(`[PAYOUT SKIPPED] Missing bank info for tx ${tx._id}`);
+        tx.processing = false;
+        await tx.save();
+        continue;
       }
+
+      const recipientRes = await axios.post(
+        'https://api.paystack.co/transferrecipient',
+        {
+          type: 'nuban',
+          name: `${user.firstName} ${user.lastName || ''}`.trim(),
+          account_number: user.bankDetails.accountNumber,
+          bank_code: user.bankDetails.bankCode,
+          currency: 'NGN'
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`
+          }
+        }
+      );
+
+      const recipientCode = recipientRes.data.data.recipient_code;
+
+      // Save to user and transaction
+      user.paystackRecipientCode = recipientCode;
+      await user.save();
+
+      tx.transferRecipient = recipientCode;
+      await tx.save();
+
+      console.log(`[PAYOUT FIXED] Created and assigned recipient for tx ${tx._id}`);
+    } catch (createErr) {
+      console.error(`[PAYOUT SKIPPED] Failed to create recipient for tx ${tx._id}:`, createErr.response?.data || createErr.message);
+      tx.processing = false;
+      await tx.save();
+      continue;
+    }
+  }
+}
 
       tx.processing = true;
       await tx.save();

@@ -2525,3 +2525,24 @@
 {"level":"info","message":"Sending FCM notification to user 6865680685b3194e8bc38b92 for message 687620ecb45f54142ff917cc","timestamp":"2025-07-15T09:35:40.799Z"}
 {"level":"info","message":"FCM notification sent to user 6865680685b3194e8bc38b92","timestamp":"2025-07-15T09:35:43.416Z"}
 {"level":"info","message":"Triggering badge update for user 6865680685b3194e8bc38b92","timestamp":"2025-07-15T09:35:43.418Z"}
+{"level":"warn","message":"Missing senderId or receiverId in /messages","timestamp":"2025-07-16T00:05:25.820Z"}
+{"level":"info","message":"Fetched 10 latest messages for user 6843d062f457581752641ee3","timestamp":"2025-07-16T00:05:26.764Z"}
+{"level":"info","message":"Fetched 8 messages between 6843d062f457581752641ee3 and 6865680685b3194e8bc38b92","timestamp":"2025-07-16T00:05:30.679Z"}
+{"level":"info","message":"Message sent from 6843d062f457581752641ee3 to 6865680685b3194e8bc38b92: 6876ecd31976935a4539ac0d","timestamp":"2025-07-16T00:05:39.567Z"}
+{"level":"info","message":"Emitting receiveMessage to user 6865680685b3194e8bc38b92: {\"_id\":\"6876ecd31976935a4539ac0d\",\"senderId\":\"6843d062f457581752641ee3\",\"receiverId\":\"6865680685b3194e8bc38b92\",\"text\":\"Sold\",\"messageType\":\"text\",\"offerDetails\":null,\"attachment\":null,\"chatPartnerName\":\"Debbie James\",\"status\":\"sent\",\"createdAt\":\"2025-07-16T00:05:39.169Z\"}","timestamp":"2025-07-16T00:05:39.581Z"}
+{"level":"info","message":"Emitting newMessage to user 6843d062f457581752641ee3: {\"_id\":\"6876ecd31976935a4539ac0d\",\"senderId\":\"6843d062f457581752641ee3\",\"receiverId\":\"6865680685b3194e8bc38b92\",\"text\":\"Sold\",\"messageType\":\"text\",\"offerDetails\":null,\"attachment\":null,\"chatPartnerName\":\"Debbie James\",\"status\":\"sent\",\"createdAt\":\"2025-07-16T00:05:39.169Z\"}","timestamp":"2025-07-16T00:05:39.593Z"}
+{"level":"info","message":"Sending FCM notification to user 6865680685b3194e8bc38b92 for message 6876ecd31976935a4539ac0d","timestamp":"2025-07-16T00:05:39.598Z"}
+{"level":"info","message":"FCM notification sent to user 6865680685b3194e8bc38b92","timestamp":"2025-07-16T00:05:41.926Z"}
+{"level":"info","message":"Triggering badge update for user 6865680685b3194e8bc38b92","timestamp":"2025-07-16T00:05:41.927Z"}
+{"level":"warn","message":"Missing senderId or receiverId in /messages","timestamp":"2025-07-16T00:06:57.041Z"}
+{"level":"info","message":"Fetched 10 latest messages for user 6843d062f457581752641ee3","timestamp":"2025-07-16T00:07:03.503Z"}
+{"level":"info","message":"Fetched 9 messages between 6843d062f457581752641ee3 and 6865680685b3194e8bc38b92","timestamp":"2025-07-16T00:07:08.035Z"}
+{"level":"warn","message":"Missing senderId or receiverId in /messages","timestamp":"2025-07-16T00:09:51.074Z"}
+{"level":"info","message":"Fetched 10 latest messages for user 6843d062f457581752641ee3","timestamp":"2025-07-16T00:09:54.848Z"}
+{"level":"info","message":"Fetched 9 messages between 6843d062f457581752641ee3 and 6865680685b3194e8bc38b92","timestamp":"2025-07-16T00:09:58.158Z"}
+{"level":"warn","message":"Missing senderId or receiverId in /messages","timestamp":"2025-07-16T00:10:47.691Z"}
+{"level":"info","message":"Fetched 10 latest messages for user 6843d062f457581752641ee3","timestamp":"2025-07-16T00:10:48.522Z"}
+{"level":"info","message":"Fetched 9 messages between 6843d062f457581752641ee3 and 6865680685b3194e8bc38b92","timestamp":"2025-07-16T00:10:50.120Z"}
+{"level":"warn","message":"Missing senderId or receiverId in /messages","timestamp":"2025-07-16T00:12:28.372Z"}
+{"level":"info","message":"Fetched 10 latest messages for user 6843d062f457581752641ee3","timestamp":"2025-07-16T00:12:34.118Z"}
+{"level":"info","message":"Fetched 9 messages between 6843d062f457581752641ee3 and 6865680685b3194e8bc38b92","timestamp":"2025-07-16T00:12:44.229Z"}

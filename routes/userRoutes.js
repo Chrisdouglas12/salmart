@@ -73,7 +73,10 @@ module.exports = (io) => {
 // Register a user
 router.post('/register', async (req, res) => {
   try {
-    const { firstName, lastName, email, password, accountNumber,} = req.body;
+    let { firstName, lastName, email, password, accountNumber,} = req.body;
+    
+    email = email.trim().toLowerCase();
+    
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: 'User already exists' });
@@ -99,7 +102,8 @@ router.post('/register', async (req, res) => {
 router.post('/login', async (req, res) => {
   console.log('Login attempt:', req.body);
   try {
-    const { email, password } = req.body;
+    let { email, password } = req.body;
+    email = email.trim().toLowerCase();
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(400).json({ message: 'User not found' });

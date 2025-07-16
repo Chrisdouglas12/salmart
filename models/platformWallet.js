@@ -11,6 +11,10 @@ const platformWalletSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
+  recipientCode: {
+    type: String,
+    default: null
+  },
   transactions: [
     {
       amount: Number,
@@ -27,5 +31,4 @@ const platformWalletSchema = new mongoose.Schema({
   }
 });
 
-// ✅ Prevent OverwriteModelError
 module.exports = mongoose.models.PlatformWallet || mongoose.model('PlatformWallet', platformWalletSchema);
