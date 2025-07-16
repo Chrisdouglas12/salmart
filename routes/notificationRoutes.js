@@ -160,6 +160,25 @@ module.exports = (io) => {
       res.status(500).json({ error: 'Server error' });
     }
   });
+  
+  // To delete and dismiss notification
+  router.post('/notifications/:id/dismiss', verifyToken, async (req, res) => {
+  const notificationId = req.params.id;
+  const userId = req.user.userId;
+
+  try {
+    const deleted = await Notification.findOneAndDelete({ _id: notificationId, userId });
+
+    if (!deleted) {
+      return res.status(404).json({ message: 'Notification not found or already dismissed' });
+    }
+
+    res.status(200).json({ message: 'Notification dismissed (deleted)' });
+  } catch (error) {
+    console.error('Dismiss error:', error);
+    res.status(500).json({ message: 'Server error during dismiss' });
+  }
+});
 
   // Mark Messages as Viewed
   router.post('/messages/mark-as-viewed', verifyToken, async (req, res) => {

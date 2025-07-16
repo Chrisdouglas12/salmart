@@ -185,7 +185,7 @@ body {
   justify-content: center;
   background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
   border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-  padding: 16px;
+  padding: 25px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
 }
 
@@ -193,7 +193,7 @@ body {
   padding: 12px 24px;
   cursor: pointer;
   border-radius: 25px;
-  margin: 0 8px;
+  margin: 0 12px;
   font-weight: 500;
   font-size: 14px;
   color: #28a745;

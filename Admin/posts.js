@@ -461,14 +461,20 @@ document.addEventListener('DOMContentLoaded', async function () {
             `;
             if (currentLoggedInUser) {
                 if (isPostCreator) {
-                    buttonContent = !post.isPromoted ? `
-                        <div class="actions">
-                            <button class="btn btn-primary promote-button" data-post-id="${post._id || ''}" aria-label="Promote this post">
-                                Promote Post
-                            </button>
-                        </div>
-                    ` : '';
-                } else {
+    buttonContent = !post.isPromoted ? `
+        <div class="actions">
+            <button 
+                class="btn btn-primary promote-button" 
+                data-post-id="${post._id || ''}" 
+                aria-label="Promote this post" 
+                ${post.isSold ? 'disabled title="Cannot promote sold out post"' : ''}
+            >
+                ${post.isSold ? 'Sold Out' : 'Promote Post'}
+            </button>
+        </div>
+    ` : '';
+}
+ else {
                     buttonContent = `
                         <div class="actions">
                             <button class="btn btn-secondary send-message-btn"
@@ -577,10 +583,11 @@ document.addEventListener('DOMContentLoaded', async function () {
                     <button class="post-options-button" type="button"><i class="fas fa-ellipsis-h"></i></button>
                     <div class="post-options-menu">
                         <ul>
-                            ${isPostCreator ? `
+                                      ${isPostCreator ? `
                                 <li><button class="delete-post-button" data-post-id="${post._id || ''}" type="button">Delete Post</button></li>
-                                <li><button class="edit-post-button" data-post-id="${post._id || ''}" type="button">Edit Post</button></li>
+                                <li><button class="edit-post-button" data-post-id="${post._id || ''}" data-post-type="${post.postType || 'regular'}" type="button">Edit Post</button></li>
                             ` : ''}
+
                             <li><button class="report-post-button" data-post-id="${post._id || ''}" type="button">Report Post</button></li>
                         </ul>
                     </div>

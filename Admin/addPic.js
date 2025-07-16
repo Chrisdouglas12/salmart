@@ -7,9 +7,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const profilePicture6 = document.getElementById('profile-picture6');
     const profilePicture8 = document.getElementById('profile-picture8'); // for Deals.html
     const username8 = document.getElementById('username8'); // for Deals.html
-    const username1 = document.getElementById('username1');
     const username = document.getElementById('username');
-    const profileUsername = document.getElementById('profileHeaderUsr');
     const followers = document.getElementById('followers'); // This seems unused in the original snippet but kept for context.
     const productsCount = document.getElementById('products-count');
 
@@ -97,9 +95,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 // Set other profile details
                 if (username) username.textContent = `${data.firstName} ${data.lastName}`;
-                if (username1) username1.textContent = `${data.firstName} ${data.lastName}`;
+               
                 if (username8) username8.textContent = `${data.firstName} ${data.lastName}`;
-                if (profileUsername) profileUsername.textContent = `${data.firstName} ${data.lastName}`;
                 if (productsCount) productsCount.textContent = data.products?.length || 0;
 
                 // Dispatch a custom event to signal that auth status is ready

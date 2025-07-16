@@ -468,113 +468,161 @@
 
   <script src="updateBankDetails.js"></script>
 
-  <!-- profile.js -->
   <script>
-  document.addEventListener("DOMContentLoaded", async function () {
-    if (typeof eruda !== 'undefined') {
-      eruda.init();
-    }
-    const API_BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart.onrender.com';
-    function getLoggedInUserInfo() {
-      const token = localStorage.getItem("authToken");
-      if (!token) {
-        console.log("No auth token found");
-        return null;
-      }
-      try {
-        const decoded = jwt_decode(token);
-        console.log("Decoded token:", decoded);
-        return decoded;
-      } catch (error) {
-        console.error("Error decoding token:", error);
-        return null;
-      }
-    }
-    const urlParams = new URLSearchParams(window.location.search);
-    let profileOwnerId = urlParams.get('userId');
-    const isOwnProfile = !profileOwnerId;
-    const userInfo = getLoggedInUserInfo();
-    if (!userInfo && isOwnProfile) {
-      window.location.href = "SignIn.html";
-      return;
-    }
-    if (!profileOwnerId && userInfo) {
-      profileOwnerId = userInfo.userId;
-    }
-    const followersCountEl = document.getElementById("followers");
-    const productsCountEl = document.getElementById("products-count");
-    const usernameEls = [
-      document.getElementById("username"),
-      document.getElementById("username1"),
-      document.getElementById("profileHeaderUsr")
-    ];
-    const profilePicEls = [
-      document.getElementById("profile-picture"),
-      document.getElementById("profile-picture1")
-    ];
-    if (userInfo) {
-      const displayName = userInfo.name || userInfo.username || "User";
-      usernameEls.forEach(el => {
-        if (el) el.textContent = displayName;
-      });
+  
+document.addEventListener("DOMContentLoaded", async function () {
+  if (typeof eruda !== 'undefined') {
+    eruda.init();
+  }
+  
+  const API_BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart.onrender.com';
+  
+  function getLoggedInUserInfo() {
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      console.log("No auth token found");
+      return null;
     }
     try {
-      console.log(`Fetching profile for ID: ${profileOwnerId}`);
-      const response = await fetch(`${API_BASE_URL}/profile/${profileOwnerId}`);
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data = await response.json();
-      console.log("Profile data received:", data);
-      if (followersCountEl) followersCountEl.textContent = data.followersCount || "0";
-      if (productsCountEl) productsCountEl.textContent = data.productsCount || "0";
-      if (data.name) {
-        usernameEls.forEach(el => {
-          if (el) {
-            el.textContent = data.name;
-            el.style.display = 'block'; // Show username
-          }
-        });
-      }
-      if (data.profilePicture) {
-        profilePicEls.forEach(el => {
-          if (el) {
-            el.onerror = function() {
-              this.src = "default-avater.png";
-            };
-            el.src = data.profilePicture;
-            el.style.display = 'block'; // Show profile picture
-          }
-        });
-      }
-      // Hide skeleton loaders
-      document.querySelectorAll('.skeleton-profile-pic').forEach(el => el.style.display = 'none');
-      document.querySelectorAll('.skeleton-username').forEach(el => el.style.display = 'none');
-      document.querySelectorAll('.skeleton-stats-text').forEach(el => el.style.display = 'none');
-      document.querySelectorAll('.skeleton-stats-number').forEach(el => el.style.display = 'none');
-      document.querySelectorAll('.stats-item p, .stats-item h3').forEach(el => el.style.display = 'block');
-    } catch (err) {
-      console.error("Error fetching profile data:", err);
-      if (userInfo) {
-        usernameEls.forEach(el => {
-          if (el) {
-            el.textContent = userInfo.name || userInfo.username;
-            el.style.display = 'block';
-          }
-        });
-      }
-      document.querySelectorAll('.skeleton-profile-pic').forEach(el => el.style.display = 'none');
-      document.querySelectorAll('.skeleton-username').forEach(el => el.style.display = 'none');
-      document.querySelectorAll('.skeleton-stats-text').forEach(el => el.style.display = 'none');
-      document.querySelectorAll('.skeleton-stats-number').forEach(el => el.style.display = 'none');
-      document.querySelectorAll('.stats-item p, .stats-item h3').forEach(el => el.style.display = 'block');
+      const decoded = jwt_decode(token);
+      console.log("Decoded token:", decoded);
+      return decoded;
+    } catch (error) {
+      console.error("Error decoding token:", error);
+      return null;
     }
-    if (followersCountEl) {
-      followersCountEl.style.display = 'none';
-      followersCountEl.offsetHeight; // Trigger reflow
-      followersCountEl.style.display = 'block';
+  }
+  
+  const urlParams = new URLSearchParams(window.location.search);
+  let profileOwnerId = urlParams.get('userId');
+  const userInfo = getLoggedInUserInfo();
+  
+  // Fix: Properly determine if it's own profile
+  const isOwnProfile = !profileOwnerId || (userInfo && profileOwnerId === userInfo.userId);
+  
+  if (!userInfo && isOwnProfile) {
+    window.location.href = "SignIn.html";
+    return;
+  }
+  
+  // If no profileOwnerId is specified, use logged-in user's ID
+  if (!profileOwnerId && userInfo) {
+    profileOwnerId = userInfo.userId;
+  }
+  
+  const followersCountEl = document.getElementById("followers");
+  const productsCountEl = document.getElementById("products-count");
+  const usernameEls = [
+    document.getElementById("username"),
+    document.getElementById("username1"),
+    document.getElementById("profileHeaderUsr")
+  ];
+  const profilePicEls = [
+    document.getElementById("profile-picture"),
+    document.getElementById("profile-picture1")
+  ];
+  
+  // Fix: Don't set logged-in user's info initially for other profiles
+  // Only set it if it's their own profile as a fallback
+  if (isOwnProfile && userInfo) {
+    const displayName = userInfo.name || userInfo.username || "User";
+    usernameEls.forEach(el => {
+      if (el) el.textContent = displayName;
+    });
+  }
+  
+  try {
+    console.log(`Fetching profile for ID: ${profileOwnerId}`);
+    const response = await fetch(`${API_BASE_URL}/profile/${profileOwnerId}`);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-  });
+    
+    const data = await response.json();
+    console.log("Profile data received:", data);
+    
+    // Update followers and products count
+    if (followersCountEl) followersCountEl.textContent = data.followersCount || "0";
+    if (productsCountEl) productsCountEl.textContent = data.productsCount || "0";
+    
+    // Fix: Always update username with profile owner's data
+    if (data.name) {
+      usernameEls.forEach(el => {
+        if (el) {
+          el.textContent = data.name;
+          el.style.display = 'block';
+        }
+      });
+    } else {
+      // Fallback: if no name in API response, show username from API or token
+      const fallbackName = data.username || (isOwnProfile ? (userInfo.name || userInfo.username) : "User");
+      usernameEls.forEach(el => {
+        if (el) {
+          el.textContent = fallbackName;
+          el.style.display = 'block';
+        }
+      });
+    }
+    
+    // Update profile pictures
+    if (data.profilePicture) {
+      profilePicEls.forEach(el => {
+        if (el) {
+          el.onerror = function() {
+            this.src = "default-avater.png";
+          };
+          el.src = data.profilePicture;
+          el.style.display = 'block';
+        }
+      });
+    }
+    
+    // Hide skeleton loaders and show content
+    document.querySelectorAll('.skeleton-profile-pic').forEach(el => el.style.display = 'none');
+    document.querySelectorAll('.skeleton-username').forEach(el => el.style.display = 'none');
+    document.querySelectorAll('.skeleton-stats-text').forEach(el => el.style.display = 'none');
+    document.querySelectorAll('.skeleton-stats-number').forEach(el => el.style.display = 'none');
+    document.querySelectorAll('.stats-item p, .stats-item h3').forEach(el => el.style.display = 'block');
+    
+  } catch (err) {
+    console.error("Error fetching profile data:", err);
+    
+    // Fix: Handle error case properly
+    if (isOwnProfile && userInfo) {
+      // For own profile, fall back to token data
+      const fallbackName = userInfo.name || userInfo.username || "User";
+      usernameEls.forEach(el => {
+        if (el) {
+          el.textContent = fallbackName;
+          el.style.display = 'block';
+        }
+      });
+    } else {
+      // For other profiles, show generic fallback
+      usernameEls.forEach(el => {
+        if (el) {
+          el.textContent = "User";
+          el.style.display = 'block';
+        }
+      });
+    }
+    
+    // Still hide skeleton loaders even on error
+    document.querySelectorAll('.skeleton-profile-pic').forEach(el => el.style.display = 'none');
+    document.querySelectorAll('.skeleton-username').forEach(el => el.style.display = 'none');
+    document.querySelectorAll('.skeleton-stats-text').forEach(el => el.style.display = 'none');
+    document.querySelectorAll('.skeleton-stats-number').forEach(el => el.style.display = 'none');
+    document.querySelectorAll('.stats-item p, .stats-item h3').forEach(el => el.style.display = 'block');
+  }
+  
+  // Fix: Ensure followers count is properly displayed
+  if (followersCountEl) {
+    followersCountEl.style.display = 'none';
+    followersCountEl.offsetHeight; // Trigger reflow
+    followersCountEl.style.display = 'block';
+  }
+});
   </script>
 
   <!-- Tab Switching -->

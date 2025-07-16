@@ -264,10 +264,13 @@ document.addEventListener('DOMContentLoaded', async function () {
 
             }
             // --- Edit Post Button ---
+          
             else if (target.classList.contains('edit-post-button')) {
-                window.location.href = `Ads.html?edit=true&postId=${postId}`;
-
+                const postType = target.dataset.postType; // Get the post type
+                window.location.href = `Ads.html?edit=true&postId=${postId}&postType=${postType}`; // Pass postType
             }
+
+            
             // --- Report Post Button ---
             else if (target.classList.contains('report-post-button')) {
                 if (!authToken) {
@@ -275,7 +278,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                     return;
                 }
 
-                // Prevent self-reporting (optional, but good practice)
+                // Preventpost onwer from.reportimg
                 const postOwnerId = postElement.dataset.postOwnerId; // Assuming you add this data-attribute to your post HTML
                 if (postOwnerId === loggedInUser) {
                     showToast("You cannot report your own post.", '#ffc107');

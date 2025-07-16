@@ -381,7 +381,7 @@
       Alerts
     </h1>
     <div class="header-actions">
-      <a href="#" class="search-btn">
+      <a href="Search.html" class="search-btn">
         <i class="fas fa-search"></i>
       </a>
       <img src="default-avater.png" alt="Profile" id="profile-picture6" class="profile-avatar" onerror="this.src='default-avater.png'">
@@ -556,15 +556,40 @@
         }
 
         let notificationText = notification.message; // Use the message directly from the backend
-        let typeLabel = '';
+     let typeLabel = '';
+
+if (notification.type === 'like') {
+  typeLabel = `<i class="fas fa-heart" style="color:#28a745; margin-right:5px;"></i> Like`;
+} else if (notification.type === 'comment') {
+  typeLabel = `<i class="fas fa-comment" style="color:#28a745; margin-right:5px;"></i> Comment`;
+} else if (notification.type === 'reply') {
+  typeLabel = `<i class="fas fa-reply" style="color:#28a745; margin-right:5px;"></i> Reply`;
+} else if (notification.type === 'message') {
+  typeLabel = `<i class="fas fa-envelope" style="color:#28a745; margin-right:5px;"></i> Message`;
+} else if (notification.type === 'payment') {
+  typeLabel = `<i class="fas fa-money-bill-wave" style="color:#28a745; margin-right:5px;"></i> Payment`;
+} else if (notification.type === 'payment_released') {
+  typeLabel = `<i class="fas fa-unlock" style="color:#28a745; margin-right:5px;"></i> Payment Released`;
+} else if (notification.type === 'payout_queued') {
+  typeLabel = `<i class="fas fa-clock" style="color:#28a745; margin-right:5px;"></i> Payout Queued`;
+} else if (notification.type === 'payout_queued_balance_error') {
+  typeLabel = `<i class="fas fa-exclamation-triangle" style="color:#28a745; margin-right:5px;"></i> Payout Issue`;
+} else if (notification.type === 'delivery') {
+  typeLabel = `<i class="fas fa-truck" style="color:#28a745; margin-right:5px;"></i> Delivery`;
+} else if (notification.type === 'deal') {
+  typeLabel = `<i class="fas fa-handshake" style="color:#28a745; margin-right:5px;"></i> Deal`;
+} else if (notification.type === 'promotion') {
+  typeLabel = `<i class="fas fa-bullhorn" style="color:#28a745; margin-right:5px;"></i> Promotion`;
+} else if (notification.type === 'warning') {
+  typeLabel = `<i class="fas fa-exclamation-circle" style="color:#28a745; margin-right:5px;"></i> Warning`;
+} else if (notification.type === 'refund_rejected') {
+  typeLabel = `<i class="fas fa-times-circle" style="color:#28a745; margin-right:5px;"></i> Refund Rejected`;
+} else if (notification.type === 'refund_processed') {
+  typeLabel = `<i class="fas fa-check-circle" style="color:#28a745; margin-right:5px;"></i> Refund Processed`;
+} else if (notification.type === 'new_post') {
+  typeLabel = `<i class="fas fa-bolt" style="color:#28a745; margin-right:5px;"></i> New Post`;
+
         
-        // Determine type label based on backend's notification type
-        if (notification.type === 'like') {
-          typeLabel = 'Reactions';
-        } else if (notification.type === 'comment') {
-          typeLabel = 'Comment';
-        } else if (notification.type === 'payment') {
-          typeLabel = 'Payment';
           // For non-aggregated types, use the sender's name and original message logic
           notificationText = `${notification.senderId.firstName} ${notification.senderId.lastName} paid for "${notification.payment}". Please release delivery address.`;
         } else if (notification.type === 'delivery') {
@@ -598,7 +623,7 @@
           <div class="notification-content">
             <div class="notification-type">${typeLabel}</div>
             <div class="notification-message">
-              <a href="post-details.html?postId=${notification.postId || ''}" style="text-decoration: none; color: inherit">${notificationText}</a>
+              <a href="product.html?postId=${notification.postId || ''}" style="text-decoration: none; color: inherit">${notificationText}</a>
             </div>
             <span class="notification-time">${formatTime(notification.createdAt)}</span>
           </div>
@@ -686,9 +711,10 @@
         typeLabel = 'Reactions';
       } else if (notification.type === 'comment') {
         typeLabel = 'Comment';
-      } else if (notification.type === 'payment') {
-          typeLabel = 'Payment';
-          notificationText = `${notification.sender.firstName} ${notification.sender.lastName} paid for "${notification.payment}". Please release delivery address.`;
+      } if (notification.type === 'payment') {
+  typeLabel = 'Payment';
+  notificationText = `${notification.sender.firstName} ${notification.sender.lastName} has paid for "${notification.payment}". Kindly share the delivery address.`;
+
       } else if (notification.type === 'delivery') {
           typeLabel = 'Funds Transfer';
           notificationText = `${notification.sender.firstName} ${notification.sender.lastName} confirmed delivery of "${notification.payment}". Funds released to your bank account.`;
