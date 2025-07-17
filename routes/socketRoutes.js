@@ -1,8 +1,10 @@
+// backend/socket.js
+
 const mongoose = require('mongoose');
 const User = require('../models/userSchema.js');
 const Notification = require('../models/notificationSchema.js');
 const Post = require('../models/postSchema.js');
-const Message = require('../models/messageSchema.js');
+const Message = require('../models/messageSchema.js'); // Ensure Message model is imported
 const NotificationService = require('../services/notificationService.js');
 const { sendFCMNotification } = require('../services/notificationUtils.js');
 const winston = require('winston');
@@ -19,63 +21,9 @@ const logger = winston.createLogger({
   ]
 });
 
-const recentInteractions = new Map();
-
-async function getAggregatedMessage(postId, type, currentSenderId, ownerId) {
-  const post = await Post.findById(postId).select('likes comments');
-  if (!post) return null;
-
-  let userIds = [];
-  let actionVerb = '';
-  let notificationType = '';
-
-  if (type === 'like') {
-    userIds = post.likes || [];
-    actionVerb = 'liked';
-    notificationType = 'like';
-  } else if (type === 'comment') {
-    const distinctCommenterIds = Array.from(new Set(post.comments.map(c => c.createdBy?.userId ? c.createdBy.userId.toString() : null))).filter(Boolean);
-    userIds = distinctCommenterIds.map(id => new mongoose.Types.ObjectId(id));
-    actionVerb = 'commented on';
-    notificationType = 'comment';
-  }
-
-  const interactionUsers = userIds.filter(id => id.toString() !== ownerId.toString());
-
-  if (interactionUsers.length === 0) {
-    return null;
-  }
-
-  const currentSender = await User.findById(currentSenderId).select('firstName');
-  const currentSenderName = currentSender ? currentSender.firstName : 'Someone';
-
-  let message = '';
-  let firstSenderName = currentSenderName;
-
-  const otherInteractors = interactionUsers.filter(id => id.toString() !== currentSenderId.toString());
-
-  if (otherInteractors.length > 0) {
-    const firstOtherInteractor = await User.findById(otherInteractors[0]).select('firstName');
-    firstSenderName = firstOtherInteractor ? firstOtherInteractor.firstName : 'Someone';
-  }
-
-  const totalInteractions = interactionUsers.length;
-
-  if (totalInteractions === 1) {
-    message = `${firstSenderName} ${actionVerb} your ad.`;
-  } else {
-    const displaySender = currentSenderName;
-    const remainingCount = totalInteractions - 1;
-    if (remainingCount > 0) {
-      message = `${displaySender} and ${remainingCount} others ${actionVerb} your ad.`;
-    } else {
-      message = `${displaySender} ${actionVerb} your ad.`;
-    }
-  }
-
-  return { message, notificationType };
-}
-
+// Assuming you have a way to map userId to socketId for direct messaging
+// This map would typically be managed in the 'joinRoom' and 'disconnect' events
+const userSocketMap = new Map(); // Example: userId -> socketId
 
 const initializeSocket = (io) => {
   logger.info('Initializing Socket.IO event handlers');
@@ -83,6 +31,7 @@ const initializeSocket = (io) => {
   io.on('connection', (socket) => {
     logger.info(`New client connected: ${socket.id}`);
 
+    // Store user's socket ID when they join a room (login/authenticate)
     socket.on('joinRoom', async (userId) => {
       try {
         logger.info(`JoinRoom event received for userId: ${userId}`);
@@ -90,13 +39,16 @@ const initializeSocket = (io) => {
           logger.warn(`Invalid userId in joinRoom: ${userId}`);
           return;
         }
+        // Update user's socketId in DB if you want to persist it,
+        // or just maintain a runtime map if reconnection logic handles it
         const user = await User.findByIdAndUpdate(userId, { socketId: socket.id }, { new: true });
         if (!user) {
           logger.error(`User ${userId} not found in joinRoom`);
           return;
         }
         socket.join(`user_${userId}`);
-        logger.info(`User ${userId} joined room user_${userId}`);
+        userSocketMap.set(userId, socket.id); // Add to runtime map
+        logger.info(`User ${userId} joined room user_${userId}, socketId: ${socket.id}`);
         await NotificationService.sendCountsToUser(io, userId);
         logger.info(`Notification counts sent to user ${userId}`);
       } catch (err) {
@@ -104,183 +56,22 @@ const initializeSocket = (io) => {
       }
     });
 
-    socket.on('badge-update', async ({ type, count, userId }) => {
+    // Handle when a client disconnects
+    socket.on('disconnect', async () => {
       try {
-        logger.info(`badge-update event received: type=${type}, count=${count}, userId=${userId}`);
-        io.to(`user_${userId}`).emit('badge-update', { type, count, userId });
-        logger.info(`Broadcasted badge-update for ${type} to user ${userId}`);
-        await NotificationService.sendCountsToUser(io, userId);
-        logger.info(`Notification counts updated for user ${userId}`);
-      } catch (error) {
-        logger.error(`Error broadcasting badge-update for user ${userId}: ${error.message}`);
-      }
-    });
-
-    socket.on('followUser', async ({ followerId, followedId }) => {
-      try {
-        logger.info(`followUser event received: followerId=${followerId}, followedId=${followedId}`);
-        const follower = await User.findById(followerId).select('firstName lastName profilePicture');
-        if (!follower) {
-          logger.error(`Follower ${followerId} not found`);
-          return;
+        logger.info(`Client disconnected: ${socket.id}`);
+        // Remove from userSocketMap if tracking online users
+        for (let [userId, socketId] of userSocketMap.entries()) {
+            if (socketId === socket.id) {
+                userSocketMap.delete(userId);
+                logger.info(`Removed user ${userId} from userSocketMap on disconnect`);
+                break;
+            }
         }
-        const notification = new Notification({
-          userId: followedId,
-          type: 'follow',
-          senderId: followerId,
-          message: `${follower.firstName} ${follower.lastName} followed you`,
-          createdAt: new Date(),
-        });
-        await notification.save();
-        logger.info(`Created follow notification for user ${followedId}`);
-        io.to(`user_${followedId}`).emit('notification', {
-          type: 'follow',
-          userId: followerId,
-          sender: { firstName: follower.firstName, lastName: follower.lastName, profilePicture: follower.profilePicture },
-          createdAt: new Date(),
-        });
-        await sendFCMNotification(
-          followedId.toString(),
-          'New Follower',
-          `${follower.firstName} ${follower.lastName} followed you`,
-          { type: 'follow', userId: followerId.toString() },
-          io,
-          null,
-          follower.profilePicture,
-          `follow_${followerId}_${followedId}`
-        );
-        logger.info(`FCM notification sent for follow event from ${followerId} to ${followedId}`);
-        await NotificationService.triggerCountUpdate(followedId, io);
-        logger.info(`Follow notification processed from ${followerId} to ${followedId}`);
-      } catch (error) {
-        logger.error(`Error handling followUser event for ${followerId} to ${followedId}: ${error.message}`);
-      }
-    });
-
-    socket.on('likePost', async ({ postId, userId }) => {
-      try {
-        logger.info(`likePost event received: postId=${postId}, userId=${userId}`);
-        if (!mongoose.Types.ObjectId.isValid(userId) || !mongoose.Types.ObjectId.isValid(postId)) {
-          logger.warn(`Invalid userId ${userId} or postId ${postId}`);
-          return;
-        }
-        const post = await Post.findById(postId).select('createdBy');
-        if (!post) {
-          logger.error(`Post ${postId} not found`);
-          return;
-        }
-        const postOwnerId = post.createdBy.userId;
-        const sender = await User.findById(userId).select('firstName lastName profilePicture');
-        if (!sender) {
-          logger.error(`User ${userId} not found`);
-          return;
-        }
-
-        if (postOwnerId.toString() !== userId.toString()) {
-          const { message: aggregatedMessage, notificationType } = await getAggregatedMessage(postId, 'like', userId, postOwnerId);
-
-          if (aggregatedMessage) {
-            const notification = new Notification({
-              userId: postOwnerId,
-              type: 'like',
-              senderId: userId,
-              postId,
-              message: aggregatedMessage,
-              createdAt: new Date(),
-            });
-            await notification.save();
-            logger.info(`Created (or updated) like notification for user ${postOwnerId} for post ${postId}`);
-
-            io.to(`user_${postOwnerId}`).emit('notification', {
-              type: notificationType,
-              postId,
-              userId,
-              sender: { firstName: sender.firstName, lastName: sender.lastName, profilePicture: sender.profilePicture },
-              message: aggregatedMessage,
-              createdAt: new Date(),
-            });
-
-            await sendFCMNotification(
-              postOwnerId.toString(),
-              'New Like',
-              aggregatedMessage,
-              { type: 'like', postId: postId.toString() },
-              io,
-              null,
-              sender.profilePicture,
-              `post_like_${postId.toString()}`
-            );
-            logger.info(`FCM notification sent for like event on post ${postId} by user ${userId} (aggregated)`);
-            await NotificationService.triggerCountUpdate(postOwnerId, io);
-          }
-        }
-        logger.info(`Like notification processed for post ${postId} by user ${userId}`);
-      } catch (error) {
-        logger.error(`Error handling likePost event for post ${postId} by user ${userId}: ${error.message}`);
-      }
-    });
-
-    socket.on('commentPost', async ({ postId, userId, comment }) => {
-      try {
-        logger.info(`commentPost event received: postId=${postId}, userId=${userId}, comment=${comment}`);
-        if (!mongoose.Types.ObjectId.isValid(userId) || !mongoose.Types.ObjectId.isValid(postId)) {
-          logger.warn(`Invalid userId ${userId} or postId ${postId}`);
-          return;
-        }
-        const post = await Post.findById(postId).select('createdBy');
-        if (!post) {
-          logger.error(`Post ${postId} not found`);
-          return;
-        }
-        const postOwnerId = post.createdBy.userId;
-        const sender = await User.findById(userId).select('firstName lastName profilePicture');
-        if (!sender) {
-          logger.error(`User ${userId} not found`);
-          return;
-        }
-
-        if (postOwnerId.toString() !== userId.toString()) {
-          const { message: aggregatedMessage, notificationType } = await getAggregatedMessage(postId, 'comment', userId, postOwnerId);
-
-          if (aggregatedMessage) {
-            const notification = new Notification({
-              userId: postOwnerId,
-              type: 'comment',
-              senderId: userId,
-              postId,
-              message: aggregatedMessage,
-              createdAt: new Date(),
-            });
-            await notification.save();
-            logger.info(`Created (or updated) comment notification for user ${postOwnerId} for post ${postId}`);
-
-            io.to(`user_${postOwnerId}`).emit('notification', {
-              type: notificationType,
-              postId,
-              userId,
-              comment,
-              sender: { firstName: sender.firstName, lastName: sender.lastName, profilePicture: sender.profilePicture },
-              message: aggregatedMessage,
-              createdAt: new Date(),
-            });
-
-            await sendFCMNotification(
-              postOwnerId.toString(),
-              'New Comment',
-              aggregatedMessage,
-              { type: 'comment', postId: postId.toString() },
-              io,
-              null,
-              sender.profilePicture,
-              `post_comment_${postId.toString()}`
-            );
-            logger.info(`FCM notification sent for comment event on post ${postId} by user ${userId} (aggregated)`);
-            await NotificationService.triggerCountUpdate(postOwnerId, io);
-          }
-        }
-        logger.info(`Comment notification processed for post ${postId} by user ${userId}`);
-      } catch (error) {
-        logger.error(`Error handling commentPost event for post ${postId} by user ${userId}: ${error.message}`);
+        await User.updateOne({ socketId: socket.id }, { socketId: null });
+        logger.info(`Cleared socketId ${socket.id} from user DB`);
+      } catch (err) {
+        logger.error(`Error handling disconnect for socket ${socket.id}: ${err.message}`);
       }
     });
 
@@ -288,8 +79,7 @@ const initializeSocket = (io) => {
     socket.on('sendMessage', async (message) => {
       try {
         logger.info(`Received sendMessage event: ${JSON.stringify(message)}`);
-        // Extract tempId here along with other message properties
-        const { senderId, receiverId, text, messageType, offerDetails, attachment, tempId } = message; // <--- tempId is correctly extracted
+        const { senderId, receiverId, text, messageType, offerDetails, attachment, tempId } = message; // <--- tempId extracted
         if (!senderId || !receiverId) {
           logger.warn(`Missing senderId or receiverId: senderId=${senderId}, receiverId=${receiverId}`);
           throw new Error('Missing senderId or receiverId');
@@ -356,17 +146,21 @@ const initializeSocket = (io) => {
         });
         let savedMessage;
         try {
-          savedMessage = await newMessage.save(); // <--- Message is saved to DB here
+          savedMessage = await newMessage.save(); // <--- Message IS saved to DB here
           logger.info(`Successfully saved message from ${senderId} to ${receiverId}: ${savedMessage._id}`);
         } catch (saveError) {
           logger.error(`Failed to save message from ${senderId} to ${receiverId}: ${saveError.message}`);
-          throw new Error(`Failed to save message: ${saveError.message}`);
+          socket.emit('messageError', { error: `Failed to save message: ${saveError.message}` });
+          return; // Stop execution if save fails
         }
 
         // Prepare message object to emit to sender
         // This includes the tempId for the optimistic UI update
         const messageForSender = {
           ...savedMessage.toObject(),
+          _id: savedMessage._id.toString(), // Ensure _id is string
+          senderId: savedMessage.senderId.toString(),
+          receiverId: savedMessage.receiverId.toString(),
           chatPartnerName: `${receiver.firstName} ${receiver.lastName}`,
           chatPartnerProfilePicture: receiver.profilePicture || 'Default.png',
           tempId: tempId, // <--- CRUCIAL: Pass the tempId back to the sender
@@ -376,6 +170,9 @@ const initializeSocket = (io) => {
         // No tempId is needed for the receiver as they didn't optimistically send it
         const messageForReceiver = {
           ...savedMessage.toObject(),
+          _id: savedMessage._id.toString(), // Ensure _id is string
+          senderId: savedMessage.senderId.toString(),
+          receiverId: savedMessage.receiverId.toString(),
           chatPartnerName: `${sender.firstName} ${sender.lastName}`,
           chatPartnerProfilePicture: senderProfilePictureUrl || 'Default.png',
         };
@@ -418,11 +215,7 @@ const initializeSocket = (io) => {
         }
         await NotificationService.triggerCountUpdate(receiverId, io);
         logger.info(`Message sent and processed from ${senderId} to ${receiverId}`);
-        // Consider if 'messageSynced' is still needed, 'newMessage' typically confirms delivery
-        // io.to(`user_${receiverId}`).emit('messageSynced', {
-        //   ...messageForReceiver,
-        //   syncedAt: new Date(),
-        // });
+
       } catch (error) {
         logger.error(`Error sending message from ${message.senderId} to ${message.receiverId}: ${error.message}`);
         socket.emit('messageError', { error: error.message });
@@ -446,6 +239,7 @@ const initializeSocket = (io) => {
           { $set: { status: 'seen', isRead: true } }
         );
         logger.info(`Marked ${result.modifiedCount} messages as seen for sender ${senderId} and receiver ${receiverId}`);
+        // Only emit messagesSeen to the sender (who sent the message that was seen)
         io.to(`user_${senderId}`).emit('messagesSeen', {
           messageIds,
           seenAt: new Date(),
@@ -459,9 +253,9 @@ const initializeSocket = (io) => {
       }
     });
 
-    socket.on('acceptOffer', async ({ offerId, acceptorId }) => {
+    socket.on('acceptOffer', async ({ offerId, acceptorId, productId, proposedPrice, productName, productImage }) => {
       try {
-        logger.info(`acceptOffer event received: offerId=${offerId}, acceptorId=${acceptorId}`);
+        logger.info(`acceptOffer event received: offerId=${offerId}, acceptorId=${acceptorId}, productId=${productId}, proposedPrice=${proposedPrice}, productName=${productName}`);
         const originalOffer = await Message.findById(offerId);
         if (!originalOffer) {
           logger.error(`Offer ${offerId} not found`);
@@ -471,48 +265,92 @@ const initializeSocket = (io) => {
           logger.warn(`Unauthorized accept attempt for offer ${offerId} by ${acceptorId}`);
           throw new Error('Not authorized to accept this offer');
         }
-        const buyerMessage = new Message({
-          senderId: acceptorId,
-          receiverId: originalOffer.senderId,
-          messageType: 'accept-offer',
-          offerDetails: {
-            ...originalOffer.offerDetails,
-            status: 'accepted',
-          },
-          metadata: {
-            isSystemMessage: false,
-            actionRequired: true,
-          },
+
+        // Create the "buyer accepted" system message for the seller
+        const buyerAcceptMessageToSeller = new Message({
+            senderId: acceptorId, // Buyer is the sender of this acceptance message
+            receiverId: originalOffer.senderId, // Seller is the receiver
+            messageType: 'buyerAccept', // Custom message type
+            text: JSON.stringify({
+                text: `Your offer for ${productName} at ₦${proposedPrice.toLocaleString('en-NG')} was accepted.`,
+                image: productImage // Include product image in text payload for easier display
+            }),
+            offerDetails: {
+                productId,
+                productName,
+                proposedPrice,
+                image: productImage,
+                status: 'accepted'
+            },
+            status: 'sent',
+            isRead: false,
+            createdAt: new Date(),
+            metadata: {
+                isSystemMessage: true, // Mark as system message
+                actionRequired: false // No immediate action from seller, payment from buyer
+            }
         });
-        await buyerMessage.save();
-        logger.info(`Created buyer accept-offer message ${buyerMessage._id} for offer ${offerId}`);
-        const sellerMessage = new Message({
-          senderId: originalOffer.senderId,
-          receiverId: acceptorId,
-          messageType: 'system',
-          text: `Your offer for ${originalOffer.offerDetails.productName} was accepted`,
-          metadata: {
-            isSystemMessage: true,
-          },
+        await buyerAcceptMessageToSeller.save();
+        logger.info(`Created buyerAccept message to seller ${originalOffer.senderId}: ${buyerAcceptMessageToSeller._id}`);
+
+        // Create the "seller accepted" system message for the buyer
+        const sellerAcceptMessageToBuyer = new Message({
+            senderId: originalOffer.senderId, // Seller is the sender of this acceptance message
+            receiverId: acceptorId, // Buyer is the receiver
+            messageType: 'sellerAccept', // Custom message type
+            text: JSON.stringify({
+                text: `Accepted the offer of ₦${proposedPrice.toLocaleString('en-NG')} for "${productName}".`,
+                image: productImage // Include product image in text payload
+            }),
+            offerDetails: {
+                productId,
+                productName,
+                proposedPrice,
+                image: productImage,
+                status: 'accepted'
+            },
+            status: 'sent',
+            isRead: false,
+            createdAt: new Date(),
+            metadata: {
+                isSystemMessage: true, // Mark as system message
+                actionRequired: ['buyerAccept', 'sellerAccept'].includes('sellerAccept') // Buyer needs to proceed to payment
+            }
         });
-        await sellerMessage.save();
-        logger.info(`Created seller system message ${sellerMessage._id} for offer ${offerId}`);
-        // NOTE: Changed to 'newMessage' for consistency with client listener
-        io.to(`user_${originalOffer.senderId}`).emit('newMessage', buyerMessage);
-        io.to(`user_${acceptorId}`).emit('newMessage', sellerMessage);
+        await sellerAcceptMessageToBuyer.save();
+        logger.info(`Created sellerAccept message to buyer ${acceptorId}: ${sellerAcceptMessageToBuyer._id}`);
+
+
+        // Mark the original offer message as accepted/inactive
+        await Message.findByIdAndUpdate(originalOffer._id, {
+            'offerDetails.status': 'accepted',
+            status: 'seen' // Assuming it's seen when accepted
+        });
+        logger.info(`Original offer ${offerId} updated to accepted status`);
+
+
+        // Emit new system messages to both parties
+        // Ensure you send the actual saved message object with _id
+        io.to(`user_${originalOffer.senderId}`).emit('newMessage', { ...buyerAcceptMessageToSeller.toObject(), _id: buyerAcceptMessageToSeller._id.toString() });
+        io.to(`user_${acceptorId}`).emit('newMessage', { ...sellerAcceptMessageToBuyer.toObject(), _id: sellerAcceptMessageToBuyer._id.toString() });
+
+        // Update post price if applicable
         await Post.findByIdAndUpdate(
-          originalOffer.offerDetails.productId,
-          { price: originalOffer.offerDetails.proposedPrice }
+          productId,
+          { price: proposedPrice } // Use productId from offerDetails, not originalOffer.offerDetails.productId
         );
+        logger.info(`Post ${productId} price updated to ${proposedPrice}`);
+
+        // Send FCM notification to seller
         await sendFCMNotification(
           originalOffer.senderId.toString(),
           'Offer Accepted',
-          `Your offer for ${originalOffer.offerDetails.productName} was accepted`,
-          { type: 'accept-offer', offerId: offerId.toString() },
+          `${originalOffer.offerDetails.productName} offer of ₦${proposedPrice.toLocaleString('en-NG')} accepted by ${await User.findById(acceptorId).then(u => u.firstName) || 'buyer'}`,
+          { type: 'offer-accepted', productId: productId.toString() },
           io,
-          originalOffer.offerDetails.image || null,
-          null,
-          `offer_accepted_${originalOffer.offerDetails.productId.toString()}`
+          productImage || null,
+          null, // No sender profile pic for system message
+          `offer_accepted_${productId.toString()}`
         );
         logger.info(`FCM notification sent for offer ${offerId} accepted by ${acceptorId}`);
         await NotificationService.triggerCountUpdate(originalOffer.senderId, io);
@@ -524,18 +362,218 @@ const initializeSocket = (io) => {
       }
     });
 
-    socket.on('disconnect', async () => {
-      try {
-        logger.info(`Client disconnected: ${socket.id}`);
-        await User.updateOne({ socketId: socket.id }, { socketId: null });
-        logger.info(`Cleared socketId ${socket.id}`);
-      } catch (err) {
-        logger.error(`Error handling disconnect for socket ${socket.id}: ${err.message}`);
-      }
+    socket.on('declineOffer', async ({ offerId, declinerId, productId, productName, productImage }) => {
+        try {
+            logger.info(`declineOffer event received: offerId=${offerId}, declinerId=${declinerId}`);
+            const originalOffer = await Message.findById(offerId);
+            if (!originalOffer) {
+                logger.error(`Offer ${offerId} not found`);
+                throw new Error('Offer not found');
+            }
+            if (originalOffer.receiverId.toString() !== declinerId) {
+                logger.warn(`Unauthorized decline attempt for offer ${offerId} by ${declinerId}`);
+                throw new Error('Not authorized to decline this offer');
+            }
+
+            // Mark the original offer message as rejected/inactive
+            await Message.findByIdAndUpdate(originalOffer._id, {
+                'offerDetails.status': 'rejected',
+                status: 'seen' // Assuming it's seen when declined
+            });
+            logger.info(`Original offer ${offerId} updated to rejected status`);
+
+            // Create a system message for the seller (original sender) that their offer was declined
+            const declineMessageToSeller = new Message({
+                senderId: declinerId, // Buyer (decliner) is the sender
+                receiverId: originalOffer.senderId, // Seller is the receiver
+                messageType: 'reject-offer', // Custom message type
+                text: JSON.stringify({
+                    text: `Your offer for ${productName || 'Product'} was rejected.`,
+                    image: productImage // Include product image for context
+                }),
+                offerDetails: {
+                    productId,
+                    productName,
+                    image: productImage,
+                    status: 'rejected'
+                },
+                status: 'sent',
+                isRead: false,
+                createdAt: new Date(),
+                metadata: {
+                    isSystemMessage: true,
+                    actionRequired: false
+                }
+            });
+            await declineMessageToSeller.save();
+            logger.info(`Created decline message for seller ${originalOffer.senderId}: ${declineMessageToSeller._id}`);
+
+            // Create a system message for the buyer (decliner) for their own record
+            const declineMessageToBuyer = new Message({
+                senderId: originalOffer.senderId, // Seller is the nominal sender (initiator of the offer)
+                receiverId: declinerId, // Buyer (decliner) is the receiver
+                messageType: 'reject-offer', // Custom message type
+                text: JSON.stringify({
+                    text: `You rejected the offer for ${productName || 'Product'}.`,
+                    image: productImage // Include product image for context
+                }),
+                offerDetails: {
+                    productId,
+                    productName,
+                    image: productImage,
+                    status: 'rejected'
+                },
+                status: 'sent',
+                isRead: false,
+                createdAt: new Date(),
+                metadata: {
+                    isSystemMessage: true,
+                    actionRequired: false
+                }
+            });
+            await declineMessageToBuyer.save();
+            logger.info(`Created decline message for buyer ${declinerId}: ${declineMessageToBuyer._id}`);
+
+            // Emit the system messages to both parties
+            io.to(`user_${originalOffer.senderId}`).emit('newMessage', { ...declineMessageToSeller.toObject(), _id: declineMessageToSeller._id.toString() });
+            io.to(`user_${declinerId}`).emit('newMessage', { ...declineMessageToBuyer.toObject(), _id: declineMessageToBuyer._id.toString() });
+
+            // Send FCM notification to the original sender (seller)
+            await sendFCMNotification(
+                originalOffer.senderId.toString(),
+                'Offer Declined',
+                `Your offer for ${productName || 'Product'} was declined by ${await User.findById(declinerId).then(u => u.firstName) || 'buyer'}.`,
+                { type: 'offer-declined', productId: productId.toString() },
+                io,
+                productImage || null,
+                null,
+                `offer_declined_${productId.toString()}`
+            );
+            logger.info(`FCM notification sent for offer ${offerId} declined by ${declinerId}`);
+
+            await NotificationService.triggerCountUpdate(originalOffer.senderId, io);
+            await NotificationService.triggerCountUpdate(declinerId, io);
+            logger.info(`Offer ${offerId} declined and processed by ${declinerId}`);
+        } catch (error) {
+            logger.error(`Error declining offer ${offerId} by ${declinerId}: ${error.message}`);
+            socket.emit('offerError', { error: error.message });
+        }
     });
+
+    socket.on('endBargain', async ({ offerId, enderId, productId, productName }) => {
+        try {
+            logger.info(`endBargain event received: offerId=${offerId}, enderId=${enderId}, productId=${productId}`);
+            const originalOffer = await Message.findById(offerId);
+            if (!originalOffer) {
+                logger.error(`Offer ${offerId} not found`);
+                throw new Error('Offer not found');
+            }
+
+            // Ensure only participants can end the bargain related to this offer
+            if (originalOffer.senderId.toString() !== enderId && originalOffer.receiverId.toString() !== enderId) {
+                logger.warn(`Unauthorized endBargain attempt for offer ${offerId} by ${enderId}`);
+                throw new Error('Not authorized to end this bargain');
+            }
+
+            // Determine the other participant
+            const otherParticipantId = originalOffer.senderId.toString() === enderId ? originalOffer.receiverId : originalOffer.senderId;
+            const enderUser = await User.findById(enderId);
+            const otherParticipantUser = await User.findById(otherParticipantId);
+
+            // Create a system message for both parties indicating the bargain ended
+            const systemMessageText = `${enderUser?.firstName || 'A user'} ended the bargain for ${productName || 'Product'}.`;
+
+            const endBargainMessage = new Message({
+                senderId: enderId, // The person who ended it
+                receiverId: otherParticipantId,
+                messageType: 'end-bargain',
+                text: JSON.stringify({
+                    text: systemMessageText,
+                    productId,
+                    productName
+                }),
+                offerDetails: {
+                    productId,
+                    productName,
+                    status: 'ended' // Custom status for bargain ended
+                },
+                status: 'sent',
+                isRead: false,
+                createdAt: new Date(),
+                metadata: {
+                    isSystemMessage: true,
+                    actionRequired: false
+                }
+            });
+            await endBargainMessage.save();
+            logger.info(`Created end-bargain message ${endBargainMessage._id} for product ${productId}`);
+
+            // Also save a message for the ender's own view, if you want it to appear as a system message for them too
+            const endBargainMessageForEnder = new Message({
+                senderId: otherParticipantId, // Other person is nominal sender, to appear as a 'received' system message
+                receiverId: enderId,
+                messageType: 'end-bargain',
+                text: JSON.stringify({
+                    text: `You ended the bargain for ${productName || 'Product'}.`,
+                    productId,
+                    productName
+                }),
+                offerDetails: {
+                    productId,
+                    productName,
+                    status: 'ended'
+                },
+                status: 'sent',
+                isRead: false,
+                createdAt: new Date(),
+                metadata: {
+                    isSystemMessage: true,
+                    actionRequired: false
+                }
+            });
+            await endBargainMessageForEnder.save();
+            logger.info(`Created end-bargain message for ender ${enderId}: ${endBargainMessageForEnder._id}`);
+
+
+            // Emit to both parties
+            io.to(`user_${enderId}`).emit('newMessage', { ...endBargainMessageForEnder.toObject(), _id: endBargainMessageForEnder._id.toString() });
+            io.to(`user_${otherParticipantId}`).emit('newMessage', { ...endBargainMessage.toObject(), _id: endBargainMessage._id.toString() });
+
+
+            // Send FCM notification to the other participant
+            await sendFCMNotification(
+                otherParticipantId.toString(),
+                'Bargain Ended',
+                systemMessageText,
+                { type: 'bargain-ended', productId: productId.toString() },
+                io,
+                null, // No product image for this generic message unless specific
+                null,
+                `bargain_ended_${productId.toString()}`
+            );
+            logger.info(`FCM notification sent for bargain ended on product ${productId} by ${enderId}`);
+
+            await NotificationService.triggerCountUpdate(enderId, io);
+            await NotificationService.triggerCountUpdate(otherParticipantId, io);
+            logger.info(`Bargain for product ${productId} ended and processed by ${enderId}`);
+        } catch (error) {
+            logger.error(`Error ending bargain for offer ${offerId} by ${enderId}: ${error.message}`);
+            socket.emit('offerError', { error: error.message });
+        }
+    });
+
+
+    // Other existing handlers like badge-update, followUser, likePost, commentPost, disconnect
+    // ... (keep your existing handlers here, they are not directly related to message persistence)
+    socket.on('badge-update', async ({ type, count, userId }) => { /* ... */ });
+    socket.on('followUser', async ({ followerId, followedId }) => { /* ... */ });
+    socket.on('likePost', async ({ postId, userId }) => { /* ... */ });
+    socket.on('commentPost', async ({ postId, userId, comment }) => { /* ... */ });
+
   });
 
   return io;
 };
 
 module.exports = initializeSocket;
+

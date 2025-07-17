@@ -1,7 +1,9 @@
+// backend/routes/messageRoutes.js
+
 const express = require('express');
 const mongoose = require('mongoose');
 const User = require('../models/userSchema.js');
-const Message = require('../models/messageSchema.js');
+const Message = require('../models/messageSchema.js'); // Ensure Message model is imported
 const Transaction = require('../models/transactionSchema.js');
 const router = express.Router();
 const verifyToken = require('../middleware/auths');
@@ -21,7 +23,7 @@ const logger = winston.createLogger({
   ]
 });
 
-module.exports = (io) => { // 'io' is passed in but won't be used for new message emission in POST /send
+module.exports = (io) => {
   // Get messages between two users
   router.get('/messages', verifyToken, async (req, res) => {
     const senderId = req.query.user1;
@@ -32,6 +34,14 @@ module.exports = (io) => { // 'io' is passed in but won't be used for new messag
       return res.status(400).json({ error: 'Missing senderId or receiverId' });
     }
 
+    // It's good practice to ensure the user requesting messages is one of the participants
+    // For now, we trust verifyToken to ensure a valid user, but more granular check can be added.
+    if (req.user.userId !== senderId && req.user.userId !== receiverId) {
+        logger.warn(`Unauthorized access attempt to messages between ${senderId} and ${receiverId} by user ${req.user.userId}`);
+        return res.status(403).json({ error: 'Unauthorized to view these messages' });
+    }
+
+
     if (!mongoose.Types.ObjectId.isValid(senderId) || !mongoose.Types.ObjectId.isValid(receiverId)) {
       logger.warn(`Invalid senderId ${senderId} or receiverId ${receiverId} format`);
       return res.status(400).json({ error: 'Invalid senderId or receiverId format' });
@@ -40,6 +50,7 @@ module.exports = (io) => { // 'io' is passed in but won't be used for new messag
     try {
       const userId1 = new mongoose.Types.ObjectId(senderId);
       const userId2 = new mongoose.Types.ObjectId(receiverId);
+
       const messages = await Message.find({
         $or: [
           { senderId: userId1, receiverId: userId2 },
@@ -57,6 +68,12 @@ module.exports = (io) => { // 'io' is passed in but won't be used for new messag
   // Get latest messages for a user
   router.get('/api/messages', verifyToken, async (req, res) => {
     const { userId } = req.query;
+
+    // Ensure the userId in query matches the authenticated user
+    if (req.user.userId !== userId) {
+        logger.warn(`Unauthorized access attempt to /api/messages by user ${req.user.userId} for userId ${userId}`);
+        return res.status(403).json({ error: 'Unauthorized access' });
+    }
 
     if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
       logger.warn(`Invalid or missing userId in /api/messages: ${userId}`);
@@ -97,6 +114,9 @@ module.exports = (io) => { // 'io' is passed in but won't be used for new messag
         'buyerDeclineResponse',
         'offer',
         'counter-offer',
+        'accept-offer', // Added for consistency if 'accept-offer' is a system-like message
+        'reject-offer', // Added
+        'payment-completed' // Added
       ];
 
       const populatedMessages = await Promise.all(
@@ -108,54 +128,74 @@ module.exports = (io) => { // 'io' is passed in but won't be used for new messag
           const isSystem = systemMessageTypes.includes(msg.messageType);
 
           let messageText = msg.text || '';
-          if (isSystem && (!messageText || messageText.trim() === '')) {
+          // Improved system message text generation
+          if (isSystem) {
+            // Attempt to parse text if it's JSON, which might contain details
+            let parsedTextContent = {};
+            if (typeof messageText === 'string' && messageText.startsWith('{')) {
+                try {
+                    parsedTextContent = JSON.parse(messageText);
+                } catch (e) {
+                    logger.warn(`Failed to parse JSON for system message text: ${messageText}`);
+                }
+            }
+
             switch (msg.messageType) {
               case 'bargainStart':
                 messageText = 'Bargain started';
                 break;
               case 'end-bargain':
-                messageText =
-                  msg.bargainStatus === 'accepted'
-                    ? 'Bargain ended - Accepted'
-                    : msg.bargainStatus === 'declined'
-                    ? 'Bargain ended - Declined'
-                    : 'Bargain ended';
+                messageText = msg.offerDetails?.status === 'accepted' ? 'Bargain ended (Accepted)' : 'Bargain ended';
+                if (msg.offerDetails?.productName) {
+                    messageText += ` for ${msg.offerDetails.productName}`;
+                }
                 break;
               case 'buyerAccept':
-                messageText = 'Buyer accepted the offer';
+                messageText = `Offer for ${msg.offerDetails?.productName || 'product'} accepted by buyer`;
                 break;
               case 'sellerAccept':
-                messageText = 'Seller accepted the offer';
+                messageText = `Offer for ${msg.offerDetails?.productName || 'product'} accepted by seller`;
                 break;
               case 'sellerDecline':
-                messageText = 'Seller declined the offer';
+                messageText = `Offer for ${msg.offerDetails?.productName || 'product'} declined by seller`;
                 break;
               case 'buyerDeclineResponse':
-                messageText = 'Buyer declined the offer';
+                messageText = `Offer for ${msg.offerDetails?.productName || 'product'} declined by buyer`;
                 break;
               case 'offer':
-                messageText = 'New offer made';
+                messageText = `New offer for ${msg.offerDetails?.productName || 'product'} at ₦${(msg.offerDetails?.proposedPrice || 0).toLocaleString('en-NG')}`;
                 break;
               case 'counter-offer':
-                messageText = 'Counter-offer made';
+                messageText = `Counter-offer for ${msg.offerDetails?.productName || 'product'} at ₦${(msg.offerDetails?.proposedPrice || 0).toLocaleString('en-NG')}`;
+                break;
+              case 'accept-offer':
+                messageText = `Offer for ${msg.offerDetails?.productName || 'product'} accepted. Price: ₦${(msg.offerDetails?.proposedPrice || 0).toLocaleString('en-NG')}`;
+                break;
+              case 'reject-offer':
+                messageText = `Offer for ${msg.offerDetails?.productName || 'product'} rejected.`;
+                break;
+              case 'payment-completed':
+                messageText = `Payment completed for ${msg.offerDetails?.productName || 'product'}.`;
                 break;
               default:
-                messageText = 'System notification';
+                messageText = parsedTextContent.text || parsedTextContent.message || msg.text || 'System notification';
             }
           } else if (messageText.startsWith('{')) {
             try {
               const parsed = JSON.parse(messageText);
               messageText = parsed.text || parsed.content || parsed.message || 'No message';
             } catch (e) {
-              messageText = messageText.substring(messageText.indexOf('}') + 1).trim() || 'No message';
+              // If it's not a system message and JSON parsing fails, treat it as plain text
+              messageText = messageText || 'No message';
             }
           }
 
+          // Ensure object IDs are stringified
           return {
-            _id: msg._id,
-            senderId: msg.senderId,
-            receiverId: msg.receiverId,
-            chatPartnerId: chatPartner?._id || null,
+            _id: msg._id.toString(),
+            senderId: msg.senderId.toString(),
+            receiverId: msg.receiverId.toString(),
+            chatPartnerId: chatPartner?._id?.toString() || null,
             chatPartnerName: chatPartner
               ? `${chatPartner.firstName} ${chatPartner.lastName}`
               : isSystem
@@ -166,6 +206,8 @@ module.exports = (io) => { // 'io' is passed in but won't be used for new messag
             status: msg.status,
             isSystem,
             messageType: msg.messageType,
+            offerDetails: msg.offerDetails || null, // Include offerDetails
+            attachment: msg.attachment || null,     // Include attachment
             createdAt: msg.createdAt.toISOString(),
           };
         })
@@ -179,81 +221,8 @@ module.exports = (io) => { // 'io' is passed in but won't be used for new messag
     }
   });
 
-  // Send a new message via HTTP. This endpoint PRIMARILY saves the message.
-  // Real-time broadcasting is handled by the Socket.IO 'sendMessage' event.
-  router.post('/send', verifyToken, async (req, res) => {
-    let senderId;
-    let receiverId;
-    try {
-      const { receiverId: reqReceiverId, text, messageType = 'text', offerDetails, attachment, tempId } = req.body;
-      receiverId = reqReceiverId;
-      senderId = req.user.userId;
 
-      if (!receiverId || !text) {
-        logger.warn(`Missing receiverId or text for message from user ${senderId}`);
-        return res.status(400).json({ error: 'Receiver ID and message text are required' });
-      }
-
-      if (!mongoose.Types.ObjectId.isValid(receiverId)) {
-        logger.warn(`Invalid receiverId ${receiverId} format`);
-        return res.status(400).json({ error: 'Invalid receiverId format' });
-      }
-
-      const receiver = await User.findById(receiverId);
-      if (!receiver) {
-        logger.error(`Receiver ${receiverId} not found`);
-        return res.status(404).json({ error: 'Receiver not found' });
-      }
-
-      const sender = await User.findById(senderId);
-      if (!sender) {
-        logger.error(`Sender ${senderId} not found`);
-        return res.status(404).json({ error: 'Sender not found' });
-      }
-
-      const message = new Message({
-        senderId,
-        receiverId,
-        text,
-        messageType,
-        offerDetails: offerDetails || null,
-        attachment: attachment || null,
-        status: 'sent',
-        createdAt: new Date(),
-      });
-      await message.save();
-
-      logger.info(`Message saved to DB from ${senderId} to ${receiverId}: ${message._id}`);
-
-      // --- CRITICAL CHANGE: REMOVED ALL io.emit() CALLS FROM HERE ---
-      // Real-time emission to both sender and receiver is now handled SOLELY by
-      // the `socket.on('sendMessage', ...)` handler in your `socket.js` file.
-      // The client makes a `socket.emit('sendMessage')` call directly for real-time.
-
-      // Send FCM notification (This is separate from real-time chat display, so keep it)
-      logger.info(`Sending FCM notification to user ${receiverId} for message ${message._id}`);
-      await sendFCMNotification(
-        receiverId,
-        'New Message',
-        `${sender.firstName} ${sender.lastName} sent you a message`,
-        { type: 'message', messageId: message._id.toString() },
-        io
-      );
-      logger.info(`FCM notification sent to user ${receiverId}`);
-
-      // Trigger badge update (This is also separate from real-time chat display, so keep it)
-      logger.info(`Triggering badge update for user ${receiverId}`);
-      await NotificationService.triggerCountUpdate(io, receiverId);
-
-      // Respond to the client with the saved message details.
-      // This response confirms the HTTP request and could include the actual _id from DB
-      // The client's optimistic update and Socket.IO listener handles the real-time display.
-      res.status(201).json({ message: 'Message sent successfully', data: { ...message.toObject(), tempId } });
-    } catch (error) {
-      logger.error(`Failed to send message from ${senderId || 'unknown'} to ${receiverId || 'unknown'}: ${error.message}`);
-      res.status(500).json({ error: 'Server error' });
-    }
-  });
 
   return router;
 };
+

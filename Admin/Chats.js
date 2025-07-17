@@ -1,3 +1,5 @@
+// frontend/public/js/chat.js (or wherever your chat client code is)
+
 // API base URL configuration for local and production environments
 const API_BASE_URL = window.location.hostname === 'localhost'
     ? 'http://localhost:3000'
@@ -106,6 +108,7 @@ function displayMessage(message, isOptimistic = false) {
 
     // Add to displayedMessages set immediately for any message that's being rendered
     // If it's an optimistic message, use its tempId as its initial _id for tracking.
+    // If it's a server-confirmed message, it will have a real _id.
     if (message._id) {
         displayedMessages.add(message._id);
     }
@@ -135,7 +138,7 @@ function displayMessage(message, isOptimistic = false) {
                 offerDetails = { ...offerDetails, ...parsedFromJson };
             } catch (e) {
                 console.warn('Failed to parse message text as JSON:', message.text, e);
-                displayText = message.text;
+                displayText = message.text; // Use original text if JSON parsing fails
             }
         }
     }
@@ -169,21 +172,19 @@ function displayMessage(message, isOptimistic = false) {
 
     // --- SYSTEM MESSAGES ---
     if (['accept-offer', 'reject-offer', 'end-bargain', 'payment-completed', 'buyerAccept', 'sellerAccept'].includes(message.messageType)) {
-        let systemText = displayText;
-        let systemImage = displayImage;
+        let systemText = displayText; // Start with parsed or raw text
+        let systemImage = displayImage; // Start with parsed or raw image
 
-        if (message.messageType === 'accept-offer') {
+        // Re-evaluate text based on messageType for clearer system messages
+        if (message.messageType === 'accept-offer' || message.messageType === 'buyerAccept') {
              systemText = `Offer for ${offerDetails.productName || 'Product'} at ₦${(offerDetails.proposedPrice || 0).toLocaleString('en-NG')} was accepted.`;
-        } else if (message.messageType === 'reject-offer') {
+        } else if (message.messageType === 'reject-offer' || message.messageType === 'buyerDeclineResponse' || message.messageType === 'sellerDecline') {
             systemText = `Offer for ${offerDetails.productName || 'Product'} was rejected.`;
         } else if (message.messageType === 'end-bargain') {
             systemText = `${message.senderId === userId ? 'You' : recipientUsername} ended the bargain for ${offerDetails.productName || 'Product'}.`;
         } else if (message.messageType === 'payment-completed') {
             systemText = `Payment completed for ${offerDetails.productName || 'Product'}.`;
-            systemImage = message.attachment?.url || systemImage;
-        } else if (message.messageType === 'buyerAccept' && message.receiverId === userId) {
-            systemText = `Your offer of ₦${(offerDetails.proposedPrice || 0).toLocaleString('en-NG')} for "${offerDetails.productName || 'Product'}" has been accepted.`;
-            systemImage = offerDetails.image || systemImage;
+            systemImage = message.attachment?.url || systemImage; // Prioritize attachment URL for payment receipts
         } else if (message.messageType === 'sellerAccept' && message.receiverId === userId) {
             systemText = `Accepted the offer of ₦${(offerDetails.proposedPrice || 0).toLocaleString('en-NG')} for "${offerDetails.productName || 'Product'}".`;
             systemImage = offerDetails.image || systemImage;
@@ -453,10 +454,11 @@ socket.on('newMessage', message => {
     // Handle system messages that are always displayed if they concern the current user
     const isSystemMessageForCurrentUser =
         message.receiverId === userId &&
-        ['sellerAccept', 'buyerAccept', 'end-bargain', 'payment-completed'].includes(message.messageType);
+        ['sellerAccept', 'buyerAccept', 'end-bargain', 'payment-completed', 'accept-offer', 'reject-offer'].includes(message.messageType);
+
 
     if (!isForCurrentChat && !isSystemMessageForCurrentUser) {
-        console.log("Message not for this chat window or not a system message for current user.");
+        console.log("Message not for this chat window or not a system message for current user. Ignoring.");
         return; // Ignore messages not meant for the currently open chat or specific system messages
     }
 
@@ -473,7 +475,8 @@ socket.on('newMessage', message => {
     displayMessage(message);
 
     // Mark as seen if it's an incoming message in the current chat from the chat partner
-    if (message.receiverId === userId && message.senderId === receiverId && message.status !== 'seen') {
+    // Also, ensure it's not a system message being marked seen by a user (system messages don't have 'seen' status from users)
+    if (message.receiverId === userId && message.senderId === receiverId && message.status !== 'seen' && !message.metadata?.isSystemMessage) {
         socket.emit('markAsSeen', {
             messageIds: [message._id],
             senderId: message.senderId, // The actual sender of this new message
@@ -496,10 +499,13 @@ socket.on('newMessage', message => {
     }
 
     // Update localStorage with the newly received message
-    const storedMessages = JSON.parse(localStorage.getItem(`chat_${userId}_${receiverId}`) || '[]');
-    if (!storedMessages.some(msg => msg._id === message._id)) {
-        storedMessages.push(message);
-        localStorage.setItem(`chat_${userId}_${receiverId}`, JSON.stringify(storedMessages));
+    // Ensure we only store valid messages with real _id (i.e., not tempIds)
+    if (message._id && !message.tempId) { // Only store messages with a real ID from the server
+        const storedMessages = JSON.parse(localStorage.getItem(`chat_${userId}_${receiverId}`) || '[]');
+        if (!storedMessages.some(msg => msg._id === message._id)) {
+            storedMessages.push(message);
+            localStorage.setItem(`chat_${userId}_${receiverId}`, JSON.stringify(storedMessages));
+        }
     }
 });
 
@@ -509,10 +515,18 @@ socket.on('newMessage', message => {
 // Handle new message notifications (for messages outside the current chat window)
 socket.on('newMessageNotification', (notification) => {
     // Only show toast if the notification is for a different chat or a general notification
-    if (notification.senderId !== receiverId || notification.senderId !== userId) { // Adjusted condition
+    // Adjusted condition: if the sender is NOT the current receiver AND the sender is NOT the current user
+    if (notification.senderId !== receiverId && notification.senderId !== userId) {
         showToast(`New message from ${notification.senderName}: ${notification.text}`, 'success');
+    } else if (notification.senderId === receiverId) {
+        // If it IS from the current receiver, but we are still not in that chat (e.g. chat window open, but userId not matching params yet?)
+        // This case is typically handled by `newMessage` directly for the current chat,
+        // but this could catch edge cases or notifications for current chat when not in focus.
+         // For now, let's let the `newMessage` handler take precedence for current chat.
+         // If `newMessage` handles it, this notification might be redundant.
     }
 });
+
 
 // Load chat history and check for initial message
 async function loadChatHistory() {
@@ -537,35 +551,37 @@ async function loadChatHistory() {
         try {
             messages = JSON.parse(rawText);
         } catch (e) {
-            console.error('Invalid JSON response:', rawText);
+            console.error('Invalid JSON response from /messages:', rawText);
             showToast('Failed to parse chat history. Some messages may be missing.', 'error');
             messages = [];
         }
 
         if (!Array.isArray(messages)) {
-            console.warn('Response is not an array:', messages);
-            showToast('Invalid chat history format.', 'error');
+            console.warn('Response from /messages is not an array:', messages);
+            showToast('Invalid chat history format received from server.', 'error');
             // Fallback to localStorage if server response is not an array
             messages = JSON.parse(localStorage.getItem(`chat_${userId}_${receiverId}`) || '[]');
         }
 
         const validMessages = messages.filter((msg, index) => {
             if (!msg || typeof msg !== 'object' || !msg.messageType) {
+                console.warn(`Skipping invalid message at index ${index}:`, msg);
                 return false;
             }
             // Ensure message has text or is a known type that doesn't require text
             if (!msg.text && !['image', 'payment-completed'].includes(msg.messageType)) {
-                if (!['sellerAccept', 'buyerAccept', 'end-bargain', 'offer', 'counter-offer'].includes(msg.messageType)) {
+                if (!['sellerAccept', 'buyerAccept', 'end-bargain', 'offer', 'counter-offer', 'accept-offer', 'reject-offer'].includes(msg.messageType)) {
+                    console.warn(`Skipping message ${msg._id} due to missing text and unknown type: ${msg.messageType}`);
                     return false;
                 }
             }
             // Validate JSON in text field if applicable
-            if (typeof msg.text === 'string' && msg.text.startsWith('{') && ['offer', 'counter-offer', 'buyerAccept', 'sellerAccept', 'end-bargain', 'text'].includes(msg.messageType)) {
+            if (typeof msg.text === 'string' && msg.text.startsWith('{')) {
                 try {
                     JSON.parse(msg.text);
                 } catch (e) {
-                    console.warn(`Message with ID ${msg._id} has malformed JSON in text field.`);
-                    // Decide if you want to skip such messages or treat them as plain text
+                    console.warn(`Message with ID ${msg._id} has malformed JSON in text field. Treating as plain text.`);
+                    // It's often safer to keep the message and display its raw text rather than skipping it.
                 }
             }
             return true;
@@ -591,13 +607,16 @@ async function loadChatHistory() {
             }
         }
 
-
         renderProductPreview(); // Call renderProductPreview AFTER checking isInitialMessageSent
                                // so it correctly decides whether to render or not.
 
         lastDisplayedDate = null;
-        // Clear displayedMessages set before displaying history to prevent issues
+        // CRITICAL FIX: Clear displayedMessages set before displaying history
+        // This prevents duplicate messages if some were optimistically added
+        // and then fetched again, or if there were old entries in the set.
         displayedMessages.clear();
+        chatMessages.innerHTML = ''; // Clear existing messages in the DOM
+
         validMessages.forEach(displayMessage);
         localStorage.setItem(`chat_${userId}_${receiverId}`, JSON.stringify(validMessages));
 
@@ -610,12 +629,14 @@ async function loadChatHistory() {
         const storedMessages = JSON.parse(localStorage.getItem(`chat_${userId}_${receiverId}`) || '[]');
         // Clear displayedMessages set before displaying history to prevent issues
         displayedMessages.clear();
+        chatMessages.innerHTML = ''; // Clear existing messages in the DOM
         storedMessages.forEach(displayMessage);
         renderProductPreview(); // Render preview even on error if not sent
         chatMessages.scrollTop = chatMessages.scrollHeight;
     }
 }
 
+// Ensure loadChatHistory is called when the page loads
 loadChatHistory();
 
 // Send typing signal
@@ -663,7 +684,7 @@ socket.on('connect', () => {
         socket.emit('joinRoom', userId); // For general user presence/notifications
         // If you need specific chat room joining for other features, keep this:
         const chatRoomId = [userId, receiverId].sort().join('_'); // Consistent chat room ID
-        socket.emit('joinChatRoom', chatRoomId);
+        socket.emit('joinChatRoom', chatRoomId); // Ensure this is also joined if needed for room-specific broadcasts
     }
 });
 
@@ -992,3 +1013,4 @@ document.getElementById('chat-messages').addEventListener('click', async (event)
 
 // Add typing indicator trigger
 typeSection.addEventListener('input', sendTypingSignal);
+
