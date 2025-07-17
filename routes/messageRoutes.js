@@ -1,9 +1,7 @@
-// backend/routes/messageRoutes.js
-
 const express = require('express');
 const mongoose = require('mongoose');
 const User = require('../models/userSchema.js');
-const Message = require('../models/messageSchema.js'); // Ensure Message model is imported
+const Message = require('../models/messageSchema.js');
 const Transaction = require('../models/transactionSchema.js');
 const router = express.Router();
 const verifyToken = require('../middleware/auths');
@@ -34,14 +32,6 @@ module.exports = (io) => {
       return res.status(400).json({ error: 'Missing senderId or receiverId' });
     }
 
-    // It's good practice to ensure the user requesting messages is one of the participants
-    // For now, we trust verifyToken to ensure a valid user, but more granular check can be added.
-    if (req.user.userId !== senderId && req.user.userId !== receiverId) {
-        logger.warn(`Unauthorized access attempt to messages between ${senderId} and ${receiverId} by user ${req.user.userId}`);
-        return res.status(403).json({ error: 'Unauthorized to view these messages' });
-    }
-
-
     if (!mongoose.Types.ObjectId.isValid(senderId) || !mongoose.Types.ObjectId.isValid(receiverId)) {
       logger.warn(`Invalid senderId ${senderId} or receiverId ${receiverId} format`);
       return res.status(400).json({ error: 'Invalid senderId or receiverId format' });
@@ -50,7 +40,6 @@ module.exports = (io) => {
     try {
       const userId1 = new mongoose.Types.ObjectId(senderId);
       const userId2 = new mongoose.Types.ObjectId(receiverId);
-
       const messages = await Message.find({
         $or: [
           { senderId: userId1, receiverId: userId2 },
@@ -68,12 +57,6 @@ module.exports = (io) => {
   // Get latest messages for a user
   router.get('/api/messages', verifyToken, async (req, res) => {
     const { userId } = req.query;
-
-    // Ensure the userId in query matches the authenticated user
-    if (req.user.userId !== userId) {
-        logger.warn(`Unauthorized access attempt to /api/messages by user ${req.user.userId} for userId ${userId}`);
-        return res.status(403).json({ error: 'Unauthorized access' });
-    }
 
     if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
       logger.warn(`Invalid or missing userId in /api/messages: ${userId}`);
@@ -114,9 +97,6 @@ module.exports = (io) => {
         'buyerDeclineResponse',
         'offer',
         'counter-offer',
-        'accept-offer', // Added for consistency if 'accept-offer' is a system-like message
-        'reject-offer', // Added
-        'payment-completed' // Added
       ];
 
       const populatedMessages = await Promise.all(
@@ -128,74 +108,54 @@ module.exports = (io) => {
           const isSystem = systemMessageTypes.includes(msg.messageType);
 
           let messageText = msg.text || '';
-          // Improved system message text generation
-          if (isSystem) {
-            // Attempt to parse text if it's JSON, which might contain details
-            let parsedTextContent = {};
-            if (typeof messageText === 'string' && messageText.startsWith('{')) {
-                try {
-                    parsedTextContent = JSON.parse(messageText);
-                } catch (e) {
-                    logger.warn(`Failed to parse JSON for system message text: ${messageText}`);
-                }
-            }
-
+          if (isSystem && (!messageText || messageText.trim() === '')) {
             switch (msg.messageType) {
               case 'bargainStart':
                 messageText = 'Bargain started';
                 break;
               case 'end-bargain':
-                messageText = msg.offerDetails?.status === 'accepted' ? 'Bargain ended (Accepted)' : 'Bargain ended';
-                if (msg.offerDetails?.productName) {
-                    messageText += ` for ${msg.offerDetails.productName}`;
-                }
+                messageText =
+                  msg.bargainStatus === 'accepted'
+                    ? 'Bargain ended - Accepted'
+                    : msg.bargainStatus === 'declined'
+                    ? 'Bargain ended - Declined'
+                    : 'Bargain ended';
                 break;
               case 'buyerAccept':
-                messageText = `Offer for ${msg.offerDetails?.productName || 'product'} accepted by buyer`;
+                messageText = 'Buyer accepted the offer';
                 break;
               case 'sellerAccept':
-                messageText = `Offer for ${msg.offerDetails?.productName || 'product'} accepted by seller`;
+                messageText = 'Seller accepted the offer';
                 break;
               case 'sellerDecline':
-                messageText = `Offer for ${msg.offerDetails?.productName || 'product'} declined by seller`;
+                messageText = 'Seller declined the offer';
                 break;
               case 'buyerDeclineResponse':
-                messageText = `Offer for ${msg.offerDetails?.productName || 'product'} declined by buyer`;
+                messageText = 'Buyer declined the offer';
                 break;
               case 'offer':
-                messageText = `New offer for ${msg.offerDetails?.productName || 'product'} at ₦${(msg.offerDetails?.proposedPrice || 0).toLocaleString('en-NG')}`;
+                messageText = 'New offer made';
                 break;
               case 'counter-offer':
-                messageText = `Counter-offer for ${msg.offerDetails?.productName || 'product'} at ₦${(msg.offerDetails?.proposedPrice || 0).toLocaleString('en-NG')}`;
-                break;
-              case 'accept-offer':
-                messageText = `Offer for ${msg.offerDetails?.productName || 'product'} accepted. Price: ₦${(msg.offerDetails?.proposedPrice || 0).toLocaleString('en-NG')}`;
-                break;
-              case 'reject-offer':
-                messageText = `Offer for ${msg.offerDetails?.productName || 'product'} rejected.`;
-                break;
-              case 'payment-completed':
-                messageText = `Payment completed for ${msg.offerDetails?.productName || 'product'}.`;
+                messageText = 'Counter-offer made';
                 break;
               default:
-                messageText = parsedTextContent.text || parsedTextContent.message || msg.text || 'System notification';
+                messageText = 'System notification';
             }
           } else if (messageText.startsWith('{')) {
             try {
               const parsed = JSON.parse(messageText);
               messageText = parsed.text || parsed.content || parsed.message || 'No message';
             } catch (e) {
-              // If it's not a system message and JSON parsing fails, treat it as plain text
-              messageText = messageText || 'No message';
+              messageText = messageText.substring(messageText.indexOf('}') + 1).trim() || 'No message';
             }
           }
 
-          // Ensure object IDs are stringified
           return {
-            _id: msg._id.toString(),
-            senderId: msg.senderId.toString(),
-            receiverId: msg.receiverId.toString(),
-            chatPartnerId: chatPartner?._id?.toString() || null,
+            _id: msg._id,
+            senderId: msg.senderId,
+            receiverId: msg.receiverId,
+            chatPartnerId: chatPartner?._id || null,
             chatPartnerName: chatPartner
               ? `${chatPartner.firstName} ${chatPartner.lastName}`
               : isSystem
@@ -206,8 +166,6 @@ module.exports = (io) => {
             status: msg.status,
             isSystem,
             messageType: msg.messageType,
-            offerDetails: msg.offerDetails || null, // Include offerDetails
-            attachment: msg.attachment || null,     // Include attachment
             createdAt: msg.createdAt.toISOString(),
           };
         })
@@ -221,8 +179,112 @@ module.exports = (io) => {
     }
   });
 
+  // Send a new message
+  router.post('/send', verifyToken, async (req, res) => {
+    let senderId; // Declared outside try-catch to ensure scope
+    let receiverId; // Declared outside try-catch to ensure scope
+    try {
+      // Extract tempId from req.body
+      const { receiverId: reqReceiverId, text, messageType = 'text', offerDetails, attachment, tempId } = req.body; // <-- ADDED tempId here, renamed receiverId to avoid conflict
+      receiverId = reqReceiverId; // Assign to outer scope variable
+      senderId = req.user.userId;
 
+      if (!receiverId || !text) {
+        logger.warn(`Missing receiverId or text for message from user ${senderId}`);
+        return res.status(400).json({ error: 'Receiver ID and message text are required' });
+      }
+
+      if (!mongoose.Types.ObjectId.isValid(receiverId)) {
+        logger.warn(`Invalid receiverId ${receiverId} format`);
+        return res.status(400).json({ error: 'Invalid receiverId format' });
+      }
+
+      const receiver = await User.findById(receiverId);
+      if (!receiver) {
+        logger.error(`Receiver ${receiverId} not found`);
+        return res.status(404).json({ error: 'Receiver not found' });
+      }
+
+      const sender = await User.findById(senderId);
+      if (!sender) {
+        logger.error(`Sender ${senderId} not found`);
+        return res.status(404).json({ error: 'Sender not found' });
+      }
+
+      const message = new Message({
+        senderId,
+        receiverId,
+        text,
+        messageType,
+        offerDetails: offerDetails || null,
+        attachment: attachment || null,
+        status: 'sent',
+        createdAt: new Date(),
+      });
+      await message.save();
+
+      logger.info(`Message sent from ${senderId} to ${receiverId}: ${message._id}`);
+
+      // Emit Socket.IO message events
+      // messageData for the sender needs the tempId to update the optimistic message
+      const messageDataForSender = {
+        _id: message._id,
+        senderId,
+        receiverId,
+        text,
+        messageType,
+        offerDetails: message.offerDetails,
+        attachment: message.attachment,
+        chatPartnerName: `${receiver.firstName} ${receiver.lastName}`, // Partner for sender is receiver
+        status: message.status,
+        createdAt: message.createdAt,
+        tempId: tempId, // <-- CRUCIAL: Pass the tempId back to the sender
+      };
+
+      // messageData for the receiver does NOT need the tempId
+      const messageDataForReceiver = {
+        _id: message._id,
+        senderId,
+        receiverId,
+        text,
+        messageType,
+        offerDetails: message.offerDetails,
+        attachment: message.attachment,
+        chatPartnerName: `${sender.firstName} ${sender.lastName}`, // Partner for receiver is sender
+        status: message.status,
+        createdAt: message.createdAt,
+      };
+
+      // Emit to sender's socket
+      logger.info(`Emitting newMessage to user ${senderId} (sender): ${JSON.stringify(messageDataForSender)}`);
+      io.to(`user_${senderId}`).emit('newMessage', messageDataForSender);
+
+      // Emit to receiver's socket
+      logger.info(`Emitting newMessage to user ${receiverId} (receiver): ${JSON.stringify(messageDataForReceiver)}`);
+      io.to(`user_${receiverId}`).emit('newMessage', messageDataForReceiver);
+
+      // Send FCM notification
+      logger.info(`Sending FCM notification to user ${receiverId} for message ${message._id}`);
+      await sendFCMNotification(
+        receiverId,
+        'New Message',
+        `${sender.firstName} ${sender.lastName} sent you a message`,
+        { type: 'message', messageId: message._id.toString() },
+        io
+      );
+      logger.info(`FCM notification sent to user ${receiverId}`);
+
+      // Trigger badge update
+      logger.info(`Triggering badge update for user ${receiverId}`);
+      await NotificationService.triggerCountUpdate(io, receiverId);
+
+      // Respond to the client (optional, as Socket.IO handles real-time update)
+      res.status(201).json({ message: 'Message sent successfully', data: message });
+    } catch (error) {
+      logger.error(`Failed to send message from ${senderId || 'unknown'} to ${receiverId || 'unknown'}: ${error.message}`);
+      res.status(500).json({ error: 'Server error' });
+    }
+  });
 
   return router;
 };
-
