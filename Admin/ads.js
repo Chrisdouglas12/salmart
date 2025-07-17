@@ -3,7 +3,7 @@
     const MAX_VIDEO_DURATION = 60; // 60 seconds (1 minute)
     // Removed MAX_DESCRIPTION_LENGTH and MAX_TEXT_LENGTH as they are not universally applied or strictly enforced here
     const API_BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart.onrender.com';
-
+let isSubmitting = false
     // DOM references
     const normalForm = document.getElementById('normal-ad-form');
     const videoForm = document.getElementById('video-ad-form');
@@ -538,97 +538,148 @@
       el.style.display = 'block';
     }
 
-    async function submitAd() {
-      const isNormalTab = activeTab === 'normal';
-      const form = isNormalTab ? normalForm : videoForm;
+    // Enhanced response handling function
+async function handleResponse(response) {
+  const contentType = response.headers.get('content-type');
+  
+  // Check if response is JSON
+  if (contentType && contentType.includes('application/json')) {
+    try {
+      const result = await response.json();
+      return { success: response.ok, data: result };
+    } catch (jsonError) {
+      console.error('JSON parsing error:', jsonError);
+      return { 
+        success: false, 
+        data: { message: 'Invalid server response format' } 
+      };
+    }
+  } else {
+    // Handle non-JSON responses
+    const textResponse = await response.text();
+    console.warn('Non-JSON response:', textResponse);
+    return { 
+      success: response.ok, 
+      data: { message: response.ok ? 'Success' : `Server error: ${response.status}` } 
+    };
+  }
+}
 
-      if (!validateForm(form)) {
-          showToast('Please correct the errors in the form.', '#dc3545');
-          return;
-      }
+// Updated submitAd function with better response handling
+async function submitAd() {
+  if (isSubmitting) {
+    console.warn('Submission already in progress');
+    return;
+  }
 
-      const token = localStorage.getItem('authToken');
-      if (!token) {
-        showToast('Please log in to create/update an ad', '#dc3545');
-        resetButtons();
-        return;
-      }
+  const isNormalTab = activeTab === 'normal';
+  const form = isNormalTab ? normalForm : videoForm;
 
-      showLoadingModal();
-      publishButton.disabled = true;
-      publishButton.textContent = isEditMode ? 'Updating...' : 'Processing...';
-      normalTab.disabled = true; // Keep tabs disabled during submission
-      videoTab.disabled = true; // Keep tabs disabled during submission
+  if (!validateForm(form)) {
+    showToast('Please correct the errors in the form.', '#dc3545');
+    return;
+  }
 
-      try {
-        const formData = new FormData(form);
+  const token = localStorage.getItem('authToken');
+  if (!token) {
+    showToast('Please log in to create/update an ad', '#dc3545');
+    resetButtons();
+    return;
+  }
 
-        // Append hidden inputs for existing media if not uploading new
-        if (isEditMode) {
-            if (isNormalTab && !photoInput.files[0] && existingPhotoUrlInput.value) {
-                formData.append('existingPhotoUrl', existingPhotoUrlInput.value);
-            } else if (!isNormalTab && !videoInput.files[0] && existingVideoUrlInput.value) {
-                formData.append('existingVideoUrl', existingVideoUrlInput.value);
-                if (existingThumbnailUrlInput.value) {
-                    formData.append('existingThumbnailUrl', existingThumbnailUrlInput.value);
-                }
-            }
+  isSubmitting = true;
+  showLoadingModal();
+  publishButton.disabled = true;
+  publishButton.textContent = isEditMode ? 'Updating...' : 'Processing...';
+  normalTab.disabled = true;
+  videoTab.disabled = true;
+
+  try {
+    const formData = new FormData(form);
+
+    if (isEditMode) {
+      if (isNormalTab && !photoInput.files[0] && existingPhotoUrlInput.value) {
+        formData.append('existingPhotoUrl', existingPhotoUrlInput.value);
+      } else if (!isNormalTab && !videoInput.files[0] && existingVideoUrlInput.value) {
+        formData.append('existingVideoUrl', existingVideoUrlInput.value);
+        if (existingThumbnailUrlInput.value) {
+          formData.append('existingThumbnailUrl', existingThumbnailUrlInput.value);
         }
-        
-        // Ensure postType is correctly set in formData, especially for new posts
-        formData.set('postType', activeTab === 'normal' ? 'regular' : 'video_ad');
-
-        let url;
-        let method;
-
-        if (isEditMode) {
-          url = `${API_BASE_URL}/post/edit/${currentPostId}`;
-          method = 'PUT';
-        } else {
-          url = `${API_BASE_URL}/post`;
-          method = 'POST';
-        }
-
-        const response = await fetch(url, {
-          method: method,
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          body: formData,
-        });
-        const result = await response.json();
-
-        if (response.ok) {
-          showToast(isEditMode ? 'Ad updated successfully!' : 'Ad created successfully!', '#28a745');
-          form.reset();
-          document.getElementById('photo-preview-container').innerHTML = '';
-          document.getElementById('video-preview-container').innerHTML = '';
-          hideProcessingStatus();
-          processedVideoFile = null;
-          existingPhotoUrlInput.value = '';
-          existingVideoUrlInput.value = '';
-          existingThumbnailUrlInput.value = '';
-
-          // Reset edit mode status if creation was successful
-          if (!isEditMode) {
-            switchTab('normal'); // Reset to default tab for new creation
-          }
-          resetButtons(); // Re-enables tabs if not in edit mode
-          
-          setTimeout(() => {
-            window.location.href = 'index.html'; // Redirect to home page
-          }, 1000);
-        } else {
-          showToast(result.message || (isEditMode ? 'Failed to update ad' : 'Failed to create ad'), '#dc3545');
-          resetButtons();
-        }
-      } catch (error) {
-        console.error('Submission error:', error);
-        showToast('Server error. Please try again later.', '#dc3545');
-        resetButtons();
       }
     }
+    
+    formData.set('postType', activeTab === 'normal' ? 'regular' : 'video_ad');
 
+    let url;
+    let method;
+
+    if (isEditMode) {
+      url = `${API_BASE_URL}/post/edit/${currentPostId}`;
+      method = 'PUT';
+    } else {
+      url = `${API_BASE_URL}/post`;
+      method = 'POST';
+    }
+
+    console.log('Submitting to:', url, 'Method:', method);
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000);
+
+    const response = await fetch(url, {
+      method: method,
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+      signal: controller.signal
+    });
+
+    clearTimeout(timeoutId);
+
+    console.log('Response status:', response.status, response.statusText);
+
+    const { success, data } = await handleResponse(response);
+
+    if (success) {
+      showToast(isEditMode ? 'Ad updated successfully!' : 'Ad created successfully!', '#28a745');
+      form.reset();
+      document.getElementById('photo-preview-container').innerHTML = '';
+      document.getElementById('video-preview-container').innerHTML = '';
+      hideProcessingStatus();
+      processedVideoFile = null;
+      existingPhotoUrlInput.value = '';
+      existingVideoUrlInput.value = '';
+      existingThumbnailUrlInput.value = '';
+
+      if (!isEditMode) {
+        switchTab('normal');
+      }
+      
+      setTimeout(() => {
+        window.location.href = 'index.html';
+      }, 1000);
+    } else {
+      const errorMessage = data.message || `Server error: ${response.status} ${response.statusText}`;
+      console.error('Server error:', errorMessage);
+      showToast(errorMessage, '#dc3545');
+    }
+
+  } catch (error) {
+    console.error('Submission error:', error);
+    
+    if (error.name === 'AbortError') {
+      showToast('Request timed out. Please check your connection and try again.', '#dc3545');
+    } else if (error.name === 'TypeError' && error.message.includes('fetch')) {
+      showToast('Network error. Please check your connection and try again.', '#dc3545');
+    } else {
+      showToast('An unexpected error occurred. Please try again.', '#dc3545');
+    }
+  } finally {
+    isSubmitting = false;
+    resetButtons();
+  }
+}
 
     // Event listeners
     if (normalTab) normalTab.addEventListener('click', () => switchTab('normal'));

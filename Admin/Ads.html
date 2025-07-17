@@ -97,12 +97,15 @@
         <div class="input-form">
           <label for="product-link">Salmart Product Link</label>
           <input id="product-link" name="productLink" type="url" class="input" placeholder="e.g. https://salmartonline.com/product/123" required />
+          <input type="hidden" id="existing-photo-url" name="existingPhotoUrl" />
           <div class="error" id="product-link-error"></div>
         </div>
         <div class="file-section">
           <label for="video-input">Upload Video (Max 6MB, Auto-processed to 1min max)</label>
           <br />
           <input id="video-input" type="file" class="media-input" name="video" accept="video/mp4" required />
+          <input type="hidden" id="existing-video-url" name="existingVideoUrl" />
+     <input type="hidden" id="existing-thumbnail-url" name="existingThumbnailUrl" />
           <div class="error" id="video-error"></div>
           <div id="video-processing-status" style="display: none; margin-top: 10px; padding: 10px; background: #f0f0f0; border-radius: 4px; font-size: 14px;"></div>
           <div id="video-preview-container" class="preview-container"></div>

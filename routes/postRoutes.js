@@ -142,14 +142,7 @@ const uploadToCloudinary = (filePath, resourceType = 'auto') => {
           logger.error(`Cloudinary upload error: ${error.message}`);
           return reject(error);
         }
-        // When using eager_async, the 'result' for the main upload might not reflect
-        // the eagerly transformed URL immediately. The best practice is often to
-        // construct the URL with the transformation parameters.
-        // However, if the eager transformation is configured to overwrite the original,
-        // or if you want the specific eager URL, you might need to adjust.
-        // For simplicity and common use, result.secure_url will usually point to the
-        // transformed version if the transformation applies synchronously or
-        // if the eager transformation is the primary one.
+
         resolve(result.secure_url);
       }
     );
@@ -242,16 +235,7 @@ module.exports = (io) => {
 
         const videoFile = req.files.video[0];
         if (isProduction) {
-          // In production, multer-storage-cloudinary already handled upload and transformations
-          // When eager_async is true, result.secure_url points to the original asset.
-          // We need to construct the URL for the eagerly transformed video.
-          // Cloudinary often appends transformation params to the URL path.
-          // Example: https://res.cloudinary.com/cloud_name/video/upload/t_video_60_sec_transform/v12345/public_id.mp4
-          // Or if you defined a named transformation in your Cloudinary settings, you can use that.
-          // For now, let's assume the default behavior which applies transformations directly to the URL.
-          // If you need the *eagerly generated* URL, you might need to query Cloudinary or structure your uploads differently.
-          // However, for most use cases, the `transformation` object in `params` will apply, and `secure_url` will reflect that.
-          // The `eager` array ensures the derived version is generated and stored.
+
           videoUrl = videoFile.path; // This path already includes the transformations defined in `params`
         } else {
           // In development, upload the local file to Cloudinary with transformations
