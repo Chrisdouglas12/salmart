@@ -23,27 +23,40 @@
     <div class="loader" id="loader">
 
     </div>
-<div class="menu-icon">
-  <div></div>
-  <div></div>
-  <div></div>
-</div>
-<div class="profile-pic">
-  <img src="Default.png" alt="up" id="profile-picture3" width="40px" height="40px" style="border-radius: 50%">
-</div>
-
-
-<div style="text-align:center">
-  <div style="z-index: 3; position: fixed; margin-left: 83.5%; margin-top: 16px; font-size: 16px;">
-    <a href="Search.html">
-  <i class="fas fa-search" style="color:#28a745; border: 0.1px solid #fff; border-radius: 20px; padding: 8.5px; background-color:#fff; box-shadow: 0 0 10px #ddd; font-weight: light; margin-left: auto"></i>
-
-  </a>
-  </div>
-
-  <h2 class="head" style=" color:  #28a745; background-color: white; padding-top: 20px; padding-bottom: 20px;  margin-top: -0px; box-shadow: 0 0px 10px 0px #d3d3d3; border: solid; border-width: 1px; border-color: #fff; position: fixed;  z-index:1; width: 100vw; font-size: 19px; font-family: Poppins">Salmart</h2> 
-  </div>
-
+    <div class="menu-icon">
+      <div></div>
+      <div></div>
+      <div></div>
+    </div>
+    <div class="profile-pic">
+      <img id="profile-picture3" width="40px" height="40px" src="default-avater.png" style="border-radius: 50%">
+    </div>
+    <div style="text-align:center">
+      <div style="z-index: 3; position: fixed; margin-left: 83.5%; margin-top: 16px; font-size: 16px;">
+        <a href="Search.html">
+          <i class="fas fa-search" style="color:#28a745; border: 0.1px solid #fff; border-radius: 20px; padding: 8.5px; background-color:#fff; box-shadow: 0 0 10px #ddd; font-weight: light; margin-left: auto"></i>
+        </a>
+      </div>
+<h2 class="head" style="
+  color: #28a745;
+  background-color: white;
+  padding: 20px 0;
+  margin: 0;
+  box-shadow: 0 0px 10px 0px #ddd;
+  border: 1px solid #fff;
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1;
+  text-align: center;
+  font-size: 19px;
+  font-family: 'Poppins', sans-serif;
+  width: 100vw;
+">
+  Salmart
+</h2>
+    </div>
 
   <div style="text-align: center">
 
@@ -72,50 +85,54 @@
     </div>
   </div>
 </div>
-    <nav id="navbar">
+   
+   <nav id="navbar">
   <ul>
-          <li >
-  <a href="index.html">
-    <i class="fas fa-store"></i> Market
-  </a>
-</li>
-<li >
-  <a href="requestlists.html" class="active">
-    <i class="fas fa-clipboard-list" class="active"></i> Requests
-  </a>
-</li>
-<li>
-  <a href="Alerts.html" onclick="clearBadge('alerts')">
-    <span class="icon-badge-wrapper">
-      <i class="fas fa-bell"></i>
-      <span class="notification-badge" id="alerts-badge"></span>
-    </span>
-    Alerts
-  </a>
-</li>
-<li>
-  <a href="Messages.html" onclick="clearBadge('messages')">
-    <span class="icon-badge-wrapper">
-      <i class="fas fa-comments"></i>
-      <span class="notification-badge" id="messages-badge"></span>
-    </span>
-    Messages
-  </a>
-</li>
-<li>
-  <a href="Deals.html" onclick="clearBadge('deals')">
-    <span class="icon-badge-wrapper">
-      <i class="fas fa-cart-plus"></i>
-      <span class="notification-badge" id="deals-badge"></span>
-    </span>
-    Deals
-  </a>
-</li>
-<li>
-  <a href="Profile.html">
-    <i class="fas fa-user"></i> Profile
-  </a>
-</li>
+    <li>
+      <a href="index.html" class="active">
+        <i class="fas fa-store"></i>
+        <span>Market</span>
+      </a>
+    </li>
+    <li>
+      <a href="requestlists.html">
+        <i class="fas fa-clipboard-list"></i>
+        <span>Requests</span>
+      </a>
+    </li>
+    <li>
+      <a href="Alerts.html" onclick="clearBadge('alerts')">
+        <span class="icon-with-badge">
+          <i class="fas fa-bell"></i>
+          <span class="notification-badge" id="alerts-badge"></span>
+        </span>
+        <span>Alerts</span>
+      </a>
+    </li>
+    <li>
+      <a href="Messages.html" onclick="clearBadge('messages')">
+        <span class="icon-with-badge">
+          <i class="fas fa-comments"></i>
+          <span class="notification-badge" id="messages-badge"></span>
+        </span>
+        <span>Messages</span>
+      </a>
+    </li>
+    <li>
+      <a href="Deals.html" onclick="clearBadge('deals')">
+        <span class="icon-with-badge">
+          <i class="fas fa-cart-plus"></i>
+          <span class="notification-badge" id="deals-badge"></span>
+        </span>
+        <span>Deals</span>
+      </a>
+    </li>
+    <li>
+      <a href="Profile.html">
+        <i class="fas fa-user"></i>
+        <span>Profile</span>
+      </a>
+    </li>
   </ul>
 </nav>
 
@@ -143,51 +160,103 @@
     <pre style="font-size: 10px; text-align: center; margin-top: 40px; color: green">&copy;Salmart Technologies 2025</pre>
   </div>
 
-       <div class="iframe-container">
-  <iframe id="desktop-iframe" class="desktop-only" src="Community.html" frameborder="0" width="450" height="100%" style="position:fixed ; right: 25px;margin-top: 68px;
-  " ></iframe>
-  </div>
-            <div class="iframe-container">
-  <iframe id="desktop-iframe" class="desktop-only" src="login.html" frameborder="0" width="450" height="100%" style="position:fixed ; right: 68%; margin-top: 68px;
-  " ></iframe>
-  </div>
- <div class="create-post-container">
+
+   <div class="create-post-container">
       <div>
         <a href="Ads.html"><button  class="post-input" style="background-color: #fff; color: #28a745; font-family: 'Poppins'; border: solid: 1px #fff; box-shadow: 0 0 10px #ddd; font-size: 12px; font-weight: 500; max-width: 250px;"><i class="fas fa-bullhorn"></i> Create an ad</button></a>
         <a href="Request.html"><button class="post-input" style="background-color: #fff; color: #28a745; font-family: 'Poppins'; border: solid: 1px #fff; box-shadow: 0 0 10px #ddd; font-size: 12px;font-weight: 500;max-width: 250px;">Create a request <i class="fas fa-circle-plus"></i></button></a>
       </div>
 
-     <!-- Category Filter Section -->
+      <div class="category-filter" ">
+        <div class="category-scroll-wrapper">
+          <div class="category-scroll">
+            <button class="category-btn active" data-category="all"><i class="fas fa-layer-group"></i> All</button>
+            <button class="category-btn" data-category="electronics"><i class="fas fa-tv"></i> Electronics</button>
+            <button class="category-btn" data-category="fashion"><i class="fas fa-tshirt"></i> Fashion</button>
+            <button class="category-btn" data-category="home"><i class="fas fa-tree"></i> Home & Garden</button>
+            <button class="category-btn" data-category="vehicles"><i class="fas fa-car"></i> Vehicles</button>
+            <button class="category-btn" data-category="music"><i class="fas fa-guitar"></i> Music Gear</button>
+            <button class="category-btn" data-category="others"><i class="fas fa-box-open"></i> Other</button>
+          </div>
+        </div>
+      </div> 
+    </div>
 
-<div class="category-filter">
-       <div class="category-scroll-wrapper">
-  <div class="category-scroll">
-    <button class="category-btn active" data-category="all"> <i class="fas fa-layer-group"></i> All</button>
-    <button class="category-btn" data-category="electronics"><i class="fas fa-tv"></i> Electronics</button>
-    <button class="category-btn" data-category="fashion"> <i class="fas fa-tshirt"></i> Fashion</button>
-    <button class="category-btn" data-category="home"> <i class="fas fa-tree"></i> Home & Garden</button>
-    <button class="category-btn" data-category="vehicles"> <i class="fas fa-car"></i> Vehicles</button>
-    <button class="category-btn" data-category="music"> <i class="fas fa-guitar"></i>  Music Gear</button>
-    <button class="category-btn" data-category="others"> <i class="fas fa-box-open"></i> Other</button>
+     <div class="main-layout">
+  <!-- Left Sidebar: Login -->
+  <div class="sidebar left">
+    <iframe src="login.html" frameborder="0"></iframe>
   </div>
-</div>
- </div> 
- </div>
- 
- <div id="loader" style="display: none;">Loading...</div>
-  <div>
-   
-  <div id="request-feed" class="request-feed">
-           <!-- Skeleton Loaders for Posts -->
-        <div class="skeleton skeleton-post"></div>
-        <div class="skeleton skeleton-post"></div>
-        <div class="skeleton skeleton-post"></div>
+
+  <!-- Center Feed -->
+  <div class="feed request-feed" id="request-feed">
+    <div class="skeleton-post">
+      <div class="skeleton-header">
+        <div class="skeleton-avatar"></div>
+        <div class="skeleton-user-info">
+          <div class="skeleton-line short"></div>
+          <div class="skeleton-line very-short"></div>
+        </div>
       </div>
+      <div class="skeleton-line"></div>
+      <div class="skeleton-line short"></div>
+      <div class="skeleton-line short"></div>
+      <div class="skeleton-line short"></div>
+      <div class="skeleton-image"></div>
+      <div class="skeleton-button"></div>
+      <div class="skeleton-actions">
+        <div class="skeleton-line very-short"></div>
+        <div class="skeleton-line very-short"></div>
+      </div>
+    </div>
 
-    <!-- Requests will be dynamically injected here -->
+    <div class="skeleton-post">
+      <div class="skeleton-header">
+        <div class="skeleton-avatar"></div>
+        <div class="skeleton-user-info">
+          <div class="skeleton-line short"></div>
+          <div class="skeleton-line very-short"></div>
+        </div>
+      </div>
+      <div class="skeleton-line"></div>
+      <div class="skeleton-line short"></div>
+      <div class="skeleton-line short"></div>
+      <div class="skeleton-line short"></div>
+      <div class="skeleton-image"></div>
+      <div class="skeleton-button"></div>
+      <div class="skeleton-actions">
+        <div class="skeleton-line very-short"></div>
+        <div class="skeleton-line very-short"></div>
+      </div>
+    </div>
+
+    <div class="skeleton-post">
+      <div class="skeleton-header">
+        <div class="skeleton-avatar"></div>
+        <div class="skeleton-user-info">
+          <div class="skeleton-line short"></div>
+          <div class="skeleton-line very-short"></div>
+        </div>
+      </div>
+      <div class="skeleton-line"></div>
+      <div class="skeleton-line short"></div>
+      <div class="skeleton-line short"></div>
+      <div class="skeleton-line short"></div>
+      <div class="skeleton-image"></div>
+      <div class="skeleton-button"></div>
+      <div class="skeleton-actions">
+        <div class="skeleton-line very-short"></div>
+        <div class="skeleton-line very-short"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Sidebar: Community -->
+  <div class="sidebar right">
+    <iframe src="Community.html" frameborder="0"></iframe>
   </div>
 </div>
-  </div>
+
 
 
 <script>

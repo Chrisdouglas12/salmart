@@ -294,37 +294,30 @@
           <i class="fas fa-search" style="color:#28a745; border: 0.1px solid #fff; border-radius: 20px; padding: 8.5px; background-color:#fff; box-shadow: 0 0 10px #ddd; font-weight: light; margin-left: auto"></i>
         </a>
       </div>
-      <h2 class="head" style="color: #28a745; background-color: white; padding-top: 20px; padding-bottom: 20px; margin-top: -0px; box-shadow: 0 0px 10px 0px #ddd; border: solid; border-width: 1px; border-color: #fff; position: fixed; z-index:1; width: 100vw; font-size: 19px; font-family: Poppins">Salmart</h2> 
+<h2 class="head" style="
+  color: #28a745;
+  background-color: white;
+  padding: 20px 0;
+  margin: 0;
+  box-shadow: 0 0px 10px 0px #ddd;
+  border: 1px solid #fff;
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1;
+  text-align: center;
+  font-size: 19px;
+  font-family: 'Poppins', sans-serif;
+  width: 100vw;
+">
+  Salmart
+</h2>
     </div>
 
 <button id="installBtn" class="install-btn"> Install Salmart</button>
 
- <div id="paymentChoiceModal" class="modal hidden">
-  <div class="modal-content">
-    <span class="close-btn" onclick="closeModal()">×</span>
-    <h2>Select Payment Method</h2>
 
-    <div class="payment-option">
-      <h3>Paystack Checkout</h3>
-      <ul>
-        <li>✔️ Instant confirmation</li>
-        <li>✔️ Faster support</li>
-        <li>✔️ Secured by Paystack</li>
-      </ul>
-      <button onclick="choosePaystack()">Pay with Paystack</button>
-    </div>
-
-    <div class="payment-option">
-      <h3>Manual Bank Transfer (PT Account)</h3>
-      <ul>
-        <li>✔️ No gateway fee</li>
-        <li>✔️ Use your mobile bank app</li>
-        <li>✔️ Admin will confirm your payment</li>
-      </ul>
-      <button onclick="choosePT()">Pay with Bank Transfer</button>
-    </div>
-  </div>
-</div>
 
     <script>
         let deferredPrompt;
@@ -427,52 +420,55 @@
         </div>
       </div>
 
-      <nav id="navbar">
-        <ul>
-        <li >
-  <a href="index.html" class="active">
-    <i class="fas fa-store"  class="active"></i> Market
-  </a>
-</li>
-<li>
-  <a href="requestlists.html">
-    <i class="fas fa-clipboard-list"></i> Requests
-  </a>
-</li>
-<li>
-  <a href="Alerts.html" onclick="clearBadge('alerts')">
-    <span class="icon-badge-wrapper">
-      <i class="fas fa-bell"></i>
-      <span class="notification-badge" id="alerts-badge"></span>
-    </span>
-    Alerts
-  </a>
-</li>
-<li>
-  <a href="Messages.html" onclick="clearBadge('messages')">
-    <span class="icon-badge-wrapper">
-      <i class="fas fa-comments"></i>
-      <span class="notification-badge" id="messages-badge"></span>
-    </span>
-    Messages
-  </a>
-</li>
-<li>
-  <a href="Deals.html" onclick="clearBadge('deals')">
-    <span class="icon-badge-wrapper">
-      <i class="fas fa-cart-plus"></i>
-      <span class="notification-badge" id="deals-badge"></span>
-    </span>
-    Deals
-  </a>
-</li>
-<li>
-  <a href="Profile.html">
-    <i class="fas fa-user"></i> Profile
-  </a>
-</li>
-        </ul>
-      </nav>
+<nav id="navbar">
+  <ul>
+    <li>
+      <a href="index.html" class="active">
+        <i class="fas fa-store"></i>
+        <span>Market</span>
+      </a>
+    </li>
+    <li>
+      <a href="requestlists.html">
+        <i class="fas fa-clipboard-list"></i>
+        <span>Requests</span>
+      </a>
+    </li>
+    <li>
+      <a href="Alerts.html" onclick="clearBadge('alerts')">
+        <span class="icon-with-badge">
+          <i class="fas fa-bell"></i>
+          <span class="notification-badge" id="alerts-badge"></span>
+        </span>
+        <span>Alerts</span>
+      </a>
+    </li>
+    <li>
+      <a href="Messages.html" onclick="clearBadge('messages')">
+        <span class="icon-with-badge">
+          <i class="fas fa-comments"></i>
+          <span class="notification-badge" id="messages-badge"></span>
+        </span>
+        <span>Messages</span>
+      </a>
+    </li>
+    <li>
+      <a href="Deals.html" onclick="clearBadge('deals')">
+        <span class="icon-with-badge">
+          <i class="fas fa-cart-plus"></i>
+          <span class="notification-badge" id="deals-badge"></span>
+        </span>
+        <span>Deals</span>
+      </a>
+    </li>
+    <li>
+      <a href="Profile.html">
+        <i class="fas fa-user"></i>
+        <span>Profile</span>
+      </a>
+    </li>
+  </ul>
+</nav>
       <div id="toast" style="display:none;"></div>
     </div>
     <div class="side-bar">
@@ -492,20 +488,13 @@
       </ul>
       <pre style="font-size: 10px; text-align: center; margin-top: 40px; color: green">©Salmart Technologies 2025</pre>
     </div>
-       <div class="iframe-container">
-  <iframe id="desktop-iframe" class="desktop-only" src="Community.html" frameborder="0" width="350" height="100%" style="position:fixed ; right: 25px;margin-top: 65px;
-  " ></iframe>
-  </div>
-            <div class="iframe-container">
-  <iframe id="desktop-iframe" class="desktop-only" src="login.html" frameborder="0" width="350" height="100%" style="position:fixed ; right: 72%; margin-top: 68px;
-  " ></iframe>
-  </div>
-    <div class="create-post-container">
+    
+           <div class="create-post-container">
       <div>
         <a href="Ads.html"><button  class="post-input" style="background-color: #fff; color: #28a745; font-family: 'Poppins'; border: solid: 1px #fff; box-shadow: 0 0 10px #ddd; font-size: 12px; font-weight: 500; max-width: 250px;"><i class="fas fa-bullhorn"></i> Create an ad</button></a>
         <a href="Request.html"><button class="post-input" style="background-color: #fff; color: #28a745; font-family: 'Poppins'; border: solid: 1px #fff; box-shadow: 0 0 10px #ddd; font-size: 12px;font-weight: 500;max-width: 250px;">Create a request <i class="fas fa-circle-plus"></i></button></a>
       </div>
-       
+
       <div class="category-filter" ">
         <div class="category-scroll-wrapper">
           <div class="category-scroll">
@@ -521,67 +510,81 @@
       </div> 
     </div>
 
-      <div id="posts-container">
-        <div class="skeleton-post">
-            <div class="skeleton-header">
-                <div class="skeleton-avatar"></div>
-                <div class="skeleton-user-info">
-                    <div class="skeleton-line short"></div>
-                    <div class="skeleton-line very-short"></div>
-                </div>
-            </div>
-            <div class="skeleton-line"></div>
-            <div class="skeleton-line short"></div>
-            <div class="skeleton-line short"></div>
-            <div class="skeleton-line short"></div>
-            <div class="skeleton-image"></div>
-            <div class="skeleton-button"></div>
-            <div class="skeleton-actions">
-                <div class="skeleton-line very-short"></div>
-                <div class="skeleton-line very-short"></div>
-            </div>
-        </div>
-        <div class="skeleton-post">
-            <div class="skeleton-header">
-                <div class="skeleton-avatar"></div>
-                <div class="skeleton-user-info">
-                    <div class="skeleton-line short"></div>
-                    <div class="skeleton-line very-short"></div>
-                </div>
-            </div>
-            <div class="skeleton-line"></div>
-            <div class="skeleton-line short"></div>
-            <div class="skeleton-line short"></div>
-            <div class="skeleton-line short"></div>
-            <div class="skeleton-image"></div>
-            <div class="skeleton-button"></div>
-            <div class="skeleton-actions">
-                <div class="skeleton-line very-short"></div>
-                <div class="skeleton-line very-short"></div>
-            </div>
-        </div>
-        <div class="skeleton-post">
-            <div class="skeleton-header">
-                <div class="skeleton-avatar"></div>
-                <div class="skeleton-user-info">
-                    <div class="skeleton-line short"></div>
-                    <div class="skeleton-line very-short"></div>
-                </div>
-            </div>
-            <div class="skeleton-line"></div>
-            <div class="skeleton-line short"></div>
-            <div class="skeleton-line short"></div>
-            <div class="skeleton-line short"></div>
-            <div class="skeleton-image"></div>
-            <div class="skeleton-button"></div>
-            <div class="skeleton-actions">
-                <div class="skeleton-line very-short"></div>
-                <div class="skeleton-line very-short"></div>
-            </div>
+   
+     <div class="main-layout">
+  <!-- Left Sidebar: Login -->
+  <div class="sidebar left">
+    <iframe src="Search.html" frameborder="0"></iframe>
+  </div>
+
+  <!-- Center Feed -->
+  <div class="feed" id="posts-container">
+    <div class="skeleton-post">
+      <div class="skeleton-header">
+        <div class="skeleton-avatar"></div>
+        <div class="skeleton-user-info">
+          <div class="skeleton-line short"></div>
+          <div class="skeleton-line very-short"></div>
         </div>
       </div>
+      <div class="skeleton-line"></div>
+      <div class="skeleton-line short"></div>
+      <div class="skeleton-line short"></div>
+      <div class="skeleton-line short"></div>
+      <div class="skeleton-image"></div>
+      <div class="skeleton-button"></div>
+      <div class="skeleton-actions">
+        <div class="skeleton-line very-short"></div>
+        <div class="skeleton-line very-short"></div>
       </div>
     </div>
+
+    <div class="skeleton-post">
+      <div class="skeleton-header">
+        <div class="skeleton-avatar"></div>
+        <div class="skeleton-user-info">
+          <div class="skeleton-line short"></div>
+          <div class="skeleton-line very-short"></div>
+        </div>
+      </div>
+      <div class="skeleton-line"></div>
+      <div class="skeleton-line short"></div>
+      <div class="skeleton-line short"></div>
+      <div class="skeleton-line short"></div>
+      <div class="skeleton-image"></div>
+      <div class="skeleton-button"></div>
+      <div class="skeleton-actions">
+        <div class="skeleton-line very-short"></div>
+        <div class="skeleton-line very-short"></div>
+      </div>
+    </div>
+
+    <div class="skeleton-post">
+      <div class="skeleton-header">
+        <div class="skeleton-avatar"></div>
+        <div class="skeleton-user-info">
+          <div class="skeleton-line short"></div>
+          <div class="skeleton-line very-short"></div>
+        </div>
+      </div>
+      <div class="skeleton-line"></div>
+      <div class="skeleton-line short"></div>
+      <div class="skeleton-line short"></div>
+      <div class="skeleton-line short"></div>
+      <div class="skeleton-image"></div>
+      <div class="skeleton-button"></div>
+      <div class="skeleton-actions">
+        <div class="skeleton-line very-short"></div>
+        <div class="skeleton-line very-short"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Sidebar: Community -->
+  <div class="sidebar right">
+    <iframe src="Messages.html" frameborder="0"></iframe>
+  </div>
+</div>
 
     <div id="imageModal" class="modal">
       <span class="close">×</span>
