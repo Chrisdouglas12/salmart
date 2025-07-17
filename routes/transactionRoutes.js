@@ -673,6 +673,12 @@ await transaction.save();
 async function processQueuedPayouts() {
   try {
     console.log('[CRON] Checking for queued payouts...');
+    
+    const systemUser = await User.findOne({ isSystemUser: true });
+if (!systemUser) {
+  logger.error('[SYSTEM USER NOT FOUND]');
+  return res.status(500).json({ error: 'System user not found' });
+}
 
     const pendingTransactions = await Transaction.find({
       status: 'confirmed_pending_payout',
@@ -820,7 +826,7 @@ if (!tx.transferRecipient) {
 
         await Notification.create({
           userId: tx.sellerId._id,
-          senderId: tx.systemUser?._id, // optional if saved earlier
+          senderId: tx.systemUser._id, // optional if saved earlier
           postId: tx.postId._id,
           title,
           message,
@@ -830,6 +836,8 @@ if (!tx.transferRecipient) {
             reference: tx.transferReference
           }
         });
+        
+       
 
         await sendFCMNotification(
           tx.sellerId._id,

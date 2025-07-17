@@ -310,7 +310,8 @@ const initializeSocket = (io) => {
     socket.on('sendMessage', async (message) => {
       try {
         logger.info(`Received sendMessage event: ${JSON.stringify(message)}`);
-        const { senderId, receiverId, text, messageType, offerDetails, attachment } = message;
+        // Extract tempId here along with other message properties
+        const { senderId, receiverId, text, messageType, offerDetails, attachment, tempId } = message; // <-- ADDED tempId here
         if (!senderId || !receiverId) {
           logger.warn(`Missing senderId or receiverId: senderId=${senderId}, receiverId=${receiverId}`);
           throw new Error('Missing senderId or receiverId');
@@ -383,18 +384,31 @@ const initializeSocket = (io) => {
           logger.error(`Failed to save message from ${senderId} to ${receiverId}: ${saveError.message}`);
           throw new Error(`Failed to save message: ${saveError.message}`);
         }
+
+        // Prepare message object to emit to sender
         const messageForSender = {
           ...savedMessage.toObject(),
           chatPartnerName: `${receiver.firstName} ${receiver.lastName}`,
           chatPartnerProfilePicture: receiver.profilePicture || 'Default.png',
+          tempId: tempId, // <-- CRUCIAL: Pass the tempId back to the sender
         };
+
+        // Prepare message object to emit to receiver (no tempId needed for receiver)
         const messageForReceiver = {
           ...savedMessage.toObject(),
           chatPartnerName: `${sender.firstName} ${sender.lastName}`,
           chatPartnerProfilePicture: senderProfilePictureUrl || 'Default.png',
         };
+
+        // Emit to sender
         io.to(`user_${senderId}`).emit('newMessage', messageForSender);
+        logger.info(`Emitted newMessage to sender ${senderId} with tempId: ${tempId}`);
+
+        // Emit to receiver
         io.to(`user_${receiverId}`).emit('newMessage', messageForReceiver);
+        logger.info(`Emitted newMessage to receiver ${receiverId}`);
+
+        // Emit newMessageNotification for the receiver
         io.to(`user_${receiverId}`).emit('newMessageNotification', {
           senderId,
           senderName: `${sender.firstName} ${sender.lastName}`,
@@ -403,7 +417,8 @@ const initializeSocket = (io) => {
           createdAt: new Date(),
           productImageUrl,
         });
-        logger.info(`Emitted newMessage and newMessageNotification to user ${receiverId}`);
+        logger.info(`Emitted newMessageNotification to user ${receiverId}`);
+
         if (!newMessage.metadata?.isSystemMessage) {
           logger.info(`Attempting to send FCM notification to user ${receiverId}`);
           await sendFCMNotification(

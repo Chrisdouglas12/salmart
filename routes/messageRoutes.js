@@ -181,11 +181,13 @@ module.exports = (io) => {
 
   // Send a new message
   router.post('/send', verifyToken, async (req, res) => {
-     let senderId;
-     let receiverId;
+    let senderId; // Declared outside try-catch to ensure scope
+    let receiverId; // Declared outside try-catch to ensure scope
     try {
-      const { receiverId, text, messageType = 'text', offerDetails, attachment } = req.body;
-      const senderId = req.user.userId;
+      // Extract tempId from req.body
+      const { receiverId: reqReceiverId, text, messageType = 'text', offerDetails, attachment, tempId } = req.body; // <-- ADDED tempId here, renamed receiverId to avoid conflict
+      receiverId = reqReceiverId; // Assign to outer scope variable
+      senderId = req.user.userId;
 
       if (!receiverId || !text) {
         logger.warn(`Missing receiverId or text for message from user ${senderId}`);
@@ -224,7 +226,8 @@ module.exports = (io) => {
       logger.info(`Message sent from ${senderId} to ${receiverId}: ${message._id}`);
 
       // Emit Socket.IO message events
-      const messageData = {
+      // messageData for the sender needs the tempId to update the optimistic message
+      const messageDataForSender = {
         _id: message._id,
         senderId,
         receiverId,
@@ -232,15 +235,33 @@ module.exports = (io) => {
         messageType,
         offerDetails: message.offerDetails,
         attachment: message.attachment,
-        chatPartnerName: `${sender.firstName} ${sender.lastName}`,
+        chatPartnerName: `${receiver.firstName} ${receiver.lastName}`, // Partner for sender is receiver
+        status: message.status,
+        createdAt: message.createdAt,
+        tempId: tempId, // <-- CRUCIAL: Pass the tempId back to the sender
+      };
+
+      // messageData for the receiver does NOT need the tempId
+      const messageDataForReceiver = {
+        _id: message._id,
+        senderId,
+        receiverId,
+        text,
+        messageType,
+        offerDetails: message.offerDetails,
+        attachment: message.attachment,
+        chatPartnerName: `${sender.firstName} ${sender.lastName}`, // Partner for receiver is sender
         status: message.status,
         createdAt: message.createdAt,
       };
 
-      logger.info(`Emitting receiveMessage to user ${receiverId}: ${JSON.stringify(messageData)}`);
-      io.to(`user_${receiverId}`).emit('receiveMessage', messageData);
-      logger.info(`Emitting newMessage to user ${senderId}: ${JSON.stringify(messageData)}`);
-      io.to(`user_${senderId}`).emit('newMessage', messageData);
+      // Emit to sender's socket
+      logger.info(`Emitting newMessage to user ${senderId} (sender): ${JSON.stringify(messageDataForSender)}`);
+      io.to(`user_${senderId}`).emit('newMessage', messageDataForSender);
+
+      // Emit to receiver's socket
+      logger.info(`Emitting newMessage to user ${receiverId} (receiver): ${JSON.stringify(messageDataForReceiver)}`);
+      io.to(`user_${receiverId}`).emit('newMessage', messageDataForReceiver);
 
       // Send FCM notification
       logger.info(`Sending FCM notification to user ${receiverId} for message ${message._id}`);
@@ -257,9 +278,10 @@ module.exports = (io) => {
       logger.info(`Triggering badge update for user ${receiverId}`);
       await NotificationService.triggerCountUpdate(io, receiverId);
 
+      // Respond to the client (optional, as Socket.IO handles real-time update)
       res.status(201).json({ message: 'Message sent successfully', data: message });
     } catch (error) {
-      logger.error(`Failed to send message from ${senderId} to ${receiverId}: ${error.message}`);
+      logger.error(`Failed to send message from ${senderId || 'unknown'} to ${receiverId || 'unknown'}: ${error.message}`);
       res.status(500).json({ error: 'Server error' });
     }
   });
