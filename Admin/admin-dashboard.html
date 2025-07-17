@@ -1395,15 +1395,17 @@ async function fetchPlatformWallet(type) {
 
     const data = await response.json();
 
-    // ✅ Convert balance from Kobo to Naira
-    balanceEl.textContent = `₦${((data.balance || 0) / 100).toLocaleString('en-NG', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    })}`;
+    // ✅ Accurate Kobo formatting
+    const balance = data.balance || 0; // In Kobo
+    const naira = Math.floor(balance / 100);
+    const kobo = balance % 100;
+    const formatted = `₦${naira.toLocaleString('en-NG')}.${kobo.toString().padStart(2, '0')}`;
+    balanceEl.textContent = formatted;
 
     lastUpdatedEl.textContent = data.lastUpdated
       ? new Date(data.lastUpdated).toLocaleString()
       : 'N/A';
+
   } catch (error) {
     console.error(`Error fetching ${type} wallet:`, error.message);
     balanceEl.textContent = 'Error';
@@ -1422,6 +1424,9 @@ async function withdrawWallet(buttonElement, type) {
         return;
     }
 
+    // Convert Naira to Kobo
+    const amountInKobo = Math.round(amount * 100); // Avoid floating point issues
+
     const originalButtonText = buttonElement.innerHTML;
     buttonElement.disabled = true;
     buttonElement.innerHTML = '<div class="loading"></div><span>Withdrawing...</span>';
@@ -1434,7 +1439,7 @@ async function withdrawWallet(buttonElement, type) {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
             },
-            body: JSON.stringify({ type, amount }) // ✅ amount in naira (not kobo)
+            body: JSON.stringify({ type, amount: amountInKobo }) // ✅ Send amount in Kobo
         });
 
         const data = await response.json();
@@ -1445,7 +1450,7 @@ async function withdrawWallet(buttonElement, type) {
 
         showAlert(data.message || `${type} withdrawal successful`, 'success');
         amountInput.value = '';
-        fetchPlatformWallet(type);
+        fetchPlatformWallet(type); // Refresh updated wallet balance
 
     } catch (error) {
         console.error(`Error during ${type} withdrawal:`, error);

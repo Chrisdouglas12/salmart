@@ -672,7 +672,7 @@ router.get('/admin/platform-wallet', verifyToken, async (req, res) => {
     const wallet = await PlatformWallet.findOne({ type }); // Find only the requested type
 
     res.json({
-      balance: wallet?.balance || 0,
+      balance: wallet ? wallet.balance / 100 : 0, // Convert Kobo to Naira
       lastUpdated: wallet?.lastUpdated || null
     });
   } catch (err) {
@@ -680,7 +680,6 @@ router.get('/admin/platform-wallet', verifyToken, async (req, res) => {
     res.status(500).json({ error: 'Failed to retrieve platform wallet info' });
   }
 });
-
 
 
 router.post('/admin/platform-wallet/withdraw', verifyToken, async (req, res) => {
@@ -694,19 +693,18 @@ router.post('/admin/platform-wallet/withdraw', verifyToken, async (req, res) => 
     return res.status(400).json({ error: 'Invalid wallet type specified' });
   }
 
-  const amountKobo = Math.round(amount * 100);
+  const amountKobo = Math.round(amount * 100); // 💡 Work strictly in Kobo
   const platformWallet = await PlatformWallet.findOne({ type });
 
-  if (!platformWallet || platformWallet.balance < amount) {
+  if (!platformWallet || platformWallet.balance < amountKobo) {
     return res.status(400).json({ error: `Insufficient ${type} balance` });
   }
 
   try {
-    // Check if recipient code exists (from env or DB)
+    // Check for existing or create new recipient code
     let recipientCode = process.env.PLATFORM_RECIPIENT_CODE || platformWallet.recipientCode;
 
     if (!recipientCode) {
-      // Pull platform account details from environment
       const platformAccountNumber = process.env.PLATFORM_ACCOUNT_NUMBER;
       const platformBankCode = process.env.PLATFORM_BANK_CODE;
       const platformAccountName = process.env.PLATFORM_ACCOUNT_NAME || 'Salmart Technologies';
@@ -715,7 +713,6 @@ router.post('/admin/platform-wallet/withdraw', verifyToken, async (req, res) => 
         return res.status(500).json({ error: 'Platform account details are not set' });
       }
 
-      // Create new transfer recipient via Paystack
       const recipientRes = await axios.post(
         'https://api.paystack.co/transferrecipient',
         {
@@ -731,18 +728,16 @@ router.post('/admin/platform-wallet/withdraw', verifyToken, async (req, res) => 
       );
 
       recipientCode = recipientRes.data.data.recipient_code;
-      console.log('✅ Created new platform recipient code:', recipientCode);
 
       if (!recipientCode) {
         return res.status(500).json({ error: 'Paystack did not return a recipient_code' });
       }
 
-      // Store in DB for future use
       platformWallet.recipientCode = recipientCode;
       await platformWallet.save();
     }
 
-    // Initiate transfer
+    // Paystack Transfer
     const transfer = await axios.post(
       'https://api.paystack.co/transfer',
       {
@@ -756,14 +751,15 @@ router.post('/admin/platform-wallet/withdraw', verifyToken, async (req, res) => 
       }
     );
 
-    // Deduct amount and record transaction
-    platformWallet.balance -= amount;
+    // Update wallet balance (deduct Kobo)
+    platformWallet.balance -= amountKobo;
     platformWallet.lastUpdated = new Date();
     platformWallet.transactions.push({
-      amount,
+      amount: amountKobo,
       reference: transfer.data.data.reference,
       type: 'debit',
-      purpose: `withdraw_${type}`
+      purpose: `withdraw_${type}`,
+      timestamp: new Date()
     });
 
     await platformWallet.save();
@@ -780,6 +776,20 @@ router.post('/admin/platform-wallet/withdraw', verifyToken, async (req, res) => 
       details: err.response?.data?.message || err.message
     });
   }
+});
+
+router.get('/admin/platform-wallet/transactions', verifyToken, async (req, res) => {
+  const { type } = req.query;
+  if (!type || !['commission', 'promotion'].includes(type)) {
+    return res.status(400).json({ error: 'Invalid wallet type.' });
+  }
+
+  const wallet = await PlatformWallet.findOne({ type }).populate('userId productId');
+  if (!wallet) {
+    return res.json({ transactions: [] });
+  }
+
+  res.json({ transactions: wallet.transactions });
 });
 
 module.exports = router;

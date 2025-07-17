@@ -9,7 +9,7 @@ const platformWalletSchema = new mongoose.Schema({
   },
   balance: {
     type: Number,
-    default: 0
+    default: 0 // Stored in kobo (₦1000 = 100000)
   },
   recipientCode: {
     type: String,
@@ -17,12 +17,36 @@ const platformWalletSchema = new mongoose.Schema({
   },
   transactions: [
     {
-      amount: Number,
-      reference: String,
-      type: { type: String, enum: ['credit', 'debit'], default: 'credit' },
-      purpose: String,
-      userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-      timestamp: { type: Date, default: Date.now }
+      amount: {
+        type: Number,
+        required: true // In kobo
+      },
+      reference: {
+        type: String,
+        required: true
+      },
+      type: {
+        type: String,
+        enum: ['credit', 'debit'],
+        default: 'credit'
+      },
+      purpose: {
+        type: String,
+        required: true
+      },
+      userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+      },
+      productId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Post',
+        default: null // Optional: attach product post if it's commission
+      },
+      timestamp: {
+        type: Date,
+        default: Date.now
+      }
     }
   ],
   lastUpdated: {
