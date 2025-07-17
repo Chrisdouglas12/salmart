@@ -702,11 +702,11 @@ router.post('/admin/platform-wallet/withdraw', verifyToken, async (req, res) => 
   }
 
   try {
-    // Check if recipient code exists (from env or db)
-    let recipientCode = process.env.PLATFORM_RECIPIENT_CODE;
+    // Check if recipient code exists (from env or DB)
+    let recipientCode = process.env.PLATFORM_RECIPIENT_CODE || platformWallet.recipientCode;
 
     if (!recipientCode) {
-      // Optional: Store platform account details in env or database
+      // Pull platform account details from environment
       const platformAccountNumber = process.env.PLATFORM_ACCOUNT_NUMBER;
       const platformBankCode = process.env.PLATFORM_BANK_CODE;
       const platformAccountName = process.env.PLATFORM_ACCOUNT_NAME || 'Salmart Technologies';
@@ -715,46 +715,48 @@ router.post('/admin/platform-wallet/withdraw', verifyToken, async (req, res) => 
         return res.status(500).json({ error: 'Platform account details are not set' });
       }
 
-
-
+      // Create new transfer recipient via Paystack
       const recipientRes = await axios.post(
-  'https://api.paystack.co/transferrecipient',
-  {
-    type: 'nuban',
-    name: platformAccountName,
-    account_number: platformAccountNumber,
-    bank_code: platformBankCode,  
-    currency: 'NGN'
-  },
-  {
-    headers: { Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}` }
-  }
-);
+        'https://api.paystack.co/transferrecipient',
+        {
+          type: 'nuban',
+          name: platformAccountName,
+          account_number: platformAccountNumber,
+          bank_code: platformBankCode,
+          currency: 'NGN'
+        },
+        {
+          headers: { Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}` }
+        }
+      );
 
-recipientCode = recipientRes.data.data.recipient_code;
-console.log('✅ Created new platform recipient code:', recipientCode);
+      recipientCode = recipientRes.data.data.recipient_code;
+      console.log('✅ Created new platform recipient code:', recipientCode);
 
-if (!recipientCode) {
-  return res.status(500).json({ error: 'Paystack did not return a recipient_code' });
-}
+      if (!recipientCode) {
+        return res.status(500).json({ error: 'Paystack did not return a recipient_code' });
+      }
 
-// store for later use
-platformWallet.recipientCode = recipientCode;
-await platformWallet.save();
+      // Store in DB for future use
+      platformWallet.recipientCode = recipientCode;
+      await platformWallet.save();
+    }
 
     // Initiate transfer
-    const transfer = await axios.post('https://api.paystack.co/transfer', {
-      source: 'balance',
-      amount: amountKobo,
-      recipient: recipientCode,
-      reason: `Withdrawal of platform ${type}`
-    }, {
-      headers: {
-        Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`
+    const transfer = await axios.post(
+      'https://api.paystack.co/transfer',
+      {
+        source: 'balance',
+        amount: amountKobo,
+        recipient: recipientCode,
+        reason: `Withdrawal of platform ${type}`
+      },
+      {
+        headers: { Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}` }
       }
-    });
+    );
 
-    // Deduct from wallet and log transaction
+    // Deduct amount and record transaction
     platformWallet.balance -= amount;
     platformWallet.lastUpdated = new Date();
     platformWallet.transactions.push({
@@ -779,5 +781,9 @@ await platformWallet.save();
     });
   }
 });
+
+module.exports = router;
+
+
   return router;
 };

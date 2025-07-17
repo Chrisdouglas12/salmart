@@ -70,33 +70,58 @@ router.post('/upload', upload.single('image'), (req, res) => {
   }
 });
 module.exports = (io) => {
+     
+     
 // Register a user
 router.post('/register', async (req, res) => {
   try {
-    let { firstName, lastName, email, password, accountNumber,} = req.body;
+    // Destructure all necessary fields from req.body
+    let { firstName, lastName, email, password, accountNumber, bankCode, accountName } = req.body;
     
+    // Trim and lowercase email
     email = email.trim().toLowerCase();
     
+    // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: 'User already exists' });
     }
+    
+    // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
+    
+    // Create a new User instance
     const newUser = new User({
       firstName,
       lastName,
       email,
       password: hashedPassword,
-      bankDetails: { accountNumber },
+      // Populate bankDetails with all received information
+      bankDetails: { 
+        accountNumber, 
+        bankCode,    // Add bankCode here
+        accountName  // Add accountName here
+      },
     });
+    
+    // Save the new user to the database
     await newUser.save();
+    
     console.log('New user registered:', newUser);
-    res.status(201).json({ message: 'User created successfully' });
+    // You might want to return a token or user ID here for immediate login on the frontend
+    res.status(201).json({ 
+        message: 'User created successfully',
+        // Optional: include user ID or a token for immediate login
+        userId: newUser._id 
+    });
+
   } catch (error) {
     console.error('Register error:', error.message);
+    // Check for specific Mongoose validation errors if needed for more detailed feedback
     res.status(500).json({ message: 'Server error' });
   }
 });
+
 
 // Login
 router.post('/login', async (req, res) => {

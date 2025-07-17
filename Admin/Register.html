@@ -643,9 +643,15 @@
         </div>
 
         <div class="form-group">
-          <label for="bankName">Account Name</label>
+          <label for="bankCode">Bank Code</label>
           <div class="input-wrapper">
-            <input class="input-field" type="text" id="bankName" placeholder="Account name will be auto-filled" disabled>
+            <input class="input-field" type="text" id="bankCode" placeholder="Bank code will be auto-filled" disabled>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="accountName">Account Name</label>
+          <div class="input-wrapper">
+            <input class="input-field" type="text" id="accountName" placeholder="Account name will be auto-filled" disabled>
           </div>
           <div id="accountStatus"></div>
         </div>
@@ -676,7 +682,6 @@
     </div>
   </div>
 
-  <!-- Success Modal -->
   <div id="successModal" class="modal">
     <div class="modal-content">
       <div class="modal-icon">
@@ -714,6 +719,9 @@
       togglePasswordVisibility('cpassword', 'toggleCPassword');
     });
 
+    // Store fetched banks to easily retrieve name by code
+    let allBanks = []; 
+
     // Fetch bank list
     async function fetchBankList() {
       try {
@@ -724,8 +732,9 @@
         const response = await fetch(`${API_BASE_URL}/banks`);
         const data = await response.json();
         
+        allBanks = data.banks; // Store the fetched banks
         const bankList = document.getElementById('bankList');
-        data.banks.forEach(bank => {
+        allBanks.forEach(bank => { // Use allBanks for consistency
           const option = document.createElement('option');
           option.value = bank.code;
           option.textContent = bank.name;
@@ -758,11 +767,13 @@
     async function resolveAccount() {
       const accountNumber = document.getElementById('accountNumber').value.trim();
       const bankCode = document.getElementById('bankList').value;
-      const bankNameField = document.getElementById('bankName');
+      const accountNameField = document.getElementById('accountName'); // Changed from bankName to accountName
+      const bankCodeField = document.getElementById('bankCode'); // Get the new bank code input field
       
       if (accountNumber.length < 10 || !bankCode) {
         document.getElementById('accountStatus').innerHTML = '';
-        bankNameField.value = '';
+        accountNameField.value = '';
+        bankCodeField.value = ''; // Clear bank code field
         return;
       }
 
@@ -785,15 +796,18 @@
         const data = await response.json();
 
         if (response.ok && data.account_name) {
-          bankNameField.value = data.account_name;
+          accountNameField.value = data.account_name;
+          bankCodeField.value = bankCode; // Set the bank code field to the selected bank's code
           showStatus('verified', 'Account verified successfully');
         } else {
-          bankNameField.value = '';
+          accountNameField.value = '';
+          bankCodeField.value = ''; // Clear bank code field on error
           showStatus('error', 'Invalid account number or bank');
         }
       } catch (error) {
         console.error('Account resolution error:', error);
-        bankNameField.value = '';
+        accountNameField.value = '';
+        bankCodeField.value = ''; // Clear bank code field on error
         showStatus('error', 'Error verifying account');
       }
     }
@@ -805,7 +819,7 @@
     // Form validation
     function validateForm() {
       const form = document.getElementById('registrationForm');
-      const formData = new FormData(form);
+      // No need for FormData if we're directly accessing elements
       const password = document.getElementById('password').value;
       const confirmPassword = document.getElementById('cpassword').value;
       const acceptTerms = document.getElementById('acceptTerms').checked;
@@ -856,8 +870,8 @@
         email: document.getElementById('email').value.trim(),
         password: document.getElementById('password').value,
         accountNumber: document.getElementById('accountNumber').value.trim(),
-        bankCode: document.getElementById('bankList').value,
-        accountName: document.getElementById('bankName').value
+        bankCode: document.getElementById('bankList').value, // This is already being used
+        accountName: document.getElementById('accountName').value // Changed from bankName to accountName
       };
 
       try {
