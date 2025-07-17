@@ -715,14 +715,17 @@ router.post('/admin/platform-wallet/withdraw', verifyToken, async (req, res) => 
         return res.status(500).json({ error: 'Platform account details are not set' });
       }
 
-      // Create transfer recipient
-      const recipientRes = await paystack.recipient.create({
-        type: 'nuban',
-        name: platformAccountName,
-        account_number: platformAccountNumber,
-        bank_code: platformBankCode,
-        currency: 'NGN'
-      });
+const recipientRes = await axios.post('https://api.paystack.co/transferrecipient', {
+  type: 'nuban',
+  name: platformAccountName,
+  account_number: platformAccountNumber,
+  bank_code: platformBankCode,
+  currency: 'NGN'
+}, {
+  headers: {
+    Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`
+  }
+});
 
       recipientCode = recipientRes.data.recipient_code;
       console.log('✅ Created new platform recipient code:', recipientCode);
