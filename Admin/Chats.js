@@ -50,7 +50,8 @@ let isInitialMessageSent = localStorage.getItem(`initialMessageSent_${productId}
 
 // Function to render product preview
 function renderProductPreview() {
-    if (productImage && productName && !isInitialMessageSent) {
+    // Only show product preview if it's the initial message and the product details are available
+    if (productImage && productName && predefinedMessage && !isInitialMessageSent) {
         const previewContainer = document.createElement('div');
         previewContainer.id = 'product-preview';
         previewContainer.style.margin = '10px';
@@ -88,19 +89,18 @@ const sentCounterOffers = new Set();
 
 function saveBargainStates() {
     // Implement your save logic if necessary, otherwise remove
+    // For a real application, you'd likely persist these server-side or in more robust client storage
 }
 
 // Display a message in the chat
 function displayMessage(message, isOptimistic = false) {
     // Check if a message with this _id is already displayed (important for preventing duplicates
-    // when a server-confirmed message arrives after an optimistic one)
+    // when a server-confirmed message arrives after an optimistic one, or during initial load)
     if (message._id && displayedMessages.has(message._id)) {
         return;
     }
 
     // If this is an optimistic message, add its temporary ID to the map
-    // Note: The new tempId handling means this map might be less critical for display,
-    // but useful for tracking optimistic messages before confirmation.
     if (isOptimistic && message._id && message._id.startsWith('temp_')) {
         optimisticMessagesMap.set(message._id, message);
     }
@@ -130,7 +130,7 @@ function displayMessage(message, isOptimistic = false) {
                 offerDetails = { ...offerDetails, ...parsedFromJson };
             } catch (e) {
                 console.warn('Failed to parse message text as JSON:', message.text, e);
-                displayText = message.text;
+                displayText = message.text; // Fallback to plain text if JSON parsing fails
             }
         }
     }
@@ -140,6 +140,7 @@ function displayMessage(message, isOptimistic = false) {
         displayImage = displayImage.startsWith('/') ? `${API_BASE_URL}${displayImage}` : displayImage;
     }
 
+    // Display date separator if date changes
     if (formattedDate !== lastDisplayedDate) {
         chatMessages.appendChild(createSystemMessage(formattedDate));
         lastDisplayedDate = formattedDate;
@@ -160,13 +161,15 @@ function displayMessage(message, isOptimistic = false) {
     if (message.messageType === 'counter-offer' && message.senderId === userId && offerDetails?.productId) {
         sentCounterOffers.add(offerDetails.productId);
     }
-    saveBargainStates();
+    saveBargainStates(); // Call this function to persist states if needed
 
     // --- SYSTEM MESSAGES ---
+    // Handle system messages and special offer/bargain messages differently
     if (['accept-offer', 'reject-offer', 'end-bargain', 'payment-completed', 'buyerAccept', 'sellerAccept'].includes(message.messageType)) {
         let systemText = displayText;
         let systemImage = displayImage;
 
+        // Custom text for different system message types
         if (message.messageType === 'accept-offer') {
              systemText = `Offer for ${offerDetails.productName || 'Product'} at ₦${(offerDetails.proposedPrice || 0).toLocaleString('en-NG')} was accepted.`;
         } else if (message.messageType === 'reject-offer') {
@@ -175,7 +178,7 @@ function displayMessage(message, isOptimistic = false) {
             systemText = `${message.senderId === userId ? 'You' : recipientUsername} ended the bargain for ${offerDetails.productName || 'Product'}.`;
         } else if (message.messageType === 'payment-completed') {
             systemText = `Payment completed for ${offerDetails.productName || 'Product'}.`;
-            systemImage = message.attachment?.url || systemImage;
+            systemImage = message.attachment?.url || systemImage; // Use attachment for payment receipts
         } else if (message.messageType === 'buyerAccept' && message.receiverId === userId) {
             systemText = `Your offer of ₦${(offerDetails.proposedPrice || 0).toLocaleString('en-NG')} for "${offerDetails.productName || 'Product'}" has been accepted.`;
             systemImage = offerDetails.image || systemImage;
@@ -198,6 +201,7 @@ function displayMessage(message, isOptimistic = false) {
             systemDiv.appendChild(imageContainer);
         }
 
+        // Add payment buttons for relevant system messages
         if (message.messageType === 'buyerAccept' && message.receiverId === userId) {
             const paymentBtn = document.createElement('button');
             paymentBtn.className = 'proceed-to-payment-btn';
@@ -208,6 +212,7 @@ function displayMessage(message, isOptimistic = false) {
                 const verifyPaymentStatus = async (productId, userId) => {
                     // Your actual payment verification logic here
                     console.log(`Verifying payment for product ${productId} by user ${userId}`);
+                    // This should ideally make an API call to your backend
                     return false; // Return true if paid, false otherwise
                 };
 
@@ -215,7 +220,7 @@ function displayMessage(message, isOptimistic = false) {
                     // Your actual payment initiation logic here
                     console.log(`Initiating payment for ${productName} (ID: ${productId}) at ₦${price}`);
                     showToast(`Initiating payment for ${productName}...`, 'info');
-                    // Simulate payment process
+                    // Simulate payment process or redirect to payment gateway
                     setTimeout(() => {
                         showToast('Payment initiated. Follow prompts.', 'success');
                         button.disabled = true;
@@ -224,7 +229,6 @@ function displayMessage(message, isOptimistic = false) {
                         button.style.cursor = 'not-allowed';
                     }, 1500);
                 };
-
 
                 const isPaid = await verifyPaymentStatus(offerDetails.productId, userId);
                 if (isPaid) {
@@ -250,6 +254,10 @@ function displayMessage(message, isOptimistic = false) {
 
         chatMessages.appendChild(systemDiv);
         chatMessages.scrollTop = chatMessages.scrollHeight;
+        // Add system messages to displayedMessages to prevent re-display
+        if (message._id) {
+            displayedMessages.add(message._id);
+        }
         return;
     }
 
@@ -289,11 +297,11 @@ function displayMessage(message, isOptimistic = false) {
         `;
     }
 
-
+    // Determine if offer buttons should be shown
     const isOfferAccepted = offerDetails.productId && acceptedOffers.has(offerDetails.productId);
     const isBargainEnded = offerDetails.productId && endedBargains.has(offerDetails.productId);
 
-    // Add offer buttons for non-image messages
+    // Add offer buttons for non-image messages (and if not accepted/ended)
     if (message.messageType !== 'image') {
         if (message.messageType === 'offer' && offerDetails.proposedPrice && message.receiverId === userId && message.senderId === receiverId && !isOfferAccepted && !isBargainEnded) {
             const acceptBtn = document.createElement('button');
@@ -304,6 +312,7 @@ function displayMessage(message, isOptimistic = false) {
                 const handleAcceptOffer = (details, sender) => {
                      console.log(`Accepting offer for ${details.productName} from ${sender}`);
                      showToast('Offer accepted!', 'success');
+                     // In a real app, you'd send an API call to accept the offer
                 };
                 handleAcceptOffer(offerDetails, message.senderId);
             };
@@ -317,6 +326,7 @@ function displayMessage(message, isOptimistic = false) {
                 const openLastPriceModal = (productId, productName, image) => {
                     console.log(`Opening last price modal for ${productName}`);
                     showToast('Last price modal functionality not implemented.', 'warning');
+                    // In a real app, this would open a modal to propose a counter-offer or end bargain
                 };
                 openLastPriceModal(offerDetails.productId, offerDetails.productName, offerDetails.image);
             };
@@ -332,6 +342,7 @@ function displayMessage(message, isOptimistic = false) {
                 const handleAcceptCounterOffer = (details, sender) => {
                     console.log(`Accepting counter offer for ${details.productName} from ${sender}`);
                     showToast('Counter offer accepted!', 'success');
+                    // In a real app, you'd send an API call to accept the counter-offer
                 };
                 handleAcceptCounterOffer(offerDetails, message.senderId);
             };
@@ -345,6 +356,7 @@ function displayMessage(message, isOptimistic = false) {
                 const handleEndBargain = (details, sender) => {
                     console.log(`Ending bargain for ${details.productName} with ${sender}`);
                     showToast('Bargain ended.', 'info');
+                    // In a real app, you'd send an API call to end the bargain
                 };
                 handleEndBargain(offerDetails, message.senderId);
             };
@@ -383,13 +395,7 @@ function updateOptimisticMessageId(tempId, newMessageId) {
             optimisticMessagesMap.set(newMessageId, optimisticMsg);
         }
 
-        // Update status for the sent message to show '✔' or '✔✔'
-        const timestampElement = optimisticMessageElement.querySelector('.message-timestamp');
-        if (timestampElement) {
-            if (!timestampElement.textContent.includes('✔')) {
-                timestampElement.textContent += ' ✔'; // Mark as sent
-            }
-        }
+        // The timestamp update logic for '✔' or '✔✔' is now handled in the newMessage listener
     } else {
         console.warn(`Optimistic message with temporary ID ${tempId} not found in DOM.`);
     }
@@ -415,19 +421,20 @@ sendBtn.onclick = async () => {
     const isInitialMessage = !isInitialMessageSent && predefinedMessage && productImage;
     const tempMessageId = `temp_${Date.now()}`; // Generate a temporary ID
 
-    const messageToSend = { // Renamed to avoid confusion with the object passed to displayMessage
+    const messageToSend = {
         receiverId,
         text: isInitialMessage ? JSON.stringify({ text, image: productImage }) : text,
         messageType: 'text',
-        createdAt: new Date().toISOString(), // Use ISO string for consistent date
+        createdAt: new Date().toISOString(),
         isRead: false,
-        tempId: tempMessageId // Crucially, add the temporary ID here for server echo
+        tempId: tempMessageId, // Crucially, add the temporary ID here for server echo
+        senderId: userId // Add senderId for optimistic display
     };
 
-    // Display the optimistic message
-    displayMessage({ ...messageToSend, senderId: userId, _id: tempMessageId, status: 'sending' }, true); // Pass tempId as _id for optimistic display
+    // Display the optimistic message immediately
+    displayMessage({ ...messageToSend, _id: tempMessageId, status: 'sending' }, true);
 
-    typeSection.value = '';
+    typeSection.value = ''; // Clear input field
 
     if (isInitialMessage) {
         isInitialMessageSent = true;
@@ -452,18 +459,8 @@ sendBtn.onclick = async () => {
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || `HTTP error ${response.status}`);
 
-        // The server response data should ideally include the _id and the tempId it received.
-        // We now rely on the 'newMessage' event for updating the optimistic message.
-        // If the server doesn't emit 'newMessage' back to the sender, you might need this:
-        // if (data.data?._id && data.data?.tempId) { // assuming server sends back tempId
-        //     updateOptimisticMessageId(data.data.tempId, data.data._id);
-        // } else if (data.data?._id) {
-        //     // Fallback if server doesn't echo tempId, try to match by content if still needed, but less reliable.
-        //     // For now, rely solely on the 'newMessage' event with tempId.
-        // } else {
-        //     console.warn('Server did not return a message _id or tempId.');
-        //     removeOptimisticMessage(tempMessageId); // Fallback: remove if no real ID confirmation
-        // }
+        // The 'newMessage' event from the server will handle the confirmation/update
+        // No explicit updateOptimisticMessageId call needed here, as the socket listener handles it.
 
     } catch (error) {
         console.error('Error sending message:', error);
@@ -475,16 +472,16 @@ sendBtn.onclick = async () => {
 // Handle incoming messages
 socket.on('newMessage', message => {
     const isForCurrentChat =
-        (message.senderId === userId && message.receiverId === receiverId) ||
-        (message.senderId === receiverId && message.receiverId === userId) ||
-        (message.receiverId === userId && ['sellerAccept', 'buyerAccept', 'end-bargain', 'payment-completed'].includes(message.messageType));
+        (message.senderId === userId && message.receiverId === receiverId) || // Message sent by current user to receiver
+        (message.senderId === receiverId && message.receiverId === userId) || // Message sent by receiver to current user
+        (message.receiverId === userId && ['sellerAccept', 'buyerAccept', 'end-bargain', 'payment-completed'].includes(message.messageType)); // System messages for current user
 
     if (!isForCurrentChat) {
-        return;
+        return; // Ignore messages not relevant to the current chat session
     }
 
-    // NEW LOGIC: If the incoming message has a tempId and was sent by the current user,
-    // it's a confirmation for an optimistic message we already displayed.
+    // Scenario 1: It's our own message coming back from the server (confirmation for optimistic display)
+    // This message will have a tempId if it was sent optimistically by this client.
     if (message.tempId && message.senderId === userId) {
         updateOptimisticMessageId(message.tempId, message._id);
         // Also, update the status for the sent message to show '✔' or '✔✔'
@@ -493,44 +490,62 @@ socket.on('newMessage', message => {
             const timestampElement = messageElement.querySelector('.message-timestamp');
             if (timestampElement) {
                 if (message.status === 'seen' && !timestampElement.textContent.includes('✔✔')) {
-                    // Replace single check with double check if already sent, or just add double check
-                    timestampElement.textContent = timestampElement.textContent.replace(/ ✔$/, '') + ' ✔✔';
+                    timestampElement.textContent = timestampElement.textContent.replace(/ ✔$/, '') + ' ✔✔'; // Replace single with double check
                 } else if (!timestampElement.textContent.includes('✔')) {
                     timestampElement.textContent += ' ✔'; // Mark as sent
                 }
             }
         }
-        return; // IMPORTANT: Don't display again if it's our own confirmed message
+        // IMPORTANT: Don't display again as a new message, we just updated the existing optimistic one.
+        // Proceed to update localStorage.
+    }
+    // Scenario 2: It's a new message from the other user OR a system message relevant to this chat
+    // Only display if we haven't already displayed this specific message _ID
+    else if (!displayedMessages.has(message._id)) {
+        displayMessage(message);
+
+        // Mark as seen if it's a message received by the current user from the other party
+        if (message.receiverId === userId && message.senderId === receiverId && message.status !== 'seen') {
+            socket.emit('markAsSeen', {
+                messageIds: [message._id],
+                senderId: message.senderId, // The sender of *this* message (the other user)
+                receiverId: userId         // The current user
+            });
+        }
+
+        // Optional: Show toast for incoming messages (only if it's from the other user)
+        if (message.senderId !== userId) {
+            showToast(`New message from ${recipientUsername}`, 'success');
+        }
+    } else {
+        // If message _ID is already displayed, it might be a status update (e.g., from sent to seen).
+        // Update the status for existing messages.
+        const messageElement = chatMessages.querySelector(`[data-message-id="${message._id}"]`);
+        if (messageElement) {
+            const timestampElement = messageElement.querySelector('.message-timestamp');
+            if (timestampElement && message.status === 'seen' && !timestampElement.textContent.includes('✔✔')) {
+                // Update the timestamp to include double checkmark
+                timestampElement.textContent = timestampElement.textContent.replace(/ ✔$/, '') + ' ✔✔';
+            }
+        }
     }
 
-    // Display the incoming message (if not our own confirmed message)
-    displayMessage(message);
-
-    // Mark as seen if it's a message received by the current user from the other party
-    if (message.receiverId === userId && message.status !== 'seen' && message.senderId !== userId) {
-        socket.emit('markAsSeen', {
-            messageIds: [message._id],
-            senderId: message.senderId,
-            receiverId: userId
-        });
-    }
-
-    if (message.senderId !== userId) {
-        showToast(`New message from ${recipientUsername}`, 'success');
-    }
-
-    // Update localStorage with the newly received message
+    // Update localStorage with the newly received or updated message
     const storedMessages = JSON.parse(localStorage.getItem(`chat_${userId}_${receiverId}`) || '[]');
-    if (!storedMessages.some(msg => msg._id === message._id)) {
-        storedMessages.push(message);
-        localStorage.setItem(`chat_${userId}_${receiverId}`, JSON.stringify(storedMessages));
+    // Find if message exists to update it, otherwise push new message
+    const existingIndex = storedMessages.findIndex(msg => msg._id === message._id);
+    if (existingIndex !== -1) {
+        storedMessages[existingIndex] = message; // Update existing message (e.g., status, or optimistic to real)
+    } else {
+        storedMessages.push(message); // Add new message
     }
+    localStorage.setItem(`chat_${userId}_${receiverId}`, JSON.stringify(storedMessages));
 });
 
 // Handle message synced event for persistence (ensure it's not duplicating what newMessage does)
+// This listener might be redundant if 'newMessage' already covers all necessary updates.
+// Keeping it for now but consider if it's truly needed.
 socket.on('messageSynced', (message) => {
-    // This event might be redundant if 'newMessage' already covers persistence,
-    // but keeping the logic in case it serves a specific purpose (e.g., historical sync)
     const isForCurrentChat =
         (message.senderId === userId && message.receiverId === receiverId) ||
         (message.senderId === receiverId && message.receiverId === userId);
@@ -538,6 +553,8 @@ socket.on('messageSynced', (message) => {
     if (!isForCurrentChat) {
         return;
     }
+    // Only update localStorage if this message is not already accounted for by `newMessage`
+    // This might occur for historical messages being synced.
     const storedMessages = JSON.parse(localStorage.getItem(`chat_${userId}_${receiverId}`) || '[]');
     if (!storedMessages.some(msg => msg._id === message._id)) {
         storedMessages.push(message);
@@ -545,8 +562,9 @@ socket.on('messageSynced', (message) => {
     }
 });
 
-// Handle new message notifications
+// Handle new message notifications (for other chats, not the current one)
 socket.on('newMessageNotification', (notification) => {
+    // Only show toast if the notification is NOT for the current chat partner
     if (notification.senderId !== receiverId) {
         showToast(`New message from ${notification.senderName}: ${notification.text}`, 'success');
     }
@@ -577,7 +595,7 @@ async function loadChatHistory() {
         } catch (e) {
             console.error('Invalid JSON response:', rawText);
             showToast('Failed to parse chat history. Some messages may be missing.', 'error');
-            messages = [];
+            messages = []; // Default to empty array on parse error
         }
 
         if (!Array.isArray(messages)) {
@@ -589,30 +607,36 @@ async function loadChatHistory() {
 
         const validMessages = messages.filter((msg, index) => {
             if (!msg || typeof msg !== 'object' || !msg.messageType) {
+                console.warn(`Skipping invalid message object (missing messageType):`, msg);
                 return false;
             }
             // Ensure message has text or is a known type that doesn't require text
             if (!msg.text && !['image', 'payment-completed'].includes(msg.messageType)) {
                 if (!['sellerAccept', 'buyerAccept', 'end-bargain', 'offer', 'counter-offer'].includes(msg.messageType)) {
+                    // Filter out messages that don't have text and aren't known special types
+                    console.warn(`Skipping message (no text, unknown type):`, msg);
                     return false;
                 }
             }
             // Validate JSON in text field if applicable
             if (typeof msg.text === 'string' && msg.text.startsWith('{') && ['offer', 'counter-offer', 'buyerAccept', 'sellerAccept', 'end-bargain', 'text'].includes(msg.messageType)) {
                 try {
-                    JSON.parse(msg.text);
+                    JSON.parse(msg.text); // Just try parsing, don't reassign unless needed
                 } catch (e) {
-                    console.warn(`Message with ID ${msg._id} has malformed JSON in text field.`);
-                    // Decide if you want to skip such messages or treat them as plain text
+                    console.warn(`Message with ID ${msg._id} has malformed JSON in text field. Treating as plain text.`, msg.text);
+                    // You might want to modify msg.text here to be just plain text if it's malformed JSON.
+                    // For now, it will be handled by displayMessage's fallback.
                 }
             }
             return true;
         });
 
+        // Check if the specific initial product message exists in history
         const initialMessageExists = validMessages.some(msg => {
             if (msg.senderId === userId && msg.messageType === 'text' && typeof msg.text === 'string' && msg.text.startsWith('{')) {
                 try {
                     const parsed = JSON.parse(msg.text);
+                    // Compare with the product image and predefined message from URL params
                     return parsed.image === productImage && parsed.text === predefinedMessage;
                 } catch (e) {
                     return false;
@@ -626,29 +650,29 @@ async function loadChatHistory() {
             localStorage.setItem(`initialMessageSent_${productId}_${receiverId}`, 'true');
         }
 
-        renderProductPreview();
+        renderProductPreview(); // Render preview based on updated isInitialMessageSent
 
-        lastDisplayedDate = null;
-        // Clear displayedMessages set before displaying history to prevent issues
-        displayedMessages.clear();
+        lastDisplayedDate = null; // Reset date for fresh rendering
+        displayedMessages.clear(); // Clear set before displaying history to prevent duplicates
         validMessages.forEach(displayMessage);
         localStorage.setItem(`chat_${userId}_${receiverId}`, JSON.stringify(validMessages));
 
-        chatMessages.scrollTop = chatMessages.scrollHeight;
+        chatMessages.scrollTop = chatMessages.scrollHeight; // Scroll to bottom
 
     } catch (error) {
         console.error('Error loading chat history:', error);
         showToast(`Failed to load messages: ${error.message}`, 'error');
         // Fallback to showing messages from localStorage if API fails
         const storedMessages = JSON.parse(localStorage.getItem(`chat_${userId}_${receiverId}`) || '[]');
-        // Clear displayedMessages set before displaying history to prevent issues
-        displayedMessages.clear();
+        lastDisplayedDate = null; // Reset date
+        displayedMessages.clear(); // Clear set
         storedMessages.forEach(displayMessage);
         renderProductPreview();
         chatMessages.scrollTop = chatMessages.scrollHeight;
     }
 }
 
+// Initial load of chat history when the page loads
 loadChatHistory();
 
 // Send typing signal
@@ -678,13 +702,14 @@ socket.on('markSeenError', ({ error }) => {
     showToast(`Error marking message as seen: ${error}`, 'error');
 });
 
+// Handle messagesSeen event to update checkmarks
 socket.on('messagesSeen', ({ messageIds }) => {
-    const messages = document.querySelectorAll('.message.sent .message-timestamp');
-    messages.forEach((timestamp) => {
-        const messageDiv = timestamp.closest('.message');
-        if (messageDiv && messageIds.includes(messageDiv.dataset.messageId)) {
-            if (!timestamp.textContent.includes('✔✔')) {
-                timestamp.textContent += ' ✔✔';
+    const messages = document.querySelectorAll('.message.sent[data-message-id]'); // Select only sent messages with an ID
+    messages.forEach((messageDiv) => {
+        if (messageIds.includes(messageDiv.dataset.messageId)) {
+            const timestamp = messageDiv.querySelector('.message-timestamp');
+            if (timestamp && !timestamp.textContent.includes('✔✔')) {
+                timestamp.textContent = timestamp.textContent.replace(/ ✔$/, '') + ' ✔✔'; // Ensure double check
             }
         }
     });
@@ -701,7 +726,7 @@ socket.on('connect', () => {
 
 socket.on('disconnect', () => {
     console.log('Disconnected from server');
-    // Handle disconnection (e.g., show a "reconnecting" message)
+    // Handle disconnection (e.g., show a "reconnecting" message or UI indicator)
 });
 
 socket.on('connect_error', (error) => {
@@ -709,7 +734,7 @@ socket.on('connect_error', (error) => {
     showToast(`Connection error: ${error.message}`, 'error');
 });
 
-// Format message date
+// Format message date (e.g., Today, Yesterday, or date)
 function formatMessageDate(date) {
     const today = new Date();
     const messageDate = new Date(date);
@@ -724,44 +749,45 @@ function formatMessageDate(date) {
     return messageDate.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
-// Toggle chat dropdown
+// Toggle chat dropdown (ellipsis menu)
 ellipsisBtn.addEventListener('click', () => {
     chatDropdown.style.display = chatDropdown.style.display === 'block' ? 'none' : 'block';
 });
 
+// Close dropdown if clicked outside
 window.addEventListener('click', function (e) {
     if (!ellipsisBtn.contains(e.target) && !chatDropdown.contains(e.target)) {
         chatDropdown.style.display = 'none';
     }
 });
 
-// Show toast notifications
+// Show toast notifications (reusable UI component)
 function showToast(message, type = 'success') {
     const toast = document.getElementById('toast');
     if (toast.timeoutId) {
         clearTimeout(toast.timeoutId);
     }
     toast.textContent = message;
-    toast.className = 'toast-message';
+    toast.className = 'toast-message'; // Reset classes
     if (type === 'error') {
         toast.classList.add('error');
     } else if (type === 'warning') {
         toast.classList.add('warning');
-    } else if (type === 'info') { // Add info type
+    } else if (type === 'info') {
         toast.classList.add('info');
     }
     toast.style.display = 'block';
     toast.style.opacity = '1';
     toast.timeoutId = setTimeout(() => {
-        toast.classList.add('fade-out');
+        toast.classList.add('fade-out'); // Start fade-out animation
         setTimeout(() => {
             toast.style.display = 'none';
-            toast.classList.remove('fade-out');
-        }, 500);
+            toast.classList.remove('fade-out'); // Remove fade-out class after animation
+        }, 500); // Match CSS animation duration
     }, 3000);
 }
 
-// Report a user
+// Report a user function
 function reportUser() {
     const modal = document.getElementById('reportConfirmationModal');
     if (!modal) {
@@ -769,9 +795,9 @@ function reportUser() {
         showToast('Report functionality not fully set up.', 'error');
         return;
     }
-    modal.style.display = 'flex';
+    modal.style.display = 'flex'; // Show modal
 
-    document.getElementById('reportReason').value = '';
+    document.getElementById('reportReason').value = ''; // Clear previous reason
 
     document.getElementById('confirmReportBtn').onclick = () => {
         const reason = document.getElementById('reportReason').value.trim();
@@ -797,25 +823,25 @@ function reportUser() {
             .then(data => {
                 if (data.success) {
                     showToast('User reported successfully. Our team will review the report.');
-                    document.getElementById('chat-dropdown').style.display = 'none';
+                    document.getElementById('chat-dropdown').style.display = 'none'; // Hide dropdown
                 } else {
                     showToast(data.message || 'Failed to report user. Please try again.', 'error');
                 }
-                modal.style.display = 'none';
+                modal.style.display = 'none'; // Hide modal
             })
             .catch(error => {
                 console.error('Error reporting user:', error);
                 showToast('An error occurred while reporting the user.', 'error');
-                modal.style.display = 'none';
+                modal.style.display = 'none'; // Hide modal
             });
     };
 
     document.getElementById('cancelReportBtn').onclick = () => {
-        modal.style.display = 'none';
+        modal.style.display = 'none'; // Hide modal
     };
 }
 
-// Block a user
+// Block a user function
 function blockUser() {
     const modal = document.getElementById('blockConfirmationModal');
     if (!modal) {
@@ -826,7 +852,7 @@ function blockUser() {
 
     document.getElementById('blockConfirmationText').textContent =
         `Are you sure you want to block ${recipientUsername}? You won't be able to message each other.`;
-    modal.style.display = 'flex';
+    modal.style.display = 'flex'; // Show modal
 
     document.getElementById('confirmBlockBtn').onclick = () => {
         showToast('Blocking user...', 'warning');
@@ -845,25 +871,26 @@ function blockUser() {
             .then(data => {
                 if (data.success) {
                     showToast('User blocked successfully.');
-                    document.getElementById('chat-dropdown').style.display = 'none';
-                    window.location.href = 'Chats.html';
+                    document.getElementById('chat-dropdown').style.display = 'none'; // Hide dropdown
+                    window.location.href = 'Chats.html'; // Redirect or update UI after blocking
                 } else {
                     showToast(data.message || 'Failed to block user. Please try again.', 'error');
                 }
-                modal.style.display = 'none';
+                modal.style.display = 'none'; // Hide modal
             })
             .catch(error => {
                 console.error('Error blocking user:', error);
                 showToast('An error occurred while blocking the user.', 'error');
-                modal.style.display = 'none';
+                modal.style.display = 'none'; // Hide modal
             });
     };
 
     document.getElementById('cancelBlockBtn').onclick = () => {
-        modal.style.display = 'none';
+        modal.style.display = 'none'; // Hide modal
     };
 }
 
+// Event listener for clicking images within chat messages to enlarge them
 document.getElementById('chat-messages').addEventListener('click', (e) => {
   if (e.target.classList.contains('receipt-image') || e.target.classList.contains('product-photo-preview')) {
     const image = e.target;
@@ -886,16 +913,17 @@ document.getElementById('chat-messages').addEventListener('click', (e) => {
     img.style.borderRadius = '10px';
 
     img.addEventListener('click', (event) => {
-      event.stopPropagation();
+      event.stopPropagation(); // Prevent modal from closing when clicking the image inside
     });
 
     modal.appendChild(img);
     document.body.appendChild(modal);
 
     modal.addEventListener('click', () => {
-      document.body.removeChild(modal);
+      document.body.removeChild(modal); // Close modal when clicking outside the image
     });
   }
 });
+
 // Add typing indicator trigger
 typeSection.addEventListener('input', sendTypingSignal);

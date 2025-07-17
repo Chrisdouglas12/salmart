@@ -2677,3 +2677,14 @@
 {"level":"info","message":"Sending FCM notification to user 6846e9cc91c8d81ee744f910 for message 6879834ac504528caa38565c","timestamp":"2025-07-17T23:12:10.415Z"}
 {"level":"info","message":"FCM notification sent to user 6846e9cc91c8d81ee744f910","timestamp":"2025-07-17T23:12:11.615Z"}
 {"level":"info","message":"Triggering badge update for user 6846e9cc91c8d81ee744f910","timestamp":"2025-07-17T23:12:11.617Z"}
+{"level":"warn","message":"Missing senderId or receiverId in /messages","timestamp":"2025-07-17T23:26:38.989Z"}
+{"level":"info","message":"Fetched 11 latest messages for user 6843d062f457581752641ee3","timestamp":"2025-07-17T23:26:41.669Z"}
+{"level":"info","message":"Fetched 11 latest messages for user 6843d062f457581752641ee3","timestamp":"2025-07-17T23:26:43.392Z"}
+{"level":"info","message":"Fetched 6 messages between 6843d062f457581752641ee3 and 6878bbbf619a967094730b93","timestamp":"2025-07-17T23:26:46.775Z"}
+{"level":"info","message":"Message sent from 6843d062f457581752641ee3 to 6878bbbf619a967094730b93: 687986be656811bad53cf1e9","timestamp":"2025-07-17T23:26:54.576Z"}
+{"level":"info","message":"Emitting newMessage to user 6843d062f457581752641ee3 (sender): {\"_id\":\"687986be656811bad53cf1e9\",\"senderId\":\"6843d062f457581752641ee3\",\"receiverId\":\"6878bbbf619a967094730b93\",\"text\":\"Hell lo\",\"messageType\":\"text\",\"offerDetails\":null,\"attachment\":null,\"chatPartnerName\":\"Danjuma Sunday\",\"status\":\"sent\",\"createdAt\":\"2025-07-17T23:26:54.221Z\",\"tempId\":\"temp_1752794813661\"}","timestamp":"2025-07-17T23:26:54.596Z"}
+{"level":"info","message":"Emitting newMessage to user 6878bbbf619a967094730b93 (receiver): {\"_id\":\"687986be656811bad53cf1e9\",\"senderId\":\"6843d062f457581752641ee3\",\"receiverId\":\"6878bbbf619a967094730b93\",\"text\":\"Hell lo\",\"messageType\":\"text\",\"offerDetails\":null,\"attachment\":null,\"chatPartnerName\":\"Debbie James\",\"status\":\"sent\",\"createdAt\":\"2025-07-17T23:26:54.221Z\"}","timestamp":"2025-07-17T23:26:54.604Z"}
+{"level":"info","message":"Sending FCM notification to user 6878bbbf619a967094730b93 for message 687986be656811bad53cf1e9","timestamp":"2025-07-17T23:26:54.613Z"}
+{"level":"info","message":"FCM notification sent to user 6878bbbf619a967094730b93","timestamp":"2025-07-17T23:26:56.752Z"}
+{"level":"info","message":"Triggering badge update for user 6878bbbf619a967094730b93","timestamp":"2025-07-17T23:26:56.755Z"}
+{"level":"info","message":"Fetched 11 latest messages for user 6843d062f457581752641ee3","timestamp":"2025-07-17T23:27:16.117Z"}
