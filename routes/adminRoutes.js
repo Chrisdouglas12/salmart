@@ -715,26 +715,32 @@ router.post('/admin/platform-wallet/withdraw', verifyToken, async (req, res) => 
         return res.status(500).json({ error: 'Platform account details are not set' });
       }
 
-const recipientRes = await axios.post('https://api.paystack.co/transferrecipient', {
-  type: 'nuban',
-  name: platformAccountName,
-  account_number: platformAccountNumber,
-  bank_code: platformBankCode,
-  currency: 'NGN'
-}, {
-  headers: {
-    Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`
+
+
+      const recipientRes = await axios.post(
+  'https://api.paystack.co/transferrecipient',
+  {
+    type: 'nuban',
+    name: platformAccountName,
+    account_number: platformAccountNumber,
+    bank_code: platformBankCode,  
+    currency: 'NGN'
+  },
+  {
+    headers: { Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}` }
   }
-});
+);
 
-      recipientCode = recipientRes.data.recipient_code;
-      console.log('✅ Created new platform recipient code:', recipientCode);
+recipientCode = recipientRes.data.data.recipient_code;
+console.log('✅ Created new platform recipient code:', recipientCode);
 
-      // Optionally: update environment variable or store in DB
-      // NOTE: you cannot update .env file at runtime directly unless using a config store
-      platformWallet.recipientCode = recipientCode;
-      await platformWallet.save();
-    }
+if (!recipientCode) {
+  return res.status(500).json({ error: 'Paystack did not return a recipient_code' });
+}
+
+// store for later use
+platformWallet.recipientCode = recipientCode;
+await platformWallet.save();
 
     // Initiate transfer
     const transfer = await axios.post('https://api.paystack.co/transfer', {
