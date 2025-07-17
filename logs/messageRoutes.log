@@ -2609,3 +2609,21 @@
 {"level":"warn","message":"Missing senderId or receiverId in /messages","timestamp":"2025-07-17T21:27:17.482Z"}
 {"level":"info","message":"Fetched 10 latest messages for user 6843d062f457581752641ee3","timestamp":"2025-07-17T21:27:26.909Z"}
 {"level":"info","message":"Fetched 25 messages between 6843d062f457581752641ee3 and 6843f54a956396ecb52e3ec0","timestamp":"2025-07-17T21:27:28.629Z"}
+{"level":"warn","message":"Missing senderId or receiverId in /messages","timestamp":"2025-07-17T22:03:25.055Z"}
+{"level":"info","message":"Fetched 10 latest messages for user 6843d062f457581752641ee3","timestamp":"2025-07-17T22:03:27.129Z"}
+{"level":"info","message":"Fetched 10 latest messages for user 6843d062f457581752641ee3","timestamp":"2025-07-17T22:03:30.975Z"}
+{"level":"info","message":"Fetched 0 messages between 6843d062f457581752641ee3 and 6878bbbf619a967094730b93","timestamp":"2025-07-17T22:03:37.010Z"}
+{"level":"info","message":"Message sent from 6843d062f457581752641ee3 to 6878bbbf619a967094730b93: 6879733b9067162e956944b2","timestamp":"2025-07-17T22:03:39.797Z"}
+{"level":"info","message":"Emitting newMessage to user 6843d062f457581752641ee3 (sender): {\"_id\":\"6879733b9067162e956944b2\",\"senderId\":\"6843d062f457581752641ee3\",\"receiverId\":\"6878bbbf619a967094730b93\",\"text\":\"{\\\"text\\\":\\\"Is this item still available?Product: LG fridge\\\",\\\"image\\\":\\\"https://res.cloudinary.com/dp7shydjh/image/upload/v1752761926/Uploads/gdihh9zpke2pwmaygrdc.jpg\\\"}\",\"messageType\":\"text\",\"offerDetails\":null,\"attachment\":null,\"chatPartnerName\":\"Danjuma Sunday\",\"status\":\"sent\",\"createdAt\":\"2025-07-17T22:03:39.480Z\",\"tempId\":\"temp_1752789818724\"}","timestamp":"2025-07-17T22:03:39.805Z"}
+{"level":"info","message":"Emitting newMessage to user 6878bbbf619a967094730b93 (receiver): {\"_id\":\"6879733b9067162e956944b2\",\"senderId\":\"6843d062f457581752641ee3\",\"receiverId\":\"6878bbbf619a967094730b93\",\"text\":\"{\\\"text\\\":\\\"Is this item still available?Product: LG fridge\\\",\\\"image\\\":\\\"https://res.cloudinary.com/dp7shydjh/image/upload/v1752761926/Uploads/gdihh9zpke2pwmaygrdc.jpg\\\"}\",\"messageType\":\"text\",\"offerDetails\":null,\"attachment\":null,\"chatPartnerName\":\"Debbie James\",\"status\":\"sent\",\"createdAt\":\"2025-07-17T22:03:39.480Z\"}","timestamp":"2025-07-17T22:03:39.810Z"}
+{"level":"info","message":"Sending FCM notification to user 6878bbbf619a967094730b93 for message 6879733b9067162e956944b2","timestamp":"2025-07-17T22:03:39.815Z"}
+{"level":"info","message":"FCM notification sent to user 6878bbbf619a967094730b93","timestamp":"2025-07-17T22:03:42.076Z"}
+{"level":"info","message":"Triggering badge update for user 6878bbbf619a967094730b93","timestamp":"2025-07-17T22:03:42.077Z"}
+{"level":"info","message":"Fetched 2 messages between 6843d062f457581752641ee3 and 6878bbbf619a967094730b93","timestamp":"2025-07-17T22:04:15.490Z"}
+{"level":"info","message":"Fetched 11 latest messages for user 6843d062f457581752641ee3","timestamp":"2025-07-17T22:05:10.652Z"}
+{"level":"warn","message":"Missing senderId or receiverId in /messages","timestamp":"2025-07-17T22:05:11.516Z"}
+{"level":"info","message":"Fetched 11 latest messages for user 6843d062f457581752641ee3","timestamp":"2025-07-17T22:05:36.841Z"}
+{"level":"info","message":"Fetched 11 latest messages for user 6843d062f457581752641ee3","timestamp":"2025-07-17T22:05:39.815Z"}
+{"level":"info","message":"Fetched 11 latest messages for user 6843d062f457581752641ee3","timestamp":"2025-07-17T22:05:51.638Z"}
+{"level":"info","message":"Fetched 11 latest messages for user 6843d062f457581752641ee3","timestamp":"2025-07-17T22:17:18.190Z"}
+{"level":"info","message":"Fetched 11 latest messages for user 6843d062f457581752641ee3","timestamp":"2025-07-17T22:17:18.977Z"}

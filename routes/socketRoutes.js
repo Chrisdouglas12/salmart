@@ -4,7 +4,7 @@ const Notification = require('../models/notificationSchema.js');
 const Post = require('../models/postSchema.js');
 const Message = require('../models/messageSchema.js');
 const NotificationService = require('../services/notificationService.js');
-const { sendFCMNotification } = require('../services/notificationUtils.js'); // Assuming sendFCMNotification is adapted to handle collapseKey
+const { sendFCMNotification } = require('../services/notificationUtils.js');
 const winston = require('winston');
 
 const logger = winston.createLogger({
@@ -19,13 +19,9 @@ const logger = winston.createLogger({
   ]
 });
 
-// A simple in-memory map to store recent interactions for aggregation.
-// In a production environment with multiple server instances, this would need a distributed cache (e.g., Redis).
-const recentInteractions = new Map(); // Map<postId, {likes: Set<userId>, comments: Set<userId>, lastProcessed: Date}>
+const recentInteractions = new Map();
 
-// Function to generate the aggregated message
 async function getAggregatedMessage(postId, type, currentSenderId, ownerId) {
-  // Fetch the latest state of the post's likes/comments for accurate count and names
   const post = await Post.findById(postId).select('likes comments');
   if (!post) return null;
 
@@ -38,32 +34,24 @@ async function getAggregatedMessage(postId, type, currentSenderId, ownerId) {
     actionVerb = 'liked';
     notificationType = 'like';
   } else if (type === 'comment') {
-    // For comments, we'd typically need to store who commented.
-    // Assuming 'comments' field on Post also stores `senderId` or `createdBy.userId`
-    // For simplicity, let's just count total comments and use a generic message or fetch last few distinct commenters.
-    // If post.comments only contains comment text, you'd need a separate Comment model to get sender IDs.
-    // For now, let's assume post.comments can give us distinct sender IDs.
     const distinctCommenterIds = Array.from(new Set(post.comments.map(c => c.createdBy?.userId ? c.createdBy.userId.toString() : null))).filter(Boolean);
     userIds = distinctCommenterIds.map(id => new mongoose.Types.ObjectId(id));
     actionVerb = 'commented on';
     notificationType = 'comment';
   }
 
-  // Filter out the post owner from the list
   const interactionUsers = userIds.filter(id => id.toString() !== ownerId.toString());
 
   if (interactionUsers.length === 0) {
-    return null; // No one else interacted
+    return null;
   }
 
-  // Get the sender's name (the one who just performed the action)
   const currentSender = await User.findById(currentSenderId).select('firstName');
   const currentSenderName = currentSender ? currentSender.firstName : 'Someone';
 
   let message = '';
-  let firstSenderName = currentSenderName; // Default to the current sender
+  let firstSenderName = currentSenderName;
 
-  // Find other recent interactors if available
   const otherInteractors = interactionUsers.filter(id => id.toString() !== currentSenderId.toString());
 
   if (otherInteractors.length > 0) {
@@ -76,10 +64,7 @@ async function getAggregatedMessage(postId, type, currentSenderId, ownerId) {
   if (totalInteractions === 1) {
     message = `${firstSenderName} ${actionVerb} your ad.`;
   } else {
-    // Try to find the name of the most recent user, which might be the `currentSenderName`
-    // unless `firstSenderName` was updated to be someone else from `otherInteractors`.
     const displaySender = currentSenderName;
-
     const remainingCount = totalInteractions - 1;
     if (remainingCount > 0) {
       message = `${displaySender} and ${remainingCount} others ${actionVerb} your ad.`;
@@ -162,7 +147,7 @@ const initializeSocket = (io) => {
           io,
           null,
           follower.profilePicture,
-          `follow_${followerId}_${followedId}` // collapseKey to group follow notifications (though usually less frequent)
+          `follow_${followerId}_${followedId}`
         );
         logger.info(`FCM notification sent for follow event from ${followerId} to ${followedId}`);
         await NotificationService.triggerCountUpdate(followedId, io);
@@ -191,21 +176,16 @@ const initializeSocket = (io) => {
           return;
         }
 
-        // Only create/send notification if the liker is not the post owner
         if (postOwnerId.toString() !== userId.toString()) {
-          // --- Aggregation Logic for Likes ---
           const { message: aggregatedMessage, notificationType } = await getAggregatedMessage(postId, 'like', userId, postOwnerId);
 
           if (aggregatedMessage) {
-            // Update or create notification in DB (you might want to handle this more granularly
-            // if you need a history of every single like vs. aggregated display).
-            // For now, we'll create a new notification entry, but the FCM will be aggregated.
             const notification = new Notification({
               userId: postOwnerId,
               type: 'like',
-              senderId: userId, // Still store the specific sender for DB history if needed
+              senderId: userId,
               postId,
-              message: aggregatedMessage, // Store the aggregated message
+              message: aggregatedMessage,
               createdAt: new Date(),
             });
             await notification.save();
@@ -216,19 +196,19 @@ const initializeSocket = (io) => {
               postId,
               userId,
               sender: { firstName: sender.firstName, lastName: sender.lastName, profilePicture: sender.profilePicture },
-              message: aggregatedMessage, // Send aggregated message via socket
+              message: aggregatedMessage,
               createdAt: new Date(),
             });
 
             await sendFCMNotification(
               postOwnerId.toString(),
               'New Like',
-              aggregatedMessage, // Use the aggregated message for FCM
+              aggregatedMessage,
               { type: 'like', postId: postId.toString() },
               io,
               null,
-              sender.profilePicture, // Still use the direct sender's picture or a generic one
-              `post_like_${postId.toString()}` // collapseKey for likes on this specific post
+              sender.profilePicture,
+              `post_like_${postId.toString()}`
             );
             logger.info(`FCM notification sent for like event on post ${postId} by user ${userId} (aggregated)`);
             await NotificationService.triggerCountUpdate(postOwnerId, io);
@@ -259,19 +239,16 @@ const initializeSocket = (io) => {
           return;
         }
 
-        // Only create/send notification if the commenter is not the post owner
         if (postOwnerId.toString() !== userId.toString()) {
-          // --- Aggregation Logic for Comments ---
           const { message: aggregatedMessage, notificationType } = await getAggregatedMessage(postId, 'comment', userId, postOwnerId);
 
           if (aggregatedMessage) {
-            // Store the specific comment in DB if needed, but the notification will be aggregated
             const notification = new Notification({
               userId: postOwnerId,
               type: 'comment',
               senderId: userId,
               postId,
-              message: aggregatedMessage, // Store the aggregated message
+              message: aggregatedMessage,
               createdAt: new Date(),
             });
             await notification.save();
@@ -281,21 +258,21 @@ const initializeSocket = (io) => {
               type: notificationType,
               postId,
               userId,
-              comment, // Still send the specific comment via socket for real-time display
+              comment,
               sender: { firstName: sender.firstName, lastName: sender.lastName, profilePicture: sender.profilePicture },
-              message: aggregatedMessage, // Send aggregated message via socket
+              message: aggregatedMessage,
               createdAt: new Date(),
             });
 
             await sendFCMNotification(
               postOwnerId.toString(),
               'New Comment',
-              aggregatedMessage, // Use the aggregated message for FCM
+              aggregatedMessage,
               { type: 'comment', postId: postId.toString() },
               io,
               null,
-              sender.profilePicture, // Still use the direct sender's picture or a generic one
-              `post_comment_${postId.toString()}` // collapseKey for comments on this specific post
+              sender.profilePicture,
+              `post_comment_${postId.toString()}`
             );
             logger.info(`FCM notification sent for comment event on post ${postId} by user ${userId} (aggregated)`);
             await NotificationService.triggerCountUpdate(postOwnerId, io);
@@ -307,11 +284,12 @@ const initializeSocket = (io) => {
       }
     });
 
+    // THIS IS THE PRIMARY MESSAGE SENDING AND BROADCASTING LOGIC
     socket.on('sendMessage', async (message) => {
       try {
         logger.info(`Received sendMessage event: ${JSON.stringify(message)}`);
         // Extract tempId here along with other message properties
-        const { senderId, receiverId, text, messageType, offerDetails, attachment, tempId } = message; // <-- ADDED tempId here
+        const { senderId, receiverId, text, messageType, offerDetails, attachment, tempId } = message; // <--- tempId is correctly extracted
         if (!senderId || !receiverId) {
           logger.warn(`Missing senderId or receiverId: senderId=${senderId}, receiverId=${receiverId}`);
           throw new Error('Missing senderId or receiverId');
@@ -378,7 +356,7 @@ const initializeSocket = (io) => {
         });
         let savedMessage;
         try {
-          savedMessage = await newMessage.save();
+          savedMessage = await newMessage.save(); // <--- Message is saved to DB here
           logger.info(`Successfully saved message from ${senderId} to ${receiverId}: ${savedMessage._id}`);
         } catch (saveError) {
           logger.error(`Failed to save message from ${senderId} to ${receiverId}: ${saveError.message}`);
@@ -386,14 +364,16 @@ const initializeSocket = (io) => {
         }
 
         // Prepare message object to emit to sender
+        // This includes the tempId for the optimistic UI update
         const messageForSender = {
           ...savedMessage.toObject(),
           chatPartnerName: `${receiver.firstName} ${receiver.lastName}`,
           chatPartnerProfilePicture: receiver.profilePicture || 'Default.png',
-          tempId: tempId, // <-- CRUCIAL: Pass the tempId back to the sender
+          tempId: tempId, // <--- CRUCIAL: Pass the tempId back to the sender
         };
 
-        // Prepare message object to emit to receiver (no tempId needed for receiver)
+        // Prepare message object to emit to receiver
+        // No tempId is needed for the receiver as they didn't optimistically send it
         const messageForReceiver = {
           ...savedMessage.toObject(),
           chatPartnerName: `${sender.firstName} ${sender.lastName}`,
@@ -401,14 +381,13 @@ const initializeSocket = (io) => {
         };
 
         // Emit to sender
-        io.to(`user_${senderId}`).emit('newMessage', messageForSender);
+        io.to(`user_${senderId}`).emit('newMessage', messageForSender); // <--- Emitting 'newMessage'
         logger.info(`Emitted newMessage to sender ${senderId} with tempId: ${tempId}`);
 
         // Emit to receiver
-        io.to(`user_${receiverId}`).emit('newMessage', messageForReceiver);
+        io.to(`user_${receiverId}`).emit('newMessage', messageForReceiver); // <--- Emitting 'newMessage'
         logger.info(`Emitted newMessage to receiver ${receiverId}`);
 
-        // Emit newMessageNotification for the receiver
         io.to(`user_${receiverId}`).emit('newMessageNotification', {
           senderId,
           senderName: `${sender.firstName} ${sender.lastName}`,
@@ -433,16 +412,17 @@ const initializeSocket = (io) => {
             io,
             productImageUrl,
             senderProfilePictureUrl,
-            `message_${senderId.toString()}_${receiverId.toString()}` // collapseKey for messages in this chat
+            `message_${senderId.toString()}_${receiverId.toString()}`
           );
           logger.info(`FCM notification attempt completed for user ${receiverId}`);
         }
         await NotificationService.triggerCountUpdate(receiverId, io);
         logger.info(`Message sent and processed from ${senderId} to ${receiverId}`);
-        io.to(`user_${receiverId}`).emit('messageSynced', {
-          ...messageForReceiver,
-          syncedAt: new Date(),
-        });
+        // Consider if 'messageSynced' is still needed, 'newMessage' typically confirms delivery
+        // io.to(`user_${receiverId}`).emit('messageSynced', {
+        //   ...messageForReceiver,
+        //   syncedAt: new Date(),
+        // });
       } catch (error) {
         logger.error(`Error sending message from ${message.senderId} to ${message.receiverId}: ${error.message}`);
         socket.emit('messageError', { error: error.message });
@@ -517,8 +497,9 @@ const initializeSocket = (io) => {
         });
         await sellerMessage.save();
         logger.info(`Created seller system message ${sellerMessage._id} for offer ${offerId}`);
-        io.to(`user_${originalOffer.senderId}`).emit('receiveMessage', buyerMessage);
-        io.to(`user_${acceptorId}`).emit('receiveMessage', sellerMessage);
+        // NOTE: Changed to 'newMessage' for consistency with client listener
+        io.to(`user_${originalOffer.senderId}`).emit('newMessage', buyerMessage);
+        io.to(`user_${acceptorId}`).emit('newMessage', sellerMessage);
         await Post.findByIdAndUpdate(
           originalOffer.offerDetails.productId,
           { price: originalOffer.offerDetails.proposedPrice }
@@ -530,8 +511,8 @@ const initializeSocket = (io) => {
           { type: 'accept-offer', offerId: offerId.toString() },
           io,
           originalOffer.offerDetails.image || null,
-          null, // No specific sender profile picture for system message
-          `offer_accepted_${originalOffer.offerDetails.productId.toString()}` // collapseKey for offer acceptance on this product
+          null,
+          `offer_accepted_${originalOffer.offerDetails.productId.toString()}`
         );
         logger.info(`FCM notification sent for offer ${offerId} accepted by ${acceptorId}`);
         await NotificationService.triggerCountUpdate(originalOffer.senderId, io);

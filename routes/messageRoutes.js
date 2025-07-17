@@ -21,7 +21,7 @@ const logger = winston.createLogger({
   ]
 });
 
-module.exports = (io) => {
+module.exports = (io) => { // 'io' is passed in but won't be used for new message emission in POST /send
   // Get messages between two users
   router.get('/messages', verifyToken, async (req, res) => {
     const senderId = req.query.user1;
@@ -179,14 +179,14 @@ module.exports = (io) => {
     }
   });
 
-  // Send a new message
+  // Send a new message via HTTP. This endpoint PRIMARILY saves the message.
+  // Real-time broadcasting is handled by the Socket.IO 'sendMessage' event.
   router.post('/send', verifyToken, async (req, res) => {
-    let senderId; // Declared outside try-catch to ensure scope
-    let receiverId; // Declared outside try-catch to ensure scope
+    let senderId;
+    let receiverId;
     try {
-      // Extract tempId from req.body
-      const { receiverId: reqReceiverId, text, messageType = 'text', offerDetails, attachment, tempId } = req.body; // <-- ADDED tempId here, renamed receiverId to avoid conflict
-      receiverId = reqReceiverId; // Assign to outer scope variable
+      const { receiverId: reqReceiverId, text, messageType = 'text', offerDetails, attachment, tempId } = req.body;
+      receiverId = reqReceiverId;
       senderId = req.user.userId;
 
       if (!receiverId || !text) {
@@ -223,47 +223,14 @@ module.exports = (io) => {
       });
       await message.save();
 
-      logger.info(`Message sent from ${senderId} to ${receiverId}: ${message._id}`);
+      logger.info(`Message saved to DB from ${senderId} to ${receiverId}: ${message._id}`);
 
-      // Emit Socket.IO message events
-      // messageData for the sender needs the tempId to update the optimistic message
-      const messageDataForSender = {
-        _id: message._id,
-        senderId,
-        receiverId,
-        text,
-        messageType,
-        offerDetails: message.offerDetails,
-        attachment: message.attachment,
-        chatPartnerName: `${receiver.firstName} ${receiver.lastName}`, // Partner for sender is receiver
-        status: message.status,
-        createdAt: message.createdAt,
-        tempId: tempId, // <-- CRUCIAL: Pass the tempId back to the sender
-      };
+      // --- CRITICAL CHANGE: REMOVED ALL io.emit() CALLS FROM HERE ---
+      // Real-time emission to both sender and receiver is now handled SOLELY by
+      // the `socket.on('sendMessage', ...)` handler in your `socket.js` file.
+      // The client makes a `socket.emit('sendMessage')` call directly for real-time.
 
-      // messageData for the receiver does NOT need the tempId
-      const messageDataForReceiver = {
-        _id: message._id,
-        senderId,
-        receiverId,
-        text,
-        messageType,
-        offerDetails: message.offerDetails,
-        attachment: message.attachment,
-        chatPartnerName: `${sender.firstName} ${sender.lastName}`, // Partner for receiver is sender
-        status: message.status,
-        createdAt: message.createdAt,
-      };
-
-      // Emit to sender's socket
-      logger.info(`Emitting newMessage to user ${senderId} (sender): ${JSON.stringify(messageDataForSender)}`);
-      io.to(`user_${senderId}`).emit('newMessage', messageDataForSender);
-
-      // Emit to receiver's socket
-      logger.info(`Emitting newMessage to user ${receiverId} (receiver): ${JSON.stringify(messageDataForReceiver)}`);
-      io.to(`user_${receiverId}`).emit('newMessage', messageDataForReceiver);
-
-      // Send FCM notification
+      // Send FCM notification (This is separate from real-time chat display, so keep it)
       logger.info(`Sending FCM notification to user ${receiverId} for message ${message._id}`);
       await sendFCMNotification(
         receiverId,
@@ -274,12 +241,14 @@ module.exports = (io) => {
       );
       logger.info(`FCM notification sent to user ${receiverId}`);
 
-      // Trigger badge update
+      // Trigger badge update (This is also separate from real-time chat display, so keep it)
       logger.info(`Triggering badge update for user ${receiverId}`);
       await NotificationService.triggerCountUpdate(io, receiverId);
 
-      // Respond to the client (optional, as Socket.IO handles real-time update)
-      res.status(201).json({ message: 'Message sent successfully', data: message });
+      // Respond to the client with the saved message details.
+      // This response confirms the HTTP request and could include the actual _id from DB
+      // The client's optimistic update and Socket.IO listener handles the real-time display.
+      res.status(201).json({ message: 'Message sent successfully', data: { ...message.toObject(), tempId } });
     } catch (error) {
       logger.error(`Failed to send message from ${senderId || 'unknown'} to ${receiverId || 'unknown'}: ${error.message}`);
       res.status(500).json({ error: 'Server error' });
