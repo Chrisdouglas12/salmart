@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Modern Product Card</title>
+    <title>Facebook-Style Sidebar</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -12,300 +14,251 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #f8f9fa;
-            padding: 20px;
+            font-family: 'Poppins', sans-serif;
+            background-color: #ffffff;
+            padding: 12px 8px;
+            min-height: 100vh;
+            overflow-x: hidden;
         }
 
-        .container {
-            max-width: 400px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 16px;
-            overflow: hidden;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        .sidebar-container {
+            width: 100%;
+            max-width: 320px;
         }
 
-        .header {
-            background: linear-gradient(135deg, #22c55e, #16a34a);
-            color: white;
-            padding: 16px 20px;
+        .sidebar-nav {
+            width: 100%;
+        }
+
+        .nav-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .nav-item {
+            margin-bottom: 2px;
+        }
+
+        .nav-link {
             display: flex;
             align-items: center;
-            gap: 12px;
+            padding: 10px 8px;
+            text-decoration: none;
+            color: #1c1e21;
+            border-radius: 8px;
+            transition: background-color 0.2s ease;
+            position: relative;
+            min-height: 48px;
         }
 
-        .seller-avatar {
-            width: 40px;
-            height: 40px;
-            background: rgba(255,255,255,0.2);
+        .nav-link:hover {
+            background-color: #f0f2f5;
+        }
+
+        .nav-link:active {
+            background-color: #e4e6ea;
+        }
+
+        .icon-container {
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: bold;
-            font-size: 16px;
-        }
-
-        .seller-info h3 {
-            font-size: 16px;
-            font-weight: 600;
-            margin-bottom: 2px;
-        }
-
-        .seller-info .time {
-            font-size: 12px;
-            opacity: 0.8;
-        }
-
-        .follow-btn {
-            margin-left: auto;
-            background: rgba(255,255,255,0.2);
-            border: none;
-            color: white;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 500;
-        }
-
-        .product-image {
-            height: 200px;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 200"><rect width="400" height="200" fill="%23f3f4f6"/><g transform="translate(50,50)"><circle cx="50" cy="50" r="40" fill="%236b7280" opacity="0.3"/><path d="M20 70 L30 50 L70 50 L80 70 Z" fill="%236b7280" opacity="0.5"/><text x="150" y="30" font-family="Arial" font-size="14" fill="%236b7280">Standing Fan</text><text x="150" y="50" font-family="Arial" font-size="12" fill="%239ca3af">Multiple fans available</text></g></svg>') center/cover;
+            margin-right: 12px;
+            flex-shrink: 0;
             position: relative;
         }
 
-        .badge {
-            position: absolute;
-            top: 12px;
-            left: 12px;
-            background: #22c55e;
+        .icon-container i {
+            font-size: 20px;
+            color: #28a745;
+        }
+
+        .nav-text {
+            font-size: 15px;
+            font-weight: 500;
+            color: #1c1e21;
+            line-height: 1.2;
+            flex: 1;
+        }
+
+        /* Specific icon styling for better Facebook-like appearance */
+        .nav-item:nth-child(1) .icon-container {
+            background-color: #e8f5e8;
+        }
+
+        .nav-item:nth-child(2) .icon-container {
+            background-color: #e8f5e8;
+        }
+
+        .nav-item:nth-child(3) .icon-container {
+            background-color: #e8f5e8;
+        }
+
+        .nav-item:nth-child(4) .icon-container {
+            background-color: #e8f5e8;
+        }
+
+        .nav-item:nth-child(5) .icon-container {
+            background-color: #e8f5e8;
+        }
+
+        .nav-item:nth-child(6) .icon-container {
+            background-color: #e8f5e8;
+        }
+
+        /* Hover effect for icons */
+        .nav-link:hover .icon-container {
+            transform: scale(1.05);
+            transition: transform 0.2s ease;
+        }
+
+        /* Active state */
+        .nav-link.active {
+            background-color: #e7f3ff;
+            color: #1877f2;
+        }
+
+        .nav-link.active .nav-text {
+            color: #1877f2;
+            font-weight: 600;
+        }
+
+        .nav-link.active .icon-container {
+            background-color: #1877f2;
+        }
+
+        .nav-link.active .icon-container i {
             color: white;
-            padding: 4px 8px;
-            border-radius: 12px;
+        }
+
+        /* Subtle border for separation */
+        .sidebar-container {
+            border-right: 1px solid #e4e6ea;
+        }
+
+        /* Notification badges (optional) */
+        .notification-badge {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            background-color: #ff4757;
+            color: white;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
             font-size: 10px;
             font-weight: 600;
-            text-transform: uppercase;
-        }
-
-        .content {
-            padding: 20px;
-        }
-
-        .product-title {
-            font-size: 20px;
-            font-weight: 700;
-            color: #111827;
-            margin-bottom: 16px;
-        }
-
-        .details-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-            margin-bottom: 20px;
-        }
-
-        .detail-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .detail-icon {
-            width: 20px;
-            height: 20px;
-            border-radius: 6px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 10px;
+            border: 2px solid white;
         }
 
-        .price-icon { background: #dcfce7; color: #16a34a; }
-        .location-icon { background: #fef3c7; color: #d97706; }
-        .condition-icon { background: #dbeafe; color: #2563eb; }
-        .category-icon { background: #f3e8ff; color: #7c3aed; }
-
-        .detail-text {
-            flex: 1;
+        /* Responsive adjustments for iframe */
+        @media (max-width: 280px) {
+            .nav-text {
+                font-size: 14px;
+            }
+            
+            .icon-container {
+                width: 32px;
+                height: 32px;
+            }
+            
+            .icon-container i {
+                font-size: 18px;
+            }
         }
 
-        .detail-label {
-            font-size: 11px;
-            color: #6b7280;
-            text-transform: uppercase;
-            font-weight: 500;
-            letter-spacing: 0.5px;
+        /* Smooth scrolling for overflow */
+        .sidebar-nav {
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #bdc3c7 transparent;
         }
 
-        .detail-value {
-            font-size: 14px;
-            font-weight: 600;
-            color: #111827;
-            margin-top: 1px;
+        .sidebar-nav::-webkit-scrollbar {
+            width: 6px;
         }
 
-        .price-value {
-            color: #dc2626;
-            font-size: 16px;
+        .sidebar-nav::-webkit-scrollbar-track {
+            background: transparent;
         }
 
-        .location-value {
-            color: #2563eb;
+        .sidebar-nav::-webkit-scrollbar-thumb {
+            background-color: #bdc3c7;
+            border-radius: 3px;
         }
 
-        .actions {
-            display: flex;
-            gap: 12px;
-            padding-top: 16px;
-            border-top: 1px solid #f3f4f6;
+        .sidebar-nav::-webkit-scrollbar-thumb:hover {
+            background-color: #95a5a6;
         }
-
-        .btn {
-            flex: 1;
-            padding: 12px;
-            border-radius: 10px;
-            font-weight: 600;
-            font-size: 14px;
-            border: none;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #22c55e, #16a34a);
-            color: white;
-        }
-
-        .btn-secondary {
-            background: #f9fafb;
-            color: #374151;
-            border: 1px solid #e5e7eb;
-        }
-
-        .btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        }
-
-        .comparison {
-            margin-top: 30px;
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 12px;
-        }
-
-        .comparison h4 {
-            color: #374151;
-            margin-bottom: 12px;
-            font-size: 14px;
-        }
-
-        .space-comparison {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-            text-align: center;
-        }
-
-        .space-item {
-            background: white;
-            padding: 12px;
-            border-radius: 8px;
-            border: 2px solid #e5e7eb;
-        }
-
-        .space-item.improved {
-            border-color: #22c55e;
-        }
-
-        .space-item h5 {
-            font-size: 12px;
-            color: #6b7280;
-            margin-bottom: 4px;
-        }
-
-        .space-item .value {
-            font-size: 16px;
-            font-weight: 700;
-        }
-
-        .old { color: #dc2626; }
-        .new { color: #16a34a; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <div class="seller-avatar">CF</div>
-            <div class="seller-info">
-                <h3>Christian Friday</h3>
-                <div class="time">1h</div>
-            </div>
-            <button class="follow-btn">Following</button>
-        </div>
-
-        <div class="product-image">
-            <div class="badge">New</div>
-        </div>
-
-        <div class="content">
-            <h2 class="product-title">Standing Fan</h2>
-            
-            <div class="details-grid">
-                <div class="detail-item">
-                    <div class="detail-icon price-icon">₦</div>
-                    <div class="detail-text">
-                        <div class="detail-label">Price</div>
-                        <div class="detail-value price-value">₦25,000</div>
-                    </div>
-                </div>
+    <div class="sidebar-container">
+        <nav class="sidebar-nav">
+            <ul class="nav-list">
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <div class="icon-container">
+                            <i class="fas fa-user-friends"></i>
+                        </div>
+                        <span class="nav-text">Friends</span>
+                    </a>
+                </li>
                 
-                <div class="detail-item">
-                    <div class="detail-icon location-icon">📍</div>
-                    <div class="detail-text">
-                        <div class="detail-label">Location</div>
-                        <div class="detail-value location-value">Masaka</div>
-                    </div>
-                </div>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <div class="icon-container">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <span class="nav-text">Groups</span>
+                    </a>
+                </li>
                 
-                <div class="detail-item">
-                    <div class="detail-icon condition-icon">✨</div>
-                    <div class="detail-text">
-                        <div class="detail-label">Condition</div>
-                        <div class="detail-value">New</div>
-                    </div>
-                </div>
+                <li class="nav-item">
+                    <a href="#" class="nav-link active">
+                        <div class="icon-container">
+                            <i class="fas fa-shopping-bag"></i>
+                        </div>
+                        <span class="nav-text">Marketplace</span>
+                    </a>
+                </li>
                 
-                <div class="detail-item">
-                    <div class="detail-icon category-icon">📦</div>
-                    <div class="detail-text">
-                        <div class="detail-label">Category</div>
-                        <div class="detail-value">Electronics</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="actions">
-                <button class="btn btn-secondary">Message</button>
-                <button class="btn btn-primary">View Details</button>
-            </div>
-        </div>
-    </div>
-
-    <div class="comparison">
-        <h4>Space Optimization Comparison</h4>
-        <div class="space-comparison">
-            <div class="space-item">
-                <h5>Original Design</h5>
-                <div class="value old">~600px</div>
-            </div>
-            <div class="space-item improved">
-                <h5>Improved Design</h5>
-                <div class="value new">~420px</div>
-            </div>
-        </div>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <div class="icon-container">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span class="notification-badge">3</span>
+                        </div>
+                        <span class="nav-text">Events</span>
+                    </a>
+                </li>
+                
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <div class="icon-container">
+                            <i class="fas fa-bookmark"></i>
+                        </div>
+                        <span class="nav-text">Saved</span>
+                    </a>
+                </li>
+                
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <div class="icon-container">
+                            <i class="fas fa-cog"></i>
+                        </div>
+                        <span class="nav-text">Settings</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
     </div>
 </body>
 </html>

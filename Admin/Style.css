@@ -754,7 +754,7 @@ h1 {
   overflow-x: auto;
 }
 
-@media only screen and (min-width: 768px) {
+@media (min-width: 768px) {
   .category-scroll-wrapper {
     max-width: 600px;
     margin: 0 auto;
@@ -763,10 +763,12 @@ h1 {
        max-width: 600px;
   }
   #posts-container {
-    max-width: calc(100% - 800px);
+    max-width: 600px;
+    min-width: 320px;
     margin: 0 calc(1200px / 2);
   }
 }
+
 .create-post-container {
   text-align: center;
   position: relative;
@@ -1984,7 +1986,7 @@ p {
   }
 
  .sidebar {
-  width: 380px;
+  width: 280px;
   height: calc(100vh - 80px);
   position: fixed;
   top: 80px; /* place it under header if needed */
@@ -2003,10 +2005,11 @@ p {
 /* Right sidebar */
 .sidebar.right {
   right: 0;
+  
 }
 
 .sidebar iframe {
-  width: 100%;
+  width: 90%;
   height: 100%;
   border: none;
 }
@@ -2025,18 +2028,5 @@ p {
     padding: 10px;
   }
 }
-@media (max-width: 1200px) {
-  .sidebar {
-    max-width: 380px;
-  }
-  #post-container{
-       max-width: 300px;
-  }
-}
 
 
-@media (min-width: 1000px) and (max-width: 1050px) {
-  #post-container {
-  
-  }
-}

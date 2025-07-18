@@ -123,7 +123,7 @@
 
     /* Notifications Wrapper */
     #notifications-wrapper {
-     
+
       margin-bottom: 60px;
       padding: 15px;
       max-width: 680px;
@@ -284,7 +284,7 @@
     /* Skeleton Loader */
     .skeleton-wrapper {
       display: flex;
-     
+
       align-items: center;
       background-color: white;
       border-radius: var(--border-radius);
@@ -309,7 +309,7 @@
 
     .skeleton-line {
       height: 12px;
-      
+
       border-radius: 4px;
       background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
       width: 200% 100%;
@@ -589,7 +589,7 @@ if (notification.type === 'like') {
 } else if (notification.type === 'new_post') {
   typeLabel = `<i class="fas fa-bolt" style="color:#28a745; margin-right:5px;"></i> New Post`;
 
-        
+
           // For non-aggregated types, use the sender's name and original message logic
           notificationText = `${notification.senderId.firstName} ${notification.senderId.lastName} paid for "${notification.payment}". Please release delivery address.`;
         } else if (notification.type === 'delivery') {
@@ -612,7 +612,7 @@ if (notification.type === 'like') {
           typeLabel = 'Promotion';
           notificationText = 'Your promotion has been approved';
         }
-        
+
         // Use senderId.profilePicture if available, else a default.
         // For aggregated notifications, the senderId might be the last person to interact,
         // or a default avatar might be more appropriate depending on your design.
@@ -705,7 +705,7 @@ if (notification.type === 'like') {
 
       let notificationText = notification.message; // Use the message directly from the backend
       let typeLabel = '';
-      
+
       // Determine type label based on backend's notification type
       if (notification.type === 'like') {
         typeLabel = 'Reactions';

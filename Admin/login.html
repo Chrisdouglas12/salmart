@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Salmart - Social Commerce Dashboard</title>
+    <title>Right Sidebar - Social Ecommerce</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -13,473 +14,476 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f3f8f1;
+            font-family: 'Poppins', sans-serif;
+            background-color: #ffffff;
+            padding: 12px 8px;
             min-height: 100vh;
             overflow-x: hidden;
         }
-         
-         a{
-           text-decoration: none;
-           color: #28a745;
-         }
-        .dashboard-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-            min-height: 100vh;
-            margin-bottom: 60px;
+
+        .right-sidebar {
+            width: 100%;
+            max-width: 320px;
+            border-left: 1px solid #e4e6ea;
         }
 
-        .header {
-            background: #fff;
-            border-radius: 20px;
-            padding: 20px 30px;
-            margin-bottom: 30px;
-            box-shadow: 0 10px 40px rgba(40, 167, 69, 0.15);
+        .sidebar-section {
+            margin-bottom: 16px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            padding: 16px;
+            border: 1px solid #e4e6ea;
+        }
+
+        .section-header {
             display: flex;
-            justify-content: space-between;
+            justify-content: between;
             align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e4e6ea;
         }
 
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .logo-icon {
-            width: 50px;
-            height: 50px;
-            background: #28a745;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 24px;
-            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
-        }
-
-        .logo-text {
-            font-size: 28px;
-            font-weight: 700;
-            color: #28a745;
-        }
-
-        .header-stats {
-            display: flex;
-            gap: 30px;
-            align-items: center;
-        }
-
-        .stat-item {
-            text-align: center;
-        }
-
-        .stat-number {
-            font-size: 24px;
-            font-weight: 700;
-            color: #2c3e50;
-        }
-
-        .stat-label {
-            font-size: 12px;
-            color: #7f8c8d;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .main-content {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
-            margin-bottom: 30px;
-        }
-
-        .welcome-section {
-            background: #fff;
-            border-radius: 20px;
-            padding: 40px;
-            box-shadow: 0 10px 40px rgba(40, 167, 69, 0.15);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .welcome-section::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            right: -50%;
-            width: 200px;
-            height: 200px;
-            background: #28a745;
-            border-radius: 50%;
-            opacity: 0.1;
-        }
-
-        .welcome-section h2 {
-            font-size: 32px;
-            color: #2c3e50;
-            margin-bottom: 15px;
-            position: relative;
-            z-index: 1;
-        }
-
-        .welcome-section p {
-            color: #5a6c7d;
-            font-size: 16px;
-            line-height: 1.6;
-            margin-bottom: 25px;
-            position: relative;
-            z-index: 1;
-        }
-
-        .cta-button {
-            background: #28a745;
-            color: white;
-            padding: 15px 30px;
-            border: none;
-            border-radius: 12px;
+        .section-title {
             font-size: 16px;
             font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
-            position: relative;
-            z-index: 1;
+            color: #1c1e21;
+            flex: 1;
         }
 
-        .cta-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(40, 167, 69, 0.6);
-            background: #218838;
-        }
-
-        .quick-actions {
-            background: #fff;
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 10px 40px rgba(40, 167, 69, 0.15);
-        }
-
-        .quick-actions h3 {
-            font-size: 20px;
-            color: #2c3e50;
-            margin-bottom: 20px;
-        }
-
-        .action-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-        }
-
-        .action-item {
-            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-            padding: 20px;
-            border-radius: 12px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border: 1px solid rgba(0, 0, 0, 0.05);
-        }
-
-        .action-item:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(40, 167, 69, 0.2);
-            background: #f3f8f1;
+        .section-action {
             color: #28a745;
-        }
-
-        .action-item i {
-            font-size: 24px;
-            margin-bottom: 10px;
-            color: #28a745;
-            transition: color 0.3s ease;
-        }
-
-        .action-item:hover i {
-            color: #28a745;
-        }
-
-        .action-item span {
-            display: block;
-            font-weight: 600;
             font-size: 14px;
-        }
-
-        .features-section {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-        }
-
-        .feature-card {
-            background: #fff;
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 10px 40px rgba(40, 167, 69, 0.1);
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .feature-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 50px rgba(40, 167, 69, 0.2);
-        }
-
-        .feature-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: #28a745;
-        }
-
-        .feature-icon {
-            width: 60px;
-            height: 60px;
-            background: #28a745;
-            border-radius: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 24px;
-            margin-bottom: 20px;
-            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
-        }
-
-        .feature-card h4 {
-            font-size: 18px;
-            color: #2c3e50;
-            margin-bottom: 10px;
-            font-weight: 600;
-        }
-
-        .feature-card p {
-            color: #5a6c7d;
-            line-height: 1.6;
-            font-size: 14px;
-        }
-
-        .trending-section {
-            background: #fff;
-            border-radius: 20px;
-            padding: 30px;
-            margin-top: 30px;
-            box-shadow: 0 10px 40px rgba(40, 167, 69, 0.1);
-        }
-
-        .trending-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-        }
-
-        .trending-header h3 {
-            font-size: 20px;
-            color: #2c3e50;
-        }
-
-        .view-all {
-            color: #28a745;
             text-decoration: none;
+            font-weight: 500;
+        }
+
+        .section-action:hover {
+            text-decoration: underline;
+        }
+
+        /* Sponsored Section */
+        .sponsored-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 0;
+            text-decoration: none;
+            color: #1c1e21;
+            border-radius: 6px;
+            transition: background-color 0.2s ease;
+        }
+
+        .sponsored-item:hover {
+            background-color: #f0f2f5;
+        }
+
+        .sponsored-image {
+            width: 48px;
+            height: 48px;
+            border-radius: 6px;
+            margin-right: 12px;
+            background-color: #e4e6ea;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: #28a745;
+        }
+
+        .sponsored-content {
+            flex: 1;
+        }
+
+        .sponsored-title {
+            font-size: 14px;
+            font-weight: 500;
+            color: #1c1e21;
+            margin-bottom: 2px;
+        }
+
+        .sponsored-subtitle {
+            font-size: 12px;
+            color: #65676b;
+        }
+
+        .sponsored-tag {
+            font-size: 11px;
+            color: #65676b;
+            margin-top: 2px;
+        }
+
+        /* Friends Online */
+        .online-friend {
+            display: flex;
+            align-items: center;
+            padding: 6px 0;
+            text-decoration: none;
+            color: #1c1e21;
+            border-radius: 6px;
+            transition: background-color 0.2s ease;
+        }
+
+        .online-friend:hover {
+            background-color: #f0f2f5;
+        }
+
+        .friend-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            margin-right: 10px;
+            background-color: #28a745;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
             font-weight: 600;
             font-size: 14px;
+            position: relative;
         }
 
-        .trending-items {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
+        .online-indicator {
+            position: absolute;
+            bottom: -2px;
+            right: -2px;
+            width: 12px;
+            height: 12px;
+            background-color: #42d969;
+            border: 2px solid white;
+            border-radius: 50%;
         }
 
+        .friend-name {
+            font-size: 14px;
+            font-weight: 500;
+            color: #1c1e21;
+        }
+
+        /* Quick Actions */
+        .quick-action {
+            display: flex;
+            align-items: center;
+            padding: 10px 8px;
+            text-decoration: none;
+            color: #1c1e21;
+            border-radius: 6px;
+            transition: background-color 0.2s ease;
+            margin-bottom: 4px;
+        }
+
+        .quick-action:hover {
+            background-color: #f0f2f5;
+        }
+
+        .action-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background-color: #e8f5e8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            color: #28a745;
+            font-size: 16px;
+        }
+
+        .action-text {
+            font-size: 14px;
+            font-weight: 500;
+            color: #1c1e21;
+        }
+
+        /* Trending Products */
         .trending-item {
-            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-            border-radius: 12px;
-            padding: 20px;
-            text-align: center;
-            transition: all 0.3s ease;
-            cursor: pointer;
+            display: flex;
+            align-items: center;
+            padding: 8px 0;
+            text-decoration: none;
+            color: #1c1e21;
+            border-radius: 6px;
+            transition: background-color 0.2s ease;
         }
 
         .trending-item:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(40, 167, 69, 0.15);
+            background-color: #f0f2f5;
         }
 
-        .trending-item .item-image {
-            width: 80px;
-            height: 80px;
-            background: #28a745;
-            border-radius: 50%;
-            margin: 0 auto 15px;
+        .trending-image {
+            width: 40px;
+            height: 40px;
+            border-radius: 6px;
+            margin-right: 12px;
+            background-color: #e4e6ea;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: white;
-            font-size: 32px;
-        }
-
-        .trending-item h5 {
             font-size: 16px;
-            color: #2c3e50;
-            margin-bottom: 5px;
-        }
-
-        .trending-item .price {
             color: #28a745;
-            font-weight: 700;
-            font-size: 18px;
         }
 
-        .floating-elements {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: -1;
+        .trending-content {
+            flex: 1;
         }
 
-        .floating-element {
-            position: absolute;
-            background: rgba(255, 255, 255, 0.1);
+        .trending-title {
+            font-size: 13px;
+            font-weight: 500;
+            color: #1c1e21;
+            margin-bottom: 1px;
+        }
+
+        .trending-price {
+            font-size: 12px;
+            color: #28a745;
+            font-weight: 600;
+        }
+
+        /* Notifications */
+        .notification-item {
+            display: flex;
+            align-items: flex-start;
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f2f5;
+            text-decoration: none;
+            color: #1c1e21;
+        }
+
+        .notification-item:last-child {
+            border-bottom: none;
+        }
+
+        .notification-item:hover {
+            background-color: #f0f2f5;
+            border-radius: 6px;
+        }
+
+        .notification-icon {
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
-            animation: float 20s infinite linear;
+            background-color: #e8f5e8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            color: #28a745;
+            font-size: 14px;
+            flex-shrink: 0;
         }
 
-        .floating-element:nth-child(1) {
-            width: 100px;
-            height: 100px;
-            top: 20%;
-            left: 10%;
-            animation-delay: 0s;
+        .notification-content {
+            flex: 1;
         }
 
-        .floating-element:nth-child(2) {
-            width: 60px;
-            height: 60px;
-            top: 60%;
-            right: 20%;
-            animation-delay: -5s;
+        .notification-text {
+            font-size: 13px;
+            color: #1c1e21;
+            margin-bottom: 2px;
+            line-height: 1.3;
         }
 
-        .floating-element:nth-child(3) {
-            width: 80px;
-            height: 80px;
-            bottom: 20%;
-            left: 30%;
-            animation-delay: -10s;
+        .notification-time {
+            font-size: 12px;
+            color: #65676b;
         }
 
-        @keyframes float {
-            0% { transform: translateY(0px) rotate(0deg); }
-            33% { transform: translateY(-20px) rotate(120deg); }
-            66% { transform: translateY(10px) rotate(240deg); }
-            100% { transform: translateY(0px) rotate(360deg); }
+        .notification-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #28a745;
+            border-radius: 50%;
+            margin-left: 8px;
+            margin-top: 4px;
         }
 
-        @media (max-width: 768px) {
-            .main-content {
-                grid-template-columns: 1fr;
-            }
-            
-            .header {
-                padding: 15px 20px;
-            }
-            
-            .header-stats {
-                gap: 20px;
-            }
-            
-            .logo-text {
-                font-size: 24px;
-            }
-            
-            .welcome-section {
-                padding: 30px 20px;
-            }
-            
-            .action-grid {
-                grid-template-columns: 1fr;
-            }
+        /* Scrollbar */
+        .right-sidebar {
+            overflow-y: auto;
+            max-height: 100vh;
+            scrollbar-width: thin;
+            scrollbar-color: #bdc3c7 transparent;
+        }
+
+        .right-sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .right-sidebar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .right-sidebar::-webkit-scrollbar-thumb {
+            background-color: #bdc3c7;
+            border-radius: 3px;
+        }
+
+        .right-sidebar::-webkit-scrollbar-thumb:hover {
+            background-color: #95a5a6;
         }
     </style>
 </head>
 <body>
-    <div class="floating-elements">
-        <div class="floating-element"></div>
-        <div class="floating-element"></div>
-        <div class="floating-element"></div>
-    </div>
-
-    
-        <div class="main-content">
-            <div class="welcome-section">
-                <h2>Welcome to Salmart</h2>
-                <p>Experience the future of social commerce where buying and selling meets community. Connect with verified sellers, discover trending products, and shop with confidence in our secure marketplace.</p>
-                <button class="cta-button">
-                    <i class="fas fa-rocket"></i>
-                    Start Shopping
-                </button>
+    <div class="right-sidebar">
+        <!-- Sponsored/Promoted Products -->
+        <div class="sidebar-section">
+            <div class="section-header">
+                <h3 class="section-title">Sponsored</h3>
             </div>
-
-            <div class="quick-actions">
-                <h3>Quick Actions</h3>
-                <div class="action-grid">
-                    <div class="action-item">
-                        <i class="fas fa-plus-circle"></i>
-                        <a href="Ads.html"><span>List Product</span></a>
-                    </div>
-                    <div class="action-item">
-                        <i class="fas fa-search"></i>
-                        <a href="Search.html"><span>Browse Items</span></a>
-                    </div>
-                    <div class="action-item">
-                        <i class="fas fa-shopping-cart"></i>
-                        <a href="Deals.html"><span>Deals</span></a>
-                    </div>
-                    <div class="action-item">
-                        <i class="fas fa-user-friends"></i>
-                       <a href="Messages.html"> <span>Connect</span></a>
-                    </div>
+            <a href="#" class="sponsored-item">
+                <div class="sponsored-image">
+                    <i class="fas fa-laptop"></i>
                 </div>
-            </div>
+                <div class="sponsored-content">
+                    <div class="sponsored-title">Gaming Laptop Sale</div>
+                    <div class="sponsored-subtitle">Up to 40% off premium laptops</div>
+                    <div class="sponsored-tag">Sponsored</div>
+                </div>
+            </a>
+            <a href="#" class="sponsored-item">
+                <div class="sponsored-image">
+                    <i class="fas fa-tshirt"></i>
+                </div>
+                <div class="sponsored-content">
+                    <div class="sponsored-title">Summer Fashion</div>
+                    <div class="sponsored-subtitle">Trendy clothes for summer</div>
+                    <div class="sponsored-tag">Sponsored</div>
+                </div>
+            </a>
         </div>
 
-        <div class="features-section">
-            <div class="feature-card">
-                <div class="feature-icon">
-                    <i class="fas fa-shield-alt"></i>
-                </div>
-                <h4>Secure Escrow System</h4>
-                <p>Our advanced escrow system protects both buyers and sellers, ensuring safe transactions and peace of mind for every purchase.</p>
+        <!-- Quick Actions -->
+        <div class="sidebar-section">
+            <div class="section-header">
+                <h3 class="section-title">Quick Actions</h3>
             </div>
-
-            <div class="feature-card">
-                <div class="feature-icon">
-                    <i class="fas fa-users"></i>
+            <a href="#" class="quick-action">
+                <div class="action-icon">
+                    <i class="fas fa-plus"></i>
                 </div>
-                <h4>Social Commerce</h4>
-                <p>Connect with friends, share products, and discover new items through our integrated social features and community reviews.</p>
-            </div>
+                <span class="action-text">Create Post</span>
+            </a>
+            <a href="#" class="quick-action">
+                <div class="action-icon">
+                    <i class="fas fa-camera"></i>
+                </div>
+                <span class="action-text">Add Story</span>
+            </a>
+            <a href="#" class="quick-action">
+                <div class="action-icon">
+                    <i class="fas fa-store"></i>
+                </div>
+                <span class="action-text">Sell Item</span>
+            </a>
+        </div>
 
-            <div class="feature-card">
-                <div class="feature-icon">
+        <!-- Trending Products -->
+        <div class="sidebar-section">
+            <div class="section-header">
+                <h3 class="section-title">Trending Now</h3>
+                <a href="#" class="section-action">See All</a>
+            </div>
+            <a href="#" class="trending-item">
+                <div class="trending-image">
+                    <i class="fas fa-headphones"></i>
+                </div>
+                <div class="trending-content">
+                    <div class="trending-title">Wireless Headphones</div>
+                    <div class="trending-price">$89.99</div>
+                </div>
+            </a>
+            <a href="#" class="trending-item">
+                <div class="trending-image">
+                    <i class="fas fa-watch"></i>
+                </div>
+                <div class="trending-content">
+                    <div class="trending-title">Smart Watch</div>
+                    <div class="trending-price">$199.99</div>
+                </div>
+            </a>
+            <a href="#" class="trending-item">
+                <div class="trending-image">
                     <i class="fas fa-mobile-alt"></i>
                 </div>
-                <h4>Mobile Optimized</h4>
-                <p>Shop seamlessly across all devices with our responsive design and dedicated mobile app for iOS and Android.</p>
-            </div>
+                <div class="trending-content">
+                    <div class="trending-title">Phone Case</div>
+                    <div class="trending-price">$24.99</div>
+                </div>
+            </a>
         </div>
 
+        <!-- Friends Online -->
+        <div class="sidebar-section">
+            <div class="section-header">
+                <h3 class="section-title">Friends Online</h3>
+                <a href="#" class="section-action">See All</a>
+            </div>
+            <a href="#" class="online-friend">
+                <div class="friend-avatar">
+                    JD
+                    <div class="online-indicator"></div>
+                </div>
+                <span class="friend-name">John Doe</span>
+            </a>
+            <a href="#" class="online-friend">
+                <div class="friend-avatar">
+                    SM
+                    <div class="online-indicator"></div>
+                </div>
+                <span class="friend-name">Sarah Miller</span>
+            </a>
+            <a href="#" class="online-friend">
+                <div class="friend-avatar">
+                    MJ
+                    <div class="online-indicator"></div>
+                </div>
+                <span class="friend-name">Mike Johnson</span>
+            </a>
+            <a href="#" class="online-friend">
+                <div class="friend-avatar">
+                    AL
+                    <div class="online-indicator"></div>
+                </div>
+                <span class="friend-name">Anna Lee</span>
+            </a>
+        </div>
+
+        <!-- Recent Notifications -->
+        <div class="sidebar-section">
+            <div class="section-header">
+                <h3 class="section-title">Notifications</h3>
+                <a href="#" class="section-action">Mark All Read</a>
+            </div>
+            <a href="#" class="notification-item">
+                <div class="notification-icon">
+                    <i class="fas fa-heart"></i>
+                </div>
+                <div class="notification-content">
+                    <div class="notification-text">Sarah liked your product review</div>
+                    <div class="notification-time">5 minutes ago</div>
+                </div>
+                <div class="notification-dot"></div>
+            </a>
+            <a href="#" class="notification-item">
+                <div class="notification-icon">
+                    <i class="fas fa-comment"></i>
+                </div>
+                <div class="notification-content">
+                    <div class="notification-text">New comment on your marketplace post</div>
+                    <div class="notification-time">12 minutes ago</div>
+                </div>
+                <div class="notification-dot"></div>
+            </a>
+            <a href="#" class="notification-item">
+                <div class="notification-icon">
+                    <i class="fas fa-shopping-cart"></i>
+                </div>
+                <div class="notification-content">
+                    <div class="notification-text">Someone purchased your item</div>
+                    <div class="notification-time">1 hour ago</div>
+                </div>
+            </a>
+        </div>
+    </div>
 </body>
 </html>
