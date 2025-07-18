@@ -2,11 +2,11 @@
 const jwt = require('jsonwebtoken'); // Import jwt for token verification
 const mongoose = require('mongoose');
 const User = require('../models/userSchema.js');
-const Notification = require('../models/notificationSchema.js'); // Assuming this is used for general notifications, not just messages
-const Post = require('../models/postSchema.js'); // For offer-related updates
+const Notification = require('../models/notificationSchema.js');
+const Post = require('../models/postSchema.js');
 const Message = require('../models/messageSchema.js');
-const NotificationService = require('../services/notificationService.js'); // Your custom service
-const { sendFCMNotification } = require('../services/notificationUtils.js'); // Your FCM utility
+const NotificationService = require('../services/notificationService.js');
+const { sendFCMNotification } = require('../services/notificationUtils.js');
 const winston = require('winston');
 
 const logger = winston.createLogger({
@@ -63,6 +63,7 @@ const initializeSocket = (io) => {
 
     // Map userId to current socketId and join user's personal room
     userSocketMap.set(authenticatedUserId, socket.id);
+    // User's personal room for general notifications and updates across all their devices/tabs
     socket.join(`user_${authenticatedUserId}`);
     logger.info(`Socket ${socket.id} (User: ${authenticatedUserId}) connected and joined user_${authenticatedUserId}`);
 
@@ -82,29 +83,45 @@ const initializeSocket = (io) => {
             return;
         }
 
-        if (userSocketMap.get(userId) !== socket.id) { // Only update if socketId changed or not mapped
+        // Re-join the user's personal room, primarily for ensuring consistency
+        // This is less about *joining* a new room and more about ensuring the socket
+        // is in its expected personal room.
+        if (!socket.rooms.has(`user_${userId}`)) {
+             socket.join(`user_${userId}`);
+             logger.info(`User ${userId} (socket ${socket.id}) explicitly joined to user_${userId} room.`);
+        } else {
+             logger.info(`User ${userId} (socket ${socket.id}) already in user_${userId} room.`);
+        }
+
+        // Update map if needed (e.g., if a new connection for the user replaces an old one)
+        if (userSocketMap.get(userId) !== socket.id) {
              userSocketMap.set(userId, socket.id);
              // await User.findByIdAndUpdate(userId, { socketId: socket.id }, { new: true }); // Update DB if tracking active socketId
         }
-        socket.join(`user_${userId}`);
-        logger.info(`User ${userId} (socket ${socket.id}) confirmed join to user_${userId} room.`);
+
         await NotificationService.sendCountsToUser(io, userId); // Re-send counts on explicit join
         logger.info(`Notification counts sent to user ${userId} after joinRoom event.`);
     });
 
-    // Handle joinChatRoom for specific chat
+    // Handle joinChatRoom for specific chat conversation
     socket.on('joinChatRoom', (chatRoomId) => {
       try {
         logger.info(`JoinChatRoom event received from ${authenticatedUserId} for chatRoomId: ${chatRoomId}`);
         // Basic validation: ensure the chatRoomId corresponds to a chat the authenticated user is part of.
+        // Assuming chatRoomId is like "user1Id_user2Id"
         const [id1, id2] = chatRoomId.split('_').sort();
         if (authenticatedUserId !== id1 && authenticatedUserId !== id2) {
             logger.warn(`User ${authenticatedUserId} attempted to join unauthorized chatRoomId: ${chatRoomId}`);
-            return; // Optionally, reject joining the room
+            return; // Prevent unauthorized room joining
         }
 
-        socket.join(`chat_${chatRoomId}`);
-        logger.info(`Socket ${socket.id} (User: ${authenticatedUserId}) joined chat room chat_${chatRoomId}`);
+        // Check if already in the room to prevent redundant joins
+        if (!socket.rooms.has(`chat_${chatRoomId}`)) {
+            socket.join(`chat_${chatRoomId}`);
+            logger.info(`Socket ${socket.id} (User: ${authenticatedUserId}) joined chat room chat_${chatRoomId}`);
+        } else {
+            logger.info(`Socket ${socket.id} (User: ${authenticatedUserId}) already in chat room chat_${chatRoomId}`);
+        }
       } catch (err) {
         logger.error(`Error in joinChatRoom for chatRoomId ${chatRoomId}: ${err.message}`);
       }
@@ -176,17 +193,24 @@ const initializeSocket = (io) => {
         let senderProfilePictureUrl = sender.profilePicture || null;
 
         try {
-            if (text && text.startsWith('{')) { // Assuming product info is sent as JSON in text for offers
-                const parsedMessage = JSON.parse(text);
-                notificationText = parsedMessage.text || text;
-                productImageUrl = parsedMessage.image || null;
+            // Attempt to parse text if it looks like JSON (e.g., for system messages with product info)
+            if (text && text.startsWith('{') && text.endsWith('}')) {
+                try {
+                    const parsedMessage = JSON.parse(text);
+                    if (parsedMessage.text) notificationText = parsedMessage.text;
+                    if (parsedMessage.image) productImageUrl = parsedMessage.image;
+                } catch (jsonParseError) {
+                    logger.warn(`Text is not valid JSON despite starting with '{': ${text.substring(0, 50)}...`);
+                    // Fallback to plain text if not valid JSON
+                }
             } else if (attachment && attachment.url && attachment.fileType?.startsWith('image')) {
                 productImageUrl = attachment.url;
             } else if (offerDetails && offerDetails.image) {
                 productImageUrl = offerDetails.image;
             }
 
-            if (offerDetails && !text?.startsWith('{')) { // Append offer details if not already in JSON text
+            // Append offer details to notification text if not already part of structured text
+            if (offerDetails && !(['offer', 'counter-offer'].includes(messageType) && text && text.startsWith('{'))) {
                 if (offerDetails.productName) {
                     notificationText = `${notificationText} - Product: ${offerDetails.productName}`;
                 }
@@ -230,30 +254,43 @@ const initializeSocket = (io) => {
           return;
         }
 
+        // Construct the full message object to send back to clients
+        // Ensure _id is a string for client-side use
+        const messagePayload = {
+            ...savedMessage.toObject(), // Convert Mongoose document to plain JS object
+            _id: savedMessage._id.toString(), // Convert ObjectId to string
+            tempId: tempId, // Pass back original tempId for client-side matching
+            // Ensure status is 'delivered' for initial display for both sender/receiver
+            status: 'delivered'
+        };
+
         // --- Real-time communication using Socket.IO rooms ---
-        // chatRoomId is used to potentially check if receiver is *in* the specific chat
+        // chatRoomId is used for the specific chat conversation room
         const chatRoomId = [senderId, receiverId].sort().join('_');
 
-        // 1. Emit to Sender (for optimistic UI confirmation and status update)
-        io.to(`user_${senderId}`).emit('newMessage', {
-          ...savedMessage.toObject(),
-          _id: savedMessage._id.toString(),
-          tempId: tempId, // Pass back tempId for client-side matching
-          status: 'delivered' // Mark as delivered to sender for checkmark
+        // 1. Emit to Sender's current socket (for optimistic UI confirmation)
+        //    This uses `socket.emit` to send only to the sender's *current* connected socket.
+        //    It's for their immediate UI feedback (changing tempId to _id, showing delivered check).
+        socket.emit('messageStatusUpdate', {
+            _id: messagePayload._id,
+            tempId: messagePayload.tempId,
+            status: 'delivered', // Confirmation to sender
+            createdAt: messagePayload.createdAt, // To update timestamp if needed
         });
-        logger.info(`Emitted newMessage (sender confirmation) to user_${senderId} for message ${savedMessage._id}`);
+        logger.info(`Emitted messageStatusUpdate to sender's socket ${socket.id} for tempId ${tempId}`);
 
 
-        // 2. Emit to Receiver (for real-time display)
-        io.to(`user_${receiverId}`).emit('newMessage', {
-          ...savedMessage.toObject(),
-          _id: savedMessage._id.toString(),
-          status: 'delivered' // Mark as delivered for receiver
-        });
-        logger.info(`Emitted newMessage to user_${receiverId} for message ${savedMessage._id}`);
+        // 2. Broadcast the message to the specific chat room (`chat_chatRoomId`)
+        //    This is the CRUCIAL part for immediate real-time display in the chat window
+        //    for both the sender (if they are still on that chat screen) and the receiver.
+        //    It will deliver to all sockets joined to this specific chat room.
+        io.to(`chat_${chatRoomId}`).emit('newMessage', messagePayload);
+        logger.info(`Broadcasted newMessage to chat room chat_${chatRoomId} for message ${savedMessage._id}`);
 
 
-        // 3. Emit notification to receiver's user room (for general notifications outside of active chat view)
+        // 3. Emit a general notification to the receiver's personal user room (`user_receiverId`)
+        //    This is for notifications outside of the active chat view (e.g., badge counts, toast notifications).
+        //    It also catches other devices the receiver might be logged into.
         io.to(`user_${receiverId}`).emit('newMessageNotification', {
           senderId: senderId.toString(),
           senderName: `${sender.firstName} ${sender.lastName}`,
@@ -265,13 +302,26 @@ const initializeSocket = (io) => {
         });
         logger.info(`Emitted newMessageNotification to user_${receiverId}`);
 
-        // 4. Send FCM notification if receiver is offline or not actively in chat with sender
-        // Check if receiver is connected to *any* socket or specifically in this chat room
+        // 4. Send FCM notification if receiver is truly offline or not actively in the chat with the sender.
+        //    Check if any socket for the receiver is online (joined their user room)
         const receiverIsOnline = io.sockets.adapter.rooms.get(`user_${receiverId}`)?.size > 0;
-        const receiverIsInChatRoom = io.sockets.adapter.rooms.get(`chat_${chatRoomId}`)?.has(userSocketMap.get(receiverId)); // Check if any socket for receiver is in chat_room
+        // Check if any socket for the receiver is currently in the specific chat room
+        // This requires iterating over sockets in the chat room to see if any belong to receiver.
+        let receiverIsInChatRoom = false;
+        const socketsInChatRoom = io.sockets.adapter.rooms.get(`chat_${chatRoomId}`);
+        if (socketsInChatRoom) {
+            for (const sockId of socketsInChatRoom) {
+                const connectedSocket = io.sockets.sockets.get(sockId);
+                if (connectedSocket && connectedSocket.user && connectedSocket.user.id === receiverId) {
+                    receiverIsInChatRoom = true;
+                    break;
+                }
+            }
+        }
+
 
         if (!receiverIsOnline || !receiverIsInChatRoom) { // Send FCM if not actively engaged in chat
-          logger.info(`Receiver ${receiverId} not actively online or in chat, attempting FCM.`);
+          logger.info(`Receiver ${receiverId} not actively online or in chat. FCM condition met.`);
           if (!newMessage.metadata?.isSystemMessage) { // Don't send FCM for system messages unless specifically desired
               await sendFCMNotification(
                   receiver.fcmToken,
@@ -293,7 +343,7 @@ const initializeSocket = (io) => {
               logger.info(`FCM notification attempt completed for user ${receiverId}`);
           }
         } else {
-            logger.info(`Receiver ${receiverId} is online and potentially in chat room, skipping FCM for real-time.`);
+            logger.info(`Receiver ${receiverId} is online and actively in chat room, skipping FCM.`);
         }
 
         // Update notification counts for receiver (and sender, if needed, though usually receiver gets the new unread count)
@@ -316,8 +366,8 @@ const initializeSocket = (io) => {
             throw new Error('Unauthorized action');
         }
 
-        if (!messageIds || !senderId || !receiverId) {
-          logger.warn(`Missing required fields in markAsSeen: messageIds=${messageIds}, senderId=${senderId}, receiverId=${receiverId}`);
+        if (!messageIds || messageIds.length === 0 || !senderId || !receiverId) {
+          logger.warn(`Missing required fields or empty messageIds in markAsSeen: messageIds=${messageIds}, senderId=${senderId}, receiverId=${receiverId}`);
           throw new Error('Missing required fields');
         }
 
@@ -331,12 +381,13 @@ const initializeSocket = (io) => {
             senderId: new mongoose.Types.ObjectId(senderId), // Only mark messages from this specific sender as seen by this receiver
             status: { $ne: 'seen' } // Only update if not already seen
           },
-          { $set: { status: 'seen', isRead: true } }
+          { $set: { status: 'seen', isRead: true, seenAt: new Date() } } // Set seenAt timestamp
         );
         logger.info(`Marked ${result.modifiedCount} messages as seen for sender ${senderId} by receiver ${receiverId}`);
 
         if (result.modifiedCount > 0) {
-            // Emit 'messagesSeen' to the original sender of these messages
+            // Emit 'messagesSeen' to the original sender's personal room
+            // This updates the checkmarks on the sender's side.
             io.to(`user_${senderId}`).emit('messagesSeen', {
                 messageIds: messageIds,
                 seenBy: receiverId,
@@ -442,8 +493,9 @@ const initializeSocket = (io) => {
             logger.info(`Created sellerAccept message to buyer ${acceptorId}: ${savedSellerAcceptMsg._id}`);
 
             // Emit to both participants' user rooms for real-time display
-            io.to(`user_${sellerId}`).emit('newMessage', { ...savedBuyerAcceptMsg.toObject(), _id: savedBuyerAcceptMsg._id.toString(), status: 'delivered' });
-            io.to(`user_${acceptorId}`).emit('newMessage', { ...savedSellerAcceptMsg.toObject(), _id: savedSellerAcceptMsg._id.toString(), status: 'delivered' });
+            // --- FIX: Broadcast to chat_room for immediate display ---
+            io.to(`chat_${chatRoomId}`).emit('newMessage', { ...savedBuyerAcceptMsg.toObject(), _id: savedBuyerAcceptMsg._id.toString(), status: 'delivered' });
+            io.to(`chat_${chatRoomId}`).emit('newMessage', { ...savedSellerAcceptMsg.toObject(), _id: savedSellerAcceptMsg._id.toString(), status: 'delivered' });
             logger.info(`Emitted acceptOffer messages to chatRoomId ${chatRoomId}`);
 
 
@@ -550,8 +602,9 @@ const initializeSocket = (io) => {
 
 
             // Emit to both participants in the chat room for real-time display
-            io.to(`user_${sellerId}`).emit('newMessage', { ...savedDeclineToSeller.toObject(), _id: savedDeclineToSeller._id.toString(), status: 'delivered' });
-            io.to(`user_${declinerId}`).emit('newMessage', { ...savedDeclineToBuyer.toObject(), _id: savedDeclineToBuyer._id.toString(), status: 'delivered' });
+            // --- FIX: Broadcast to chat_room for immediate display ---
+            io.to(`chat_${chatRoomId}`).emit('newMessage', { ...savedDeclineToSeller.toObject(), _id: savedDeclineToSeller._id.toString(), status: 'delivered' });
+            io.to(`chat_${chatRoomId}`).emit('newMessage', { ...savedDeclineToBuyer.toObject(), _id: savedDeclineToBuyer._id.toString(), status: 'delivered' });
             logger.info(`Emitted declineOffer messages to chatRoomId ${chatRoomId}`);
 
 
@@ -662,8 +715,9 @@ const initializeSocket = (io) => {
 
 
             // Emit to both participants in the chat room for real-time display
-            io.to(`user_${enderId}`).emit('newMessage', { ...savedEndBargainForEnder.toObject(), _id: savedEndBargainForEnder._id.toString(), status: 'delivered' });
-            io.to(`user_${actualOtherParticipantId}`).emit('newMessage', { ...savedEndBargainMsg.toObject(), _id: savedEndBargainMsg._id.toString(), status: 'delivered' });
+            // --- FIX: Broadcast to chat_room for immediate display ---
+            io.to(`chat_${chatRoomId}`).emit('newMessage', { ...savedEndBargainForEnder.toObject(), _id: savedEndBargainForEnder._id.toString(), status: 'delivered' });
+            io.to(`chat_${chatRoomId}`).emit('newMessage', { ...savedEndBargainMsg.toObject(), _id: savedEndBargainMsg._id.toString(), status: 'delivered' });
             logger.info(`Emitted endBargain messages to chatRoomId ${chatRoomId}`);
 
 
