@@ -529,7 +529,8 @@ try {
       await transaction.save();
 
       const title = 'Delivery Confirmed – Payment Processing Soon';
-      const message = `Your delivery of "${product.title}" has been Confirmed by the buyer. You’ll receive ₦${amountToTransferNaira.toLocaleString('en-NG')} within 24 hours time.`;
+      
+      const message = `Good news! The buyer has confirmed delivery of "${product.title}". Expect your ₦${amountToTransferNaira.toLocaleString('en-NG')} within 24 hours.`;
 
       // --- FIX for Notification: Add postId and senderId ---
       await Notification.create({
@@ -610,7 +611,7 @@ await transaction.save();
     logger.info('[CONFIRM DELIVERY] Payout successful and transaction updated', { transactionId, newStatus: transaction.status, transferReference: transaction.transferReference });
 
     const title = 'Payment Released to Your Account';
-    const message = `₦${amountToTransferNaira.toLocaleString('en-NG')} for "${product.title}" has been released to your bank account. Thanks for using Salmart`;
+    const message = `Great news! ₦${amountToTransferNaira.toLocaleString('en-NG')} for "${product.title}" is now in your bank account. We appreciate you for using Salmart!`;
 
     // --- FIX for Notification: Add postId and senderId ---
     await Notification.create({
@@ -822,20 +823,20 @@ if (!tx.transferRecipient) {
         availableBalance -= amountKobo;
 
         const title = 'Payment Released to Your Account';
-        const message = `₦${tx.amountDue.toLocaleString('en-NG')} for "${tx.postId?.title}" has been released.`;
+        const message = `Awesome! ₦${tx.amountDue.toLocaleString('en-NG')} for "${tx.postId?.title}" is now in your bank account. Thanks for being a valued seller on Salmart!`;
 
         await Notification.create({
-          userId: tx.sellerId._id,
-          senderId: tx.systemUser._id, // optional if saved earlier
-          postId: tx.postId._id,
-          title,
-          message,
-          type: 'payment_released',
-          metadata: {
-            transactionId: tx._id,
-            reference: tx.transferReference
-          }
-        });
+  userId: tx.sellerId._id,
+  senderId: systemUser._id,
+  postId: tx.postId._id,
+  title,
+  message,
+  type: 'payment_released',
+  metadata: {
+    transactionId: tx._id,
+    reference: tx.transferReference
+  }
+});
         
        
 

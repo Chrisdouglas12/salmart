@@ -202,7 +202,7 @@ router.get('/admin/me', verifyToken, async (req, res) => {
 });
 
 
-// Admin Routes
+// Get all refunds request
 router.get('/api/admin/refunds', verifyToken, async (req, res) => {
   try {
     const refunds = await RefundRequests.find()
@@ -218,79 +218,7 @@ router.get('/api/admin/refunds', verifyToken, async (req, res) => {
   }
 });
 
-router.get('/api/admin/users', verifyToken, async (req, res) => {
-  try {
-    const users = await User.find().select('firstName lastName email profilePicture createdAt isBanned').sort({ createdAt: -1 });
-    res.status(200).json(users);
-  } catch (error) {
-    console.error('Fetch users error:', error.message);
-    res.status(500).json({ success: false, message: 'Server error' });
-  }
-});
-
-router.post('/api/admin/users/:id/ban', verifyToken, async (req, res) => {
-  try {
-    const user = await User.findById(req.params.id);
-    if (!user) {
-      return res.status(404).json({ success: false, message: 'User not found' });
-    }
-    if (user.isBanned) {
-      return res.status(400).json({ success: false, message: 'User already banned' });
-    }
-    user.isBanned = true;
-    await user.save();
-    res.status(200).json({ success: true, message: 'User banned successfully' });
-  } catch (error) {
-    console.error('Ban user error:', error.message);
-    res.status(500).json({ success: false, message: 'Server error' });
-  }
-});
-
-router.get('/api/admin/users/banned', verifyToken, async (req, res) => {
-  try {
-    const bannedUsers = await User.find({ isBanned: true }).select('firstName lastName email profilePicture createdAt').sort({ createdAt: -1 });
-    res.status(200).json(bannedUsers);
-  } catch (error) {
-    console.error('Fetch banned users error:', error.message);
-    res.status(500).json({ success: false, message: 'Server error' });
-  }
-});
-
-router.post('/api/admin/users/:id/unban', verifyToken, async (req, res) => {
-  try {
-    const user = await User.findById(req.params.id);
-    if (!user) {
-      return res.status(404).json({ success: false, message: 'User not found' });
-    }
-    if (!user.isBanned) {
-      return res.status(400).json({ success: false, message: 'User not banned' });
-    }
-    user.isBanned = false;
-    await user.save();
-    res.status(200).json({ success: true, message: 'User unbanned successfully' });
-  } catch (error) {
-    console.error('Unban user error:', error.message);
-    res.status(500).json({ success: false, message: 'Server error' });
-  }
-});
-
-router.get('/api/admin/transactions', verifyToken, async (req, res) => {
-  try {
-    const transactions = await Transaction.find()
-      .populate('buyerId', 'firstName lastName email')
-      .populate('sellerId', 'firstName lastName email')
-      .populate('postId', 'title')
-      .select('buyerId sellerId postId amount status createdAt refundRequested paymentReference')
-      .sort({ createdAt: -1 });
-    res.status(200).json(transactions);
-  } catch (error) {
-    console.error('Fetch transactions error:', error.message);
-    res.status(500).json({ success: false, message: 'Server error' });
-  }
-});
-
-
-
+//handle refunds requests
 router.post('/api/admin/refunds/:id/:action', verifyToken, async (req, res) => {
   try {
     const { id, action } = req.params;
@@ -305,23 +233,24 @@ router.post('/api/admin/refunds/:id/:action', verifyToken, async (req, res) => {
       return res.status(404).json({ success: false, message: 'Related transaction not found or missing payment reference' });
     }
 
+    const systemUser = await User.findOne({ isSystemUser: true });
+    if (!systemUser) {
+      logger.error('[SYSTEM USER NOT FOUND]');
+      return res.status(500).json({ error: 'System user not found' });
+    }
+
     const buyerId = refund.buyerId?._id || transaction.buyerId;
     const postId = refund.description?._id || transaction.postId;
     const amount = transaction.amount || 0;
     const productTitle = refund.description?.title || 'product';
-const systemUser = await User.findOne({ isSystemUser: true });
-if (!systemUser) {
-  logger.error('[SYSTEM USER NOT FOUND]');
-  return res.status(500).json({ error: 'System user not found' });
-}
+
     if (action === 'approve') {
-      // Call Paystack refund
       try {
         const refundResponse = await axios.post(
           'https://api.paystack.co/refund',
           {
-            transaction: transaction.paymentReference,
-            amount: Math.round(amount * 100) // In kobo
+            reference: transaction.paymentReference, // ✅ Corrected field
+            amount: Math.round(amount * 100)
           },
           {
             headers: {
@@ -333,7 +262,6 @@ if (!systemUser) {
 
         const refundData = refundResponse.data.data;
 
-        // Update DB
         refund.status = 'refunded';
         refund.adminComment = 'Refund approved and processed';
         await refund.save();
@@ -344,13 +272,15 @@ if (!systemUser) {
         transaction.refundStatus = refundData?.status || 'initiated';
         await transaction.save();
 
-        // Save in-app notification
+        const title = 'Refund Approved';
+        const message = `We’ve processed a refund of ₦${amount.toLocaleString('en-NG')} for your purchase of "${productTitle}".`;
+
         await Notification.create({
           userId: buyerId,
           senderId: systemUser._id,
           postId,
-          title: 'Refund Approved',
-          message: `We have processed a refund of ₦${amount.toLocaleString('en-NG')} for your purchase of "${productTitle}".`,
+          title,
+          message,
           type: 'refund_processed',
           metadata: {
             refundId: refund._id,
@@ -360,10 +290,9 @@ if (!systemUser) {
           }
         });
 
-        // Send FCM notification
         await sendFCMNotification(
           buyerId,
-          'Refund Approved',
+          title,
           `₦${amount.toLocaleString('en-NG')} has been refunded for your purchase of "${productTitle}".`,
           {
             type: 'refund_processed',
@@ -371,7 +300,7 @@ if (!systemUser) {
             transactionId: transaction._id.toString(),
             amount,
             reference: transaction.refundReference,
-            senderId: null,
+            senderId: null
           }
         );
 
@@ -395,13 +324,15 @@ if (!systemUser) {
       refund.adminComment = 'Refund denied by admin';
       await refund.save();
 
+      const title = 'Refund Denied';
+      const message = `Your refund request for "${productTitle}" was denied after our review. If you have any concerns or wish to appeal, please contact us via email.`;
+
       await Notification.create({
         userId: buyerId,
         senderId: systemUser._id,
         postId,
-        senderId: null,
-        title: 'Refund Denied',
-        message: `Your refund request for "${productTitle}" was denied after our review. if you have any concerns or wish to appeal this decision, please contact us via email.`,
+        title,
+        message,
         type: 'refund_rejected',
         metadata: {
           refundId: refund._id,
@@ -411,13 +342,13 @@ if (!systemUser) {
 
       await sendFCMNotification(
         buyerId,
-        'Refund Denied',
-        `Your refund request for "${productTitle}" was rejected.`,
+        title,
+        `Your refund request for "${productTitle}" was denied.`,
         {
           type: 'refund_rejected',
           refundId: refund._id.toString(),
           transactionId: transaction._id.toString(),
-          senderId: null,
+          senderId: null
         }
       );
 
@@ -431,6 +362,99 @@ if (!systemUser) {
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
+
+//Get all users
+router.get('/api/admin/users', verifyToken, async (req, res) => {
+  try {
+    const users = await User.find().select('firstName lastName email profilePicture createdAt isBanned').sort({ createdAt: -1 });
+    res.status(200).json(users);
+  } catch (error) {
+    console.error('Fetch users error:', error.message);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+//To ban a user from tge platform
+router.post('/api/admin/users/:id/ban', verifyToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+    if (user.isBanned) {
+      return res.status(400).json({ success: false, message: 'User already banned' });
+    }
+    user.isBanned = true;
+    await user.save();
+    res.status(200).json({ success: true, message: 'User banned successfully' });
+  } catch (error) {
+    console.error('Ban user error:', error.message);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+
+// To get all banned users
+router.get('/api/admin/users/banned', verifyToken, async (req, res) => {
+  try {
+    const bannedUsers = await User.find({ isBanned: true }).select('firstName lastName email profilePicture createdAt').sort({ createdAt: -1 });
+    res.status(200).json(bannedUsers);
+  } catch (error) {
+    console.error('Fetch banned users error:', error.message);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// To unban a users
+router.post('/api/admin/users/:id/unban', verifyToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+    if (!user.isBanned) {
+      return res.status(400).json({ success: false, message: 'User not banned' });
+    }
+    user.isBanned = false;
+    await user.save();
+    res.status(200).json({ success: true, message: 'User unbanned successfully' });
+  } catch (error) {
+    console.error('Unban user error:', error.message);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+//Get all transactions
+router.get('/api/admin/transactions', verifyToken, async (req, res) => {
+  try {
+    const transactions = await Transaction.find()
+      .populate('buyerId', 'firstName lastName email')
+      .populate('sellerId', 'firstName lastName email')
+      .populate('postId', 'title')
+      .select('buyerId sellerId postId amount status createdAt refundRequested paymentReference')
+      .sort({ createdAt: -1 });
+
+    const transactionsWithCommission = transactions.map(tx => {
+      const amount = tx.amount || 0;
+      const commission = parseFloat((amount * 0.025).toFixed(2)); // 2.5% of amount
+      const sellerAmount = parseFloat((amount - commission).toFixed(2));
+
+      return {
+        ...tx.toObject(),
+        platformCommission: commission,
+        sellerAmount
+      };
+    });
+
+    res.status(200).json(transactionsWithCommission);
+  } catch (error) {
+    console.error('Fetch transactions error:', error.message);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+
+
 //Get reported users
 router.get('/api/reported-users', verifyToken, async (req, res) => {
   try {
@@ -509,7 +533,7 @@ router.get('/admin/transactions/pending', verifyToken, async (req, res) => {
     const pendingTxns = await Transaction.find({
   status: { $in: ['confirmed_pending_payout', 'in_escrow'] }
 })
-.populate('postId', 'title photo')
+.populate('postId', 'title', 'photo')
 .populate('buyerId', 'firstName lastName email')
 .sort({ createdAt: -1 });
 
