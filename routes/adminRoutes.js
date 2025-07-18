@@ -350,7 +350,7 @@ if (!systemUser) {
           senderId: systemUser._id,
           postId,
           title: 'Refund Approved',
-          message: `₦${amount.toLocaleString('en-NG')} has been refunded for your purchase of "${productTitle}".`,
+          message: `We have processed a refund of ₦${amount.toLocaleString('en-NG')} for your purchase of "${productTitle}".`,
           type: 'refund_processed',
           metadata: {
             refundId: refund._id,
@@ -364,7 +364,7 @@ if (!systemUser) {
         await sendFCMNotification(
           buyerId,
           'Refund Approved',
-          `₦${amount.toLocaleString('en-NG')} refunded for "${productTitle}".`,
+          `₦${amount.toLocaleString('en-NG')} has been refunded for your purchase of "${productTitle}".`,
           {
             type: 'refund_processed',
             refundId: refund._id.toString(),
@@ -401,7 +401,7 @@ if (!systemUser) {
         postId,
         senderId: null,
         title: 'Refund Denied',
-        message: `Your refund request for "${productTitle}" was denied by admin.`,
+        message: `Your refund request for "${productTitle}" was denied after our review. if you have any concerns or wish to appeal this decision, please contact us via email.`,
         type: 'refund_rejected',
         metadata: {
           refundId: refund._id,

@@ -567,7 +567,7 @@ router.get('/promotion-success', async (req, res) => {
       type: 'promotion',
       postId,
       payment: notificationData.productTitle,
-      message: `Your post "${post.title || post.description}" has been successfully promoted for ${payment.durationDays} days!`,
+      message: `Your ad "${post.title || post.description}" has been successfully promoted for ${payment.durationDays} days!`,
       createdAt: new Date()
     });
     await notification.save();
@@ -576,7 +576,7 @@ router.get('/promotion-success', async (req, res) => {
     await sendFCMNotification(
       userId,
       'Promotion Activated',
-      `Your post "${notificationData.productTitle}" is now promoted for ${payment.durationDays} days!`,
+      `Your ad "${notificationData.productTitle}" is now promoted for ${payment.durationDays} days!`,
       { type: 'promotion', postId: postId.toString() },
       io,
       post.photo,

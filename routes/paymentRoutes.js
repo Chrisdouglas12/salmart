@@ -763,7 +763,7 @@ const paystackInitializeResponse = await paystack.transaction.initialize({
           type: 'payment',
           postId: post._id, // Use post._id
           payment: post.title,
-          message: `${receiptData.buyerName} just paid for your product: "${post.description}"`,
+          message: `${receiptData.buyerName} just paid for your product: "${post.title}" Kindly deliver the item to recieve payment`,
           createdAt: new Date()
         }).save()
       ]);
@@ -786,7 +786,7 @@ const paystackInitializeResponse = await paystack.transaction.initialize({
         sendFCMNotification(
           seller._id.toString(),
           'Payment Received',
-          `${receiptData.buyerName} paid for your product: "${receiptData.productTitle}"`,
+          `${receiptData.buyerName} paid for your product: "${receiptData.productTitle}" Kindly deliver the item to recieve payment`,
           { type: 'payment', postId: post._id.toString() }, // Use post._id
           req.io,
           post.photo,

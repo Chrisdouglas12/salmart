@@ -589,9 +589,7 @@ if (notification.type === 'like') {
 } else if (notification.type === 'new_post') {
   typeLabel = `<i class="fas fa-bolt" style="color:#28a745; margin-right:5px;"></i> New Post`;
 
-
-          // For non-aggregated types, use the sender's name and original message logic
-          notificationText = `${notification.senderId.firstName} ${notification.senderId.lastName} paid for "${notification.payment}". Please release delivery address.`;
+          notificationText = `${notification.senderId.firstName} ${notification.senderId.lastName} Created a new Ad`;
         } else if (notification.type === 'delivery') {
           typeLabel = 'Funds Transfer';
           notificationText = `${notification.senderId.firstName} ${notification.senderId.lastName} confirmed delivery of "${notification.payment}". Funds released to your bank account.`;
@@ -605,7 +603,7 @@ if (notification.type === 'like') {
           typeLabel = 'New Follower';
           notificationText = `${notification.senderId.firstName} ${notification.senderId.lastName} followed you.`;
         }
-        else if (notification.type === 'new_posts') { // Added follow notification display
+        else if (notification.type === 'new_post') { // Added follow notification display
           typeLabel = 'New Post';
           notificationText = `${notification.senderId.firstName} ${notification.senderId.lastName} Created posted a new product.`;
         } else if (notification.type === 'Promotion') { // Added follow notification display
