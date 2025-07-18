@@ -7,24 +7,27 @@ const { Server } = require('socket.io');
 const admin = require('firebase-admin');
 const cloudinary = require('cloudinary').v2;
 const nodemailer = require('nodemailer');
+const jwt = require('jsonwebtoken'); // Import jsonwebtoken
 require('dotenv').config();
 
 // Models
 const User = require('./models/userSchema.js');
 const Post = require('./models/postSchema.js');
 const Notification = require('./models/notificationSchema.js');
+const Message = require('./models/messageSchema.js'); // Ensure Message model is imported
 
 // Routes
 const userRoutes = require('./routes/userRoutes.js');
 const postRoutes = require('./routes/postRoutes.js');
 const requestRoutes = require('./routes/requestRoutes.js');
 const notificationRoutes = require('./routes/notificationRoutes.js');
-const messageRoutes = require('./routes/messageRoutes.js');
+const messageRoutes = require('./routes/messageRoutes.js'); // Your REST message routes
 const paymentRoutes = require('./routes/paymentRoutes.js');
 const transactionRoutes = require('./routes/transactionRoutes.js');
 const adminRoutes = require('./routes/adminRoutes.js');
 const promoteRoutes = require('./routes/promoteRoutes.js');
 const cleanupPromotions = require('./cron/promotionCleanUp.js');
+const initializeSocket = require('./routes/socketRoutes.js'); // Import your socket handler
 
 
 // Initialize Winston logger
@@ -99,33 +102,39 @@ const io = new Server(server, {
     credentials: true,
   },
   path: '/socket.io',
+  // --- Socket.IO Authentication Middleware ---
+  // This middleware runs for every new socket connection
+  // It checks the auth token passed from the client during connection.
+  auth: (socket, callback) => {
+    const token = socket.handshake.auth.token;
+    if (!token) {
+      logger.warn('Socket connection denied: No authentication token provided.');
+      return callback(new Error('Authentication error: No token provided'));
+    }
+    try {
+      // Replace 'YOUR_JWT_SECRET' with your actual JWT secret
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      socket.handshake.auth.userId = decoded.userId; // Attach userId to the handshake object
+      logger.info(`Socket ${socket.id} authenticated for user ${decoded.userId}.`);
+      callback(null, true); // Allow connection
+    } catch (error) {
+      logger.error(`Socket connection denied: Invalid token - ${error.message}`);
+      callback(new Error('Authentication error: Invalid token'));
+    }
+  }
 });
 logger.info('✅ Socket.IO initialized');
 
-// Socket.IO connection handling (moved from socket.js)
-io.on('connection', (socket) => {
-  logger.info(`Socket connected: ${socket.id}`);
-  socket.on('join', (userId) => {
-    if (mongoose.Types.ObjectId.isValid(userId)) {
-      socket.join(`user_${userId}`);
-      logger.info(`User ${userId} joined room user_${userId}`);
-    } else {
-      logger.warn(`Invalid userId in join event: ${userId}`);
-    }
-  });
-  socket.on('disconnect', () => {
-    logger.info(`Socket disconnected: ${socket.id}`);
-  });
-});
-
-
+// --- Pass io instance to your Socket.IO event handler ---
+initializeSocket(io); // This replaces the simple io.on('connection') block here
 
 // Routes
 app.use(userRoutes(io));
 app.use(postRoutes(io));
 app.use(requestRoutes(io));
 app.use(notificationRoutes(io));
-app.use(messageRoutes(io));
+// messageRoutes (your REST API for history) can still be used
+app.use(messageRoutes(io)); // Pass io if it needs to emit notifications for history related actions
 app.use(paymentRoutes(io));
 app.use(transactionRoutes(io));
 app.use(adminRoutes(io));

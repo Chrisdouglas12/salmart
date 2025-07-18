@@ -6,7 +6,7 @@ const bargainBtn = document.getElementById('bargain-btn');
 
 // --- Bargaining State Management ---
 // Track ended bargains, counter-offers, displayed messages, and initial message status
-const endedBargains = new Set(JSON.parse(localStorage.getItem(`endedBargains_${userId}_${receiverId}`) || '[]'));
+
 const bargainingSessions = new Set(JSON.parse(localStorage.getItem(`bargainingSessions_${userId}_${receiverId}`) || '[]'));
 const acceptedOffers = new Set(JSON.parse(localStorage.getItem(`acceptedOffers_${userId}_${receiverId}`) || '[]'));
 const sentCounterOffers = new Set(JSON.parse(localStorage.getItem(`sentCounterOffers_${userId}_${receiverId}`) || '[]'));
@@ -14,7 +14,7 @@ const displayedSystemMessages = new Set(JSON.parse(localStorage.getItem(`display
 
 // Function to save bargaining states to localStorage
 function saveBargainStates() {
-    localStorage.setItem(`endedBargains_${userId}_${receiverId}`, JSON.stringify(Array.from(endedBargains)));
+    
     localStorage.setItem(`bargainingSessions_${userId}_${receiverId}`, JSON.stringify(Array.from(bargainingSessions)));
     localStorage.setItem(`acceptedOffers_${userId}_${receiverId}`, JSON.stringify(Array.from(acceptedOffers)));
     localStorage.setItem(`sentCounterOffers_${userId}_${receiverId}`, JSON.stringify(Array.from(sentCounterOffers)));

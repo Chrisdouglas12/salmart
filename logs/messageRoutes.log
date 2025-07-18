@@ -2762,3 +2762,14 @@
 {"level":"info","message":"Fetched 10 latest messages for user 68431685432ee393a735a641","timestamp":"2025-07-18T12:15:47.762Z"}
 {"level":"info","message":"Fetched 10 latest messages for user 68431685432ee393a735a641","timestamp":"2025-07-18T12:15:55.618Z"}
 {"level":"info","message":"Fetched 10 latest messages for user 68431685432ee393a735a641","timestamp":"2025-07-18T12:16:46.466Z"}
+{"level":"info","message":"Fetched 10 latest messages for user 68431685432ee393a735a641","timestamp":"2025-07-18T15:08:34.374Z"}
+{"level":"error","message":"Error fetching messages for user 68431685432ee393a735a641: getaddrinfo ENOTFOUND ac-78e8zxz-shard-00-01.bfiorya.mongodb.net","timestamp":"2025-07-18T15:12:25.615Z"}
+{"level":"warn","message":"Missing senderId or receiverId in /messages","timestamp":"2025-07-18T18:38:06.539Z"}
+{"level":"info","message":"Fetched 10 latest messages for user 68431685432ee393a735a641","timestamp":"2025-07-18T18:38:11.922Z"}
+{"level":"info","message":"Fetched 48 messages between 68431685432ee393a735a641 and 6843d062f457581752641ee3","timestamp":"2025-07-18T18:38:16.143Z"}
+{"level":"warn","message":"Missing senderId or receiverId in /messages","timestamp":"2025-07-18T19:01:42.736Z"}
+{"level":"info","message":"Fetched 10 latest messages for user 68431685432ee393a735a641","timestamp":"2025-07-18T19:01:43.109Z"}
+{"level":"info","message":"Fetched 48 messages between 68431685432ee393a735a641 and 6843d062f457581752641ee3","timestamp":"2025-07-18T19:01:47.316Z"}
+{"level":"warn","message":"Missing senderId or receiverId in /messages","timestamp":"2025-07-18T19:09:32.115Z"}
+{"level":"info","message":"Fetched 10 latest messages for user 68431685432ee393a735a641","timestamp":"2025-07-18T19:09:33.329Z"}
+{"level":"info","message":"Fetched 48 messages between 68431685432ee393a735a641 and 6843d062f457581752641ee3","timestamp":"2025-07-18T19:09:35.906Z"}
