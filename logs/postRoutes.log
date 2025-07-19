@@ -29510,3 +29510,87 @@
 {"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T14:24:34.967Z"}
 {"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T14:24:37.087Z"}
 {"level":"info","message":"✅ Cloudinary configured in postRoutes","timestamp":"2025-07-19T20:37:04.969Z"}
+{"level":"info","message":"✅ Cloudinary configured in postRoutes","timestamp":"2025-07-19T20:41:21.951Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T20:48:02.038Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T20:48:47.367Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T20:49:33.533Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T20:50:09.393Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T20:50:35.979Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T20:51:28.702Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T20:53:56.740Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T20:54:32.998Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T20:54:52.007Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T20:56:48.431Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T20:57:02.816Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T20:57:45.303Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T20:58:24.474Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T21:00:36.308Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T21:00:47.251Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T21:00:54.316Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T21:01:57.936Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T21:02:17.406Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T21:03:03.758Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T21:03:41.459Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T21:04:16.325Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T21:04:36.318Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T21:05:51.591Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T21:06:05.004Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T21:06:14.628Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T21:06:26.002Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T21:06:35.279Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T21:06:42.690Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T21:06:52.262Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T21:07:17.346Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T21:07:31.935Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T21:07:43.664Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T21:07:56.837Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T21:10:22.609Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T21:11:29.052Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T21:12:11.904Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T21:13:28.441Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T21:13:57.168Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T21:14:32.005Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T21:15:29.724Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T21:15:51.243Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T21:16:28.089Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T21:16:41.845Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T21:17:28.420Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T21:18:32.070Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T21:18:34.491Z"}
+{"level":"error","message":"Error fetching posts: getaddrinfo ENOTFOUND ac-78e8zxz-shard-00-00.bfiorya.mongodb.net","timestamp":"2025-07-19T21:18:39.545Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T21:18:39.576Z"}
+{"level":"error","message":"Error fetching posts: getaddrinfo ENOTFOUND ac-78e8zxz-shard-00-00.bfiorya.mongodb.net","timestamp":"2025-07-19T21:18:44.599Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T21:18:44.621Z"}
+{"level":"error","message":"Error fetching posts: getaddrinfo ENOTFOUND ac-78e8zxz-shard-00-00.bfiorya.mongodb.net","timestamp":"2025-07-19T21:18:49.641Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T21:21:19.478Z"}
+{"level":"error","message":"Error fetching posts: getaddrinfo ENOTFOUND ac-78e8zxz-shard-00-00.bfiorya.mongodb.net","timestamp":"2025-07-19T21:21:24.492Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T21:25:26.842Z"}
+{"level":"error","message":"Error fetching posts: getaddrinfo ENOTFOUND ac-78e8zxz-shard-00-00.bfiorya.mongodb.net","timestamp":"2025-07-19T21:25:31.852Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T21:25:36.753Z"}
+{"level":"error","message":"Error fetching posts: getaddrinfo ENOTFOUND ac-78e8zxz-shard-00-00.bfiorya.mongodb.net","timestamp":"2025-07-19T21:25:41.763Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T21:32:13.747Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T21:33:32.092Z"}
+{"level":"error","message":"Error fetching posts: getaddrinfo ENOTFOUND ac-78e8zxz-shard-00-00.bfiorya.mongodb.net","timestamp":"2025-07-19T21:33:37.102Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T21:34:54.445Z"}
+{"level":"error","message":"Error fetching posts: getaddrinfo ENOTFOUND ac-78e8zxz-shard-00-00.bfiorya.mongodb.net","timestamp":"2025-07-19T21:34:59.456Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T21:35:39.383Z"}
+{"level":"error","message":"Error fetching posts: getaddrinfo ENOTFOUND ac-78e8zxz-shard-00-00.bfiorya.mongodb.net","timestamp":"2025-07-19T21:35:44.399Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T21:36:10.848Z"}
+{"level":"error","message":"Error fetching posts: getaddrinfo ENOTFOUND ac-78e8zxz-shard-00-00.bfiorya.mongodb.net","timestamp":"2025-07-19T21:36:15.860Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T21:37:39.454Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T21:37:54.331Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T21:40:50.006Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T21:41:40.401Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T21:41:50.475Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T21:42:25.146Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T21:42:51.737Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T21:43:10.324Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T21:43:19.921Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T21:44:00.097Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T21:44:06.446Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T21:46:30.930Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T21:47:06.602Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T21:47:20.042Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T21:49:26.063Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T21:50:27.729Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T21:50:32.382Z"}

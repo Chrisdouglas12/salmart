@@ -706,7 +706,6 @@ h1 {
   background: #fff;
   width: 100vw;
   padding: 10px 0;
-  max-width: 600px;
   border-bottom: 1px solid #eee;
   margin: 0 auto;
 }
@@ -756,11 +755,10 @@ h1 {
 
 @media (min-width: 768px) {
   .category-scroll-wrapper {
-    max-width: 600px;
     margin: 0 auto;
   }
   .category-filter{
-       max-width: 600px;
+       
   }
   #posts-container {
     max-width: 600px;
@@ -774,14 +772,12 @@ h1 {
   position: relative;
   align-items: center;
   margin: 0 auto;
-  max-width: 600px;
   box-shadow: 0 0 10px #ddd;
   padding: 10px 0;
   border: 1px solid #fff;
 }
 
 .post-input {
-  max-width: 600px;
   margin-bottom: 0;
   border: 1px solid white;
   width: 45%;
@@ -983,7 +979,6 @@ p {
   left: 50%;
   transform: translateX(-50%);
   width: 100%;
-  max-width: 600px;
   background-color: white;
   box-shadow: 0 0 10px #ddd;
   z-index: 1000;
@@ -1058,6 +1053,11 @@ p {
   border: 1px solid #fff;
   box-shadow: 0 0 10px #ddd;
   padding: 10px;
+  height: 35px;
+  width: 35px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   border-radius: 50%;
 }
 

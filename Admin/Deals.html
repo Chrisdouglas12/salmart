@@ -159,53 +159,55 @@
   <div id="transaction-list"></div>
   <p id="no-transactions" style="display:none;">No transactions yet. Check back later!</p>
 
-  <!-- Bottom Navigation Bar -->
-  <nav id="navbar">
-    <ul>
-      <li class="active">
-        <a href="index.html">
-          <i class="fas fa-store"></i> Market
-        </a>
-      </li>
-      <li class="active">
-        <a href="requestlists.html">
-          <i class="fas fa-clipboard-list"></i> Requests
-        </a>
-      </li>
-      <li>
-        <a href="Alerts.html" onclick="clearBadge('alerts')">
-          <span class="icon-badge-wrapper">
-            <i class="fas fa-bell"></i>
-            <span class="notification-badge" id="alerts-badge"></span>
-          </span>
-          Alerts
-        </a>
-      </li>
-      <li>
-        <a href="Messages.html" onclick="clearBadge('messages')">
-          <span class="icon-badge-wrapper">
-            <i class="fas fa-comments"></i>
-            <span class="notification-badge" id="messages-badge"></span>
-          </span>
-          Messages
-        </a>
-      </li>
-      <li>
-        <a href="Deals.html" onclick="clearBadge('deals')">
-          <span class="icon-badge-wrapper">
-            <i class="fas fa-cart-plus"></i>
-            <span class="notification-badge" id="deals-badge"></span>
-          </span>
-          Deals
-        </a>
-      </li>
-      <li>
-        <a href="Profile.html">
-          <i class="fas fa-user"></i> Profile
-        </a>
-      </li>
-    </ul>
-  </nav>
+<nav id="navbar">
+  <ul>
+    <li>
+      <a href="index.html" class="">
+        <i class="fas fa-store"></i>
+        <span>Market</span>
+      </a>
+    </li>
+    <li>
+      <a href="requestlists.html">
+        <i class="fas fa-clipboard-list"></i>
+        <span>Requests</span>
+      </a>
+    </li>
+    <li>
+      <a href="Alerts.html" onclick="clearBadge('alerts')">
+        <span class="icon-with-badge">
+          <i class="fas fa-bell"></i>
+          <span class="notification-badge" id="alerts-badge"></span>
+        </span>
+        <span>Alerts</span>
+      </a>
+    </li>
+    <li>
+      <a href="Messages.html" onclick="clearBadge('messages')">
+        <span class="icon-with-badge">
+          <i class="fas fa-comments"></i>
+          <span class="notification-badge" id="messages-badge"></span>
+        </span>
+        <span>Messages</span>
+      </a>
+    </li>
+    <li>
+      <a href="Deals.html" onclick="clearBadge('deals')">
+        <span class="icon-with-badge">
+          <i class="fas fa-cart-plus"></i>
+          <span class="notification-badge" id="deals-badge"></span>
+        </span>
+        <span>Deals</span>
+      </a>
+    </li>
+    <li>
+      <a href="Profile.html">
+        <i class="fas fa-user"></i>
+        <span>Profile</span>
+      </a>
+    </li>
+  </ul>
+</nav>
 
   <!-- Confirmation Modal -->
   <div id="confirmModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background-color: rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">

@@ -93,10 +93,10 @@ body.typing {
 
     .chats-header img {
       border-radius: 50%;
-      width: 44px;
-      height: 44px;
+      width: 48px;
+      height: 48px;
       margin-right: 12px;
-      border: 2px solid #28a756;
+      border: 1px solid #28a756;
       object-fit: cover;
       transition: transform 0.2s ease;
     }
@@ -131,10 +131,11 @@ body.typing {
       font-size: 18px;
       color: #64748b;
       cursor: pointer;
-      padding: 8px;
+      padding:8px;
+      
       border-radius: 50%;
       transition: all 0.2s ease;
-      background: rgba(40, 167, 86, 0.1);
+     
     }
 
     #ellipsis-btn:hover {
@@ -178,7 +179,7 @@ body.typing {
     #chat-messages {
       padding: 20px;
       overflow-y: auto;
-      height: calc(100vh - 180px);
+      height: calc(100vh - 200px);
       margin-top: 80px;
       scroll-behavior: smooth;
       margin-bottom: 140px;
@@ -391,7 +392,7 @@ body.typing {
   border-top: 1px solid #fff;
   box-shadow: 0 0 10px #ddd;
   z-index: 999;
-  padding: 10px;
+  padding: 5px;
   border-top-left-radius: 30px;
   border-top-right-radius: 30px;
 }
@@ -403,7 +404,7 @@ body.typing {
 
 #type-section {
   width: 100%;
-  min-height: 52px;
+  min-height: 10px;
   max-height: 200px;
   padding: 10px 16px;
   border: 1px solid #fff;
@@ -412,6 +413,7 @@ body.typing {
   font-family: inherit;
   line-height: 1.5;
   resize: none;
+  box-shadow: 0 0 10 #ddd;
   outline: none;
   background: #fafafa;
   transition: all 0.2s ease;
@@ -421,6 +423,8 @@ body.typing {
 #type-section:focus {
   border-color: #fff;
   background: white;
+  box-shadow: 0 0 10px #ddd;
+  border-top: 1px solid #28a745;
 }
 
 #type-section::placeholder {
@@ -432,7 +436,7 @@ body.typing {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 12px;
+  margin-top: 4px;
 }
 
 .left-buttons {
@@ -778,7 +782,7 @@ body.typing {
   <!-- Header -->
   <div class="chats-header">
     <div class="user-profile">
-      <img id="chatspic" alt="User" src="https://via.placeholder.com/44x44/28a756/ffffff?text=U">
+      <img id="chatspic" >
       <div class="user-info">
         <div id="chats-userName">Username</div>
         <div class="typing-indicator" id="typing-indicator"></div>

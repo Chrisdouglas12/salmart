@@ -54,7 +54,9 @@
       flex-direction: column;
       overflow-x: hidden;
     }
-
+.main-container{
+     justify-content: center;
+}
     /* Header Styles */
     .header {
       background: #fff;
@@ -214,71 +216,92 @@
     }
 
     /* Bottom Navbar */
-    #navbar {
-      position: fixed;
-      bottom: 0;
-      width: 100%;
-      background-color: white;
-      box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
-      z-index: 1000;
-    }
-
-    #navbar ul {
-      display: flex;
-      justify-content: space-around;
-      padding: 10px 0;
-      list-style: none;
-    }
-
-    #navbar li {
-      flex: 1;
-      text-align: center;
-    }
-
-    #navbar a {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-decoration: none;
-      color: var(--primary-color);
-      font-size: 12px;
-      padding: 8px;
-      transition: color 0.2s;
-    }
-
-    #navbar a.active {
-      color: var(--secondary-color);
-      font-weight: 600;
-    }
-
-    #navbar a i {
-      font-size: 20px;
-      margin-bottom: 5px;
-    }
-
-     .icon-badge-wrapper {
-  position: relative;
-  display: inline-block;
+#navbar {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  background-color: white;
+  box-shadow: 0 0 10px #ddd;
+  z-index: 1000;
+  display: flex; /* Added for proper alignment */
+  justify-content: center;
+  align-items: center;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+  transition: all 0.3s ease-in-out;
 }
 
-.notification-badge {
-  position: absolute;
-  top: -5px;
-  right: -10px;
-  background-color: red;
-  color: white;
-  font-size: 10px;
-  width: 18px;
-  height: 18px;
-  line-height: 18px;
-  border-radius: 50%;
-  text-align: center;
-  z-index: 1;
+/* Desktop: Move to top-right */
+@media (min-width: 900px) {
+  #navbar {
+    top: -4px;
+    bottom: auto;
+    left: auto;
+    right: 0px;
+    transform: none;
+    max-width: 400px;
+    background-color: transparent;
+    box-shadow: none;
+  }
+}
+
+@media (min-width: 900px) {
+  #navbar a span:not(.notification-badge):not(.icon-with-badge) {
+    display: none;
+  }
+}
+
+#navbar ul {
   display: flex;
-  align-items: center;
+  max-width: 900px;
   justify-content: center;
-  font-weight: bold;
-  overflow: hidden;
+  padding: 10px 0;
+  list-style: none;
+  margin: 0 auto;
+  width: 100%;
+}
+
+#navbar li {
+  flex: 1;
+  text-align: center;
+}
+
+#navbar a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-decoration: none;
+  color: #28a745;
+  font-size: 12px;
+  padding: 8px;
+  transition: color 0.2s;
+}
+
+#navbar a.active {
+  color: #28a745;
+  font-weight: 500;
+}
+
+#navbar i.active {
+  color: #28a745;
+  font-weight: 500;
+}
+
+#navbar a i {
+  font-size: 14px;
+  margin-bottom: 5px;
+  background: #fff;
+  border: 1px solid #fff;
+  box-shadow: 0 0 10px #ddd;
+  padding: 10px;
+  height: 35px;
+  width: 35px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 50%;
 }
 
     /* Skeleton Loader */
@@ -372,9 +395,58 @@
         font-size: 18px;
       }
     }
+     .sidebar {
+  width: 280px;
+  height: calc(100vh - 80px);
+  position: fixed;
+  top: 80px; /* place it under header if needed */
+  z-index: 1;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  background: #fff;
+  overflow: hidden;
+}
+
+/* Left sidebar */
+.sidebar.left {
+  left: 0;
+}
+
+/* Right sidebar */
+.sidebar.right {
+  right: 0;
+  
+}
+
+.sidebar iframe {
+  width: 90%;
+  height: 100%;
+  border: none;
+}
+
+  .feed {
+    flex: 1;
+    max-width: 600px;
+    min-width: 300px;
+  }
+}
+@media (max-width: 899px) {
+       .sidebar {
+    display: none;
+}
+  .feed {
+    padding: 10px;
+  }
+}
+@media (max-width: 600px) {
+     .sidebar {
+          display: none
+     }
+}
   </style>
 </head>
 <body>
+     <div class="main-container">
    <header class="header">
     <h1 class="header-title">
       <i class="fas fa-bell"></i>
@@ -387,59 +459,67 @@
       <img src="default-avater.png" alt="Profile" id="profile-picture6" class="profile-avatar" onerror="this.src='default-avater.png'">
     </div>
   </header>
-
+  <!-- Left Sidebar: Login -->
+  <div class="sidebar left">
+    <iframe src="dex.html" frameborder="0"></iframe>
+  </div>
   <div id="notifications-wrapper" role="region" aria-live="polite">
     <div id="notifications"></div>
     <p id="no-alerts" style="display: none;">No alerts for now, check later!</p>
   </div>
-
-       <nav id="navbar">
-        <ul>
-                <li class="active">
-  <a href="index.html">
-    <i class="fas fa-store"></i> Market
-  </a>
-</li>
-<li class="active">
-  <a href="requestlists.html">
-    <i class="fas fa-clipboard-list"></i> Requests
-  </a>
-</li>
-<li>
-  <a href="Alerts.html" onclick="clearBadge('alerts')">
-    <span class="icon-badge-wrapper">
-      <i class="fas fa-bell"></i>
-      <span class="notification-badge" id="alerts-badge"></span>
-    </span>
-    Alerts
-  </a>
-</li>
-<li>
-  <a href="Messages.html" onclick="clearBadge('messages')">
-    <span class="icon-badge-wrapper">
-      <i class="fas fa-comments"></i>
-      <span class="notification-badge" id="messages-badge"></span>
-    </span>
-    Messages
-  </a>
-</li>
-<li>
-  <a href="Deals.html" onclick="clearBadge('deals')">
-    <span class="icon-badge-wrapper">
-      <i class="fas fa-cart-plus"></i>
-      <span class="notification-badge" id="deals-badge"></span>
-    </span>
-    Deals
-  </a>
-</li>
-<li>
-  <a href="Profile.html">
-    <i class="fas fa-user"></i> Profile
-  </a>
-</li>
-        </ul>
-      </nav>
-
+  <div class="sidebar right" >
+    <iframe src="login.html" frameborder="0"></iframe>
+  </div>
+<nav id="navbar">
+  <ul>
+    <li>
+      <a href="index.html" class="">
+        <i class="fas fa-store"></i>
+        <span>Market</span>
+      </a>
+    </li>
+    <li>
+      <a href="requestlists.html">
+        <i class="fas fa-clipboard-list"></i>
+        <span>Requests</span>
+      </a>
+    </li>
+    <li>
+      <a href="Alerts.html" onclick="clearBadge('alerts')">
+        <span class="icon-with-badge">
+          <i class="fas fa-bell"></i>
+          <span class="notification-badge" id="alerts-badge"></span>
+        </span>
+        <span>Alerts</span>
+      </a>
+    </li>
+    <li>
+      <a href="Messages.html" onclick="clearBadge('messages')">
+        <span class="icon-with-badge">
+          <i class="fas fa-comments"></i>
+          <span class="notification-badge" id="messages-badge"></span>
+        </span>
+        <span>Messages</span>
+      </a>
+    </li>
+    <li>
+      <a href="Deals.html" onclick="clearBadge('deals')">
+        <span class="icon-with-badge">
+          <i class="fas fa-cart-plus"></i>
+          <span class="notification-badge" id="deals-badge"></span>
+        </span>
+        <span>Deals</span>
+      </a>
+    </li>
+    <li>
+      <a href="Profile.html">
+        <i class="fas fa-user"></i>
+        <span>Profile</span>
+      </a>
+    </li>
+  </ul>
+</nav>
+</div>
   <script>
     const API_BASE_URL = window.location.hostname === 'localhost' 
       ? 'http://localhost:3000' 
