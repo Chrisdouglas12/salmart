@@ -40,12 +40,15 @@
           <input id="productCondition" name="productCondition" type="text" class="input" placeholder="e.g. New, Used" required maxlength="100" />
           <div class="error" id="normal-condition-error"></div>
         </div>
-        <div class="input-form">
-          <label for="price-display">Product Price ₦</label>
-          <input id="price-display" type="text" class="input" placeholder="Enter Price" autocomplete="off" required />
-          <input id="price" name="price" type="hidden" />
-          <div class="error" id="normal-price-error"></div>
-        </div>
+      <div class="input-form">
+  <label for="price-display">Product Price ₦</label>
+  <input id="price-display" type="text" class="input" placeholder="Enter Price" autocomplete="off" required />
+  <input id="price" name="price" type="hidden" />
+  <div class="error" id="normal-price-error"></div>
+
+  <!-- Seller earnings feedback -->
+  <small id="sellerEarningsInfo" style="color: green; display: block; margin-top: 5px;"></small>
+</div>
         <div class="input-form">
           <label for="location">Location</label>
           <input id="location" name="location" type="text" class="input" placeholder="Enter Location" required maxlength="100" />
@@ -139,6 +142,57 @@
       <div id="processing-progress" style="margin-top: 10px; font-size: 14px;"></div>
     </div>
   </div>
+<script>
+  const priceDisplayInput = document.getElementById('price-display');
+  const priceHiddenInput = document.getElementById('price');
+  const earningsInfo = document.getElementById('sellerEarningsInfo');
+  const errorDisplay = document.getElementById('normal-price-error');
+  const minimumPrice = 100;
+
+  function getCommissionRate(amount) {
+    if (amount < 10000) return 3.5;
+    if (amount < 50000) return 3;
+    if (amount < 200000) return 2.5;
+    return 1;
+  }
+
+  function getPaystackFee(amount) {
+    const baseFee = (1.5 / 100) * amount + 100;
+    return Math.min(baseFee, 2000);
+  }
+
+  priceDisplayInput.addEventListener('input', () => {
+    const raw = priceDisplayInput.value.replace(/[^0-9.]/g, '');
+    const price = parseFloat(raw);
+
+    if (!isNaN(price)) {
+      if (price < minimumPrice) {
+        errorDisplay.textContent = `Minimum price allowed is ₦${minimumPrice}`;
+        earningsInfo.textContent = '';
+        priceHiddenInput.value = '';
+      } else {
+        const paystackFee = getPaystackFee(price);
+        const amountAfterPaystack = price - paystackFee;
+
+        const platformRate = getCommissionRate(amountAfterPaystack); // ✅ Updated here
+        const platformFee = (platformRate / 100) * amountAfterPaystack;
+
+        const sellerReceives = amountAfterPaystack - platformFee;
+
+        priceHiddenInput.value = price;
+        errorDisplay.textContent = '';
+        earningsInfo.textContent = `You'll receive ₦${sellerReceives.toLocaleString('en-NG', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        })} after ₦${paystackFee.toFixed(2)} Paystack fee and ${platformRate}% platform fee.`;
+      }
+    } else {
+      errorDisplay.textContent = '';
+      earningsInfo.textContent = '';
+      priceHiddenInput.value = '';
+    }
+  });
+</script>
 <script src="ads.js"></script>
   
 </body>

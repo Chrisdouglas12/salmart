@@ -27,7 +27,7 @@ const logger = winston.createLogger({
   ],
 });
 
-const COMMISSION_PERCENT = 2.5;
+const COMMISSION_PERCENT = 3.5;
 
 module.exports = (io) => {
 
@@ -410,9 +410,17 @@ if (!systemUser) {
       });
     }
 // == Calculate platform's commission == //
-    const commissionPercent = COMMISSION_PERCENT; 
-    const commissionNaira = (commissionPercent / 100) * amountPaidByBuyerNaira;
-    const amountToTransferNaira = amountPaidByBuyerNaira - commissionNaira;
+
+    function getCommissionRate(amount) {
+  if (amount < 10000) return 3.5;
+  if (amount < 50000) return 3;
+  if (amount < 200000) return 2.5;
+  return 1;
+}
+
+const commissionPercent = getCommissionRate(amountPaidByBuyerNaira);
+const commissionNaira = (commissionPercent / 100) * amountPaidByBuyerNaira;
+
     const neededAmountKobo = Math.round(amountToTransferNaira * 100);
     // === Record platform commission ===
 try {

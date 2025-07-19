@@ -33,8 +33,7 @@ const logger = winston.createLogger({
   ]
 });
 
-// Constants
-const COMMISSION_PERCENT = 2.5;
+
 const RECEIPT_TIMEOUT = 30000; // 30 seconds timeout for receipt generation
 
 module.exports = (io) => {
@@ -713,10 +712,41 @@ const paystackInitializeResponse = await paystack.transaction.initialize({
         sellerId: seller._id 
       });
 
-      // Calculate amounts
-      const amountPaid = data.data.amount / 100;
-      const commission = (COMMISSION_PERCENT / 100) * amountPaid;
-      const sellerShare = amountPaid - commission;
+const amountPaid = data.data.amount / 100;
+
+// Calculate Paystack fee (1.5% + ₦100, capped at ₦2000)
+let paystackFee = (1.5 / 100) * amountPaid + 100;
+if (paystackFee > 2000) paystackFee = 2000;
+
+// Amount left after Paystack deduction
+const amountAfterPaystack = amountPaid - paystackFee;
+
+// Match frontend commission tiers
+function getCommissionRate(amount) {
+  if (amount < 10000) return 3.5;
+  if (amount < 50000) return 3;
+  if (amount < 200000) return 2.5;
+  return 1;
+}
+
+const commissionPercent = getCommissionRate(amountPaid);
+const commissionNaira = (commissionPercent / 100) * amountAfterPaystack;
+
+// Final seller payout
+const amountToTransferNaira = amountAfterPaystack - commissionNaira;
+const neededAmountKobo = Math.round(amountToTransferNaira * 100);
+
+// Optional logging
+logger.info(`[PAYMENT VERIFIED]`, {
+  buyerId: buyer._id,
+  sellerId: seller._id,
+  postId: post._id,
+  amountPaid,
+  paystackFee,
+  commissionPercent,
+  commissionNaira,
+  amountToTransferNaira,
+});
 
       // Prepare receipt data
       const receiptData = {
@@ -740,8 +770,8 @@ const paystackInitializeResponse = await paystack.transaction.initialize({
           buyer: buyer._id,
           seller: seller._id,
           amount: amountPaid,
-          commission,
-          sellerShare,
+          commissionNaira,
+          amountToTransferNaira,
           paymentReference: reference,
           status: 'In Escrow'
         }).save(),

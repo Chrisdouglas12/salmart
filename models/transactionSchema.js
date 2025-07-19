@@ -46,7 +46,7 @@ const transactionSchema = new mongoose.Schema({
     productCondition: String,
     createdAt: Date
   },
-
+commissionRate: { type: Number, default: 0 }, // % used for each transaction
   // Payout-related fields
   platformCommission: { type: Number, default: 0 }, // ₦ taken by platform
   sellerAmount: { type: Number, default: 0 },       // ₦ to seller

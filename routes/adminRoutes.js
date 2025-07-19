@@ -18,6 +18,7 @@ const Admin = require('../models/adminSchema.js')
 const RefundRequests = require('../models/refundSchema.js')
 const Report = require('../models/reportSchema.js')
  const Payout = require('../models/payoutSchema.js')
+ const Payment = require('../models/paymentSchema.js')
 const verifyToken = require('../middleware/auths.js')
 const Notification = require('../models/notificationSchema.js')
 const NotificationService = require('../services/notificationService.js');
@@ -218,7 +219,7 @@ router.get('/api/admin/refunds', verifyToken, async (req, res) => {
   }
 });
 
-//handle refunds requests
+// handle refunds requests
 router.post('/api/admin/refunds/:id/:action', verifyToken, async (req, res) => {
   try {
     const { id, action } = req.params;
@@ -246,11 +247,21 @@ router.post('/api/admin/refunds/:id/:action', verifyToken, async (req, res) => {
 
     if (action === 'approve') {
       try {
+        // ➕ Calculate Paystack fees (1.5% + ₦100 if amount > ₦2500)
+        const paystackPercentage = 0.015;
+        const flatFee = amount > 2500 ? 100 : 0;
+        const percentageFee = Math.min(amount * paystackPercentage, 2000);
+        const paystackFee = percentageFee + flatFee;
+
+        // ➖ Refund only what you truly received
+        const refundAmount = amount - paystackFee;
+
+        // 🔄 Call Paystack API for refund with adjusted amount
         const refundResponse = await axios.post(
           'https://api.paystack.co/refund',
           {
-            reference: transaction.paymentReference, // ✅ Corrected field
-            amount: Math.round(amount * 100)
+            reference: transaction.paymentReference,
+            amount: Math.round(refundAmount * 100) // convert to kobo
           },
           {
             headers: {
@@ -262,8 +273,9 @@ router.post('/api/admin/refunds/:id/:action', verifyToken, async (req, res) => {
 
         const refundData = refundResponse.data.data;
 
+        // Update refund & transaction records
         refund.status = 'refunded';
-        refund.adminComment = 'Refund approved and processed';
+        refund.adminComment = 'Refund approved and processed (minus gateway fees)';
         await refund.save();
 
         transaction.status = 'refunded';
@@ -272,8 +284,9 @@ router.post('/api/admin/refunds/:id/:action', verifyToken, async (req, res) => {
         transaction.refundStatus = refundData?.status || 'initiated';
         await transaction.save();
 
+        // Notify buyer
         const title = 'Refund Approved';
-        const message = `We’ve processed a refund of ₦${amount.toLocaleString('en-NG')} for your purchase of "${productTitle}".`;
+        const message = `We’ve refunded ₦${refundAmount.toLocaleString('en-NG')} for your purchase of "${productTitle}", after deducting gateway processing fees.`;
 
         await Notification.create({
           userId: buyerId,
@@ -285,7 +298,7 @@ router.post('/api/admin/refunds/:id/:action', verifyToken, async (req, res) => {
           metadata: {
             refundId: refund._id,
             transactionId: transaction._id,
-            amount,
+            amount: refundAmount,
             reference: transaction.refundReference
           }
         });
@@ -293,12 +306,12 @@ router.post('/api/admin/refunds/:id/:action', verifyToken, async (req, res) => {
         await sendFCMNotification(
           buyerId,
           title,
-          `₦${amount.toLocaleString('en-NG')} has been refunded for your purchase of "${productTitle}".`,
+          message,
           {
             type: 'refund_processed',
             refundId: refund._id.toString(),
             transactionId: transaction._id.toString(),
-            amount,
+            amount: refundAmount,
             reference: transaction.refundReference,
             senderId: null
           }
@@ -306,7 +319,7 @@ router.post('/api/admin/refunds/:id/:action', verifyToken, async (req, res) => {
 
         return res.status(200).json({
           success: true,
-          message: 'Refund approved and processed via Paystack',
+          message: 'Refund approved and processed via Paystack (minus fees)',
           data: refundData
         });
 
@@ -343,7 +356,7 @@ router.post('/api/admin/refunds/:id/:action', verifyToken, async (req, res) => {
       await sendFCMNotification(
         buyerId,
         title,
-        `Your refund request for "${productTitle}" was denied.`,
+        message,
         {
           type: 'refund_rejected',
           refundId: refund._id.toString(),
@@ -424,7 +437,7 @@ router.post('/api/admin/users/:id/unban', verifyToken, async (req, res) => {
   }
 });
 
-//Get all transactions
+// Get all transactions with tiered commission logic
 router.get('/api/admin/transactions', verifyToken, async (req, res) => {
   try {
     const transactions = await Transaction.find()
@@ -436,7 +449,15 @@ router.get('/api/admin/transactions', verifyToken, async (req, res) => {
 
     const transactionsWithCommission = transactions.map(tx => {
       const amount = tx.amount || 0;
-      const commission = parseFloat((amount * 0.025).toFixed(2)); // 2.5% of amount
+      let commission = 0;
+
+      if (amount <= 10000) commission = 0.065 * amount;
+      else if (amount <= 20000) commission = 0.055 * amount;
+      else if (amount <= 50000) commission = 0.045 * amount;
+      else if (amount <= 100000) commission = 0.04 * amount;
+      else commission = 0.025 * amount;
+
+      commission = parseFloat(commission.toFixed(2));
       const sellerAmount = parseFloat((amount - commission).toFixed(2));
 
       return {
@@ -452,7 +473,6 @@ router.get('/api/admin/transactions', verifyToken, async (req, res) => {
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
-
 
 
 //Get reported users
@@ -687,18 +707,60 @@ if (!systemUser) {
 
 router.get('/admin/platform-wallet', verifyToken, async (req, res) => {
   try {
-    const { type } = req.query; // Get the type from query parameter
+    const { type } = req.query;
 
     if (!type || (type !== 'commission' && type !== 'promotion')) {
       return res.status(400).json({ error: 'Invalid wallet type specified.' });
     }
 
-    const wallet = await PlatformWallet.findOne({ type }); // Find only the requested type
+    let totalAmount = 0;
+
+    // Match frontend commission tiers
+    function getCommissionRate(amount) {
+      if (amount < 10000) return 3.5;
+      if (amount < 50000) return 3;
+      if (amount < 200000) return 2.5;
+      return 1;
+    }
+
+    if (type === 'commission') {
+      const transactions = await Transaction.find({ status: 'released' });
+
+      transactions.forEach(tx => {
+        const amount = tx.amount || 0;
+
+        // Paystack fee: 1.5% + ₦100 (capped at ₦2000)
+        let paystackFee = (1.5 / 100) * amount + 100;
+        if (paystackFee > 2000) paystackFee = 2000;
+
+        const amountAfterPaystack = amount - paystackFee;
+
+        const commissionPercent = getCommissionRate(amount);
+        const commissionNaira = (commissionPercent / 100) * amountAfterPaystack;
+
+        totalAmount += commissionNaira;
+      });
+
+    } else if (type === 'promotion') {
+      const promos = await Payment.find({ status: 'success' });
+
+      promos.forEach(promo => {
+        const amount = promo.amount || 0;
+
+        // Paystack fee: 1.5% + ₦100 (capped at ₦2000)
+        let paystackFee = (1.5 / 100) * amount + 100;
+        if (paystackFee > 2000) paystackFee = 2000;
+
+        const netAmount = amount - paystackFee;
+        totalAmount += netAmount;
+      });
+    }
 
     res.json({
-      balance: wallet ? wallet.balance / 100 : 0, // Convert Kobo to Naira
-      lastUpdated: wallet?.lastUpdated || null
+      balance: parseFloat((totalAmount / 100).toFixed(2)), // Kobo to Naira
+      lastUpdated: new Date()
     });
+
   } catch (err) {
     console.error('[WALLET FETCH ERROR]', err.message);
     res.status(500).json({ error: 'Failed to retrieve platform wallet info' });
