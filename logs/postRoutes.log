@@ -29452,3 +29452,60 @@
 {"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T13:45:49.778Z"}
 {"level":"info","message":"✅ Cloudinary configured in postRoutes","timestamp":"2025-07-19T14:05:51.906Z"}
 {"level":"info","message":"✅ Cloudinary configured in postRoutes","timestamp":"2025-07-19T14:07:15.935Z"}
+{"level":"info","message":"✅ Cloudinary configured in postRoutes","timestamp":"2025-07-19T14:10:21.438Z"}
+{"level":"info","message":"✅ Cloudinary configured in postRoutes","timestamp":"2025-07-19T14:11:26.110Z"}
+{"level":"info","message":"✅ Cloudinary configured in postRoutes","timestamp":"2025-07-19T14:18:23.245Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T14:20:07.440Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T14:20:07.669Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T14:20:08.597Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T14:20:09.629Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T14:20:19.132Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T14:20:33.571Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T14:20:34.455Z"}
+{"level":"info","message":"Distributed 50 posts for user 6865680685b3194e8bc38b92 - Fresh: 2, Recent: 3, Older: 10","timestamp":"2025-07-19T14:20:36.642Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T14:20:36.677Z"}
+{"level":"info","message":"Distributed 50 posts for user 6865680685b3194e8bc38b92 - Fresh: 2, Recent: 3, Older: 10","timestamp":"2025-07-19T14:20:40.677Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T14:20:40.736Z"}
+{"level":"info","message":"Distributed 50 posts for user 6865680685b3194e8bc38b92 - Fresh: 2, Recent: 3, Older: 10","timestamp":"2025-07-19T14:20:42.036Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T14:21:03.653Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T14:22:24.197Z"}
+{"level":"info","message":"Starting post creation for user 6865680685b3194e8bc38b92, type: regular","timestamp":"2025-07-19T14:22:40.828Z"}
+{"level":"info","message":"Post created by user 6865680685b3194e8bc38b92: 687baa313e9da176d92fac7d","timestamp":"2025-07-19T14:22:41.514Z"}
+{"level":"info","message":"Created notification for follower 6843d062f457581752641ee3 for post 687baa313e9da176d92fac7d","timestamp":"2025-07-19T14:22:41.948Z"}
+{"level":"info","message":"Created notification for follower 68431685432ee393a735a641 for post 687baa313e9da176d92fac7d","timestamp":"2025-07-19T14:22:41.971Z"}
+{"level":"info","message":"Created notification for follower 6846e9cc91c8d81ee744f910 for post 687baa313e9da176d92fac7d","timestamp":"2025-07-19T14:22:42.122Z"}
+{"level":"info","message":"Created notification for follower 6878bbbf619a967094730b93 for post 687baa313e9da176d92fac7d","timestamp":"2025-07-19T14:22:42.141Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T14:22:47.556Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T14:22:48.001Z"}
+{"level":"info","message":"Distributed 50 posts for user 6865680685b3194e8bc38b92 - Fresh: 3, Recent: 3, Older: 10","timestamp":"2025-07-19T14:22:49.560Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T14:22:49.614Z"}
+{"level":"info","message":"Distributed 50 posts for user 6865680685b3194e8bc38b92 - Fresh: 3, Recent: 3, Older: 10","timestamp":"2025-07-19T14:22:50.787Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T14:22:50.834Z"}
+{"level":"info","message":"Distributed 50 posts for user 6865680685b3194e8bc38b92 - Fresh: 3, Recent: 3, Older: 10","timestamp":"2025-07-19T14:22:51.642Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T14:22:58.417Z"}
+{"level":"info","message":"User 6865680685b3194e8bc38b92 liked post 687baa313e9da176d92fac7d","timestamp":"2025-07-19T14:22:58.814Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T14:23:02.406Z"}
+{"level":"info","message":"Fetched post 687baa313e9da176d92fac7d for user anonymous","timestamp":"2025-07-19T14:23:02.819Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T14:23:12.156Z"}
+{"body":{"amount":160000,"dailyRate":800,"duration":2,"email":"sam@gmail.com","postId":"687baa313e9da176d92fac7d"},"bodyEmail":"sam@gmail.com","level":"info","message":"Promotion payment initiation started","requestId":"PROMO_1752934992169","timestamp":"2025-07-19T14:23:12.170Z","user":{"exp":1753534152,"iat":1752929352,"userId":"6865680685b3194e8bc38b92"}}
+{"amount":1600,"duration":2,"level":"info","message":"Promotion payment initialized successfully","postId":"687baa313e9da176d92fac7d","reference":"PROMO_1752934992556_bbhal6ptl","requestId":"PROMO_1752934992169","timestamp":"2025-07-19T14:23:13.902Z","userEmail":"sam@gmail.com"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T14:23:28.741Z"}
+{"level":"info","message":"Promotion payment verification started","postId":"687baa313e9da176d92fac7d","reference":"PROMO_1752934992556_bbhal6ptl","requestId":"PROMO_SUCCESS_1752935008762","timestamp":"2025-07-19T14:23:28.762Z","userId":"6865680685b3194e8bc38b92"}
+{"level":"info","message":"Promotion verification completed successfully","reference":"PROMO_1752934992556_bbhal6ptl","requestId":"PROMO_SUCCESS_1752935008762","timestamp":"2025-07-19T14:23:33.254Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T14:23:33.602Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T14:23:48.767Z"}
+{"level":"info","message":"Distributed 50 posts for user 6865680685b3194e8bc38b92 - Fresh: 3, Recent: 3, Older: 10","timestamp":"2025-07-19T14:23:50.175Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T14:23:50.229Z"}
+{"level":"info","message":"Distributed 50 posts for user 6865680685b3194e8bc38b92 - Fresh: 3, Recent: 3, Older: 10","timestamp":"2025-07-19T14:23:51.806Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T14:23:51.844Z"}
+{"level":"info","message":"Distributed 50 posts for user 6865680685b3194e8bc38b92 - Fresh: 3, Recent: 3, Older: 10","timestamp":"2025-07-19T14:23:53.064Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T14:24:18.668Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T14:24:24.509Z"}
+{"level":"info","message":"Distributed 50 posts for user 6865680685b3194e8bc38b92 - Fresh: 3, Recent: 3, Older: 10","timestamp":"2025-07-19T14:24:25.857Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T14:24:25.890Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T14:24:32.577Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T14:24:32.608Z"}
+{"level":"info","message":"Distributed 50 posts for user 6865680685b3194e8bc38b92 - Fresh: 3, Recent: 3, Older: 10","timestamp":"2025-07-19T14:24:33.103Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T14:24:33.166Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T14:24:34.967Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-19T14:24:37.087Z"}

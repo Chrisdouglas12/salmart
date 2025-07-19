@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
   <title>Chat - SALMART</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -38,7 +38,42 @@
       z-index: 1000;
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
     }
+.chats-header {
+  background: linear-gradient(135deg, #fff 0%, #f8fafc 100%);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(40, 167, 86, 0.1);
+  display: flex;
+  align-items: center;
+  padding: 16px 20px;
+  position: fixed;
+  width: 100%;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  /* Add these lines: */
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  will-change: transform;
+}
 
+/* Prevent body scroll when typing on mobile */
+body.typing {
+  position: fixed;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Force header to stay fixed on iOS */
+@supports (-webkit-touch-callout: none) {
+  .chats-header {
+    position: -webkit-sticky;
+    position: sticky;
+    top: 0;
+  }
+}
     .user-profile {
       display: flex;
       align-items: center;
@@ -135,7 +170,7 @@
       height: calc(100vh - 180px);
       margin-top: 80px;
       scroll-behavior: smooth;
-      margin-bottom: 180px;
+      margin-bottom: 140px;
     }
 
     #chat-messages::-webkit-scrollbar {
@@ -336,80 +371,113 @@
 
 
     /* Message Input */
-    .message-container {
-      display: flex;
-      align-items: center;
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: white;
-      padding: 16px 20px;
-      border-top: 1px solid #e2e8f0;
-      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
-      z-index: 999;
-    }
+.message-container {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  border-top: 1px solid #fff;
+  box-shadow: 0 0 10px #ddd;
+  z-index: 999;
+  padding: 10px;
+  border-top-left-radius: 30px;
+  border-top-right-radius: 30px;
+}
 
-    #type-section {
-      flex: 1;
-      padding: 12px 16px;
-      border-radius: 24px;
-      border: 1px solid #e2e8f0;
-      outline: none;
-      font-size: 14px;
-      background: #f8fafc;
-      transition: all 0.2s ease;
-    }
+.input-section {
+  max-width: 800px;
+  margin: 0 auto;
+}
 
-    #type-section:focus {
-      border-color: #28a756;
-      box-shadow: 0 0 0 3px rgba(40, 167, 86, 0.1);
-      background: white;
-    }
+#type-section {
+  width: 100%;
+  min-height: 52px;
+  max-height: 200px;
+  padding: 10px 16px;
+  border: 1px solid #fff;
+  border-radius: 30px;
+  font-size: 16px;
+  font-family: inherit;
+  line-height: 1.5;
+  resize: none;
+  outline: none;
+  background: #fafafa;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
 
-    #send-btn {
-      background: linear-gradient(135deg, #28a756 0%, #22c55e 100%);
-      border: none;
-      color: white;
-      padding: 12px 20px;
-      border-radius: 24px;
-      margin-left: 8px;
-      cursor: pointer;
-      font-weight: 600;
-      transition: all 0.2s ease;
-      box-shadow: 0 2px 8px rgba(40, 167, 86, 0.3);
-    }
+#type-section:focus {
+  border-color: #fff;
+  background: white;
+}
 
-    #send-btn:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(40, 167, 86, 0.4);
-    }
+#type-section::placeholder {
+  color: #9ca3af;
+  font-size: 16px;
+}
 
-    #bargain-btn {
-      background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
-      border: none;
-      color: white;
-      padding: 12px 16px;
-      border-radius: 24px;
-      margin-left: 8px;
-      cursor: pointer;
-      font-weight: 600;
-      transition: all 0.2s ease;
-      box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
-    }
+.action-buttons {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px;
+}
 
-    #bargain-btn:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
-    }
+.left-buttons {
+  display: flex;
+  gap: 8px;
+}
 
-    #bargain-btn:disabled {
-      background: #9ca3af;
-      cursor: not-allowed;
-      transform: none;
-      box-shadow: none;
-    }
+.action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 16px;
+  background: #f1f5f9;
+  color: #64748b;
+}
 
+.action-btn:hover {
+  background: #e2e8f0;
+  transform: translateY(-1px);
+}
+
+.action-btn.primary {
+  background: linear-gradient(135deg, #28a756 0%, #22c55e 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(40, 167, 86, 0.3);
+}
+
+.action-btn.primary:hover {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  box-shadow: 0 4px 12px rgba(40, 167, 86, 0.4);
+}
+
+.action-btn:disabled {
+  background: #f1f5f9;
+  color: #cbd5e0;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+#bargain-btn:not(:disabled) {
+  background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+}
+
+#bargain-btn:not(:disabled):hover {
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+}
     /* Product Preview */
     .product-photo-preview {
       max-width: 100%;
@@ -571,6 +639,128 @@
         display: none;
       }
     }
+    /* Emoji Picker Styles */
+.emoji-picker {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  width: 320px;
+  max-height: 300px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  display: none;
+  z-index: 1001;
+  overflow: hidden;
+}
+
+.emoji-categories {
+  display: flex;
+  border-bottom: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.emoji-category {
+  flex: 1;
+  padding: 10px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  background: none;
+  font-size: 18px;
+}
+
+.emoji-category:hover {
+  background: #e2e8f0;
+}
+
+.emoji-category.active {
+  background: #28a756;
+  color: white;
+}
+
+.emoji-grid {
+  max-height: 240px;
+  overflow-y: auto;
+  padding: 10px;
+}
+
+.emoji-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  margin-bottom: 5px;
+}
+
+.emoji-item {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 6px;
+  font-size: 18px;
+  transition: all 0.2s ease;
+  border: none;
+  background: none;
+}
+
+.emoji-item:hover {
+  background: #f0f0f0;
+  transform: scale(1.2);
+}
+
+.emoji-grid::-webkit-scrollbar {
+  width: 4px;
+}
+
+.emoji-grid::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 10px;
+}
+
+.emoji-grid::-webkit-scrollbar-thumb {
+  background: #cbd5e0;
+  border-radius: 10px;
+}
+
+/* Message emoji styling */
+.message {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Helvetica Neue", sans-serif;
+}
+
+/* Make emojis larger in messages */
+.emoji-large {
+  font-size: 2.5em;
+  line-height: 1;
+}
+
+.message.emoji-only {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  padding: 8px;
+}
+
+.sent.emoji-only {
+  background: transparent !important;
+}
+@media (max-width: 768px) {
+  .emoji-picker {
+    width: calc(100vw - 40px);
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  
+  .emoji-item {
+    width: 36px;
+    height: 36px;
+    font-size: 20px;
+  }
+}
   </style>
 </head>
 <body>
@@ -600,15 +790,50 @@
   <!-- Chat Messages -->
   <div id="chat-messages"></div>
 
-  <!-- Message Input -->
-  <div class="message-container">
-    <input id="type-section" placeholder="Type a message..." oninput="sendTypingSignal()">
-    <button id="send-btn"><i class="fas fa-paper-plane"></i></button>
-    <button id="bargain-btn"><i class="fas fa-handshake"></i></button>
+<!-- Message Input -->
+<div class="message-container">
+  <div class="input-section">
+    <textarea id="type-section" placeholder="Type a message..." oninput="sendTypingSignal()" rows="1"></textarea>
+    
+    <div class="action-buttons">
+      <div class="left-buttons">
+        <button id="attach-btn" class="action-btn" title="Attach Image">
+          <i class="fas fa-paperclip"></i>
+        </button>
+        <button id="emoji-btn" class="action-btn" title="Add Emoji">
+          <i class="fas fa-smile"></i>
+        </button>
+        <button id="bargain-btn" class="action-btn" title="Start Bargaining">
+          <i class="fas fa-handshake"></i>
+        </button>
+      </div>
+      
+      <div class="right-buttons">
+        <button id="send-btn" class="action-btn primary" title="Send Message">
+          <i class="fas fa-paper-plane"></i>
+        </button>
+      </div>
+    </div>
+    
+    <!-- Emoji Picker (positioned outside action-buttons for proper layout) -->
+    <div id="emoji-picker" class="emoji-picker">
+      <div class="emoji-categories">
+        <button class="emoji-category active" data-category="smileys">😊</button>
+        <button class="emoji-category" data-category="people">👍</button>
+        <button class="emoji-category" data-category="animals">🐶</button>
+        <button class="emoji-category" data-category="food">🍕</button>
+        <button class="emoji-category" data-category="activities">⚽</button>
+        <button class="emoji-category" data-category="travel">🚗</button>
+        <button class="emoji-category" data-category="objects">💻</button>
+        <button class="emoji-category" data-category="symbols">❤️</button>
+      </div>
+      <div class="emoji-grid" id="emoji-grid">
+        <!-- Emojis will be loaded here -->
+      </div>
+    </div>
   </div>
+</div>
 
-  <!-- Toast Notification -->
-  <div id="toast" class="toast-message" style="display: none;"></div>
 
   <!-- Report Modal -->
   <div id="reportConfirmationModal" class="modal">
@@ -684,7 +909,180 @@
       </div>
     </div>
   </div>
+<script>
+// Auto-resize textarea like Claude AI
+function autoResizeTextarea() {
+  const textarea = document.getElementById('type-section');
+  textarea.style.height = 'auto';
+  textarea.style.height = Math.min(textarea.scrollHeight, 200) + 'px';
+}
 
+document.getElementById('type-section').addEventListener('input', function() {
+  autoResizeTextarea();
+  sendTypingSignal(); // Keep your existing typing signal
+});
+
+// Handle Enter key (send on Enter, new line on Shift+Enter)
+document.getElementById('type-section').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    document.getElementById('send-btn').click();
+  }
+});
+
+// Handle file attachment
+document.getElementById('attach-btn').addEventListener('click', function() {
+  document.getElementById('file-input').click();
+});
+
+document.getElementById('file-input').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (file) {
+    console.log('Selected file:', file.name);
+    // Add your file upload logic here
+    this.value = '';
+  }
+});
+
+// Initial resize
+autoResizeTextarea();
+</script>
+<script>
+// Handle mobile keyboard appearance
+let initialViewportHeight = window.innerHeight;
+
+function handleViewportChange() {
+  const currentHeight = window.innerHeight;
+  const heightDifference = initialViewportHeight - currentHeight;
+  
+  if (heightDifference > 150) { // Keyboard is likely open
+    document.body.classList.add('typing');
+  } else {
+    document.body.classList.remove('typing');
+  }
+}
+
+// Listen for viewport changes
+window.addEventListener('resize', handleViewportChange);
+
+// Focus/blur events for input
+document.getElementById('type-section').addEventListener('focus', function() {
+  setTimeout(() => {
+    document.body.classList.add('typing');
+  }, 300);
+});
+
+document.getElementById('type-section').addEventListener('blur', function() {
+  document.body.classList.remove('typing');
+});
+</script>
+<script>
+// Emoji data
+const emojiData = {
+  smileys: ['😀','😃','😄','😁','😆','😅','😂','🤣','😊','😇','🙂','🙃','😉','😌','😍','🥰','😘','😗','😙','😚','😋','😛','😝','😜','🤪','🤨','🧐','🤓','😎','🤩','🥳','😏','😒','😞','😔','😟','😕','🙁','☹️','😣','😖','😫','😩','🥺','😢','😭','😤','😠','😡','🤬','🤯','😳','🥵','🥶','😱','😨','😰','😥','😓','🤗','🤔','🤭','🤫','🤥','😶','😐','😑','😬','🙄','😯','😦','😧','😮','😲'],
+  people: ['👋','🤚','🖐️','✋','🖖','👌','🤌','🤏','✌️','🤞','🤟','🤘','🤙','👈','👉','👆','🖕','👇','☝️','👍','👎','👊','✊','🤛','🤜','👏','🙌','👐','🤲','🤝','🙏','✍️','💅','🤳','💪','🦾','🦿','🦵','🦶','👂','🦻','👃','🧠','🫀','🫁','🦷','🦴','👀','👁️','👅','👄','💋'],
+  animals: ['🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼','🐻‍❄️','🐨','🐯','🦁','🐮','🐷','🐽','🐸','🐵','🙈','🙉','🙊','🐒','🐔','🐧','🐦','🐤','🐣','🐥','🦆','🦅','🦉','🦇','🐺','🐗','🐴','🦄','🐝','🐛','🦋','🐌','🐞','🐜','🦟','🦗','🕷️','🦂','🐢','🐍','🦎','🦖','🦕','🐙','🦑','🦐','🦞','🦀','🐡','🐠','🐟','🐬','🐳','🐋','🦈','🐊','🐅','🐆','🦓','🦍','🦧','🐘','🦛','🦏','🐪','🐫','🦒','🦘','🐃','🐂','🐄','🐎','🐖','🐏','🐑','🦙','🐐','🦌','🐕','🐩','🦮','🐕‍🦺','🐈','🐈‍⬛','🐓','🦃','🦚','🦜','🦢','🦩','🕊️','🐇','🦝','🦨','🦡','🦦','🦥','🐁','🐀','🐿️','🦔'],
+  food: ['🍏','🍎','🍐','🍊','🍋','🍌','🍉','🍇','🍓','🫐','🍈','🍒','🍑','🥭','🍍','🥥','🥝','🍅','🍆','🥑','🥦','🥬','🥒','🌶️','🫑','🌽','🥕','🫒','🧄','🧅','🥔','🍠','🥐','🥯','🍞','🥖','🥨','🧀','🥚','🍳','🧈','🥞','🧇','🥓','🥩','🍗','🍖','🦴','🌭','🍔','🍟','🍕','🫓','🥪','🥙','🧆','🌮','🌯','🫔','🥗','🥘','🫕','🥫','🍝','🍜','🍲','🍛','🍣','🍱','🥟','🦪','🍤','🍙','🍚','🍘','🍥','🥠','🥮','🍢','🍡','🍧','🍨','🍦','🥧','🧁','🍰','🎂','🍮','🍭','🍬','🍫','🍿','🍩','🍪','🌰','🥜','🍯'],
+  activities: ['⚽','🏀','🏈','⚾','🥎','🎾','🏐','🏉','🥏','🎱','🪀','🏓','🏸','🏒','🏑','🥍','🏏','🪃','🥅','⛳','🪁','🏹','🎣','🤿','🥊','🥋','🎽','🛹','🛷','⛸️','🥌','🎿','⛷️','🏂','🪂','🏋️‍♀️','🏋️','🏋️‍♂️','🤼‍♀️','🤼','🤼‍♂️','🤸‍♀️','🤸','🤸‍♂️','⛹️‍♀️','⛹️','⛹️‍♂️','🤺','🤾‍♀️','🤾','🤾‍♂️','🏌️‍♀️','🏌️','🏌️‍♂️','🏇','🧘‍♀️','🧘','🧘‍♂️','🏄‍♀️','🏄','🏄‍♂️','🏊‍♀️','🏊','🏊‍♂️','🤽‍♀️','🤽','🤽‍♂️','🚣‍♀️','🚣','🚣‍♂️','🧗‍♀️','🧗','🧗‍♂️','🚵‍♀️','🚵','🚵‍♂️','🚴‍♀️','🚴','🚴‍♂️','🏆','🥇','🥈','🥉','🏅','🎖️','🏵️','🎗️','🎫','🎟️','🎪','🤹','🤹‍♀️','🤹‍♂️','🎭','🩰','🎨','🎬','🎤','🎧','🎼','🎵','🎶','🥁','🪘','🎹','🎷','🎺','🎸','🪕','🎻','🎲','♠️','♥️','♦️','♣️','♟️','🃏','🀄','🎴'],
+  travel: ['🚗','🚕','🚙','🚌','🚎','🏎️','🚓','🚑','🚒','🚐','🛻','🚚','🚛','🚜','🏍️','🛵','🚲','🛴','🛹','🛼','🚁','🛸','🚀','✈️','🛩️','🛫','🛬','🪂','💺','🚢','🛥️','🚤','⛵','🛶','⚓','🚧','⛽','🚨','🚥','🚦','🛑','🚏','⭐','🎡','🎢','🎠','🏗️','🌁','🗼','🏭','⛲','🎑','⛰️','🏔️','🗻','🌋','🏕️','🏖️','🏜️','🏝️','🏞️','🏟️','🏛️','🏗️','🧱','🪨','🪵','🛖','🏘️','🏚️','🏠','🏡','🏢','🏣','🏤','🏥','🏦','🏨','🏩','🏪','🏫','🏬','🏭','🏯','🏰','🗾','🎌','🏁','🚩','🏴','🏳️','🏳️‍🌈','🏳️‍⚧️','🏴‍☠️'],
+  objects: ['⌚','📱','📲','💻','⌨️','🖥️','🖨️','🖱️','🖲️','🕹️','🗜️','💽','💾','💿','📀','📼','📷','📸','📹','🎥','📽️','🎞️','📞','☎️','📟','📠','📺','📻','🎙️','🎚️','🎛️','🧭','⏱️','⏲️','⏰','🕰️','⌛','⏳','📡','🔋','🔌','💡','🔦','🕯️','🪔','🧯','🛢️','💸','💵','💴','💶','💷','💰','💳','💎','⚖️','🧰','🔧','🔨','⚒️','🛠️','⛏️','🔩','⚙️','🧱','⛓️','🧲','🔫','💣','🧨','🪓','🔪','🗡️','⚔️','🛡️','🚬','⚰️','🪦','⚱️','🏺','🔮','📿','🧿','💈','⚗️','🔭','🔬','🕳️','🩹','🩺','💊','💉','🧬','🦠','🧫','🧪','🌡️','🧹','🧺','🧻','🚽','🚰','🚿','🛁','🛀','🧼','🪥','🪒','🧴','🧷','🧸','🪆','🖼️','🛍️','🛒','🎁','🎀','🎊','🎉','🎈','🎂','🍾','🥂','🍻','🍷','🥃','🍸','🍹','🧃','🧉','☕','🍵','🥤','🧋','🍼','🥛','🍯','🍮','🍭','🍬','🍫','🍿','🍩','🍪','🌰','🥜','🫐','🍇','🍈','🍉','🍊','🍋','🍌','🍍','🥭','🍎','🍏','🍐','🍑','🍒','🍓','🫒','🥝','🍅'],
+  symbols: ['❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💔','❣️','💕','💞','💓','💗','💖','💘','💝','💟','☮️','✝️','☪️','🕉️','☸️','✡️','🔯','🕎','☯️','☦️','🛐','⛎','♈','♉','♊','♋','♌','♍','♎','♏','♐','♑','♒','♓','🆔','⚛️','🉑','☢️','☣️','📴','📳','🈶','🈚','🈸','🈺','🈷️','✴️','🆚','💮','🉐','㊙️','㊗️','🈴','🈵','🈹','🈲','🅰️','🅱️','🆎','🆑','🅾️','🆘','❌','⭕','🛑','⛔','📛','🚫','💯','💢','♨️','🚷','🚯','🚳','🚱','🔞','📵','🚭','❗','❕','❓','❔','‼️','⁉️','🔅','🔆','〽️','⚠️','🚸','🔱','⚜️','🔰','♻️','✅','🈯','💹','❇️','✳️','❎','🌐','💠','Ⓜ️','🌀','💤','🏧','🚾','♿','🅿️','🛗','🈳','🈂️','🛂','🛃','🛄','🛅','🚹','🚺','🚼','⚧️','🚻','🚮','🎦','📶','🈁','🔣','ℹ️','🔤','🔡','🔠','🆖','🆗','🆙','🆒','🆕','🆓','0️⃣','1️⃣','2️⃣','3️⃣','4️⃣','5️⃣','6️⃣','7️⃣','8️⃣','9️⃣','🔟']
+};
+
+// Emoji picker functionality
+let currentCategory = 'smileys';
+const emojiPicker = document.getElementById('emoji-picker');
+const emojiGrid = document.getElementById('emoji-grid');
+const emojiBtn = document.getElementById('emoji-btn');
+const textarea = document.getElementById('type-section');
+
+// Toggle emoji picker
+emojiBtn.addEventListener('click', function(e) {
+  e.stopPropagation();
+  if (emojiPicker.style.display === 'block') {
+    emojiPicker.style.display = 'none';
+  } else {
+    emojiPicker.style.display = 'block';
+    loadEmojiCategory(currentCategory);
+  }
+});
+
+// Close picker when clicking outside
+document.addEventListener('click', function(e) {
+  if (!emojiPicker.contains(e.target) && e.target !== emojiBtn) {
+    emojiPicker.style.display = 'none';
+  }
+});
+
+// Category switching
+document.querySelectorAll('.emoji-category').forEach(btn => {
+  btn.addEventListener('click', function() {
+    document.querySelector('.emoji-category.active').classList.remove('active');
+    this.classList.add('active');
+    currentCategory = this.dataset.category;
+    loadEmojiCategory(currentCategory);
+  });
+});
+
+// Load emojis for category
+function loadEmojiCategory(category) {
+  const emojis = emojiData[category] || [];
+  let html = '';
+  
+  for (let i = 0; i < emojis.length; i += 9) {
+    html += '<div class="emoji-row">';
+    for (let j = i; j < i + 9 && j < emojis.length; j++) {
+      html += `<button class="emoji-item" data-emoji="${emojis[j]}">${emojis[j]}</button>`;
+    }
+    html += '</div>';
+  }
+  
+  emojiGrid.innerHTML = html;
+  
+  // Add click listeners to emoji items
+  document.querySelectorAll('.emoji-item').forEach(item => {
+    item.addEventListener('click', function() {
+      insertEmoji(this.dataset.emoji);
+    });
+  });
+}
+
+// Insert emoji into textarea
+function insertEmoji(emoji) {
+  const start = textarea.selectionStart;
+  const end = textarea.selectionEnd;
+  const text = textarea.value;
+  const before = text.substring(0, start);
+  const after = text.substring(end);
+  
+  textarea.value = before + emoji + after;
+  textarea.selectionStart = textarea.selectionEnd = start + emoji.length;
+  textarea.focus();
+  
+  // Auto-resize textarea
+  autoResizeTextarea();
+  
+  // Hide picker
+  emojiPicker.style.display = 'none';
+}
+
+// Check if message is emoji-only
+function isEmojiOnly(text) {
+  const emojiRegex = /^[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]+$/u;
+  return emojiRegex.test(text.trim());
+}
+
+// Update your message sending function to handle emoji-only messages
+// Add this to your existing message sending code:
+function checkEmojiMessage(messageElement, text) {
+  if (isEmojiOnly(text)) {
+    messageElement.classList.add('emoji-only');
+    if (text.length <= 6) { // For 1-3 emojis, make them larger
+      messageElement.classList.add('emoji-large');
+    }
+  }
+}
+</script>
   <script src="Chats.js"></script>
   <script src="bargaining.js"></script>
 </body>
