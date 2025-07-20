@@ -1982,3 +1982,226 @@
 {"level":"warn","message":"Socket Ozf5H_Y1yjs6jmn6AACS connection attempt: No token provided.","timestamp":"2025-07-19T21:49:26.050Z"}
 {"level":"warn","message":"Socket UU9EPELJzToOBNRyAACU connection attempt: No token provided.","timestamp":"2025-07-19T21:50:27.743Z"}
 {"level":"warn","message":"Socket 1t_vFcHfL3iQC9DJAACW connection attempt: No token provided.","timestamp":"2025-07-19T21:50:32.417Z"}
+{"level":"info","message":"Initializing Socket.IO event handlers","timestamp":"2025-07-20T18:49:53.408Z"}
+{"level":"info","message":"Initializing Socket.IO event handlers","timestamp":"2025-07-20T19:20:32.288Z"}
+{"level":"info","message":"Initializing Socket.IO event handlers","timestamp":"2025-07-20T19:45:30.077Z"}
+{"level":"info","message":"Initializing Socket.IO event handlers","timestamp":"2025-07-20T19:49:27.415Z"}
+{"level":"info","message":"Initializing Socket.IO event handlers","timestamp":"2025-07-20T20:04:01.251Z"}
+{"level":"warn","message":"Socket gDZ-ej9PupHcDosxAAAB connection attempt: No token provided.","timestamp":"2025-07-20T20:06:20.964Z"}
+{"level":"warn","message":"Socket jb0wJv5DoVlVUud9AAAD connection attempt: No token provided.","timestamp":"2025-07-20T20:06:49.637Z"}
+{"level":"warn","message":"Socket guPeRx58DBrOVAGCAAAF connection attempt: No token provided.","timestamp":"2025-07-20T20:06:53.386Z"}
+{"level":"warn","message":"Socket BV2Ok5FA_YhCni4PAAAH connection attempt: No token provided.","timestamp":"2025-07-20T20:07:50.250Z"}
+{"level":"warn","message":"Socket MV00iIUJuFOBWdpJAAAJ connection attempt: No token provided.","timestamp":"2025-07-20T20:08:06.107Z"}
+{"level":"warn","message":"Socket 4uQ_indUgQOvpB9oAAAL connection attempt: No token provided.","timestamp":"2025-07-20T20:08:29.118Z"}
+{"level":"warn","message":"Socket QhJgGM2GfffT8UyYAAAN connection attempt: No token provided.","timestamp":"2025-07-20T20:21:18.165Z"}
+{"level":"warn","message":"Socket ZQ4P2CjzuVPYwUJ5AAAP connection attempt: No token provided.","timestamp":"2025-07-20T20:23:15.318Z"}
+{"level":"warn","message":"Socket OWtu6s9WJ_beq0YxAAAR connection attempt: No token provided.","timestamp":"2025-07-20T20:23:40.745Z"}
+{"level":"warn","message":"Socket bJYkAxCBQcgwBVJ3AAAT connection attempt: No token provided.","timestamp":"2025-07-20T20:23:44.277Z"}
+{"level":"warn","message":"Socket bNJAzPR_8dM7ulhwAAAV connection attempt: No token provided.","timestamp":"2025-07-20T20:28:09.913Z"}
+{"level":"warn","message":"Socket Sf2z4Q4-00n5XjrMAAAX connection attempt: No token provided.","timestamp":"2025-07-20T20:28:33.062Z"}
+{"level":"warn","message":"Socket s7_TORFxxZ5mbnDrAAAZ connection attempt: No token provided.","timestamp":"2025-07-20T20:28:39.886Z"}
+{"level":"warn","message":"Socket GfdNCw2-oeU6RftqAAAb connection attempt: No token provided.","timestamp":"2025-07-20T20:31:17.524Z"}
+{"level":"info","message":"Initializing Socket.IO event handlers","timestamp":"2025-07-20T20:38:34.884Z"}
+{"level":"warn","message":"Socket ovbh4CvWwZgM5GP2AAAB connection attempt: No token provided.","timestamp":"2025-07-20T20:40:35.422Z"}
+{"level":"warn","message":"Socket CkW8cOZOltV5DAI-AAAD connection attempt: No token provided.","timestamp":"2025-07-20T20:40:53.072Z"}
+{"level":"warn","message":"Socket 19tTGi_vcGwfV5mZAAAF connection attempt: No token provided.","timestamp":"2025-07-20T20:41:12.420Z"}
+{"level":"warn","message":"Socket X9G-eYgo5kOPD7UxAAAH connection attempt: No token provided.","timestamp":"2025-07-20T20:41:14.973Z"}
+{"level":"warn","message":"Socket Zqj4TTYIhsbpFrQ8AAAK connection attempt: No token provided.","timestamp":"2025-07-20T20:41:36.537Z"}
+{"level":"warn","message":"Socket oiu4kwcbzm2TnHc9AAAM connection attempt: No token provided.","timestamp":"2025-07-20T20:41:52.107Z"}
+{"level":"info","message":"Socket VcJsexBCldWRRpNzAAAO authenticated for user: 68431685432ee393a735a641","timestamp":"2025-07-20T20:41:56.033Z"}
+{"level":"info","message":"New client connected: VcJsexBCldWRRpNzAAAO (Authenticated User: 68431685432ee393a735a641)","timestamp":"2025-07-20T20:41:56.053Z"}
+{"level":"info","message":"Socket VcJsexBCldWRRpNzAAAO (User: 68431685432ee393a735a641) connected and joined user_68431685432ee393a735a641","timestamp":"2025-07-20T20:41:56.055Z"}
+{"level":"info","message":"User 68431685432ee393a735a641 (socket VcJsexBCldWRRpNzAAAO) already in user_68431685432ee393a735a641 room.","timestamp":"2025-07-20T20:41:56.081Z"}
+{"level":"info","message":"User 68431685432ee393a735a641 (socket VcJsexBCldWRRpNzAAAO) already in user_68431685432ee393a735a641 room.","timestamp":"2025-07-20T20:41:56.086Z"}
+{"level":"info","message":"Notification counts sent to user 68431685432ee393a735a641 after joinRoom event.","timestamp":"2025-07-20T20:41:56.093Z"}
+{"level":"info","message":"Notification counts sent to user 68431685432ee393a735a641 after joinRoom event.","timestamp":"2025-07-20T20:41:56.094Z"}
+{"level":"info","message":"Socket UREaMVq8juCnX276AAAQ authenticated for user: 68431685432ee393a735a641","timestamp":"2025-07-20T20:41:57.609Z"}
+{"level":"info","message":"New client connected: UREaMVq8juCnX276AAAQ (Authenticated User: 68431685432ee393a735a641)","timestamp":"2025-07-20T20:41:57.614Z"}
+{"level":"info","message":"Socket UREaMVq8juCnX276AAAQ (User: 68431685432ee393a735a641) connected and joined user_68431685432ee393a735a641","timestamp":"2025-07-20T20:41:57.615Z"}
+{"level":"info","message":"Client disconnected: VcJsexBCldWRRpNzAAAO (User: 68431685432ee393a735a641)","timestamp":"2025-07-20T20:42:00.699Z"}
+{"level":"info","message":"Client disconnected: UREaMVq8juCnX276AAAQ (User: 68431685432ee393a735a641)","timestamp":"2025-07-20T20:42:00.717Z"}
+{"level":"info","message":"Removed user 68431685432ee393a735a641 from userSocketMap on disconnect.","timestamp":"2025-07-20T20:42:00.719Z"}
+{"level":"info","message":"Socket QuNQUjyCjuT_k7FRAAAS authenticated for user: 68431685432ee393a735a641","timestamp":"2025-07-20T20:42:01.854Z"}
+{"level":"info","message":"New client connected: QuNQUjyCjuT_k7FRAAAS (Authenticated User: 68431685432ee393a735a641)","timestamp":"2025-07-20T20:42:01.859Z"}
+{"level":"info","message":"Socket QuNQUjyCjuT_k7FRAAAS (User: 68431685432ee393a735a641) connected and joined user_68431685432ee393a735a641","timestamp":"2025-07-20T20:42:01.860Z"}
+{"level":"info","message":"User 68431685432ee393a735a641 (socket QuNQUjyCjuT_k7FRAAAS) already in user_68431685432ee393a735a641 room.","timestamp":"2025-07-20T20:42:01.871Z"}
+{"level":"info","message":"JoinChatRoom event received from 68431685432ee393a735a641 for chatRoomId: 68431685432ee393a735a641_6843d062f457581752641ee3","timestamp":"2025-07-20T20:42:01.875Z"}
+{"level":"info","message":"Socket QuNQUjyCjuT_k7FRAAAS (User: 68431685432ee393a735a641) joined chat room chat_68431685432ee393a735a641_6843d062f457581752641ee3","timestamp":"2025-07-20T20:42:01.877Z"}
+{"level":"info","message":"Notification counts sent to user 68431685432ee393a735a641 after joinRoom event.","timestamp":"2025-07-20T20:42:01.878Z"}
+{"level":"info","message":"Typing signal from 68431685432ee393a735a641 to 6843d062f457581752641ee3","timestamp":"2025-07-20T20:42:16.095Z"}
+{"level":"info","message":"Typing signal from 68431685432ee393a735a641 to 6843d062f457581752641ee3","timestamp":"2025-07-20T20:42:16.101Z"}
+{"level":"info","message":"Typing signal from 68431685432ee393a735a641 to 6843d062f457581752641ee3","timestamp":"2025-07-20T20:42:16.104Z"}
+{"level":"info","message":"Typing signal from 68431685432ee393a735a641 to 6843d062f457581752641ee3","timestamp":"2025-07-20T20:42:16.406Z"}
+{"level":"info","message":"Typing signal from 68431685432ee393a735a641 to 6843d062f457581752641ee3","timestamp":"2025-07-20T20:42:16.415Z"}
+{"level":"info","message":"Typing signal from 68431685432ee393a735a641 to 6843d062f457581752641ee3","timestamp":"2025-07-20T20:42:16.418Z"}
+{"level":"info","message":"Typing signal from 68431685432ee393a735a641 to 6843d062f457581752641ee3","timestamp":"2025-07-20T20:42:17.413Z"}
+{"level":"info","message":"Typing signal from 68431685432ee393a735a641 to 6843d062f457581752641ee3","timestamp":"2025-07-20T20:42:17.419Z"}
+{"level":"info","message":"Typing signal from 68431685432ee393a735a641 to 6843d062f457581752641ee3","timestamp":"2025-07-20T20:42:17.421Z"}
+{"level":"info","message":"Typing signal from 68431685432ee393a735a641 to 6843d062f457581752641ee3","timestamp":"2025-07-20T20:42:17.426Z"}
+{"level":"info","message":"Typing signal from 68431685432ee393a735a641 to 6843d062f457581752641ee3","timestamp":"2025-07-20T20:42:17.432Z"}
+{"level":"info","message":"Typing signal from 68431685432ee393a735a641 to 6843d062f457581752641ee3","timestamp":"2025-07-20T20:42:17.434Z"}
+{"level":"info","message":"Received sendMessage event: {\"receiverId\":\"6843d062f457581752641ee3\",\"text\":\"Thanks\",\"messageType\":\"text\",\"createdAt\":\"2025-07-20T20:42:18.032Z\",\"isRead\":false,\"tempId\":\"temp_1753044138032\",\"senderId\":\"68431685432ee393a735a641\"}","timestamp":"2025-07-20T20:42:18.046Z"}
+{"level":"info","message":"Fetching sender 68431685432ee393a735a641 and receiver 6843d062f457581752641ee3","timestamp":"2025-07-20T20:42:18.048Z"}
+{"level":"info","message":"Successfully saved message from 68431685432ee393a735a641 to 6843d062f457581752641ee3: 687d54aa08780ebe4f45bd95","timestamp":"2025-07-20T20:42:18.794Z"}
+{"level":"info","message":"Emitted messageStatusUpdate to sender's socket QuNQUjyCjuT_k7FRAAAS for tempId temp_1753044138032","timestamp":"2025-07-20T20:42:18.803Z"}
+{"level":"info","message":"Broadcasted newMessage to chat room chat_68431685432ee393a735a641_6843d062f457581752641ee3 for message 687d54aa08780ebe4f45bd95","timestamp":"2025-07-20T20:42:18.806Z"}
+{"level":"info","message":"Emitted newMessageNotification to user_6843d062f457581752641ee3","timestamp":"2025-07-20T20:42:18.809Z"}
+{"level":"info","message":"Receiver 6843d062f457581752641ee3 not actively online or in chat. FCM condition met.","timestamp":"2025-07-20T20:42:18.811Z"}
+{"level":"info","message":"FCM notification attempt completed for user 6843d062f457581752641ee3","timestamp":"2025-07-20T20:42:18.823Z"}
+{"level":"info","message":"Message sent and processed from 68431685432ee393a735a641 to 6843d062f457581752641ee3","timestamp":"2025-07-20T20:42:18.829Z"}
+{"level":"info","message":"Client disconnected: QuNQUjyCjuT_k7FRAAAS (User: 68431685432ee393a735a641)","timestamp":"2025-07-20T20:42:24.926Z"}
+{"level":"info","message":"Removed user 68431685432ee393a735a641 from userSocketMap on disconnect.","timestamp":"2025-07-20T20:42:24.928Z"}
+{"level":"info","message":"Socket 3DNUcJtVeoCGyz37AAAU authenticated for user: 68431685432ee393a735a641","timestamp":"2025-07-20T20:42:25.626Z"}
+{"level":"info","message":"New client connected: 3DNUcJtVeoCGyz37AAAU (Authenticated User: 68431685432ee393a735a641)","timestamp":"2025-07-20T20:42:25.630Z"}
+{"level":"info","message":"Socket 3DNUcJtVeoCGyz37AAAU (User: 68431685432ee393a735a641) connected and joined user_68431685432ee393a735a641","timestamp":"2025-07-20T20:42:25.632Z"}
+{"level":"info","message":"User 68431685432ee393a735a641 (socket 3DNUcJtVeoCGyz37AAAU) already in user_68431685432ee393a735a641 room.","timestamp":"2025-07-20T20:42:25.712Z"}
+{"level":"info","message":"Notification counts sent to user 68431685432ee393a735a641 after joinRoom event.","timestamp":"2025-07-20T20:42:25.720Z"}
+{"level":"info","message":"User 68431685432ee393a735a641 (socket 3DNUcJtVeoCGyz37AAAU) already in user_68431685432ee393a735a641 room.","timestamp":"2025-07-20T20:42:25.728Z"}
+{"level":"info","message":"Notification counts sent to user 68431685432ee393a735a641 after joinRoom event.","timestamp":"2025-07-20T20:42:25.734Z"}
+{"level":"info","message":"Socket V1cfYrji2LNWzAZhAAAW authenticated for user: 68431685432ee393a735a641","timestamp":"2025-07-20T20:42:25.809Z"}
+{"level":"info","message":"New client connected: V1cfYrji2LNWzAZhAAAW (Authenticated User: 68431685432ee393a735a641)","timestamp":"2025-07-20T20:42:25.811Z"}
+{"level":"info","message":"Socket V1cfYrji2LNWzAZhAAAW (User: 68431685432ee393a735a641) connected and joined user_68431685432ee393a735a641","timestamp":"2025-07-20T20:42:25.812Z"}
+{"level":"info","message":"Client disconnected: 3DNUcJtVeoCGyz37AAAU (User: 68431685432ee393a735a641)","timestamp":"2025-07-20T20:42:30.226Z"}
+{"level":"info","message":"Client disconnected: V1cfYrji2LNWzAZhAAAW (User: 68431685432ee393a735a641)","timestamp":"2025-07-20T20:42:30.256Z"}
+{"level":"info","message":"Removed user 68431685432ee393a735a641 from userSocketMap on disconnect.","timestamp":"2025-07-20T20:42:30.259Z"}
+{"level":"warn","message":"Socket 9y_9uS7AhdWeCLWOAAAY connection attempt: No token provided.","timestamp":"2025-07-20T20:42:31.323Z"}
+{"level":"warn","message":"Socket 2DuEdHsrSMYcUtFwAAAa connection attempt: No token provided.","timestamp":"2025-07-20T20:42:55.361Z"}
+{"level":"warn","message":"Socket BVV4pcAVIBY0BgE_AAAc connection attempt: No token provided.","timestamp":"2025-07-20T20:45:09.137Z"}
+{"level":"warn","message":"Socket VwI99-kn1nbkNJqsAAAe connection attempt: No token provided.","timestamp":"2025-07-20T20:45:40.455Z"}
+{"level":"warn","message":"Socket ZGLPdw67ozWXbD5yAAAg connection attempt: No token provided.","timestamp":"2025-07-20T20:45:41.735Z"}
+{"level":"info","message":"Socket 3RQ2PkPJo8nDDI8CAAAi authenticated for user: 68431685432ee393a735a641","timestamp":"2025-07-20T20:45:42.951Z"}
+{"level":"info","message":"New client connected: 3RQ2PkPJo8nDDI8CAAAi (Authenticated User: 68431685432ee393a735a641)","timestamp":"2025-07-20T20:45:42.955Z"}
+{"level":"info","message":"Socket 3RQ2PkPJo8nDDI8CAAAi (User: 68431685432ee393a735a641) connected and joined user_68431685432ee393a735a641","timestamp":"2025-07-20T20:45:42.956Z"}
+{"level":"info","message":"User 68431685432ee393a735a641 (socket 3RQ2PkPJo8nDDI8CAAAi) already in user_68431685432ee393a735a641 room.","timestamp":"2025-07-20T20:45:43.075Z"}
+{"level":"info","message":"Notification counts sent to user 68431685432ee393a735a641 after joinRoom event.","timestamp":"2025-07-20T20:45:43.080Z"}
+{"level":"info","message":"User 68431685432ee393a735a641 (socket 3RQ2PkPJo8nDDI8CAAAi) already in user_68431685432ee393a735a641 room.","timestamp":"2025-07-20T20:45:43.082Z"}
+{"level":"info","message":"Notification counts sent to user 68431685432ee393a735a641 after joinRoom event.","timestamp":"2025-07-20T20:45:43.087Z"}
+{"level":"info","message":"Socket kFeFLZy7hTx0laDxAAAk authenticated for user: 68431685432ee393a735a641","timestamp":"2025-07-20T20:45:43.225Z"}
+{"level":"info","message":"New client connected: kFeFLZy7hTx0laDxAAAk (Authenticated User: 68431685432ee393a735a641)","timestamp":"2025-07-20T20:45:43.229Z"}
+{"level":"info","message":"Socket kFeFLZy7hTx0laDxAAAk (User: 68431685432ee393a735a641) connected and joined user_68431685432ee393a735a641","timestamp":"2025-07-20T20:45:43.230Z"}
+{"level":"info","message":"Client disconnected: 3RQ2PkPJo8nDDI8CAAAi (User: 68431685432ee393a735a641)","timestamp":"2025-07-20T20:45:43.906Z"}
+{"level":"info","message":"Client disconnected: kFeFLZy7hTx0laDxAAAk (User: 68431685432ee393a735a641)","timestamp":"2025-07-20T20:45:43.922Z"}
+{"level":"info","message":"Removed user 68431685432ee393a735a641 from userSocketMap on disconnect.","timestamp":"2025-07-20T20:45:43.924Z"}
+{"level":"warn","message":"Socket HNQfiwsEFdb3VAjpAAAm connection attempt: No token provided.","timestamp":"2025-07-20T20:45:44.531Z"}
+{"level":"warn","message":"Socket zdU7Qz_fEeTR6ZpyAAAo connection attempt: No token provided.","timestamp":"2025-07-20T20:45:46.391Z"}
+{"level":"warn","message":"Socket HGXUz6tLOdcGHynPAAAq connection attempt: No token provided.","timestamp":"2025-07-20T20:45:47.552Z"}
+{"level":"warn","message":"Socket tUQvOR9B8qvq4hNxAAAs connection attempt: No token provided.","timestamp":"2025-07-20T20:46:45.626Z"}
+{"level":"info","message":"Initializing Socket.IO event handlers","timestamp":"2025-07-20T21:06:10.552Z"}
+{"level":"info","message":"Initializing Socket.IO event handlers","timestamp":"2025-07-20T21:10:24.519Z"}
+{"level":"info","message":"Initializing Socket.IO event handlers","timestamp":"2025-07-20T21:11:07.651Z"}
+{"level":"warn","message":"Socket PNkHfnWQexGFhG7OAAAB connection attempt: No token provided.","timestamp":"2025-07-20T21:12:12.594Z"}
+{"level":"warn","message":"Socket 1f5IDkQp6S6PDVlLAAAD connection attempt: No token provided.","timestamp":"2025-07-20T21:13:47.952Z"}
+{"level":"warn","message":"Socket cADh2dGOS2Mnz4QYAAAF connection attempt: No token provided.","timestamp":"2025-07-20T21:13:53.084Z"}
+{"level":"info","message":"Socket r5sx_zzkfjOKdgG2AAAH authenticated for user: 68431685432ee393a735a641","timestamp":"2025-07-20T21:14:03.594Z"}
+{"level":"info","message":"New client connected: r5sx_zzkfjOKdgG2AAAH (Authenticated User: 68431685432ee393a735a641)","timestamp":"2025-07-20T21:14:03.612Z"}
+{"level":"info","message":"Socket r5sx_zzkfjOKdgG2AAAH (User: 68431685432ee393a735a641) connected and joined user_68431685432ee393a735a641","timestamp":"2025-07-20T21:14:03.614Z"}
+{"level":"info","message":"User 68431685432ee393a735a641 (socket r5sx_zzkfjOKdgG2AAAH) already in user_68431685432ee393a735a641 room.","timestamp":"2025-07-20T21:14:03.639Z"}
+{"level":"info","message":"User 68431685432ee393a735a641 (socket r5sx_zzkfjOKdgG2AAAH) already in user_68431685432ee393a735a641 room.","timestamp":"2025-07-20T21:14:03.647Z"}
+{"level":"info","message":"Notification counts sent to user 68431685432ee393a735a641 after joinRoom event.","timestamp":"2025-07-20T21:14:03.659Z"}
+{"level":"info","message":"Notification counts sent to user 68431685432ee393a735a641 after joinRoom event.","timestamp":"2025-07-20T21:14:03.660Z"}
+{"level":"info","message":"Socket 3GlWO_a-TuU0T1GZAAAJ authenticated for user: 68431685432ee393a735a641","timestamp":"2025-07-20T21:14:04.836Z"}
+{"level":"info","message":"New client connected: 3GlWO_a-TuU0T1GZAAAJ (Authenticated User: 68431685432ee393a735a641)","timestamp":"2025-07-20T21:14:04.842Z"}
+{"level":"info","message":"Socket 3GlWO_a-TuU0T1GZAAAJ (User: 68431685432ee393a735a641) connected and joined user_68431685432ee393a735a641","timestamp":"2025-07-20T21:14:04.844Z"}
+{"level":"info","message":"Client disconnected: r5sx_zzkfjOKdgG2AAAH (User: 68431685432ee393a735a641)","timestamp":"2025-07-20T21:14:09.415Z"}
+{"level":"info","message":"Client disconnected: 3GlWO_a-TuU0T1GZAAAJ (User: 68431685432ee393a735a641)","timestamp":"2025-07-20T21:14:09.449Z"}
+{"level":"info","message":"Removed user 68431685432ee393a735a641 from userSocketMap on disconnect.","timestamp":"2025-07-20T21:14:09.451Z"}
+{"level":"warn","message":"Socket bL5QIiROCicnZMD1AAAL connection attempt: No token provided.","timestamp":"2025-07-20T21:14:10.365Z"}
+{"level":"info","message":"Socket imbZPIYEWW4kshbeAAAN authenticated for user: 68431685432ee393a735a641","timestamp":"2025-07-20T21:14:52.507Z"}
+{"level":"info","message":"New client connected: imbZPIYEWW4kshbeAAAN (Authenticated User: 68431685432ee393a735a641)","timestamp":"2025-07-20T21:14:52.517Z"}
+{"level":"info","message":"Socket imbZPIYEWW4kshbeAAAN (User: 68431685432ee393a735a641) connected and joined user_68431685432ee393a735a641","timestamp":"2025-07-20T21:14:52.519Z"}
+{"level":"info","message":"User 68431685432ee393a735a641 (socket imbZPIYEWW4kshbeAAAN) already in user_68431685432ee393a735a641 room.","timestamp":"2025-07-20T21:14:52.614Z"}
+{"level":"info","message":"Notification counts sent to user 68431685432ee393a735a641 after joinRoom event.","timestamp":"2025-07-20T21:14:52.621Z"}
+{"level":"info","message":"User 68431685432ee393a735a641 (socket imbZPIYEWW4kshbeAAAN) already in user_68431685432ee393a735a641 room.","timestamp":"2025-07-20T21:14:52.624Z"}
+{"level":"info","message":"Notification counts sent to user 68431685432ee393a735a641 after joinRoom event.","timestamp":"2025-07-20T21:14:52.630Z"}
+{"level":"info","message":"Socket -f_aZb5vzRBsllh0AAAP authenticated for user: 68431685432ee393a735a641","timestamp":"2025-07-20T21:14:52.788Z"}
+{"level":"info","message":"New client connected: -f_aZb5vzRBsllh0AAAP (Authenticated User: 68431685432ee393a735a641)","timestamp":"2025-07-20T21:14:52.813Z"}
+{"level":"info","message":"Socket -f_aZb5vzRBsllh0AAAP (User: 68431685432ee393a735a641) connected and joined user_68431685432ee393a735a641","timestamp":"2025-07-20T21:14:52.815Z"}
+{"level":"info","message":"Client disconnected: imbZPIYEWW4kshbeAAAN (User: 68431685432ee393a735a641)","timestamp":"2025-07-20T21:14:56.168Z"}
+{"level":"info","message":"Client disconnected: -f_aZb5vzRBsllh0AAAP (User: 68431685432ee393a735a641)","timestamp":"2025-07-20T21:14:56.193Z"}
+{"level":"info","message":"Removed user 68431685432ee393a735a641 from userSocketMap on disconnect.","timestamp":"2025-07-20T21:14:56.195Z"}
+{"level":"warn","message":"Socket BMEkBYjrKSmGB6FtAAAR connection attempt: No token provided.","timestamp":"2025-07-20T21:14:56.539Z"}
+{"level":"warn","message":"Socket ubvGll5R8pTWEO9IAAAT connection attempt: No token provided.","timestamp":"2025-07-20T21:14:58.122Z"}
+{"level":"warn","message":"Socket _pOEatg7rjM519raAAAV connection attempt: No token provided.","timestamp":"2025-07-20T21:16:31.487Z"}
+{"level":"warn","message":"Socket b8v5KZNVwmu5PB-lAAAX connection attempt: No token provided.","timestamp":"2025-07-20T21:17:02.714Z"}
+{"level":"warn","message":"Socket 1E9oWFC4P8KDPwwiAAAZ connection attempt: No token provided.","timestamp":"2025-07-20T21:17:18.031Z"}
+{"level":"info","message":"Initializing Socket.IO event handlers","timestamp":"2025-07-20T21:19:15.720Z"}
+{"level":"info","message":"Initializing Socket.IO event handlers","timestamp":"2025-07-20T21:20:21.333Z"}
+{"level":"info","message":"Initializing Socket.IO event handlers","timestamp":"2025-07-20T21:21:07.119Z"}
+{"level":"info","message":"Initializing Socket.IO event handlers","timestamp":"2025-07-20T21:22:10.794Z"}
+{"level":"warn","message":"Socket hDcQLYjHAXsl4qdrAAAB connection attempt: No token provided.","timestamp":"2025-07-20T21:23:40.527Z"}
+{"level":"warn","message":"Socket CmWLAFw6d6alyLufAAAD connection attempt: No token provided.","timestamp":"2025-07-20T21:24:04.934Z"}
+{"level":"warn","message":"Socket mBzQrgwKcce5UJ4QAAAF connection attempt: No token provided.","timestamp":"2025-07-20T21:24:13.380Z"}
+{"level":"warn","message":"Socket N4kNbhxBarZya8UDAAAH connection attempt: No token provided.","timestamp":"2025-07-20T21:24:24.958Z"}
+{"level":"warn","message":"Socket kU2t-5s8NlX1-hHYAAAJ connection attempt: No token provided.","timestamp":"2025-07-20T21:24:39.833Z"}
+{"level":"warn","message":"Socket uILoQTADpOQVW3onAAAL connection attempt: No token provided.","timestamp":"2025-07-20T21:25:44.212Z"}
+{"level":"warn","message":"Socket SznhKWTMXDH0IBMhAAAN connection attempt: No token provided.","timestamp":"2025-07-20T21:25:47.362Z"}
+{"level":"warn","message":"Socket nY2sInW5FbxnS2yfAAAP connection attempt: No token provided.","timestamp":"2025-07-20T21:26:07.005Z"}
+{"level":"warn","message":"Socket gOex1UyxotqpFB0TAAAR connection attempt: No token provided.","timestamp":"2025-07-20T21:26:24.956Z"}
+{"level":"warn","message":"Socket _XO4nFa2e3BIIZ1tAAAT connection attempt: No token provided.","timestamp":"2025-07-20T21:26:48.048Z"}
+{"level":"info","message":"Socket 5Xh49prbAgWE44ZJAAAV authenticated for user: 685f09f1b408e815cdf5f314","timestamp":"2025-07-20T21:27:41.907Z"}
+{"level":"info","message":"New client connected: 5Xh49prbAgWE44ZJAAAV (Authenticated User: 685f09f1b408e815cdf5f314)","timestamp":"2025-07-20T21:27:41.925Z"}
+{"level":"info","message":"Socket 5Xh49prbAgWE44ZJAAAV (User: 685f09f1b408e815cdf5f314) connected and joined user_685f09f1b408e815cdf5f314","timestamp":"2025-07-20T21:27:41.927Z"}
+{"level":"info","message":"User 685f09f1b408e815cdf5f314 (socket 5Xh49prbAgWE44ZJAAAV) already in user_685f09f1b408e815cdf5f314 room.","timestamp":"2025-07-20T21:27:41.946Z"}
+{"level":"info","message":"Notification counts sent to user 685f09f1b408e815cdf5f314 after joinRoom event.","timestamp":"2025-07-20T21:27:41.952Z"}
+{"level":"info","message":"User 685f09f1b408e815cdf5f314 (socket 5Xh49prbAgWE44ZJAAAV) already in user_685f09f1b408e815cdf5f314 room.","timestamp":"2025-07-20T21:27:41.965Z"}
+{"level":"info","message":"Notification counts sent to user 685f09f1b408e815cdf5f314 after joinRoom event.","timestamp":"2025-07-20T21:27:41.970Z"}
+{"level":"info","message":"Socket 88BXZbRUhHWEbjCLAAAX authenticated for user: 685f09f1b408e815cdf5f314","timestamp":"2025-07-20T21:27:43.284Z"}
+{"level":"info","message":"New client connected: 88BXZbRUhHWEbjCLAAAX (Authenticated User: 685f09f1b408e815cdf5f314)","timestamp":"2025-07-20T21:27:43.288Z"}
+{"level":"info","message":"Socket 88BXZbRUhHWEbjCLAAAX (User: 685f09f1b408e815cdf5f314) connected and joined user_685f09f1b408e815cdf5f314","timestamp":"2025-07-20T21:27:43.290Z"}
+{"level":"info","message":"Client disconnected: 5Xh49prbAgWE44ZJAAAV (User: 685f09f1b408e815cdf5f314)","timestamp":"2025-07-20T21:27:44.686Z"}
+{"level":"info","message":"Client disconnected: 88BXZbRUhHWEbjCLAAAX (User: 685f09f1b408e815cdf5f314)","timestamp":"2025-07-20T21:27:44.698Z"}
+{"level":"info","message":"Removed user 685f09f1b408e815cdf5f314 from userSocketMap on disconnect.","timestamp":"2025-07-20T21:27:44.699Z"}
+{"level":"info","message":"Socket AkRs6EIZfyooZUplAAAZ authenticated for user: 685f09f1b408e815cdf5f314","timestamp":"2025-07-20T21:27:45.633Z"}
+{"level":"info","message":"New client connected: AkRs6EIZfyooZUplAAAZ (Authenticated User: 685f09f1b408e815cdf5f314)","timestamp":"2025-07-20T21:27:45.639Z"}
+{"level":"info","message":"Socket AkRs6EIZfyooZUplAAAZ (User: 685f09f1b408e815cdf5f314) connected and joined user_685f09f1b408e815cdf5f314","timestamp":"2025-07-20T21:27:45.640Z"}
+{"level":"info","message":"User 685f09f1b408e815cdf5f314 (socket AkRs6EIZfyooZUplAAAZ) already in user_685f09f1b408e815cdf5f314 room.","timestamp":"2025-07-20T21:27:45.679Z"}
+{"level":"info","message":"JoinChatRoom event received from 685f09f1b408e815cdf5f314 for chatRoomId: 685f09f1b408e815cdf5f314_685f0a61b408e815cdf5f34f","timestamp":"2025-07-20T21:27:45.686Z"}
+{"level":"info","message":"Socket AkRs6EIZfyooZUplAAAZ (User: 685f09f1b408e815cdf5f314) joined chat room chat_685f09f1b408e815cdf5f314_685f0a61b408e815cdf5f34f","timestamp":"2025-07-20T21:27:45.688Z"}
+{"level":"info","message":"Notification counts sent to user 685f09f1b408e815cdf5f314 after joinRoom event.","timestamp":"2025-07-20T21:27:45.689Z"}
+{"level":"info","message":"Typing signal from 685f09f1b408e815cdf5f314 to 685f0a61b408e815cdf5f34f","timestamp":"2025-07-20T21:27:50.788Z"}
+{"level":"info","message":"Typing signal from 685f09f1b408e815cdf5f314 to 685f0a61b408e815cdf5f34f","timestamp":"2025-07-20T21:27:50.791Z"}
+{"level":"info","message":"Typing signal from 685f09f1b408e815cdf5f314 to 685f0a61b408e815cdf5f34f","timestamp":"2025-07-20T21:27:50.792Z"}
+{"level":"info","message":"Typing signal from 685f09f1b408e815cdf5f314 to 685f0a61b408e815cdf5f34f","timestamp":"2025-07-20T21:27:51.457Z"}
+{"level":"info","message":"Typing signal from 685f09f1b408e815cdf5f314 to 685f0a61b408e815cdf5f34f","timestamp":"2025-07-20T21:27:51.467Z"}
+{"level":"info","message":"Typing signal from 685f09f1b408e815cdf5f314 to 685f0a61b408e815cdf5f34f","timestamp":"2025-07-20T21:27:51.469Z"}
+{"level":"info","message":"Typing signal from 685f09f1b408e815cdf5f314 to 685f0a61b408e815cdf5f34f","timestamp":"2025-07-20T21:27:52.313Z"}
+{"level":"info","message":"Typing signal from 685f09f1b408e815cdf5f314 to 685f0a61b408e815cdf5f34f","timestamp":"2025-07-20T21:27:52.318Z"}
+{"level":"info","message":"Typing signal from 685f09f1b408e815cdf5f314 to 685f0a61b408e815cdf5f34f","timestamp":"2025-07-20T21:27:52.321Z"}
+{"level":"info","message":"Typing signal from 685f09f1b408e815cdf5f314 to 685f0a61b408e815cdf5f34f","timestamp":"2025-07-20T21:27:53.158Z"}
+{"level":"info","message":"Typing signal from 685f09f1b408e815cdf5f314 to 685f0a61b408e815cdf5f34f","timestamp":"2025-07-20T21:27:53.161Z"}
+{"level":"info","message":"Typing signal from 685f09f1b408e815cdf5f314 to 685f0a61b408e815cdf5f34f","timestamp":"2025-07-20T21:27:53.162Z"}
+{"level":"info","message":"Typing signal from 685f09f1b408e815cdf5f314 to 685f0a61b408e815cdf5f34f","timestamp":"2025-07-20T21:27:53.322Z"}
+{"level":"info","message":"Typing signal from 685f09f1b408e815cdf5f314 to 685f0a61b408e815cdf5f34f","timestamp":"2025-07-20T21:27:53.326Z"}
+{"level":"info","message":"Typing signal from 685f09f1b408e815cdf5f314 to 685f0a61b408e815cdf5f34f","timestamp":"2025-07-20T21:27:53.327Z"}
+{"level":"info","message":"Typing signal from 685f09f1b408e815cdf5f314 to 685f0a61b408e815cdf5f34f","timestamp":"2025-07-20T21:27:53.507Z"}
+{"level":"info","message":"Typing signal from 685f09f1b408e815cdf5f314 to 685f0a61b408e815cdf5f34f","timestamp":"2025-07-20T21:27:53.511Z"}
+{"level":"info","message":"Typing signal from 685f09f1b408e815cdf5f314 to 685f0a61b408e815cdf5f34f","timestamp":"2025-07-20T21:27:53.512Z"}
+{"level":"info","message":"Typing signal from 685f09f1b408e815cdf5f314 to 685f0a61b408e815cdf5f34f","timestamp":"2025-07-20T21:27:54.597Z"}
+{"level":"info","message":"Typing signal from 685f09f1b408e815cdf5f314 to 685f0a61b408e815cdf5f34f","timestamp":"2025-07-20T21:27:54.602Z"}
+{"level":"info","message":"Typing signal from 685f09f1b408e815cdf5f314 to 685f0a61b408e815cdf5f34f","timestamp":"2025-07-20T21:27:54.605Z"}
+{"level":"info","message":"Typing signal from 685f09f1b408e815cdf5f314 to 685f0a61b408e815cdf5f34f","timestamp":"2025-07-20T21:27:54.828Z"}
+{"level":"info","message":"Typing signal from 685f09f1b408e815cdf5f314 to 685f0a61b408e815cdf5f34f","timestamp":"2025-07-20T21:27:54.832Z"}
+{"level":"info","message":"Typing signal from 685f09f1b408e815cdf5f314 to 685f0a61b408e815cdf5f34f","timestamp":"2025-07-20T21:27:54.833Z"}
+{"level":"info","message":"Typing signal from 685f09f1b408e815cdf5f314 to 685f0a61b408e815cdf5f34f","timestamp":"2025-07-20T21:27:55.227Z"}
+{"level":"info","message":"Typing signal from 685f09f1b408e815cdf5f314 to 685f0a61b408e815cdf5f34f","timestamp":"2025-07-20T21:27:55.231Z"}
+{"level":"info","message":"Typing signal from 685f09f1b408e815cdf5f314 to 685f0a61b408e815cdf5f34f","timestamp":"2025-07-20T21:27:55.232Z"}
+{"level":"info","message":"Typing signal from 685f09f1b408e815cdf5f314 to 685f0a61b408e815cdf5f34f","timestamp":"2025-07-20T21:27:55.545Z"}
+{"level":"info","message":"Typing signal from 685f09f1b408e815cdf5f314 to 685f0a61b408e815cdf5f34f","timestamp":"2025-07-20T21:27:55.550Z"}
+{"level":"info","message":"Typing signal from 685f09f1b408e815cdf5f314 to 685f0a61b408e815cdf5f34f","timestamp":"2025-07-20T21:27:55.551Z"}
+{"level":"info","message":"Typing signal from 685f09f1b408e815cdf5f314 to 685f0a61b408e815cdf5f34f","timestamp":"2025-07-20T21:27:55.860Z"}
+{"level":"info","message":"Typing signal from 685f09f1b408e815cdf5f314 to 685f0a61b408e815cdf5f34f","timestamp":"2025-07-20T21:27:55.865Z"}
+{"level":"info","message":"Typing signal from 685f09f1b408e815cdf5f314 to 685f0a61b408e815cdf5f34f","timestamp":"2025-07-20T21:27:55.866Z"}
+{"level":"info","message":"Received sendMessage event: {\"receiverId\":\"685f0a61b408e815cdf5f34f\",\"text\":\"Alright seen sir\",\"messageType\":\"text\",\"createdAt\":\"2025-07-20T21:27:56.671Z\",\"isRead\":false,\"tempId\":\"temp_1753046876671\",\"senderId\":\"685f09f1b408e815cdf5f314\"}","timestamp":"2025-07-20T21:27:56.700Z"}
+{"level":"info","message":"Fetching sender 685f09f1b408e815cdf5f314 and receiver 685f0a61b408e815cdf5f34f","timestamp":"2025-07-20T21:27:56.702Z"}
+{"level":"info","message":"Successfully saved message from 685f09f1b408e815cdf5f314 to 685f0a61b408e815cdf5f34f: 687d5f5d240f9403ef868f1d","timestamp":"2025-07-20T21:27:57.835Z"}
+{"level":"info","message":"Emitted messageStatusUpdate to sender's socket AkRs6EIZfyooZUplAAAZ for tempId temp_1753046876671","timestamp":"2025-07-20T21:27:57.859Z"}
+{"level":"info","message":"Broadcasted newMessage to chat room chat_685f09f1b408e815cdf5f314_685f0a61b408e815cdf5f34f for message 687d5f5d240f9403ef868f1d","timestamp":"2025-07-20T21:27:57.864Z"}
+{"level":"info","message":"Emitted newMessageNotification to user_685f0a61b408e815cdf5f34f","timestamp":"2025-07-20T21:27:57.869Z"}
+{"level":"info","message":"Receiver 685f0a61b408e815cdf5f34f not actively online or in chat. FCM condition met.","timestamp":"2025-07-20T21:27:57.871Z"}
+{"level":"info","message":"FCM notification attempt completed for user 685f0a61b408e815cdf5f34f","timestamp":"2025-07-20T21:27:57.882Z"}
+{"level":"info","message":"Message sent and processed from 685f09f1b408e815cdf5f314 to 685f0a61b408e815cdf5f34f","timestamp":"2025-07-20T21:27:57.909Z"}
+{"level":"info","message":"Client disconnected: AkRs6EIZfyooZUplAAAZ (User: 685f09f1b408e815cdf5f314)","timestamp":"2025-07-20T21:30:42.205Z"}
+{"level":"info","message":"Removed user 685f09f1b408e815cdf5f314 from userSocketMap on disconnect.","timestamp":"2025-07-20T21:30:42.235Z"}
+{"level":"warn","message":"Socket kpB6c3hEgs7-YCWhAAAc connection attempt: No token provided.","timestamp":"2025-07-20T21:30:43.738Z"}
+{"level":"warn","message":"Socket wryE5BjWADoscBW3AAAe connection attempt: No token provided.","timestamp":"2025-07-20T21:30:54.001Z"}
+{"level":"warn","message":"Socket JN0RFMECBCdQIUL2AAAg connection attempt: No token provided.","timestamp":"2025-07-20T21:31:28.229Z"}

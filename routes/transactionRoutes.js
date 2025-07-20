@@ -411,17 +411,33 @@ if (!systemUser) {
     }
 // == Calculate platform's commission == //
 
-    function getCommissionRate(amount) {
+
+// Paystack fee calculation
+function calculatePaystackFee(amountNaira) {
+  let fee = (1.5 / 100) * amountNaira;
+  if (amountNaira > 2500) fee += 100;
+  return fee > 2000 ? 2000 : fee;
+}
+
+// Platform commission rate
+function getCommissionRate(amount) {
   if (amount < 10000) return 3.5;
   if (amount < 50000) return 3;
   if (amount < 200000) return 2.5;
   return 1;
 }
 
-const commissionPercent = getCommissionRate(amountPaidByBuyerNaira);
-const commissionNaira = (commissionPercent / 100) * amountPaidByBuyerNaira;
+// Step 1: Deduct Paystack fee from buyer's payment
+const paystackFee = calculatePaystackFee(amountPaidByBuyerNaira);
+const netAmount = amountPaidByBuyerNaira - paystackFee; // What Paystack settles to you
 
-    const neededAmountKobo = Math.round(amountToTransferNaira * 100);
+// Step 2: Calculate your platform commission on the settled amount
+const commissionPercent = getCommissionRate(netAmount);
+const commissionNaira = (commissionPercent / 100) * netAmount;
+
+// Step 3: Final amount to transfer to seller
+const amountToTransferNaira = netAmount - commissionNaira;
+const neededAmountKobo = Math.round(amountToTransferNaira * 100);
     // === Record platform commission ===
 try {
   await PlatformWallet.updateOne(

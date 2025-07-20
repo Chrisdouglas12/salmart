@@ -712,16 +712,17 @@ const paystackInitializeResponse = await paystack.transaction.initialize({
         sellerId: seller._id 
       });
 
-const amountPaid = data.data.amount / 100;
+const amountPaid = data.data.amount / 100; // From Paystack (in Naira)
 
-// Calculate Paystack fee (1.5% + ₦100, capped at ₦2000)
-let paystackFee = (1.5 / 100) * amountPaid + 100;
+// Calculate Paystack fee (1.5% + ₦100 if > ₦2500, capped at ₦2000)
+let paystackFee = (1.5 / 100) * amountPaid;
+if (amountPaid > 2500) paystackFee += 100;
 if (paystackFee > 2000) paystackFee = 2000;
 
-// Amount left after Paystack deduction
+// Net amount received after Paystack fee
 const amountAfterPaystack = amountPaid - paystackFee;
 
-// Match frontend commission tiers
+// Get commission rate based on amount *after* Paystack fees
 function getCommissionRate(amount) {
   if (amount < 10000) return 3.5;
   if (amount < 50000) return 3;
@@ -729,7 +730,7 @@ function getCommissionRate(amount) {
   return 1;
 }
 
-const commissionPercent = getCommissionRate(amountPaid);
+const commissionPercent = getCommissionRate(amountAfterPaystack);
 const commissionNaira = (commissionPercent / 100) * amountAfterPaystack;
 
 // Final seller payout
@@ -743,11 +744,11 @@ logger.info(`[PAYMENT VERIFIED]`, {
   postId: post._id,
   amountPaid,
   paystackFee,
+  amountAfterPaystack,
   commissionPercent,
   commissionNaira,
   amountToTransferNaira,
 });
-
       // Prepare receipt data
       const receiptData = {
         reference,

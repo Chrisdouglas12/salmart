@@ -157,8 +157,11 @@
   }
 
   function getPaystackFee(amount) {
-    const baseFee = (1.5 / 100) * amount + 100;
-    return Math.min(baseFee, 2000);
+    let fee = (1.5 / 100) * amount;
+    if (amount >= 2500) {
+      fee += 100;
+    }
+    return Math.min(fee, 2000);
   }
 
   priceDisplayInput.addEventListener('input', () => {
@@ -174,7 +177,7 @@
         const paystackFee = getPaystackFee(price);
         const amountAfterPaystack = price - paystackFee;
 
-        const platformRate = getCommissionRate(amountAfterPaystack); // ✅ Updated here
+        const platformRate = getCommissionRate(amountAfterPaystack);
         const platformFee = (platformRate / 100) * amountAfterPaystack;
 
         const sellerReceives = amountAfterPaystack - platformFee;
@@ -184,7 +187,7 @@
         earningsInfo.textContent = `You'll receive ₦${sellerReceives.toLocaleString('en-NG', {
           minimumFractionDigits: 2,
           maximumFractionDigits: 2
-        })} after ₦${paystackFee.toFixed(2)} Paystack fee and ${platformRate}% platform fee.`;
+        })} after ₦${paystackFee.toFixed(2)} Payment gateway fee and ${platformRate}% platform fee.`;
       }
     } else {
       errorDisplay.textContent = '';
