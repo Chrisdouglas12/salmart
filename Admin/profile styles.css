@@ -68,14 +68,7 @@ header {
   }
 }
 
-.profile-page {
-  margin: 20px 0;
-  background-color: #f2f5f9;
-  border: solid 1px #ddd;
-  border-radius: 10px;
-  box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-}
+
 
 i {
   display: block;
@@ -101,7 +94,6 @@ i {
 .stats {
   display: flex;
   justify-content: space-around;
-  padding: 20px;
   background-color: #f9f9f9;
   border-bottom: 1px solid #eee;
   margin-top: 30px;

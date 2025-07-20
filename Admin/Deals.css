@@ -112,48 +112,93 @@ body {
     }
     
         /* Bottom Navbar */
-    #navbar {
-      position: fixed;
-      bottom: 0;
-      width: 100%;
-      background-color: white;
-      box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
-      z-index: 1000;
-    }
+ #navbar {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  background-color: white;
+  box-shadow: 0 0 10px #ddd;
+  z-index: 1000;
+  display: flex; /* Added for proper alignment */
+  justify-content: center;
+  align-items: center;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+  transition: all 0.3s ease-in-out;
+}
 
-    #navbar ul {
-      display: flex;
-      justify-content: space-around;
-      padding: 10px 0;
-      list-style: none;
-    }
+/* Desktop: Move to top-right */
+@media (min-width: 900px) {
+  #navbar {
+    top: -4px;
+    bottom: auto;
+    left: auto;
+    right: 0px;
+    transform: none;
+    max-width: 400px;
+    background-color: transparent;
+    box-shadow: none;
+  }
+}
 
-    #navbar li {
-      flex: 1;
-      text-align: center;
-    }
+@media (min-width: 900px) {
+  #navbar a span:not(.notification-badge):not(.icon-with-badge) {
+    display: none;
+  }
+}
 
-    #navbar a {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-decoration: none;
-      color: var(--primary-color);
-      font-size: 12px;
-      padding: 8px;
-      transition: color 0.2s;
-    }
+#navbar ul {
+  display: flex;
+  max-width: 900px;
+  justify-content: center;
+  padding: 10px 0;
+  list-style: none;
+  margin: 0 auto;
+  width: 100%;
+}
 
-    #navbar a.active {
-      color: var(--secondary-color);
-      font-weight: 600;
-    }
+#navbar li {
+  flex: 1;
+  text-align: center;
+}
 
-    #navbar a i {
-      font-size: 20px;
-      margin-bottom: 5px;
-    }
+#navbar a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-decoration: none;
+  color: #28a745;
+  font-size: 12px;
+  padding: 8px;
+  transition: color 0.2s;
+}
 
+#navbar a.active {
+  color: #28a745;
+  font-weight: 500;
+}
+
+#navbar i.active {
+  color: #28a745;
+  font-weight: 500;
+}
+
+#navbar a i {
+  font-size: 14px;
+  margin-bottom: 5px;
+  background: #fff;
+  border: 1px solid #fff;
+  box-shadow: 0 0 10px #ddd;
+  padding: 10px;
+  height: 35px;
+  width: 35px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 50%;
+}
      .icon-badge-wrapper {
   position: relative;
   display: inline-block;
