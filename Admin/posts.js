@@ -1,9 +1,9 @@
 // main.js
-
-// Assumes video-controls.js is loaded and provides window.videoObserver and window.initializeVideoControls
 import { salmartCache } from './salmartCache.js';
 
+
 const API_BASE_URL = window.API_BASE_URL || (window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart.onrender.com');
+const SOCKET_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart.onrender.com';
 
 document.addEventListener('DOMContentLoaded', async function () {
     let currentLoggedInUser = localStorage.getItem('userId');
@@ -14,6 +14,31 @@ document.addEventListener('DOMContentLoaded', async function () {
     let isLoading = false;
     let suggestionCounter = 0;
     const promotedPostIdsInserted = new Set();
+
+    // Initialize Socket.IO
+    const socket = io(SOCKET_URL, {
+        auth: { token: localStorage.getItem('authToken') },
+        reconnectionAttempts: 5,
+        reconnectionDelay: 1000,
+    });
+
+    socket.on('connect', () => {
+        console.log('Socket.IO connected');
+        if (currentLoggedInUser) {
+            socket.emit('join', `user_${currentLoggedInUser}`);
+        }
+    });
+
+    socket.on('connect_error', (error) => {
+        console.error('Socket.IO connection error:', error.message);
+        showToast('Failed to connect to real-time updates. Some features may be delayed.', '#dc3545');
+    });
+
+    // Listen for profile picture updates
+    socket.on('profilePictureUpdate', ({ userId, profilePicture }) => {
+        console.log(`Received profile picture update for user ${userId}`);
+        updateProfilePictures(userId, profilePicture);
+    });
 
     function showToast(message, bgColor = '#333') {
         const toast = document.querySelector('.toast-message') || document.createElement('div');
@@ -29,6 +54,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             setTimeout(() => toast.remove(), 500);
         }, 3000);
     }
+    window.showToast = showToast; // Expose showToast globally
 
     async function fetchFollowingList() {
         if (!currentLoggedInUser) {
@@ -45,13 +71,15 @@ document.addEventListener('DOMContentLoaded', async function () {
             });
             if (response.ok) {
                 const { following } = await response.json();
-                return [...new Set(following.map(id => id.toString()))] || [];
+                return [...new Set(following.map(user => user._id.toString()))] || [];
             } else {
                 console.warn('Could not fetch following list. Status:', response.status);
+                showToast('Failed to fetch following list.', '#dc3545');
                 return [];
             }
         } catch (error) {
             console.error('Error fetching following list:', error);
+            showToast('Error fetching following list.', '#dc3545');
             return [];
         }
     }
@@ -74,10 +102,12 @@ document.addEventListener('DOMContentLoaded', async function () {
                 return suggestions.filter(user => !currentFollowingList.includes(user._id.toString()));
             } else {
                 console.warn('Could not fetch user suggestions. Status:', response.status);
+                showToast('Failed to fetch user suggestions.', '#dc3545');
                 return [];
             }
         } catch (error) {
             console.error('Error fetching user suggestions:', error);
+            showToast('Error fetching user suggestions.', '#dc3545');
             return [];
         }
     }
@@ -132,13 +162,22 @@ document.addEventListener('DOMContentLoaded', async function () {
         });
     };
 
+    // Function to update profile pictures in the UI
+    function updateProfilePictures(userId, profilePicture) {
+        const cacheBustedUrl = `${profilePicture}?v=${Date.now()}`;
+        document.querySelectorAll(`img.post-avatar[data-user-id="${userId}"], img.promoted-avatar[data-user-id="${userId}"], img.user-suggestion-avatar[data-user-id="${userId}"]`).forEach(img => {
+            img.src = cacheBustedUrl;
+            img.onerror = () => { img.src = '/salmart-192x192.png'; };
+        });
+    }
+
     function renderUserSuggestion(user) {
         const suggestionElement = document.createElement('div');
         suggestionElement.classList.add('user-suggestion-card');
         const isFollowingUser = currentFollowingList.includes(user._id.toString());
         suggestionElement.innerHTML = `
             <a href="Profile.html?userId=${user._id}" class="user-info-link">
-                <img src="${user.profilePicture || '/salmart-192x192.png'}" alt="${escapeHtml(user.name)}'s profile picture" class="user-suggestion-avatar" onerror="this.src='/salmart-192x192.png'">
+                <img src="${user.profilePicture || '/salmart-192x192.png'}?v=${Date.now()}" alt="${escapeHtml(user.name)}'s profile picture" class="user-suggestion-avatar" data-user-id="${user._id}" onerror="this.src='/salmart-192x192.png'">
                 <h5 class="user-suggestion-name">${escapeHtml(user.name)}</h5>
             </a>
             <button class="follow-button user-suggestion-follow-btn" data-user-id="${user._id}" ${isFollowingUser ? 'disabled' : ''}>
@@ -187,11 +226,11 @@ document.addEventListener('DOMContentLoaded', async function () {
                 padding-bottom: 10px;
                 scroll-snap-type: x mandatory;
                 -webkit-overflow-scrolling: touch;
-                -webkit-scrollbar: none;
-                -ms-overflow-style: none;
                 scrollbar-width: none;
                 margin-bottom: ${i + cardsPerRow < users.length ? '10px' : '0'};
             `;
+            rowContainer.style.setProperty('-webkit-scrollbar', 'none');
+            rowContainer.style.setProperty('-ms-overflow-style', 'none');
 
             const currentRowUsers = users.slice(i, i + cardsPerRow);
             currentRowUsers.forEach(user => {
@@ -253,6 +292,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         postElement.dataset.createdAt = post.createdAt || new Date().toISOString();
         postElement.dataset.postId = post._id || '';
         postElement.dataset.sellerId = post.createdBy ? post.createdBy.userId : '';
+        postElement.dataset.userId = post.createdBy ? post.createdBy.userId : ''; // For profile picture updates
 
         const isPostCreator = post.createdBy && post.createdBy.userId === currentLoggedInUser;
 
@@ -263,7 +303,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         const productImageForChat = post.photo || '/salmart-192x192.png';
 
         mediaContent = `
-            <img src="${productImageForChat}" class="promoted-image" alt="Promoted Product" onerror="this.src='/salmart-192x192.png'">
+            <img src="${productImageForChat}?v=${Date.now()}" class="promoted-image" alt="Promoted Product" onerror="this.src='/salmart-192x192.png'">
         `;
         productDetails = `
             <div class="promoted-product-info">
@@ -275,27 +315,27 @@ document.addEventListener('DOMContentLoaded', async function () {
 
         if (currentLoggedInUser && !isPostCreator) {
             buttonContent = `
-            <div class="button-container">
-                <button class="promoted-cta-button buy-now-button" data-post-id="${post._id || ''}"
-                    data-product-image="${productImageForChat}"
-                    data-product-title="${escapeHtml(post.title || 'Untitled Product')}"
-                    data-product-description="${escapeHtml(post.description || 'No description available.')}"
-                    data-product-location="${escapeHtml(post.location || 'N/A')}"
-                    data-product-condition="${escapeHtml(post.productCondition || 'N/A')}"
-                    data-product-price="${post.price ? '₦' + Number(post.price).toLocaleString('en-NG') : '₦0.00'}"
-                    data-seller-id="${post.createdBy ? post.createdBy.userId : ''}"
-                    ${post.isSold ? 'disabled' : ''}>
-                    <i class="fas fa-shopping-cart"></i> ${post.isSold ? 'Sold' : 'Buy'}
-                </button>
-                <button class="promoted-cta-button send-message-btn"
-                    data-recipient-id="${post.createdBy ? post.createdBy.userId : ''}"
-                    data-product-image="${productImageForChat}"
-                    data-product-description="${escapeHtml(post.title || '')}"
-                    data-post-id="${post._id || ''}"
-                    ${post.isSold ? 'disabled' : ''}>
-                    <i class="fas fa-paper-plane"></i> ${post.isSold ? 'Unavailable' : 'Message'}
-                </button>
-            </div>
+                <div class="button-container">
+                    <button class="promoted-cta-button buy-now-button" data-post-id="${post._id || ''}"
+                        data-product-image="${productImageForChat}"
+                        data-product-title="${escapeHtml(post.title || 'Untitled Product')}"
+                        data-product-description="${escapeHtml(post.description || 'No description available.')}"
+                        data-product-location="${escapeHtml(post.location || 'N/A')}"
+                        data-product-condition="${escapeHtml(post.productCondition || 'N/A')}"
+                        data-product-price="${post.price ? '₦' + Number(post.price).toLocaleString('en-NG') : '₦0.00'}"
+                        data-seller-id="${post.createdBy ? post.createdBy.userId : ''}"
+                        ${post.isSold ? 'disabled' : ''}>
+                        <i class="fas fa-shopping-cart"></i> ${post.isSold ? 'Sold' : 'Buy'}
+                    </button>
+                    <button class="promoted-cta-button send-message-btn"
+                        data-recipient-id="${post.createdBy ? post.createdBy.userId : ''}"
+                        data-product-image="${productImageForChat}"
+                        data-product-description="${escapeHtml(post.title || '')}"
+                        data-post-id="${post._id || ''}"
+                        ${post.isSold ? 'disabled' : ''}>
+                        <i class="fas fa-paper-plane"></i> ${post.isSold ? 'Unavailable' : 'Message'}
+                    </button>
+                </div>
             `;
         } else if (!currentLoggedInUser) {
             buttonContent = `
@@ -322,7 +362,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 <span>Promoted</span>
             </div>
             <div class="promoted-header">
-                <img src="${post.profilePicture || '/salmart-192x192.png'}" class="promoted-avatar" onerror="this.src='/salmart-192x192.png'" alt="User Avatar">
+                <img src="${post.createdBy?.profilePicture || '/salmart-192x192.png'}?v=${Date.now()}" class="promoted-avatar" data-user-id="${post.createdBy?.userId || ''}" onerror="this.src='/salmart-192x192.png'" alt="User Avatar">
                 <div class="promoted-user-info">
                     <h5 class="promoted-user-name">${escapeHtml(post.createdBy ? post.createdBy.name : 'Unknown')}</h5>
                     <span class="promoted-time">${formatTime(post.createdAt || new Date())}</span>
@@ -345,6 +385,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         postElement.dataset.createdAt = post.createdAt || new Date().toISOString();
         postElement.dataset.postId = post._id || '';
         postElement.dataset.sellerId = post.createdBy ? post.createdBy.userId : '';
+        postElement.dataset.userId = post.createdBy ? post.createdBy.userId : ''; // For profile picture updates
 
         const isFollowing = currentFollowingList.includes(post.createdBy?.userId?.toString());
         const isPostCreator = post.createdBy && post.createdBy.userId === currentLoggedInUser;
@@ -422,7 +463,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             mediaContent = `
                 <div class="product-image">
                     <div class="badge">${post.productCondition || 'New'}</div>
-                    <img src="${productImageForChat}" class="post-image" onclick="window.openImage('${productImageForChat.replace(/'/g, "\\'")}')" alt="Product Image" onerror="this.src='/salmart-192x192.png'">
+                    <img src="${productImageForChat}?v=${Date.now()}" class="post-image" onclick="window.openImage('${productImageForChat.replace(/'/g, "\\'")}')" alt="Product Image" onerror="this.src='/salmart-192x192.png'">
                 </div>
             `;
             productDetails = `
@@ -461,20 +502,19 @@ document.addEventListener('DOMContentLoaded', async function () {
             `;
             if (currentLoggedInUser) {
                 if (isPostCreator) {
-    buttonContent = !post.isPromoted ? `
-        <div class="actions">
-            <button 
-                class="btn btn-primary promote-button" 
-                data-post-id="${post._id || ''}" 
-                aria-label="Promote this post" 
-                ${post.isSold ? 'disabled title="Cannot promote sold out post"' : ''}
-            >
-                ${post.isSold ? 'Sold Out' : 'Promote Post'}
-            </button>
-        </div>
-    ` : '';
-}
- else {
+                    buttonContent = !post.isPromoted ? `
+                        <div class="actions">
+                            <button 
+                                class="btn btn-primary promote-button" 
+                                data-post-id="${post._id || ''}" 
+                                aria-label="Promote this post" 
+                                ${post.isSold ? 'disabled title="Cannot promote sold out post"' : ''}
+                            >
+                                ${post.isSold ? 'Sold Out' : 'Promote Post'}
+                            </button>
+                        </div>
+                    ` : '';
+                } else {
                     buttonContent = `
                         <div class="actions">
                             <button class="btn btn-secondary send-message-btn"
@@ -570,7 +610,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         postElement.innerHTML = `
             <div class="post-header">
                 <a href="Profile.html?userId=${post.createdBy ? post.createdBy.userId : ''}">
-                    <img src="${post.profilePicture || '/salmart-192x192.png'}" class="post-avatar" onerror="this.src='/salmart-192x192.png'" alt="User Avatar">
+                    <img src="${post.createdBy?.profilePicture || '/salmart-192x192.png'}?v=${Date.now()}" class="post-avatar" data-user-id="${post.createdBy?.userId || ''}" onerror="this.src='/salmart-192x192.png'" alt="User Avatar">
                 </a>
                 <div class="post-user-info">
                     <a href="Profile.html?userId=${post.createdBy ? post.createdBy.userId : ''}">
@@ -583,12 +623,11 @@ document.addEventListener('DOMContentLoaded', async function () {
                     <button class="post-options-button" type="button"><i class="fas fa-ellipsis-h"></i></button>
                     <div class="post-options-menu">
                         <ul>
-                                      ${isPostCreator ? `
+                            ${isPostCreator ? `
                                 <li><button class="delete-post-button" data-post-id="${post._id || ''}" type="button">Delete Post</button></li>
                                 <li><button class="edit-post-button" data-post-id="${post._id || ''}" data-post-type="${post.postType || 'regular'}" type="button">Edit Post</button></li>
                             ` : ''}
-
-                            <li><button class="report-post-button" data-post-id="${post._id || ''}" type="button">Report Post</button></li>
+                            <li><button class "report-post-button" data-post-id="${post._id || ''}" type="button">Report Post</button></li>
                         </ul>
                     </div>
                 </div>
@@ -687,10 +726,10 @@ document.addEventListener('DOMContentLoaded', async function () {
             scroll-snap-type: x mandatory;
             -webkit-overflow-scrolling: touch;
             position: relative;
-            -webkit-scrollbar: none;
-            -ms-overflow-style: none;
             scrollbar-width: none;
         `;
+        rowContainer.style.setProperty('-webkit-scrollbar', 'none');
+        rowContainer.style.setProperty('-ms-overflow-style', 'none');
 
         const postsToRender = posts.filter(post => !promotedPostIdsInserted.has(post._id));
 
@@ -722,6 +761,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         const postsContainer = document.getElementById('posts-container');
         if (!postsContainer) {
             console.error('Posts container not found.');
+            showToast('Error: Page layout issue. Please refresh.', '#dc3545');
             return;
         }
 
@@ -868,34 +908,30 @@ document.addEventListener('DOMContentLoaded', async function () {
                     </p>
                 `;
             }
+            showToast('Failed to load posts. Please try again.', '#dc3545');
         } finally {
             isLoading = false;
         }
     }
 
     window.redirectToLogin = function() {
-        if (window.showToast) {
-            window.showToast('Please log in to access this feature', 'error');
-            setTimeout(() => {
-                window.location.href = 'SignIn.html';
-            }, 1000);
-        } else {
+        showToast('Please log in to access this feature', '#dc3545');
+        setTimeout(() => {
             window.location.href = 'SignIn.html';
-        }
+        }, 1000);
     };
 
     document.addEventListener('click', async (event) => {
         const target = event.target.closest('button');
         if (!target) return;
 
-        const showToast = window.showToast;
         const authToken = localStorage.getItem('authToken');
         const loggedInUser = localStorage.getItem('userId');
 
         if (target.classList.contains('promote-button')) {
             const postId = target.dataset.postId;
             if (!postId) {
-                if (showToast) showToast('Invalid post ID for promotion', 'error');
+                showToast('Invalid post ID for promotion', '#dc3545');
                 return;
             }
             window.location.href = `promote.html?postId=${postId}`;
@@ -909,12 +945,12 @@ document.addEventListener('DOMContentLoaded', async function () {
 
             if (!postElement) {
                 console.error("Could not find parent post element for send message button.");
-                if (showToast) showToast('Error: Post information not found.', '#dc3545');
+                showToast('Error: Post information not found.', '#dc3545');
                 return;
             }
 
             const recipientUsername = postElement.querySelector('.post-user-name')?.textContent || postElement.querySelector('.promoted-user-name')?.textContent || 'Unknown';
-            const recipientProfilePictureUrl = postElement.querySelector('.post-avatar')?.src || postElement.querySelector('.promoted-avatar')?.src || 'default-avatar.png';
+            const recipientProfilePictureUrl = postElement.querySelector('.post-avatar')?.src || postElement.querySelector('.promoted-avatar')?.src || '/salmart-192x192.png';
             let productImage = target.dataset.productImage || '';
             const productDescription = target.dataset.productDescription || '';
             const postId = target.dataset.postId;
@@ -940,7 +976,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             const postId = target.dataset.postId;
             if (!postId) {
                 console.error("Post ID is missing");
-                if (showToast) showToast('Error: Post ID not found.', '#dc3545');
+                showToast('Error: Post ID not found.', '#dc3545');
                 return;
             }
 
@@ -971,7 +1007,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         if (target.classList.contains('follow-button') && target.dataset.userId) {
             const userIdToFollow = target.dataset.userId;
             if (!authToken || !loggedInUser) {
-                if (showToast) showToast('Please log in to follow users.', '#dc3545');
+                showToast('Please log in to follow users.', '#dc3545');
                 return;
             }
 
@@ -999,11 +1035,11 @@ document.addEventListener('DOMContentLoaded', async function () {
                 } else {
                     currentFollowingList.push(userIdToFollow);
                 }
-                window.updateFollowButtonsUI(userIdToFollow, isCurrentlyFollowing);
-                if (showToast) showToast(data.message || 'Follow status updated!', '#28a745');
+                window.updateFollowButtonsUI(userIdToFollow, !isCurrentlyFollowing);
+                showToast(data.message || 'Follow status updated!', '#28a745');
             } catch (error) {
                 console.error('Follow/Unfollow error:', error);
-                if (showToast) showToast(error.message || 'Failed to update follow status.', '#dc3545');
+                showToast(error.message || 'Failed to update follow status.', '#dc3545');
                 window.updateFollowButtonsUI(userIdToFollow, isCurrentlyFollowing);
             }
             return;
@@ -1019,6 +1055,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
         if (currentLoggedInUser) {
             currentFollowingList = await fetchFollowingList();
+            socket.emit('join', `user_${currentLoggedInUser}`);
         }
         isAuthReady = true;
         console.log('App initialization complete. User:', currentLoggedInUser ? currentLoggedInUser : 'Not logged in');
@@ -1031,6 +1068,9 @@ document.addEventListener('DOMContentLoaded', async function () {
         if (!isAuthReady || currentLoggedInUser !== event.detail.loggedInUser) {
             currentLoggedInUser = event.detail.loggedInUser;
             console.log('Auth status ready event received. Logged in user:', currentLoggedInUser ? currentLoggedInUser : 'Not logged in');
+            if (currentLoggedInUser) {
+                socket.emit('join', `user_${currentLoggedInUser}`);
+            }
             await initializeAppData();
         }
     });
@@ -1046,4 +1086,9 @@ document.addEventListener('DOMContentLoaded', async function () {
             }
         });
     }
+
+    // Cleanup on page unload
+    window.addEventListener('beforeunload', () => {
+        socket.disconnect();
+    });
 });

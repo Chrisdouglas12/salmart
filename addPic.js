@@ -1,37 +1,28 @@
 const mongoose = require('mongoose');
-const dotenv = require('dotenv');
-const PlatformWallet = require('./models/PlatformWallet'); // Adjust path if needed
+const Post = require('./models/postSchema.js');
+require('dotenv').config()
 
-dotenv.config();
 
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/salmart'; // Update if needed
 
-async function resetWallets() {
+async function migrate() {
   try {
-    await mongoose.connect(MONGO_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
-
-    const result = await PlatformWallet.updateMany(
-      { type: { $in: ['commission', 'promotion'] } },
-      {
-        $set: {
-          balance: 0,
-          lastUpdated: new Date()
-        },
-        $unset: {
-          transactions: "" // Optionally clear all transactions
-        }
-      }
-    );
-
-    console.log('Reset Result:', result);
-  } catch (err) {
-    console.error('[RESET ERROR]', err.message);
-  } finally {
-    await mongoose.disconnect();
+    await mongoose.connect(process.env.MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  serverSelectionTimeoutMS: 5000,
+  socketTimeoutMS: 45000,
+})
+  .then(() => console.log('✅ MongoDB connected successfully'))
+  .catch((err) => {
+    console.error(`❌ MongoDB connection error: ${err.message}`);
+    process.exit(1); // Exit if MongoDB fails to connect
+  });
+    await Post.updateMany({}, { $unset: { profilePicture: "" } });
+    console.log('Migration completed: profilePicture field removed from Post documents');
+    mongoose.connection.close();
+  } catch (error) {
+    console.error('Migration error:', error);
   }
 }
 
-resetWallets();
+migrate();

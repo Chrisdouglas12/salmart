@@ -6,7 +6,7 @@ const path = require('path');
 const fs = require('fs');
 const os = require('os');
 const Post = require('../models/postSchema.js');
-const User = require('../models/userSchema.js'); // Ensure User model is correctly imported
+const User = require('../models/userSchema.js');
 const Report = require('../models/reportSchema.js');
 const Notification = require('../models/notificationSchema.js');
 const verifyToken = require('../middleware/auths.js');
@@ -69,7 +69,7 @@ const storage = isProduction
           allowed_formats: ['jpg', 'png', 'jpeg', 'mp4'],
           transformation: transformation,
           eager: [
-            ...(file.mimetype.startsWith('video/') ?
+            ...(file.mimetype.startsWith('video/') ? 
               [{ duration: "60", crop: "limit", quality: "auto:eco", fetch_format: "mp4" }] : []),
           ],
           eager_async: true,
@@ -135,7 +135,6 @@ const uploadToCloudinary = (filePath, resourceType = 'auto') => {
           logger.error(`Cloudinary upload error: ${error.message}`);
           return reject(error);
         }
-
         resolve(result.secure_url);
       }
     );
@@ -164,7 +163,6 @@ module.exports = (io) => {
     next();
   });
 
-  // --- POST /post - Create a new post ---
   router.post(
     '/post',
     verifyToken,
@@ -205,8 +203,7 @@ module.exports = (io) => {
         const isValidSalmartLink = (link) => {
           try {
             const url = new URL(link);
-            // Ensure link is for HTTP or HTTPS and the correct domain
-            return (url.protocol === 'http:' || url.protocol === 'https:') && url.hostname === validDomain;
+            return url.hostname === validDomain;
           } catch (e) {
             return false;
           }
@@ -215,15 +212,15 @@ module.exports = (io) => {
         if (postType === 'video_ad') {
           if (!description || !category || !req.files?.video?.[0] || !productLink) {
             logger.warn(`Missing fields in video ad post creation by user ${userId}`);
-            return res.status(400).json({
-              message: 'Description, category, video, and product link are required'
+            return res.status(400).json({ 
+              message: 'Description, category, video, and product link are required' 
             });
           }
 
           if (!isValidSalmartLink(productLink)) {
             logger.warn(`Invalid product link ${productLink} by user ${userId}`);
-            return res.status(400).json({
-              message: `Product link must be a valid Salmart URL (e.g., https://${validDomain}/product/123)`
+            return res.status(400).json({ 
+              message: 'Product link must be a valid Salmart URL (e.g., https://salmartonline.com.ng/product/123)' 
             });
           }
 
@@ -237,15 +234,15 @@ module.exports = (io) => {
         } else if (postType === 'regular') {
           if (!title || !productCondition || !price || !location || !category || !req.files?.photo?.[0]) {
             logger.warn(`Missing fields in regular post creation by user ${userId}`);
-            return res.status(400).json({
-              message: 'All fields are required for regular posts'
+            return res.status(400).json({ 
+              message: 'All fields are required for regular posts' 
             });
           }
 
           if (isNaN(price) || Number(price) < 0) {
             logger.warn(`Invalid price ${price} by user ${userId}`);
-            return res.status(400).json({
-              message: 'Price must be a valid non-negative number'
+            return res.status(400).json({ 
+              message: 'Price must be a valid non-negative number' 
             });
           }
 
@@ -266,20 +263,19 @@ module.exports = (io) => {
           title: sanitizedTitle,
           description: sanitizedDescription,
           category,
-          // Removed profilePicture from here - it will be populated dynamically
           createdBy: {
             userId: user._id,
-            name: `${user.firstName} ${user.lastName}`, // Keep name as a snapshot, or populate it too if preferred
+            name: `${user.firstName} ${user.lastName}`,
           },
           createdAt: new Date(),
           likes: [],
-          ...(postType === 'video_ad'
-            ? { video: videoUrl, productLink }
-            : {
-                photo: photoUrl,
-                location,
-                productCondition,
-                price: Number(price)
+          ...(postType === 'video_ad' 
+            ? { video: videoUrl, productLink } 
+            : { 
+                photo: photoUrl, 
+                location, 
+                productCondition, 
+                price: Number(price) 
               }
           ),
         });
@@ -287,7 +283,6 @@ module.exports = (io) => {
         await newPost.save();
         logger.info(`Post created by user ${userId}: ${newPost._id}`);
 
-        // Notification logic for followers
         const followers = user.followers || [];
         const notificationPromises = followers
           .filter((followerId) => followerId.toString() !== userId.toString())
@@ -296,11 +291,6 @@ module.exports = (io) => {
               const follower = await User.findById(followerId)
                 .select('notificationPreferences fcmToken blockedUsers')
                 .lean();
-
-              if (!follower) { // Handle case where follower might have been deleted
-                logger.warn(`Follower ${followerId} not found for notification.`);
-                return;
-              }
 
               if (follower.blockedUsers?.includes(userId)) {
                 logger.info(`Skipping notification for blocked user ${followerId}`);
@@ -338,14 +328,14 @@ module.exports = (io) => {
 
         await Promise.all(notificationPromises);
 
-        res.status(201).json({
-          message: 'Post created successfully',
-          post: newPost
+        res.status(201).json({ 
+          message: 'Post created successfully', 
+          post: newPost 
         });
       } catch (error) {
         logger.error(`Post creation error for user ${req.user?.userId}: ${error.message}`);
-        res.status(500).json({
-          message: `Server error: ${error.message}`
+        res.status(500).json({ 
+          message: `Server error: ${error.message}` 
         });
       } finally {
         cleanupFiles(tempFiles);
@@ -353,8 +343,6 @@ module.exports = (io) => {
     }
   );
 
-  
-  // --- GET /post - Get all posts with dynamic profile pictures ---
   router.get('/post', async (req, res) => {
     try {
       const { category } = req.query;
@@ -381,22 +369,7 @@ module.exports = (io) => {
       }
 
       const posts = await Post.find({ ...categoryFilter, status: 'active' })
-        .populate({
-          path: 'createdBy.userId',
-          model: 'User',
-          select: 'firstName lastName profilePicture'
-        })
-        // You might also want to populate comments and replies here if you return them in this route
-        // .populate({
-        //   path: 'comments.userId',
-        //   model: 'User',
-        //   select: 'profilePicture firstName lastName'
-        // })
-        // .populate({
-        //   path: 'comments.replies.userId',
-        //   model: 'User',
-        //   select: 'profilePicture firstName lastName'
-        // })
+        .populate('createdBy.userId', 'firstName lastName profilePicture')
         .lean();
 
       if (!posts || posts.length === 0) {
@@ -405,7 +378,7 @@ module.exports = (io) => {
       }
 
       const currentTime = new Date();
-
+      
       const buckets = {
         ultraFresh: [],
         fresh: [],
@@ -416,7 +389,7 @@ module.exports = (io) => {
 
       posts.forEach(post => {
         const hoursSincePosted = (currentTime - new Date(post.createdAt)) / (1000 * 60 * 60);
-
+        
         if (hoursSincePosted < 2) buckets.ultraFresh.push(post);
         else if (hoursSincePosted < 12) buckets.fresh.push(post);
         else if (hoursSincePosted < 48) buckets.recent.push(post);
@@ -427,14 +400,13 @@ module.exports = (io) => {
       const scoreAndSortBucket = (bucketPosts) => {
         return bucketPosts.map(post => {
           const hoursSincePosted = (currentTime - new Date(post.createdAt)) / (1000 * 60 * 60);
-
+          
           const likeCount = post.likes?.length || 0;
           const commentCount = post.comments?.length || 0;
           const engagementScore = (likeCount * 0.3) + (commentCount * 0.7);
 
           let followingScore = 0;
-          // IMPORTANT: Check if post.createdBy.userId exists and has _id for comparison
-          if (loggedInUserId && post.createdBy.userId && following.some(id => id.toString() === post.createdBy.userId._id.toString())) {
+          if (loggedInUserId && following.some(id => id.toString() === post.createdBy.userId._id.toString())) {
             followingScore = 5;
           }
 
@@ -452,7 +424,7 @@ module.exports = (io) => {
           const contentTypeScore = post.postType === 'video_ad' ? 1 : 0;
           const microRecencyScore = 1 / (hoursSincePosted + 1);
 
-          const totalScore =
+          const totalScore = 
             (followingScore * 0.4) +
             (engagementScore * 0.25) +
             (relevanceScore * 0.15) +
@@ -474,7 +446,7 @@ module.exports = (io) => {
 
       const distributedPosts = [];
       const maxPosts = 50;
-
+      
       const distribution = {
         ultraFresh: Math.min(15, sortedBuckets.ultraFresh.length),
         fresh: Math.min(15, sortedBuckets.fresh.length),
@@ -499,78 +471,49 @@ module.exports = (io) => {
           ...sortedBuckets.thisWeek.slice(distribution.thisWeek),
           ...sortedBuckets.older.slice(distribution.older)
         ].filter(post => !usedIds.has(post._id.toString()))
-          .sort((a, b) => b.totalScore - a.totalScore);
+         .sort((a, b) => b.totalScore - a.totalScore);
 
         distributedPosts.push(...remainingPosts.slice(0, remainingSlots));
       }
 
-      // Final shuffle within time buckets to avoid predictable ordering (optional)
       const finalPosts = [];
-      let ultraIndex = 0, freshIndex = 0, recentIndex = 0, thisWeekIndex = 0, olderIndex = 0;
-
-      for (let i = 0; i < maxPosts; i++) {
-        let added = false;
-        if (i % 3 === 0 && ultraIndex < sortedBuckets.ultraFresh.length) {
+      let ultraIndex = 0, freshIndex = 0, recentIndex = 0;
+      
+      for (let i = 0; i < distributedPosts.length; i++) {
+        if (i % 3 === 0 && ultraIndex < distribution.ultraFresh) {
           finalPosts.push(sortedBuckets.ultraFresh[ultraIndex++]);
-          added = true;
-        } else if (i % 2 === 0 && freshIndex < sortedBuckets.fresh.length) {
+        } else if (i % 2 === 0 && freshIndex < distribution.fresh) {
           finalPosts.push(sortedBuckets.fresh[freshIndex++]);
-          added = true;
-        } else if (recentIndex < sortedBuckets.recent.length) {
+        } else if (recentIndex < distribution.recent) {
           finalPosts.push(sortedBuckets.recent[recentIndex++]);
-          added = true;
-        } else if (thisWeekIndex < sortedBuckets.thisWeek.length) {
-          finalPosts.push(sortedBuckets.thisWeek[thisWeekIndex++]);
-          added = true;
-        } else if (olderIndex < sortedBuckets.older.length) {
-          finalPosts.push(sortedBuckets.older[olderIndex++]);
-          added = true;
+        } else {
+          finalPosts.push(distributedPosts[finalPosts.length]);
         }
-
-        // If no post from higher priority buckets was added, try to fill from any remaining
-        if (!added && distributedPosts.length > finalPosts.length) {
-          const nextPost = distributedPosts.find(p => !finalPosts.includes(p));
-          if (nextPost) {
-            finalPosts.push(nextPost);
-          }
-        }
-        if (finalPosts.length >= maxPosts) break; // Ensure we don't exceed maxPosts
       }
 
+      const sortedPosts = distributedPosts.slice(0, maxPosts);
 
-      // Format response to include populated user details
-      const populatedPosts = finalPosts.map((post) => {
-        // Ensure createdBy.userId is populated
-        const profilePicture = post.createdBy.userId?.profilePicture || 'default-avatar.png';
-        const firstName = post.createdBy.userId?.firstName || 'Unknown';
-        const lastName = post.createdBy.userId?.lastName || 'User';
-
-        return {
-          ...post,
-          createdBy: {
-            userId: post.createdBy.userId?._id,
-            name: `${firstName} ${lastName}`,
-            profilePicture: profilePicture,
-          },
-          isFollowing: loggedInUserId ? following.some(
-            (followedId) => followedId.toString() === post.createdBy.userId?._id.toString()
-          ) : false,
-          media: post.postType === 'video_ad' ? { video: post.video } : { photo: post.photo },
-          isLiked: loggedInUserId ? post.likes.includes(loggedInUserId) : false,
-          // Remove totalScore, hoursSincePosted, etc. if not needed by frontend
-          totalScore: undefined,
-          hoursSincePosted: undefined,
-          followingScore: undefined,
-          engagementScore: undefined,
-        };
-      }).filter(p => p.createdBy.userId); // Filter out posts where user data couldn't be populated (e.g., deleted user)
+      const populatedPosts = sortedPosts.map((post) => ({
+        ...post,
+        createdBy: {
+          userId: post.createdBy.userId._id,
+          name: `${post.createdBy.userId.firstName} ${post.createdBy.userId.lastName}`,
+          profilePicture: post.createdBy.userId.profilePicture || 'default-avatar.png', // Use User profile picture
+        },
+        isFollowing: following.some(
+          (followedId) => followedId.toString() === post.createdBy.userId._id.toString()
+        ),
+        postType: post.postType,
+        media: post.postType === 'video_ad' ? { video: post.video } : { photo: post.photo },
+        isLiked: loggedInUserId ? post.likes.includes(loggedInUserId) : false,
+      }));
 
       await Post.updateMany(
-        { _id: { $in: populatedPosts.map((p) => p._id) } }, // Use populatedPosts to ensure _id exists
+        { _id: { $in: sortedPosts.map((p) => p._id) } },
         { $inc: { viewCount: 1 } }
       );
 
-      logger.info(`Distributed ${populatedPosts.length} posts for user ${loggedInUserId || 'anonymous'}`);
+      logger.info(`Distributed ${populatedPosts.length} posts for user ${loggedInUserId || 'anonymous'} - Fresh: ${distribution.ultraFresh + distribution.fresh}, Recent: ${distribution.recent}, Older: ${distribution.thisWeek + distribution.older}`);
       res.status(200).json(populatedPosts);
     } catch (error) {
       logger.error(`Error fetching posts: ${error.message}`);
@@ -578,7 +521,6 @@ module.exports = (io) => {
     }
   });
 
-  // --- GET /post/:postId - Get a single post with dynamic profile picture ---
   router.get('/post/:postId', async (req, res) => {
     try {
       const { postId } = req.params;
@@ -587,24 +529,7 @@ module.exports = (io) => {
         return res.status(400).json({ success: false, message: 'Invalid post ID' });
       }
 
-      const post = await Post.findById(postId)
-        .populate({
-          path: 'createdBy.userId',
-          model: 'User',
-          select: 'firstName lastName profilePicture'
-        })
-        .populate({
-          path: 'comments.userId',
-          model: 'User',
-          select: 'firstName lastName profilePicture'
-        })
-        .populate({
-          path: 'comments.replies.userId',
-          model: 'User',
-          select: 'firstName lastName profilePicture'
-        })
-        .lean(); // Use .lean() for faster retrieval if you're transforming the object afterwards
-
+      const post = await Post.findById(postId).populate('createdBy.userId', 'firstName lastName profilePicture');
       if (!post) {
         logger.error(`Post not found: ${postId}`);
         return res.status(404).json({ success: false, message: 'Post not found' });
@@ -622,41 +547,19 @@ module.exports = (io) => {
         }
       }
 
-      // Reconstruct comments and replies to use populated data
-      const formattedComments = post.comments.map(comment => {
-        const commentAuthor = comment.userId || {}; // Use an empty object if userId isn't populated
-        const formattedReplies = comment.replies.map(reply => {
-          const replyAuthor = reply.userId || {};
-          return {
-            ...reply,
-            userId: replyAuthor._id, // Keep the ID
-            name: `${replyAuthor.firstName || 'Unknown'} ${replyAuthor.lastName || 'User'}`,
-            profilePicture: replyAuthor.profilePicture || 'default-avatar.png',
-          };
-        });
-
-        return {
-          ...comment,
-          userId: commentAuthor._id, // Keep the ID
-          name: `${commentAuthor.firstName || 'Unknown'} ${commentAuthor.lastName || 'User'}`,
-          profilePicture: commentAuthor.profilePicture || 'default-avatar.png',
-          replies: formattedReplies,
-        };
-      });
-
       const postData = {
-        ...post, // Use the lean post object directly
+        ...post.toObject(),
         createdBy: {
-          userId: post.createdBy.userId?._id, // Ensure ._id is accessed safely
-          name: `${post.createdBy.userId?.firstName || 'Unknown'} ${post.createdBy.userId?.lastName || 'User'}`,
-          profilePicture: post.createdBy.userId?.profilePicture || 'default-avatar.png',
+          userId: post.createdBy.userId._id,
+          name: `${post.createdBy.userId.firstName} ${post.createdBy.userId.lastName}`,
+          profilePicture: post.createdBy.userId.profilePicture || 'default-avatar.png', // Use User profile picture
         },
         likes: post.likes || [],
-        comments: formattedComments, // Use the newly formatted comments
+        comments: post.comments || [],
         isLiked: loggedInUserId ? post.likes.includes(loggedInUserId) : false,
       };
 
-      // No need to delete postData.createdBy.userId._id if we are careful with direct assignment
+      delete postData.createdBy.userId._id;
       logger.info(`Fetched post ${postId} for user ${loggedInUserId || 'anonymous'}`);
       res.status(200).json(postData);
     } catch (error) {
@@ -665,21 +568,11 @@ module.exports = (io) => {
     }
   });
 
-  // --- GET /user-posts/:Id - Get all posts by a specific user with dynamic profile pictures ---
   router.get('/user-posts/:Id', async (req, res) => {
     try {
       const { Id } = req.params;
-      if (!mongoose.Types.ObjectId.isValid(Id)) {
-        logger.warn(`Invalid user ID: ${Id}`);
-        return res.status(400).json({ message: 'Invalid user ID' });
-      }
-
       const userPosts = await Post.find({ 'createdBy.userId': Id })
-        .populate({
-          path: 'createdBy.userId',
-          model: 'User',
-          select: 'firstName lastName profilePicture'
-        })
+        .populate('createdBy.userId', 'firstName lastName profilePicture')
         .sort({ createdAt: -1 })
         .lean();
 
@@ -688,40 +581,29 @@ module.exports = (io) => {
         return res.status(404).json({ message: 'No posts found for this user' });
       }
 
-      // Format response to include populated user details
-      const formattedUserPosts = userPosts.map(post => {
-        const profilePicture = post.createdBy.userId?.profilePicture || 'default-avatar.png';
-        const firstName = post.createdBy.userId?.firstName || 'Unknown';
-        const lastName = post.createdBy.userId?.lastName || 'User';
+      const formattedPosts = userPosts.map(post => ({
+        ...post,
+        createdBy: {
+          userId: post.createdBy.userId._id,
+          name: `${post.createdBy.userId.firstName} ${post.createdBy.userId.lastName}`,
+          profilePicture: post.createdBy.userId.profilePicture || 'default-avatar.png', // Use User profile picture
+        },
+      }));
 
-        return {
-          ...post,
-          createdBy: {
-            userId: post.createdBy.userId?._id,
-            name: `${firstName} ${lastName}`,
-            profilePicture: profilePicture,
-          },
-          // You might also want to populate comments here if you return them
-          // comments: post.comments.map(comment => { ... }),
-        };
-      }).filter(p => p.createdBy.userId); // Filter out posts where user data couldn't be populated
-
-      logger.info(`Fetched ${formattedUserPosts.length} posts for user ${Id}`);
-      res.status(200).json(formattedUserPosts);
+      logger.info(`Fetched ${userPosts.length} posts for user ${Id}`);
+      res.status(200).json(formattedPosts);
     } catch (error) {
       logger.error(`Error fetching posts for user ${req.params.Id}: ${error.message}`);
       res.status(500).json({ message: 'Server error' });
     }
   });
 
-  
-  // --- POST /post/like/:id - Like/Unlike a post ---
   router.post('/post/like/:id', verifyToken, async (req, res) => {
     try {
       const postId = req.params.id;
       const userId = req.user.userId;
 
-      const post = await Post.findById(postId);
+      const post = await Post.findById(postId).populate('createdBy.userId', 'firstName lastName profilePicture');
       if (!post) {
         logger.error(`Post not found: ${postId}`);
         return res.status(404).json({ success: false, message: 'Post not found' });
@@ -737,28 +619,26 @@ module.exports = (io) => {
         if (!post.likes.some((id) => id.toString() === userId.toString())) {
           post.likes.push(userId);
           logger.info(`User ${userId} liked post ${postId}`);
-          if (post.createdBy.userId.toString() !== userId.toString()) {
-            const user = await User.findById(userId).select('firstName lastName'); // Fetch sender's name
-            if (user) {
-              const notification = new Notification({
-                userId: post.createdBy.userId,
-                type: 'like',
-                senderId: userId,
-                postId,
-                message: `${user.firstName} ${user.lastName} liked your post`,
-                createdAt: new Date(),
-              });
-              await notification.save();
-              logger.info(`Created like notification for user ${post.createdBy.userId} for post ${postId}`);
-              await sendFCMNotification(
-                post.createdBy.userId.toString(),
-                'New Like',
-                `${user.firstName} ${user.lastName} liked your post`,
-                { type: 'like', postId: postId.toString() },
-                req.io
-              );
-              await NotificationService.triggerCountUpdate(req.io, post.createdBy.userId.toString());
-            }
+          if (post.createdBy.userId._id.toString() !== userId.toString()) {
+            const user = await User.findById(userId);
+            const notification = new Notification({
+              userId: post.createdBy.userId._id,
+              type: 'like',
+              senderId: userId,
+              postId,
+              message: `${user.firstName} ${user.lastName} liked your post`,
+              createdAt: new Date(),
+            });
+            await notification.save();
+            logger.info(`Created like notification for user ${post.createdBy.userId._id} for post ${postId}`);
+            await sendFCMNotification(
+              post.createdBy.userId._id.toString(),
+              'New Like',
+              `${user.firstName} ${user.lastName} liked your post`,
+              { type: 'like', postId: postId.toString() },
+              req.io
+            );
+            await NotificationService.triggerCountUpdate(req.io, post.createdBy.userId._id.toString());
           }
         }
       }
@@ -777,7 +657,6 @@ module.exports = (io) => {
     }
   });
 
-  // --- POST /post/comment/:postId - Add a comment to a post ---
   router.post('/post/comment/:postId', verifyToken, async (req, res) => {
     try {
       const { text } = req.body;
@@ -789,7 +668,7 @@ module.exports = (io) => {
         return res.status(400).json({ error: 'Comment text is required' });
       }
 
-      const user = await User.findById(userId).select('firstName lastName profilePicture'); // Select profilePicture
+      const user = await User.findById(userId);
       if (!user) {
         logger.error(`User ${userId} not found`);
         return res.status(404).json({ error: 'User not found' });
@@ -802,23 +681,14 @@ module.exports = (io) => {
       }
 
       const newComment = {
-        userId: user._id, // Store only userId
         text,
         createdAt: new Date(),
-        // Removed profilePicture and name from here, will be populated on read
+        profilePicture: user.profilePicture || 'default-avatar.png',
+        name: `${user.firstName} ${user.lastName}`,
       };
 
       post.comments.push(newComment);
       await post.save();
-
-      // Populate the newly added comment for response
-      const savedComment = post.comments[post.comments.length - 1]; // Get the last added comment
-      const populatedComment = {
-          ...savedComment.toObject(), // Convert Mongoose object to plain object
-          userId: user._id, // Keep the user ID
-          name: `${user.firstName} ${user.lastName}`, // Add populated name
-          profilePicture: user.profilePicture || 'default-avatar.png', // Add populated profilePicture
-      };
 
       if (post.createdBy.userId.toString() !== userId.toString()) {
         const notification = new Notification({
@@ -842,14 +712,13 @@ module.exports = (io) => {
       }
 
       logger.info(`Comment added to post ${postId} by user ${userId}`);
-      res.status(201).json({ message: 'Comment added successfully', comment: populatedComment });
+      res.json({ message: 'Comment added successfully', comment: newComment });
     } catch (error) {
       logger.error(`Error adding comment to post ${req.params.postId} by user ${req.user.userId}: ${error.message}`);
       res.status(500).json({ message: 'Server error' });
     }
   });
 
-  // --- GET /post/reply/:postId/:commentId - Get a single comment with its replies (populated) ---
   router.get('/post/reply/:postId/:commentId', async (req, res) => {
     try {
       const { postId, commentId } = req.params;
@@ -864,49 +733,30 @@ module.exports = (io) => {
         return res.status(400).json({ message: 'Invalid comment ID' });
       }
 
-      const post = await Post.findById(postId)
-        .populate({
-          path: 'comments.userId',
-          model: 'User',
-          select: 'firstName lastName profilePicture'
-        })
-        .populate({
-          path: 'comments.replies.userId',
-          model: 'User',
-          select: 'firstName lastName profilePicture'
-        })
-        .lean(); // Use lean for performance
-
+      const post = await Post.findById(postId).populate('createdBy.userId', 'firstName lastName profilePicture');
       if (!post) {
         logger.error(`Post not found: ${postId}`);
         return res.status(404).json({ message: 'Post not found' });
       }
 
-      const comment = post.comments.find(c => c._id.toString() === commentId); // Use find with toString() for comparison
+      const comment = post.comments.id(commentId);
       if (!comment) {
         logger.error(`Comment not found: ${commentId} in post ${postId}`);
         return res.status(404).json({ message: 'Comment not found' });
       }
 
-      // Format the comment and its replies to include populated user details
-      const formattedReplies = comment.replies.map(reply => {
-        const replyAuthor = reply.userId || {}; // Populated user object or empty
-        return {
-          ...reply,
-          userId: replyAuthor._id,
-          name: `${replyAuthor.firstName || 'Unknown'} ${replyAuthor.lastName || 'User'}`,
-          profilePicture: replyAuthor.profilePicture || 'default-avatar.png',
-        };
-      });
+      const user = await User.findById(comment.userId).select('firstName lastName profilePicture').lean();
+      if (!user) {
+        logger.warn(`User not found for comment ${commentId}`);
+      }
 
       const commentData = {
         _id: comment._id,
         text: comment.text,
-        userId: comment.userId?._id, // Access populated ID
-        name: `${comment.userId?.firstName || 'Unknown'} ${comment.userId?.lastName || 'User'}`,
-        profilePicture: comment.userId?.profilePicture || 'default-avatar.png',
+        name: user ? `${user.firstName} ${user.lastName}` : comment.name || 'Unknown User',
+        profilePicture: user?.profilePicture || comment.profilePicture || 'default-avatar.png',
         createdAt: comment.createdAt,
-        replies: formattedReplies,
+        replies: comment.replies || [],
       };
 
       logger.info(`Fetched comment ${commentId} for post ${postId}`);
@@ -917,7 +767,6 @@ module.exports = (io) => {
     }
   });
 
-  // --- POST /post/reply/:postId/:commentId - Add a reply to a comment ---
   router.post('/post/reply/:postId/:commentId', verifyToken, async (req, res) => {
     try {
       const { postId, commentId } = req.params;
@@ -929,7 +778,7 @@ module.exports = (io) => {
         return res.status(400).json({ message: 'Reply text is required' });
       }
 
-      const post = await Post.findById(postId);
+      const post = await Post.findById(postId).populate('createdBy.userId', 'firstName lastName profilePicture');
       if (!post) {
         logger.error(`Post ${postId} not found`);
         return res.status(404).json({ message: 'Post not found' });
@@ -941,34 +790,26 @@ module.exports = (io) => {
         return res.status(404).json({ message: 'Comment not found' });
       }
 
-      const user = await User.findById(userId).select('firstName lastName profilePicture'); // Select profilePicture
+      const user = await User.findById(userId).select('firstName lastName profilePicture');
       if (!user) {
         logger.error(`User ${userId} not found`);
         return res.status(404).json({ message: 'User not found' });
       }
 
       const reply = {
-        userId: user._id, // Store only userId
+        userId,
+        name: `${user.firstName} ${user.lastName}`,
         text,
+        profilePicture: user.profilePicture || 'default-avatar.png',
         createdAt: new Date(),
-        // Removed profilePicture and name from here, will be populated on read
       };
 
       comment.replies.push(reply);
       await post.save();
 
-      // Populate the newly added reply for response
-      const savedReply = comment.replies[comment.replies.length - 1];
-      const populatedReply = {
-          ...savedReply.toObject(),
-          userId: user._id,
-          name: `${user.firstName} ${user.lastName}`,
-          profilePicture: user.profilePicture || 'default-avatar.png',
-      };
-
-      if (post.createdBy.userId.toString() !== userId.toString()) {
+      if (post.createdBy.userId._id.toString() !== userId.toString()) {
         const notification = new Notification({
-          userId: post.createdBy.userId,
+          userId: post.createdBy.userId._id,
           type: 'reply',
           senderId: userId,
           postId,
@@ -976,69 +817,60 @@ module.exports = (io) => {
           createdAt: new Date(),
         });
         await notification.save();
-        logger.info(`Created reply notification for user ${post.createdBy.userId} for comment ${commentId}`);
-        // Consider sending less sensitive data over socket if possible
-        req.io.to(`user_${post.createdBy.userId}`).emit('notification', {
+        logger.info(`Created reply notification for user ${post.createdBy.userId._id} for comment ${commentId}`);
+        req.io.to(`user_${post.createdBy.userId._id}`).emit('notification', {
           type: 'reply',
           postId,
+          userId,
           commentId,
-          text: populatedReply.text, // Use the text from the formatted reply
+          text,
           sender: {
-            userId: populatedReply.userId,
             firstName: user.firstName,
             lastName: user.lastName,
-            profilePicture: populatedReply.profilePicture,
+            profilePicture: user.profilePicture,
           },
-          createdAt: populatedReply.createdAt,
+          createdAt: new Date(),
         });
         await sendFCMNotification(
-          post.createdBy.userId.toString(),
+          post.createdBy.userId._id.toString(),
           'New Reply',
           `${user.firstName} ${user.lastName} replied to your comment`,
           { type: 'reply', postId: postId.toString(), commentId: commentId.toString() },
           req.io
         );
-        await NotificationService.triggerCountUpdate(req.io, post.createdBy.userId.toString());
+        await NotificationService.triggerCountUpdate(req.io, post.createdBy.userId._id.toString());
       }
 
       logger.info(`Reply added to comment ${commentId} on post ${postId} by user ${userId}`);
-      res.status(201).json({ reply: populatedReply });
+      res.status(201).json({ reply });
     } catch (error) {
       logger.error(`Error adding reply to comment ${req.params.commentId} on post ${req.params.postId}: ${error.message}`);
       res.status(500).json({ message: 'Server error' });
     }
   });
 
-  // --- PUT /post/edit/:postId - Edit a post ---
   router.put('/post/edit/:postId', verifyToken, upload.single('photo'), async (req, res) => {
-    let tempFiles = []; // Initialize tempFiles here
     try {
       const { postId } = req.params;
       const userId = req.user.userId;
-      const post = await Post.findById(postId);
+      const post = await Post.findById(postId).populate('createdBy.userId', 'firstName lastName profilePicture');
       if (!post) {
         logger.error(`Post ${postId} not found`);
         return res.status(404).json({ success: false, message: 'Post not found' });
       }
 
-      if (post.createdBy.userId.toString() !== userId) {
+      if (post.createdBy.userId._id.toString() !== userId) {
         logger.warn(`User ${userId} not authorized to edit post ${postId}`);
         return res.status(403).json({ success: false, message: 'Not authorized to edit this post' });
       }
 
       const { description, productCondition, price, location } = req.body;
+      let tempFiles = [];
 
       if (description) post.description = sanitizeHtml(description, { allowedTags: [], allowedAttributes: {} });
       if (productCondition) post.productCondition = productCondition;
-      // Ensure price is handled correctly
-      if (price !== undefined && !isNaN(Number(price))) {
-        post.price = Number(price);
-      } else if (price !== undefined) { // If price is provided but invalid
-        logger.warn(`Invalid price ${price} provided for post ${postId} by user ${userId}`);
-        return res.status(400).json({ success: false, message: 'Invalid price value' });
-      }
+      if (price) post.price = Number(price);
       if (location) post.location = location;
-
       if (req.file) {
         if (isProduction) {
           post.photo = req.file.path;
@@ -1048,19 +880,26 @@ module.exports = (io) => {
         }
       }
 
-      const updatedPost = await post.save();
+      await post.save();
+      const updatedPost = {
+        ...post.toObject(),
+        createdBy: {
+          userId: post.createdBy.userId._id,
+          name: `${post.createdBy.userId.firstName} ${post.createdBy.userId.lastName}`,
+          profilePicture: post.createdBy.userId.profilePicture || 'default-avatar.png', // Use User profile picture
+        },
+      };
+
       logger.info(`Post ${postId} edited by user ${userId}`);
       res.json({ success: true, message: 'Post updated successfully', post: updatedPost });
 
+      cleanupFiles(tempFiles);
     } catch (error) {
       logger.error(`Error editing post ${req.params.postId} by user ${req.user.userId}: ${error.message}`);
       res.status(500).json({ success: false, message: 'Server error' });
-    } finally {
-        cleanupFiles(tempFiles); // Ensure cleanup runs even if there's an error
     }
   });
 
-  // --- POST /post/report/:postId - Report a post ---
   router.post('/post/report/:postId', verifyToken, async (req, res) => {
     try {
       const { postId } = req.params;
@@ -1072,20 +911,14 @@ module.exports = (io) => {
         return res.status(400).json({ error: 'Reason is required' });
       }
 
-      const post = await Post.findById(postId).populate('createdBy.userId', 'firstName lastName'); // Only populate necessary fields
+      const post = await Post.findById(postId).populate('createdBy.userId', 'firstName lastName profilePicture');
       if (!post) {
         logger.error(`Post ${postId} not found`);
         return res.status(404).json({ error: 'Post not found' });
       }
 
-      // Check if post.createdBy.userId exists (user might be deleted)
-      if (!post.createdBy.userId) {
-        logger.error(`Creator user for post ${postId} not found. Cannot report.`);
-        return res.status(404).json({ error: 'Post creator not found. Cannot report.' });
-      }
-
       const existingReport = await Report.findOne({
-        reportedUser: post.createdBy.userId._id, // Use the populated _id
+        reportedUser: post.createdBy.userId._id,
         reportedBy: reporterId,
         relatedPost: postId,
       });
@@ -1096,7 +929,7 @@ module.exports = (io) => {
       }
 
       const newReport = new Report({
-        reportedUser: post.createdBy.userId._id, // Use the populated _id
+        reportedUser: post.createdBy.userId._id,
         reportedBy: reporterId,
         reason: reason.trim(),
         relatedPost: postId,
@@ -1110,85 +943,75 @@ module.exports = (io) => {
         reportedAt: new Date(),
       });
 
-      // Recalculate report count for the user
-      const reportCountForUser = await Report.countDocuments({
-        reportedUser: post.createdBy.userId._id, // Count reports against the *user*
+      const reportCount = await Report.countDocuments({
+        reportedUser: post.createdBy.userId._id,
         status: 'pending',
       });
 
-      // Update post status based on number of reports for the *post itself* (if you have this logic)
-      // Or, if 3 reports means suspending the *user*, then you'd handle that separately.
-      // Assuming 3 reports on a single post makes it 'under_review' for that post:
-      if (post.reports.length >= 3) { // Using post.reports.length as proxy for reports on this specific post
+      if (reportCount >= 3) {
         post.status = 'under_review';
-        // Notify admins if a post goes 'under_review'
-        const adminUsers = await User.find({ isAdmin: true }).select('_id fcmToken notificationEnabled'); // Select necessary fields for notification
-        logger.info(`Post ${postId} has reached ${post.reports.length} reports. Notifying ${adminUsers.length} admins.`);
+        const adminUsers = await User.find({ role: 'admin' });
+        logger.info(`Notifying ${adminUsers.length} admins for post ${postId} with ${reportCount} reports`);
         for (const admin of adminUsers) {
           const notification = new Notification({
             userId: admin._id,
             type: 'report',
             senderId: reporterId,
             postId,
-            message: `Post "${post.title || post.description.substring(0, 20) + '...'}" by ${post.createdBy.userId.firstName || 'Unknown'} was reported. Now under review.`,
+            message: `Post ${postId} reported by user ${reporterId} for: ${reason}`,
             createdAt: new Date(),
           });
           await notification.save();
-          if (admin.fcmToken && admin.notificationEnabled !== false) {
-             await sendFCMNotification(
-              admin._id.toString(),
-              'Post Under Review',
-              `Post by ${post.createdBy.userId.firstName || 'Unknown'} reported for: ${reason}. Status: Under Review.`,
-              { type: 'report_under_review', postId: postId.toString() },
-              req.io
-            );
-          }
+          await sendFCMNotification(
+            admin._id.toString(),
+            'Post Reported',
+            `Post ${postId} reported for: ${reason}`,
+            { type: 'report', postId: postId.toString() },
+            req.io
+          );
           await NotificationService.triggerCountUpdate(req.io, admin._id.toString());
         }
       }
 
       await post.save();
       logger.info(`Post ${postId} reported by user ${reporterId}`);
-      res.status(201).json({ success: true, message: 'Post reported successfully', reportId: newReport._id });
+      res.json({ success: true, message: 'Post reported successfully', reportId: newReport._id });
     } catch (error) {
       logger.error(`Error reporting post ${req.params.postId} by user ${req.user.userId}: ${error.message}`);
       res.status(500).json({ error: 'Internal server error' });
     }
   });
 
-  // --- DELETE /post/delete/:postId - Delete a post ---
   router.delete('/post/delete/:postId', verifyToken, async (req, res) => {
     try {
       const { postId } = req.params;
       const userId = req.user.userId;
 
-      const post = await Post.findById(postId);
+      const post = await Post.findById(postId).populate('createdBy.userId', 'firstName lastName profilePicture');
       if (!post) {
         logger.error(`Post ${postId} not found`);
         return res.status(404).json({ message: 'Post not found' });
       }
 
-      if (post.createdBy.userId.toString() !== userId) {
+      if (post.createdBy.userId._id.toString() !== userId) {
         logger.warn(`User ${userId} not authorized to delete post ${postId}`);
         return res.status(403).json({ message: 'Not authorized' });
       }
 
       await Post.findByIdAndDelete(postId);
       logger.info(`Post ${postId} deleted by user ${userId}`);
-      res.status(200).json({ success: true, message: 'Post deleted' });
+      res.json({ success: true, message: 'Post deleted' });
     } catch (error) {
       logger.error(`Error deleting post ${req.params.postId} by user ${req.user.userId}: ${error.message}`);
       res.status(500).json({ success: false, message: 'Server error' });
     }
   });
 
-  // --- GET /:postId/likers - Get users who liked a post ---
-  router.get('/:postId/likers', async (req, res) => { // Consider adding verifyToken if this info is sensitive
+  router.get('/:postId/likers', async (req, res) => {
     try {
       const postId = req.params.postId;
 
       const post = await Post.findById(postId);
-
       if (!post) {
         return res.status(404).json({ message: 'Post not found' });
       }
@@ -1197,22 +1020,19 @@ module.exports = (io) => {
         return res.status(200).json({ likers: [], message: 'No one has liked this post yet.' });
       }
 
-      // Populate likers with first name, last name, and profile picture
       const likers = await User.find({ _id: { $in: post.likes } })
-        .select('firstName lastName profilePicture')
+        .select('_id name profilePicture') // Include profilePicture for consistency
         .lean();
 
-      // Format the likers array to include full name and profile picture
       const formattedLikers = likers.map(liker => ({
         _id: liker._id,
-        name: `${liker.firstName} ${liker.lastName}`,
-        profilePicture: liker.profilePicture || 'default-avatar.png',
+        name: liker.name,
+        profilePicture: liker.profilePicture || 'default-avatar.png', // Use User profile picture
       }));
 
       res.status(200).json({ likers: formattedLikers });
-
     } catch (error) {
-      logger.error('Error fetching likers:', error);
+      console.error('Error fetching likers:', error);
       if (error.name === 'CastError') {
         return res.status(400).json({ message: 'Invalid Post ID format.' });
       }

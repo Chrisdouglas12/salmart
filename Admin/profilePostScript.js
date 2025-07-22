@@ -1,6 +1,5 @@
 // post-renderer.js
 import { salmartCache } from './salmartCache.js';
-
 document.addEventListener('DOMContentLoaded', async function () {
     let currentLoggedInUser = localStorage.getItem('userId'); // Get user ID from localStorage immediately
     let isAuthReady = false;
@@ -9,8 +8,43 @@ document.addEventListener('DOMContentLoaded', async function () {
     let currentPage = 1;
     let isLoading = false;
 
-    // Define API_BASE_URL once
+    // Define API_BASE_URL and SOCKET_URL once
     const API_BASE_URL = window.API_BASE_URL || (window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart.onrender.com');
+    const SOCKET_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart.onrender.com';
+
+    // Initialize Socket.IO
+    const socket = io(SOCKET_URL, {
+        auth: { token: localStorage.getItem('authToken') },
+        reconnectionAttempts: 5,
+        reconnectionDelay: 1000,
+    });
+
+    socket.on('connect', () => {
+        console.log('Socket.IO connected');
+        if (currentLoggedInUser) {
+            socket.emit('join', `user_${currentLoggedInUser}`);
+        }
+    });
+
+    socket.on('connect_error', (error) => {
+        console.error('Socket.IO connection error:', error.message);
+        if (window.showToast) window.showToast('Failed to connect to real-time updates. Some features may be delayed.', '#dc3545');
+    });
+
+    // Listen for profile picture updates
+    socket.on('profilePictureUpdate', ({ userId, profilePicture }) => {
+        console.log(`Received profile picture update for user ${userId}`);
+        updateProfilePictures(userId, profilePicture);
+    });
+
+    // Function to update profile pictures in the UI
+    function updateProfilePictures(userId, profilePicture) {
+        const cacheBustedUrl = `${profilePicture}?v=${Date.now()}`;
+        document.querySelectorAll(`img.post-avatar[data-user-id="${userId}"]`).forEach(img => {
+            img.src = cacheBustedUrl;
+            img.onerror = () => { img.src = '/salmart-192x192.png'; };
+        });
+    }
 
     // --- Helper Functions ---
 
@@ -106,8 +140,6 @@ document.addEventListener('DOMContentLoaded', async function () {
                 openAppOrWeb(telegramUrl, telegramWebUrl);
                 break;
             case 'instagram':
-                // Note: Instagram sharing via URL/deeplink for posts is complex and often restricted.
-                // This is a placeholder and might not work as expected for direct post sharing.
                 const instagramUrl = `instagram://library?AssetPath=${encodeURIComponent(postLink)}`;
                 openAppOrWeb(instagramUrl, `https://www.instagram.com/explore/tags/product/`);
                 break;
@@ -220,15 +252,13 @@ document.addEventListener('DOMContentLoaded', async function () {
             return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
         }
 
-        // Video metadata loaded: set initial time to generate thumbnail
         video.addEventListener('loadedmetadata', () => {
             if (!video.dataset.thumbnailGenerated) {
-                video.currentTime = 2; // Set time to generate thumbnail
+                video.currentTime = 2;
             }
             durationDisplay.textContent = formatVideoTime(video.duration);
         });
 
-        // Seeked event: generate thumbnail after seeking to 2 seconds
         video.addEventListener('seeked', () => {
             if (video.currentTime === 2 && !video.dataset.thumbnailGenerated) {
                 const ctx = thumbnailCanvas.getContext('2d');
@@ -237,7 +267,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 ctx.drawImage(video, 0, 0, thumbnailCanvas.width, thumbnailCanvas.height);
                 video.poster = thumbnailCanvas.toDataURL('image/jpeg');
                 video.dataset.thumbnailGenerated = 'true';
-                video.currentTime = 0; // Reset to 0 after generating thumbnail
+                video.currentTime = 0;
             }
         });
 
@@ -338,7 +368,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             seekPreview.style.left = `${posX}px`;
             seekPreviewCanvas.width = 120;
             seekPreviewCanvas.height = 68;
-            setTimeout(() => { // Using setTimeout as a common workaround for seek preview
+            setTimeout(() => {
                 const ctx = seekPreviewCanvas.getContext('2d');
                 ctx.drawImage(video, 0, 0, seekPreviewCanvas.width, seekPreviewCanvas.height);
             }, 100);
@@ -435,6 +465,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         postElement.classList.add('post');
         postElement.dataset.createdAt = post.createdAt || new Date().toISOString();
         postElement.dataset.postId = post._id || '';
+        postElement.dataset.userId = post.createdBy ? post.createdBy.userId : ''; // For profile picture updates
 
         const isPostCreator = post.createdBy && post.createdBy.userId === currentLoggedInUser;
         let productDetails = '';
@@ -497,13 +528,12 @@ document.addEventListener('DOMContentLoaded', async function () {
             
             buttonContent = `
                 <div class="actions">
-                <i class="fa fas-shopping-cart"></i>
-                    <a href="${post.productLink || '#'}" class=" checkout-product-btn" aria-label="Check out product ${escapeHtml(post.description || 'product')}" ${!post.productLink ? 'style="pointer-events: none; opacity: 0.6;"' : ''}>
-                        Check Out Product
+                    <a href="${post.productLink || '#'}" class="checkout-product-btn" aria-label="Check out product ${escapeHtml(post.description || 'product')}" ${!post.productLink ? 'style="pointer-events: none; opacity: 0.6;"' : ''}>
+                        <i class="fas fa-shopping-cart"></i> Check Out Product
                     </a>
                 </div>
             `;
-        } else { // Regular image-based posts
+        } else {
             descriptionContent = `
                 <h2 class="product-title">${escapeHtml(post.title || 'No description')}</h2>
                 <div class="post-description-text" style="margin-bottom: 10px; padding: 0 15px;">
@@ -513,7 +543,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             mediaContent = `
                 <div class="product-image">
                     <div class="badge">${post.productCondition || 'New'}</div>
-                    <img src="${productImageForChat}" class="post-image" onclick="window.openImage('${productImageForChat.replace(/'/g, "\\'")}')" alt="Product Image" onerror="this.src='/salmart-192x192.png'">
+                    <img src="${productImageForChat}?v=${Date.now()}" class="post-image" onclick="window.openImage('${productImageForChat.replace(/'/g, "\\'")}')" alt="Product Image" onerror="this.src='/salmart-192x192.png'">
                 </div>
             `;
             productDetails = `
@@ -555,22 +585,31 @@ document.addEventListener('DOMContentLoaded', async function () {
                     <button class="btn btn-secondary send-message-btn"
                         data-recipient-id="${post.createdBy ? post.createdBy.userId : ''}"
                         data-product-image="${productImageForChat}"
-                        data-product-description="${escapeHtml(post.description || '')}"
+                        data-product-description="${escapeHtml(post.title || '')}"
                         data-post-id="${post._id || ''}"
                         ${post.isSold ? 'disabled' : ''}>
-                        ${post.isSold ? 'Unavailable' : 'Message'}
+                        <i class="fas fa-paper-plane"></i> ${post.isSold ? 'Unavailable' : 'Message'}
                     </button>
-                    <button class="btn btn-primary buy-now-button" data-post-id="${post._id || ''}" ${post.isSold ? 'disabled' : ''}>
-                        ${post.isSold ? 'Sold Out' : 'Buy Now'}
+                    <button class="btn btn-primary buy-now-button"
+                        data-post-id="${post._id || ''}"
+                        data-product-image="${productImageForChat}"
+                        data-product-title="${escapeHtml(post.title || 'Untitled Product')}"
+                        data-product-description="${escapeHtml(post.description || 'No description available.')}"
+                        data-product-location="${escapeHtml(post.location || 'N/A')}"
+                        data-product-condition="${escapeHtml(post.productCondition || 'N/A')}"
+                        data-product-price="${post.price ? '₦' + Number(post.price).toLocaleString('en-NG') : '₦0.00'}"
+                        data-seller-id="${post.createdBy ? post.createdBy.userId : ''}"
+                        ${post.isSold ? 'disabled' : ''}>
+                        <i class="fas fa-shopping-cart"></i> ${post.isSold ? 'Sold Out' : 'Buy Now'}
                     </button>
                 </div>
             ` : currentLoggedInUser ? '' : `
                 <div class="actions">
                     <button class="btn btn-secondary login-required" onclick="window.redirectToLogin()">
-                        Message
+                        <i class="fas fa-paper-plane"></i> Message
                     </button>
                     <button class="btn btn-primary login-required" onclick="window.redirectToLogin()">
-                        Buy Now
+                        <i class="fas fa-shopping-cart"></i> Buy Now
                     </button>
                 </div>
             `;
@@ -609,7 +648,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         postElement.innerHTML = `
             <div class="post-header">
                 <a href="Profile.html?userId=${post.createdBy ? post.createdBy.userId : ''}">
-                    <img src="${post.profilePicture || '/salmart-192x192.png'}" class="post-avatar" onerror="this.src='/salmart-192x192.png'" alt="User Avatar">
+                    <img src="${post.createdBy?.profilePicture || '/salmart-192x192.png'}?v=${Date.now()}" class="post-avatar" data-user-id="${post.createdBy?.userId || ''}" onerror="this.src='/salmart-192x192.png'" alt="User Avatar">
                 </a>
                 <div class="post-user-info">
                     <a href="Profile.html?userId=${post.createdBy ? post.createdBy.userId : ''}">
@@ -645,7 +684,6 @@ document.addEventListener('DOMContentLoaded', async function () {
             ${postActionsHtml}
         `;
 
-        // Initialize video controls if this is a video post
         if (post.postType === 'video_ad') {
             initializeVideoControls(postElement);
         }
@@ -657,6 +695,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         const postsContainer = document.getElementById('posts-container');
         if (!postsContainer) {
             console.error('Posts container not found.');
+            if (window.showToast) window.showToast('Error: Page layout issue. Please refresh.', '#dc3545');
             return;
         }
 
@@ -680,15 +719,13 @@ document.addEventListener('DOMContentLoaded', async function () {
                     Unable to load posts. Please try again later.
                 </p>
             `;
+            if (window.showToast) window.showToast('Unable to load posts: No user ID provided.', '#dc3545');
             isLoading = false;
             return;
         }
 
         try {
-            const API_BASE_URL = window.API_BASE_URL || (window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart.onrender.com');
-            // Assuming salmartCache.getPostsByUserId might exist for profile pages
-            // If not, you might need to fetch directly from API
-            const allPosts = await salmartCache.getPostsByUserId(profileOwnerId); // Assuming this method exists or you fetch directly
+            const allPosts = await salmartCache.getPostsByUserId(profileOwnerId);
 
             if (!Array.isArray(allPosts) || allPosts.length === 0) {
                 if (postsContainer.children.length === 0) {
@@ -710,8 +747,6 @@ document.addEventListener('DOMContentLoaded', async function () {
 
             const fragment = document.createDocumentFragment();
             sortedPosts.forEach(post => {
-                // Ensure only posts by the profile owner are shown (if this is a profile page renderer)
-                // This check is important as salmartCache.getPostsByUserId might return all posts or none if not implemented
                 if (post.createdBy.userId === profileOwnerId) {
                     const postElement = renderPost(post);
                     fragment.appendChild(postElement);
@@ -745,6 +780,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                     </p>
                 `;
             }
+            if (window.showToast) window.showToast('Failed to load posts. Please try again.', '#dc3545');
         } finally {
             isLoading = false;
         }
@@ -776,7 +812,6 @@ document.addEventListener('DOMContentLoaded', async function () {
         const authToken = localStorage.getItem('authToken');
         const showToast = window.showToast;
 
-        // Handle Like Button
         if (target.classList.contains('like-button') && target.dataset.postId) {
             if (!authToken || !currentLoggedInUser) {
                 if (showToast) showToast('Please log in to like posts.', '#dc3545');
@@ -788,7 +823,6 @@ document.addEventListener('DOMContentLoaded', async function () {
             const icon = target.querySelector('i');
             const isCurrentlyLiked = icon.classList.contains('fas');
 
-            // Optimistic UI update
             target.disabled = true;
             likeCountElement.textContent = parseInt(likeCountElement.textContent, 10) + (isCurrentlyLiked ? -1 : 1);
             icon.classList.toggle('fas', !isCurrentlyLiked);
@@ -816,7 +850,6 @@ document.addEventListener('DOMContentLoaded', async function () {
 
             } catch (error) {
                 console.error('Error liking/unliking post:', error);
-                // Revert UI on error
                 likeCountElement.textContent = parseInt(likeCountElement.textContent, 10) + (isCurrentlyLiked ? 1 : -1);
                 icon.classList.toggle('fas', isCurrentlyLiked);
                 icon.classList.toggle('far', !isCurrentlyLiked);
@@ -827,16 +860,17 @@ document.addEventListener('DOMContentLoaded', async function () {
             return;
         }
 
-        // Handle Reply Button
         if (target.classList.contains('reply-button') && target.dataset.postId) {
             window.location.href = `product.html?postId=${target.dataset.postId}`;
             return;
         }
 
-        // Handle Share Button
         if (target.classList.contains('share-button') && target.dataset.postId) {
             const postElement = target.closest('.post');
-            if (!postElement) return;
+            if (!postElement) {
+                if (showToast) showToast('Error: Post information not found.', '#dc3545');
+                return;
+            }
             const postId = target.dataset.postId;
             const post = {
                 _id: postId,
@@ -847,9 +881,14 @@ document.addEventListener('DOMContentLoaded', async function () {
             return;
         }
 
-        // Handle Buy Now Button
         if (target.classList.contains('buy-now-button') && target.dataset.postId) {
             const postId = target.dataset.postId.trim();
+            const postElement = target.closest('.post');
+            if (!postElement) {
+                if (showToast) showToast('Error: Post information not found.', '#dc3545');
+                return;
+            }
+
             const email = localStorage.getItem('email');
             const buyerId = localStorage.getItem('userId');
 
@@ -858,27 +897,27 @@ document.addEventListener('DOMContentLoaded', async function () {
                 return;
             }
 
-            try {
-                const response = await fetch(`${API_BASE_URL}/pay`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, postId, buyerId, currency: 'NGN' }),
-                });
+            const recipientUsername = postElement.querySelector('.post-user-name')?.textContent || 'Unknown';
+            const recipientProfilePictureUrl = postElement.querySelector('.post-avatar')?.src || '/salmart-192x192.png';
 
-                const result = await response.json();
-                if (response.ok && result.success && result.url) {
-                    window.location.href = result.url;
-                } else {
-                    if (showToast) showToast(`Payment failed: ${result.message || 'Please try again.'}`, '#dc3545');
-                }
-            } catch (error) {
-                console.error("Error processing payment:", error);
-                if (showToast) showToast("Failed to process payment. Please try again.", '#dc3545');
-            }
+            const productData = {
+                postId: postId,
+                productImage: target.dataset.productImage || '',
+                productTitle: target.dataset.productTitle || '',
+                productDescription: target.dataset.productDescription || '',
+                productLocation: target.dataset.productLocation || '',
+                productCondition: target.dataset.productCondition || '',
+                productPrice: target.dataset.productPrice || '',
+                sellerId: target.dataset.sellerId || '',
+                recipient_username: encodeURIComponent(recipientUsername),
+                recipient_profile_picture_url: encodeURIComponent(recipientProfilePictureUrl)
+            };
+
+            const queryParams = new URLSearchParams(productData).toString();
+            window.location.href = `checkout.html?${queryParams}`;
             return;
         }
 
-        // Handle Send Message Button
         if (target.classList.contains('send-message-btn')) {
             event.preventDefault();
             const recipientId = target.dataset.recipientId;
@@ -899,7 +938,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 productImage = productImage.startsWith('/') ? `${API_BASE_URL}${productImage}` : `${API_BASE_URL}/${productImage}`;
             }
 
-            const message = `Is this item still available?\n\nProduct: ${productDescription}`;
+            const message = `I'm ready to pay for this now, is it still available?\n\nProduct: ${productDescription}`;
             const encodedMessage = encodeURIComponent(message);
             const encodedProductImage = encodeURIComponent(productImage);
             const encodedRecipientUsername = encodeURIComponent(recipientUsername);
@@ -911,7 +950,6 @@ document.addEventListener('DOMContentLoaded', async function () {
             return;
         }
 
-        // Handle Report Post Button
         if (target.classList.contains('report-post-button') && target.dataset.postId) {
             if (!authToken) {
                 if (showToast) showToast("Please log in to report posts", '#dc3545');
@@ -1048,7 +1086,6 @@ document.addEventListener('DOMContentLoaded', async function () {
             return;
         }
 
-        // Handle Delete Post Button
         if (target.classList.contains('delete-post-button') && target.dataset.postId) {
             const postId = target.dataset.postId;
             const modal = document.createElement('div');
@@ -1116,14 +1153,12 @@ document.addEventListener('DOMContentLoaded', async function () {
             return;
         }
 
-        // Handle Edit Post Button
         if (target.classList.contains('edit-post-button') && target.dataset.postId) {
             const postId = target.dataset.postId;
             window.location.href = `Ads.html?edit=true&postId=${postId}`;
             return;
         }
 
-        // Handle Post Options Button
         if (target.classList.contains('post-options-button')) {
             event.stopPropagation();
             const optionsMenu = target.nextElementSibling;
@@ -1135,7 +1170,6 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
     });
 
-    // Close post options menu if clicked outside
     document.addEventListener('click', (event) => {
         if (!event.target.closest('.post-options-button') && !event.target.closest('.post-options-menu')) {
             document.querySelectorAll('.post-options-menu.show').forEach(menu => menu.classList.remove('show'));
@@ -1145,11 +1179,14 @@ document.addEventListener('DOMContentLoaded', async function () {
     // --- Authentication and Initialization Logic ---
 
     async function initializeAuthStatusAndPosts() {
-        if (isAuthReady) return; // Prevent double execution
+        if (isAuthReady) return;
 
-        // Ensure currentLoggedInUser is based on localStorage at this point
         if (!currentLoggedInUser) {
             currentLoggedInUser = localStorage.getItem('userId');
+        }
+
+        if (currentLoggedInUser) {
+            socket.emit('join', `user_${currentLoggedInUser}`);
         }
 
         isAuthReady = true;
@@ -1157,26 +1194,21 @@ document.addEventListener('DOMContentLoaded', async function () {
         await fetchPosts(currentPage, true);
     }
 
-    window.fetchPosts = fetchPosts; // Make it globally accessible if needed elsewhere
+    window.fetchPosts = fetchPosts;
 
     document.addEventListener('authStatusReady', async (event) => {
-        // Only proceed if app initialization hasn't happened yet
-        if (!isAuthReady) {
-            currentLoggedInUser = event.detail.loggedInUser; // Update loggedInUser from the event
-            console.log('Auth status ready event received. Logged in user:', currentLoggedInUser ? currentLoggedInUser : 'Not logged in');
-            await initializeAuthStatusAndPosts(); // Trigger full app initialization
-        } else {
-             // If already initialized, just update currentLoggedInUser if it changed
+        if (!isAuthReady || currentLoggedInUser !== event.detail.loggedInUser) {
             currentLoggedInUser = event.detail.loggedInUser;
+            console.log('Auth status ready event received. Logged in user:', currentLoggedInUser ? currentLoggedInUser : 'Not logged in');
+            if (currentLoggedInUser) {
+                socket.emit('join', `user_${currentLoggedInUser}`);
+            }
+            await initializeAuthStatusAndPosts();
         }
     });
 
-    // Execute initial load on DOMContentLoaded.
-    // The `isAuthReady` flag within `initializeAuthStatusAndPosts` prevents re-fetching
-    // if `authStatusReady` fires very quickly.
     initializeAuthStatusAndPosts();
 
-    // Load More Button
     const loadMoreBtn = document.getElementById('load-more-btn');
     if (loadMoreBtn) {
         loadMoreBtn.addEventListener('click', () => {
@@ -1186,4 +1218,9 @@ document.addEventListener('DOMContentLoaded', async function () {
             }
         });
     }
+
+    // Cleanup on page unload
+    window.addEventListener('beforeunload', () => {
+        socket.disconnect();
+    });
 });
