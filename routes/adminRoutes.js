@@ -709,126 +709,111 @@ router.get('/admin/platform-wallet', verifyToken, async (req, res) => {
   try {
     const { type } = req.query;
 
-    if (!type || (type !== 'commission' && type !== 'promotion')) {
-      return res.status(400).json({ error: 'Invalid wallet type specified.' });
+    const validTypes = ['commission', 'promotion'];
+    if (!type || !validTypes.includes(type)) {
+      return res.status(400).json({ success: false, message: 'Invalid wallet type specified.' });
     }
 
-    let totalAmount = 0;
+    let walletInfo = null;
 
-    // Match frontend commission tiers
-    function getCommissionRate(amount) {
-      if (amount < 10000) return 3.5;
-      if (amount < 50000) return 3;
-      if (amount < 200000) return 2.5;
-      return 1;
+    // --- Unified Logic to Fetch Wallet from PlatformWallet Collection ---
+    // Instead of separate `if/else if` blocks that recalculate commission,
+    // we now fetch directly from the PlatformWallet model for both types.
+    const platformWalletDoc = await PlatformWallet.findOne({ type });
+
+    if (!platformWalletDoc) {
+      // If no wallet document exists for this type yet, return an initial state.
+      // This is crucial, as the document might not be created until the first credit.
+      walletInfo = {
+        type: type,
+        balance: 0, // Default to 0 kobo if the document doesn't exist
+        lastUpdated: new Date() // Use current time as it's an initial state
+      };
+    } else {
+      // Wallet document exists, return its stored balance (which should be in kobo)
+      walletInfo = {
+        type: platformWalletDoc.type,
+        balance: platformWalletDoc.balance, // Return balance as is (in kobo)
+        lastUpdated: platformWalletDoc.lastUpdated,
+        // You could also include a subset of transactions if needed:
+        // transactions: platformWalletDoc.transactions.slice(-10) // e.g., last 10 transactions
+      };
     }
 
-    if (type === 'commission') {
-      const transactions = await Transaction.find({ status: 'released' });
-
-      transactions.forEach(tx => {
-        const amount = tx.amount || 0;
-
-        // Paystack fee: 1.5% + ₦100 (capped at ₦2000)
-        let paystackFee = (1.5 / 100) * amount + 100;
-        if (paystackFee > 2000) paystackFee = 2000;
-
-        const amountAfterPaystack = amount - paystackFee;
-
-        const commissionPercent = getCommissionRate(amount);
-        const commissionNaira = (commissionPercent / 100) * amountAfterPaystack;
-
-        totalAmount += commissionNaira;
-      });
-
-    } else if (type === 'promotion') {
-      const promos = await Payment.find({ status: 'success' });
-
-      promos.forEach(promo => {
-        const amount = promo.amount || 0;
-
-        // Paystack fee: 1.5% + ₦100 (capped at ₦2000)
-        let paystackFee = (1.5 / 100) * amount + 100;
-        if (paystackFee > 2000) paystackFee = 2000;
-
-        const netAmount = amount - paystackFee;
-        totalAmount += netAmount;
-      });
-    }
-
-    res.json({
-      balance: parseFloat((totalAmount / 100).toFixed(2)), // Kobo to Naira
-      lastUpdated: new Date()
+    res.status(200).json({
+      success: true,
+      wallet: walletInfo
     });
 
   } catch (err) {
     console.error('[WALLET FETCH ERROR]', err.message);
-    res.status(500).json({ error: 'Failed to retrieve platform wallet info' });
+    res.status(500).json({ success: false, message: 'Failed to retrieve platform wallet info' });
   }
 });
 
 
-router.post('/admin/platform-wallet/withdraw', verifyToken, async (req, res) => {
-  const { amount, type } = req.body;
 
-  if (!amount || amount <= 0) {
-    return res.status(400).json({ error: 'Invalid withdrawal amount' });
+router.post('/admin/platform-wallet/withdraw', verifyToken, async (req, res) => {
+  const { amount: rawAmount, type } = req.body;
+  const amountToWithdrawKobo = parseInt(rawAmount, 10);
+
+  // --- Validate input ---
+  if (isNaN(amountToWithdrawKobo) || amountToWithdrawKobo <= 0) {
+    console.error(`[WITHDRAWAL VALIDATION FAIL] rawAmount: ${rawAmount}, parsed amountToWithdrawKobo: ${amountToWithdrawKobo}`);
+    return res.status(400).json({ error: 'Invalid withdrawal amount: Must be a positive number.' });
   }
 
   if (!['commission', 'promotion'].includes(type)) {
-    return res.status(400).json({ error: 'Invalid wallet type specified' });
-  }
-
-  const amountKobo = Math.round(amount * 100); // 💡 Work strictly in Kobo
-  const platformWallet = await PlatformWallet.findOne({ type });
-
-  if (!platformWallet || platformWallet.balance < amountKobo) {
-    return res.status(400).json({ error: `Insufficient ${type} balance` });
+    return res.status(400).json({ error: 'Invalid wallet type specified.' });
   }
 
   try {
-    // Check for existing or create new recipient code
+    const platformWallet = await PlatformWallet.findOne({ type });
+
+    if (!platformWallet || platformWallet.balance < amountToWithdrawKobo) {
+      console.error(`[WITHDRAWAL BALANCE FAIL] Wallet balance: ${platformWallet ? platformWallet.balance : 'N/A'}, Attempted withdrawal: ${amountToWithdrawKobo}`);
+      return res.status(400).json({ error: `Insufficient ${type} balance.` });
+    }
+
+    // --- Ensure recipientCode exists ---
     let recipientCode = process.env.PLATFORM_RECIPIENT_CODE || platformWallet.recipientCode;
 
     if (!recipientCode) {
-      const platformAccountNumber = process.env.PLATFORM_ACCOUNT_NUMBER;
-      const platformBankCode = process.env.PLATFORM_BANK_CODE;
-      const platformAccountName = process.env.PLATFORM_ACCOUNT_NAME || 'Salmart Technologies';
-
-      if (!platformAccountNumber || !platformBankCode) {
-        return res.status(500).json({ error: 'Platform account details are not set' });
+      const { PLATFORM_ACCOUNT_NUMBER, PLATFORM_BANK_CODE, PLATFORM_ACCOUNT_NAME, PAYSTACK_SECRET_KEY } = process.env;
+      if (!PLATFORM_ACCOUNT_NUMBER || !PLATFORM_BANK_CODE) {
+        return res.status(500).json({ error: 'Platform bank details are not configured.' });
       }
 
       const recipientRes = await axios.post(
         'https://api.paystack.co/transferrecipient',
         {
           type: 'nuban',
-          name: platformAccountName,
-          account_number: platformAccountNumber,
-          bank_code: platformBankCode,
+          name: PLATFORM_ACCOUNT_NAME || 'Salmart Technologies',
+          account_number: PLATFORM_ACCOUNT_NUMBER,
+          bank_code: PLATFORM_BANK_CODE,
           currency: 'NGN'
         },
         {
-          headers: { Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}` }
+          headers: { Authorization: `Bearer ${PAYSTACK_SECRET_KEY}` }
         }
       );
 
-      recipientCode = recipientRes.data.data.recipient_code;
+      recipientCode = recipientRes.data?.data?.recipient_code;
 
       if (!recipientCode) {
-        return res.status(500).json({ error: 'Paystack did not return a recipient_code' });
+        return res.status(500).json({ error: 'Paystack did not return a valid recipient_code.' });
       }
 
       platformWallet.recipientCode = recipientCode;
       await platformWallet.save();
     }
 
-    // Paystack Transfer
+    // --- Initiate Paystack Transfer ---
     const transfer = await axios.post(
       'https://api.paystack.co/transfer',
       {
         source: 'balance',
-        amount: amountKobo,
+        amount: amountToWithdrawKobo,
         recipient: recipientCode,
         reason: `Withdrawal of platform ${type}`
       },
@@ -837,32 +822,56 @@ router.post('/admin/platform-wallet/withdraw', verifyToken, async (req, res) => 
       }
     );
 
-    // Update wallet balance (deduct Kobo)
-    platformWallet.balance -= amountKobo;
+    const reference = transfer?.data?.data?.reference;
+    if (!reference) {
+      return res.status(500).json({ error: 'Paystack transfer did not return a valid reference.' });
+    }
+
+    // --- Update wallet state ---
+    platformWallet.balance -= amountToWithdrawKobo;
     platformWallet.lastUpdated = new Date();
-    platformWallet.transactions.push({
-      amount: amountKobo,
-      reference: transfer.data.data.reference,
+
+    // ✅ Ensure all required transaction fields are included
+    const newTransaction = {
+      amount: amountToWithdrawKobo,
+      reference,
       type: 'debit',
       purpose: `withdraw_${type}`,
       timestamp: new Date()
-    });
+    };
 
+    console.log('✅ Adding transaction to wallet:', newTransaction);
+    platformWallet.transactions.push(newTransaction);
+    platformWallet.markModified('transactions');
     await platformWallet.save();
 
-    res.status(200).json({
+    return res.status(200).json({
       message: `${type.charAt(0).toUpperCase() + type.slice(1)} withdrawal successful`,
-      transferReference: transfer.data.data.reference
+      transferReference: reference
     });
 
   } catch (err) {
-    console.error(`[WITHDRAW ${type.toUpperCase()} ERROR]`, err.response?.data || err.message);
-    res.status(500).json({
-      error: 'Paystack transfer failed',
-      details: err.response?.data?.message || err.message
-    });
+    if (err.name === 'ValidationError') {
+      console.error(`[WITHDRAW ${type.toUpperCase()} VALIDATION ERROR]`, err.message);
+      for (let field in err.errors) {
+        console.error(`  - Field: ${field}, Message: ${err.errors[field].message}`);
+      }
+      return res.status(400).json({
+        error: 'Validation failed',
+        details: err.message
+      });
+    } else {
+      console.error(`[WITHDRAW ${type.toUpperCase()} ERROR]`, err.response?.data || err.message);
+      return res.status(500).json({
+        error: 'Paystack transfer failed or unexpected error',
+        details: err.response?.data?.message || err.message
+      });
+    }
   }
 });
+
+
+
 
 router.get('/admin/platform-wallet/transactions', verifyToken, async (req, res) => {
   const { type } = req.query;

@@ -79,17 +79,16 @@ const postSchema = new mongoose.Schema({
       return this.postType === 'regular';
     },
   },
-  profilePicture: {
-    type: String,
-  },
+  // REMOVED: profilePicture field from the top level of Post schema
+
   createdBy: {
     userId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      ref: 'User', // This is crucial for linking to the User model
       required: true,
     },
     name: {
-      type: String,
+      type: String, // Keeping name here for display, but it could also be populated
       required: true,
     },
   },
@@ -121,16 +120,22 @@ const postSchema = new mongoose.Schema({
   ],
   comments: [
     {
-      userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+      userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User', // This is crucial for linking to the User model
+      },
       name: String,
-      profilePicture: String,
+      // REMOVED: profilePicture field from comment sub-schema
       text: String,
       createdAt: { type: Date, default: Date.now },
       replies: [
         {
-          userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+          userId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User', // This is crucial for linking to the User model
+          },
           name: String,
-          profilePicture: String,
+          // REMOVED: profilePicture field from reply sub-schema
           text: String,
           createdAt: { type: Date, default: Date.now },
         },

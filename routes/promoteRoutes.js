@@ -541,24 +541,53 @@ router.get('/promotion-success', async (req, res) => {
       durationDays: payment.durationDays
     };
     
-    await PlatformWallet.findOneAndUpdate(
-  { type: 'promotion' },
-  {
-    $inc: { balance: amountPaid },
-    $push: {
-      transactions: {
-        amountPaid,
-        reference,
-        purpose: 'ad_promotion',
-        userId,
-        type: 'credit',
-        timestamp: new Date()
-      }
-    },
-    $set: { lastUpdated: new Date() }
-  },
-  { upsert: true }
-);
+const wallet = await PlatformWallet.findOne({ type: 'promotion' });
+
+// Calculate Paystack fee (1.5% + ₦100 if > ₦2500, capped at ₦2000)
+let paystackFee = (1.5 / 100) * amountPaid;
+if (amountPaid > 2500) paystackFee += 100;
+if (paystackFee > 2000) paystackFee = 2000;
+
+// Net amount received after Paystack fee
+const netAmount = amountPaid - paystackFee;
+
+// Round to nearest whole number (you can convert to kobo if needed)
+const platformEarning = Math.round(netAmount);
+
+if (!wallet) {
+  // Create wallet if it doesn't exist
+  await PlatformWallet.create({
+    type: 'promotion',
+    balance: platformEarning,
+    lastUpdated: new Date(),
+    transactions: [{
+      amount: platformEarning,
+      reference,
+      purpose: 'ad_promotion',
+      userId,
+      type: 'credit',
+      timestamp: new Date()
+    }]
+  });
+} else {
+  // Avoid duplicate entries
+  const alreadyExists = wallet.transactions.some(tx => tx.reference === reference);
+  if (!alreadyExists) {
+    wallet.balance += platformEarning;
+    wallet.lastUpdated = new Date();
+    wallet.transactions.push({
+      amount: platformEarning,
+      reference,
+      purpose: 'ad_promotion',
+      userId,
+      type: 'credit',
+      timestamp: new Date()
+    });
+    await wallet.save();
+  } else {
+    console.log(`💡 Duplicate reference "${reference}" skipped.`);
+  }
+}
 
     // Create notification
     const notification = new Notification({

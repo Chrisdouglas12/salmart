@@ -21,7 +21,7 @@ header {
 }
 
 .main-layout {
-  padding-top: 70px; /* Adjust for header */
+  padding-top: 90px; /* Adjust for header */
   max-width: 1200px;
   margin: 0 auto;
   display: flex;
@@ -41,13 +41,14 @@ header {
   justify-content: center;
   width: 100%;
   max-width: 800px;
-  margin: 10px 0;
+  margin:  0;
 }
 
 #posts-container {
   width: 100%;
   max-width: 800px;
   margin: 0 auto;
+  margin-top: -40px;
   padding: 10px;
 }
 
@@ -358,10 +359,10 @@ button i {
 .bank-button {
   background-color: #fff;
   color: #28a745;
-  width: 70%;
+  width: 80%;
   height: 35px;
   border: solid 1px #28a745;
-  border-radius: 10px;
+  border-radius: 50px;
   margin-top: 15px;
   cursor: pointer;
   transition: background-color 0.3s ease;
@@ -928,4 +929,42 @@ a .active {
   padding: 10px;
   border-radius: 8px;
   margin-bottom: 30px;
+}
+header {
+  background-color: white;
+  border: solid 1px #fff;
+  box-shadow: 0 0 10px #ddd;
+  position: fixed;
+  width: 100vw;
+  z-index: 100;
+}
+
+#profileHeaderUsr {
+  font-size: 16px;
+  padding: 10px;
+  margin-top: 10px;
+  color: #28a745;
+  margin-left: -2px;
+}
+
+/* For menu-icon */
+.menu-icon {
+    z-index: 3000;
+}
+
+/* For side-bar */
+.side-bar {
+    z-index: 3000;
+}
+
+/* For pre tag in side-bar */
+.side-bar pre {
+    font-size: 10px;
+    text-align: center;
+    margin-top: 40px;
+    color: green;
+}
+.bank-button{
+     width: 120px;
+     
 }

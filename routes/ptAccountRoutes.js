@@ -929,7 +929,7 @@ async function markProductAsSold(txn, reference, io) {
               receiptStatus.message = 'Digital receipt sent to seller.';
             } catch (receiptGenError) {
               logger.error('Receipt generation/sending failed during /payment-success redirect:', {
-                error: receiptGenError.message,
+                error: receiptGenError.message
                 stack: receiptGenError.stack,
                 reference
               });

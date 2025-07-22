@@ -441,24 +441,25 @@ const neededAmountKobo = Math.round(amountToTransferNaira * 100);
     // === Record platform commission ===
 try {
   await PlatformWallet.updateOne(
-  { type: 'commission' },
-  {
-    $inc: { balance: commissionNaira },
-    $set: { lastUpdated: new Date() },
-    $push: {
-      transactions: {
-        amount: Math.round(commissionNaira * 100), // Save as kobo
-        reference: `commission-${transaction._id}`,
-        type: 'credit',
-        purpose: `Commission from confirmed delivery of "${product.title}"`,
-        userId: buyer._id, // The buyer who made the purchase
-        productId: product._id,
-        timestamp: new Date()
+    { type: 'commission' },
+    {
+      $inc: { balance: Math.round(commissionNaira * 100) }, // Ensure balance is in kobo
+      $set: { lastUpdated: new Date() },
+      $push: {
+        transactions: {
+          amount: Math.round(commissionNaira * 100), // Save in kobo
+          reference: `commission-${transaction._id}`,
+          type: 'credit',
+          purpose: `Commission from confirmed delivery of "${product.title || 'a product'}"`,
+          userId: buyer._id,
+          productId: product._id,
+          timestamp: new Date()
+        }
       }
-    }
-  },
-  { upsert: true }
-);
+    },
+    { upsert: true }
+  );
+
   logger.info('[PLATFORM COMMISSION RECORDED]', {
     transactionId,
     commission: commissionNaira

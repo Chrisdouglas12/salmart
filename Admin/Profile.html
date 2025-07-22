@@ -140,7 +140,6 @@
     <div class="sidebar right">
       <iframe src="login.html" frameborder="0"></iframe>
     </div>
-    <!-- Stats Section -->
     <div class="stats">
       <div class="stats-item">
         <div class="skeleton skeleton-stats-text"></div>
@@ -172,11 +171,14 @@
       <button class="tab-btn" data-tab="reviews">Reviews</button>
     </div>
 
-    <!-- Home Tab Content -->
     <div id="home-tab" class="tab-content active">
-    
+        <div id="posts-container" style="padding: 0px">
+            <div class="skeleton skeleton-post"></div>
+            <div class="skeleton skeleton-post"></div>
+            <div class="skeleton skeleton-post"></div>
+        </div>
+    </div>
 
-    <!-- Reviews Tab Content -->
     <div id="reviews-tab" class="tab-content">
       <div class="reviews-container">
         <div id="review-form-container" class="review-form-container" style="display: none;">
@@ -204,9 +206,7 @@
         <div id="reviews-list" class="reviews-list"></div>
       </div>
     </div>
-    
 
-    <!-- Slide-Up Bank Details Form -->
     <div id="overlay" class="overlay"></div>
     <div id="bottom-sheet" class="bottom-sheet">
       <div class="bottom-sheet-header">
@@ -226,7 +226,6 @@
       </form>
     </div>
 
-    <!-- Profile Picture Modal -->
     <div id="profile-pic-modal" class="modern-profile-modal">
       <div class="modal-content">
         <div class="modal-header">
@@ -257,14 +256,6 @@
     </div>
   </div>
 
-  <div id="posts-container" style="padding: 0px">
-        <!-- Skeleton for posts -->
-        <div class="skeleton skeleton-post"></div>
-        <div class="skeleton skeleton-post"></div>
-        <div class="skeleton skeleton-post"></div>
-      </div>
-    </div>
-  <!-- Inline Profile Picture Modal Script -->
   <script>
     document.addEventListener("DOMContentLoaded", function() {
       function getLoggedInUserInfo() {
@@ -378,7 +369,6 @@
     });
   </script>
 
-  <!-- Inline Follow Button Script -->
   <script>
     const API_BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart.onrender.com';
     const socket = io(`${API_BASE_URL}`, {
@@ -604,7 +594,6 @@
     });
   </script>
 
-  <!-- Tab Switching -->
   <script>
     document.addEventListener("DOMContentLoaded", function() {
       const tabBtns = document.querySelectorAll('.tab-btn');
@@ -624,7 +613,6 @@
     });
   </script>
 
-  <!-- Sidebar Toggle -->
   <script>
     const menuIcon = document.querySelector('.menu-icon');
     const sideBar = document.querySelector('.side-bar');

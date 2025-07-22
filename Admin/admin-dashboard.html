@@ -1376,11 +1376,16 @@ if (urlParams.toString() && !authToken) {
       `;
     }
 
+
+
 async function fetchPlatformWallet(type) {
   const balanceEl = document.getElementById(`${type}-balance`);
   const lastUpdatedEl = document.getElementById(`${type}-last-updated`);
+
+  // Show loading states
   balanceEl.innerHTML = '<div class="loading"></div>';
   lastUpdatedEl.textContent = 'Loading...';
+
   const token = localStorage.getItem('adminToken');
 
   try {
@@ -1395,15 +1400,21 @@ async function fetchPlatformWallet(type) {
 
     const data = await response.json();
 
-    // ✅ Accurate Kobo formatting
-    const balance = data.balance || 0; // In Kobo
-    const naira = Math.floor(balance / 100);
-    const kobo = balance % 100;
-    const formatted = `₦${naira.toLocaleString('en-NG')}.${kobo.toString().padStart(2, '0')}`;
-    balanceEl.textContent = formatted;
+    // The backend now sends the balance in KOBO.
+    const balanceInKobo = data.wallet.balance || 0; // This will be e.g., 720000
 
-    lastUpdatedEl.textContent = data.lastUpdated
-      ? new Date(data.lastUpdated).toLocaleString()
+    // --- CRITICAL FIX: Convert Kobo to Naira for display ---
+    const balanceInNaira = balanceInKobo / 100; // Converts 720000 to 7200
+
+    // Format the Naira balance to 2 decimal places and handle potential NaN
+    const formattedBalance = isNaN(balanceInNaira) ? '0.00' : balanceInNaira.toFixed(2);
+
+    // Display the formatted balance with Naira symbol and locale-specific formatting (e.g., commas)
+    balanceEl.textContent = `₦${parseFloat(formattedBalance).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`; // Ensure 2 decimal places with toLocaleString
+
+    // Update last updated timestamp
+    lastUpdatedEl.textContent = data.wallet.lastUpdated
+      ? new Date(data.wallet.lastUpdated).toLocaleString()
       : 'N/A';
 
   } catch (error) {
@@ -1413,6 +1424,9 @@ async function fetchPlatformWallet(type) {
     showAlert(`Error fetching ${type} wallet: ${error.message}`, 'error');
   }
 }
+
+
+
 
 async function withdrawWallet(buttonElement, type) {
     const amountInputId = `${type}-withdrawal-amount`;
