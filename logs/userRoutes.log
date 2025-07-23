@@ -1138,3 +1138,76 @@
 {"level":"info","message":"Attached io to request object in userRoutes","timestamp":"2025-07-23T17:08:25.580Z"}
 {"level":"info","message":"Fetched 1 user suggestions for user: 68431685432ee393a735a641","timestamp":"2025-07-23T17:08:26.544Z"}
 {"level":"info","message":"Attached io to request object in userRoutes","timestamp":"2025-07-23T17:08:31.781Z"}
+{"level":"info","message":"✅ Cloudinary configured in userRoutes","timestamp":"2025-07-23T17:32:40.434Z"}
+{"level":"info","message":"Attached io to request object in userRoutes","timestamp":"2025-07-23T17:34:54.057Z"}
+{"level":"info","message":"Attached io to request object in userRoutes","timestamp":"2025-07-23T17:34:54.279Z"}
+{"level":"info","message":"Attached io to request object in userRoutes","timestamp":"2025-07-23T17:34:54.362Z"}
+{"level":"info","message":"Attached io to request object in userRoutes","timestamp":"2025-07-23T17:34:54.483Z"}
+{"level":"error","message":"Get user profile error: connection timed out","timestamp":"2025-07-23T17:34:59.208Z"}
+{"level":"error","message":"Verify token error: connection timed out","timestamp":"2025-07-23T17:34:59.377Z"}
+{"level":"info","message":"Attached io to request object in userRoutes","timestamp":"2025-07-23T17:34:59.467Z"}
+{"level":"error","message":"Error fetching following list: connection timed out","timestamp":"2025-07-23T17:34:59.518Z"}
+{"level":"info","message":"Attached io to request object in userRoutes","timestamp":"2025-07-23T17:34:59.536Z"}
+{"level":"info","message":"Attached io to request object in userRoutes","timestamp":"2025-07-23T17:35:04.550Z"}
+{"level":"error","message":"Error fetching following list: connection timed out","timestamp":"2025-07-23T17:35:04.570Z"}
+{"level":"info","message":"✅ Cloudinary configured in userRoutes","timestamp":"2025-07-23T17:35:23.523Z"}
+{"level":"info","message":"Attached io to request object in userRoutes","timestamp":"2025-07-23T17:36:23.440Z"}
+{"level":"info","message":"✅ Cloudinary configured in userRoutes","timestamp":"2025-07-23T17:56:16.199Z"}
+{"level":"info","message":"✅ Cloudinary configured in userRoutes","timestamp":"2025-07-23T17:56:50.468Z"}
+{"level":"info","message":"Attached io to request object in userRoutes","timestamp":"2025-07-23T17:57:55.972Z"}
+{"level":"info","message":"Attached io to request object in userRoutes","timestamp":"2025-07-23T18:20:05.711Z"}
+{"level":"info","message":"Attached io to request object in userRoutes","timestamp":"2025-07-23T18:20:39.044Z"}
+{"level":"info","message":"User logged in: 68431685432ee393a735a641","timestamp":"2025-07-23T18:20:39.811Z"}
+{"level":"info","message":"Attached io to request object in userRoutes","timestamp":"2025-07-23T18:20:43.174Z"}
+{"level":"info","message":"Attached io to request object in userRoutes","timestamp":"2025-07-23T18:20:43.224Z"}
+{"level":"info","message":"Attached io to request object in userRoutes","timestamp":"2025-07-23T18:20:43.325Z"}
+{"level":"info","message":"Attached io to request object in userRoutes","timestamp":"2025-07-23T18:20:43.495Z"}
+{"level":"info","message":"Attached io to request object in userRoutes","timestamp":"2025-07-23T18:20:43.552Z"}
+{"level":"info","message":"Attached io to request object in userRoutes","timestamp":"2025-07-23T18:20:43.620Z"}
+{"level":"info","message":"Attached io to request object in userRoutes","timestamp":"2025-07-23T18:20:43.662Z"}
+{"level":"info","message":"Fetched average rating for user: 68431685432ee393a735a641","timestamp":"2025-07-23T18:20:44.581Z"}
+{"level":"info","message":"Fetched profile for user: 68431685432ee393a735a641","timestamp":"2025-07-23T18:20:44.770Z"}
+{"level":"info","message":"Fetched profile for user: 68431685432ee393a735a641","timestamp":"2025-07-23T18:20:44.976Z"}
+{"level":"info","message":"Fetched 1 reviews for user: 68431685432ee393a735a641","timestamp":"2025-07-23T18:20:45.757Z"}
+{"level":"info","message":"Attached io to request object in userRoutes","timestamp":"2025-07-23T18:20:56.902Z"}
+{"level":"info","message":"Attached io to request object in userRoutes","timestamp":"2025-07-23T18:20:56.920Z"}
+{"level":"info","message":"Attached io to request object in userRoutes","timestamp":"2025-07-23T18:20:56.965Z"}
+{"level":"info","message":"Fetched profile for user: 68431685432ee393a735a641","timestamp":"2025-07-23T18:20:57.121Z"}
+{"level":"info","message":"Fetched following list for user: 68431685432ee393a735a641","timestamp":"2025-07-23T18:20:57.277Z"}
+{"level":"info","message":"Attached io to request object in userRoutes","timestamp":"2025-07-23T18:20:57.347Z"}
+{"level":"info","message":"Attached io to request object in userRoutes","timestamp":"2025-07-23T18:20:58.990Z"}
+{"level":"info","message":"Fetched 1 user suggestions for user: 68431685432ee393a735a641","timestamp":"2025-07-23T18:20:59.755Z"}
+{"level":"info","message":"Attached io to request object in userRoutes","timestamp":"2025-07-23T18:21:12.637Z"}
+{"level":"info","message":"Attached io to request object in userRoutes","timestamp":"2025-07-23T18:21:12.883Z"}
+{"level":"info","message":"Attached io to request object in userRoutes","timestamp":"2025-07-23T18:21:20.939Z"}
+{"level":"info","message":"Attached io to request object in userRoutes","timestamp":"2025-07-23T18:21:26.367Z"}
+{"level":"info","message":"Attached io to request object in userRoutes","timestamp":"2025-07-23T18:21:32.150Z"}
+{"level":"info","message":"Attached io to request object in userRoutes","timestamp":"2025-07-23T18:21:33.916Z"}
+{"level":"info","message":"Fetched 1 user suggestions for user: 68431685432ee393a735a641","timestamp":"2025-07-23T18:21:34.621Z"}
+{"level":"info","message":"Attached io to request object in userRoutes","timestamp":"2025-07-23T18:21:43.147Z"}
+{"level":"info","message":"Attached io to request object in userRoutes","timestamp":"2025-07-23T18:21:43.173Z"}
+{"level":"info","message":"Attached io to request object in userRoutes","timestamp":"2025-07-23T18:21:43.228Z"}
+{"level":"info","message":"Attached io to request object in userRoutes","timestamp":"2025-07-23T18:21:43.298Z"}
+{"level":"info","message":"Attached io to request object in userRoutes","timestamp":"2025-07-23T18:21:43.335Z"}
+{"level":"info","message":"Attached io to request object in userRoutes","timestamp":"2025-07-23T18:21:43.372Z"}
+{"level":"info","message":"Fetched profile for user: 68431685432ee393a735a641","timestamp":"2025-07-23T18:21:43.428Z"}
+{"level":"info","message":"Attached io to request object in userRoutes","timestamp":"2025-07-23T18:21:43.516Z"}
+{"level":"info","message":"No reviews found for user: 6865680685b3194e8bc38b92","timestamp":"2025-07-23T18:21:43.548Z"}
+{"level":"info","message":"Fetched profile for user: 6865680685b3194e8bc38b92","timestamp":"2025-07-23T18:21:43.633Z"}
+{"level":"info","message":"Fetched average rating for user: 6865680685b3194e8bc38b92","timestamp":"2025-07-23T18:21:44.774Z"}
+{"level":"info","message":"Attached io to request object in userRoutes","timestamp":"2025-07-23T18:22:01.757Z"}
+{"level":"info","message":"Attached io to request object in userRoutes","timestamp":"2025-07-23T18:22:03.369Z"}
+{"level":"info","message":"Fetched 1 user suggestions for user: 68431685432ee393a735a641","timestamp":"2025-07-23T18:22:04.017Z"}
+{"level":"info","message":"Attached io to request object in userRoutes","timestamp":"2025-07-23T18:22:09.861Z"}
+{"level":"info","message":"Attached io to request object in userRoutes","timestamp":"2025-07-23T18:22:10.175Z"}
+{"level":"info","message":"Attached io to request object in userRoutes","timestamp":"2025-07-23T18:22:12.944Z"}
+{"level":"info","message":"Attached io to request object in userRoutes","timestamp":"2025-07-23T18:22:14.425Z"}
+{"level":"info","message":"Fetched 1 user suggestions for user: 68431685432ee393a735a641","timestamp":"2025-07-23T18:22:14.995Z"}
+{"level":"info","message":"Attached io to request object in userRoutes","timestamp":"2025-07-23T18:22:19.796Z"}
+{"level":"info","message":"Attached io to request object in userRoutes","timestamp":"2025-07-23T18:22:20.083Z"}
+{"level":"info","message":"Attached io to request object in userRoutes","timestamp":"2025-07-23T18:22:23.457Z"}
+{"level":"info","message":"Attached io to request object in userRoutes","timestamp":"2025-07-23T18:22:26.936Z"}
+{"level":"info","message":"Attached io to request object in userRoutes","timestamp":"2025-07-23T18:22:34.375Z"}
+{"level":"info","message":"Attached io to request object in userRoutes","timestamp":"2025-07-23T18:22:34.642Z"}
+{"level":"info","message":"Attached io to request object in userRoutes","timestamp":"2025-07-23T18:22:50.409Z"}
+{"level":"info","message":"Attached io to request object in userRoutes","timestamp":"2025-07-23T18:22:55.346Z"}

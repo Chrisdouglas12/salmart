@@ -7,6 +7,53 @@
   --border-radius: 12px;
 }
 
+/* --- Styles to add/update in your main.css file --- */
+
+/* Basic styling for images during lazy loading */
+img.lazy-loading {
+    /* This background color acts as a visible placeholder if the tiny GIF isn't enough */
+    background-color: #f0f0f0; /* Light gray background */
+
+    transition: filter 0.5s ease-out; /* Smooth transition when blur is removed */
+}
+
+img.lazy-loading.loaded {
+    
+    /* Optional: Add a fade-in effect */
+    opacity: 0;
+    animation: fadeIn 0.5s forwards;
+}
+
+
+
+
+/* Styling for videos during lazy loading */
+.post-video-container {
+    position: relative;
+    background-color: #000; /* Black background for videos */
+    display: flex; /* To center loading spinner */
+    justify-content: center;
+    align-items: center;
+    min-height: 250px; /* Ensure video container has a height */
+}
+
+.post-video-container .post-video {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.post-video.lazy-loading {
+    /* Hide the video itself while loading, show only placeholder/spinner */
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
+}
+
+.post-video.lazy-loading.loaded {
+    opacity: 1; /* Fade in video once loaded */
+}
+
+
 * {
   box-sizing: border-box;
   margin: 0;

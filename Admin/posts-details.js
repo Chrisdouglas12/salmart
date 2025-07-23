@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const postDetailsContainer = document.querySelector('.post-details-container');
     const commentInput = document.getElementById('comment-input');
     const commentSubmit = document.getElementById('comment-submit');
-    const userAvatar = document.getElementById('user-avatar');
+    const userAvatarElement = document.getElementById('user-avatar'); // Renamed to avoid conflict
     const loggedInUser = localStorage.getItem('userId');
     let postId;
 
@@ -46,14 +46,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Fetch user profile for avatar
-    async function fetchUserProfile() {
+    async function fetchUserProfileForAvatar() {
         try {
             const response = await fetch(`${API_BASE_URL}/verify-token`, {
                 headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` },
             });
             if (response.ok) {
                 const userData = await response.json();
-                userAvatar.src = userData.profilePicture || 'default-avatar.png';
+                if (userAvatarElement) {
+                    userAvatarElement.src = userData.profilePicture || 'default-avatar.png';
+                }
             }
         } catch (error) {
             console.error('Error fetching user profile:', error);
@@ -89,7 +91,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             // Determine media content and button based on post type
             let mediaContent = '';
-            let buttonContent = '';
+            let actionButtonContent = '';
             const productImageForChat = post.postType === 'video_ad' ? (post.thumbnail || 'default-video-poster.png') : (post.photo || 'default-image.png');
 
             if (post.postType === 'video_ad') {
@@ -137,7 +139,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         </div>
                     </div>
                 `;
-                buttonContent = `
+                actionButtonContent = `
                     <a href="${post.productLink || '#'}" class="buy-now-button checkout-product-button" aria-label="Check out product ${post.description || 'product'}" ${!post.productLink ? 'disabled' : ''}>
                         <i class="fas fa-shopping-cart"></i> Check Out Product
                     </a>
@@ -146,18 +148,31 @@ document.addEventListener('DOMContentLoaded', async () => {
                 mediaContent = `
                     <img src="${productImageForChat}" class="post-image" onclick="openImage('${productImageForChat}')" alt="Product Image">
                 `;
-                buttonContent = `
+                actionButtonContent = `
                     <button class="buy-now-button" data-post-id="${post._id || ''}" ${post.isSold ? 'disabled' : ''}>
-                        <i class="fas fa-shopping-cart" style="margin-right: 0x; font-size: 14px;"></i> ${post.isSold ? 'Sold Out' : 'Buy Now'}
+                        <i class="fas fa-shopping-cart" style="margin-right: 0px; font-size: 14px;"></i> ${post.isSold ? 'Sold Out' : 'Buy Now'}
                     </button>
                 `;
+            }
+
+            // Determine if the logged-in user is the post creator
+            const isPostCreator = loggedInUser === post.createdBy?.userId;
+            let creatorActionButton = '';
+            if (isPostCreator) {
+                creatorActionButton = `
+                    <button class="promote-post-button" data-post-id="${post._id || ''}">
+                        <i class="fas fa-bullhorn"></i> Promote Post
+                    </button>
+                `;
+            } else {
+                creatorActionButton = actionButtonContent;
             }
 
             // Render post details
             postDetailsContainer.innerHTML = `
                 <div class="post-header">
                     <a href="Profile.html?userId=${post.createdBy?.userId || ''}">
-                        <img src="${post.profilePicture || 'default-avatar.png'}" class="post-avatar">
+                        <img src="${post.createdBy?.profilePicture || 'default-avatar.png'}" class="post-avatar">
                     </a>
                     <div class="post-user-info">
                         <a href="Profile.html?userId=${post.createdBy?.userId || ''}" class="post-user-name">${post.createdBy?.name || 'Unknown'}</a>
@@ -176,19 +191,15 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </div>
                 <div class="product-container">
                     <div class="product-card">
-                                            <p class="post-title"><b></b> ${post.title}</p>
+                        <p class="post-title"><b></b> ${post.title}</p>
                         <p class="post-description"><b></b> ${post.description}</p>
-                        
-                        ${post.postType !== 'video_ad' ? `
-                            
-                        ` : ''}
                     </div>
                     <div class="media-card">
                         ${mediaContent}
                     </div>
                 </div>
                 <div class="buy" style="text-align: center">
-                   ${post.createdBy?.userId !== loggedInUser ? buttonContent : ''}
+                   ${creatorActionButton}
                 </div>
                 <div class="post-actions">
                     <button class="like-button">
@@ -264,45 +275,57 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             });
 
-            // Buy now functionality
-            const buyButton = postDetailsContainer.querySelector('.buy-now-button');
-            if (buyButton && !buyButton.classList.contains('checkout-product-button')) {
-                buyButton.addEventListener('click', async () => {
-                    const email = localStorage.getItem('email');
-                    const buyerId = localStorage.getItem('userId');
+            // Handle Buy Now / Promote Post button clicks
+            const actionButton = postDetailsContainer.querySelector('.buy-now-button, .promote-post-button');
+            if (actionButton) {
+                if (actionButton.classList.contains('buy-now-button') && !actionButton.classList.contains('checkout-product-button')) {
+                    // Buy Now functionality
+                    actionButton.addEventListener('click', async () => {
+                        const email = localStorage.getItem('email');
+                        const buyerId = localStorage.getItem('userId');
 
-                    if (!email || !buyerId || !postId) {
-                        showToast('Please log in to make a purchase.', '#dc3545');
-                        return;
-                    }
-
-                    try {
-                        const response = await fetch(`${API_BASE_URL}/pay`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-                            },
-                            body: JSON.stringify({
-                                email,
-                                postId,
-                                buyerId,
-                                currency: 'NGN',
-                            }),
-                        });
-
-                        const result = await response.json();
-                        if (response.ok && result.success && result.url) {
-                            window.location.href = result.url;
-                        } else {
-                            showToast(`Payment failed: ${result.message || 'Please try again.'}`, '#dc3545');
+                        if (!email || !buyerId || !postId) {
+                            showToast('Please log in to make a purchase.', '#dc3545');
+                            return;
                         }
-                    } catch (error) {
-                        console.error('Payment error:', error);
-                        showToast('Failed to process payment. Please try again.', '#dc3545');
-                    }
-                });
+
+                        try {
+                            const response = await fetch(`${API_BASE_URL}/pay`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+                                },
+                                body: JSON.stringify({
+                                    email,
+                                    postId,
+                                    buyerId,
+                                    currency: 'NGN',
+                                }),
+                            });
+
+                            const result = await response.json();
+                            if (response.ok && result.success && result.url) {
+                                window.location.href = result.url;
+                            } else {
+                                showToast(`Payment failed: ${result.message || 'Please try again.'}`, '#dc3545');
+                            }
+                        } catch (error) {
+                            console.error('Payment error:', error);
+                            showToast('Failed to process payment. Please try again.', '#dc3545');
+                        }
+                    });
+                } else if (actionButton.classList.contains('promote-post-button')) {
+                    // Promote Post functionality
+                    actionButton.addEventListener('click', () => {
+                        // Implement your promote post logic here, e.g., redirect to a promotion page
+                        showToast('Promote Post button clicked! (Functionality to be implemented)', '#007bff');
+                        console.log(`Promote Post ID: ${postId}`);
+                        // Example: window.location.href = `promote.html?postId=${postId}`;
+                    });
+                }
             }
+
 
             // Follow functionality
             const followButton = postDetailsContainer.querySelector('.follow-button');
@@ -396,6 +419,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             const displayText = newComment.text || commentText;
 
             const commentsList = postDetailsContainer.querySelector('.comments-list');
+            // Remove "No comments yet" if present
+            const noCommentsMessage = commentsList.querySelector('p');
+            if (noCommentsMessage && noCommentsMessage.textContent === 'No comments yet.') {
+                noCommentsMessage.remove();
+            }
+
             const newCommentHTML = `
                 <div class="comment" data-comment-id="${newComment._id}">
                     <img src="${newComment.profilePicture || 'default-avatar.png'}" class="comment-avatar">
@@ -414,11 +443,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             commentsList.insertAdjacentHTML('afterbegin', newCommentHTML);
             commentInput.value = '';
             showToast('Your comment has been posted!', '#28a745');
-
-            const noCommentsMessage = commentsList.querySelector('p');
-            if (noCommentsMessage) {
-                noCommentsMessage.remove();
-            }
 
             await fetchPost(); // Re-fetch post to update comment count and ensure consistency
         } catch (error) {
@@ -575,7 +599,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Initialize page
-    await fetchUserProfile();
+    await fetchUserProfileForAvatar();
     await fetchPost();
     window.addEventListener('popstate', fetchPost); // Ensure content loads on navigation
 });
