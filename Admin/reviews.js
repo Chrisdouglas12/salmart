@@ -1,315 +1,428 @@
 document.addEventListener("DOMContentLoaded", function() {
-  // Set API base URL
-  const API_BASE_URL = window.location.hostname === 'localhost' 
-    ? 'http://localhost:3000' 
-    : 'https://salmart.onrender.com';
-
-  // Get user IDs
-  const getProfileOwnerId = () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get('userId')?.trim() || null;
+  // Configuration and state management
+  const CONFIG = {
+    API_BASE_URL: window.location.hostname === 'localhost' 
+      ? 'http://localhost:3000' 
+      : 'https://salmart.onrender.com',
+    MIN_REVIEW_LENGTH: 10,
+    RATING_RANGE: { MIN: 1, MAX: 5 }
   };
 
-  const token = localStorage.getItem("authToken");
-  let loggedInUserId = null;
+  // State management
+  const state = {
+    token: localStorage.getItem("authToken"),
+    loggedInUserId: null,
+    profileOwnerId: null,
+    isEditMode: false,
+    currentReview: null,
+    eventListenersAdded: new Set()
+  };
 
-  if (token) {
-    try {
-      const decoded = jwt_decode(token);
-      loggedInUserId = decoded.userId?.toString().trim() || null;
-    } catch (error) {
-      console.error("Error decoding token:", error);
+  // Initialize user data
+  function initializeUserData() {
+    // Get profile owner ID from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    state.profileOwnerId = urlParams.get('userId')?.trim() || null;
+
+    // Decode logged-in user info
+    if (state.token) {
+      try {
+        const decoded = jwt_decode(state.token);
+        state.loggedInUserId = decoded.userId?.toString().trim() || null;
+      } catch (error) {
+        console.error("Error decoding token:", error);
+        state.token = null; // Clear invalid token
+      }
+    }
+
+    // Set default profile owner to logged-in user if not specified
+    if (!state.profileOwnerId) {
+      state.profileOwnerId = state.loggedInUserId;
     }
   }
 
-  // Star rating functionality
-  const stars = document.querySelectorAll('.stars i');
-  const ratingInput = document.getElementById('rating-value');
+  // DOM element cache
+  const elements = {
+    get stars() { return document.querySelectorAll('.stars i'); },
+    get ratingInput() { return document.getElementById('rating-value'); },
+    get reviewForm() { return document.getElementById('review-form'); },
+    get reviewFormContainer() { return document.getElementById('review-form-container'); },
+    get reviewText() { return document.getElementById('review-text'); },
+    get reviewsList() { return document.getElementById('reviews-list'); },
+    get editReviewBtn() { return document.getElementById('edit-review-btn'); },
+    get averageRatingEl() { return document.getElementById('average-rating'); },
+    get reviewCountEl() { return document.getElementById('reviews-count'); }
+  };
 
-  stars.forEach(star => {
-    star.addEventListener('click', function() {
-      const rating = parseInt(this.getAttribute('data-rating'));
-      ratingInput.value = rating;
+  // Validation functions
+  const validators = {
+    rating: (rating) => {
+      const num = parseInt(rating);
+      return !isNaN(num) && num >= CONFIG.RATING_RANGE.MIN && num <= CONFIG.RATING_RANGE.MAX;
+    },
+    
+    reviewText: (text) => {
+      return text && text.trim().length >= CONFIG.MIN_REVIEW_LENGTH;
+    },
+    
+    userAuth: () => {
+      return state.token && state.loggedInUserId;
+    },
+    
+    profileOwner: () => {
+      return state.profileOwnerId && state.profileOwnerId !== state.loggedInUserId;
+    }
+  };
 
-      stars.forEach((s, index) => {
-        if (index < rating) {
-          s.classList.add('active');
-        } else {
-          s.classList.remove('active');
-        }
+  // Utility functions
+  const utils = {
+    showError: (message) => {
+      console.error(message);
+      alert(message); // Consider replacing with a toast notification
+    },
+    
+    showSuccess: (message) => {
+      alert(message); // Consider replacing with a toast notification
+    },
+    
+    formatDate: (dateString) => {
+      return new Date(dateString).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
       });
-    });
-  });
-
-  // Show/hide review form based on whether it's another user's profile
-  const profileOwnerId = getProfileOwnerId() || loggedInUserId;
-  const reviewFormContainer = document.getElementById('review-form-container');
-  if (reviewFormContainer) {
-    if (profileOwnerId && loggedInUserId && profileOwnerId !== loggedInUserId) {
-      reviewFormContainer.style.display = 'block';
-    } else {
-      reviewFormContainer.style.display = 'none';
+    },
+    
+    generateStarsHTML: (rating) => {
+      return Array.from({ length: 5 }, (_, i) => 
+        `<i class="fas fa-star${i < rating ? ' active' : ''}"></i>`
+      ).join('');
+    },
+    
+    updateStarsDisplay: (rating) => {
+      elements.stars.forEach((star, index) => {
+        star.classList.toggle('active', index < rating);
+      });
+    },
+    
+    resetForm: () => {
+      if (elements.reviewForm) {
+        elements.reviewForm.reset();
+        elements.reviewForm.dataset.mode = '';
+      }
+      if (elements.ratingInput) elements.ratingInput.value = '';
+      utils.updateStarsDisplay(0);
+      state.isEditMode = false;
+      state.currentReview = null;
     }
-  }
+  };
 
-  // Handle review submission and editing
-  const reviewForm = document.getElementById('review-form');
-  if (reviewForm) {
-    reviewForm.addEventListener('submit', async function(e) {
+  // API functions
+  const api = {
+    async makeRequest(url, options = {}) {
+      const defaultOptions = {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${state.token || ''}`
+        }
+      };
+      
+      const mergedOptions = {
+        ...defaultOptions,
+        ...options,
+        headers: { ...defaultOptions.headers, ...options.headers }
+      };
+
+      const response = await fetch(url, mergedOptions);
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || `Server error: ${response.status}`);
+      }
+      
+      return data;
+    },
+
+    async submitReview(reviewData) {
+      const url = state.isEditMode 
+        ? `${CONFIG.API_BASE_URL}/update-review`
+        : `${CONFIG.API_BASE_URL}/submit-review`;
+      
+      const method = state.isEditMode ? 'PATCH' : 'POST';
+      
+      return await this.makeRequest(url, {
+        method,
+        body: JSON.stringify({
+          reviewedUserId: state.profileOwnerId,
+          rating: reviewData.rating,
+          review: reviewData.reviewText
+        })
+      });
+    },
+
+    async loadReviews(userId) {
+      return await this.makeRequest(`${CONFIG.API_BASE_URL}/user-reviews/${userId}`);
+    },
+
+    async getAverageRating(userId) {
+      return await this.makeRequest(`${CONFIG.API_BASE_URL}/average-rating/${userId}`);
+    }
+  };
+
+  // UI Management functions
+  const ui = {
+    initializeStarRating() {
+      if (state.eventListenersAdded.has('stars')) return;
+      
+      elements.stars.forEach(star => {
+        star.addEventListener('click', function() {
+          const rating = parseInt(this.getAttribute('data-rating'));
+          if (elements.ratingInput) {
+            elements.ratingInput.value = rating;
+          }
+          utils.updateStarsDisplay(rating);
+        });
+      });
+      
+      state.eventListenersAdded.add('stars');
+    },
+
+    toggleReviewForm() {
+      if (!elements.reviewFormContainer) return;
+      
+      const shouldShow = validators.profileOwner();
+      elements.reviewFormContainer.style.display = shouldShow ? 'block' : 'none';
+    },
+
+    async handleReviewSubmission(e) {
       e.preventDefault();
 
-      const currentProfileOwnerId = getProfileOwnerId() || loggedInUserId;
-      const isEditMode = reviewForm.dataset.mode === 'edit';
-      const url = isEditMode ? `${API_BASE_URL}/update-review` : `${API_BASE_URL}/submit-review`;
+      // Validation
+      const rating = parseInt(elements.ratingInput?.value);
+      const reviewText = elements.reviewText?.value.trim();
 
-      // Debug: Log all values before submission
-      console.log(`${isEditMode ? 'Updating' : 'Submitting'} review with:`, {
-        profileOwnerId: currentProfileOwnerId,
-        loggedInUserId: loggedInUserId,
-        rating: ratingInput.value,
-        reviewText: document.getElementById('review-text').value.trim(),
-        token: token ? 'Token present' : 'No token',
-        mode: isEditMode ? 'edit' : 'submit'
-      });
-
-      // Validate required fields
-      const rating = parseInt(ratingInput.value);
-      const reviewText = document.getElementById('review-text').value.trim();
-
-      if (!rating || isNaN(rating) || rating < 1 || rating > 5) {
-        alert('Please select a valid rating between 1 and 5 stars');
+      if (!validators.rating(rating)) {
+        utils.showError('Please select a valid rating between 1 and 5 stars');
         return;
       }
 
-      if (!reviewText || reviewText.length < 10) {
-        alert('Please write a review with at least 10 characters');
+      if (!validators.reviewText(reviewText)) {
+        utils.showError(`Please write a review with at least ${CONFIG.MIN_REVIEW_LENGTH} characters`);
         return;
       }
 
-      if (!currentProfileOwnerId) {
-        alert('Error: Cannot determine who you are reviewing');
-        return;
-      }
-
-      if (!token || !loggedInUserId) {
-        alert('Please log in to submit a review');
+      if (!validators.userAuth()) {
+        utils.showError('Please log in to submit a review');
         window.location.href = 'SignIn.html';
         return;
       }
 
+      if (!state.profileOwnerId) {
+        utils.showError('Error: Cannot determine who you are reviewing');
+        return;
+      }
+
       try {
-        const response = await fetch(url, {
-          method: isEditMode ? 'PATCH' : 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({
-            reviewedUserId: currentProfileOwnerId,
-            rating: rating,
-            review: reviewText
-          })
-        });
-
-        const data = await response.json();
-        console.log(`Server response for ${isEditMode ? 'update' : 'submit'}-review:`, data);
-
-        if (!response.ok) {
-          throw new Error(data.message || `Server error: ${response.status}`);
-        }
-
+        const data = await api.submitReview({ rating, reviewText });
+        
         if (data.success) {
-          alert(`Review ${isEditMode ? 'updated' : 'submitted'} successfully!`);
-          reviewForm.reset();
-          reviewForm.dataset.mode = ''; // Reset mode
-          stars.forEach(star => star.classList.remove('active'));
-          ratingInput.value = '';
-          await loadReviews(currentProfileOwnerId);
-          await updateAverageRating(currentProfileOwnerId);
+          const action = state.isEditMode ? 'updated' : 'submitted';
+          utils.showSuccess(`Review ${action} successfully!`);
+          utils.resetForm();
+          await Promise.all([
+            ui.loadReviews(state.profileOwnerId),
+            ui.updateAverageRating(state.profileOwnerId)
+          ]);
         } else {
-          throw new Error(data.message || `Failed to ${isEditMode ? 'update' : 'submit'} review`);
+          throw new Error(data.message || 'Failed to process review');
         }
       } catch (error) {
-        console.error(`Review ${isEditMode ? 'update' : 'submission'} error:`, error);
-        alert(`${isEditMode ? 'Update' : 'Submission'} failed: ${error.message}`);
+        console.error('Review submission error:', error);
+        utils.showError(`Submission failed: ${error.message}`);
       }
-    });
-  }
+    },
 
-  // Load reviews for the profile
-  async function loadReviews(userId) {
-    const targetUserId = userId || getProfileOwnerId() || loggedInUserId;
-    if (!targetUserId) {
-      console.error('No user ID provided for loading reviews');
-      return;
-    }
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/user-reviews/${targetUserId}`, {
-        headers: {
-          'Authorization': `Bearer ${token || ''}`
-        }
-      });
-      if (!response.ok) {
-        throw new Error(`Server error: ${response.status}`);
+    async loadReviews(userId = state.profileOwnerId) {
+      if (!userId) {
+        console.error('No user ID provided for loading reviews');
+        return;
       }
-      const data = await response.json();
-      console.log('Reviews data:', data);
 
-      const reviewsList = document.getElementById('reviews-list');
-      if (!reviewsList) {
+      try {
+        const data = await api.loadReviews(userId);
+        this.renderReviews(data);
+        this.handleEditButton(data);
+        this.updateReviewCount(data.length || 0);
+      } catch (error) {
+        console.error('Error loading reviews:', error);
+        this.renderReviewsError();
+      }
+    },
+
+    renderReviews(reviews) {
+      if (!elements.reviewsList) {
         console.error('Reviews list element not found');
         return;
       }
-      reviewsList.innerHTML = '';
 
-      if (!data || data.length === 0 || data.message === 'No reviews found for this user') {
-        reviewsList.innerHTML = '<div class="no-reviews">No reviews yet.</div>';
-      } else {
-        data.forEach(review => {
-          const reviewCard = document.createElement('div');
-          reviewCard.className = 'review-card';
+      if (!reviews || reviews.length === 0 || reviews.message === 'No reviews found for this user') {
+        elements.reviewsList.innerHTML = '<div class="no-reviews">No reviews yet.</div>';
+        return;
+      }
 
-          const reviewDate = new Date(review.createdAt).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-          });
+      elements.reviewsList.innerHTML = reviews.map(review => {
+        const reviewer = review.reviewerId;
+        const reviewerName = (typeof reviewer === 'object' && reviewer?.firstName) 
+          ? `${reviewer.firstName} ${reviewer.lastName || ''}`.trim()
+          : (review.reviewerName || 'Anonymous');
+        
+        const reviewerPicture = (typeof reviewer === 'object' && reviewer?.profilePicture)
+          ? reviewer.profilePicture 
+          : 'default-avatar.png';
 
-          let starsHtml = '';
-          for (let i = 1; i <= 5; i++) {
-            starsHtml += `<i class="fas fa-star${i <= review.rating ? ' active' : ''}"></i>`;
-          }
-
-          const reviewer = review.reviewerId;
-          const reviewerName = typeof reviewer === 'object' && reviewer?.firstName || reviewer?.lastName
-           ? `${reviewer.firstName} ${reviewer.lastName}`
-            : (review.reviewerName || 'Anonymous');
-          const reviewerPicture = typeof reviewer === 'object' && reviewer?.profilePicture 
-            ? reviewer.profilePicture 
-            : 'default-avatar.png';
-
-          reviewCard.innerHTML = `
+        return `
+          <div class="review-card">
             <div class="review-header">
               <img src="${reviewerPicture}" 
                    alt="${reviewerName}" 
                    class="reviewer-avatar"
                    onerror="this.src='default-avatar.png'">
               <span class="reviewer-name">${reviewerName}</span>
-              <span class="review-date">${reviewDate}</span>
-              <div class="review-rating">${starsHtml}</div>
+              <span class="review-date">${utils.formatDate(review.createdAt)}</span>
+              <div class="review-rating">${utils.generateStarsHTML(review.rating)}</div>
             </div>
             <div class="review-content">
               <p>${review.review}</p>
             </div>
-          `;
+          </div>
+        `;
+      }).join('');
+    },
 
-          reviewsList.appendChild(reviewCard);
-        });
+    renderReviewsError() {
+      if (elements.reviewsList) {
+        elements.reviewsList.innerHTML = '<div class="no-reviews">Error loading reviews. Please try again later.</div>';
+      }
+    },
+
+    handleEditButton(reviews) {
+      if (!state.loggedInUserId || !validators.profileOwner() || !elements.editReviewBtn) {
+        return;
       }
 
-      // Check for existing review and show edit button
-      const editReviewBtn = document.getElementById('edit-review-btn');
-      if (loggedInUserId && profileOwnerId !== loggedInUserId && editReviewBtn) {
-        const existingReview = data.find(review => review.reviewerId && review.reviewerId._id === loggedInUserId);
-        if (existingReview) {
-          editReviewBtn.style.display = 'block';
-          editReviewBtn.addEventListener('click', () => {
-            // Populate form with existing review
-            ratingInput.value = existingReview.rating;
-            document.getElementById('review-text').value = existingReview.review;
-            stars.forEach((s, index) => {
-              s.classList.toggle('active', index < existingReview.rating);
-            });
-            reviewForm.dataset.mode = 'edit';
-            reviewFormContainer.scrollIntoView({ behavior: 'smooth' });
-          }, { once: true }); // Prevent multiple listeners
-        } else {
-          editReviewBtn.style.display = 'none';
+      const existingReview = reviews.find(review => 
+        review.reviewerId && review.reviewerId._id === state.loggedInUserId
+      );
+
+      if (existingReview) {
+        elements.editReviewBtn.style.display = 'block';
+        
+        // Remove existing listener if any
+        if (!state.eventListenersAdded.has('editReview')) {
+          elements.editReviewBtn.addEventListener('click', () => {
+            this.populateEditForm(existingReview);
+          });
+          state.eventListenersAdded.add('editReview');
         }
+        
+        state.currentReview = existingReview;
+      } else {
+        elements.editReviewBtn.style.display = 'none';
+        state.currentReview = null;
+      }
+    },
+
+    populateEditForm(review) {
+      if (elements.ratingInput) elements.ratingInput.value = review.rating;
+      if (elements.reviewText) elements.reviewText.value = review.review;
+      
+      utils.updateStarsDisplay(review.rating);
+      
+      if (elements.reviewForm) {
+        elements.reviewForm.dataset.mode = 'edit';
+      }
+      
+      state.isEditMode = true;
+      elements.reviewFormContainer?.scrollIntoView({ behavior: 'smooth' });
+    },
+
+    async updateAverageRating(userId = state.profileOwnerId) {
+      if (!userId) {
+        console.error('No user ID provided for updating average rating');
+        return;
       }
 
-      // Update review count
-      const reviewCountEl = document.getElementById('reviews-count');
-      if (reviewCountEl) {
-        console.log('Updating review count from loadReviews:', data.length || 0);
-        reviewCountEl.textContent = data.length || 0;
+      try {
+        const data = await api.getAverageRating(userId);
+        
+        if (elements.averageRatingEl) {
+          const rating = data.averageRating !== undefined 
+            ? parseFloat(data.averageRating).toFixed(1) 
+            : '0.0';
+          elements.averageRatingEl.textContent = rating;
+        }
+
+        if (data.reviewCount !== undefined) {
+          this.updateReviewCount(data.reviewCount);
+        }
+      } catch (error) {
+        console.error('Error fetching average rating:', error);
+        if (elements.averageRatingEl) elements.averageRatingEl.textContent = '0.0';
+        this.updateReviewCount(0);
       }
-    } catch (error) {
-      console.error('Error loading reviews:', error);
-      const reviewsList = document.getElementById('reviews-list');
-      if (reviewsList) {
-        reviewsList.innerHTML = '<div class="no-reviews">Error loading reviews. Please try again later.</div>';
+    },
+
+    updateReviewCount(count) {
+      if (elements.reviewCountEl) {
+        console.log('Updating review count:', count);
+        elements.reviewCountEl.textContent = count.toString();
       }
     }
-  }
+  };
 
-  // Update average rating and review count
-  async function updateAverageRating(userId) {
-    const targetUserId = userId || getProfileOwnerId() || loggedInUserId;
-    if (!targetUserId) {
-      console.error('No user ID provided for updating average rating');
-      return;
+  // Event listeners setup
+  function setupEventListeners() {
+    // Review form submission
+    if (elements.reviewForm && !state.eventListenersAdded.has('reviewForm')) {
+      elements.reviewForm.addEventListener('submit', ui.handleReviewSubmission.bind(ui));
+      state.eventListenersAdded.add('reviewForm');
     }
 
-    try {
-      const response = await fetch(`${API_BASE_URL}/average-rating/${targetUserId}`, {
-        headers: {
-          'Authorization': `Bearer ${token || ''}`
+    // Custom event for tab activation
+    if (!state.eventListenersAdded.has('reviewsTab')) {
+      document.addEventListener('reviewsTabActivated', async function() {
+        if (state.profileOwnerId) {
+          await Promise.all([
+            ui.loadReviews(state.profileOwnerId),
+            ui.updateAverageRating(state.profileOwnerId)
+          ]);
         }
       });
-      if (!response.ok) {
-        throw new Error(`Server error: ${response.status}`);
-      }
-      const data = await response.json();
-      console.log('Average rating data:', data);
+      state.eventListenersAdded.add('reviewsTab');
+    }
+  }
 
-      const averageRatingEl = document.getElementById('average-rating');
-      if (averageRatingEl && data.averageRating !== undefined) {
-        averageRatingEl.textContent = parseFloat(data.averageRating).toFixed(1);
-      } else {
-        if (averageRatingEl) averageRatingEl.textContent = '0.0';
-      }
+  // Initialize everything
+  async function initialize() {
+    try {
+      initializeUserData();
+      ui.initializeStarRating();
+      ui.toggleReviewForm();
+      setupEventListeners();
 
-      // Update review count
-      const reviewCountEl = document.getElementById('reviews-count');
-      if (reviewCountEl && data.reviewCount !== undefined) {
-        console.log('Updating review count from updateAverageRating:', data.reviewCount);
-        reviewCountEl.textContent = data.reviewCount;
-      } else {
-        if (reviewCountEl) {
-          console.log('No reviewCount in average rating data, setting to 0');
-          reviewCountEl.textContent = '0';
-        }
+      // Load initial data if on reviews tab or home tab
+      const activeTab = document.querySelector('.tab-btn.active')?.getAttribute('data-tab');
+      if (['reviews', 'home'].includes(activeTab) && state.profileOwnerId) {
+        await Promise.all([
+          ui.loadReviews(state.profileOwnerId),
+          ui.updateAverageRating(state.profileOwnerId)
+        ]);
       }
     } catch (error) {
-      console.error('Error fetching average rating:', error);
-      const averageRatingEl = document.getElementById('average-rating');
-      if (averageRatingEl) averageRatingEl.textContent = '0.0';
-      const reviewCountEl = document.getElementById('reviews-count');
-      if (reviewCountEl) {
-        console.log('Error in updateAverageRating, setting review count to 0');
-        reviewCountEl.textContent = '0';
-      }
+      console.error('Initialization error:', error);
     }
   }
 
-  // Initialize reviews and rating when Reviews tab is active
-  const activeTab = document.querySelector('.tab-btn.active')?.getAttribute('data-tab', 'data-tab active');
-  if (activeTab === 'reviews', 'home') {
-    const userId = getProfileOwnerId() || loggedInUserId;
-    if (userId) {
-      loadReviews(userId);
-      updateAverageRating(userId);
-    }
-  }
-
-  // Load reviews when Reviews tab is activated
-  document.addEventListener('reviewsTabActivated', function() {
-    const userId = getProfileOwnerId() || loggedInUserId;
-    if (userId) {
-      loadReviews(userId);
-      updateAverageRating(userId);
-    }
-  });
+  // Start initialization
+  initialize();
 });

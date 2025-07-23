@@ -1,5 +1,6 @@
 // post-renderer.js
 import { salmartCache } from './salmartCache.js';
+
 document.addEventListener('DOMContentLoaded', async function () {
     let currentLoggedInUser = localStorage.getItem('userId'); // Get user ID from localStorage immediately
     let isAuthReady = false;
@@ -55,7 +56,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
         if (diffInSeconds < 60) return "Just now";
         if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m`;
-        if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h`;
+        if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 86400 / 24)}h`; // Fixed calculation for hours
         if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d`;
         if (diffInSeconds < 2592000) return `${Math.floor(diffInSeconds / 604800)}w`;
 
@@ -105,15 +106,18 @@ document.addEventListener('DOMContentLoaded', async function () {
     function openAppOrWeb(appUrl, webUrl) {
         window.location.href = appUrl;
         setTimeout(() => {
-            if (!document.hidden) {
+            // Check if the app opened (by checking if the document is hidden)
+            // If not, open the web URL as a fallback.
+            if (document.visibilityState === 'visible') { // Means app didn't take over
                 window.open(webUrl, '_blank');
             }
-        }, 500);
+        }, 500); // Give the app a moment to launch
     }
 
     function sharePost(post, postLink, platform) {
-        const shareText = `Check out this product: ${post.description} - ${post.price ? '₦' + Number(post.price).toLocaleString('en-NG') : 'Price not specified'}`;
-        
+        // Use a more generic description if title is not available for video ads
+        const shareText = `Check out this product: ${post.title || post.description} - ${post.price ? '₦' + Number(post.price).toLocaleString('en-NG') : 'Price not specified'}`;
+
         switch(platform) {
             case 'copy':
                 copyToClipboard(postLink);
@@ -140,8 +144,14 @@ document.addEventListener('DOMContentLoaded', async function () {
                 openAppOrWeb(telegramUrl, telegramWebUrl);
                 break;
             case 'instagram':
-                const instagramUrl = `instagram://library?AssetPath=${encodeURIComponent(postLink)}`;
-                openAppOrWeb(instagramUrl, `https://www.instagram.com/explore/tags/product/`);
+                // Instagram sharing is complex for direct content. Often requires image/video to be on device.
+                // For web, it usually means directing to their site. The app link below is often for deep-linking profiles or specific posts if you have their ID.
+                // For simplicity, for an actual product, this might redirect to their general app or web.
+                const instagramWebUrl = `https://www.instagram.com/explore/tags/product/`; // A generic tag search or just instagram.com
+                // Note: direct sharing of external content to Instagram feed is usually not supported via URL schemes.
+                // The following line for appUrl is likely not what's expected for sharing
+                const instagramAppUrl = `instagram://app`; // This might just open the app.
+                openAppOrWeb(instagramAppUrl, instagramWebUrl);
                 break;
         }
     }
@@ -149,8 +159,11 @@ document.addEventListener('DOMContentLoaded', async function () {
     function showShareModal(post) {
         const shareModal = document.createElement('div');
         shareModal.className = 'share-modal';
-        const postLink = `${window.location.origin}/product.html?postId=${post._id}`;
-        
+        // Construct the post link dynamically based on postType
+        const postLink = post.postType === 'video_ad' ?
+            `${window.location.origin}/video-ad.html?postId=${post._id}` : // Assuming a dedicated page for video ads
+            `${window.location.origin}/product.html?postId=${post._id}`;
+
         shareModal.innerHTML = `
             <div class="share-modal-content">
                 <div class="share-modal-header">
@@ -221,7 +234,87 @@ document.addEventListener('DOMContentLoaded', async function () {
         });
     }
 
-    // --- Video Controls Initialization Function ---
+    // --- Placeholder and Lazy Loading Utility ---
+
+    const DEFAULT_PLACEHOLDER_IMAGE = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+
+    function lazyLoadImage(imgElement, originalSrc) {
+        imgElement.src = DEFAULT_PLACEHOLDER_IMAGE;
+        imgElement.classList.add('lazy-loading');
+
+        const observer = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const lazyImage = entry.target;
+                    lazyImage.src = originalSrc;
+                    lazyImage.onload = () => {
+                        lazyImage.classList.remove('lazy-loading');
+                        lazyImage.classList.add('loaded');
+                        observer.unobserve(lazyImage);
+                    };
+                    lazyImage.onerror = () => {
+                        lazyImage.src = '/salmart-192x192.png';
+                        lazyImage.classList.remove('lazy-loading');
+                        console.error(`Failed to load image: ${originalSrc}`);
+                        observer.unobserve(lazyImage);
+                    };
+                }
+            });
+        }, {
+            rootMargin: '0px 0px 200px 0px',
+            threshold: 0.01
+        });
+
+        observer.observe(imgElement);
+    }
+
+    function lazyLoadVideo(videoElement) {
+        const sourceElements = videoElement.querySelectorAll('source[data-src]');
+        // Only load if video has sources or an original src set
+        if (sourceElements.length === 0 && !videoElement.dataset.originalSrc) return;
+
+        if (!window.videoIntersectionObserver) {
+            window.videoIntersectionObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    const video = entry.target;
+                    if (entry.isIntersecting) {
+                        // Ensure sources are set if they have data-src
+                        sourceElements.forEach(source => {
+                            if (source.dataset.src && !source.src) { // Only set src if not already set
+                                source.src = source.dataset.src;
+                            }
+                        });
+                        // Set video src if not already set and originalSrc exists
+                        if (video.dataset.originalSrc && !video.src) {
+                            video.src = video.dataset.originalSrc;
+                        }
+
+                        // Only load if there's actually a src or source to load
+                        if (video.src || sourceElements.length > 0) {
+                            video.load();
+                        }
+                        video.classList.remove('lazy-loading');
+                        video.classList.add('loaded');
+                        if (video.paused && video.readyState >= 3) { // Check if video is ready to play
+                            video.play().catch(e => console.warn("Video auto-play blocked or error:", e));
+                        }
+                    } else {
+                        if (!video.paused && !video.ended) {
+                            video.pause();
+                        }
+                    }
+                });
+            }, {
+                rootMargin: '0px 0px 300px 0px',
+                threshold: 0.5
+            });
+        }
+
+        videoElement.classList.add('lazy-loading');
+        window.videoIntersectionObserver.observe(videoElement);
+    }
+
+
     function initializeVideoControls(postElement) {
         const container = postElement.querySelector('.post-video-container');
         if (!container) return;
@@ -252,24 +345,29 @@ document.addEventListener('DOMContentLoaded', async function () {
             return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
         }
 
+        // Event listener for when video metadata is loaded
         video.addEventListener('loadedmetadata', () => {
-            if (!video.dataset.thumbnailGenerated) {
-                video.currentTime = 2;
+            // Generate thumbnail if not already generated and video has duration
+            if (!video.dataset.thumbnailGenerated && video.duration > 0) {
+                video.currentTime = Math.min(2, video.duration / 2); // Seek to 2 seconds or half duration
             }
             durationDisplay.textContent = formatVideoTime(video.duration);
         });
 
+        // Event listener for when video seeking is complete
         video.addEventListener('seeked', () => {
-            if (video.currentTime === 2 && !video.dataset.thumbnailGenerated) {
+            // Only draw thumbnail if currentTime is valid and thumbnail not generated
+            if (video.currentTime > 0 && !video.dataset.thumbnailGenerated) {
                 const ctx = thumbnailCanvas.getContext('2d');
+                // Set canvas dimensions to match video to avoid distortion
                 thumbnailCanvas.width = video.videoWidth;
                 thumbnailCanvas.height = video.videoHeight;
                 ctx.drawImage(video, 0, 0, thumbnailCanvas.width, thumbnailCanvas.height);
-                video.poster = thumbnailCanvas.toDataURL('image/jpeg');
-                video.dataset.thumbnailGenerated = 'true';
-                video.currentTime = 0;
+                video.dataset.thumbnailGenerated = 'true'; // Mark thumbnail as generated
+                video.currentTime = 0; // Reset video to start
             }
         });
+
 
         video.addEventListener('timeupdate', () => {
             const progress = (video.currentTime / video.duration) * 100;
@@ -292,7 +390,11 @@ document.addEventListener('DOMContentLoaded', async function () {
                     playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
                 }).catch(e => {
                     loadingSpinner.style.display = 'none';
-                    if (window.showToast) window.showToast('Error playing video.', '#dc3545');
+                    if (e.name === 'NotAllowedError') {
+                        if (window.showToast) window.showToast('Video auto-play blocked by browser. Please tap video to play.', '#dc3545');
+                    } else {
+                        if (window.showToast) window.showToast('Error playing video.', '#dc3545');
+                    }
                     console.error('Play error:', e);
                 });
             } else {
@@ -301,7 +403,12 @@ document.addEventListener('DOMContentLoaded', async function () {
             }
         });
 
-        video.addEventListener('canplay', () => {
+
+        video.addEventListener('waiting', () => {
+            loadingSpinner.style.display = 'block';
+        });
+
+        video.addEventListener('playing', () => {
             loadingSpinner.style.display = 'none';
         });
 
@@ -323,7 +430,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
         fullscreenBtn.addEventListener('click', () => {
             if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-                const elem = container;
+                const elem = container; // Fullscreen the container, not just the video
                 if (elem.requestFullscreen) {
                     elem.requestFullscreen().catch(e => console.error('Fullscreen error:', e));
                 } else if (elem.webkitRequestFullscreen) {
@@ -365,13 +472,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             progressBar.style.width = `${progress * 100}%`;
             progressBar.setAttribute('aria-valuenow', progress * 100);
 
-            seekPreview.style.left = `${posX}px`;
-            seekPreviewCanvas.width = 120;
-            seekPreviewCanvas.height = 68;
-            setTimeout(() => {
-                const ctx = seekPreviewCanvas.getContext('2d');
-                ctx.drawImage(video, 0, 0, seekPreviewCanvas.width, seekPreviewCanvas.height);
-            }, 100);
+            if (isTouch) seekPreview.style.display = 'none'; // Hide preview on touch
         };
 
         progressContainer.addEventListener('mousedown', (e) => {
@@ -385,9 +486,10 @@ document.addEventListener('DOMContentLoaded', async function () {
 
         document.addEventListener('mouseup', () => {
             isDragging = false;
-            seekPreview.style.display = 'none';
+            seekPreview.style.display = 'none'; // Hide preview when drag ends
         });
 
+        // Show seek preview on hover
         progressContainer.addEventListener('mousemove', (e) => {
             if (!isDragging) {
                 const rect = progressContainer.getBoundingClientRect();
@@ -398,13 +500,20 @@ document.addEventListener('DOMContentLoaded', async function () {
                 const seekTime = progress * video.duration;
                 seekPreview.style.display = 'block';
                 seekPreview.style.left = `${posX}px`;
-                seekPreviewCanvas.width = 120;
-                seekPreviewCanvas.height = 68;
-                video.currentTime = seekTime;
-                setTimeout(() => {
-                    const ctx = seekPreviewCanvas.getContext('2d');
-                    ctx.drawImage(video, 0, 0, seekPreviewCanvas.width, seekPreviewCanvas.height);
-                }, 100);
+                seekPreviewCanvas.width = 120; // Set a fixed width for the preview canvas
+                seekPreviewCanvas.height = 68; // Set a fixed height for the preview canvas
+
+                // Draw frame preview
+                if (video.readyState >= 1) { // Check if video has enough data
+                    const originalTime = video.currentTime;
+                    video.currentTime = seekTime; // Temporarily jump to seek time
+                    // Use a small timeout to allow the video to render the frame
+                    setTimeout(() => {
+                        const ctx = seekPreviewCanvas.getContext('2d');
+                        ctx.drawImage(video, 0, 0, seekPreviewCanvas.width, seekPreviewCanvas.height);
+                        video.currentTime = originalTime; // Revert to original time
+                    }, 50); // Short delay
+                }
             }
         });
 
@@ -416,6 +525,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             updateProgress(e);
         });
 
+        // Touch events for mobile
         progressContainer.addEventListener('touchstart', (e) => {
             isDragging = true;
             updateProgress(e, true);
@@ -430,11 +540,12 @@ document.addEventListener('DOMContentLoaded', async function () {
             seekPreview.style.display = 'none';
         });
 
+        // Keyboard controls
         postElement.addEventListener('keydown', (e) => {
-            if (e.target === video || e.target === container) {
+            if (e.target === video || e.target === container) { // Ensure keydown is for video or its container
                 switch (e.key) {
                     case ' ':
-                        e.preventDefault();
+                        e.preventDefault(); // Prevent scrolling with spacebar
                         playPauseBtn.click();
                         break;
                     case 'm':
@@ -442,6 +553,12 @@ document.addEventListener('DOMContentLoaded', async function () {
                         break;
                     case 'f':
                         fullscreenBtn.click();
+                        break;
+                    case 'ArrowRight':
+                        video.currentTime += 5; // Skip forward 5 seconds
+                        break;
+                    case 'ArrowLeft':
+                        video.currentTime -= 5; // Skip backward 5 seconds
                         break;
                 }
             }
@@ -454,7 +571,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
         video.addEventListener('ended', () => {
             playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
-            video.currentTime = 0;
+            video.currentTime = 0; // Reset video to start
             progressBar.style.width = '0%';
             progressBar.setAttribute('aria-valuenow', 0);
         });
@@ -465,28 +582,35 @@ document.addEventListener('DOMContentLoaded', async function () {
         postElement.classList.add('post');
         postElement.dataset.createdAt = post.createdAt || new Date().toISOString();
         postElement.dataset.postId = post._id || '';
-        postElement.dataset.userId = post.createdBy ? post.createdBy.userId : ''; // For profile picture updates
+        // Ensure createdBy.userId is properly accessed
+        postElement.dataset.userId = post.createdBy && post.createdBy.userId ? post.createdBy.userId._id || post.createdBy.userId : '';
 
-        const isPostCreator = post.createdBy && post.createdBy.userId === currentLoggedInUser;
+        const isPostCreator = post.createdBy &&
+                             (post.createdBy.userId === currentLoggedInUser ||
+                              (post.createdBy.userId && post.createdBy.userId._id && post.createdBy.userId._id.toString() === currentLoggedInUser)); // Handle populated userId object
         let productDetails = '';
         let mediaContent = '';
         let descriptionContent = '';
         let buttonContent = '';
 
-        const productImageForChat = post.postType === 'video_ad' ? (post.thumbnail || '/salmart-192x192.png') : (post.photo || '/salmart-192x192.png');
+        // Determine the correct image for chat, prioritizing photo for regular posts and thumbnail for video ads
+        const productImageForChat = post.postType === 'video_ad' ?
+                                    (post.thumbnail || '/salmart-192x192.png') :
+                                    (post.photo || '/salmart-192x192.png');
 
         if (post.postType === 'video_ad') {
             descriptionContent = `
+                <h2 class="product-title">${escapeHtml(post.title || '')}</h2>
                 <div class="post-description-text" style="margin-bottom: 10px; padding: 0 15px;">
                     <p>${escapeHtml(post.description || '')}</p>
                 </div>
             `;
             mediaContent = `
                 <div class="post-video-container">
-                    <video class="post-video" preload="metadata" aria-label="Video ad for ${escapeHtml(post.description || 'product')}" poster="${post.thumbnail || '/salmart-192x192.png'}">
-                        <source src="${post.video || ''}" type="video/mp4" />
-                        <source src="${post.video ? post.video.replace('.mp4', '.webm') : ''}" type="video/webm" />
-                        <source src="${post.video ? post.video.replace('.mp4', '.ogg') : ''}" type="video/ogg" />
+                    <video class="post-video" preload="none" aria-label="Video ad for ${escapeHtml(post.description || 'product')}" poster="${post.thumbnail || '/salmart-192x192.png'}" data-original-src="${post.video || ''}">
+                        <source data-src="${post.video || ''}" type="video/mp4" />
+                        <source data-src="${post.video ? post.video.replace(/\.mp4$/, '.webm') : ''}" type="video/webm" />
+                        <source data-src="${post.video ? post.video.replace(/\.mp4$/, '.ogg') : ''}" type="video/ogg" />
                         Your browser does not support the video tag.
                     </video>
                     <canvas class="video-thumbnail" style="display: none;"></canvas>
@@ -525,7 +649,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                     </div>
                 </div>
             `;
-            
+
             buttonContent = `
                 <div class="actions">
                     <a href="${post.productLink || '#'}" class="checkout-product-btn" aria-label="Check out product ${escapeHtml(post.description || 'product')}" ${!post.productLink ? 'style="pointer-events: none; opacity: 0.6;"' : ''}>
@@ -533,9 +657,9 @@ document.addEventListener('DOMContentLoaded', async function () {
                     </a>
                 </div>
             `;
-        } else {
+        } else { // Regular post
             descriptionContent = `
-                <h2 class="product-title">${escapeHtml(post.title || 'No description')}</h2>
+                <h2 class="product-title">${escapeHtml(post.title || 'No title')}</h2>
                 <div class="post-description-text" style="margin-bottom: 10px; padding: 0 15px;">
                     <p>${escapeHtml(post.description || '')}</p>
                 </div>
@@ -543,7 +667,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             mediaContent = `
                 <div class="product-image">
                     <div class="badge">${post.productCondition || 'New'}</div>
-                    <img src="${productImageForChat}?v=${Date.now()}" class="post-image" onclick="window.openImage('${productImageForChat.replace(/'/g, "\\'")}')" alt="Product Image" onerror="this.src='/salmart-192x192.png'">
+                    <img class="post-image" onclick="window.openImage('${productImageForChat.replace(/'/g, "\\'")}')" alt="Product Image" onerror="this.src='/salmart-192x192.png'">
                 </div>
             `;
             productDetails = `
@@ -580,39 +704,63 @@ document.addEventListener('DOMContentLoaded', async function () {
                     </div>
                 </div>
             `;
-            buttonContent = currentLoggedInUser && !isPostCreator ? `
-                <div class="actions">
-                    <button class="btn btn-secondary send-message-btn"
-                        data-recipient-id="${post.createdBy ? post.createdBy.userId : ''}"
-                        data-product-image="${productImageForChat}"
-                        data-product-description="${escapeHtml(post.title || '')}"
-                        data-post-id="${post._id || ''}"
-                        ${post.isSold ? 'disabled' : ''}>
-                        <i class="fas fa-paper-plane"></i> ${post.isSold ? 'Unavailable' : 'Message'}
-                    </button>
-                    <button class="btn btn-primary buy-now-button"
-                        data-post-id="${post._id || ''}"
-                        data-product-image="${productImageForChat}"
-                        data-product-title="${escapeHtml(post.title || 'Untitled Product')}"
-                        data-product-description="${escapeHtml(post.description || 'No description available.')}"
-                        data-product-location="${escapeHtml(post.location || 'N/A')}"
-                        data-product-condition="${escapeHtml(post.productCondition || 'N/A')}"
-                        data-product-price="${post.price ? '₦' + Number(post.price).toLocaleString('en-NG') : '₦0.00'}"
-                        data-seller-id="${post.createdBy ? post.createdBy.userId : ''}"
-                        ${post.isSold ? 'disabled' : ''}>
-                        <i class="fas fa-shopping-cart"></i> ${post.isSold ? 'Sold Out' : 'Buy Now'}
-                    </button>
-                </div>
-            ` : currentLoggedInUser ? '' : `
-                <div class="actions">
-                    <button class="btn btn-secondary login-required" onclick="window.redirectToLogin()">
-                        <i class="fas fa-paper-plane"></i> Message
-                    </button>
-                    <button class="btn btn-primary login-required" onclick="window.redirectToLogin()">
-                        <i class="fas fa-shopping-cart"></i> Buy Now
-                    </button>
-                </div>
-            `;
+
+            if (currentLoggedInUser) {
+                if (isPostCreator) {
+                    buttonContent = !post.isPromoted ? `
+                        <div class="actions">
+                            <button
+                                class="btn btn-primary promote-button"
+                                data-post-id="${post._id || ''}"
+                                aria-label="Promote this post"
+                                ${post.isSold ? 'disabled title="Cannot promote a sold out post"' : ''}
+                            >
+                                ${post.isSold ? 'Sold Out' : 'Promote Post'}
+                            </button>
+                        </div>
+                    ` : `
+                        <a href="javascript:void(0);" style="pointer-events: none; color: #28a745; font-size: 14px; font-weight: 400; display: inline-block; padding: 8px 15px; border-radius: 5px; background-color: #e6ffe6;">
+                            <i class="fas fa-toggle-on"></i> Active Promotion
+                        </a>
+                    `;
+                } else {
+                    buttonContent = `
+                        <div class="actions">
+                            <button class="btn btn-secondary send-message-btn"
+                                data-recipient-id="${post.createdBy && post.createdBy.userId ? post.createdBy.userId._id || post.createdBy.userId : ''}"
+                                data-product-image="${productImageForChat}"
+                                data-product-description="${escapeHtml(post.title || '')}"
+                                data-post-id="${post._id || ''}"
+                                ${post.isSold ? 'disabled' : ''}>
+                                <i class="fas fa-paper-plane"></i> ${post.isSold ? 'Unavailable' : 'Message'}
+                            </button>
+                            <button class="btn btn-primary buy-now-button"
+                                    data-post-id="${post._id || ''}"
+                                    data-product-image="${productImageForChat}"
+                                    data-product-title="${escapeHtml(post.title || 'Untitled Product')}"
+                                    data-product-description="${escapeHtml(post.description || 'No description available.')}"
+                                    data-product-location="${escapeHtml(post.location || 'N/A')}"
+                                    data-product-condition="${escapeHtml(post.productCondition || 'N/A')}"
+                                    data-product-price="${post.price ? '₦' + Number(post.price).toLocaleString('en-NG') : '₦0.00'}"
+                                    data-seller-id="${post.createdBy && post.createdBy.userId ? post.createdBy.userId._id || post.createdBy.userId : ''}"
+                                    ${post.isSold ? 'disabled' : ''}>
+                                <i class="fas fa-shopping-cart"></i> ${post.isSold ? 'Sold Out' : 'Buy Now'}
+                            </button>
+                        </div>
+                    `;
+                }
+            } else { // Not logged in
+                buttonContent = `
+                    <div class="actions">
+                        <button class="btn btn-secondary login-required" onclick="window.redirectToLogin()">
+                            <i class="fas fa-paper-plane"></i> Message
+                        </button>
+                        <button class="btn btn-primary login-required" onclick="window.redirectToLogin()">
+                            <i class="fas fa-shopping-cart"></i> Buy Now
+                        </button>
+                    </div>
+                `;
+            }
         }
 
         const postActionsHtml = currentLoggedInUser ? `
@@ -644,14 +792,16 @@ document.addEventListener('DOMContentLoaded', async function () {
                 </button>
             </div>
         `;
+        // Determine the user ID for the profile link
+        const profileLinkUserId = post.createdBy && post.createdBy.userId ? (post.createdBy.userId._id || post.createdBy.userId) : '';
 
         postElement.innerHTML = `
             <div class="post-header">
-                <a href="Profile.html?userId=${post.createdBy ? post.createdBy.userId : ''}">
-                    <img src="${post.createdBy?.profilePicture || '/salmart-192x192.png'}?v=${Date.now()}" class="post-avatar" data-user-id="${post.createdBy?.userId || ''}" onerror="this.src='/salmart-192x192.png'" alt="User Avatar">
+                <a href="Profile.html?userId=${profileLinkUserId}">
+                    <img class="post-avatar" data-user-id="${profileLinkUserId}" onerror="this.src='/salmart-192x192.png'" alt="User Avatar">
                 </a>
                 <div class="post-user-info">
-                    <a href="Profile.html?userId=${post.createdBy ? post.createdBy.userId : ''}">
+                    <a href="Profile.html?userId=${profileLinkUserId}">
                         <h4 class="post-user-name">${escapeHtml(post.createdBy ? post.createdBy.name : 'Unknown')}</h4>
                     </a>
                     <p class="post-time">${formatTime(post.createdAt || new Date())}</p>
@@ -662,7 +812,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                         <ul>
                             ${isPostCreator ? `
                                 <li><button class="delete-post-button" data-post-id="${post._id || ''}" type="button">Delete Post</button></li>
-                                <li><button class="edit-post-button" data-post-id="${post._id || ''}" type="button">Edit Post</button></li>
+                                <li><button class="edit-post-button" data-post-id="${post._id || ''}" data-post-type="${post.postType || 'regular'}" type="button">Edit Post</button></li>
                             ` : ''}
                             <li><button class="report-post-button" data-post-id="${post._id || ''}" type="button">Report Post</button></li>
                         </ul>
@@ -684,8 +834,22 @@ document.addEventListener('DOMContentLoaded', async function () {
             ${postActionsHtml}
         `;
 
+        const postAvatarElement = postElement.querySelector('.post-avatar');
+        if (postAvatarElement) {
+            lazyLoadImage(postAvatarElement, `${post.createdBy?.profilePicture || '/salmart-192x192.png'}?v=${Date.now()}`);
+        }
+
         if (post.postType === 'video_ad') {
-            initializeVideoControls(postElement);
+            const videoElement = postElement.querySelector('.post-video');
+            if (videoElement) {
+                lazyLoadVideo(videoElement);
+                initializeVideoControls(postElement);
+            }
+        } else {
+            const postImgElement = postElement.querySelector('.post-image');
+            if (postImgElement) {
+                lazyLoadImage(postImgElement, `${productImageForChat}?v=${Date.now()}`);
+            }
         }
 
         return postElement;
@@ -706,66 +870,92 @@ document.addEventListener('DOMContentLoaded', async function () {
         isLoading = true;
 
         if (clearExisting) {
+            if (window.videoIntersectionObserver) {
+                postsContainer.querySelectorAll('.post-video').forEach(video => {
+                    window.videoIntersectionObserver.unobserve(video);
+                });
+            }
             postsContainer.innerHTML = '';
         }
 
         const urlParams = new URLSearchParams(window.location.search);
-        let profileOwnerId = urlParams.get('userId') || currentLoggedInUser;
+        const profileOwnerId = urlParams.get('userId'); // This will be the user ID from the URL if on a profile page
 
-        if (!profileOwnerId) {
-            console.log('No userId found in URL or loggedInUser. Cannot fetch posts.');
+        // Determine the actual user ID whose posts we want to fetch
+        const targetUserId = profileOwnerId || currentLoggedInUser;
+
+        const authToken = localStorage.getItem('authToken');
+        let apiUrl = '';
+        let noPostsMessage = '';
+
+        if (!targetUserId) {
+             // This scenario implies neither a profile ID nor a logged-in user,
+             // which might mean they should be on the general feed or log in.
+             // For a personal profile page, this should ideally not happen if login is enforced.
             postsContainer.innerHTML = `
                 <p style="text-align: center; padding: 20px; color: #666;">
-                    Unable to load posts. Please try again later.
+                    No user specified or logged in to fetch posts.
                 </p>
             `;
-            if (window.showToast) window.showToast('Unable to load posts: No user ID provided.', '#dc3545');
             isLoading = false;
             return;
         }
 
-        try {
-            const allPosts = await salmartCache.getPostsByUserId(profileOwnerId);
+        // Use the /user-posts/:Id endpoint for fetching posts for a specific user.
+        // The backend handles distinguishing between regular posts and video_ads from this endpoint.
+        apiUrl = `${API_BASE_URL}/user-posts/${targetUserId}?page=${page}&limit=10`;
+        noPostsMessage = targetUserId === currentLoggedInUser
+            ? 'You have not created any posts yet.'
+            : 'This user has not created any posts yet.';
 
-            if (!Array.isArray(allPosts) || allPosts.length === 0) {
+
+        try {
+            const response = await fetch(apiUrl, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(authToken && { 'Authorization': `Bearer ${authToken}` })
+                }
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to fetch posts');
+            }
+
+            const posts = await response.json();
+
+            if (!Array.isArray(posts) || posts.length === 0) {
                 if (postsContainer.children.length === 0) {
                     postsContainer.innerHTML = `
                         <p style="text-align: center; padding: 20px; color: #666;">
-                            No posts yet for this user.
+                            ${noPostsMessage}
                         </p>
                     `;
+                }
+                if (loadMoreBtn && posts.length === 0 && !clearExisting) {
+                    loadMoreBtn.style.display = 'none';
                 }
                 isLoading = false;
                 return;
             }
 
-            const sortedPosts = [...allPosts].sort((a, b) => {
-                const dateA = new Date(a.createdAt || 0);
-                const dateB = new Date(b.createdAt || 0);
-                return dateB - dateA;
-            });
-
+            // The backend already sorts by createdAt, so simply render them.
+            // If additional client-side sorting is needed, it would go here.
             const fragment = document.createDocumentFragment();
-            sortedPosts.forEach(post => {
-                if (post.createdBy.userId === profileOwnerId) {
-                    const postElement = renderPost(post);
-                    fragment.appendChild(postElement);
-                }
+            posts.forEach(post => { // Use 'posts' directly as they are already sorted by the backend
+                const postElement = renderPost(post);
+                fragment.appendChild(postElement);
             });
 
-            if (clearExisting) {
-                postsContainer.innerHTML = '';
-                postsContainer.appendChild(fragment);
-            } else {
-                postsContainer.appendChild(fragment);
-            }
+            postsContainer.appendChild(fragment);
 
-            if (postsContainer.children.length === 0) {
-                postsContainer.innerHTML = `
-                    <p style="text-align: center; padding: 20px; color: #666;">
-                        No posts available.
-                    </p>
-                `;
+            if (loadMoreBtn) {
+                if (posts.length < 10) { // Assuming 10 is the limit set in the backend query
+                    loadMoreBtn.style.display = 'none';
+                } else {
+                    loadMoreBtn.style.display = 'block';
+                }
             }
 
             window.dispatchEvent(new Event('postsRendered'));
@@ -776,7 +966,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 postsContainer.innerHTML = `
                     <p style="text-align: center; color: red; padding: 20px;">
                         Error loading posts. Please check your internet connection or try again later.
-                        <br>Error: ${error.message || 'Unknown error'}
+                        <br>Error: ${escapeHtml(error.message || 'Unknown error')}
                     </p>
                 `;
             }
@@ -785,8 +975,6 @@ document.addEventListener('DOMContentLoaded', async function () {
             isLoading = false;
         }
     }
-
-    // --- Global Utility Functions ---
 
     window.redirectToLogin = function() {
         if (window.showToast) {
@@ -803,14 +991,22 @@ document.addEventListener('DOMContentLoaded', async function () {
         window.open(url, '_blank');
     };
 
-    // --- Event Delegates for Interactive Elements ---
-
     document.addEventListener('click', async (event) => {
-        const target = event.target.closest('button');
+        const target = event.target.closest('button, a');
         if (!target) return;
 
         const authToken = localStorage.getItem('authToken');
         const showToast = window.showToast;
+
+        if (target.classList.contains('promote-button')) {
+            const postId = target.dataset.postId;
+            if (!postId) {
+                showToast('Invalid post ID for promotion', '#dc3545');
+                return;
+            }
+            window.location.href = `promote.html?postId=${postId}`;
+            return;
+        }
 
         if (target.classList.contains('like-button') && target.dataset.postId) {
             if (!authToken || !currentLoggedInUser) {
@@ -835,7 +1031,9 @@ document.addEventListener('DOMContentLoaded', async function () {
                         'Authorization': `Bearer ${authToken}`,
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ action: isCurrentlyLiked ? 'unlike' : 'like' }),
+                    // The backend handles the like/unlike logic without needing an explicit action in the body.
+                    // This body can be removed or kept as empty JSON if the backend expects it.
+                    body: JSON.stringify({}), // Or { action: isCurrentlyLiked ? 'unlike' : 'like' } if your backend explicitly uses it
                 });
 
                 if (!response.ok) {
@@ -850,6 +1048,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
             } catch (error) {
                 console.error('Error liking/unliking post:', error);
+                // Revert UI changes on error
                 likeCountElement.textContent = parseInt(likeCountElement.textContent, 10) + (isCurrentlyLiked ? 1 : -1);
                 icon.classList.toggle('fas', isCurrentlyLiked);
                 icon.classList.toggle('far', !isCurrentlyLiked);
@@ -861,21 +1060,25 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
 
         if (target.classList.contains('reply-button') && target.dataset.postId) {
+            // This button now consistently navigates to the product detail page for comments
             window.location.href = `product.html?postId=${target.dataset.postId}`;
             return;
         }
 
         if (target.classList.contains('share-button') && target.dataset.postId) {
+            const postId = target.dataset.postId;
             const postElement = target.closest('.post');
             if (!postElement) {
                 if (showToast) showToast('Error: Post information not found.', '#dc3545');
                 return;
             }
-            const postId = target.dataset.postId;
+            // Reconstruct post object for share modal based on available data
             const post = {
                 _id: postId,
-                description: postElement.querySelector('.product-title')?.textContent || '',
-                price: postElement.querySelector('.price-value')?.textContent?.replace('₦', '').replace(/,/g, '') || null
+                description: postElement.querySelector('.post-description-text p')?.textContent || '',
+                title: postElement.querySelector('.product-title')?.textContent || '',
+                price: postElement.querySelector('.price-value')?.textContent?.replace('₦', '').replace(/,/g, '') || null,
+                postType: postElement.querySelector('.post-video') ? 'video_ad' : 'regular' // Infer post type for correct link generation
             };
             showShareModal(post);
             return;
@@ -897,6 +1100,8 @@ document.addEventListener('DOMContentLoaded', async function () {
                 return;
             }
 
+            // Ensure to get the correct createdBy.userId for sellerId, handling populated objects
+            const sellerIdFromDataset = target.dataset.sellerId;
             const recipientUsername = postElement.querySelector('.post-user-name')?.textContent || 'Unknown';
             const recipientProfilePictureUrl = postElement.querySelector('.post-avatar')?.src || '/salmart-192x192.png';
 
@@ -908,7 +1113,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 productLocation: target.dataset.productLocation || '',
                 productCondition: target.dataset.productCondition || '',
                 productPrice: target.dataset.productPrice || '',
-                sellerId: target.dataset.sellerId || '',
+                sellerId: sellerIdFromDataset, // Use the already extracted seller ID
                 recipient_username: encodeURIComponent(recipientUsername),
                 recipient_profile_picture_url: encodeURIComponent(recipientProfilePictureUrl)
             };
@@ -1062,9 +1267,10 @@ document.addEventListener('DOMContentLoaded', async function () {
                             'Content-Type': 'application/json',
                             'Authorization': `Bearer ${authToken}`,
                         },
-                        body: JSON.stringify({ 
+                        body: JSON.stringify({
                             reason: reportDetails,
-                            postDescription: postElement.querySelector('.product-title')?.textContent || ''
+                            // Ensure postDescription is available; if not, use a fallback
+                            postDescription: postElement.querySelector('.product-title')?.textContent || 'No description available'
                         }),
                     });
 
@@ -1073,6 +1279,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                         throw new Error(result.message || 'Failed to report post');
                     }
 
+                    // Update UI to reflect that the post has been reported
                     target.innerHTML = '<i class="fas fa-flag"></i> Reported';
                     target.disabled = true;
                     target.style.color = '#ff0000';
@@ -1155,13 +1362,15 @@ document.addEventListener('DOMContentLoaded', async function () {
 
         if (target.classList.contains('edit-post-button') && target.dataset.postId) {
             const postId = target.dataset.postId;
-            window.location.href = `Ads.html?edit=true&postId=${postId}`;
+            const postType = target.dataset.postType;
+            window.location.href = `Ads.html?edit=true&postId=${postId}&type=${postType}`;
             return;
         }
 
         if (target.classList.contains('post-options-button')) {
-            event.stopPropagation();
+            event.stopPropagation(); // Prevent document click from closing other menus immediately
             const optionsMenu = target.nextElementSibling;
+            // Close any other open menus
             document.querySelectorAll('.post-options-menu.show').forEach(menu => {
                 if (menu !== optionsMenu) menu.classList.remove('show');
             });
@@ -1171,12 +1380,11 @@ document.addEventListener('DOMContentLoaded', async function () {
     });
 
     document.addEventListener('click', (event) => {
+        // Close post options menu if click is outside of it
         if (!event.target.closest('.post-options-button') && !event.target.closest('.post-options-menu')) {
             document.querySelectorAll('.post-options-menu.show').forEach(menu => menu.classList.remove('show'));
         }
     });
-
-    // --- Authentication and Initialization Logic ---
 
     async function initializeAuthStatusAndPosts() {
         if (isAuthReady) return;
@@ -1194,19 +1402,10 @@ document.addEventListener('DOMContentLoaded', async function () {
         await fetchPosts(currentPage, true);
     }
 
+    // Expose fetchPosts globally if needed elsewhere, though direct call from this script is often sufficient.
     window.fetchPosts = fetchPosts;
 
-    document.addEventListener('authStatusReady', async (event) => {
-        if (!isAuthReady || currentLoggedInUser !== event.detail.loggedInUser) {
-            currentLoggedInUser = event.detail.loggedInUser;
-            console.log('Auth status ready event received. Logged in user:', currentLoggedInUser ? currentLoggedInUser : 'Not logged in');
-            if (currentLoggedInUser) {
-                socket.emit('join', `user_${currentLoggedInUser}`);
-            }
-            await initializeAuthStatusAndPosts();
-        }
-    });
-
+    // Initial call to fetch posts when the DOM is ready
     initializeAuthStatusAndPosts();
 
     const loadMoreBtn = document.getElementById('load-more-btn');
@@ -1219,8 +1418,17 @@ document.addEventListener('DOMContentLoaded', async function () {
         });
     }
 
-    // Cleanup on page unload
     window.addEventListener('beforeunload', () => {
-        socket.disconnect();
+        if (socket) {
+            socket.disconnect();
+        }
+        if (window.videoIntersectionObserver) {
+            const postsContainer = document.getElementById('posts-container');
+            if (postsContainer) {
+                postsContainer.querySelectorAll('.post-video').forEach(video => {
+                    window.videoIntersectionObserver.unobserve(video);
+                });
+            }
+        }
     });
 });
