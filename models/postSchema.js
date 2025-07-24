@@ -1,3 +1,5 @@
+// Schema (postSchema.js)
+
 const mongoose = require('mongoose');
 
 const postSchema = new mongoose.Schema({
@@ -79,16 +81,14 @@ const postSchema = new mongoose.Schema({
       return this.postType === 'regular';
     },
   },
-  // REMOVED: profilePicture field from the top level of Post schema
-
   createdBy: {
     userId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User', // This is crucial for linking to the User model
+      ref: 'User',
       required: true,
     },
     name: {
-      type: String, // Keeping name here for display, but it could also be populated
+      type: String,
       required: true,
     },
   },
@@ -122,20 +122,18 @@ const postSchema = new mongoose.Schema({
     {
       userId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User', // This is crucial for linking to the User model
+        ref: 'User', // Now we will rely solely on this reference for user details
       },
-      name: String,
-      // REMOVED: profilePicture field from comment sub-schema
+      // name: String, // You can keep this or derive it from populated user
       text: String,
       createdAt: { type: Date, default: Date.now },
       replies: [
         {
           userId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'User', // This is crucial for linking to the User model
+            ref: 'User', // Rely on this for user details
           },
-          name: String,
-          // REMOVED: profilePicture field from reply sub-schema
+          // name: String, // You can keep this or derive it from populated user
           text: String,
           createdAt: { type: Date, default: Date.now },
         },
@@ -146,7 +144,6 @@ const postSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
-  // New promotion fields
   isPromoted: {
     type: Boolean,
     default: false,
@@ -188,7 +185,6 @@ const postSchema = new mongoose.Schema({
   },
 });
 
-// TTL index for video_ad posts (delete after 24 hours = 86400 seconds)
 postSchema.index(
   { createdAt: 1 },
   {
@@ -197,16 +193,14 @@ postSchema.index(
   }
 );
 
-// TTL index for promoted posts (expire promotion after endDate)
 postSchema.index(
   { 'promotionDetails.endDate': 1 },
   {
-    expireAfterSeconds: 0, // Expire immediately after endDate
+    expireAfterSeconds: 0,
     partialFilterExpression: { isPromoted: true },
   }
 );
 
-// Update updatedAt on save
 postSchema.pre('save', function (next) {
   this.updatedAt = new Date();
   next();

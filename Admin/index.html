@@ -677,7 +677,7 @@
           categoryBtns.forEach(b => b.classList.remove('active'));
           this.classList.add('active');
           currentCategory = this.dataset.category;
-          // *** THE CRITICAL CHANGE HERE: ***
+     
           // Call window.fetchPosts, which is the function exposed globally by posts.js
           // and accepts category, page, and clearExisting as arguments.
           // We want to clear existing posts when a new category is selected.
