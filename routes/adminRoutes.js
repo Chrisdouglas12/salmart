@@ -219,12 +219,21 @@ router.get('/api/admin/refunds', verifyToken, async (req, res) => {
   }
 });
 
-// handle refunds requests
+// Helper function for Paystack fee calculation
+function calculatePaystackFee(amountNaira) {
+  let fee = (1.5 / 100) * amountNaira;
+  if (amountNaira > 2500) fee += 100;
+  return fee > 2000 ? 2000 : fee;
+}
+
+// Handle refund requests
 router.post('/api/admin/refunds/:id/:action', verifyToken, async (req, res) => {
   try {
     const { id, action } = req.params;
 
-    const refund = await RefundRequests.findOne({ transactionId: id }).populate('transactionId buyerId sellerId description');
+    const refund = await RefundRequests.findOne({ transactionId: id })
+      .populate('transactionId buyerId sellerId description');
+
     if (!refund) {
       return res.status(404).json({ success: false, message: 'Refund request not found' });
     }
@@ -241,27 +250,25 @@ router.post('/api/admin/refunds/:id/:action', verifyToken, async (req, res) => {
     }
 
     const buyerId = refund.buyerId?._id || transaction.buyerId;
+    const sellerId = refund.sellerId?._id || transaction.sellerId;
     const postId = refund.description?._id || transaction.postId;
     const amount = transaction.amount || 0;
     const productTitle = refund.description?.title || 'product';
 
     if (action === 'approve') {
       try {
-        // ➕ Calculate Paystack fees (1.5% + ₦100 if amount > ₦2500)
-        const paystackPercentage = 0.015;
-        const flatFee = amount > 2500 ? 100 : 0;
-        const percentageFee = Math.min(amount * paystackPercentage, 2000);
-        const paystackFee = percentageFee + flatFee;
+        const amountInNaira = typeof amount === 'number' && amount > 100000 
+          ? amount / 100 
+          : amount;
 
-        // ➖ Refund only what you truly received
-        const refundAmount = amount - paystackFee;
+        const paystackFee = calculatePaystackFee(amountInNaira);
+        const refundAmount = amountInNaira - paystackFee;
 
-        // 🔄 Call Paystack API for refund with adjusted amount
         const refundResponse = await axios.post(
           'https://api.paystack.co/refund',
           {
             reference: transaction.paymentReference,
-            amount: Math.round(refundAmount * 100) // convert to kobo
+            amount: Math.round(refundAmount * 100)
           },
           {
             headers: {
@@ -273,9 +280,9 @@ router.post('/api/admin/refunds/:id/:action', verifyToken, async (req, res) => {
 
         const refundData = refundResponse.data.data;
 
-        // Update refund & transaction records
+        // Update records
         refund.status = 'refunded';
-        refund.adminComment = 'Refund approved and processed (minus gateway fees)';
+        refund.adminComment = `Refund approved: ₦${refundAmount.toLocaleString('en-NG')} (₦${paystackFee.toLocaleString('en-NG')} processing fee deducted)`;
         await refund.save();
 
         transaction.status = 'refunded';
@@ -285,15 +292,15 @@ router.post('/api/admin/refunds/:id/:action', verifyToken, async (req, res) => {
         await transaction.save();
 
         // Notify buyer
-        const title = 'Refund Approved';
-        const message = `We’ve refunded ₦${refundAmount.toLocaleString('en-NG')} for your purchase of "${productTitle}", after deducting gateway processing fees.`;
+        const buyerTitle = 'Refund Processed';
+        const buyerMsg = `Your refund has been processed! You'll receive ₦${refundAmount.toLocaleString('en-NG')} for "${productTitle}". ₦${paystackFee.toLocaleString('en-NG')} was deducted as payment processing fee.`;
 
         await Notification.create({
           userId: buyerId,
           senderId: systemUser._id,
           postId,
-          title,
-          message,
+          title: buyerTitle,
+          message: buyerMsg,
           type: 'refund_processed',
           metadata: {
             refundId: refund._id,
@@ -305,22 +312,56 @@ router.post('/api/admin/refunds/:id/:action', verifyToken, async (req, res) => {
 
         await sendFCMNotification(
           buyerId,
-          title,
-          message,
+          buyerTitle,
+          buyerMsg,
           {
             type: 'refund_processed',
             refundId: refund._id.toString(),
             transactionId: transaction._id.toString(),
             amount: refundAmount,
-            reference: transaction.refundReference,
-            senderId: null
+            reference: transaction.refundReference
+          }
+        );
+
+        // Notify seller
+        const sellerTitle = 'Refund Issued';
+        const sellerMsg = `A refund of ₦${refundAmount.toLocaleString('en-NG')} has been issued to the buyer for "${productTitle}". This amount was deducted from the transaction due to a refund request approval.`;
+
+        await Notification.create({
+          userId: sellerId,
+          senderId: systemUser._id,
+          postId,
+          title: sellerTitle,
+          message: sellerMsg,
+          type: 'refund_notice_to_seller',
+          metadata: {
+            refundId: refund._id,
+            transactionId: transaction._id,
+            amount: refundAmount
+          }
+        });
+
+        await sendFCMNotification(
+          sellerId,
+          sellerTitle,
+          sellerMsg,
+          {
+            type: 'refund_notice_to_seller',
+            refundId: refund._id.toString(),
+            transactionId: transaction._id.toString(),
+            amount: refundAmount
           }
         );
 
         return res.status(200).json({
           success: true,
-          message: 'Refund approved and processed via Paystack (minus fees)',
-          data: refundData
+          message: `Refund processed: ₦${refundAmount.toLocaleString('en-NG')} (₦${paystackFee.toLocaleString('en-NG')} processing fee deducted)`,
+          data: {
+            ...refundData,
+            originalAmount: amountInNaira,
+            processingFee: paystackFee,
+            refundAmount: refundAmount
+          }
         });
 
       } catch (paystackErr) {
@@ -338,7 +379,7 @@ router.post('/api/admin/refunds/:id/:action', verifyToken, async (req, res) => {
       await refund.save();
 
       const title = 'Refund Denied';
-      const message = `Your refund request for "${productTitle}" was denied after our review. If you have any concerns or wish to appeal, please contact us via email.`;
+      const message = `Your refund request for "${productTitle}" was denied. If you have any concerns, feel free to reach out.`;
 
       await Notification.create({
         userId: buyerId,
@@ -360,8 +401,7 @@ router.post('/api/admin/refunds/:id/:action', verifyToken, async (req, res) => {
         {
           type: 'refund_rejected',
           refundId: refund._id.toString(),
-          transactionId: transaction._id.toString(),
-          senderId: null
+          transactionId: transaction._id.toString()
         }
       );
 

@@ -110,7 +110,7 @@ module.exports = (io) => {
 
       // Success indicator with modern styling (Your specified green)
       const successBadge = await Jimp.create(200, 50, Jimp.cssColorToHex('#28a745FF')); // Your specified green
-      successBadge.print(fontRegular, 40, 15, '✓ VERIFIED', 120);
+      successBadge.print(fontRegular, 40, 15, 'VERIFIED', 120);
       image.composite(successBadge, 450, 65);
 
       // Main content area with card-like design
@@ -191,7 +191,7 @@ module.exports = (io) => {
       }
 
       // Footer text
-      image.print(fontSmall, 50, yPos, '© 2025 Salmart Technologies', 300);
+      image.print(fontSmall, 50, yPos, ' 2025 Salmart Technologies', 300);
       image.print(fontSmall, 50, yPos + 20, 'Secure Digital Commerce Platform', 300);
       image.print(fontSmall, 400, yPos, `Receipt ID: ${reference.slice(-8)}`, 200);
       image.print(fontSmall, 400, yPos + 20, new Date().toISOString().split('T')[0], 200);

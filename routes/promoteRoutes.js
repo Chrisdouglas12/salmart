@@ -544,14 +544,18 @@ router.get('/promotion-success', async (req, res) => {
 const wallet = await PlatformWallet.findOne({ type: 'promotion' });
 
 // Calculate Paystack fee (1.5% + ₦100 if > ₦2500, capped at ₦2000)
-let paystackFee = (1.5 / 100) * amountPaid;
-if (amountPaid > 2500) paystackFee += 100;
-if (paystackFee > 2000) paystackFee = 2000;
+const amountInNaira = amountPaid / 100; // Convert from kobo to naira
+let paystackFee = (1.5 / 100) * amountInNaira; // Calculate 1.5% in naira
+if (amountInNaira > 2500) paystackFee += 100; // Add ₦100 if > ₦2500
+if (paystackFee > 2000) paystackFee = 2000; // Cap at ₦2000
 
-// Net amount received after Paystack fee
-const netAmount = amountPaid - paystackFee;
+// Convert fee back to kobo for consistency
+const paystackFeeInKobo = paystackFee * 100;
 
-// Round to nearest whole number (you can convert to kobo if needed)
+// Net amount received after Paystack fee (in kobo)
+const netAmount = amountPaid - paystackFeeInKobo;
+
+// Round to nearest whole number (already in kobo)
 const platformEarning = Math.round(netAmount);
 
 if (!wallet) {

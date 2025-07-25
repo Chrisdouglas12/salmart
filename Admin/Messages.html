@@ -380,7 +380,6 @@
       100% { background-position: -200% 0; }
     }
 
-    /* Bottom Navbar */
 #navbar {
   position: fixed;
   bottom: 0;
@@ -469,30 +468,35 @@
   border-radius: 50%;
 }
 
-    .icon-badge-wrapper {
-      position: relative;
-      display: inline-block;
-    }
+.icon-badge-wrapper {
+  position: relative;
+  display: inline-block;
+}
 
-    .notification-badge {
-      position: absolute;
-      top: -5px;
-      right: -10px;
-      background-color: red;
-      color: white;
-      font-size: 10px;
-      width: 18px;
-      height: 18px;
-      line-height: 18px;
-      border-radius: 50%;
-      text-align: center;
-      z-index: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: bold;
-      overflow: hidden;
-    }
+.icon-with-badge {
+  position: relative;
+  display: inline-block;
+}
+
+/* Notification badge (already provided by you, kept intact) */
+.notification-badge {
+  position: absolute;
+  top: -5px;
+  right: -10px;
+  background-color: red;
+  color: white;
+  font-size: 10px;
+  width: 18px;
+  height: 18px;
+  line-height: 18px;
+  border-radius: 50%;
+  text-align: center;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+}
 
     /* Responsive Design */
     @media (min-width: 768px) {

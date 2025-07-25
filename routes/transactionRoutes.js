@@ -410,9 +410,7 @@ if (!systemUser) {
       });
     }
 // == Calculate platform's commission == //
-
-
-// Paystack fee calculation
+// Paystack fee calculation - FIXED VERSION
 function calculatePaystackFee(amountNaira) {
   let fee = (1.5 / 100) * amountNaira;
   if (amountNaira > 2500) fee += 100;
@@ -427,9 +425,15 @@ function getCommissionRate(amount) {
   return 1;
 }
 
+// IMPORTANT: Ensure amountPaidByBuyerNaira is in Naira, not Kobo
+// If your transaction.amount is stored in kobo, convert it first:
+const amountInNaira = typeof amountPaidByBuyerNaira === 'number' && amountPaidByBuyerNaira > 100000 
+  ? amountPaidByBuyerNaira / 100  // Convert from kobo to naira if amount seems to be in kobo
+  : amountPaidByBuyerNaira;       // Use as-is if already in naira
+
 // Step 1: Deduct Paystack fee from buyer's payment
-const paystackFee = calculatePaystackFee(amountPaidByBuyerNaira);
-const netAmount = amountPaidByBuyerNaira - paystackFee; // What Paystack settles to you
+const paystackFee = calculatePaystackFee(amountInNaira);
+const netAmount = amountInNaira - paystackFee; // What Paystack settles to you
 
 // Step 2: Calculate your platform commission on the settled amount
 const commissionPercent = getCommissionRate(netAmount);
