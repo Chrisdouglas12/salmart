@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Salmart Refunds Policy</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        header {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: #fff;
+            text-align: center;
+            padding: 60px 40px;
+            border-radius: 20px 20px 0 0;
+            box-shadow: 0 10px 30px rgba(40, 167, 69, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: pulse 4s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.3; }
+            50% { transform: scale(1.1); opacity: 0.1; }
+        }
+
+        .logo {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            position: relative;
+            z-index: 1;
+        }
+
+        .subtitle {
+            font-size: 1.4rem;
+            font-weight: 300;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .last-updated {
+            background: rgba(255,255,255,0.2);
+            padding: 8px 20px;
+            border-radius: 25px;
+            font-size: 0.95rem;
+            display: inline-block;
+            backdrop-filter: blur(10px);
+            position: relative;
+            z-index: 1;
+        }
+
+        .main-content {
+            background: #fff;
+            padding: 0;
+            border-radius: 0 0 20px 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .intro {
+            padding: 40px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #fff 100%);
+            border-bottom: 3px solid #28a745;
+        }
+
+        .intro p {
+            font-size: 1.1rem;
+            text-align: center;
+            color: #555;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .section {
+            padding: 40px;
+            border-bottom: 1px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+
+        .section:hover {
+            background: rgba(40, 167, 69, 0.02);
+        }
+
+        .section:last-child {
+            border-bottom: none;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #28a745;
+        }
+
+        .section-icon {
+            font-size: 2rem;
+            margin-right: 15px;
+            padding: 15px;
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: #fff;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.3);
+        }
+
+        .section-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #28a745;
+            margin: 0;
+        }
+
+        .section-content {
+            font-size: 1.05rem;
+            line-height: 1.7;
+            color: #555;
+        }
+
+        .section-content p {
+            margin-bottom: 20px;
+        }
+
+        .section-content ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .section-content li {
+            position: relative;
+            padding: 12px 0 12px 35px;
+            margin-bottom: 8px;
+            background: rgba(40, 167, 69, 0.05);
+            border-radius: 8px;
+            padding-left: 50px;
+        }
+
+        .section-content li::before {
+            content: '✓';
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #28a745;
+            color: #fff;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .process-steps {
+            counter-reset: step-counter;
+        }
+
+        .process-steps li {
+            counter-increment: step-counter;
+            background: linear-gradient(135deg, rgba(40, 167, 69, 0.1) 0%, rgba(40, 167, 69, 0.05) 100%);
+            border-left: 4px solid #28a745;
+        }
+
+        .process-steps li::before {
+            content: counter(step-counter);
+            background: #28a745;
+            color: #fff;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            font-weight: bold;
+        }
+
+        .highlight-box {
+            background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+            border-left: 5px solid #ffc107;
+            padding: 25px;
+            margin: 25px 0;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(255, 193, 7, 0.2);
+        }
+
+        .highlight-box h4 {
+            color: #856404;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+        }
+
+        .highlight-box h4::before {
+            content: '💡';
+            margin-right: 10px;
+            font-size: 1.4rem;
+        }
+
+        .formula {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 2px dashed #28a745;
+            text-align: center;
+        }
+
+        .formula-text {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #28a745;
+            margin-bottom: 15px;
+        }
+
+        .example-box {
+            background: linear-gradient(135deg, #e8f5e8 0%, #f0f8f0 100%);
+            border: 2px solid #28a745;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 25px 0;
+        }
+
+        .example-title {
+            color: #28a745;
+            font-weight: 700;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        .example-calc {
+            font-family: 'Courier New', monospace;
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #28a745;
+            margin: 10px 0;
+        }
+
+        .contact-section {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: #fff;
+            text-align: center;
+            padding: 50px 40px;
+            margin-top: 0;
+        }
+
+        .contact-section h3 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+        }
+
+        .contact-email {
+            background: rgba(255,255,255,0.2);
+            padding: 12px 25px;
+            border-radius: 25px;
+            display: inline-block;
+            color: #fff;
+            text-decoration: none;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .contact-email:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px 10px;
+            }
+            
+            header {
+                padding: 40px 20px;
+            }
+            
+            .logo {
+                font-size: 2.2rem;
+            }
+            
+            .subtitle {
+                font-size: 1.1rem;
+            }
+            
+            .section {
+                padding: 30px 20px;
+            }
+            
+            .section-header {
+                flex-direction: column;
+                text-align: center;
+                align-items: center;
+            }
+            
+            .section-icon {
+                margin-right: 0;
+                margin-bottom: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">🔁 Salmart</div>
+            <div class="subtitle">Refunds Policy</div>
+            <div class="last-updated">Last updated: July 25, 2025</div>
+        </header>
+
+        <div class="main-content">
+            <div class="intro">
+                <p>At Salmart, we are committed to creating a secure and trustworthy marketplace where buyers and sellers interact seamlessly. This Refunds Policy outlines the terms and conditions under which buyers may request refunds and how such requests are processed.</p>
+            </div>
+
+            <div class="section">
+                <div class="section-header">
+                    <div class="section-icon">⚖️</div>
+                    <h2 class="section-title">1. Escrow Payment Protection</h2>
+                </div>
+                <div class="section-content">
+                    <p>All payments made on Salmart are securely held in escrow by our platform until the buyer confirms that the product has been received in satisfactory condition. This protects both the buyer and the seller.</p>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-header">
+                    <div class="section-icon">🧾</div>
+                    <h2 class="section-title">2. Eligibility for Refunds</h2>
+                </div>
+                <div class="section-content">
+                    <p>Buyers are eligible to request a refund in the following situations:</p>
+                    <ul>
+                        <li>The product was not delivered by the seller.</li>
+                        <li>The product received is damaged, fake, or significantly different from the description.</li>
+                        <li>The seller refuses communication or delays delivery beyond a reasonable time.</li>
+                    </ul>
+                    <p><strong>Important:</strong> Refunds must be requested before confirming delivery. Once a buyer confirms delivery, the funds are released to the seller and refund eligibility ends.</p>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-header">
+                    <div class="section-icon">💼</div>
+                    <h2 class="section-title">3. Refund Request Process</h2>
+                </div>
+                <div class="section-content">
+                    <ul class="process-steps">
+                        <li>Buyer initiates a refund request from the "Transactions" page.</li>
+                        <li>Salmart admin will review the request and communicate with both parties.</li>
+                        <li>A decision (approve or deny) is made based on supporting evidence (chat history, delivery proof, photos, etc.).</li>
+                        <li>If approved, refund is processed back to the buyer's original payment method.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-header">
+                    <div class="section-icon">💰</div>
+                    <h2 class="section-title">4. Refund Amount & Fees</h2>
+                </div>
+                <div class="section-content">
+                    <p>Salmart refunds the full product price paid by the buyer minus payment gateway charges.</p>
+                    
+                    <div class="highlight-box">
+                        <h4>Paystack Fee Policy</h4>
+                        <p>Paystack deducts 1.5% + ₦100 (for transactions above ₦2,500) from each payment before it reaches Salmart. This fee is non-refundable, as Paystack does not return it upon refunds.</p>
+                    </div>
+
+                    <p>Therefore, the amount refunded will be:</p>
+                    
+                    <div class="formula">
+                        <div class="formula-text">🔹 Refund = Amount Paid - Paystack Fee</div>
+                    </div>
+
+                    <div class="example-box">
+                        <div class="example-title">Example:</div>
+                        <p>If a buyer pays ₦50,000:</p>
+                        <div class="example-calc">
+                            Paystack Fee = (1.5% of ₦50,000) + ₦100 = ₦850<br>
+                            Refund to buyer = ₦49,150
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-header">
+                    <div class="section-icon">❌</div>
+                    <h2 class="section-title">5. Refund Denial</h2>
+                </div>
+                <div class="section-content">
+                    <p>Salmart may deny a refund request if:</p>
+                    <ul>
+                        <li>The product was delivered as described.</li>
+                        <li>The buyer confirmed delivery and later changed their mind.</li>
+                        <li>The buyer failed to respond to admin queries within a reasonable time.</li>
+                        <li>There is evidence of false claims or fraudulent behavior.</li>
+                    </ul>
+                    <p>If denied, the funds will be released to the seller.</p>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-header">
+                    <div class="section-icon">⏳</div>
+                    <h2 class="section-title">6. Processing Time</h2>
+                </div>
+                <div class="section-content">
+                    <p>Approved refunds are processed within <strong>3–5 business days</strong> after confirmation. Timing may vary depending on the buyer's bank.</p>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-header">
+                    <div class="section-icon">🛡️</div>
+                    <h2 class="section-title">7. Buyer Protection Promise</h2>
+                </div>
+                <div class="section-content">
+                    <p>We designed Salmart to protect both buyers and sellers. Every transaction is recorded, and disputes are handled professionally with human review. Our goal is fairness, transparency, and a smooth experience for all users.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="contact-section">
+            <h3>Have Questions?</h3>
+            <p>If you have any questions about this policy, contact our support team:</p>
+            <a href="mailto:support@salmart.ng" class="contact-email">support@salmart.ng</a>
+        </div>
+    </div>
+</body>
+</html>

@@ -156,8 +156,8 @@ try {
 }
 
 // ===== PWA Caching Configuration =====
-const CACHE_NAME = 'salmart-cache-v1.75.18';
-const DYNAMIC_CACHE_NAME = 'salmart-dynamic-v1.75.18';
+const CACHE_NAME = 'salmart-cache-v1.75.19';
+const DYNAMIC_CACHE_NAME = 'salmart-dynamic-v1.75.19';
 
 const urlsToCache = [
   '/',

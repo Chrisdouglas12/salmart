@@ -45,8 +45,8 @@ module.exports = (io) => {
     req.io = io;
     next();
   });
-  
-  
+
+
   async function markProductAsSold(txn, reference, io) {
   if (!txn || !txn.postId) return;
 
@@ -219,203 +219,7 @@ router.get('/api/admin/refunds', verifyToken, async (req, res) => {
   }
 });
 
-// Helper function for Paystack fee calculation
-function calculatePaystackFee(amountNaira) {
-  let fee = (1.5 / 100) * amountNaira;
-  if (amountNaira > 2500) fee += 100;
-  return fee > 2000 ? 2000 : fee;
-}
 
-// Handle refund requests
-router.post('/api/admin/refunds/:id/:action', verifyToken, async (req, res) => {
-  try {
-    const { id, action } = req.params;
-
-    const refund = await RefundRequests.findOne({ transactionId: id })
-      .populate('transactionId buyerId sellerId description');
-
-    if (!refund) {
-      return res.status(404).json({ success: false, message: 'Refund request not found' });
-    }
-
-    const transaction = await Transaction.findById(refund.transactionId);
-    if (!transaction || !transaction.paymentReference) {
-      return res.status(404).json({ success: false, message: 'Related transaction not found or missing payment reference' });
-    }
-
-    const systemUser = await User.findOne({ isSystemUser: true });
-    if (!systemUser) {
-      logger.error('[SYSTEM USER NOT FOUND]');
-      return res.status(500).json({ error: 'System user not found' });
-    }
-
-    const buyerId = refund.buyerId?._id || transaction.buyerId;
-    const sellerId = refund.sellerId?._id || transaction.sellerId;
-    const postId = refund.description?._id || transaction.postId;
-    const amount = transaction.amount || 0;
-    const productTitle = refund.description?.title || 'product';
-
-    if (action === 'approve') {
-      try {
-        const amountInNaira = typeof amount === 'number' && amount > 100000 
-          ? amount / 100  // convert kobo to naira
-          : amount;
-
-        const paystackFee = calculatePaystackFee(amountInNaira);
-        const refundAmount = amountInNaira - paystackFee;
-
-        const refundResponse = await axios.post(
-          'https://api.paystack.co/refund',
-          {
-            reference: transaction.paymentReference,
-            amount: Math.round(refundAmount * 100) // Paystack expects kobo
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
-              'Content-Type': 'application/json'
-            }
-          }
-        );
-
-        const refundData = refundResponse.data.data;
-
-        // Update refund record
-        refund.status = 'refunded';
-        refund.adminComment = `Refund approved: ₦${refundAmount.toLocaleString('en-NG')} (₦${paystackFee.toLocaleString('en-NG')} fee deducted)`;
-        await refund.save();
-
-        // Update transaction record
-        transaction.status = 'refunded';
-        transaction.refundedAt = new Date();
-        transaction.refundReference = refundData?.refund_reference || 'manual';
-        transaction.refundStatus = refundData?.status || 'initiated';
-        await transaction.save();
-
-        // Notify buyer
-        const buyerTitle = 'Refund Processed';
-        const buyerMsg = `Your refund has been processed. You'll receive ₦${refundAmount.toLocaleString('en-NG')} for "${productTitle}". ₦${paystackFee.toLocaleString('en-NG')} was deducted by Paystack as a processing fee.`;
-
-        await Notification.create({
-          userId: buyerId,
-          senderId: systemUser._id,
-          postId,
-          title: buyerTitle,
-          message: buyerMsg,
-          type: 'refund_processed',
-          metadata: {
-            refundId: refund._id,
-            transactionId: transaction._id,
-            amount: refundAmount,
-            reference: transaction.refundReference
-          }
-        });
-
-        await sendFCMNotification(
-          buyerId,
-          buyerTitle,
-          buyerMsg,
-          {
-            type: 'refund_processed',
-            refundId: refund._id.toString(),
-            transactionId: transaction._id.toString(),
-            amount: refundAmount,
-            reference: transaction.refundReference
-          }
-        );
-
-        // Notify seller
-        const sellerTitle = 'Refund Issued';
-        const sellerMsg = `A refund of ₦${refundAmount.toLocaleString('en-NG')} has been issued to the buyer for "${productTitle}". This amount was deducted from your transaction following a refund approval.`;
-
-        await Notification.create({
-          userId: sellerId,
-          senderId: systemUser._id,
-          postId,
-          title: sellerTitle,
-          message: sellerMsg,
-          type: 'refund_notice_to_seller',
-          metadata: {
-            refundId: refund._id,
-            transactionId: transaction._id,
-            amount: refundAmount
-          }
-        });
-
-        await sendFCMNotification(
-          sellerId,
-          sellerTitle,
-          sellerMsg,
-          {
-            type: 'refund_notice_to_seller',
-            refundId: refund._id.toString(),
-            transactionId: transaction._id.toString(),
-            amount: refundAmount
-          }
-        );
-
-        return res.status(200).json({
-          success: true,
-          message: `Refund processed: ₦${refundAmount.toLocaleString('en-NG')} (₦${paystackFee.toLocaleString('en-NG')} fee deducted)`,
-          data: {
-            ...refundData,
-            originalAmount: amountInNaira,
-            processingFee: paystackFee,
-            refundAmount
-          }
-        });
-
-      } catch (paystackErr) {
-        console.error('[PAYSTACK REFUND ERROR]', paystackErr.response?.data || paystackErr.message);
-        return res.status(500).json({
-          success: false,
-          message: 'Refund failed on Paystack',
-          error: paystackErr.response?.data?.message || paystackErr.message
-        });
-      }
-
-    } else if (action === 'deny') {
-      refund.status = 'rejected';
-      refund.adminComment = 'Refund denied by admin';
-      await refund.save();
-
-      const title = 'Refund Denied';
-      const message = `Your refund request for "${productTitle}" was denied. Please contact support if you have questions.`;
-
-      await Notification.create({
-        userId: buyerId,
-        senderId: systemUser._id,
-        postId,
-        title,
-        message,
-        type: 'refund_rejected',
-        metadata: {
-          refundId: refund._id,
-          transactionId: transaction._id
-        }
-      });
-
-      await sendFCMNotification(
-        buyerId,
-        title,
-        message,
-        {
-          type: 'refund_rejected',
-          refundId: refund._id.toString(),
-          transactionId: transaction._id.toString()
-        }
-      );
-
-      return res.status(200).json({ success: true, message: 'Refund request denied' });
-    }
-
-    return res.status(400).json({ success: false, message: 'Invalid action' });
-
-  } catch (err) {
-    console.error('[ADMIN REFUND ERROR]', err.message);
-    res.status(500).json({ success: false, message: 'Server error' });
-  }
-});
 
 //Get all users
 router.get('/api/admin/users', verifyToken, async (req, res) => {
@@ -617,13 +421,13 @@ router.post('/admin/approve-payment', verifyToken, async (req, res) => {
     if (!txn) {
       return res.status(404).json({ success: false, message: 'Transaction not found' });
     }
-    
-    
+
+
 
     if (!['confirmed_pending_payout', 'pending', 'in_escrow'].includes(txn.status)) {
       return res.status(400).json({ success: false, message: 'Transaction not in payout-ready state' });
     }
-    
+
     const systemUser = await User.findOne({ isSystemUser: true });
 if (!systemUser) {
   logger.error('[SYSTEM USER NOT FOUND]');
@@ -926,6 +730,152 @@ router.get('/admin/platform-wallet/transactions', verifyToken, async (req, res) 
   }
 
   res.json({ transactions: wallet.transactions });
+});
+
+
+router.post('/api/admin/refunds/:id/:action', verifyToken, async (req, res) => {
+  try {
+    const { id, action } = req.params;
+
+    const refund = await RefundRequests.findOne({ transactionId: id }).populate('transactionId buyerId sellerId description');
+    if (!refund) {
+      return res.status(404).json({ success: false, message: 'Refund request not found' });
+    }
+
+    const transaction = await Transaction.findById(refund.transactionId);
+    if (!transaction || !transaction.paymentReference) {
+      return res.status(404).json({ success: false, message: 'Related transaction not found or missing payment reference' });
+    }
+
+    const buyerId = refund.buyerId?._id || transaction.buyerId;
+    const postId = refund.description?._id || transaction.postId;
+    const amount = transaction.amount || 0;
+    const productTitle = refund.description?.title || 'product';
+
+    const systemUser = await User.findOne({ isSystemUser: true });
+    if (!systemUser) {
+      console.error('[SYSTEM USER NOT FOUND]');
+      return res.status(500).json({ error: 'System user not found' });
+    }
+
+    if (action === 'approve') {
+      // Calculate Paystack fees
+      let paystackFee = (1.5 / 100) * amount;
+      if (amount > 2500) paystackFee += 100;
+      if (paystackFee > 2000) paystackFee = 2000;
+
+      const refundAmount = Math.round((amount - paystackFee) * 100); // In Kobo
+
+      try {
+        const refundResponse = await axios.post(
+          'https://api.paystack.co/refund',
+          {
+            transaction: transaction.paymentReference,
+            amount: refundAmount
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+
+        const refundData = refundResponse.data.data;
+
+        // Update DB
+        refund.status = 'refunded';
+        refund.adminComment = 'Refund approved and processed';
+        await refund.save();
+
+        transaction.status = 'refunded';
+        transaction.refundedAt = new Date();
+        transaction.refundReference = refundData?.refund_reference || 'manual';
+        transaction.refundStatus = refundData?.status || 'initiated';
+        await transaction.save();
+
+        // Notify Buyer
+        await Notification.create({
+          userId: buyerId,
+          senderId: systemUser._id,
+          postId,
+          title: 'Refund Approved',
+          message: `₦${(amount - paystackFee).toLocaleString('en-NG')} has been refunded for your purchase of "${productTitle}".`,
+          type: 'refund_processed',
+          metadata: {
+            refundId: refund._id,
+            transactionId: transaction._id,
+            amount: amount - paystackFee,
+            reference: transaction.refundReference
+          }
+        });
+
+        await sendFCMNotification(
+          buyerId,
+          'Refund Approved',
+          `₦${(amount - paystackFee).toLocaleString('en-NG')} refunded for "${productTitle}".`,
+          {
+            type: 'refund_processed',
+            refundId: refund._id.toString(),
+            transactionId: transaction._id.toString(),
+            amount: amount - paystackFee,
+            reference: transaction.refundReference
+          }
+        );
+
+        return res.status(200).json({
+          success: true,
+          message: 'Refund approved and processed via Paystack',
+          data: refundData
+        });
+
+      } catch (paystackErr) {
+        console.error('[PAYSTACK REFUND ERROR]', paystackErr.response?.data || paystackErr.message);
+        return res.status(500).json({
+          success: false,
+          message: 'Refund failed on Paystack',
+          error: paystackErr.response?.data?.message || paystackErr.message
+        });
+      }
+
+    } else if (action === 'deny') {
+      refund.status = 'rejected';
+      refund.adminComment = 'Refund denied by admin';
+      await refund.save();
+
+      await Notification.create({
+        userId: buyerId,
+        senderId: systemUser._id,
+        postId,
+        title: 'Refund Denied',
+        message: `Your refund request for "${productTitle}" was denied by admin.`,
+        type: 'refund_rejected',
+        metadata: {
+          refundId: refund._id,
+          transactionId: transaction._id
+        }
+      });
+
+      await sendFCMNotification(
+        buyerId,
+        'Refund Denied',
+        `Your refund request for "${productTitle}" was rejected.`,
+        {
+          type: 'refund_rejected',
+          refundId: refund._id.toString(),
+          transactionId: transaction._id.toString(),
+        }
+      );
+
+      return res.status(200).json({ success: true, message: 'Refund request denied' });
+    }
+
+    return res.status(400).json({ success: false, message: 'Invalid action' });
+
+  } catch (err) {
+    console.error('[ADMIN REFUND ERROR]', err.message);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
 });
 
 module.exports = router;
