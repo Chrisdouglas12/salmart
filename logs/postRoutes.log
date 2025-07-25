@@ -32326,3 +32326,75 @@
 {"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-25T17:16:40.098Z"}
 {"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-25T17:16:41.948Z"}
 {"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-25T17:16:46.151Z"}
+{"level":"info","message":"✅ Cloudinary configured in postRoutes","timestamp":"2025-07-25T17:19:00.845Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-25T17:21:48.877Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-25T17:21:49.201Z"}
+{"level":"info","message":"Fetched 16 posts for user 68431685432ee393a735a641","timestamp":"2025-07-25T17:21:49.635Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-25T17:21:51.399Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-25T17:21:51.610Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-25T17:21:52.335Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-25T17:21:52.494Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-25T17:21:53.484Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-25T17:22:03.671Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-25T17:22:18.714Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-25T17:22:36.788Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-25T17:22:36.824Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-25T17:22:38.191Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-25T17:22:38.224Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-25T17:22:38.800Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-25T17:22:39.863Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-25T17:22:40.056Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-25T17:22:42.136Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-25T17:22:47.242Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-25T17:23:06.045Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-25T17:23:06.062Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-25T17:23:07.713Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-25T17:23:08.406Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-25T17:23:08.934Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-25T17:23:09.503Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-25T17:23:09.663Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-25T17:23:10.725Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-25T17:23:16.390Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-25T17:23:35.337Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-25T17:24:35.766Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-25T17:24:35.787Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-25T17:24:37.233Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-25T17:24:38.144Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-25T17:24:38.353Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-25T17:24:38.800Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-25T17:24:38.882Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-25T17:24:40.140Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-25T17:24:41.672Z"}
+{"level":"info","message":"✅ Cloudinary configured in postRoutes","timestamp":"2025-07-25T17:59:20.670Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-25T18:00:03.360Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-25T18:00:03.457Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-25T18:00:04.012Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-25T18:00:06.604Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-25T18:00:08.660Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-25T18:00:08.729Z"}
+{"level":"error","message":"[ADMIN TXNS] Error fetching pending txns: Schema hasn't been registered for model \"photo\".\nUse mongoose.model(name, schema)","stack":"MissingSchemaError: Schema hasn't been registered for model \"photo\".\nUse mongoose.model(name, schema)\n    at NativeConnection.model (/storage/emulated/0/Download/My web/Backend/node_modules/mongoose/lib/connection.js:1491:13)\n    at _getModelFromConn (/storage/emulated/0/Download/My web/Backend/node_modules/mongoose/lib/helpers/populate/getModelsMapForPopulate.js:579:15)\n    at addModelNamesToMap (/storage/emulated/0/Download/My web/Backend/node_modules/mongoose/lib/helpers/populate/getModelsMapForPopulate.js:507:17)\n    at getModelsMapForPopulate (/storage/emulated/0/Download/My web/Backend/node_modules/mongoose/lib/helpers/populate/getModelsMapForPopulate.js:208:7)\n    at _populatePath (/storage/emulated/0/Download/My web/Backend/node_modules/mongoose/lib/model.js:4469:21)\n    at Function.populate (/storage/emulated/0/Download/My web/Backend/node_modules/mongoose/lib/model.js:4436:21)\n    at model.Query._find (/storage/emulated/0/Download/My web/Backend/node_modules/mongoose/lib/query.js:2433:20)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async model.Query.exec (/storage/emulated/0/Download/My web/Backend/node_modules/mongoose/lib/query.js:4604:63)\n    at async /storage/emulated/0/Download/My web/Backend/routes/adminRoutes.js:594:25","timestamp":"2025-07-25T18:00:08.920Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-25T18:00:14.230Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-25T18:00:23.537Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-25T18:00:49.854Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-25T18:01:12.279Z"}
+{"level":"error","message":"[ADMIN TXNS] Error fetching pending txns: Schema hasn't been registered for model \"photo\".\nUse mongoose.model(name, schema)","stack":"MissingSchemaError: Schema hasn't been registered for model \"photo\".\nUse mongoose.model(name, schema)\n    at NativeConnection.model (/storage/emulated/0/Download/My web/Backend/node_modules/mongoose/lib/connection.js:1491:13)\n    at _getModelFromConn (/storage/emulated/0/Download/My web/Backend/node_modules/mongoose/lib/helpers/populate/getModelsMapForPopulate.js:579:15)\n    at addModelNamesToMap (/storage/emulated/0/Download/My web/Backend/node_modules/mongoose/lib/helpers/populate/getModelsMapForPopulate.js:507:17)\n    at getModelsMapForPopulate (/storage/emulated/0/Download/My web/Backend/node_modules/mongoose/lib/helpers/populate/getModelsMapForPopulate.js:208:7)\n    at _populatePath (/storage/emulated/0/Download/My web/Backend/node_modules/mongoose/lib/model.js:4469:21)\n    at Function.populate (/storage/emulated/0/Download/My web/Backend/node_modules/mongoose/lib/model.js:4436:21)\n    at model.Query._find (/storage/emulated/0/Download/My web/Backend/node_modules/mongoose/lib/query.js:2433:20)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async model.Query.exec (/storage/emulated/0/Download/My web/Backend/node_modules/mongoose/lib/query.js:4604:63)\n    at async /storage/emulated/0/Download/My web/Backend/routes/adminRoutes.js:594:25","timestamp":"2025-07-25T18:01:12.505Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-25T18:01:21.435Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-25T18:01:21.484Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-25T18:01:21.867Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-25T18:01:25.086Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-25T18:01:29.824Z"}
+{"level":"error","message":"[ADMIN TXNS] Error fetching pending txns: Schema hasn't been registered for model \"photo\".\nUse mongoose.model(name, schema)","stack":"MissingSchemaError: Schema hasn't been registered for model \"photo\".\nUse mongoose.model(name, schema)\n    at NativeConnection.model (/storage/emulated/0/Download/My web/Backend/node_modules/mongoose/lib/connection.js:1491:13)\n    at _getModelFromConn (/storage/emulated/0/Download/My web/Backend/node_modules/mongoose/lib/helpers/populate/getModelsMapForPopulate.js:579:15)\n    at addModelNamesToMap (/storage/emulated/0/Download/My web/Backend/node_modules/mongoose/lib/helpers/populate/getModelsMapForPopulate.js:507:17)\n    at getModelsMapForPopulate (/storage/emulated/0/Download/My web/Backend/node_modules/mongoose/lib/helpers/populate/getModelsMapForPopulate.js:208:7)\n    at _populatePath (/storage/emulated/0/Download/My web/Backend/node_modules/mongoose/lib/model.js:4469:21)\n    at Function.populate (/storage/emulated/0/Download/My web/Backend/node_modules/mongoose/lib/model.js:4436:21)\n    at model.Query._find (/storage/emulated/0/Download/My web/Backend/node_modules/mongoose/lib/query.js:2433:20)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async model.Query.exec (/storage/emulated/0/Download/My web/Backend/node_modules/mongoose/lib/query.js:4604:63)\n    at async /storage/emulated/0/Download/My web/Backend/routes/adminRoutes.js:594:25","timestamp":"2025-07-25T18:01:30.150Z"}
+{"level":"info","message":"✅ Cloudinary configured in postRoutes","timestamp":"2025-07-25T18:10:06.415Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-25T18:10:35.553Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-25T18:10:35.687Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-25T18:10:36.303Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-25T18:10:39.098Z"}
+{"level":"error","message":"[ADMIN TXNS] Error fetching pending txns: Schema hasn't been registered for model \"photo\".\nUse mongoose.model(name, schema)","stack":"MissingSchemaError: Schema hasn't been registered for model \"photo\".\nUse mongoose.model(name, schema)\n    at NativeConnection.model (/storage/emulated/0/Download/My web/Backend/node_modules/mongoose/lib/connection.js:1491:13)\n    at _getModelFromConn (/storage/emulated/0/Download/My web/Backend/node_modules/mongoose/lib/helpers/populate/getModelsMapForPopulate.js:579:15)\n    at addModelNamesToMap (/storage/emulated/0/Download/My web/Backend/node_modules/mongoose/lib/helpers/populate/getModelsMapForPopulate.js:507:17)\n    at getModelsMapForPopulate (/storage/emulated/0/Download/My web/Backend/node_modules/mongoose/lib/helpers/populate/getModelsMapForPopulate.js:208:7)\n    at _populatePath (/storage/emulated/0/Download/My web/Backend/node_modules/mongoose/lib/model.js:4469:21)\n    at Function.populate (/storage/emulated/0/Download/My web/Backend/node_modules/mongoose/lib/model.js:4436:21)\n    at model.Query._find (/storage/emulated/0/Download/My web/Backend/node_modules/mongoose/lib/query.js:2433:20)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async model.Query.exec (/storage/emulated/0/Download/My web/Backend/node_modules/mongoose/lib/query.js:4604:63)\n    at async /storage/emulated/0/Download/My web/Backend/routes/adminRoutes.js:594:25","timestamp":"2025-07-25T18:10:39.399Z"}
+{"level":"info","message":"✅ Cloudinary configured in postRoutes","timestamp":"2025-07-25T18:12:01.859Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-25T18:13:26.819Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-25T18:13:27.002Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-25T18:13:27.698Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-25T18:13:30.714Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-25T18:14:00.399Z"}
+{"level":"info","message":"Attached io to request object in postRoutes","timestamp":"2025-07-25T18:14:07.248Z"}
+{"level":"info","message":"✅ Cloudinary configured in postRoutes","timestamp":"2025-07-25T18:48:42.912Z"}

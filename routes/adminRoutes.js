@@ -258,7 +258,7 @@ router.post('/api/admin/refunds/:id/:action', verifyToken, async (req, res) => {
     if (action === 'approve') {
       try {
         const amountInNaira = typeof amount === 'number' && amount > 100000 
-          ? amount / 100 
+          ? amount / 100  // convert kobo to naira
           : amount;
 
         const paystackFee = calculatePaystackFee(amountInNaira);
@@ -268,7 +268,7 @@ router.post('/api/admin/refunds/:id/:action', verifyToken, async (req, res) => {
           'https://api.paystack.co/refund',
           {
             reference: transaction.paymentReference,
-            amount: Math.round(refundAmount * 100)
+            amount: Math.round(refundAmount * 100) // Paystack expects kobo
           },
           {
             headers: {
@@ -280,11 +280,12 @@ router.post('/api/admin/refunds/:id/:action', verifyToken, async (req, res) => {
 
         const refundData = refundResponse.data.data;
 
-        // Update records
+        // Update refund record
         refund.status = 'refunded';
-        refund.adminComment = `Refund approved: ₦${refundAmount.toLocaleString('en-NG')} (₦${paystackFee.toLocaleString('en-NG')} processing fee deducted)`;
+        refund.adminComment = `Refund approved: ₦${refundAmount.toLocaleString('en-NG')} (₦${paystackFee.toLocaleString('en-NG')} fee deducted)`;
         await refund.save();
 
+        // Update transaction record
         transaction.status = 'refunded';
         transaction.refundedAt = new Date();
         transaction.refundReference = refundData?.refund_reference || 'manual';
@@ -293,7 +294,7 @@ router.post('/api/admin/refunds/:id/:action', verifyToken, async (req, res) => {
 
         // Notify buyer
         const buyerTitle = 'Refund Processed';
-        const buyerMsg = `Your refund has been processed! You'll receive ₦${refundAmount.toLocaleString('en-NG')} for "${productTitle}". ₦${paystackFee.toLocaleString('en-NG')} was deducted as payment processing fee.`;
+        const buyerMsg = `Your refund has been processed. You'll receive ₦${refundAmount.toLocaleString('en-NG')} for "${productTitle}". ₦${paystackFee.toLocaleString('en-NG')} was deducted by Paystack as a processing fee.`;
 
         await Notification.create({
           userId: buyerId,
@@ -325,7 +326,7 @@ router.post('/api/admin/refunds/:id/:action', verifyToken, async (req, res) => {
 
         // Notify seller
         const sellerTitle = 'Refund Issued';
-        const sellerMsg = `A refund of ₦${refundAmount.toLocaleString('en-NG')} has been issued to the buyer for "${productTitle}". This amount was deducted from the transaction due to a refund request approval.`;
+        const sellerMsg = `A refund of ₦${refundAmount.toLocaleString('en-NG')} has been issued to the buyer for "${productTitle}". This amount was deducted from your transaction following a refund approval.`;
 
         await Notification.create({
           userId: sellerId,
@@ -355,12 +356,12 @@ router.post('/api/admin/refunds/:id/:action', verifyToken, async (req, res) => {
 
         return res.status(200).json({
           success: true,
-          message: `Refund processed: ₦${refundAmount.toLocaleString('en-NG')} (₦${paystackFee.toLocaleString('en-NG')} processing fee deducted)`,
+          message: `Refund processed: ₦${refundAmount.toLocaleString('en-NG')} (₦${paystackFee.toLocaleString('en-NG')} fee deducted)`,
           data: {
             ...refundData,
             originalAmount: amountInNaira,
             processingFee: paystackFee,
-            refundAmount: refundAmount
+            refundAmount
           }
         });
 
@@ -379,7 +380,7 @@ router.post('/api/admin/refunds/:id/:action', verifyToken, async (req, res) => {
       await refund.save();
 
       const title = 'Refund Denied';
-      const message = `Your refund request for "${productTitle}" was denied. If you have any concerns, feel free to reach out.`;
+      const message = `Your refund request for "${productTitle}" was denied. Please contact support if you have questions.`;
 
       await Notification.create({
         userId: buyerId,
@@ -593,7 +594,7 @@ router.get('/admin/transactions/pending', verifyToken, async (req, res) => {
     const pendingTxns = await Transaction.find({
   status: { $in: ['confirmed_pending_payout', 'in_escrow'] }
 })
-.populate('postId', 'title', 'photo')
+.populate('postId', 'title', )
 .populate('buyerId', 'firstName lastName email')
 .sort({ createdAt: -1 });
 

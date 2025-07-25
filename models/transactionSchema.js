@@ -4,6 +4,7 @@ const transactionSchema = new mongoose.Schema({
   buyerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   sellerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   postId: { type: mongoose.Schema.Types.ObjectId, ref: 'Post', required: true },
+  photo: { type: mongoose.Schema.Types.ObjectId, ref: 'Post', },
 
   buyerEmail: { type: String },
 
