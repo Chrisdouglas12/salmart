@@ -338,8 +338,8 @@ if (message.messageType === 'image') {
     msgDiv.classList.add('image-message'); // Add a specific class for image messages
 
     if (message.viewOnce && message.viewOnce.enabled) {
-        // Check if already viewed
-        if (message.viewOnce.viewed) {
+        // Check if already viewed (by anyone)
+        if (message.viewOnce.viewed) { // If the backend reports it as 'viewed'
             // Show "Image was viewed and deleted" state
             msgDiv.classList.add('view-once-deleted-container');
             msgDiv.innerHTML = `
@@ -358,55 +358,40 @@ if (message.messageType === 'image') {
                     <div class="view-once-text-overlay">
                         <span class="view-once-info-text">Uploaded photos are subject to one time view</span>
                         <i class="fas fa-eye view-once-icon"></i>
-                        <span class="view-once-action-text">${message.senderId === userId ? 'Image Sent' : 'Tap to View'}</span>
+                        <span class="view-once-action-text">Tap to View</span>
                     </div>
                 </div>
                 <div class="message-timestamp">${time} ${statusCheckmark}</div>
             `;
-            // Add click listener to the overlay for "view once" behavior, only if recipient
-            if (message.senderId !== userId) {
-                const overlay = msgDiv.querySelector('.view-once-overlay');
-                if (overlay) {
-                    overlay.addEventListener('click', function() {
-                        const imgSource = this.dataset.src;
-                        const messageId = this.dataset.messageId;
-                        if (imgSource && messageId) {
-                            this.innerHTML = `<img src="${imgSource}" class="view-once-actual-image" alt="View Once Image">`;
-                            this.classList.remove('view-once-overlay'); // Remove overlay styling
-                            this.classList.add('viewed-image-container'); // Add class for viewed state
-                            this.removeEventListener('click', arguments.callee); // Remove listener after viewing
+            // Add click listener to the overlay for "view once" behavior
+            const overlay = msgDiv.querySelector('.view-once-overlay');
+            if (overlay) {
+                overlay.addEventListener('click', function() {
+                    const imgSource = this.dataset.src;
+                    const messageId = this.dataset.messageId;
+                    const isSender = this.dataset.isSender === 'true'; // Check if current user is sender
 
-                            // Emit to server that the image has been viewed
-                            socket.emit('imageViewed', {
-                                messageId: messageId,
-                                viewerId: userId
-                            });
+                    if (imgSource && messageId) {
+                        this.innerHTML = `<img src="${imgSource}" class="view-once-actual-image" alt="View Once Image">`;
+                        this.classList.remove('view-once-overlay'); // Remove overlay styling
+                        this.classList.add('viewed-image-container'); // Add class for viewed state
+                        this.removeEventListener('click', arguments.callee); // Remove listener after viewing
 
-                            // Start deletion timer - hide image after 5 minutes
-                            setTimeout(() => {
-                                const viewedContainer = msgDiv.querySelector('.viewed-image-container');
-                                if (viewedContainer) {
-                                    viewedContainer.innerHTML = `
-                                        <i class="fas fa-eye-slash view-once-icon"></i>
-                                        <span class="view-once-text">This image was viewed and deleted</span>
-                                    `;
-                                    viewedContainer.classList.remove('viewed-image-container');
-                                    viewedContainer.classList.add('view-once-deleted');
-                                    msgDiv.classList.remove('view-once-photo-container');
-                                    msgDiv.classList.add('view-once-deleted-container');
-                                }
-                            }, 300000); // 5 minutes (300,000 milliseconds)
-                        } else {
-                            showToast('Image not available.', 'error');
-                        }
-                    }, { once: true }); // Use { once: true } to auto-remove listener after first click
-                }
-            } else {
-                // For the sender, prevent clicking and just show the blurred image with text
-                const overlay = msgDiv.querySelector('.view-once-overlay');
-                if (overlay) {
-                    overlay.style.pointerEvents = 'none'; // Make it unclickable for the sender
-                }
+                        // Emit to server that the image has been viewed
+                        // This applies to both sender and receiver
+                        socket.emit('imageViewed', {
+                            messageId: messageId,
+                            viewerId: userId
+                        });
+
+                        // The 5-minute deletion timer starts from the backend's confirmation
+                        // via the `imageViewedConfirmation` event.
+                        // We don't need a local setTimeout here anymore, as the server will
+                        // eventually emit `imageViewDeleted` to all clients.
+                    } else {
+                        showToast('Image not available.', 'error');
+                    }
+                }, { once: true }); // Use { once: true } to auto-remove listener after first click
             }
         }
     } else {
@@ -423,7 +408,8 @@ if (message.messageType === 'image') {
             <div class="message-timestamp">${time} ${statusCheckmark}</div>
         `;
     }
-} else {
+}
+ else {
     // Regular text message display (existing code remains the same)
     msgDiv.innerHTML = `
         <div>${displayText}</div>

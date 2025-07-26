@@ -36,6 +36,13 @@
   <div id="chat-messages"></div>
 
 <div class="message-container">
+     <div id="image-preview-container" style="display: none;">
+    <img id="image-preview" src="" alt="Image Preview">
+    <div class="preview-actions">
+        <button id="close-image-preview" class="close-preview-btn">&times;</button>
+    </div>
+</div>
+
   <div class="input-section">
     <textarea id="type-section" placeholder="Type a message..." oninput="sendTypingSignal()" rows="1"></textarea>
     
