@@ -155,16 +155,15 @@ document.addEventListener('DOMContentLoaded', async () => {
                 `;
             }
 
-            // Determine if the logged-in user is the post creator
-            const isPostCreator = loggedInUser === post.createdBy?.userId;
-            let creatorActionButton = '';
-            if (isPostCreator) {
-                creatorActionButton = `
-                    <button class="promote-post-button" data-post-id="${post._id || ''}">
-                        <i class="fas fa-bullhorn"></i> Promote Post
-                    </button>
-                `;
-            } else {
+// Determine if the logged-in user is the post creator
+const isPostCreator = loggedInUser === post.createdBy?.userId;
+let creatorActionButton = '';
+if (isPostCreator) {
+  creatorActionButton = !post.isPromoted ? 
+    `<button class="promote-post-button" data-post-id="${post._id || ''}" ${post.isSold ? 'disabled' : ''}>
+      <i class="fas ${post.isSold ? 'fa-ban' : 'fa-bullhorn'}"></i> ${post.isSold ? 'Sold Out' : 'Promote Post'}
+    </button>` : '';
+} else {
                 creatorActionButton = actionButtonContent;
             }
 
@@ -223,9 +222,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                                 </div>
                             </div>
                         </div>
-                    `).join('') : '<p>No comments yet.</p>'}
+                    `).join('') : '<p style="text-align: center;">No comments yet.</p>'}
                 </div>
             `;
+
             // Call initializeVideoControls only if it's a video ad
             if (post.postType === 'video_ad' && typeof initializeVideoControls === 'function') {
                 initializeVideoControls(postDetailsContainer);
@@ -275,57 +275,58 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             });
 
-            // Handle Buy Now / Promote Post button clicks
-            const actionButton = postDetailsContainer.querySelector('.buy-now-button, .promote-post-button');
-            if (actionButton) {
-                if (actionButton.classList.contains('buy-now-button') && !actionButton.classList.contains('checkout-product-button')) {
-                    // Buy Now functionality
-                    actionButton.addEventListener('click', async () => {
-                        const email = localStorage.getItem('email');
-                        const buyerId = localStorage.getItem('userId');
+            // Handle Buy Now button clicks
+            const buyNowButton = postDetailsContainer.querySelector('.buy-now-button:not(.checkout-product-button)');
+            if (buyNowButton) {
+                buyNowButton.addEventListener('click', async () => {
+                    const email = localStorage.getItem('email');
+                    const buyerId = localStorage.getItem('userId');
 
-                        if (!email || !buyerId || !postId) {
-                            showToast('Please log in to make a purchase.', '#dc3545');
-                            return;
+                    if (!email || !buyerId || !postId) {
+                        showToast('Please log in to make a purchase.', '#dc3545');
+                        return;
+                    }
+
+                    try {
+                        const response = await fetch(`${API_BASE_URL}/pay`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+                            },
+                            body: JSON.stringify({
+                                email,
+                                postId,
+                                buyerId,
+                                currency: 'NGN',
+                            }),
+                        });
+
+                        const result = await response.json();
+                        if (response.ok && result.success && result.url) {
+                            window.location.href = result.url;
+                        } else {
+                            showToast(`Payment failed: ${result.message || 'Please try again.'}`, '#dc3545');
                         }
-
-                        try {
-                            const response = await fetch(`${API_BASE_URL}/pay`, {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-                                },
-                                body: JSON.stringify({
-                                    email,
-                                    postId,
-                                    buyerId,
-                                    currency: 'NGN',
-                                }),
-                            });
-
-                            const result = await response.json();
-                            if (response.ok && result.success && result.url) {
-                                window.location.href = result.url;
-                            } else {
-                                showToast(`Payment failed: ${result.message || 'Please try again.'}`, '#dc3545');
-                            }
-                        } catch (error) {
-                            console.error('Payment error:', error);
-                            showToast('Failed to process payment. Please try again.', '#dc3545');
-                        }
-                    });
-                } else if (actionButton.classList.contains('promote-post-button')) {
-                    // Promote Post functionality
-                    actionButton.addEventListener('click', () => {
-                        // Implement your promote post logic here, e.g., redirect to a promotion page
-                        showToast('Promote Post button clicked! (Functionality to be implemented)', '#007bff');
-                        console.log(`Promote Post ID: ${postId}`);
-                        // Example: window.location.href = `promote.html?postId=${postId}`;
-                    });
-                }
+                    } catch (error) {
+                        console.error('Payment error:', error);
+                        showToast('Failed to process payment. Please try again.', '#dc3545');
+                    }
+                });
             }
 
+            // Handle Promote Post button clicks
+            const promoteButton = postDetailsContainer.querySelector('.promote-post-button');
+            if (promoteButton) {
+                promoteButton.addEventListener('click', () => {
+                    const postIdToPromote = promoteButton.dataset.postId;
+                    if (!postIdToPromote) {
+                        showToast('Invalid post ID for promotion', '#dc3545');
+                        return;
+                    }
+                    window.location.href = `promote.html?postId=${postIdToPromote}`;
+                });
+            }
 
             // Follow functionality
             const followButton = postDetailsContainer.querySelector('.follow-button');
@@ -536,7 +537,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function sharePost(post, postLink, platform) {
-        const shareText = `Check out this product: ${post.description || 'No description'} - ${post.price ? '₦' + Number(post.price).toLocaleString('en-Ng') : 'Price not specified'}`;
+        const shareText = `Check out this product: ${post.title || 'No description'} - ${post.price ? '₦' + Number(post.price).toLocaleString('en-Ng') : 'Price not specified'}`;
         switch (platform) {
             case 'copy':
                 copyToClipboard(postLink);

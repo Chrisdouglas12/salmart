@@ -31,6 +31,7 @@ header {
 
 .tabs {
   display: flex;
+  width: 360px;
   justify-content: center;
   width: 100%;
   max-width: 800px;
@@ -38,10 +39,12 @@ header {
 }
 .stats {
   display: flex;
+  width: 350px;
   justify-content: center;
+  align-items: center;
   width: 100%;
   max-width: 800px;
-  margin:  0;
+  margin:  0 auto;
 }
 
 #posts-container {
@@ -56,7 +59,7 @@ header {
   display: none; /* Hide sidebars by default */
 }
 
-@media (min-width: 768px) {
+@media (min-width: 800px) {
   .main-layout {
     display: grid;
     grid-template-columns: 1fr 3fr 1fr; /* Adjust as needed */
@@ -721,13 +724,13 @@ a .active {
 
 /* ===== MAIN CONTAINER ===== */
 .reviews-container {
-  margin: 2rem 0;
-  padding: 2rem;
+     max-width: 800px;
   background: var(--bg-light);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
   position: relative;
   overflow: hidden;
+  margin-bottom: 60px;
 }
 
 .reviews-container::before {
@@ -744,7 +747,6 @@ a .active {
 /* ===== REVIEW FORM CONTAINER ===== */
 .review-form-container {
   background: var(--bg-primary);
-  padding: 2rem;
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-md);
   margin-bottom: 2rem;
@@ -1030,7 +1032,6 @@ a .active {
 /* ===== NO REVIEWS STATE ===== */
 .no-reviews {
   text-align: center;
-  padding: 3rem 2rem;
   color: var(--text-muted);
   font-size: 1.1rem;
   font-family: var(--font-family);
@@ -1049,14 +1050,12 @@ a .active {
 }
 
 /* ===== RESPONSIVE DESIGN ===== */
-@media (max-width: 768px) {
+@media (max-width: 800px) {
   .reviews-container {
     margin: 1rem 0;
-    padding: 1.5rem;
   }
   
   .review-form-container {
-    padding: 1.5rem;
     margin-bottom: 1.5rem;
   }
   
@@ -1064,9 +1063,6 @@ a .active {
     font-size: 1.5rem;
   }
   
-  .review-card {
-    padding: 1.25rem;
-  }
   
   .review-header {
     flex-direction: column;
@@ -1094,7 +1090,7 @@ a .active {
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 800px) {
   .rating-input {
     flex-direction: column;
     align-items: flex-start;
@@ -1106,10 +1102,7 @@ a .active {
     padding: 0.875rem;
   }
   
-  .no-reviews {
-    padding: 2rem 1rem;
-  }
-}
+
 
 /* ===== ACCESSIBILITY IMPROVEMENTS ===== */
 @media (prefers-reduced-motion: reduce) {

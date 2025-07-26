@@ -949,7 +949,7 @@ body.typing {
 /* Style for deleted view-once images */
 .view-once-deleted-container {
     width: 200px;
-    height: 100px; /* Smaller height for deleted state */
+    height: 120px; /* Smaller height for deleted state */
     display: flex;
     justify-content: center;
     align-items: center;
@@ -997,7 +997,7 @@ body.typing {
 }
 
 .message.sent .image-container {
-    background-color: #dcf8c6; /* Greenish for sent image bubble */
+    background-color: #28a745 ;/* Greenish for sent image bubble */
 }
 
 .message.received .image-container {
@@ -1021,8 +1021,8 @@ body.typing {
 }
 
 .message.sent .image-message-text {
-    background-color: #dcf8c6;
-    color: #333;
+    background-color: #28a745;
+    color: #fff;
 }
 
 .message.received .image-message-text {
@@ -1033,17 +1033,18 @@ body.typing {
 
 /* Specific styling for sent/received view-once containers */
 .sent.view-once-image-container {
-  background: linear-gradient(135deg, #dcf8c6 0%, #aed581 100%); /* Lighter green for sent */
-  border-color: #28a756;
+  background: #28a745;/* Lighter green for sent */
+  border-color: #fff;
 }
 
 .received.view-once-image-container {
   background-color: #fff;
-  border-color: #28a745;
+  border: solid 10px #fff;
+  box-shadow: 0 0 10px #ddd;
 }
 
 .sent.viewed-image-container {
-    background: linear-gradient(135deg, #aed581 0%, #8bc34a 100%);
+    background: #28a745;
     border-color: #1a6d32;
 }
 
@@ -1053,7 +1054,7 @@ body.typing {
 }
 
 /* General image styling for regular chat images (ensure this is compatible) */
-.chat-image, .receipt-image, .product-photo-preview {
+.chat-image,  .product-photo-preview {
   max-width: 100%; /* Ensures images fit within their message bubble */
   height: auto;
   border-radius: 8px;

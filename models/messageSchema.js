@@ -39,15 +39,14 @@ const messageSchema = new mongoose.Schema({
     status: { type: String, enum: ['pending', 'accepted', 'declined', 'completed', null], default: null },
     isCounterOffer: { type: Boolean, default: false }
   },
-  // viewOnce functionality
+  // Add viewOnce functionality
   viewOnce: {
-  enabled: { type: Boolean, default: false },
-  viewed: { type: Boolean, default: false },
-  allowDownload: { type: Boolean, default: false },
-  deleteAt: { type: Date },
-  viewedAt: { type: Date, default: null },
-  viewedBy: { type: String, default: null }
-},
+    enabled: { type: Boolean, default: false },
+    viewed: { type: Boolean, default: false },
+    viewedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: false },
+    viewedAt: { type: Date, required: false },
+    deleteAt: { type: Date, required: false } // When to delete this message
+  },
   metadata: {
     isSystemMessage: { type: Boolean, default: false }, // Explicitly mark system messages
     actionRequired: { type: Boolean, default: false } // For messages requiring user action
@@ -95,13 +94,16 @@ messageSchema.pre('validate', function (next) {
 
 // Pre-save middleware to handle viewOnce logic
 messageSchema.pre('save', function (next) {
-  // If this is a new viewOnce image, set the default deleteAt to 24 hours
+  // If this is a new viewOnce image, set the default deleteAt
   if (this.isNew && this.viewOnce && this.viewOnce.enabled && !this.viewOnce.deleteAt) {
     this.viewOnce.deleteAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
   }
   
-  // DON'T automatically update deleteAt when viewed - let it stay for 5 minutes
-  // The cleanup job will handle deletion based on the deleteAt time set when viewed
+  // If viewOnce image is viewed, update deleteAt to be immediately (or very soon)
+  if (this.viewOnce && this.viewOnce.enabled && this.viewOnce.viewed && this.viewOnce.viewedAt) {
+    // Delete 1 minute after viewing to allow UI to show "viewed" state briefly
+    this.viewOnce.deleteAt = new Date(this.viewOnce.viewedAt.getTime() + 5 * 60 * 1000);
+  }
   
   next();
 });

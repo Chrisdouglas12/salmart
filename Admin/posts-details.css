@@ -856,3 +856,29 @@ a{
     outline: none;
 }
 
+/* Promote Button Styles */
+.promote-post-button {
+  background: #28a745;
+  color: #fff;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 25px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px #ddd;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100% !important;
+  max-width: 100% !important;
+  flex: 1 1 100% !important;
+  margin: 0 !important;
+}
+
+.promote-post-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px #f3f8f1;
+  background: #f3f8f1;
+}

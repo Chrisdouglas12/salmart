@@ -605,7 +605,7 @@ function renderPost(post) {
     } else {
         descriptionContent = `
             <h2 class="product-title">${escapeHtml(post.title || 'No description')}</h2>
-            <div class="post-description-text" style="margin-bottom: 10px; padding: 0 15px;">
+            <div class="post-description-text" style="margin-bottom: 10px;">
                 <p>${escapeHtml(post.description || '')}</p>
             </div>
         `;
@@ -631,19 +631,7 @@ function renderPost(post) {
                             <div class="detail-label">Location</div>
                             <div class="detail-value location-value">${escapeHtml(post.location || 'N/A')}</div>
                         </div>
-                    </div>
-                    <div class="detail-item">
-                        <div class="detail-icon condition-icon">✨</div>
-                        <div class="detail-text">
-                            <div class="detail-label">Condition</div>
-                            <div class="detail-value">${escapeHtml(post.productCondition || 'N/A')}</div>
-                        </div>
-                    </div>
-                    <div class="detail-item">
-                        <div class="detail-icon category-icon">📦</div>
-                        <div class="detail-text">
-                            <div class="detail-label">Category</div>
-                            <div class="detail-value">${escapeHtml(post.category || 'N/A')}</div>
+
                         </div>
                     </div>
                 </div>
@@ -1061,12 +1049,11 @@ async function fetchPostsByCategory(category = currentCategory, page = currentPa
         if (!postsContainer.children.length) {
             postsContainer.innerHTML = `
                 <p style="text-align: center; color: red; padding: 20px;">
-                    Error loading posts. Please check your internet connection or try again later.
-                    <br>Error: ${escapeHtml(error.message || 'Unknown error')}
+                    Something went wrong. Refresh or check your connection
                 </p>
             `;
         }
-        showToast('Failed to load posts. Please try again.', '#dc3545');
+        showToast('Something went wrong.', '#dc3545');
     } finally {
         isLoading = false;
         postsContainer.classList.remove('loading'); // Remove loading state
@@ -1130,7 +1117,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             }
 
             const recipientUsername = postElement.querySelector('.post-user-name')?.textContent || postElement.querySelector('.promoted-user-name')?.textContent || 'Unknown';
-            const recipientProfilePictureUrl = postElement.querySelector('.post-avatar')?.src || postElement.querySelector('.promoted-avatar')?.src || '/salmart-192x192.png';
+            const recipientProfilePictureUrl = postElement.querySelector('.post-avatar')?.src || postElement.querySelector('.promoted-avatar')?.src ;
             let productImage = target.dataset.productImage || '';
             const productDescription = target.dataset.productDescription || '';
             const postId = target.dataset.postId;

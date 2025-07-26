@@ -47,41 +47,49 @@ document.addEventListener('DOMContentLoaded', async function () {
         });
     }
 
-    // --- Helper Functions ---
+/**
+ * Formats a timestamp into a human-readable relative time string.
+ * @param {string} timestamp - The ISO timestamp string.
+ * @returns {string} - Formatted time string (e.g., "5m", "3h", "Jul 23").
+ */
+function formatTime(timestamp) {
+    const now = new Date();
+    const postDate = new Date(timestamp);
+    const diffInSeconds = Math.floor((now - postDate) / 1000);
 
-    function formatTime(timestamp) {
-        const now = new Date();
-        const postDate = new Date(timestamp);
-        const diffInSeconds = Math.floor((now - postDate) / 1000);
+    if (diffInSeconds < 60) return "Just now";
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h`;
+    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d`;
+    if (diffInSeconds < 2592000) return `${Math.floor(diffInSeconds / 604800)}w`;
 
-        if (diffInSeconds < 60) return "Just now";
-        if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m`;
-        if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 86400 / 24)}h`; // Fixed calculation for hours
-        if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d`;
-        if (diffInSeconds < 2592000) return `${Math.floor(diffInSeconds / 604800)}w`;
+    const currentYear = now.getFullYear();
+    const postYear = postDate.getFullYear();
 
-        const currentYear = now.getFullYear();
-        const postYear = postDate.getFullYear();
-
-        if (postYear === currentYear) {
-            return postDate.toLocaleDateString(undefined, {
-                month: "short",
-                day: "numeric"
-            });
-        } else {
-            return postDate.toLocaleDateString(undefined, {
-                month: "short",
-                day: "numeric",
-                year: "numeric"
-            });
-        }
+    if (postYear === currentYear) {
+        return postDate.toLocaleDateString(undefined, {
+            month: "short",
+            day: "numeric"
+        });
+    } else {
+        return postDate.toLocaleDateString(undefined, {
+            month: "short",
+            day: "numeric",
+            year: "numeric"
+        });
     }
+}
 
-    function escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
+/**
+ * Escapes HTML characters in a string to prevent XSS.
+ * @param {string} text - The text to escape.
+ * @returns {string} - The escaped HTML string.
+ */
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
 
     async function copyToClipboard(text) {
         try {
@@ -660,7 +668,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         } else { // Regular post
             descriptionContent = `
                 <h2 class="product-title">${escapeHtml(post.title || 'No title')}</h2>
-                <div class="post-description-text" style="margin-bottom: 10px; padding: 0 15px;">
+                <div class="post-description-text" style="margin-bottom: 10px;">
                     <p>${escapeHtml(post.description || '')}</p>
                 </div>
             `;
@@ -687,19 +695,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                                 <div class="detail-value location-value">${escapeHtml(post.location || 'N/A')}</div>
                             </div>
                         </div>
-                        <div class="detail-item">
-                            <div class="detail-icon condition-icon">✨</div>
-                            <div class="detail-text">
-                                <div class="detail-label">Condition</div>
-                                <div class="detail-value">${escapeHtml(post.productCondition || 'N/A')}</div>
-                            </div>
-                        </div>
-                        <div class="detail-item">
-                            <div class="detail-icon category-icon">📦</div>
-                            <div class="detail-text">
-                                <div class="detail-label">Category</div>
-                                <div class="detail-value">${escapeHtml(post.category || 'N/A')}</div>
-                            </div>
+                     
                         </div>
                     </div>
                 </div>

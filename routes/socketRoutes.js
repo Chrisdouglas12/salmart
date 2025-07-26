@@ -758,269 +758,50 @@ const initializeSocket = (io) => {
         }
     });
     
-// Enhanced imageViewed socket handler with download functionality
-socket.on('imageViewed', async ({ messageId, viewerId }) => {
+    //once viewed photos
+    socket.on('imageViewed', async ({ messageId, viewerId }) => {
   try {
     logger.info(`imageViewed event received: messageId=${messageId}, viewerId=${viewerId}`);
     
-    // Verify the authenticated user matches the viewer
     if (authenticatedUserId !== viewerId) {
       logger.warn(`Unauthorized imageViewed attempt by ${authenticatedUserId} for viewer ${viewerId}`);
-      socket.emit('messageError', { 
-        tempId: null, 
-        error: 'Unauthorized view attempt' 
-      });
       return;
     }
 
-    // Find the message and validate it's a view-once image
+    // Find the message and mark as viewed
     const message = await Message.findById(messageId);
-    if (!message || message.messageType !== 'image' || !message.viewOnce || !message.viewOnce.enabled) {
+    if (!message || message.messageType !== 'image' || !message.viewOnce) {
       logger.warn(`Invalid view-once image message: ${messageId}`);
-      socket.emit('messageError', { 
-        tempId: null, 
-        error: 'Invalid view-once message' 
-      });
       return;
     }
 
-    // Check if already viewed
-    if (message.viewOnce.viewed) {
-      logger.info(`Image ${messageId} already viewed by ${viewerId}`);
-      // Still emit confirmation in case of race conditions
-      socket.emit('imageViewedConfirmation', {
-        messageId,
-        viewerId,
-        allowDownload: message.viewOnce.allowDownload || false,
-        viewedAt: message.viewOnce.viewedAt
-      });
-      return;
-    }
-
-    // Verify the viewer is authorized (either sender or receiver)
-    if (message.senderId !== viewerId && message.receiverId !== viewerId) {
-      logger.warn(`Unauthorized view attempt: ${viewerId} not participant in message ${messageId}`);
-      socket.emit('messageError', { 
-        tempId: null, 
-        error: 'Access denied' 
-      });
-      return;
-    }
-
-    // Mark as viewed and enable download
+    // Mark as viewed and set deletion timer (24 hours from now)
     const viewedAt = new Date();
-    const deleteAt = new Date(viewedAt.getTime() + 24 * 60 * 60 * 1000); // 24 hours from view
+    const deleteAt = new Date(viewedAt.getTime() + 24 * 60 * 60 * 1000); // 24 hours
 
-    const updatedMessage = await Message.findByIdAndUpdate(messageId, {
+    await Message.findByIdAndUpdate(messageId, {
       $set: {
         'viewOnce.viewed': true,
         'viewOnce.viewedAt': viewedAt,
         'viewOnce.deleteAt': deleteAt,
-        'viewOnce.viewedBy': viewerId,
-        'viewOnce.allowDownload': true // Enable download after viewing
+        'viewOnce.viewedBy': viewerId
       }
-    }, { new: true });
+    });
 
-    if (!updatedMessage) {
-      logger.error(`Failed to update message ${messageId} as viewed`);
-      socket.emit('messageError', { 
-        tempId: null, 
-        error: 'Failed to mark image as viewed' 
-      });
-      return;
-    }
-
-    logger.info(`Image ${messageId} marked as viewed by ${viewerId}. Download enabled.`);
-
-    // Emit confirmation to the viewer
-    socket.emit('imageViewedConfirmation', {
+    // Emit confirmation to all devices of both participants
+    const chatRoomId = [message.senderId.toString(), message.receiverId.toString()].sort().join('_');
+    io.to(`chat_${chatRoomId}`).emit('imageViewedConfirmation', {
       messageId,
       viewerId,
-      allowDownload: true,
-      viewedAt: viewedAt.toISOString()
+      viewedAt
     });
 
-    // Emit confirmation to the sender (if different from viewer) for UI updates
-    const otherParticipantId = message.senderId === viewerId ? message.receiverId : message.senderId;
-    if (otherParticipantId !== viewerId) {
-      io.to(`user_${otherParticipantId}`).emit('imageViewedConfirmation', {
-        messageId,
-        viewerId,
-        allowDownload: true,
-        viewedAt: viewedAt.toISOString(),
-        viewedByOther: true // Flag to indicate someone else viewed it
-      });
-    }
-
-    // Emit to the chat room for real-time updates
-    const chatRoomId = [message.senderId, message.receiverId].sort().join('_');
-    socket.to(`chat_${chatRoomId}`).emit('imageViewedConfirmation', {
-      messageId,
-      viewerId,
-      allowDownload: true,
-      viewedAt: viewedAt.toISOString()
-    });
-
-    // Schedule cleanup after 24 hours (optional - you might want to use a job queue)
-    scheduleImageCleanup(messageId, deleteAt);
+    logger.info(`View-once image ${messageId} marked as viewed by ${viewerId}`);
 
   } catch (error) {
-    logger.error(`Error handling imageViewed event: ${error.message}`, { 
-      messageId, 
-      viewerId, 
-      error: error.stack 
-    });
-    
-    socket.emit('messageError', { 
-      tempId: null, 
-      error: 'Server error processing image view' 
-    });
+    logger.error(`Error handling imageViewed: ${error.message}`);
   }
 });
-
-// Optional: Function to schedule image cleanup (implement based on your needs)
-function scheduleImageCleanup(messageId, deleteAt) {
-  // Option 1: Use setTimeout (not recommended for production - not persistent)
-  const timeUntilDeletion = deleteAt.getTime() - Date.now();
-  if (timeUntilDeletion > 0 && timeUntilDeletion < 24 * 60 * 60 * 1000) { // Only if within 24 hours
-    setTimeout(async () => {
-      try {
-        await cleanupViewOnceImage(messageId);
-      } catch (error) {
-        logger.error(`Failed to cleanup image ${messageId}:`, error);
-      }
-    }, timeUntilDeletion);
-  }
-
-  // Option 2: Add to a job queue (recommended for production)
-  // Example with Bull Queue:
-  /*
-  const cleanupQueue = require('../queues/cleanupQueue'); // Your queue setup
-  cleanupQueue.add('deleteViewOnceImage', { messageId }, {
-    delay: timeUntilDeletion,
-    attempts: 3,
-    backoff: 'exponential'
-  });
-  */
-
-  logger.info(`Scheduled cleanup for image ${messageId} at ${deleteAt.toISOString()}`);
-}
-
-// Optional: Image cleanup function
-async function cleanupViewOnceImage(messageId) {
-  try {
-    const message = await Message.findById(messageId);
-    if (!message || !message.viewOnce || !message.attachment) {
-      return;
-    }
-
-    // Delete from Cloudinary (if using)
-    if (message.attachment.cloudinaryPublicId && isProduction) {
-      const cloudinary = require('cloudinary').v2;
-      await cloudinary.uploader.destroy(message.attachment.cloudinaryPublicId);
-      logger.info(`Deleted Cloudinary image: ${message.attachment.cloudinaryPublicId}`);
-    }
-
-    // Delete local file (if not in production)
-    if (!isProduction && message.attachment.url) {
-      const fs = require('fs');
-      const path = require('path');
-      const filePath = path.join(__dirname, '../', message.attachment.url);
-      
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
-        logger.info(`Deleted local image file: ${filePath}`);
-      }
-    }
-
-    // Update message to mark as deleted
-    await Message.findByIdAndUpdate(messageId, {
-      $set: {
-        'viewOnce.imageDeleted': true,
-        'viewOnce.deletedAt': new Date(),
-        'attachment.url': null // Remove URL to prevent access
-      }
-    });
-
-    logger.info(`View-once image ${messageId} cleaned up successfully`);
-
-  } catch (error) {
-    logger.error(`Error cleaning up view-once image ${messageId}:`, error);
-    throw error;
-  }
-}
-
-// Additional socket handler for manual download requests (optional)
-socket.on('requestImageDownload', async ({ messageId, userId }) => {
-  try {
-    logger.info(`Download request: messageId=${messageId}, userId=${userId}`);
-    
-    if (authenticatedUserId !== userId) {
-      logger.warn(`Unauthorized download request by ${authenticatedUserId} for user ${userId}`);
-      socket.emit('downloadError', { 
-        messageId, 
-        error: 'Unauthorized download attempt' 
-      });
-      return;
-    }
-
-    const message = await Message.findById(messageId);
-    if (!message || message.messageType !== 'image') {
-      socket.emit('downloadError', { 
-        messageId, 
-        error: 'Message not found or not an image' 
-      });
-      return;
-    }
-
-    // Check download permissions
-    if (message.viewOnce && message.viewOnce.enabled) {
-      if (!message.viewOnce.viewed || !message.viewOnce.allowDownload) {
-        socket.emit('downloadError', { 
-          messageId, 
-          error: 'Download not permitted - image must be viewed first' 
-        });
-        return;
-      }
-
-      // Check if user is authorized
-      if (message.senderId !== userId && message.receiverId !== userId) {
-        socket.emit('downloadError', { 
-          messageId, 
-          error: 'Access denied' 
-        });
-        return;
-      }
-
-      // Check if image is still available (not deleted)
-      if (message.viewOnce.imageDeleted) {
-        socket.emit('downloadError', { 
-          messageId, 
-          error: 'Image no longer available' 
-        });
-        return;
-      }
-    }
-
-    // Emit download permission
-    socket.emit('downloadPermitted', {
-      messageId,
-      downloadUrl: message.attachment.url,
-      filename: message.attachment.filename || 'image.jpg'
-    });
-
-    logger.info(`Download permitted for message ${messageId} by user ${userId}`);
-
-  } catch (error) {
-    logger.error(`Error handling download request: ${error.message}`, { messageId, userId });
-    socket.emit('downloadError', { 
-      messageId, 
-      error: 'Server error processing download request' 
-    });
-  }
-});
-
-
 
     socket.on('badge-update', async ({ type, count, userId }) => { /* ... */ });
     socket.on('followUser', async ({ followerId, followedId }) => { /* ... */ });
