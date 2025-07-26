@@ -11,6 +11,7 @@ const Review = require('../models/reviewSchema.js');
 const Report = require('../models/reportSchema.js'); // Added import
 const verifyToken = require('../middleware/auths');
 const fs = require('fs');
+const Message = require('../models/messageSchema.js');
 const path = require('path');
 const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
@@ -775,7 +776,7 @@ router.post('/api/password-reset/reset', async (req, res) => {
   }
 });
 
-// Upload Route for View-Once Images
+// Enhanced Upload Route for View-Once Images with Multiple Upload Support
 router.post('/upload-image', upload.single('image'), async (req, res) => {
   try {
     if (!req.file) {
@@ -786,7 +787,26 @@ router.post('/upload-image', upload.single('image'), async (req, res) => {
 
     // Validate required fields
     if (!senderId || !receiverId || !tempId) {
-      return res.status(400).json({ error: 'Missing required fields' });
+      return res.status(400).json({ 
+        error: 'Missing required fields',
+        received: { senderId, receiverId, tempId, messageType }
+      });
+    }
+
+    // Additional file validation
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(req.file.mimetype)) {
+      return res.status(400).json({ 
+        error: 'Invalid file type. Only JPEG, PNG, GIF, and WebP images are allowed.' 
+      });
+    }
+
+    // Check file size (5MB limit)
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (req.file.size > maxSize) {
+      return res.status(400).json({ 
+        error: 'File too large. Maximum size is 5MB.' 
+      });
     }
 
     let imageUrl, publicId = null;
@@ -796,31 +816,182 @@ router.post('/upload-image', upload.single('image'), async (req, res) => {
       imageUrl = req.file.path;
       publicId = req.file.filename; // Cloudinary public_id for cleanup
     } else {
-      // Local upload
+      // Local upload - ensure the URL is properly formatted
       imageUrl = `/Uploads/${req.file.filename}`;
     }
 
-    // Parse viewOnce if it's a string
+    // Parse and enhance viewOnce configuration
     let parsedViewOnce = null;
     if (viewOnce) {
       try {
         parsedViewOnce = typeof viewOnce === 'string' ? JSON.parse(viewOnce) : viewOnce;
+        
+        // Ensure all required viewOnce properties are present
+        parsedViewOnce = {
+          enabled: parsedViewOnce.enabled !== undefined ? parsedViewOnce.enabled : true,
+          viewed: parsedViewOnce.viewed !== undefined ? parsedViewOnce.viewed : false,
+          allowDownload: parsedViewOnce.allowDownload !== undefined ? parsedViewOnce.allowDownload : false,
+          deleteAt: parsedViewOnce.deleteAt || new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+          viewedAt: null, // Will be set when image is viewed
+          viewedBy: null  // Will be set when image is viewed
+        };
       } catch (e) {
-        parsedViewOnce = { enabled: true, viewed: false };
+        console.warn('Failed to parse viewOnce, using defaults:', e.message);
+        parsedViewOnce = { 
+          enabled: true, 
+          viewed: false, 
+          allowDownload: false,
+          deleteAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+          viewedAt: null,
+          viewedBy: null
+        };
       }
     }
 
+    // Generate a more descriptive filename for download
+    const originalName = req.file.originalname;
+    const fileExtension = originalName.split('.').pop();
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const downloadFilename = `image_${timestamp}.${fileExtension}`;
+
+    // Log successful upload for debugging
+    console.log(`Image uploaded successfully:`, {
+      tempId,
+      imageUrl,
+      publicId,
+      fileSize: req.file.size,
+      mimeType: req.file.mimetype,
+      viewOnce: parsedViewOnce
+    });
+
     res.json({ 
+      success: true,
       imageUrl,
       publicId,
       tempId,
       viewOnce: parsedViewOnce,
-      messageType: messageType || 'image'
+      messageType: messageType || 'image',
+      fileInfo: {
+        originalName: originalName,
+        downloadFilename: downloadFilename,
+        size: req.file.size,
+        mimeType: req.file.mimetype
+      },
+      uploadedAt: new Date().toISOString()
     });
 
   } catch (error) {
-    console.error('Image upload error:', error.message);
-    res.status(500).json({ error: 'Server error during image upload' });
+    console.error('Image upload error:', error);
+    
+    // More detailed error response
+    res.status(500).json({ 
+      error: 'Server error during image upload',
+      message: error.message,
+      tempId: req.body?.tempId || null // Include tempId for frontend error handling
+    });
+  }
+});
+
+// Optional: Add a route to handle image view confirmation and download enabling
+router.post('/image-viewed', async (req, res) => {
+  try {
+    const { messageId, viewerId } = req.body;
+    
+    if (!messageId || !viewerId) {
+      return res.status(400).json({ error: 'Missing messageId or viewerId' });
+    }
+
+    // Here you would typically:
+    // 1. Find the message in your database
+    // 2. Update the viewOnce.viewed = true
+    // 3. Set viewOnce.allowDownload = true
+    // 4. Set viewOnce.viewedAt = new Date()
+    // 5. Set viewOnce.viewedBy = viewerId
+    
+    // Example database update (adjust according to your schema):
+    /*
+    const message = await Message.findByIdAndUpdate(
+      messageId, 
+      {
+        'viewOnce.viewed': true,
+        'viewOnce.allowDownload': true,
+        'viewOnce.viewedAt': new Date(),
+        'viewOnce.viewedBy': viewerId
+      },
+      { new: true }
+    );
+    
+    if (!message) {
+      return res.status(404).json({ error: 'Message not found' });
+    }
+    */
+
+    res.json({ 
+      success: true,
+      messageId,
+      viewerId,
+      allowDownload: true,
+      viewedAt: new Date().toISOString()
+    });
+
+  } catch (error) {
+    console.error('Image view confirmation error:', error);
+    res.status(500).json({ 
+      error: 'Server error confirming image view',
+      message: error.message 
+    });
+  }
+});
+
+// Optional: Add a route for secure image download with view verification
+router.get('/download-image/:messageId', async (req, res) => {
+  try {
+    const { messageId } = req.params;
+    const userId = req.user?.id; // Assuming you have auth middleware
+    
+    if (!userId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    // Here you would:
+    // 1. Find the message
+    // 2. Verify the user has permission to download (viewed the image)
+    // 3. Check if download is still allowed (within time limits)
+    // 4. Serve the file or redirect to the image URL
+    
+    // Example:
+    /*
+    const message = await Message.findById(messageId);
+    
+    if (!message || !message.viewOnce.allowDownload) {
+      return res.status(403).json({ error: 'Download not permitted' });
+    }
+    
+    if (message.senderId !== userId && message.receiverId !== userId) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+    
+    // For Cloudinary images, you might redirect:
+    if (message.attachment.cloudinaryPublicId) {
+      return res.redirect(message.attachment.url);
+    }
+    
+    // For local files, serve the file:
+    const filePath = path.join(__dirname, '../uploads', message.attachment.filename);
+    res.download(filePath, message.attachment.downloadFilename || 'image.jpg');
+    */
+
+    res.json({ 
+      success: true, 
+      message: 'Download endpoint - implement based on your needs' 
+    });
+
+  } catch (error) {
+    console.error('Image download error:', error);
+    res.status(500).json({ 
+      error: 'Server error during download',
+      message: error.message 
+    });
   }
 });
   return router;

@@ -20,6 +20,11 @@ const ellipsisBtn = document.getElementById('ellipsis-btn');
 const chatDropdown = document.getElementById('chat-dropdown');
 const attachBtn = document.getElementById('attach-btn'); // New: Get attach button
 const imageInput = document.getElementById('image-input'); // New: Get hidden image input
+const imagePreviewContainer = document.getElementById('image-preview-container'); // New: Container for image preview
+const imagePreview = document.getElementById('image-preview'); // New: Image preview element
+const closeImagePreview = document.getElementById('close-image-preview'); // New: Close preview button
+const viewOnceToggle = document.getElementById('view-once-toggle'); // New: View once toggle
+
 
 // Parse URL parameters for chat context
 const urlParams = new URLSearchParams(window.location.search);
@@ -53,20 +58,25 @@ const optimisticMessagesMap = new Map();
 // Flag for initial message handling
 let isInitialMessageSent = localStorage.getItem(`initialMessageSent_${productId}_${receiverId}`) === 'true';
 
+// Track if a file is pending for upload (for image preview)
+let pendingFile = null;
+
 // Function to render product preview for initial message
 function renderProductPreview() {
     if (productImage && productName && predefinedMessage && !isInitialMessageSent) {
         const previewContainer = document.createElement('div');
         previewContainer.id = 'product-preview';
-        previewContainer.style.margin = '10px';
-        previewContainer.style.textAlign = 'center';
+        previewContainer.classList.add('url-photo-preview'); // Add a class for styling
         const isValidImageUrl = productImage.startsWith('http://') || productImage.startsWith('https://');
         previewContainer.innerHTML = `
-            <p style="font-size: 14px; color: #777;">Product Preview: ${productName}</p>
-            ${isValidImageUrl
-                ? `<img src="${productImage}" class="product-photo-preview" alt="Product Preview" style="max-width: 200px; border-radius: 5px; margin-top: 60px;" onerror="this.style.display='none';this.nextElementSibling.style.display='block';">
-                   <p style="display:none;color:red;">Failed to load product image.</p>`
-                : `<p style="color:red;">No product image available.</p>`}
+            <div class="url-preview-content">
+                <p class="url-preview-message">${predefinedMessage}</p>
+                ${isValidImageUrl
+                    ? `<img src="${productImage}" class="url-preview-image" alt="Product Preview" onerror="this.style.display='none';this.nextElementSibling.style.display='block';">
+                       <p style="display:none;color:red;">Failed to load product image.</p>`
+                    : `<p style="color:red;">No product image available.</p>`}
+                <p class="url-preview-product-name">${productName}</p>
+            </div>
         `;
         chatMessages.insertAdjacentElement('beforebegin', previewContainer);
     }
@@ -341,50 +351,62 @@ if (message.messageType === 'image') {
             `;
         } else {
             // View-once image display (not yet viewed)
-            msgDiv.classList.add('view-once-image-container'); // Add class for styling
+            msgDiv.classList.add('view-once-photo-container'); // Apply modern styling
             msgDiv.innerHTML = `
-                <div class="view-once-overlay" data-src="${displayImageUrl || ''}" data-message-id="${message._id}">
-                    <i class="fas fa-eye view-once-icon"></i>
-                    <span class="view-once-text">Tap to View Image</span>
+                <div class="view-once-overlay" data-src="${displayImageUrl || ''}" data-message-id="${message._id}" data-is-sender="${message.senderId === userId}">
+                    <img src="${displayImageUrl || ''}" class="view-once-blurred-image" alt="One Time View Image">
+                    <div class="view-once-text-overlay">
+                        <span class="view-once-info-text">Uploaded photos are subject to one time view</span>
+                        <i class="fas fa-eye view-once-icon"></i>
+                        <span class="view-once-action-text">${message.senderId === userId ? 'Image Sent' : 'Tap to View'}</span>
+                    </div>
                 </div>
                 <div class="message-timestamp">${time} ${statusCheckmark}</div>
             `;
-            // Add click listener to the overlay for "view once" behavior
-            const overlay = msgDiv.querySelector('.view-once-overlay');
-            if (overlay) {
-                overlay.addEventListener('click', function() {
-                    const imgSource = this.dataset.src;
-                    const messageId = this.dataset.messageId;
-                    if (imgSource && messageId) {
-                        this.innerHTML = `<img src="${imgSource}" class="view-once-actual-image" alt="View Once Image">`;
-                        this.classList.remove('view-once-overlay'); // Remove overlay styling
-                        this.classList.add('viewed-image-container'); // Add class for viewed state
-                        this.removeEventListener('click', arguments.callee); // Remove listener after viewing
+            // Add click listener to the overlay for "view once" behavior, only if recipient
+            if (message.senderId !== userId) {
+                const overlay = msgDiv.querySelector('.view-once-overlay');
+                if (overlay) {
+                    overlay.addEventListener('click', function() {
+                        const imgSource = this.dataset.src;
+                        const messageId = this.dataset.messageId;
+                        if (imgSource && messageId) {
+                            this.innerHTML = `<img src="${imgSource}" class="view-once-actual-image" alt="View Once Image">`;
+                            this.classList.remove('view-once-overlay'); // Remove overlay styling
+                            this.classList.add('viewed-image-container'); // Add class for viewed state
+                            this.removeEventListener('click', arguments.callee); // Remove listener after viewing
 
-                        // Emit to server that the image has been viewed
-                        socket.emit('imageViewed', { 
-                            messageId: messageId, 
-                            viewerId: userId 
-                        });
+                            // Emit to server that the image has been viewed
+                            socket.emit('imageViewed', {
+                                messageId: messageId,
+                                viewerId: userId
+                            });
 
-                        // Start deletion timer - hide image after 1 minute
-                        setTimeout(() => {
-                            const viewedContainer = msgDiv.querySelector('.viewed-image-container');
-                            if (viewedContainer) {
-                                viewedContainer.innerHTML = `
-                                    <i class="fas fa-eye-slash view-once-icon"></i>
-                                    <span class="view-once-text">This image was viewed and deleted</span>
-                                `;
-                                viewedContainer.classList.remove('viewed-image-container');
-                                viewedContainer.classList.add('view-once-deleted');
-                                msgDiv.classList.remove('view-once-image-container');
-                                msgDiv.classList.add('view-once-deleted-container');
-                            }
-                        }, 300000); // 5 minutes
-                    } else {
-                        showToast('Image not available.', 'error');
-                    }
-                }, { once: true }); // Use { once: true } to auto-remove listener after first click
+                            // Start deletion timer - hide image after 5 minutes
+                            setTimeout(() => {
+                                const viewedContainer = msgDiv.querySelector('.viewed-image-container');
+                                if (viewedContainer) {
+                                    viewedContainer.innerHTML = `
+                                        <i class="fas fa-eye-slash view-once-icon"></i>
+                                        <span class="view-once-text">This image was viewed and deleted</span>
+                                    `;
+                                    viewedContainer.classList.remove('viewed-image-container');
+                                    viewedContainer.classList.add('view-once-deleted');
+                                    msgDiv.classList.remove('view-once-photo-container');
+                                    msgDiv.classList.add('view-once-deleted-container');
+                                }
+                            }, 300000); // 5 minutes (300,000 milliseconds)
+                        } else {
+                            showToast('Image not available.', 'error');
+                        }
+                    }, { once: true }); // Use { once: true } to auto-remove listener after first click
+                }
+            } else {
+                // For the sender, prevent clicking and just show the blurred image with text
+                const overlay = msgDiv.querySelector('.view-once-overlay');
+                if (overlay) {
+                    overlay.style.pointerEvents = 'none'; // Make it unclickable for the sender
+                }
             }
         }
     } else {
@@ -392,7 +414,7 @@ if (message.messageType === 'image') {
         msgDiv.innerHTML = `
             ${displayText ? `<div class="image-message-text">${displayText}</div>` : ''}
             ${displayImageUrl ? `
-                <div class="image-container" style="margin: 10px 0;">
+                <div class="image-container">
                     <img src="${displayImageUrl}" class="chat-image" alt="Chat Image"
                          onerror="this.style.display='none';this.nextElementSibling.style.display='block';">
                     <p style="display:none;color:red;">Failed to load image.</p>
@@ -576,58 +598,96 @@ attachBtn.addEventListener('click', () => {
 imageInput.addEventListener('change', async (event) => {
     const file = event.target.files[0];
     if (!file) {
+        pendingFile = null; // Clear pending file if selection is cancelled
+        imagePreviewContainer.style.display = 'none';
         return; // No file selected
     }
 
     if (!file.type.startsWith('image/')) {
         showToast('Only image files are allowed.', 'error');
         imageInput.value = ''; // Clear the input
+        pendingFile = null;
+        imagePreviewContainer.style.display = 'none';
         return;
     }
 
     if (file.size > 5 * 1024 * 1024) { // 5MB limit
         showToast('Image size exceeds 5MB limit.', 'error');
         imageInput.value = ''; // Clear the input
+        pendingFile = null;
+        imagePreviewContainer.style.display = 'none';
         return;
     }
 
-    // Generate a temporary ID for optimistic UI
-    const tempMessageId = `temp_${Date.now()}`;
+    pendingFile = file; // Store the file temporarily
 
-    // Create a FileReader to get a preview (data URL) for optimistic display
+    // Show image preview
     const reader = new FileReader();
     reader.onload = (e) => {
-        const localImageUrl = e.target.result; // Data URL for immediate display
+        imagePreview.src = e.target.result;
+        imagePreviewContainer.style.display = 'flex'; // Show the preview container
+        typeSection.focus(); // Keep focus on input field
+    };
+    reader.readAsDataURL(file);
+});
 
-        // Optimistically display the image message
-        // The `viewOnce` flag here is crucial for the frontend display logic.
-        displayMessage({
-            senderId: userId,
-            receiverId: receiverId,
-            messageType: 'image',
-            content: '', // No initial text content for image
-            attachment: { url: localImageUrl, filename: file.name },
-            createdAt: new Date().toISOString(),
-            isRead: false,
-            tempId: tempMessageId,
-            status: 'sending',
-            viewOnce: true // IMPORTANT: Mark as view-once
-        }, true);
+// Close image preview
+closeImagePreview.addEventListener('click', () => {
+    imagePreviewContainer.style.display = 'none';
+    imagePreview.src = '';
+    imageInput.value = ''; // Clear the file input
+    pendingFile = null; // Clear pending file
+});
 
-//preparing to send the actual file to the server for upload
+// Send a new message from the chat input (modified to handle pending image)
+sendBtn.onclick = async () => {
+    const text = typeSection.value.trim();
+    const isInitialMessage = !isInitialMessageSent && predefinedMessage && productImage;
+    const isViewOnce = viewOnceToggle.checked; // Get view-once status from toggle
+
+    // If an image is pending, send it
+    if (pendingFile) {
+        const file = pendingFile;
+        const tempMessageId = `temp_${Date.now()}`;
+
+        // Create a FileReader to get a preview (data URL) for optimistic display
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const localImageUrl = e.target.result; // Data URL for immediate display
+
+            // Optimistically display the image message
+            displayMessage({
+                senderId: userId,
+                receiverId: receiverId,
+                messageType: 'image',
+                content: text, // Use text as caption for image
+                attachment: { url: localImageUrl, filename: file.name },
+                createdAt: new Date().toISOString(),
+                isRead: false,
+                tempId: tempMessageId,
+                status: 'sending',
+                viewOnce: {
+                    enabled: isViewOnce,
+                    viewed: false,
+                    deleteAt: isViewOnce ? new Date(Date.now() + 5 * 60 * 1000).toISOString() : null // 5 minutes if view-once
+                }
+            }, true);
+        };
+        reader.readAsDataURL(file);
+
         const formData = new FormData();
         formData.append('image', file);
         formData.append('senderId', userId);
         formData.append('receiverId', receiverId);
         formData.append('messageType', 'image');
         formData.append('tempId', tempMessageId);
+        formData.append('content', text); // Send text as caption
         formData.append('viewOnce', JSON.stringify({
-            enabled: true,
+            enabled: isViewOnce,
             viewed: false,
-            deleteAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
-        })); // Send as JSON object instead of just 'true'
+            deleteAt: isViewOnce ? new Date(Date.now() + 5 * 60 * 1000).toISOString() : null
+        }));
 
-        // Send the image data to your backend API for upload first
         fetch(`${API_BASE_URL}/upload-image`, {
             method: 'POST',
             headers: {
@@ -643,21 +703,20 @@ imageInput.addEventListener('change', async (event) => {
         })
         .then(data => {
             console.log('Image upload successful:', data);
-            
-            // Now send the message through socket with the uploaded image URL
+
             const messageToSend = {
                 receiverId,
-                text: '', // No text for image-only messages
+                text: text, // Caption
                 messageType: 'image',
                 attachment: {
-                    url: data.imageUrl, // Use the uploaded image URL from response
+                    url: data.imageUrl,
                     fileType: 'image',
-                    cloudinaryPublicId: data.publicId // Include for cleanup
+                    cloudinaryPublicId: data.publicId
                 },
                 viewOnce: {
-                    enabled: true,
+                    enabled: isViewOnce,
                     viewed: false,
-                    deleteAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+                    deleteAt: isViewOnce ? new Date(Date.now() + 5 * 60 * 1000).toISOString() : null
                 },
                 tempId: tempMessageId,
                 senderId: userId,
@@ -665,7 +724,6 @@ imageInput.addEventListener('change', async (event) => {
                 isRead: false
             };
 
-            // Send through socket instead of just relying on upload endpoint
             socket.emit('sendMessage', messageToSend);
             console.log('Emitted image message via socket:', messageToSend);
         })
@@ -674,34 +732,24 @@ imageInput.addEventListener('change', async (event) => {
             showToast(`Failed to send image: ${error.message}`, 'error');
             removeOptimisticMessage(tempMessageId);
         });
-    };
-    reader.readAsDataURL(file);
 
-    // Clear the file input so the same file can be selected again
-    imageInput.value = '';
-});
+        // Clear preview and input after sending
+        imagePreviewContainer.style.display = 'none';
+        imagePreview.src = '';
+        imageInput.value = '';
+        pendingFile = null;
+        typeSection.value = ''; // Clear text input as well
+        viewOnceToggle.checked = false; // Reset toggle
 
+        return; // Exit as image sending is handled
+    }
 
-// Send a new message from the chat input (modified to handle pending image)
-sendBtn.onclick = async () => {
-    const text = typeSection.value.trim();
-    // Allow sending initial message even if input empty, but check for any content if not initial.
-    if (!text && !predefinedMessage && !imageInput.files[0]) {
+    // If no image is pending, proceed with text message
+    if (!text && !predefinedMessage) {
         showToast('Please enter a message or select an image.', 'error');
         return;
     }
 
-    // If an image is selected, the imageInput.addEventListener('change') will handle the send.
-    // This `sendBtn.onclick` will then only process text.
-    if (imageInput.files[0]) {
-        // The image upload logic is handled by the `imageInput` change event.
-        // We'll let that flow complete before potentially sending text if any.
-        // If you want to send text WITH the image, you'll need to combine the logic.
-        // For now, if an image is chosen, assume the 'send' button is confirming the image send.
-        return;
-    }
-
-    const isInitialMessage = !isInitialMessageSent && predefinedMessage && productImage;
     // Generate a temporary ID for optimistic UI
     const tempMessageId = `temp_${Date.now()}`;
 
@@ -724,6 +772,7 @@ sendBtn.onclick = async () => {
 
     // Clear input field
     typeSection.value = '';
+    viewOnceToggle.checked = false; // Reset toggle
 
     // Handle initial message flag and UI cleanup
     if (isInitialMessage) {
@@ -760,11 +809,11 @@ socket.on('messageStatusUpdate', ({ _id, tempId, status, createdAt, attachment, 
                 optimisticMsg.attachment = attachment;
             }
             if (typeof viewOnce === 'boolean') {
-                optimisticMsg.viewOnce = viewOnce;
+                optimisticMsg.viewOnce = { enabled: viewOnce, viewed: false, deleteAt: null };
             }
-if (typeof viewOnce === 'object' && viewOnce !== null) {
-    optimisticMsg.viewOnce = viewOnce; // Update full viewOnce object
-  }
+            if (typeof viewOnce === 'object' && viewOnce !== null) {
+                optimisticMsg.viewOnce = viewOnce; // Update full viewOnce object
+            }
             // Remove the old optimistic message from DOM and display the confirmed one.
             // This ensures all properties (like viewOnce) are correctly applied.
             removeOptimisticMessage(tempId);
@@ -807,7 +856,8 @@ if (typeof viewOnce === 'object' && viewOnce !== null) {
         const updatedMsg = { ...storedMessages[existingIndex], _id, status, createdAt };
         if (tempId) delete updatedMsg.tempId; // Remove tempId once real ID is known
         if (attachment) updatedMsg.attachment = attachment;
-        if (typeof viewOnce === 'boolean') updatedMsg.viewOnce = viewOnce;
+        if (typeof viewOnce === 'boolean') updatedMsg.viewOnce = { enabled: viewOnce, viewed: false, deleteAt: null };
+        if (typeof viewOnce === 'object' && viewOnce !== null) updatedMsg.viewOnce = viewOnce;
         storedMessages[existingIndex] = updatedMsg;
     } else {
         // If it's a new confirmed message not previously in local storage (e.g., from another device)
@@ -921,32 +971,55 @@ socket.on('newMessageNotification', (notification) => {
 // This allows you to update the UI on other devices or to confirm deletion.
 socket.on('imageViewedConfirmation', ({ messageId, viewerId }) => {
     console.log(`Image message ${messageId} confirmed as viewed by ${viewerId}.`);
-    // You might want to visually dim or mark the image as "viewed"
-    // across all instances where this message is shown, regardless of who viewed it.
     const messageDiv = chatMessages.querySelector(`.message[data-message-id="${messageId}"]`);
     if (messageDiv) {
-        // Find the overlay if it still exists (e.g., if viewed by another device before this one was clicked)
         let overlay = messageDiv.querySelector('.view-once-overlay');
         if (overlay) {
+            // Update the overlay to show "Image Viewed"
             overlay.innerHTML = `<i class="fas fa-eye-slash view-once-icon"></i><span class="view-once-text">Image Viewed</span>`;
             overlay.classList.remove('view-once-overlay');
             overlay.classList.add('viewed-image-container');
             overlay.style.pointerEvents = 'none'; // Make it unclickable
         }
-        // If the image was already displayed, you might update its opacity or add a "viewed" badge
+        // If the image was already displayed (e.g., by the sender), dim it
         let actualImage = messageDiv.querySelector('.view-once-actual-image');
+        let blurredImage = messageDiv.querySelector('.view-once-blurred-image');
         if (actualImage) {
             actualImage.style.opacity = '0.5'; // Example: dim the image after it's viewed
-            // Or add a "Viewed" label
+            // Add a "Viewed" label
             const viewedLabel = document.createElement('span');
             viewedLabel.textContent = ' (Viewed)';
             viewedLabel.style.fontSize = '0.8em';
             viewedLabel.style.color = '#777';
-            if (!messageDiv.querySelector('.viewed-label')) { // Prevent adding multiple labels
+            if (!messageDiv.querySelector('.viewed-label')) {
                 viewedLabel.classList.add('viewed-label');
                 messageDiv.querySelector('.message-timestamp').prepend(viewedLabel);
             }
+        } else if (blurredImage) {
+            // If it's the sender's side showing the blurred image, dim it further and update text
+            blurredImage.style.filter = 'blur(8px) brightness(0.7)'; // Even more blur/dim
+            const infoText = messageDiv.querySelector('.view-once-info-text');
+            const actionText = messageDiv.querySelector('.view-once-action-text');
+            if (infoText) infoText.textContent = 'Image was viewed by recipient';
+            if (actionText) actionText.style.display = 'none'; // Hide "Image Sent"
         }
+    }
+});
+
+// Listener for when a view-once image has been 'deleted' on the backend.
+socket.on('imageViewDeleted', ({ messageId }) => {
+    console.log(`Image message ${messageId} confirmed as deleted.`);
+    const messageDiv = chatMessages.querySelector(`.message[data-message-id="${messageId}"]`);
+    if (messageDiv) {
+        messageDiv.classList.remove('view-once-photo-container', 'viewed-image-container');
+        messageDiv.classList.add('view-once-deleted-container');
+        messageDiv.innerHTML = `
+            <div class="view-once-deleted">
+                <i class="fas fa-eye-slash view-once-icon"></i>
+                <span class="view-once-text">This image was viewed and deleted</span>
+            </div>
+            ${messageDiv.querySelector('.message-timestamp') ? messageDiv.querySelector('.message-timestamp').outerHTML : ''}
+        `;
     }
 });
 
