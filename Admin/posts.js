@@ -78,6 +78,7 @@ async function fetchFollowingList() {
         console.log("No logged-in user to fetch following list for.");
         return [];
     }
+
     const token = localStorage.getItem('authToken');
     if (!token) return [];
 
@@ -86,9 +87,16 @@ async function fetchFollowingList() {
             method: 'GET',
             headers: { 'Authorization': `Bearer ${token}` },
         });
+
         if (response.ok) {
             const { following } = await response.json();
-            return [...new Set(following.map(user => user._id.toString()))] || [];
+console.log("Following users:", following);
+            // Validate and map to ID strings
+            return Array.isArray(following)
+              ? [...new Set(following
+                  .filter(user => user && user._id)
+                  .map(user => user._id.toString()))]
+              : [];
         } else {
             console.warn('Could not fetch following list. Status:', response.status);
             showToast('Failed to fetch following list.', '#dc3545');
@@ -100,7 +108,6 @@ async function fetchFollowingList() {
         return [];
     }
 }
-
 /**
  * Fetches user suggestions for following.
  * @returns {Promise<object[]>} - A promise that resolves to an array of user objects.

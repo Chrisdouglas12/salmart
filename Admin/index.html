@@ -633,16 +633,43 @@
     };
     </script>
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
-    <script>
-    const API_BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart.onrender.com';
-    const socket = io(`${API_BASE_URL}`, {
-      path: '/socket.io',
-      transports: ['websocket', 'polling']
-    });
-    socket.on('connect', () => {
-      console.log('Connected to server');
-    });
-    </script>
+<script>
+  const API_BASE_URL = window.location.hostname === 'localhost'
+    ? 'http://localhost:3000'
+    : 'https://salmart.onrender.com';
+
+  const token = localStorage.getItem('authToken');
+
+  const socket = io(API_BASE_URL, {
+    path: '/socket.io',
+    transports: ['websocket', 'polling'],
+    auth: {
+      token: token || null,
+    }
+  });
+
+  socket.on('connect', () => {
+    console.log('✅ Socket.IO connected with ID:', socket.id);
+    const userId = localStorage.getItem('userId');
+    if (userId) {
+      console.log('✅ Registering user with Socket.IO:', userId);
+      socket.emit('joinRoom', userId);
+    } else {
+      console.warn('⚠️ No userId found in localStorage');
+    }
+  });
+
+  socket.on('disconnect', () => {
+    console.log('❌ Socket.IO disconnected');
+  });
+
+  socket.on('connect_error', (error) => {
+    console.error('🔥 Socket.IO connection error:', error.message);
+    if (error.message.includes('token')) {
+      console.warn('⚠️ Socket.IO rejected due to missing or invalid token');
+    }
+  });
+</script>
 
     <script>
     function openImage(imageUrl) {

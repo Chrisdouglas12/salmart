@@ -228,21 +228,29 @@ const initializeSocket = (io) => {
         }
 
         // Create new Message document
-        const newMessage = new Message({
-          senderId,
-          receiverId,
-          text: text, // Store original text, even if it was JSON
-          messageType: messageType || 'text',
-          status: 'sent', // Initial status
-          isRead: false,
-          createdAt: new Date(),
-          ...(offerDetails && { offerDetails }),
-          ...(attachment && { attachment }),
-          metadata: {
-            isSystemMessage: ['bargainStart', 'end-bargain', 'buyerAccept', 'sellerAccept', 'sellerDecline', 'buyerDeclineResponse', 'payment-completed'].includes(messageType),
-            actionRequired: ['offer', 'counter-offer'].includes(messageType),
-          },
-        });
+  const newMessage = new Message({
+  senderId,
+  receiverId,
+  text: text,
+  messageType: messageType || 'text',
+  status: 'sent',
+  isRead: false,
+  createdAt: new Date(),
+  ...(offerDetails && { offerDetails }),
+  ...(attachment && { attachment }),
+  // viewOnce handling for images
+  ...(messageType === 'image' && attachment && {
+    viewOnce: {
+      enabled: true,
+      viewed: false,
+      deleteAt: new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours from creation if not viewed
+    }
+  }),
+  metadata: {
+    isSystemMessage: ['bargainStart', 'end-bargain', 'buyerAccept', 'sellerAccept', 'sellerDecline', 'buyerDeclineResponse', 'payment-completed'].includes(messageType),
+    actionRequired: ['offer', 'counter-offer'].includes(messageType),
+  },
+});
 
         let savedMessage;
         try {
@@ -749,16 +757,52 @@ const initializeSocket = (io) => {
             socket.emit('offerError', { error: error.message });
         }
     });
+    
+    //once viewed photos
+    socket.on('imageViewed', async ({ messageId, viewerId }) => {
+  try {
+    logger.info(`imageViewed event received: messageId=${messageId}, viewerId=${viewerId}`);
+    
+    if (authenticatedUserId !== viewerId) {
+      logger.warn(`Unauthorized imageViewed attempt by ${authenticatedUserId} for viewer ${viewerId}`);
+      return;
+    }
 
-    // You might have other handlers like 'counterOffer', 'paymentComplete', etc.
-    // Ensure they follow the same pattern:
-    // 1. Validate incoming data and senderId (always from socket.user.id).
-    // 2. Save message to DB.
-    // 3. Emit 'newMessage' to relevant user rooms (`user_${id}`).
-    // 4. Emit FCM notification if the recipient is not online/in chat.
-    // 5. Trigger NotificationService.triggerCountUpdate for relevant users.
+    // Find the message and mark as viewed
+    const message = await Message.findById(messageId);
+    if (!message || message.messageType !== 'image' || !message.viewOnce) {
+      logger.warn(`Invalid view-once image message: ${messageId}`);
+      return;
+    }
 
-    // Keep your existing handlers (badge-update, followUser, likePost, commentPost)
+    // Mark as viewed and set deletion timer (24 hours from now)
+    const viewedAt = new Date();
+    const deleteAt = new Date(viewedAt.getTime() + 24 * 60 * 60 * 1000); // 24 hours
+
+    await Message.findByIdAndUpdate(messageId, {
+      $set: {
+        'viewOnce.viewed': true,
+        'viewOnce.viewedAt': viewedAt,
+        'viewOnce.deleteAt': deleteAt,
+        'viewOnce.viewedBy': viewerId
+      }
+    });
+
+    // Emit confirmation to all devices of both participants
+    const chatRoomId = [message.senderId.toString(), message.receiverId.toString()].sort().join('_');
+    io.to(`chat_${chatRoomId}`).emit('imageViewedConfirmation', {
+      messageId,
+      viewerId,
+      viewedAt
+    });
+
+    logger.info(`View-once image ${messageId} marked as viewed by ${viewerId}`);
+
+  } catch (error) {
+    logger.error(`Error handling imageViewed: ${error.message}`);
+  }
+});
+
     socket.on('badge-update', async ({ type, count, userId }) => { /* ... */ });
     socket.on('followUser', async ({ followerId, followedId }) => { /* ... */ });
     socket.on('likePost', async ({ postId, userId }) => { /* ... */ });
