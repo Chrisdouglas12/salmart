@@ -155,9 +155,21 @@ try {
   console.error('❌ [ServiceWorker] Firebase init failed:', error);
 }
 
-// ===== PWA Caching Configuration =====
-const CACHE_NAME = 'salmart-cache-v1.76.21';
-const DYNAMIC_CACHE_NAME = 'salmart-dynamic-v1.76.21';
+// ===== Enhanced Update Management =====
+// UPDATE THIS LINE ON EVERY DEPLOYMENT
+const BUILD_TIMESTAMP = '2024-07-27-v1.76.21'; // <-- CHANGE THIS EACH TIME YOU DEPLOY
+
+const CACHE_NAME = `salmart-cache-${BUILD_TIMESTAMP}`;
+const DYNAMIC_CACHE_NAME = `salmart-dynamic-${BUILD_TIMESTAMP}`;
+
+// Version info for debugging
+const SW_VERSION = {
+  version: BUILD_TIMESTAMP,
+  timestamp: Date.now(),
+  features: ['firebase-messaging', 'pwa-caching', 'auto-update', 'enhanced-notifications']
+};
+
+console.log(`🚀 [ServiceWorker] Version ${SW_VERSION.version} initializing...`);
 
 const urlsToCache = [
   '/',
@@ -207,27 +219,50 @@ const urlsToCache = [
   'https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;0&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;0,800;0,900&display=swap'
 ];
 
-// ===== Dynamic Content Cache Strategies =====
+// ===== Enhanced Dynamic Content Cache Strategies =====
 const CACHE_STRATEGIES = {
-  '/post': 120000,
-  '/get-transactions': 300000,
-  '/messages': 60000,
-  '/notifications': 90000,
-  '/requests': 180000,
-  '/user': 300000,
-  '/is-following-list': 120000,
-  '/api/is-following-list': 120000,
-  '/api/user-suggestions': 120000,
+  '/post': { ttl: 120000, forceRefresh: true },
+  '/get-transactions': { ttl: 300000, forceRefresh: true },
+  '/messages': { ttl: 60000, forceRefresh: true },
+  '/notifications': { ttl: 90000, forceRefresh: true },
+  '/requests': { ttl: 180000, forceRefresh: true },
+  '/user': { ttl: 300000, forceRefresh: true }, // Always refresh user data
+  '/is-following-list': { ttl: 120000, forceRefresh: true },
+  '/api/is-following-list': { ttl: 120000, forceRefresh: true },
+  '/api/user-suggestions': { ttl: 120000, forceRefresh: true },
+  '/auth': { ttl: 0, forceRefresh: true }, // Never cache auth
+  '/login': { ttl: 0, forceRefresh: true },
+  '/logout': { ttl: 0, forceRefresh: true },
+  '/verify-token': { ttl: 0, forceRefresh: true },
+  '/refresh-token': { ttl: 0, forceRefresh: true }
 };
 
-function getCacheTTL(url) {
+// Helper function to identify auth requests
+function isAuthRequest(requestUrl) {
+  const authPaths = ['/auth', '/login', '/logout', '/verify-token', '/refresh-token'];
+  return authPaths.some(path => requestUrl.pathname.startsWith(path)) ||
+         requestUrl.searchParams.has('token') ||
+         requestUrl.pathname.includes('firebase') ||
+         requestUrl.hostname.includes('googleapis.com') ||
+         requestUrl.hostname.includes('firebaseio.com');
+}
+
+// Helper function to identify user-specific requests
+function isUserSpecificRequest(requestUrl) {
+  const userPaths = ['/user', '/profile', '/messages', '/notifications', '/requests'];
+  return userPaths.some(path => requestUrl.pathname.startsWith(path)) ||
+         requestUrl.searchParams.has('userId') ||
+         requestUrl.searchParams.has('token');
+}
+
+function getCacheStrategy(url) {
   const pathname = new URL(url).pathname;
-  for (const [path, ttl] of Object.entries(CACHE_STRATEGIES)) {
+  for (const [path, strategy] of Object.entries(CACHE_STRATEGIES)) {
     if (pathname.startsWith(path)) {
-      return ttl;
+      return strategy;
     }
   }
-  return 300000;
+  return { ttl: 300000, forceRefresh: false };
 }
 
 function isCacheStale(cachedResponse, maxAge) {
@@ -280,35 +315,85 @@ function isDynamicContent(requestUrl) {
   return false;
 }
 
-// ===== Service Worker Events =====
+// ===== Enhanced Service Worker Events =====
 self.addEventListener('install', (event) => {
-  console.log('📦 [ServiceWorker] Installing and caching static assets...');
+  console.log(`📦 [ServiceWorker] Installing version ${SW_VERSION.version}...`);
+  
+  // Skip waiting to activate immediately
   self.skipWaiting();
+  
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(urlsToCache).catch(error => {
-        console.error('❌ [ServiceWorker] Failed to cache some URLs during install:', error);
-      });
-    })
+    Promise.all([
+      // Cache static assets
+      caches.open(CACHE_NAME).then((cache) => {
+        return cache.addAll(urlsToCache).catch(error => {
+          console.error('❌ [ServiceWorker] Failed to cache some URLs during install:', error);
+        });
+      }),
+      
+      // Clear old dynamic caches immediately
+      caches.keys().then((cacheNames) => {
+        return Promise.all(
+          cacheNames.map((name) => {
+            if (name.includes('salmart-dynamic-') && name !== DYNAMIC_CACHE_NAME) {
+              console.log(`🗑️ [ServiceWorker] Clearing old dynamic cache: ${name}`);
+              return caches.delete(name);
+            }
+          })
+        );
+      }),
+      
+      // Notify clients about new version
+      self.clients.matchAll().then(clients => {
+        clients.forEach(client => {
+          client.postMessage({
+            type: 'SW_VERSION_UPDATE',
+            version: SW_VERSION,
+            action: 'installed'
+          });
+        });
+      })
+    ])
   );
 });
 
 self.addEventListener('activate', (event) => {
-  console.log('🧹 [ServiceWorker] Activating and cleaning old caches...');
+  console.log(`🧹 [ServiceWorker] Activating version ${SW_VERSION.version}...`);
+  
   event.waitUntil(
-    caches.keys().then((cacheNames) =>
-      Promise.all(
-        cacheNames.map((name) => {
-          if (name !== CACHE_NAME && name !== DYNAMIC_CACHE_NAME) {
-            console.log(`🗑️ [ServiceWorker] Deleting old cache: ${name}`);
-            return caches.delete(name);
-          }
-        })
-      )
-    ).then(() => clients.claim())
+    Promise.all([
+      // Delete all old caches
+      caches.keys().then((cacheNames) =>
+        Promise.all(
+          cacheNames.map((name) => {
+            if (name !== CACHE_NAME && name !== DYNAMIC_CACHE_NAME) {
+              console.log(`🗑️ [ServiceWorker] Deleting old cache: ${name}`);
+              return caches.delete(name);
+            }
+          })
+        )
+      ),
+      
+      // Take control immediately
+      self.clients.claim(),
+      
+      // Notify all clients about activation
+      self.clients.matchAll({ type: 'window' }).then(clients => {
+        clients.forEach(client => {
+          console.log('🔄 [ServiceWorker] Notifying client about activation');
+          client.postMessage({
+            type: 'SW_VERSION_UPDATE',
+            version: SW_VERSION,
+            action: 'activated',
+            shouldReload: true
+          });
+        });
+      })
+    ])
   );
 });
 
+// ===== Enhanced Fetch Handler =====
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET' ||
       event.request.url.includes('sockjs-node') ||
@@ -317,92 +402,152 @@ self.addEventListener('fetch', (event) => {
   }
 
   const requestUrl = new URL(event.request.url);
+  
+  // Never cache authentication requests
+  if (isAuthRequest(requestUrl)) {
+    console.log(`🔐 [SW] Bypassing cache for auth request: ${event.request.url}`);
+    event.respondWith(fetch(event.request));
+    return;
+  }
 
-  if (isDynamicContent(requestUrl)) {
+  // Handle version check endpoint
+  if (event.request.url.endsWith('/sw-version')) {
     event.respondWith(
-      caches.match(event.request).then(async (cachedResponse) => {
-        const cacheTTL = getCacheTTL(event.request.url);
-
-        const networkFetchPromise = fetchAndCache(event.request).catch(err => {
-            console.warn(`⚠️ [SW] Network fetch/update failed for ${event.request.url}: ${err.message}`);
-            throw err;
-        });
-
-        if (cachedResponse) {
-          const isStale = isCacheStale(cachedResponse, cacheTTL);
-          if (!isStale) {
-            console.log(`⚡ [SW] Serving fresh cached dynamic content: ${event.request.url}`);
-            event.waitUntil(networkFetchPromise.catch(err => {}));
-            return cachedResponse;
-          }
-          console.log(`🔄 [SW] Serving stale dynamic content, updating in background: ${event.request.url}`);
-          event.waitUntil(networkFetchPromise.catch(err => {}));
-          return cachedResponse;
-        }
-
-        console.log(`📡 [SW] No cache, fetching dynamic content: ${event.request.url}`);
-        return networkFetchPromise;
-      }).catch(async (error) => {
-        console.error(`❌ [SW] Dynamic fetch strategy failed for ${event.request.url}:`, error);
-        if (event.request.headers.get('accept')?.includes('application/json')) {
-            console.log(`🌐 [SW] Network/cache failed for JSON API, providing offline fallback data.`);
-            return new Response(JSON.stringify({
-                error: 'Network unavailable and no cached content for API.',
-                offline: true,
-                data: []
-            }), {
-                status: 503,
-                statusText: 'Service Unavailable',
-                headers: { 'Content-Type': 'application/json' }
-            });
-        }
-        return new Response('Network error occurred for dynamic content', {
-            status: 503,
-            statusText: 'Service Unavailable'
-        });
+      new Response(JSON.stringify(SW_VERSION), {
+        headers: { 'Content-Type': 'application/json' }
       })
     );
     return;
   }
 
-  // Static Content Strategy
-  event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        console.log(`💾 [SW] Serving from static cache: ${event.request.url}`);
-        return cachedResponse;
-      }
+  if (isDynamicContent(requestUrl)) {
+    event.respondWith(handleDynamicContent(event.request));
+    return;
+  }
 
-      console.log(`📡 [SW] Fetching and caching static content: ${event.request.url}`);
-      return fetch(event.request)
-        .then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
-            const responseToCache = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(event.request, responseToCache);
-            });
-          }
-          return networkResponse;
-        })
-        .catch(() => {
-          if (event.request.mode === 'navigate') {
-            return caches.match('/Offline.html');
-          }
-          return new Response('Network error occurred', {
-            status: 503,
-            statusText: 'Service Unavailable'
-          });
-        });
-    })
-  );
+  // Handle static content
+  event.respondWith(handleStaticContent(event.request));
 });
+
+// Enhanced dynamic content handler
+async function handleDynamicContent(request) {
+  const requestUrl = new URL(request.url);
+  const strategy = getCacheStrategy(request.url);
+  
+  try {
+    // Always fetch fresh for critical user data or auth
+    if (strategy.forceRefresh || isUserSpecificRequest(requestUrl) || isAuthRequest(requestUrl)) {
+      console.log(`📡 [SW] Force refreshing: ${request.url}`);
+      return await fetchAndCache(request);
+    }
+    
+    // Standard cache strategy
+    const cachedResponse = await caches.match(request);
+    const cacheTTL = strategy.ttl;
+
+    if (cachedResponse && !isCacheStale(cachedResponse, cacheTTL)) {
+      console.log(`⚡ [SW] Serving fresh cached content: ${request.url}`);
+      // Update in background
+      fetchAndCache(request).catch(() => {});
+      return cachedResponse;
+    }
+
+    console.log(`🔄 [SW] Fetching fresh content: ${request.url}`);
+    return await fetchAndCache(request);
+    
+  } catch (error) {
+    console.error(`❌ [SW] Dynamic fetch failed for ${request.url}:`, error);
+    
+    // Return cached version if available
+    const cachedResponse = await caches.match(request);
+    if (cachedResponse) {
+      console.log(`📦 [SW] Returning stale cached content: ${request.url}`);
+      return cachedResponse;
+    }
+    
+    // Return error response
+    if (request.headers.get('accept')?.includes('application/json')) {
+      return new Response(JSON.stringify({
+        error: 'Network unavailable',
+        offline: true,
+        data: []
+      }), {
+        status: 503,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+    
+    throw error;
+  }
+}
+
+// Static content handler
+async function handleStaticContent(request) {
+  try {
+    const cachedResponse = await caches.match(request);
+    if (cachedResponse) {
+      console.log(`💾 [SW] Serving from static cache: ${request.url}`);
+      return cachedResponse;
+    }
+
+    console.log(`📡 [SW] Fetching and caching static content: ${request.url}`);
+    const networkResponse = await fetch(request);
+    
+    if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
+      const responseToCache = networkResponse.clone();
+      const cache = await caches.open(CACHE_NAME);
+      await cache.put(request, responseToCache);
+    }
+    return networkResponse;
+    
+  } catch (error) {
+    console.error(`❌ [SW] Static fetch failed for ${request.url}:`, error);
+    
+    if (request.mode === 'navigate') {
+      const offlinePage = await caches.match('/Offline.html');
+      return offlinePage || new Response('Offline', { status: 503 });
+    }
+    
+    return new Response('Network error occurred', {
+      status: 503,
+      statusText: 'Service Unavailable'
+    });
+  }
+}
 
 // ===== Enhanced Message Handling =====
 self.addEventListener('message', (event) => {
   console.log('📨 [ServiceWorker] Message from main thread:', event.data);
   
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    console.log('⏭️ [ServiceWorker] Skip waiting requested');
+    self.skipWaiting();
+  }
+  
+  if (event.data && event.data.type === 'GET_VERSION') {
+    event.ports[0].postMessage({
+      type: 'SW_VERSION',
+      version: SW_VERSION
+    });
+  }
+  
+  if (event.data && event.data.type === 'CLEAR_ALL_CACHES') {
+    console.log('🧹 [ServiceWorker] Clearing all caches');
+    event.waitUntil(
+      caches.keys().then(cacheNames => 
+        Promise.all(
+          cacheNames.map(name => {
+            if (name.includes('salmart')) {
+              console.log(`🗑️ [ServiceWorker] Deleting cache: ${name}`);
+              return caches.delete(name);
+            }
+          })
+        )
+      )
+    );
+  }
+  
   if (event.data && event.data.type === 'CLEAR_NOTIFICATIONS') {
-    // Clear all notifications
     self.registration.getNotifications().then((notifications) => {
       notifications.forEach((notification) => notification.close());
       console.log('🧹 [ServiceWorker] Cleared all notifications');
@@ -410,7 +555,6 @@ self.addEventListener('message', (event) => {
   }
   
   if (event.data && event.data.type === 'UPDATE_NOTIFICATION_SETTINGS') {
-    // Handle notification settings updates
     console.log('⚙️ [ServiceWorker] Updating notification settings:', event.data.settings);
   }
 });
@@ -438,7 +582,7 @@ async function updateCriticalPostsData() {
               await cache.put(new Request(`${self.location.origin}${endpoint}`), response.clone());
               console.log(`✅ [SW] Updated cache for background sync: ${endpoint}`);
           } else {
-              console.log(`⚠️ [SW] Failed background sync update for ${endpoint}: ${response.status} ${response.statusText}`);
+              console.log(`⚠️ [SW] Failed background sync update for ${endpoint}: ${response.status}`);
           }
       } catch (error) {
           console.log(`⚠️ [SW] Background sync network error for ${endpoint}: ${error.message}`);
@@ -449,25 +593,24 @@ async function updateCriticalPostsData() {
   console.log('✅ [SW] Background sync for posts completed');
 }
 
-// ===== Notification Management =====
+// ===== Push Subscription Management =====
 self.addEventListener('pushsubscriptionchange', (event) => {
   console.log('🔄 [ServiceWorker] Push subscription changed');
-  // Handle push subscription changes
   event.waitUntil(
-    // Re-register push subscription
     self.registration.pushManager.subscribe({
       userVisibleOnly: true,
       applicationServerKey: 'BCtAsyYJYCSfpg_kXL2aO59szQsPFE3DvmqqLOnW03JTVR88Jb435-jDnUgj0j0mL5VCWLiGGfErTuwQ-XUArho'
     }).then((subscription) => {
       console.log('✅ [ServiceWorker] Push subscription renewed');
-      // Send new subscription to server
       return fetch('/api/update-push-subscription', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(subscription)
       });
+    }).catch(error => {
+      console.error('❌ [ServiceWorker] Push subscription renewal failed:', error);
     })
   );
 });
 
-console.log('✅ [ServiceWorker] Enhanced Firebase Messaging Service Worker loaded with WhatsApp-like features');
+console.log(`✅ [ServiceWorker] Enhanced version ${SW_VERSION.version} loaded with Firebase messaging and auto-update features`);

@@ -3028,3 +3028,19 @@
 {"level":"info","message":"Fetched 48 messages between 68431685432ee393a735a641 and 6865680685b3194e8bc38b92","timestamp":"2025-07-26T21:55:20.994Z"}
 {"level":"info","message":"Fetched 11 latest messages for user 68431685432ee393a735a641","timestamp":"2025-07-26T21:55:21.051Z"}
 {"level":"info","message":"Fetched 48 messages between 68431685432ee393a735a641 and 6865680685b3194e8bc38b92","timestamp":"2025-07-26T21:55:38.450Z"}
+{"level":"warn","message":"Missing senderId or receiverId in /messages","timestamp":"2025-07-27T14:37:01.200Z"}
+{"level":"info","message":"Fetched 11 latest messages for user 68431685432ee393a735a641","timestamp":"2025-07-27T14:37:24.372Z"}
+{"level":"info","message":"Fetched 61 messages between 68431685432ee393a735a641 and 6865680685b3194e8bc38b92","timestamp":"2025-07-27T14:37:49.297Z"}
+{"level":"warn","message":"Missing senderId or receiverId in /messages","timestamp":"2025-07-27T14:41:11.696Z"}
+{"level":"info","message":"Fetched 11 latest messages for user 68431685432ee393a735a641","timestamp":"2025-07-27T14:41:37.345Z"}
+{"level":"info","message":"Fetched 61 messages between 68431685432ee393a735a641 and 6865680685b3194e8bc38b92","timestamp":"2025-07-27T14:41:40.600Z"}
+{"level":"info","message":"Fetched 11 latest messages for user 68431685432ee393a735a641","timestamp":"2025-07-27T14:41:41.338Z"}
+{"level":"info","message":"Fetched 11 latest messages for user 68431685432ee393a735a641","timestamp":"2025-07-27T14:41:54.323Z"}
+{"level":"info","message":"Fetched 11 latest messages for user 68431685432ee393a735a641","timestamp":"2025-07-27T14:42:53.876Z"}
+{"level":"warn","message":"Missing senderId or receiverId in /messages","timestamp":"2025-07-27T14:43:20.892Z"}
+{"level":"info","message":"Fetched 11 latest messages for user 68431685432ee393a735a641","timestamp":"2025-07-27T14:43:54.812Z"}
+{"level":"error","message":"Error fetching messages between 68431685432ee393a735a641 and 6865680685b3194e8bc38b92: connection <monitor> to 65.62.31.3:27017 timed out","timestamp":"2025-07-27T14:44:39.009Z"}
+{"level":"error","message":"Error fetching messages for user 68431685432ee393a735a641: connection <monitor> to 65.62.31.3:27017 timed out","timestamp":"2025-07-27T14:44:39.021Z"}
+{"level":"info","message":"Fetched 11 latest messages for user 68431685432ee393a735a641","timestamp":"2025-07-27T14:44:45.213Z"}
+{"level":"info","message":"Fetched 0 latest messages for user 688698bbee3508811f4c277c","timestamp":"2025-07-27T22:11:53.615Z"}
+{"level":"warn","message":"Missing senderId or receiverId in /messages","timestamp":"2025-07-27T22:11:54.080Z"}

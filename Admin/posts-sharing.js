@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 await navigator.clipboard.writeText(text);
                 return true;
             } else {
-                const textarea = document.createElement('textarea');
+                const textarea = document.createElementa('textarea');
                 textarea.value = text;
                 document.body.appendChild(textarea);
                 textarea.select();

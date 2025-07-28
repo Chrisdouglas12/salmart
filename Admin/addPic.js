@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Force set the default image
                 imgElement.src = DEFAULT_PROFILE_PIC;
                 // Also set alt text for accessibility
-                imgElement.alt = "Default Profile Picture";
+                
                 console.log(`Set default profile picture for element:`, imgElement.id || imgElement.className);
             }
         });

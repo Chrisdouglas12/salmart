@@ -1321,7 +1321,7 @@ p {
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
+  z-index: 1000000;
 }
 
 .report-modal-content,
@@ -1329,7 +1329,7 @@ p {
 .delete-modal-content {
   background-color: white;
   border-radius: 12px;
-  width: 90%;
+  width: 80%;
   max-width: 500px;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
   overflow: hidden;
