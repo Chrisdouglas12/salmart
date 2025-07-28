@@ -203,15 +203,19 @@ document.getElementById('registrationForm').addEventListener('submit', async (e)
 
     const data = await res.json();
 
-    if (res.ok) {
-      if (data.token) localStorage.setItem('authToken', data.token);
-      if (data.userId) localStorage.setItem('userId', data.userId);
-       if (data.userId) localStorage.setItem('pending_email', data.pendingEmail);
-       
-      window.location.href = 'verify.html';
-    } else {
-      alert(data.message || 'Registration failed');
-    }
+    // In your registration form submit handler, update this part:
+
+if (res.ok) {
+  if (data.token) localStorage.setItem('authToken', data.token);
+  if (data.userId) localStorage.setItem('userId', data.userId);
+  
+  // Store the email for resend functionality
+  localStorage.setItem('pending_email', user.email); // Use user.email instead of data.pendingEmail
+  
+  window.location.href = 'verify.html';
+} else {
+  alert(data.message || 'Registration failed');
+}
   } catch (err) {
     console.error('Register error:', err);
     alert('Something went wrong. Try again.');

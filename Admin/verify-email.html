@@ -4,101 +4,469 @@
   <meta charset="UTF-8">
   <title>Email Verification - Salmart</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.css" rel="stylesheet">
   <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
     body {
-      font-family: "Segoe UI", sans-serif;
-      background-color: #f7f7f7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: #fff;
+      min-height: 100vh;
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 100vh;
-      color: #333;
+      padding: 20px;
+      color: #374151;
     }
 
-    .card {
-      background-color: #fff;
-      border: 1px solid #ddd;
-      padding: 30px;
-      border-radius: 10px;
+    .verification-container {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 40px;
+      max-width: 450px;
+      width: 100%;
       text-align: center;
-      max-width: 400px;
-      box-shadow: 0 5px 10px rgba(0, 0, 0, 0.08);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .verification-container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: #28a745;
+      border-radius: 20px 20px 0 0;
     }
 
     .status-icon {
-      font-size: 40px;
-      margin-bottom: 15px;
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .status-icon svg {
+      width: 40px;
+      height: 40px;
+      stroke-width: 2.5;
+    }
+
+    .loading {
+      background: #28a745;
+      animation: pulse 2s infinite;
     }
 
     .success {
-      color: #28a745;
+      background: linear-gradient(135deg, #10b981, #059669);
+      animation: successBounce 0.6s ease-out;
     }
 
     .error {
-      color: red;
+      background: linear-gradient(135deg, #28a745, #28a745);
+      animation: errorShake 0.6s ease-out;
     }
 
-    .message {
-      font-size: 18px;
-      margin-bottom: 10px;
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 0.8; }
+      50% { transform: scale(1.05); opacity: 1; }
     }
 
-    .login-btn {
-      margin-top: 15px;
-      background-color: #28a745;
-      color: #fff;
-      padding: 10px 20px;
-      border: none;
-      border-radius: 6px;
+    @keyframes successBounce {
+      0% { transform: scale(0); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+
+    @keyframes errorShake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
+
+    .spinner {
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top: 3px solid white;
+      width: 24px;
+      height: 24px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .message-title {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      color: #111827;
+      line-height: 1.2;
+    }
+
+    .message-description {
+      font-size: 16px;
+      color: #6b7280;
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }
+
+    .redirect-info {
+      background: #ffff;
+      border-radius: 12px;
+      padding: 20px;
+      margin: 24px 0;
+      border-left: 4px solid #28a745;
+    }
+
+    .redirect-text {
+      font-size: 14px;
+      color: #ccc;
+      margin-bottom: 8px;
+    }
+
+    .countdown-timer {
+      font-size: 28px;
+      font-weight: 800;
+      color: #28a745;
+      font-family: 'Courier New', monospace;
+      letter-spacing: 1px;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 24px;
+    }
+
+    .btn {
+      padding: 12px 24px;
+      border-radius: 12px;
       text-decoration: none;
-      font-weight: bold;
-      display: inline-block;
+      font-weight: 600;
+      font-size: 14px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.3s ease;
+      border: none;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
     }
 
-    .login-btn:hover {
-      background-color: #218838;
+    .btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+      transition: left 0.5s;
+    }
+
+    .btn:hover::before {
+      left: 100%;
+    }
+
+    .btn-primary {
+      background: #fff;
+      color: #28a745;
+      box-shadow: 0 0 10px #ddd
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 10px #ddd
+    }
+
+    .btn-secondary {
+      background: #28a745;
+      color: #374151;
+      border: 2px solid #fff;
+    }
+
+    .btn-secondary:hover {
+      background: #ffff;
+      border-color: #28a745;
+      transform: translateY(-1px);
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 4px;
+      background: #fff;
+      border-radius: 2px;
+      overflow: hidden;
+      margin: 16px 0;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #28a745, #28a745);
+      border-radius: 2px;
+      transition: width 1s linear;
+    }
+
+    .brand-logo {
+      font-size: 20px;
+      font-weight: 800;
+      color: #1f2937;
+      margin-bottom: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    @media (max-width: 480px) {
+      .verification-container {
+        padding: 24px;
+        margin: 20px;
+      }
+      
+      .message-title {
+        font-size: 20px;
+      }
+      
+      .action-buttons {
+        flex-direction: column;
+      }
+      
+      .btn {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+
+    .fade-in {
+      animation: fadeIn 0.6s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
     }
   </style>
 </head>
 <body>
-  <div class="card" id="verifyBox">
-    <div class="status-icon">⏳</div>
-    <p class="message">Verifying your email...</p>
+  <div class="verification-container fade-in" id="verificationBox">
+    <div class="brand-logo">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M20 6L9 17l-5-5"/>
+      </svg>
+      Salmart
+    </div>
+    
+    <div class="status-icon loading" id="statusIcon">
+      <div class="spinner"></div>
+    </div>
+    
+    <h1 class="message-title" id="messageTitle">Verifying Your Email</h1>
+    <p class="message-description" id="messageDescription">Please wait while we verify your email address...</p>
+    
+    <div class="progress-bar" id="progressBar" style="display: none;">
+      <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+    </div>
   </div>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.js"></script>
   <script>
-    
+    // Configuration
     const API_BASE_URL = window.API_BASE_URL || 
       (window.location.hostname === 'localhost' 
         ? 'http://localhost:3000' 
         : 'https://salmart.onrender.com');
+    
+    const REDIRECT_DELAY = 5; // seconds
+    const LOGIN_URL = '/SignIn.html';
+    
+    // DOM Elements
+    const verificationBox = document.getElementById('verificationBox');
+    const statusIcon = document.getElementById('statusIcon');
+    const messageTitle = document.getElementById('messageTitle');
+    const messageDescription = document.getElementById('messageDescription');
+    const progressBar = document.getElementById('progressBar');
+    const progressFill = document.getElementById('progressFill');
+    
+    // Get token from URL
     const params = new URLSearchParams(window.location.search);
     const token = params.get('token');
-
-    const box = document.getElementById('verifyBox');
-
-    if (!token) {
-      box.innerHTML = `
-        <div class="status-icon error">❌</div>
-        <p class="message">No verification token found in the link.</p>
-      `;
-    } else {
-      fetch(`${API_BASE_URL}/verify-email?token=` + token)
-        .then(response => response.text())
-        .then(data => {
-          box.innerHTML = `
-            <div class="status-icon success">✅</div>
-            <p class="message">${data}</p>
-            <a href="/SigIn.html" class="login-btn">Log in now</a>
-          `;
-        })
-        .catch(err => {
-          box.innerHTML = `
-            <div class="status-icon error">❌</div>
-            <p class="message">Verification failed. Please try again later.</p>
-          `;
-        });
+    
+    // Utility function to create icons
+    function createIcon(iconName, className = '') {
+      const icon = document.createElement('div');
+      icon.innerHTML = lucide.icons[iconName].toSvg();
+      if (className) icon.className = className;
+      return icon.innerHTML;
     }
+    
+    // Show error state
+    function showError(title, description) {
+      statusIcon.className = 'status-icon error';
+      statusIcon.innerHTML = createIcon('alertCircle');
+      messageTitle.textContent = title;
+      messageDescription.textContent = description;
+      
+      // Add retry button
+      setTimeout(() => {
+        const actionButtons = document.createElement('div');
+        actionButtons.className = 'action-buttons';
+        actionButtons.innerHTML = `
+          <button class="btn btn-secondary" onclick="location.reload()">
+            ${createIcon('refreshCw')}
+            Try Again
+          </button>
+          <a href="${LOGIN_URL}" class="btn btn-primary">
+            ${createIcon('logIn')}
+            Go to Login
+          </a>
+        `;
+        verificationBox.appendChild(actionButtons);
+      }, 500);
+    }
+    
+    // Show success state with countdown
+    function showSuccess(message) {
+      statusIcon.className = 'status-icon success';
+      statusIcon.innerHTML = createIcon('checkCircle');
+      messageTitle.textContent = 'Email Verified Successfully!';
+      messageDescription.textContent = message;
+      
+      // Show redirect info with countdown
+      const redirectInfo = document.createElement('div');
+      redirectInfo.className = 'redirect-info';
+      redirectInfo.innerHTML = `
+        <p class="redirect-text">Redirecting to login page in:</p>
+        <div class="countdown-timer" id="countdownTimer">${REDIRECT_DELAY}</div>
+      `;
+      
+      progressBar.style.display = 'block';
+      verificationBox.insertBefore(redirectInfo, verificationBox.lastElementChild);
+      
+      // Action buttons
+      const actionButtons = document.createElement('div');
+      actionButtons.className = 'action-buttons';
+      actionButtons.innerHTML = `
+        <a href="${LOGIN_URL}" class="btn btn-primary">
+          ${createIcon('logIn')}
+          Login Now
+        </a>
+        <button class="btn btn-secondary" onclick="cancelRedirect()">
+          ${createIcon('x')}
+          Cancel
+        </button>
+      `;
+      verificationBox.appendChild(actionButtons);
+      
+      // Start countdown
+      startCountdown();
+    }
+    
+    // Countdown and redirect functionality
+    let countdownInterval;
+    let redirectTimeout;
+    
+    function startCountdown() {
+      let timeLeft = REDIRECT_DELAY;
+      const countdownTimer = document.getElementById('countdownTimer');
+      
+      countdownInterval = setInterval(() => {
+        timeLeft--;
+        countdownTimer.textContent = timeLeft;
+        
+        // Update progress bar
+        const progress = ((REDIRECT_DELAY - timeLeft) / REDIRECT_DELAY) * 100;
+        progressFill.style.width = progress + '%';
+        
+        if (timeLeft <= 0) {
+          clearInterval(countdownInterval);
+          window.location.href = LOGIN_URL;
+        }
+      }, 1000);
+      
+      // Backup redirect
+      redirectTimeout = setTimeout(() => {
+        window.location.href = LOGIN_URL;
+      }, REDIRECT_DELAY * 1000);
+    }
+    
+    // Cancel redirect function
+    window.cancelRedirect = function() {
+      clearInterval(countdownInterval);
+      clearTimeout(redirectTimeout);
+      
+      const redirectInfo = document.querySelector('.redirect-info');
+      const progressBar = document.getElementById('progressBar');
+      
+      if (redirectInfo) redirectInfo.remove();
+      if (progressBar) progressBar.style.display = 'none';
+      
+      messageDescription.textContent = 'Auto-redirect cancelled. You can now login manually.';
+    };
+    
+    // Main verification logic
+    async function verifyEmail() {
+      if (!token) {
+        showError(
+          'Invalid Verification Link',
+          'No verification token found in the link. Please check your email for the correct verification link.'
+        );
+        return;
+      }
+      
+      try {
+        const response = await fetch(`${API_BASE_URL}/verify-email?token=${encodeURIComponent(token)}`);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const data = await response.text();
+        
+        // Simulate processing time for better UX
+        setTimeout(() => {
+          showSuccess(data || 'Your email has been verified successfully!');
+        }, 1500);
+        
+      } catch (error) {
+        console.error('Verification error:', error);
+        
+        setTimeout(() => {
+          showError(
+            'Verification Failed',
+            'Unable to verify your email at this time. This could be due to an expired token or server issues. Please try again or contact support.'
+          );
+        }, 1500);
+      }
+    }
+    
+    // Initialize verification
+    verifyEmail();
+    
+    // Add some visual feedback for loading
+    setTimeout(() => {
+      messageDescription.textContent = 'Connecting to server...';
+    }, 800);
   </script>
 </body>
 </html>

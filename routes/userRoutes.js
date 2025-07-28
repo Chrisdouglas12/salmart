@@ -158,7 +158,11 @@ router.post('/register', async (req, res) => {
 
     res.status(201).json({
       message: 'User registered. Please check your email to verify your account.',
-      userId: newUser._id
+      userId: newUser._id,
+      token: token,
+      pendingEmail: newUser.email,
+      success: true,
+      
     });
 
   } catch (error) {
@@ -180,7 +184,7 @@ router.get('/verify-email', async (req, res) => {
     user.verificationToken = undefined;
     await user.save();
 
-    res.status(200).send('✅ Email verified successfully. You can now log in.');
+    res.status(200).json('Email verified successfully. You can now log in.');
   } catch (err) {
     console.error('Email verification error:', err);
     res.status(500).send('Server error');
@@ -1028,46 +1032,100 @@ router.get('/states-lgas', (req, res) => {
 
 
 
-// Resend verification email route
+// Resend verification email
 router.post('/resend-verification', async (req, res) => {
   try {
     const { email } = req.body;
-    if (!email) return res.status(400).json({ message: 'Email is required' });
-
-    const user = await User.findOne({ email: email.toLowerCase().trim() });
-    if (!user) return res.status(404).json({ message: 'User not found' });
-
-    if (user.isVerified) {
-      return res.status(400).json({ message: 'User already verified' });
+    
+    if (!email) {
+      return res.status(400).json({ message: 'Email address is required' });
     }
 
-    // Generate new token and save
-    const token = generateVerificationToken();
-    user.verificationToken = token;
-    user.tokenExpires = Date.now() + 1000 * 60 * 30; // 30 mins expiry
-    await user.save();
+    // Find user by email
+    const user = await User.findOne({ email: email.toLowerCase() });
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found with this email address' });
+    }
 
-    // Send email
-    const verifyUrl = `${process.env.BASE_URL}/verify-email?token=${token}`;
-    const mailOptions = {
+    // Check if user is already verified
+    if (user.isVerified) {
+      return res.status(400).json({ message: 'Email is already verified' });
+    }
+
+    // Generate new verification token if needed
+    if (!user.verificationToken) {
+      user.verificationToken = crypto.randomBytes(32).toString('hex');
+      await user.save();
+    }
+
+    // Create verification URL
+    const verifyUrl = `https://salmartonline.com.ng/verify-email.html?token=${user.verificationToken}`;
+
+    // Send verification email
+    await transporter.sendMail({
       from: `"Salmart" <${process.env.EMAIL_USER}>`,
       to: user.email,
-      subject: 'Verify Your Email - Salmart',
+      subject: 'Verify your email address - Resent',
       html: `
-        <h2>Welcome to Salmart!</h2>
-        <p>Click the button below to verify your email address:</p>
-        <a href="${verifyUrl}" style="padding: 10px 16px; background: #28a745; color: #fff; border-radius: 6px; text-decoration: none;">Verify Email</a>
-        <p>If the button doesn't work, copy and paste this link into your browser:</p>
-        <p>${verifyUrl}</p>
+        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f8f9fa; padding: 20px;">
+          <div style="background-color: white; padding: 40px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+            <div style="text-align: center; margin-bottom: 30px;">
+              <h1 style="color: #28a745; margin-bottom: 10px; font-size: 28px;">📧 Email Verification</h1>
+              <p style="color: #6c757d; font-size: 16px;">Salmart Account Verification</p>
+            </div>
+            
+            <div style="text-align: center; margin-bottom: 30px;">
+              <h2 style="color: #333; margin-bottom: 15px;">Hello ${user.firstName}!</h2>
+              <p style="color: #555; font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
+                You requested a new verification link. Click the button below to verify your email address and activate your Salmart account:
+              </p>
+            </div>
+            
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${verifyUrl}" style="display: inline-block; padding: 15px 30px; background-color: #28a745; color: white; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);">
+                ✅ Verify Email Address
+              </a>
+            </div>
+            
+            <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; border-left: 4px solid #28a745; margin: 20px 0;">
+              <p style="color: #495057; font-size: 14px; margin: 0;">
+                <strong>🔒 Security Note:</strong> This verification link will expire in 24 hours for your security.
+              </p>
+            </div>
+            
+            <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #dee2e6;">
+              <p style="color: #6c757d; font-size: 14px; margin-bottom: 10px;">
+                If the button doesn't work, copy and paste this link in your browser:
+              </p>
+              <p style="color: #28a745; font-size: 12px; word-break: break-all; background-color: #f8f9fa; padding: 10px; border-radius: 4px;">
+                ${verifyUrl}
+              </p>
+            </div>
+            
+            <div style="text-align: center; margin-top: 20px;">
+              <p style="color: #868e96; font-size: 12px;">
+                If you didn't request this verification email, please ignore this message.
+                <br>
+                This email was sent from Salmart - Your trusted online marketplace.
+              </p>
+            </div>
+          </div>
+        </div>
       `
-    };
+    });
 
-    await transporter.sendMail(mailOptions);
-    res.json({ message: 'Verification email resent. Please check your inbox.' });
+    res.status(200).json({ 
+      message: 'Verification email sent successfully',
+      success: true 
+    });
 
   } catch (error) {
-    console.error('❌ Resend error:', error.message);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Resend verification error:', error);
+    res.status(500).json({ 
+      message: 'Failed to send verification email. Please try again later.',
+      error: error.message 
+    });
   }
 });
 

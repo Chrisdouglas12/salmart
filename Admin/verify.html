@@ -5,205 +5,680 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Email Verification - Salmart</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
   <style>
     * {
       box-sizing: border-box;
+      margin: 0;
+      padding: 0;
     }
 
     body {
-      margin: 0;
-      padding: 0;
       font-family: 'Poppins', sans-serif;
-      background-color: #f8f9fa;
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
       display: flex;
       justify-content: center;
       align-items: center;
       min-height: 100vh;
+      padding: 20px;
     }
 
     .verify-container {
-      background-color: #fff;
-      padding: 3rem 2rem;
-      border-radius: 16px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.07);
+      background: #fff;
+      padding: 3rem 2.5rem;
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(40, 167, 69, 0.08);
       text-align: center;
-      max-width: 460px;
+      max-width: 480px;
       width: 100%;
-      transition: all 0.3s ease-in-out;
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(40, 167, 69, 0.1);
     }
 
-    .icon-wrapper {
-      background-color: #e8f5e9;
-      border-radius: 50%;
-      width: 80px;
-      height: 80px;
+    .verify-container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #28a745, #20c997, #28a745);
+      border-radius: 20px 20px 0 0;
+    }
+
+    .brand-header {
       display: flex;
-      justify-content: center;
       align-items: center;
-      margin: 0 auto 20px;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 2rem;
+      color: #28a745;
+      font-weight: 700;
+      font-size: 18px;
     }
 
-    .icon-wrapper i {
-      font-size: 38px;
-      color: #28a745;
-    }
-
-    .verify-container h2 {
-      color: #28a745;
-      margin-bottom: 12px;
+    .brand-header i {
       font-size: 24px;
     }
 
+    .icon-wrapper {
+      background: linear-gradient(135deg, #28a745, #20c997);
+      border-radius: 50%;
+      width: 100px;
+      height: 100px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 0 auto 24px;
+      position: relative;
+      animation: iconPulse 2s infinite;
+    }
+
+    .icon-wrapper::after {
+      content: '';
+      position: absolute;
+      width: 120px;
+      height: 120px;
+      border: 2px solid rgba(40, 167, 69, 0.2);
+      border-radius: 50%;
+      animation: ripple 2s infinite;
+    }
+
+    .icon-wrapper i {
+      font-size: 45px;
+      color: #fff;
+      z-index: 1;
+    }
+
+    @keyframes iconPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    @keyframes ripple {
+      0% {
+        transform: scale(0.8);
+        opacity: 1;
+      }
+      100% {
+        transform: scale(1.2);
+        opacity: 0;
+      }
+    }
+
+    .verify-container h2 {
+      color: #2c3e50;
+      margin-bottom: 16px;
+      font-size: 28px;
+      font-weight: 600;
+      letter-spacing: -0.5px;
+    }
+
     .verify-container p {
-      font-size: 15px;
-      color: #555;
+      font-size: 16px;
+      color: #6c757d;
       line-height: 1.6;
+      margin-bottom: 8px;
+    }
+
+    .email-highlight {
+      background: rgba(40, 167, 69, 0.1);
+      padding: 16px;
+      border-radius: 12px;
+      margin: 20px 0;
+      border-left: 4px solid #28a745;
+    }
+
+    .email-highlight p {
+      color: #28a745;
+      font-weight: 500;
+      margin: 0;
     }
 
     .btn {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      background-color: #28a745;
+      justify-content: center;
+      gap: 10px;
+      background: linear-gradient(135deg, #28a745, #20c997);
       color: #fff;
-      padding: 12px 24px;
+      padding: 14px 28px;
       border: none;
-      border-radius: 10px;
-      font-weight: 500;
+      border-radius: 12px;
+      font-weight: 600;
       text-decoration: none;
       margin-top: 25px;
       cursor: pointer;
-      transition: background-color 0.3s ease;
+      transition: all 0.3s ease;
+      font-size: 15px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+      transition: left 0.5s;
+    }
+
+    .btn:hover::before {
+      left: 100%;
     }
 
     .btn:hover {
-      background-color: #218838;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(40, 167, 69, 0.3);
     }
 
-    .info, .resend-container {
-      margin-top: 18px;
+    .info {
+      margin-top: 24px;
+      padding: 16px;
+      background: #f8f9fa;
+      border-radius: 12px;
+      border: 1px solid #e9ecef;
+    }
+
+    .info p {
+      color: #495057;
       font-size: 14px;
-      color: #666;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
     }
 
-    .info i, .resend-container i {
-      margin-right: 6px;
+    .info i {
+      color: #28a745;
+    }
+
+    .countdown-section {
+      background: rgba(40, 167, 69, 0.05);
+      padding: 20px;
+      border-radius: 12px;
+      margin: 24px 0;
+      border: 1px dashed rgba(40, 167, 69, 0.3);
+    }
+
+    .countdown-text {
+      color: #6c757d;
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+
+    .countdown-timer {
+      font-size: 32px;
+      font-weight: 700;
+      color: #28a745;
+      font-family: 'Courier New', monospace;
+      letter-spacing: 2px;
+      margin-bottom: 8px;
+    }
+
+    .countdown-label {
+      color: #28a745;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .progress-ring {
+      width: 60px;
+      height: 60px;
+      margin: 0 auto 16px;
+      position: relative;
+    }
+
+    .progress-ring svg {
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg);
+    }
+
+    .progress-ring-circle {
+      fill: none;
+      stroke: #e9ecef;
+      stroke-width: 4;
+    }
+
+    .progress-ring-progress {
+      fill: none;
+      stroke: #28a745;
+      stroke-width: 4;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 1s linear;
     }
 
     #resendSection {
-      margin-top: 25px;
+      margin-top: 30px;
       display: none;
-      animation-in forwards;
+      animation: slideIn 0.6s ease-out;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .resend-container {
+      background: #fff5f5;
+      padding: 20px;
+      border-radius: 12px;
+      border: 1px solid #fecaca;
+      margin-bottom: 16px;
+    }
+
+    .resend-container p {
+      color: #dc2626;
+      font-size: 14px;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
     }
 
     #resendBtn {
-      margin-top: 12px;
-      background-color: #fff;
+      background: #fff;
       border: 2px solid #28a745;
       color: #28a745;
-      padding: 10px 20px;
-      border-radius: 8px;
-      font-weight: 500;
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-weight: 600;
       cursor: pointer;
       transition: all 0.3s ease;
+      font-size: 14px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #resendBtn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(40, 167, 69, 0.1), transparent);
+      transition: left 0.5s;
+    }
+
+    #resendBtn:hover::before {
+      left: 100%;
     }
 
     #resendBtn:hover {
-      background-color: #28a745;
+      background: #28a745;
       color: #fff;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
     }
 
-    #resendStatus {
-      margin-top: 10px;
-      font-size: 13px;
+    #resendBtn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    #resendBtn:disabled:hover {
+      background: #fff;
       color: #28a745;
+      box-shadow: none;
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
+    .status-message {
+      margin-top: 16px;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: all 0.3s ease;
+    }
+
+    .status-message.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .status-message.success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+
+    .status-message.error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+
+    .status-message.warning {
+      background: #fff3cd;
+      color: #856404;
+      border: 1px solid #ffeaa7;
+    }
+
+    .tips-section {
+      background: #f8f9fa;
+      padding: 20px;
+      border-radius: 12px;
+      margin-top: 24px;
+      text-align: left;
+    }
+
+    .tips-title {
+      color: #28a745;
+      font-weight: 600;
+      font-size: 16px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tips-list {
+      list-style: none;
+      padding: 0;
+    }
+
+    .tips-list li {
+      color: #6c757d;
+      font-size: 14px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .tips-list li i {
+      color: #28a745;
+      margin-top: 2px;
+      font-size: 12px;
     }
 
     @media screen and (max-width: 480px) {
       .verify-container {
         padding: 2rem 1.5rem;
+        margin: 10px;
+      }
+
+      .verify-container h2 {
+        font-size: 24px;
       }
 
       .btn {
         width: 100%;
         justify-content: center;
       }
+
+      .countdown-timer {
+        font-size: 28px;
+      }
+
+      .tips-section {
+        text-align: center;
+      }
+
+      .tips-list li {
+        justify-content: center;
+      }
+    }
+
+    .fade-in {
+      animation: fadeIn 0.8s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
     }
   </style>
 </head>
 <body>
 
-  <!-- Inside the verify-container -->
-<main class="verify-container" role="main">
+<main class="verify-container fade-in" role="main">
+  <div class="brand-header">
+    <i class="fas fa-store"></i>
+    <span>Salmart</span>
+  </div>
+
   <div class="icon-wrapper">
     <i class="fas fa-envelope-open-text"></i>
   </div>
 
   <h2>Check Your Email</h2>
-  <p>
-    We’ve sent a verification link to your email.<br/>
-    Please click the link we sent to activate your account.
-  </p>
+  <p>We've sent a verification link to your email address.</p>
+  <p>Please click the link we sent to activate your account.</p>
 
+  <div class="email-highlight">
+    <p><i class="fas fa-info-circle"></i> Check your inbox and spam folder</p>
+  </div>
 
+  <a href="#" class="btn">
+    <i class="fas fa-external-link-alt"></i>
+    Open Email App
+  </a>
 
+  <div class="info">
+    <p><i class="fas fa-shield-alt"></i> This link will expire in 24 hours for security</p>
+  </div>
+
+  <!-- Countdown Section -->
+  <div class="countdown-section" id="countdownSection">
+    <div class="progress-ring">
+      <svg>
+        <circle class="progress-ring-circle" cx="30" cy="30" r="26"></circle>
+        <circle class="progress-ring-progress" cx="30" cy="30" r="26" 
+                stroke-dasharray="163.36" stroke-dashoffset="163.36" id="progressCircle"></circle>
+      </svg>
+    </div>
+    <p class="countdown-text">Resend option available in:</p>
+    <div class="countdown-timer" id="countdownTimer">30</div>
+    <p class="countdown-label">Seconds</p>
+  </div>
+
+  <!-- Resend Section -->
   <div id="resendSection">
     <div class="resend-container">
-      <i class="fas fa-question-circle"></i> Didn’t receive the email?
+      <p><i class="fas fa-exclamation-triangle"></i> Didn't receive the email?</p>
     </div>
-    <button id="resendBtn">Resend Verification Email</button>
-    <div id="resendStatus"></div>
+    <button id="resendBtn">
+      <i class="fas fa-paper-plane"></i>
+      Resend Verification Email
+    </button>
+    <div id="resendStatus" class="status-message"></div>
+  </div>
+
+  <!-- Tips Section -->
+  <div class="tips-section">
+    <div class="tips-title">
+      <i class="fas fa-lightbulb"></i>
+      Helpful Tips
+    </div>
+    <ul class="tips-list">
+      <li><i class="fas fa-dot-circle"></i> Check your spam or junk folder</li>
+      <li><i class="fas fa-dot-circle"></i> Make sure the email address is correct</li>
+      <li><i class="fas fa-dot-circle"></i> Add us to your contacts to avoid spam filtering</li>
+      <li><i class="fas fa-dot-circle"></i> Email delivery may take a few minutes</li>
+    </ul>
   </div>
 </main>
-  <script>
-    const API_BASE_URL = window.API_BASE_URL || 
-      (window.location.hostname === 'localhost' 
-        ? 'http://localhost:3000' 
-        : 'https://salmart.onrender.com');
 
-    // Show the resend section after 10 seconds
-    setTimeout(() => {
-      document.getElementById('resendSection').style.display = 'block';
-    }, 10000);
+<script>
+  const API_BASE_URL = window.API_BASE_URL || 
+    (window.location.hostname === 'localhost' 
+      ? 'http://localhost:3000' 
+      : 'https://salmart.onrender.com');
 
-    const resendBtn = document.getElementById('resendBtn');
-    const resendStatus = document.getElementById('resendStatus');
+  // Countdown configuration
+  const COUNTDOWN_DURATION = 30; // seconds
+  let countdownTime = COUNTDOWN_DURATION;
+  let countdownInterval;
 
-    resendBtn.addEventListener('click', async () => {
-      resendBtn.disabled = true;
-      resendBtn.innerText = 'Resending...';
-      resendStatus.innerText = '';
+  // DOM Elements
+  const countdownSection = document.getElementById('countdownSection');
+  const countdownTimer = document.getElementById('countdownTimer');
+  const progressCircle = document.getElementById('progressCircle');
+  const resendSection = document.getElementById('resendSection');
+  const resendBtn = document.getElementById('resendBtn');
+  const resendStatus = document.getElementById('resendStatus');
 
-      try {
-        const email = localStorage.getItem("pending_email");
-        const res = await fetch(`${API_BASE_URL}/resend-verification`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ email })
-        });
+  // Progress circle calculations
+  const radius = 26;
+  const circumference = 2 * Math.PI * radius;
 
-        const data = await res.json();
+  // Initialize progress circle
+  progressCircle.style.strokeDasharray = circumference;
+  progressCircle.style.strokeDashoffset = circumference;
 
-        if (res.ok) {
-          resendStatus.innerText = '✅ Verification email resent successfully!';
-        } else {
-          resendStatus.innerText = `⚠️ ${data.message || 'Something went wrong.'}`;
-        }
-      } catch (err) {
-        resendStatus.innerText = '❌ Network error.';
-      } finally {
-        resendBtn.disabled = false;
-        resendBtn.innerText = 'Resend Verification Email';
+  // Update progress circle
+  function updateProgress(timeLeft) {
+    const progress = (COUNTDOWN_DURATION - timeLeft) / COUNTDOWN_DURATION;
+    const offset = circumference - (progress * circumference);
+    progressCircle.style.strokeDashoffset = offset;
+  }
+
+  // Start countdown
+  function startCountdown() {
+    countdownInterval = setInterval(() => {
+      countdownTime--;
+      countdownTimer.textContent = countdownTime;
+      updateProgress(countdownTime);
+
+      if (countdownTime <= 0) {
+        clearInterval(countdownInterval);
+        showResendSection();
       }
-    });
-  </script>
+    }, 1000);
+  }
+
+  // Show resend section
+  function showResendSection() {
+    countdownSection.style.display = 'none';
+    resendSection.style.display = 'block';
+  }
+
+  // Show status message
+  function showStatusMessage(message, type, icon) {
+    resendStatus.innerHTML = `<i class="fas ${icon}"></i> ${message}`;
+    resendStatus.className = `status-message ${type} show`;
+    
+    setTimeout(() => {
+      resendStatus.classList.remove('show');
+    }, 5000);
+  }
+
+  // Reset countdown
+  function resetCountdown() {
+    countdownTime = COUNTDOWN_DURATION;
+    countdownTimer.textContent = countdownTime;
+    updateProgress(0);
+    resendSection.style.display = 'none';
+    countdownSection.style.display = 'block';
+    startCountdown();
+  }
+
+  // Resend functionality
+  resendBtn.addEventListener('click', async () => {
+    resendBtn.disabled = true;
+    resendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+    
+    // Clear previous status
+    resendStatus.classList.remove('show');
+
+    try {
+      const email = localStorage.getItem("pending_email");
+      
+      if (!email) {
+        showStatusMessage('Email address not found. Please try registering again.', 'error', 'fa-exclamation-circle');
+        return;
+      }
+
+      const response = await fetch(`${API_BASE_URL}/resend-verification`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        showStatusMessage('Verification email sent successfully! Check your inbox.', 'success', 'fa-check-circle');
+        resetCountdown();
+      } else {
+        showStatusMessage(data.message || 'Failed to send email. Please try again.', 'error', 'fa-exclamation-circle');
+      }
+    } catch (error) {
+      console.error('Resend error:', error);
+      showStatusMessage('Network error. Please check your connection and try again.', 'error', 'fa-wifi');
+    } finally {
+      resendBtn.disabled = false;
+      resendBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Resend Verification Email';
+    }
+  });
+
+  // Auto-detect email client and update button
+  function updateEmailButton() {
+    const btn = document.querySelector('.btn');
+    const userAgent = navigator.userAgent.toLowerCase();
+    
+    if (userAgent.includes('android')) {
+      btn.href = 'intent:///#Intent;action=android.intent.action.MAIN;category=android.intent.category.APP_EMAIL;end';
+      btn.innerHTML = '<i class="fas fa-envelope"></i> Open Gmail';
+    } else if (userAgent.includes('iphone') || userAgent.includes('ipad')) {
+      btn.href = 'message://';
+      btn.innerHTML = '<i class="fas fa-envelope"></i> Open Mail';
+    } else {
+      btn.href = 'mailto:';
+      btn.innerHTML = '<i class="fas fa-envelope"></i> Open Email Client';
+    }
+  }
+
+  // Initialize
+  document.addEventListener('DOMContentLoaded', () => {
+    updateEmailButton();
+    startCountdown();
+    
+    // Add some visual feedback
+    setTimeout(() => {
+      const tips = document.querySelector('.tips-section');
+      tips.style.animation = 'slideIn 0.6s ease-out';
+    }, 2000);
+  });
+
+  // Handle visibility change to pause/resume countdown
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      clearInterval(countdownInterval);
+    } else if (countdownTime > 0 && resendSection.style.display === 'none') {
+      startCountdown();
+    }
+  });
+</script>
+
 </body>
 </html>
