@@ -139,29 +139,38 @@ router.post('/register', async (req, res) => {
 
     const verifyUrl = `https://salmartonline.com.ng/verify-email.html?token=${verificationToken}`;
 
-    // Send verification email
-    await transporter.sendMail({
-      from: `"Salmart" <${process.env.EMAIL_USER}>`,
-      to: newUser.email,
-      subject: 'Verify your email address',
-      html: `
-        <div style="font-family: Arial, sans-serif; color: #333;">
-          <h2>Welcome to Salmart, ${newUser.firstName}!</h2>
-          <p>Click the link below to verify your email address and activate your account:</p>
-          <a href="${verifyUrl}" style="display: inline-block; padding: 10px 20px; background-color: #28a745; color: white; text-decoration: none; border-radius: 5px;">Verify Email</a>
-          <p>If you did not sign up on Salmart, please ignore this email.</p>
+await transporter.sendMail({
+  from: `"Salmart" <${process.env.EMAIL_USER}>`,
+  to: newUser.email,
+  subject: 'Confirm Your Salmart Account',
+  html: `
+    <div style="font-family: 'Segoe UI', Roboto, Arial, sans-serif; background-color: #f9f9f9; padding: 40px;">
+      <div style="max-width: 600px; margin: auto; background: #ffffff; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); padding: 30px;">
+        <h1 style="color: #333333; margin-bottom: 20px;">Welcome to Salmart, ${newUser.firstName}!</h1>
+        <p style="font-size: 16px; color: #555555; line-height: 1.6;">
+          We're thrilled to have you on board. Please click the button below to verify your email address and activate your account.
+        </p>
+        <div style="margin: 30px 0;">
+          <a href="${verifyUrl}" style="display: inline-block; background-color: #007BFF; color: #ffffff; font-size: 16px; padding: 12px 24px; border-radius: 6px; text-decoration: none;">
+            Verify Email
+          </a>
         </div>
-      `
-    });
+        <p style="font-size: 14px; color: #999999;">
+          If you didn't create an account with Salmart, you can safely ignore this message.
+        </p>
+      </div>
+      <div style="text-align: center; margin-top: 20px; font-size: 12px; color: #aaaaaa;">
+        &copy; ${new Date().getFullYear()} Salmart. All rights reserved.
+      </div>
+    </div>
+  `
+});
 
     console.log('✅ New user registered & verification email sent to:', newUser.email);
 
     res.status(201).json({
       message: 'User registered. Please check your email to verify your account.',
       userId: newUser._id,
-      token: token,
-      pendingEmail: newUser.email,
-      success: true,
       
     });
 
