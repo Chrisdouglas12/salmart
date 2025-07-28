@@ -3044,3 +3044,11 @@
 {"level":"info","message":"Fetched 11 latest messages for user 68431685432ee393a735a641","timestamp":"2025-07-27T14:44:45.213Z"}
 {"level":"info","message":"Fetched 0 latest messages for user 688698bbee3508811f4c277c","timestamp":"2025-07-27T22:11:53.615Z"}
 {"level":"warn","message":"Missing senderId or receiverId in /messages","timestamp":"2025-07-27T22:11:54.080Z"}
+{"level":"info","message":"Fetched 0 latest messages for user 688698bbee3508811f4c277c","timestamp":"2025-07-28T09:32:21.061Z"}
+{"level":"warn","message":"Missing senderId or receiverId in /messages","timestamp":"2025-07-28T09:32:21.161Z"}
+{"level":"warn","message":"Missing senderId or receiverId in /messages","timestamp":"2025-07-28T09:48:33.329Z"}
+{"level":"info","message":"Fetched 11 latest messages for user 68431685432ee393a735a641","timestamp":"2025-07-28T09:48:38.032Z"}
+{"level":"info","message":"Fetched 61 messages between 68431685432ee393a735a641 and 6865680685b3194e8bc38b92","timestamp":"2025-07-28T09:48:47.531Z"}
+{"level":"info","message":"Fetched 11 latest messages for user 68431685432ee393a735a641","timestamp":"2025-07-28T09:52:00.493Z"}
+{"level":"warn","message":"Missing senderId or receiverId in /messages","timestamp":"2025-07-28T09:52:01.988Z"}
+{"level":"info","message":"Fetched 62 messages between 68431685432ee393a735a641 and 6865680685b3194e8bc38b92","timestamp":"2025-07-28T09:52:05.830Z"}

@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Email Verification - Salmart</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet"/>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Poppins', sans-serif;
+      background-color: #f8f9fa;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .verify-container {
+      background-color: #fff;
+      padding: 3rem 2rem;
+      border-radius: 16px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.07);
+      text-align: center;
+      max-width: 460px;
+      width: 100%;
+      transition: all 0.3s ease-in-out;
+    }
+
+    .icon-wrapper {
+      background-color: #e8f5e9;
+      border-radius: 50%;
+      width: 80px;
+      height: 80px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 0 auto 20px;
+    }
+
+    .icon-wrapper i {
+      font-size: 38px;
+      color: #28a745;
+    }
+
+    .verify-container h2 {
+      color: #28a745;
+      margin-bottom: 12px;
+      font-size: 24px;
+    }
+
+    .verify-container p {
+      font-size: 15px;
+      color: #555;
+      line-height: 1.6;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background-color: #28a745;
+      color: #fff;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 10px;
+      font-weight: 500;
+      text-decoration: none;
+      margin-top: 25px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .btn:hover {
+      background-color: #218838;
+    }
+
+    .info, .resend-container {
+      margin-top: 18px;
+      font-size: 14px;
+      color: #666;
+    }
+
+    .info i, .resend-container i {
+      margin-right: 6px;
+    }
+
+    #resendSection {
+      margin-top: 25px;
+      display: none;
+      animation-in forwards;
+    }
+
+    #resendBtn {
+      margin-top: 12px;
+      background-color: #fff;
+      border: 2px solid #28a745;
+      color: #28a745;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    #resendBtn:hover {
+      background-color: #28a745;
+      color: #fff;
+    }
+
+    #resendStatus {
+      margin-top: 10px;
+      font-size: 13px;
+      color: #28a745;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media screen and (max-width: 480px) {
+      .verify-container {
+        padding: 2rem 1.5rem;
+      }
+
+      .btn {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Inside the verify-container -->
+<main class="verify-container" role="main">
+  <div class="icon-wrapper">
+    <i class="fas fa-envelope-open-text"></i>
+  </div>
+
+  <h2>Check Your Email</h2>
+  <p>
+    We’ve sent a verification link to your email.<br/>
+    Please click the link we sent to activate your account.
+  </p>
+
+
+
+  <div id="resendSection">
+    <div class="resend-container">
+      <i class="fas fa-question-circle"></i> Didn’t receive the email?
+    </div>
+    <button id="resendBtn">Resend Verification Email</button>
+    <div id="resendStatus"></div>
+  </div>
+</main>
+  <script>
+    const API_BASE_URL = window.API_BASE_URL || 
+      (window.location.hostname === 'localhost' 
+        ? 'http://localhost:3000' 
+        : 'https://salmart.onrender.com');
+
+    // Show the resend section after 10 seconds
+    setTimeout(() => {
+      document.getElementById('resendSection').style.display = 'block';
+    }, 10000);
+
+    const resendBtn = document.getElementById('resendBtn');
+    const resendStatus = document.getElementById('resendStatus');
+
+    resendBtn.addEventListener('click', async () => {
+      resendBtn.disabled = true;
+      resendBtn.innerText = 'Resending...';
+      resendStatus.innerText = '';
+
+      try {
+        const email = localStorage.getItem("pending_email");
+        const res = await fetch(`${API_BASE_URL}/resend-verification`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ email })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          resendStatus.innerText = '✅ Verification email resent successfully!';
+        } else {
+          resendStatus.innerText = `⚠️ ${data.message || 'Something went wrong.'}`;
+        }
+      } catch (err) {
+        resendStatus.innerText = '❌ Network error.';
+      } finally {
+        resendBtn.disabled = false;
+        resendBtn.innerText = 'Resend Verification Email';
+      }
+    });
+  </script>
+</body>
+</html>

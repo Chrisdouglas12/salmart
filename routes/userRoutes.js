@@ -28,6 +28,11 @@ const transporter = nodemailer.createTransport({
   }
 });
 
+// Generate verification token
+function generateVerificationToken() {
+  return crypto.randomBytes(32).toString('hex');
+}
+
 // Set up storage dynamically
 const uploadDir = path.join(__dirname, 'Uploads');
 let storage;
@@ -77,57 +82,110 @@ router.post('/upload', upload.single('image'), (req, res) => {
 });
 module.exports = (io) => {
      
-     
+
+const crypto = require('crypto');
+
 // Register a user
 router.post('/register', async (req, res) => {
   try {
-    // Destructure all necessary fields from req.body
-    let { firstName, lastName, email, password, accountNumber, bankCode, accountName } = req.body;
-    
-    // Trim and lowercase email
+    let {
+      firstName,
+      lastName,
+      email,
+      password,
+      phoneNumber,
+      state,
+      city,
+      accountNumber,
+      bankCode,
+      accountName,
+      bankName
+    } = req.body;
+
+    if (!email || !password || !phoneNumber || !state || !city) {
+      return res.status(400).json({ message: 'All required fields must be provided.' });
+    }
+
     email = email.trim().toLowerCase();
-    
-    // Check if user already exists
+
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: 'User already exists' });
     }
-    
-    // Hash the password
+
     const hashedPassword = await bcrypt.hash(password, 10);
-    
-    // Create a new User instance
+
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+
     const newUser = new User({
-      firstName,
-      lastName,
+      firstName: firstName?.trim(),
+      lastName: lastName?.trim(),
       email,
       password: hashedPassword,
-      // Populate bankDetails with all received information
-      bankDetails: { 
-        accountNumber, 
-        bankCode,    // Add bankCode here
-        accountName  // Add accountName here
-      },
+      phoneNumber: phoneNumber?.trim(),
+      state: state?.trim(),
+      city: city?.trim(),
+      isVerified: false,
+      verificationToken,
+      bankDetails: {
+        accountNumber,
+        bankCode,
+        accountName,
+        bankName,
+      }
     });
-    
-    // Save the new user to the database
+
     await newUser.save();
-    
-    console.log('New user registered:', newUser);
-    // You might want to return a token or user ID here for immediate login on the frontend
-    res.status(201).json({ 
-        message: 'User created successfully',
-        // Optional: include user ID or a token for immediate login
-        userId: newUser._id 
+
+    const verifyUrl = `https://salmartonline.com.ng/verify-email.html?token=${verificationToken}`;
+
+    // Send verification email
+    await transporter.sendMail({
+      from: `"Salmart" <${process.env.EMAIL_USER}>`,
+      to: newUser.email,
+      subject: 'Verify your email address',
+      html: `
+        <div style="font-family: Arial, sans-serif; color: #333;">
+          <h2>Welcome to Salmart, ${newUser.firstName}!</h2>
+          <p>Click the link below to verify your email address and activate your account:</p>
+          <a href="${verifyUrl}" style="display: inline-block; padding: 10px 20px; background-color: #28a745; color: white; text-decoration: none; border-radius: 5px;">Verify Email</a>
+          <p>If you did not sign up on Salmart, please ignore this email.</p>
+        </div>
+      `
+    });
+
+    console.log('✅ New user registered & verification email sent to:', newUser.email);
+
+    res.status(201).json({
+      message: 'User registered. Please check your email to verify your account.',
+      userId: newUser._id
     });
 
   } catch (error) {
-    console.error('Register error:', error.message);
-    // Check for specific Mongoose validation errors if needed for more detailed feedback
+    console.error('❌ Register error:', error.message);
     res.status(500).json({ message: 'Server error' });
   }
 });
 
+//verify email
+router.get('/verify-email', async (req, res) => {
+  try {
+    const { token } = req.query;
+    if (!token) return res.status(400).send('Verification token missing');
+
+    const user = await User.findOne({ verificationToken: token });
+    if (!user) return res.status(404).send('Invalid or expired verification token');
+
+    user.isVerified = true;
+    user.verificationToken = undefined;
+    await user.save();
+
+    res.status(200).send('✅ Email verified successfully. You can now log in.');
+  } catch (err) {
+    console.error('Email verification error:', err);
+    res.status(500).send('Server error');
+  }
+});
 
 // Login
 router.post('/login', async (req, res) => {
@@ -135,18 +193,27 @@ router.post('/login', async (req, res) => {
   try {
     let { email, password } = req.body;
     email = email.trim().toLowerCase();
+
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(400).json({ message: 'User not found' });
     }
+
+    if (!user.isVerified) {
+      return res.status(403).json({ message: 'Email not verified. Please check your inbox.' });
+    }
+
     if (user.isBanned) {
       return res.status(403).json({ message: 'Account is banned' });
     }
+
     const isPassword = await bcrypt.compare(password, user.password);
     if (!isPassword) {
       return res.status(400).json({ message: 'Invalid password' });
     }
+
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1w' });
+
     res.status(200).json({
       message: 'Login successful',
       token,
@@ -943,56 +1010,67 @@ router.post('/image-viewed', async (req, res) => {
   }
 });
 
-// Optional: Add a route for secure image download with view verification
-router.get('/download-image/:messageId', async (req, res) => {
+
+
+
+router.get('/states-lgas', (req, res) => {
+  console.log('States API hit!');
   try {
-    const { messageId } = req.params;
-    const userId = req.user?.id; // Assuming you have auth middleware
-    
-    if (!userId) {
-      return res.status(401).json({ error: 'Authentication required' });
-    }
-
-    // Here you would:
-    // 1. Find the message
-    // 2. Verify the user has permission to download (viewed the image)
-    // 3. Check if download is still allowed (within time limits)
-    // 4. Serve the file or redirect to the image URL
-    
-    // Example:
-    /*
-    const message = await Message.findById(messageId);
-    
-    if (!message || !message.viewOnce.allowDownload) {
-      return res.status(403).json({ error: 'Download not permitted' });
-    }
-    
-    if (message.senderId !== userId && message.receiverId !== userId) {
-      return res.status(403).json({ error: 'Access denied' });
-    }
-    
-    // For Cloudinary images, you might redirect:
-    if (message.attachment.cloudinaryPublicId) {
-      return res.redirect(message.attachment.url);
-    }
-    
-    // For local files, serve the file:
-    const filePath = path.join(__dirname, '../uploads', message.attachment.filename);
-    res.download(filePath, message.attachment.downloadFilename || 'image.jpg');
-    */
-
-    res.json({ 
-      success: true, 
-      message: 'Download endpoint - implement based on your needs' 
-    });
-
+    const filePath = path.join(__dirname, '..', 'nigerian-states.json'); // go up one level
+    const data = fs.readFileSync(filePath, 'utf-8');
+    const parsed = JSON.parse(data);
+    res.status(200).json(parsed);
   } catch (error) {
-    console.error('Image download error:', error);
-    res.status(500).json({ 
-      error: 'Server error during download',
-      message: error.message 
-    });
+    console.error('Failed to load states and LGAs:', error);
+    res.status(500).json({ message: 'Error loading data' });
   }
 });
+
+
+
+// Resend verification email route
+router.post('/resend-verification', async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ message: 'Email is required' });
+
+    const user = await User.findOne({ email: email.toLowerCase().trim() });
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    if (user.isVerified) {
+      return res.status(400).json({ message: 'User already verified' });
+    }
+
+    // Generate new token and save
+    const token = generateVerificationToken();
+    user.verificationToken = token;
+    user.tokenExpires = Date.now() + 1000 * 60 * 30; // 30 mins expiry
+    await user.save();
+
+    // Send email
+    const verifyUrl = `${process.env.BASE_URL}/verify-email?token=${token}`;
+    const mailOptions = {
+      from: `"Salmart" <${process.env.EMAIL_USER}>`,
+      to: user.email,
+      subject: 'Verify Your Email - Salmart',
+      html: `
+        <h2>Welcome to Salmart!</h2>
+        <p>Click the button below to verify your email address:</p>
+        <a href="${verifyUrl}" style="padding: 10px 16px; background: #28a745; color: #fff; border-radius: 6px; text-decoration: none;">Verify Email</a>
+        <p>If the button doesn't work, copy and paste this link into your browser:</p>
+        <p>${verifyUrl}</p>
+      `
+    };
+
+    await transporter.sendMail(mailOptions);
+    res.json({ message: 'Verification email resent. Please check your inbox.' });
+
+  } catch (error) {
+    console.error('❌ Resend error:', error.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+module.exports = router;
   return router;
 };

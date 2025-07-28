@@ -6,576 +6,7 @@
   <title>Register - SALMART</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <style>
-    :root {
-      --primary-color: #28a745;
-      --primary-dark: #1e7e34;
-      --primary-light: #34ce57;
-      --secondary-color: #6c757d;
-      --success-color: #28a745;
-      --error-color: #dc3545;
-      --warning-color: #ffc107;
-      --background-color: #f8f9fa;
-      --card-background: #ffffff;
-      --text-primary: #2c3e50;
-      --text-secondary: #6c757d;
-      --border-color: #e9ecef;
-      --shadow-light: 0 2px 10px rgba(0, 0, 0, 0.1);
-      --shadow-medium: 0 8px 30px rgba(0, 0, 0, 0.12);
-      --shadow-heavy: 0 15px 50px rgba(0, 0, 0, 0.15);
-      --border-radius: 16px;
-      --border-radius-small: 8px;
-      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    body {
-      font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: #fff;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-      line-height: 1.6;
-      color: var(--text-primary);
-    }
-
-    .container {
-      width: 100%;
-      max-width: 480px;
-      background: var(--card-background);
-      border-radius: var(--border-radius);
-      box-shadow: var(--shadow-heavy);
-      overflow: hidden;
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-    }
-
-    .header {
-      background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
-      color: white;
-      padding: 40px 30px;
-      text-align: center;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .header::before {
-      content: '';
-      position: absolute;
-      top: -50%;
-      left: -50%;
-      width: 200%;
-      height: 200%;
-      background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-      animation: shimmer 3s infinite;
-    }
-
-    .header h1 {
-      font-size: 2.5rem;
-      font-weight: 700;
-      margin-bottom: 8px;
-      position: relative;
-      z-index: 1;
-    }
-
-    .header p {
-      font-size: 1rem;
-      opacity: 0.9;
-      position: relative;
-      z-index: 1;
-      margin-bottom: 20px;
-    }
-
-    .header h2 {
-      font-size: 1.8rem;
-      font-weight: 600;
-      position: relative;
-      z-index: 1;
-    }
-
-    .form-container {
-      padding: 40px 30px;
-    }
-
-    .form-group {
-      position: relative;
-      margin-bottom: 24px;
-    }
-
-    .form-group label {
-      display: block;
-      margin-bottom: 8px;
-      font-weight: 500;
-      color: var(--text-primary);
-      font-size: 0.9rem;
-    }
-
-    .input-wrapper {
-      position: relative;
-    }
-
-    .input-field {
-      width: 100%;
-      padding: 16px 20px;
-      border: 2px solid var(--border-color);
-      border-radius: var(--border-radius-small);
-      font-size: 16px;
-      font-family: inherit;
-      background: var(--card-background);
-      color: var(--text-primary);
-      transition: var(--transition);
-      outline: none;
-    }
-
-    .input-field:focus {
-      border-color: var(--primary-color);
-      box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.1);
-      transform: translateY(-2px);
-    }
-
-    .input-field:valid {
-      border-color: var(--success-color);
-    }
-
-    .input-field::placeholder {
-      color: var(--text-secondary);
-    }
-
-    .password-container {
-      position: relative;
-    }
-
-    .password-container .input-field {
-      padding-right: 50px;
-    }
-
-    .eye-icon {
-      position: absolute;
-      right: 16px;
-      top: 50%;
-      transform: translateY(-50%);
-      cursor: pointer;
-      color: var(--text-secondary);
-      font-size: 1.2rem;
-      transition: var(--transition);
-      z-index: 2;
-    }
-
-    .eye-icon:hover {
-      color: var(--primary-color);
-      transform: translateY(-50%) scale(1.1);
-    }
-
-    .input-group {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-    }
-
-    .select-wrapper {
-      position: relative;
-    }
-
-    .select-wrapper::after {
-      content: '\f107';
-      font-family: 'Font Awesome 6 Free';
-      font-weight: 900;
-      position: absolute;
-      right: 16px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--text-secondary);
-      pointer-events: none;
-      z-index: 1;
-    }
-
-    .input-field.select {
-      appearance: none;
-      background-color: var(--card-background);
-      cursor: pointer;
-      padding-right: 50px;
-    }
-
-    .status-indicator {
-      margin-top: 8px;
-      font-size: 0.875rem;
-      font-weight: 500;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .status-indicator.verified {
-      color: var(--success-color);
-    }
-
-    .status-indicator.error {
-      color: var(--error-color);
-    }
-
-    .status-indicator.loading {
-      color: var(--warning-color);
-    }
-
-    .checkbox-group {
-      display: flex;
-      align-items: flex-start;
-      gap: 12px;
-      margin-bottom: 32px;
-    }
-
-    .custom-checkbox {
-      position: relative;
-      display: flex;
-      align-items: center;
-      cursor: pointer;
-    }
-
-    .custom-checkbox input[type="checkbox"] {
-      position: absolute;
-      opacity: 0;
-      cursor: pointer;
-    }
-
-    .checkmark {
-      width: 20px;
-      height: 20px;
-      border: 2px solid var(--border-color);
-      border-radius: 4px;
-      background: var(--card-background);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: var(--transition);
-      flex-shrink: 0;
-    }
-
-    .custom-checkbox input[type="checkbox"]:checked + .checkmark {
-      background: var(--primary-color);
-      border-color: var(--primary-color);
-    }
-
-    .custom-checkbox input[type="checkbox"]:checked + .checkmark::after {
-      content: '\f00c';
-      font-family: 'Font Awesome 6 Free';
-      font-weight: 900;
-      color: white;
-      font-size: 0.7rem;
-    }
-
-    .checkbox-label {
-      font-size: 0.875rem;
-      color: var(--text-secondary);
-      line-height: 1.4;
-    }
-
-    .checkbox-label a {
-      color: var(--primary-color);
-      text-decoration: none;
-      font-weight: 500;
-    }
-
-    .checkbox-label a:hover {
-      text-decoration: underline;
-    }
-
-    .submit-btn {
-      width: 100%;
-      padding: 16px 24px;
-      background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
-      color: white;
-      border: none;
-      border-radius: var(--border-radius-small);
-      font-size: 1rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: var(--transition);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      box-shadow: var(--shadow-light);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .submit-btn::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-      transition: left 0.5s;
-    }
-
-    .submit-btn:hover::before {
-      left: 100%;
-    }
-
-    .submit-btn:hover {
-      background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-color) 100%);
-      transform: translateY(-2px);
-      box-shadow: var(--shadow-medium);
-    }
-
-    .submit-btn:active {
-      transform: translateY(0);
-    }
-
-    .submit-btn:disabled {
-      opacity: 0.7;
-      cursor: not-allowed;
-      transform: none;
-    }
-
-    .loading-spinner {
-      width: 20px;
-      height: 20px;
-      border: 2px solid rgba(255, 255, 255, 0.3);
-      border-top: 2px solid white;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
-
-    .form-footer {
-      text-align: center;
-      margin-top: 24px;
-      padding-top: 24px;
-      border-top: 1px solid var(--border-color);
-    }
-
-    .form-footer p {
-      color: var(--text-secondary);
-      font-size: 0.9rem;
-    }
-
-    .form-footer a {
-      color: var(--primary-color);
-      text-decoration: none;
-      font-weight: 500;
-    }
-
-    .form-footer a:hover {
-      text-decoration: underline;
-    }
-
-    .footer {
-      text-align: center;
-      padding: 20px;
-      background: var(--background-color);
-      color: var(--text-secondary);
-      font-size: 0.85rem;
-    }
-
-    /* Modal Styles */
-    .modal {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0, 0, 0, 0.7);
-      backdrop-filter: blur(5px);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-      padding: 20px;
-    }
-
-    .modal.show {
-      display: flex;
-    }
-
-    .modal-content {
-      background: var(--card-background);
-      border-radius: var(--border-radius);
-      padding: 40px;
-      text-align: center;
-      max-width: 400px;
-      width: 100%;
-      box-shadow: var(--shadow-heavy);
-      animation: modalSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .modal-icon {
-      font-size: 4rem;
-      color: var(--success-color);
-      margin-bottom: 20px;
-      animation: pulse 0.8s ease-in-out;
-    }
-
-    .modal h3 {
-      font-size: 1.5rem;
-      font-weight: 600;
-      margin-bottom: 12px;
-      color: var(--text-primary);
-    }
-
-    .modal p {
-      color: var(--text-secondary);
-      margin-bottom: 24px;
-      line-height: 1.6;
-    }
-
-    /* Responsive Design */
-    @media (max-width: 768px) {
-      body {
-        padding: 10px;
-      }
-
-      .container {
-        margin: 0;
-        border-radius: 0;
-        min-height: 100vh;
-        display: flex;
-        flex-direction: column;
-      }
-
-      .header {
-        padding: 30px 20px;
-      }
-
-      .header h1 {
-        font-size: 2rem;
-      }
-
-      .form-container {
-        padding: 30px 20px;
-        flex: 1;
-      }
-
-      .input-group {
-        grid-template-columns: 1fr;
-        gap: 24px;
-      }
-
-      .modal-content {
-        padding: 30px 20px;
-        margin: 0 10px;
-      }
-    }
-
-    @media (max-width: 480px) {
-      .header h1 {
-        font-size: 1.8rem;
-      }
-
-      .header p {
-        font-size: 0.9rem;
-      }
-
-      .form-container {
-        padding: 20px 15px;
-      }
-
-      .input-field {
-        padding: 14px 16px;
-        font-size: 16px; /* Prevent zoom on iOS */
-      }
-
-      .submit-btn {
-        padding: 14px 20px;
-      }
-    }
-
-    /* Animations */
-    @keyframes shimmer {
-      0% {
-        transform: translateX(-100%);
-      }
-      100% {
-        transform: translateX(100%);
-      }
-    }
-
-    @keyframes spin {
-      0% {
-        transform: rotate(0deg);
-      }
-      100% {
-        transform: rotate(360deg);
-      }
-    }
-
-    @keyframes modalSlideIn {
-      from {
-        transform: translateY(-50px) scale(0.9);
-        opacity: 0;
-      }
-      to {
-        transform: translateY(0) scale(1);
-        opacity: 1;
-      }
-    }
-
-    @keyframes pulse {
-      0%, 100% {
-        transform: scale(1);
-      }
-      50% {
-        transform: scale(1.1);
-      }
-    }
-
-    /* Accessibility */
-    @media (prefers-reduced-motion: reduce) {
-      * {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
-      }
-    }
-
-    /* Focus indicators for keyboard navigation */
-    .submit-btn:focus,
-    .input-field:focus,
-    .custom-checkbox:focus-within {
-      outline: 2px solid var(--primary-color);
-      outline-offset: 2px;
-    }
-
-    /* High contrast mode */
-    @media (prefers-contrast: high) {
-      .container {
-        border: 2px solid var(--text-primary);
-      }
-      
-      .input-field {
-        border-width: 2px;
-      }
-    }
-
-    /* Dark mode support */
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --background-color: #1a1a1a;
-        --card-background: #2d2d2d;
-        --text-primary: #ffffff;
-        --text-secondary: #b0b0b0;
-        --border-color: #404040;
-      }
-    }
-
-    /* PWA specific styles */
-    @media (display-mode: standalone) {
-      body {
-        padding-top: env(safe-area-inset-top);
-        padding-bottom: env(safe-area-inset-bottom);
-      }
-    }
-  </style>
+<link rel="stylesheet" href="Register.css">
 </head>
 <body>
   <div class="container">
@@ -586,95 +17,123 @@
     </div>
 
     <div class="form-container">
-      <form id="registrationForm">
-        <div class="input-group">
-          <div class="form-group">
-            <label for="firstName">First Name</label>
-            <div class="input-wrapper">
-              <input class="input-field" type="text" id="firstName" placeholder="Enter your first name" required>
-            </div>
-          </div>
+<form id="registrationForm">
+  <div class="input-group">
+    <div class="form-group">
+      <label for="firstName">First Name</label>
+      <div class="input-wrapper">
+        <input class="input-field" type="text" id="firstName" placeholder="Enter your first name" required>
+      </div>
+    </div>
 
-          <div class="form-group">
-            <label for="lastName">Last Name</label>
-            <div class="input-wrapper">
-              <input class="input-field" type="text" id="lastName" placeholder="Enter your last name" required>
-            </div>
-          </div>
-        </div>
+    <div class="form-group">
+      <label for="lastName">Last Name</label>
+      <div class="input-wrapper">
+        <input class="input-field" type="text" id="lastName" placeholder="Enter your last name" required>
+      </div>
+    </div>
+  </div>
 
-        <div class="form-group">
-          <label for="email">Email Address</label>
-          <div class="input-wrapper">
-            <input class="input-field" type="email" id="email" placeholder="Enter your email address" required>
-          </div>
-        </div>
+  <div class="form-group">
+    <label for="email">Email Address</label>
+    <div class="input-wrapper">
+      <input class="input-field" type="email" id="email" placeholder="Enter your email address" required>
+    </div>
+  </div>
 
-        <div class="form-group">
-          <label for="password">Password</label>
-          <div class="password-container">
-            <input class="input-field" type="password" id="password" placeholder="Create a strong password" required minlength="6">
-            <i class="fas fa-eye eye-icon" id="togglePassword"></i>
-          </div>
-        </div>
+  <div class="form-group">
+    <label for="phoneNumber">Phone Number</label>
+    <div class="input-wrapper">
+      <input class="input-field" type="tel" id="phoneNumber" placeholder="e.g. 08012345678" required>
+    </div>
+  </div>
 
-        <div class="form-group">
-          <label for="cpassword">Confirm Password</label>
-          <div class="password-container">
-            <input class="input-field" type="password" id="cpassword" placeholder="Confirm your password" required minlength="6">
-            <i class="fas fa-eye eye-icon" id="toggleCPassword"></i>
-          </div>
-        </div>
+  <div class="form-group">
+    <label for="password">Password</label>
+    <div class="password-container">
+      <input class="input-field" type="password" id="password" placeholder="Create a strong password" required minlength="6">
+      <i class="fas fa-eye eye-icon" id="togglePassword"></i>
+    </div>
+  </div>
 
-        <div class="form-group">
-          <label for="accountNumber">Account Number</label>
-          <div class="input-wrapper">
-            <input class="input-field" type="text" id="accountNumber" placeholder="Enter your account number" required>
-          </div>
-        </div>
+  <div class="form-group">
+    <label for="cpassword">Confirm Password</label>
+    <div class="password-container">
+      <input class="input-field" type="password" id="cpassword" placeholder="Confirm your password" required minlength="6">
+      <i class="fas fa-eye eye-icon" id="toggleCPassword"></i>
+    </div>
+  </div>
 
-        <div class="form-group">
-          <label for="bankList">Select Bank</label>
-          <div class="select-wrapper">
-            <select id="bankList" class="input-field select" required>
-              <option value="">Choose your bank</option>
-            </select>
-          </div>
-        </div>
+  <div class="form-group">
+    <label for="state">State</label>
+    <div class="select-wrapper">
+      <select id="state" class="input-field select" required>
+        <option value="">Select State</option>
+        <!-- Will be populated via JS -->
+      </select>
+    </div>
+  </div>
 
-        <div class="form-group">
-          <label for="bankCode">Bank Code</label>
-          <div class="input-wrapper">
-            <input class="input-field" type="text" id="bankCode" placeholder="Bank code will be auto-filled" disabled>
-          </div>
-        </div>
-        <div class="form-group">
-          <label for="accountName">Account Name</label>
-          <div class="input-wrapper">
-            <input class="input-field" type="text" id="accountName" placeholder="Account name will be auto-filled" disabled>
-          </div>
-          <div id="accountStatus"></div>
-        </div>
+  <div class="form-group">
+    <label for="city">City</label>
+    <div class="select-wrapper">
+      <select id="city" class="input-field select" required>
+        <option value="">Select City</option>
+        <!-- Will be dynamically populated based on state -->
+      </select>
+    </div>
+  </div>
 
-        <div class="checkbox-group">
-          <div class="custom-checkbox">
-            <input type="checkbox" id="acceptTerms" required>
-            <span class="checkmark"></span>
-          </div>
-          <label for="acceptTerms" class="checkbox-label">
-            I agree to the <a href="Community.html" target="_blank">Terms & Conditions</a> and <a href="Privacy.html" target="_blank">Privacy Policy</a>
-          </label>
-        </div>
+  <div class="form-group">
+    <label for="accountNumber">Account Number</label>
+    <div class="input-wrapper">
+      <input class="input-field" type="text" id="accountNumber" placeholder="Enter your account number" required>
+    </div>
+  </div>
 
-        <button type="submit" class="submit-btn" id="submitBtn">
-          <span id="btnText">Create Account</span>
-          <div id="btnSpinner" class="loading-spinner" style="display: none;"></div>
-        </button>
+  <div class="form-group">
+    <label for="bankList">Select Bank</label>
+    <div class="select-wrapper">
+      <select id="bankList" class="input-field select" required>
+        <option value="">Choose your bank</option>
+      </select>
+    </div>
+  </div>
 
-        <div class="form-footer">
-          <p>Already have an account? <a href="SignIn.html">Sign In</a></p>
-        </div>
-      </form>
+  <div class="form-group">
+    <label for="bankCode">Bank Code</label>
+    <div class="input-wrapper">
+      <input class="input-field" type="text" id="bankCode" placeholder="Bank code will be auto-filled" disabled>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label for="accountName">Account Name</label>
+    <div class="input-wrapper">
+      <input class="input-field" type="text" id="accountName" placeholder="Account name will be auto-filled" disabled>
+    </div>
+    <div id="accountStatus"></div>
+  </div>
+
+  <div class="checkbox-group">
+    <div class="custom-checkbox">
+      <input type="checkbox" id="acceptTerms" required>
+      <span class="checkmark"></span>
+    </div>
+    <label for="acceptTerms" class="checkbox-label">
+      I agree to the <a href="Community.html" target="_blank">Terms & Conditions</a> and <a href="Privacy.html" target="_blank">Privacy Policy</a>
+    </label>
+  </div>
+
+  <button type="submit" class="submit-btn" id="submitBtn">
+    <span id="btnText">Create Account</span>
+    <div id="btnSpinner" class="loading-spinner" style="display: none;"></div>
+  </button>
+
+  <div class="form-footer">
+    <p>Already have an account? <a href="SignIn.html">Sign In</a></p>
+  </div>
+</form>
     </div>
 
     <div class="footer">
@@ -693,253 +152,6 @@
     </div>
   </div>
 
-  <script>
-    // Toggle password visibility
-    function togglePasswordVisibility(inputId, iconId) {
-      const input = document.getElementById(inputId);
-      const icon = document.getElementById(iconId);
-      
-      if (input.type === 'password') {
-        input.type = 'text';
-        icon.classList.remove('fa-eye');
-        icon.classList.add('fa-eye-slash');
-      } else {
-        input.type = 'password';
-        icon.classList.remove('fa-eye-slash');
-        icon.classList.add('fa-eye');
-      }
-    }
-
-    // Event listeners for password toggle
-    document.getElementById('togglePassword').addEventListener('click', () => {
-      togglePasswordVisibility('password', 'togglePassword');
-    });
-
-    document.getElementById('toggleCPassword').addEventListener('click', () => {
-      togglePasswordVisibility('cpassword', 'toggleCPassword');
-    });
-
-    // Store fetched banks to easily retrieve name by code
-    let allBanks = []; 
-
-    // Fetch bank list
-    async function fetchBankList() {
-      try {
-        const API_BASE_URL = window.location.hostname === 'localhost' 
-          ? 'http://localhost:3000' 
-          : 'https://salmart.onrender.com';
-
-        const response = await fetch(`${API_BASE_URL}/banks`);
-        const data = await response.json();
-        
-        allBanks = data.banks; // Store the fetched banks
-        const bankList = document.getElementById('bankList');
-        allBanks.forEach(bank => { // Use allBanks for consistency
-          const option = document.createElement('option');
-          option.value = bank.code;
-          option.textContent = bank.name;
-          bankList.appendChild(option);
-        });
-      } catch (error) {
-        console.error('Failed to load banks:', error);
-        showStatus('error', 'Failed to load bank list');
-      }
-    }
-
-    // Show status message
-    function showStatus(type, message) {
-      const statusDiv = document.getElementById('accountStatus');
-      const iconMap = {
-        verified: 'fa-check-circle',
-        error: 'fa-times-circle',
-        loading: 'fa-spinner fa-spin'
-      };
-      
-      statusDiv.innerHTML = `
-        <div class="status-indicator ${type}">
-          <i class="fas ${iconMap[type]}"></i>
-          <span>${message}</span>
-        </div>
-      `;
-    }
-
-    // Account resolution
-    async function resolveAccount() {
-      const accountNumber = document.getElementById('accountNumber').value.trim();
-      const bankCode = document.getElementById('bankList').value;
-      const accountNameField = document.getElementById('accountName'); // Changed from bankName to accountName
-      const bankCodeField = document.getElementById('bankCode'); // Get the new bank code input field
-      
-      if (accountNumber.length < 10 || !bankCode) {
-        document.getElementById('accountStatus').innerHTML = '';
-        accountNameField.value = '';
-        bankCodeField.value = ''; // Clear bank code field
-        return;
-      }
-
-      showStatus('loading', 'Verifying account...');
-
-      try {
-        const API_BASE_URL = window.location.hostname === 'localhost' 
-          ? 'http://localhost:3000' 
-          : 'https://salmart.onrender.com';
-
-        const response = await fetch(`${API_BASE_URL}/resolve-account`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            account_number: accountNumber, 
-            bank_code: bankCode 
-          })
-        });
-
-        const data = await response.json();
-
-        if (response.ok && data.account_name) {
-          accountNameField.value = data.account_name;
-          bankCodeField.value = bankCode; // Set the bank code field to the selected bank's code
-          showStatus('verified', 'Account verified successfully');
-        } else {
-          accountNameField.value = '';
-          bankCodeField.value = ''; // Clear bank code field on error
-          showStatus('error', 'Invalid account number or bank');
-        }
-      } catch (error) {
-        console.error('Account resolution error:', error);
-        accountNameField.value = '';
-        bankCodeField.value = ''; // Clear bank code field on error
-        showStatus('error', 'Error verifying account');
-      }
-    }
-
-    // Add event listeners for account resolution
-    document.getElementById('accountNumber').addEventListener('blur', resolveAccount);
-    document.getElementById('bankList').addEventListener('change', resolveAccount);
-
-    // Form validation
-    function validateForm() {
-      const form = document.getElementById('registrationForm');
-      // No need for FormData if we're directly accessing elements
-      const password = document.getElementById('password').value;
-      const confirmPassword = document.getElementById('cpassword').value;
-      const acceptTerms = document.getElementById('acceptTerms').checked;
-
-      // Check if passwords match
-      if (password !== confirmPassword) {
-        alert('Passwords do not match');
-        return false;
-      }
-
-      // Check if terms are accepted
-      if (!acceptTerms) {
-        alert('You must accept the Terms & Conditions');
-        return false;
-      }
-
-      // Check if account is verified
-      const statusDiv = document.getElementById('accountStatus');
-      const isVerified = statusDiv.querySelector('.status-indicator.verified');
-      if (!isVerified) {
-        alert('Please verify your account details');
-        return false;
-      }
-
-      return true;
-    }
-
-    // Form submission
-    document.getElementById('registrationForm').addEventListener('submit', async function(e) {
-      e.preventDefault();
-
-      if (!validateForm()) {
-        return;
-      }
-
-      const submitBtn = document.getElementById('submitBtn');
-      const btnText = document.getElementById('btnText');
-      const btnSpinner = document.getElementById('btnSpinner');
-
-      // Show loading state
-      btnText.textContent = 'Creating Account...';
-      btnSpinner.style.display = 'block';
-      submitBtn.disabled = true;
-
-      const userData = {
-        firstName: document.getElementById('firstName').value.trim(),
-        lastName: document.getElementById('lastName').value.trim(),
-        email: document.getElementById('email').value.trim(),
-        password: document.getElementById('password').value,
-        accountNumber: document.getElementById('accountNumber').value.trim(),
-        bankCode: document.getElementById('bankList').value, // This is already being used
-        accountName: document.getElementById('accountName').value // Changed from bankName to accountName
-      };
-
-      try {
-        const API_BASE_URL = window.location.hostname === 'localhost' 
-          ? 'http://localhost:3000' 
-          : 'https://salmart.onrender.com';
-
-        const response = await fetch(`${API_BASE_URL}/register`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(userData)
-        });
-
-        const data = await response.json();
-
-        if (response.ok) {
-          // Store user data
-          if (data.token) {
-            localStorage.setItem('authToken', data.token);
-          }
-          if (data.userId) {
-            localStorage.setItem('userId', data.userId);
-          }
-
-          // Show success modal
-          document.getElementById('successModal').classList.add('show');
-
-          // Redirect after delay
-          setTimeout(() => {
-            window.location.href = 'SignIn.html';
-          }, 2500);
-        } else {
-          alert(data.message || 'Registration failed. Please try again.');
-        }
-      } catch (error) {
-        console.error('Registration error:', error);
-        alert('Network error. Please check your connection and try again.');
-      } finally {
-        // Reset button state
-        btnText.textContent = 'Create Account';
-        btnSpinner.style.display = 'none';
-        submitBtn.disabled = false;
-      }
-    });
-
-    // Initialize
-    document.addEventListener('DOMContentLoaded', function() {
-      fetchBankList();
-      
-      // Add input animations
-      const inputs = document.querySelectorAll('.input-field');
-      inputs.forEach(input => {
-        input.addEventListener('focus', function() {
-          this.parentElement.classList.add('focused');
-        });
-        
-        input.addEventListener('blur', function() {
-          this.parentElement.classList.remove('focused');
-        });
-      });
-    });
-
-    // Prevent form submission on Enter key in input fields (except submit button)
-    document.addEventListener('keydown', function(e) {
-      if (e.key === 'Enter' && e.target.tagName !== 'BUTTON') {
-        e.preventDefault();
-      }
-    });
-  </script>
+<script src="Register.js"></script>
 </body>
 </html>

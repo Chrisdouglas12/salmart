@@ -130,3 +130,11 @@
 {"level":"error","message":"[SYSTEM USER NOT FOUND]","timestamp":"2025-07-27T21:30:00.863Z"}
 {"level":"error","message":"[SYSTEM USER NOT FOUND]","timestamp":"2025-07-27T21:45:10.780Z"}
 {"level":"error","message":"[SYSTEM USER NOT FOUND]","timestamp":"2025-07-28T06:45:00.434Z"}
+{"level":"info","message":"[CONFIRM DELIVERY INITIATED]","timestamp":"2025-07-28T09:51:42.647Z","transactionId":"68874800058aa4a051e91ad0"}
+{"level":"info","message":"[CONFIRM DELIVERY] Creating new Paystack recipient for seller","sellerId":"6865680685b3194e8bc38b92","timestamp":"2025-07-28T09:51:43.264Z"}
+{"level":"info","message":"[CONFIRM DELIVERY] Paystack recipient created and saved","recipientCode":"RCP_u443jj6mjun3t42","sellerId":"6865680685b3194e8bc38b92","timestamp":"2025-07-28T09:51:44.395Z"}
+{"commission":151.63750000000002,"level":"info","message":"[PLATFORM COMMISSION RECORDED]","timestamp":"2025-07-28T09:51:44.653Z","transactionId":"68874800058aa4a051e91ad0"}
+{"availableBalance":2662292359,"level":"info","message":"[CONFIRM DELIVERY] Paystack Balance Check","timestamp":"2025-07-28T09:51:44.968Z"}
+{"level":"info","message":"[CONFIRM DELIVERY] Attempting Paystack transfer","neededAmountKobo":418086,"recipientCode":"RCP_u443jj6mjun3t42","timestamp":"2025-07-28T09:51:44.971Z","transactionId":"68874800058aa4a051e91ad0"}
+{"level":"info","message":"[CONFIRM DELIVERY] Paystack transfer response","timestamp":"2025-07-28T09:51:45.538Z","transactionId":"68874800058aa4a051e91ad0","transferData":{"amount":418086,"createdAt":"2025-07-28T09:51:48.000Z","currency":"NGN","domain":"test","failures":null,"id":856474215,"integration":1383582,"reason":"Payment for product: Bike","recipient":99824171,"reference":"7pb9pin3lmqdah6b69kc","request":1062595455,"source":"balance","source_details":null,"status":"success","titan_code":null,"transfer_code":"TRF_lc5aajg2s2w74r03","transferred_at":null,"transfersessionid":[],"transfertrials":[],"updatedAt":"2025-07-28T09:51:48.000Z"},"transferStatus":"success"}
+{"level":"info","message":"[CONFIRM DELIVERY] Payout successful and transaction updated","newStatus":"released","timestamp":"2025-07-28T09:51:45.739Z","transactionId":"68874800058aa4a051e91ad0","transferReference":"7pb9pin3lmqdah6b69kc"}

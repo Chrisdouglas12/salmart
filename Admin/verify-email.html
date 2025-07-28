@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Email Verification - Salmart</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: "Segoe UI", sans-serif;
+      background-color: #f7f7f7;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      color: #333;
+    }
+
+    .card {
+      background-color: #fff;
+      border: 1px solid #ddd;
+      padding: 30px;
+      border-radius: 10px;
+      text-align: center;
+      max-width: 400px;
+      box-shadow: 0 5px 10px rgba(0, 0, 0, 0.08);
+    }
+
+    .status-icon {
+      font-size: 40px;
+      margin-bottom: 15px;
+    }
+
+    .success {
+      color: #28a745;
+    }
+
+    .error {
+      color: red;
+    }
+
+    .message {
+      font-size: 18px;
+      margin-bottom: 10px;
+    }
+
+    .login-btn {
+      margin-top: 15px;
+      background-color: #28a745;
+      color: #fff;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: bold;
+      display: inline-block;
+    }
+
+    .login-btn:hover {
+      background-color: #218838;
+    }
+  </style>
+</head>
+<body>
+  <div class="card" id="verifyBox">
+    <div class="status-icon">⏳</div>
+    <p class="message">Verifying your email...</p>
+  </div>
+
+  <script>
+    
+    const API_BASE_URL = window.API_BASE_URL || 
+      (window.location.hostname === 'localhost' 
+        ? 'http://localhost:3000' 
+        : 'https://salmart.onrender.com');
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('authToken');
+
+    const box = document.getElementById('verifyBox');
+
+    if (!token) {
+      box.innerHTML = `
+        <div class="status-icon error">❌</div>
+        <p class="message">No verification token found in the link.</p>
+      `;
+    } else {
+      fetch(`${API_BASE_URL}/verify-email?token=` + token)
+        .then(response => response.text())
+        .then(data => {
+          box.innerHTML = `
+            <div class="status-icon success">✅</div>
+            <p class="message">${data}</p>
+            <a href="/SigIn.html" class="login-btn">Log in now</a>
+          `;
+        })
+        .catch(err => {
+          box.innerHTML = `
+            <div class="status-icon error">❌</div>
+            <p class="message">Verification failed. Please try again later.</p>
+          `;
+        });
+    }
+  </script>
+</body>
+</html>

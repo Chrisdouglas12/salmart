@@ -5861,3 +5861,52 @@
 {"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-28T07:26:57.760Z"}
 {"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-28T07:30:53.548Z"}
 {"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-28T07:31:32.256Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-28T09:50:35.208Z"}
+{"body":{"buyerId":"68431685432ee393a735a641","currency":"NGN","email":"chrisdouglas1700@gmail.com","postId":"687fd347f739481dc104bf30"},"level":"info","message":"Payment initiation started","requestId":"PAY_1753696235225","timestamp":"2025-07-28T09:50:35.225Z"}
+{"level":"info","message":"Payment initialized successfully with Paystack","reference":"7xis71kfuk","requestId":"PAY_1753696235225","timestamp":"2025-07-28T09:50:37.028Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-28T09:50:54.322Z"}
+{"level":"info","message":"Payment verification started","queryParams":{"buyerId":"68431685432ee393a735a641","postId":"687fd347f739481dc104bf30","reference":"7xis71kfuk","trxref":"7xis71kfuk"},"reference":"7xis71kfuk","requestId":"SUCCESS_1753696254338","timestamp":"2025-07-28T09:50:54.339Z"}
+{"level":"debug","message":"Attempting Paystack verification","reference":"7xis71kfuk","requestId":"SUCCESS_1753696254338","timestamp":"2025-07-28T09:50:54.516Z"}
+{"data":{"data":{"amount":45000000,"authorization":{"account_name":null,"authorization_code":"AUTH_cm4yv8lkqj","bank":"TEST BANK","bin":"408408","brand":"visa","card_type":"visa ","channel":"card","country_code":"NG","exp_month":"01","exp_year":"2030","last4":"0409","receiver_bank":null,"receiver_bank_account_number":null,"reusable":true,"signature":"SIG_HcdGRqS1hY03045gNb8I"},"channel":"card","connect":null,"createdAt":"2025-07-28T09:50:39.000Z","created_at":"2025-07-28T09:50:39.000Z","currency":"NGN","customer":{"customer_code":"CUS_39jjnxsa4xtn85z","email":"chrisdouglas1700@gmail.com","first_name":"Christian","id":241385727,"international_format_phone":null,"last_name":"Friday","metadata":null,"phone":null,"risk_action":"default"},"domain":"test","fees":200000,"fees_breakdown":null,"fees_split":null,"gateway_response":"[Test] Approved","id":5186303760,"ip_address":"102.91.104.243","log":{"attempts":1,"errors":0,"history":[{"message":"Set payment method to: card","time":3,"type":"action"},{"message":"Attempted to pay with card","time":5,"type":"action"},{"message":"Authentication Required: 3DS","time":5,"type":"auth"},{"message":"Third-party authentication window opened","time":6,"type":"action"},{"message":"Successfully paid with card","time":8,"type":"success"}],"input":[],"mobile":true,"start_time":1753696245,"success":true,"time_spent":8},"message":"test-3ds","metadata":{"buyerId":"68431685432ee393a735a641","email":"chrisdouglas1700@gmail.com","postId":"687fd347f739481dc104bf30","sellerId":"6865680685b3194e8bc38b92"},"order_id":null,"paidAt":"2025-07-28T09:50:55.000Z","paid_at":"2025-07-28T09:50:55.000Z","plan":null,"plan_object":{},"pos_transaction_data":null,"receipt_number":null,"reference":"7xis71kfuk","requested_amount":45000000,"source":null,"split":{},"status":"success","subaccount":{},"transaction_date":"2025-07-28T09:50:39.000Z"},"message":"Verification successful","status":true},"level":"debug","message":"Paystack verification raw response","requestId":"SUCCESS_1753696254338","timestamp":"2025-07-28T09:50:55.627Z"}
+{"buyerEmailFromPaystack":"chrisdouglas1700@gmail.com","level":"debug","message":"Extracted IDs from Paystack metadata","requestId":"SUCCESS_1753696254338","retrievedBuyerId":"68431685432ee393a735a641","retrievedPostId":"687fd347f739481dc104bf30","sellerIdFromPaystackMetadata":"6865680685b3194e8bc38b92","timestamp":"2025-07-28T09:50:55.633Z"}
+{"buyerEmail":"chrisdouglas1700@gmail.com","level":"debug","message":"Attempting to find post, buyer, and seller from DB","postId":"687fd347f739481dc104bf30","requestId":"SUCCESS_1753696254338","sellerId":"6865680685b3194e8bc38b92","timestamp":"2025-07-28T09:50:55.636Z"}
+{"buyerId":"68431685432ee393a735a641","level":"info","message":"Found post, buyer, and seller from DB","postId":"687fd347f739481dc104bf30","requestId":"SUCCESS_1753696254338","sellerId":"6865680685b3194e8bc38b92","timestamp":"2025-07-28T09:50:56.085Z"}
+{"amountAfterPaystack":448000,"amountPaid":450000,"amountToTransferNaira":443520,"buyerId":"68431685432ee393a735a641","commissionNaira":4480,"commissionPercent":1,"level":"info","message":"[PAYMENT VERIFIED]","paystackFee":2000,"postId":"687fd347f739481dc104bf30","sellerId":"6865680685b3194e8bc38b92","timestamp":"2025-07-28T09:50:56.089Z"}
+{"level":"debug","message":"Prepared receipt data","receiptDataRef":"7xis71kfuk","requestId":"SUCCESS_1753696254338","timestamp":"2025-07-28T09:50:56.092Z"}
+{"level":"debug","message":"Attempting to create Escrow, Transaction, and Notification records","requestId":"SUCCESS_1753696254338","timestamp":"2025-07-28T09:50:56.094Z"}
+{"escrowId":"68874800058aa4a051e91acf","level":"info","message":"Escrow, Transaction, and Notification records created","notificationId":"68874800058aa4a051e91ad1","requestId":"SUCCESS_1753696254338","timestamp":"2025-07-28T09:50:56.445Z","transactionId":"68874800058aa4a051e91ad0"}
+{"level":"debug","message":"Attempting to mark post as sold","postId":"687fd347f739481dc104bf30","requestId":"SUCCESS_1753696254338","timestamp":"2025-07-28T09:50:56.447Z"}
+{"level":"info","message":"Post marked as sold successfully","postId":"687fd347f739481dc104bf30","requestId":"SUCCESS_1753696254338","timestamp":"2025-07-28T09:50:56.662Z"}
+{"level":"debug","message":"Sending initial FCM notifications and updating notification count","requestId":"SUCCESS_1753696254338","timestamp":"2025-07-28T09:50:56.664Z"}
+{"level":"info","message":"Initial notifications sent to seller","requestId":"SUCCESS_1753696254338","timestamp":"2025-07-28T09:50:59.043Z"}
+{"level":"debug","message":"Attempting receipt generation and sending with timeout","requestId":"SUCCESS_1753696254338","timestamp":"2025-07-28T09:50:59.045Z"}
+{"level":"debug","message":"Starting receipt generation","receiptDataRef":"7xis71kfuk","timestamp":"2025-07-28T09:50:59.050Z"}
+{"imagePath":"/storage/emulated/0/Download/My web/Backend/routes/receipts/7xis71kfuk.png","level":"debug","message":"Receipt image saved locally","timestamp":"2025-07-28T09:51:01.595Z"}
+{"level":"debug","message":"Receipt image uploaded to Cloudinary","timestamp":"2025-07-28T09:51:04.250Z","url":"https://res.cloudinary.com/dp7shydjh/image/upload/v1753696265/salmart_receipts/receipts/7xis71kfuk.png"}
+{"imagePath":"/storage/emulated/0/Download/My web/Backend/routes/receipts/7xis71kfuk.png","level":"debug","message":"Local receipt image deleted","timestamp":"2025-07-28T09:51:04.254Z"}
+{"level":"debug","message":"Transaction updated with receipt URL","requestId":"SUCCESS_1753696254338","timestamp":"2025-07-28T09:51:04.484Z","transactionId":"68874800058aa4a051e91ad0"}
+{"buyerId":"68431685432ee393a735a641","level":"debug","message":"Starting send receipt to seller","reference":"7xis71kfuk","sellerId":"6865680685b3194e8bc38b92","timestamp":"2025-07-28T09:51:04.488Z"}
+{"level":"debug","message":"Receipt message saved to DB","messageId":"68874808058aa4a051e91ada","timestamp":"2025-07-28T09:51:04.721Z"}
+{"level":"debug","message":"Emitted receiveMessage to seller via socket","sellerId":"6865680685b3194e8bc38b92","timestamp":"2025-07-28T09:51:04.728Z"}
+{"level":"debug","message":"FCM notification sent for receipt","sellerId":"6865680685b3194e8bc38b92","timestamp":"2025-07-28T09:51:06.061Z"}
+{"level":"info","message":"Receipt generation and sending completed","receiptStatus":{"success":true},"requestId":"SUCCESS_1753696254338","timestamp":"2025-07-28T09:51:06.065Z"}
+{"level":"info","message":"Payment verification completed successfully and success page rendered","receiptSent":true,"reference":"7xis71kfuk","requestId":"SUCCESS_1753696254338","timestamp":"2025-07-28T09:51:06.082Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-28T09:51:06.484Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-28T09:51:22.055Z"}
+{"level":"warn","message":"Receipt generation timeout triggered","requestId":"SUCCESS_1753696254338","timestamp":"2025-07-28T09:51:29.061Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-28T09:51:42.629Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-28T09:51:46.288Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-28T09:57:17.035Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-28T10:22:02.156Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-28T10:30:22.646Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-28T10:34:58.640Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-28T10:52:54.838Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-28T10:56:11.774Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-28T10:57:53.545Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-28T11:06:42.728Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-28T11:51:04.632Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-28T11:52:33.755Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-28T11:53:51.146Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-28T11:53:59.773Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-28T11:54:17.424Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-07-28T12:05:45.992Z"}
