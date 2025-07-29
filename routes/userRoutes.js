@@ -346,7 +346,7 @@ router.get('/profile-picture', verifyToken, async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-    res.json({ profilePicture: user.profilePicture || 'default-avatar.png' });
+    res.json({ profilePicture: user.profilePicture || 'default-avater.png' });
   } catch (error) {
     console.error('Get profile picture error:', error.message);
     res.status(500).json({ message: 'Server error' });

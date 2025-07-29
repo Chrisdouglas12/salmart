@@ -21,7 +21,7 @@ header {
 }
 
 .main-layout {
-  padding-top: 90px; /* Adjust for header */
+  padding-top: 20px; /* Adjust for header */
   max-width: 1200px;
   margin: 0 auto;
   display: flex;
@@ -31,20 +31,23 @@ header {
 
 .tabs {
   display: flex;
-  width: 360px;
+  width: 350px;
   justify-content: center;
+  align-items: center;
   width: 100%;
   max-width: 800px;
-  margin: 10px 0;
+  margin: 0;
 }
 .stats {
   display: flex;
   width: 350px;
   justify-content: center;
   align-items: center;
+  padding:10px ;
   width: 100%;
   max-width: 800px;
   margin:  0 auto;
+  padding-top: 20px;
 }
 
 #posts-container {
@@ -98,8 +101,11 @@ i {
 .stats {
   display: flex;
   justify-content: space-around;
-  background-color: #f9f9f9;
-  border-bottom: 1px solid #eee;
+  background-color: #fff;
+  border-top: 1px solid #fff;
+  box-shadow: 0 0 10px #ddd;
+  border-top-right-radius: 20px;
+  border-top-left-radius: 20px;
   margin-top: 30px;
 }
 
@@ -109,34 +115,28 @@ i {
 
 .stats-item h3 {
   margin: 5px 0 0;
-  color: #333;
+  color: #28a745;
 }
 
 .tabs {
+  padding-top: 5px;
   display: flex;
-  justify-content: space-around;
-  background-color: #f1f1f1;
-  border-bottom: 1px solid #ddd;
+  justify-content: center;
+  background-color: #fff;
+  border-bottom: 1px solid #fff;
+  box-shadow: 0 0 10px #ddd;
 }
 
 .tabs button {
   flex: 1;
   padding: 10px;
-  background: none;
-  border: none;
   cursor: pointer;
   font-size: 16px;
   font-weight: bold;
   transition: background-color 0.3s;
 }
 
-.tabs button:hover {
-  background-color: #ddd;
-}
 
-.tabs .tabs-active {
-  background-color: #ddd;
-}
 
 h1 {
   color: black;
@@ -224,7 +224,8 @@ h1 {
   bottom: 6px;
   right: 6px;
   background-color: white;
-  border: 1px solid #28a745;
+  border: 1px solid #fff;
+  box-shadow: 0 0 10px #ddd;
   border-radius: 50%;
   height: 30px;
   width: 30px;
@@ -264,26 +265,27 @@ h1 {
   align-items: center;
 }
 
-.bio, .product-list, footer {
-  margin: 0;
-}
+
 
 .tabs button {
-  background-color: #f0f2f5;
+  background-color: #fff;
   border: none;
-  padding: 10px 20px;
+  padding-top: 5px;
+  padding: 14px 24px;
   margin: 0 10px;
   cursor: pointer;
   transition: background-color 0.3s ease;
 }
 
-.tabs-active {
-  background-color: #28a745;
-  color: white;
-}
+
 
 .tabs button:hover {
-  background-color: #e0e2e5;
+  background-color: #f3f8f1;
+  color: #28a745;
+margin-top: 0px;
+    padding-left: -10px;
+  padding-right: -10px;
+  border-radius: 15px;
 }
 
 .overlay {
@@ -368,10 +370,9 @@ button i {
 .bank-button {
   background-color: #fff;
   color: #28a745;
-  width: 80%;
-  height: 35px;
-  border: solid 1px #28a745;
+  border: solid 1px #fff;
   border-radius: 50px;
+  box-shadow: 0 0 10px #ddd;
   margin-top: 15px;
   cursor: pointer;
   transition: background-color 0.3s ease;
@@ -379,6 +380,7 @@ button i {
 
 .bank-button:hover {
   background-color: #1e7a33;
+  color: #fff;
 }
 
 .following {
@@ -449,8 +451,8 @@ h4 {
   border: solid 0.1px #fff;
   box-shadow: 0 0 10px #ddd;
   border-radius: 100%;
-  width: 45px;
-  height: 45px;
+  width: 50px;
+  height: 50px;
   margin-left: 5px;
   margin-top: 10px;
 }
@@ -466,7 +468,7 @@ h4 {
 }
 
 a .active {
-  color: blue;
+  color: #28a745;
 }
 
 .modern-profile-modal {
@@ -534,11 +536,11 @@ a .active {
 }
 
 .image-preview-container {
-  width: 200px;
-  height: 200px;
+  width: 150px;
+  height: 150px;
   margin: 0 auto 20px;
   border-radius: 50%;
-  border: 2px dashed #ddd;
+  border: 1px solid #ddd;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -550,6 +552,7 @@ a .active {
   max-width: 100%;
   max-height: 100%;
   object-fit: cover;
+  border-radius: 50%;
 }
 
 .upload-options {
@@ -560,12 +563,13 @@ a .active {
 }
 
 .option-btn {
-  background-color: #f8f9fa;
-  border: none;
+  background-color: #fff;
+  border: solid 1px #fff;
+  box-shadow: 0 0 10px #ddd;
   border-radius: 8px;
-  padding: 10px 15px;
+  padding: 6px 15px;
   font-size: 14px;
-  color: #333;
+  color: #28a745;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -574,11 +578,13 @@ a .active {
 }
 
 .option-btn:hover {
-  background-color: #e9ecef;
+  background-color: #f1f8f3;
+  color: #28a745;
 }
 
 .option-btn i {
   font-size: 16px;
+  color: #28a745;
 }
 
 .edit-options {
@@ -1043,7 +1049,7 @@ a .active {
   font-family: var(--font-family);
   background: var(--bg-primary);
   border-radius: var(--radius-md);
-  border: 2px dashed var(--border-color);
+  border: 1px solid var(--border-color);
   position: relative;
 }
 
@@ -1145,8 +1151,8 @@ a .active {
 }
 
 .skeleton-profile-pic {
-  width: 100px;
-  height: 100px;
+  width: 120px;
+  height: 120px;
   border-radius: 50%;
   margin: 0 auto;
 }
@@ -1227,6 +1233,22 @@ header {
     color: green;
 }
 .bank-button{
-     width: 200px;
-
+     width: 300px;
+     padding-top: 5px;
+     height: 45px;
 }
+.tab-btn i {
+  margin-right: 5px;
+}
+
+.stats-item i{
+  height: 35px;
+  width: 35px;
+  padding: 7px;
+  background: #fff;
+  border: 1px solid #fff;
+  box-shadow: 0 0 10px #ddd;
+  border-radius: 50%;
+}
+
+

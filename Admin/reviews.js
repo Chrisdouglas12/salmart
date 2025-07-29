@@ -301,7 +301,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     renderReviewsError() {
       if (elements.reviewsList) {
-        elements.reviewsList.innerHTML = '<div class="no-reviews">Error loading reviews. Please try again later.</div>';
+        elements.reviewsList.innerHTML = '<div class="no-reviews" style="margin-bottom: 80px; padding: 40px;">No Reviews</div>';
       }
     },
 

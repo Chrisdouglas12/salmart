@@ -32,12 +32,11 @@ document.addEventListener("DOMContentLoaded", async function () {
     profileOwnerId = userInfo.userId;
   }
 
-  // Create and append bank details button
-  const openBtn = document.createElement("button");
-  openBtn.textContent = "Update Bank Details";
-  openBtn.className = "bank-button";
-  openBtn.style.marginTop = "10px";
-  openBtn.type = "button"; // Prevent form submit reload
+const openBtn = document.createElement("button");
+openBtn.innerHTML = '<i class="fas fa-university"></i> Update Bank Details';
+openBtn.className = "bank-button";
+openBtn.style.marginTop = "10px";
+openBtn.type = "button"; // Prevent form submit reload
 
   // Only append and show button for profile owner
   const uploadForm = document.getElementById("upload-form");

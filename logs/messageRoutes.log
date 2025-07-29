@@ -3056,3 +3056,5 @@
 {"level":"warn","message":"Missing senderId or receiverId in /messages","timestamp":"2025-07-28T17:30:00.252Z"}
 {"level":"info","message":"Fetched 11 latest messages for user 68431685432ee393a735a641","timestamp":"2025-07-28T18:08:54.951Z"}
 {"level":"info","message":"Fetched 5 latest messages for user 6865680685b3194e8bc38b92","timestamp":"2025-07-28T18:53:00.224Z"}
+{"level":"info","message":"Fetched 0 latest messages for user 6888805724d2c93d4470fcd9","timestamp":"2025-07-29T11:29:42.978Z"}
+{"level":"warn","message":"Missing senderId or receiverId in /messages","timestamp":"2025-07-29T11:29:44.671Z"}

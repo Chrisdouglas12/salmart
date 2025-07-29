@@ -963,13 +963,15 @@ function escapeHtml(text) {
             console.error('Error fetching posts:', error);
             if (!postsContainer.children.length) {
                 postsContainer.innerHTML = `
-                    <p style="text-align: center; color: red; padding: 20px;">
-                        Error loading posts. Please check your internet connection or try again later.
-                        <br>Error: ${escapeHtml(error.message || 'Unknown error')}
+                                   <div class="no-content"style="text-align: center; padding: 40px; color: #555; font-family: 'Poppins', sans-serif;">
+                    <i class="fas fa-folder-open" style="font-size: 40px; color: #ccc; margin-bottom: 10px;"></i>
+                    <p style="font-size: 16px; margin-top: 10px;">
+                        Nothing to see yet.<br>Please refresh the page, check your connection or create a new post.
                     </p>
-                `;
+                </div>
+            `;
             }
-            if (window.showToast) window.showToast('Failed to load posts. Please try again.', '#dc3545');
+            
         } finally {
             isLoading = false;
         }
@@ -1142,7 +1144,7 @@ function escapeHtml(text) {
                 productImage = productImage.startsWith('/') ? `${API_BASE_URL}${productImage}` : `${API_BASE_URL}/${productImage}`;
             }
 
-            const message = `I'm ready to pay for this now, is it still available?\n\nProduct: ${productDescription}`;
+            const message = `Do you still have this?\n\nProduct: ${productDescription}`;
             const encodedMessage = encodeURIComponent(message);
             const encodedProductImage = encodeURIComponent(productImage);
             const encodedRecipientUsername = encodeURIComponent(recipientUsername);

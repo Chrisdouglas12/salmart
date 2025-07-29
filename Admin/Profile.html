@@ -18,7 +18,8 @@
 
 <body>
   <header style="background-color: white; border: solid 1px #fff; box-shadow: 0 0 10px #ddd; position: fixed; width: 100vw; z-index: 100">
-    <h1 id="profileHeaderUsr" style="font-size: 16px; margin-top: 10px; color: #28a745; margin-left: -2px">Username</h1>
+    <h1 id="profileHeaderUsr" style="font-size: 16px; margin-top: 10px;
+    padding: 10px; color: #28a745; margin-left: -2px"></h1>
   </header>
   <div class="menu-icon" style="z-index: 3000">
     <div></div>
@@ -139,36 +140,46 @@
     <div class="sidebar right">
       <iframe src="login.html" frameborder="0"></iframe>
     </div>
-    <div class="stats" style="width: 350px;">
-      <div class="stats-item">
-        <div class="skeleton skeleton-stats-text"></div>
-        <p style="display: none;">Followers</p>
-        <div class="skeleton skeleton-stats-number"></div>
-        <h3 id="followers" style="display: none;">0</h3>
-      </div>
-      <div class="stats-item">
-        <div class="skeleton skeleton-stats-text"></div>
-        <p style="display: none;">Products</p>
-        <div class="skeleton skeleton-stats-number"></div>
-        <h3 id="products-count" style="display: none;">0</h3>
-      </div>
-      <div class="stats-item">
-        <div class="skeleton skeleton-stats-text"></div>
-        <p style="display: none;">Rating</p>
-        <div class="skeleton skeleton-stats-number"></div>
-        <h3 id="average-rating" style="display: none;">0.0</h3>
-      </div>
-      <div class="stats-item">
-        <div class="skeleton skeleton-stats-text"></div>
-        <p style="display: none;">Reviews</p>
-        <div class="skeleton skeleton-stats-number"></div>
-        <h3 id="reviews-count" style="display: none;">0</h3>
-      </div>
-    </div>
-    <div class="tabs">
-      <button class="tab-btn active" data-tab="home">Home</button>
-      <button class="tab-btn" data-tab="reviews">Reviews</button>
-    </div>
+<div class="stats" style="width: 350px;">
+  <div class="stats-item">
+    <i class="fas fa-users"></i>
+    <p style="display: none;">Followers</p>
+    <div class="skeleton skeleton-stats-text"></div>
+    <div class="skeleton skeleton-stats-number"></div>
+    <h3 id="followers" style="display: none;">0</h3>
+  </div>
+  <div class="stats-item">
+    <i class="fas fa-box"></i>
+    <p style="display: none;">Products</p>
+    <div class="skeleton skeleton-stats-text"></div>
+    <div class="skeleton skeleton-stats-number"></div>
+    <h3 id="products-count" style="display: none;">0</h3>
+  </div>
+  <div class="stats-item">
+    <i class="fas fa-star"></i>
+    <p style="display: none;">Rating</p>
+    <div class="skeleton skeleton-stats-text"></div>
+    <div class="skeleton skeleton-stats-number"></div>
+    <h3 id="average-rating" style="display: none;">0.0</h3>
+  </div>
+  <div class="stats-item">
+    <i class="fas fa-comments"></i>
+    <p style="display: none;">Reviews</p>
+    <div class="skeleton skeleton-stats-text"></div>
+    <div class="skeleton skeleton-stats-number"></div>
+    <h3 id="reviews-count" style="display: none;">0</h3>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab-btn active" data-tab="home">
+    <i class="fas fa-home"></i> Home
+  </button>
+  <button class="tab-btn" data-tab="reviews">
+    <i class="fas fa-star"></i> Reviews
+  </button>
+</div>
+
 
     <div id="home-tab" class="tab-content active">
         <div id="posts-container" style="padding: 0px; margin-top: -18px;">
@@ -178,7 +189,7 @@
         </div>
     </div>
 
-    <div id="reviews-tab" class="tab-content" style="width: 350px; padding:0; margin-bottom: 60px; margin-top: -15px;">
+    <div id="reviews-tab" class="tab-content" style="width: 350px; padding:0; margin-bottom: 60px; margin-top: -5px;">
       <div class="reviews-container">
         <div id="review-form-container" class="review-form-container" style="display: none;">
           <h3>Leave a Review</h3>
