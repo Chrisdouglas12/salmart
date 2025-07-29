@@ -1,100 +1,100 @@
-// updatePromotionBalance.js
-require('dotenv').config(); // Load environment variables from .env file
 const mongoose = require('mongoose');
-const PlatformWallet = require('./models/platformWallet.js'); // Adjust path if necessary
+const Transaction = require('./models/transactionSchema.js'); // adjust the path as needed
+require('dotenv').config();
 
-// --- Configuration ---
-// Make sure your MongoDB URI is correctly set in your .env file (e.g., MONGODB_URI=mongodb://localhost:27017/yourdbname)
-const MONGODB_URI = process.env.MONGO_URI;
+// MongoDB Connection
+mongoose.connect(process.env.MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  serverSelectionTimeoutMS: 5000,
+  socketTimeoutMS: 45000,
+})
+  .then(() => {
+    console.log('✅ MongoDB connected successfully');
+    migrateTransactionCurrencyUnits(); // ✅ FIXED: Call the correct function name
+  })
+  .catch((err) => {
+    console.error(`❌ MongoDB connection error: ${err.message}`);
+    process.exit(1);
+  });
 
-// Set the target promotion balance you expect IN NAIRA.
-// For example, if you want it to be ₦7200, set this to 7200.
-const TARGET_NAIRA_BALANCE_PROMOTION = 7200; // <<<--- IMPORTANT: SET THIS TO YOUR DESIRED NAIRA VALUE
-
-// Set the target commission balance if you also want to update it.
-// For example, if you want it to be ₦522.35, set this to 522.35.
-const TARGET_NAIRA_BALANCE_COMMISSION = 522.35; // <<<--- IMPORTANT: SET THIS TO YOUR DESIRED NAIRA VALUE (if applicable)
-
-// --- Script Logic ---
-async function updatePlatformWalletBalances() {
-    if (!MONGODB_URI) {
-        console.error('Error: MONGODB_URI is not set in your .env file.');
-        process.exit(1);
-    }
-
-    try {
-        await mongoose.connect(MONGODB_URI);
-        console.log('Connected to MongoDB successfully.');
-
-        // --- Update Promotion Wallet ---
-        const targetPromotionKobo = Math.round(TARGET_NAIRA_BALANCE_PROMOTION * 100);
-
-        const promoWallet = await PlatformWallet.findOne({ type: 'promotion' });
-
-        if (promoWallet) {
-            console.log(`\n--- Promotion Wallet ---`);
-            console.log(`Current raw balance in DB: ${promoWallet.balance} kobo (₦${(promoWallet.balance / 100).toFixed(2)})`);
-            console.log(`Desired balance: ₦${TARGET_NAIRA_BALANCE_PROMOTION.toFixed(2)} (${targetPromotionKobo} kobo)`);
-
-            if (promoWallet.balance === targetPromotionKobo) {
-                console.log('Promotion wallet balance is already correct. No update needed.');
-            } else {
-                const result = await PlatformWallet.updateOne(
-                    { type: 'promotion' },
-                    { $set: { balance: targetPromotionKobo, lastUpdated: new Date() } }
-                );
-                if (result.matchedCount > 0) {
-                    console.log(`Successfully updated promotion wallet. New balance: ${targetPromotionKobo} kobo (₦${(targetPromotionKobo / 100).toFixed(2)})`);
-                } else {
-                    console.warn('Promotion wallet document not found for update.');
-                }
-            }
+async function migrateTransactionCurrencyUnits() {
+  try {
+    console.log('Starting transaction currency unit migration...');
+    
+    // Get all transactions without currencyUnit field
+    const transactionsToUpdate = await Transaction.find({ 
+      currencyUnit: { $exists: false },
+      amount: { $exists: true, $ne: null }
+    });
+    
+    console.log(`Found ${transactionsToUpdate.length} transactions to migrate`);
+    
+    let updated = 0;
+    let errors = 0;
+    
+    for (const transaction of transactionsToUpdate) {
+      try {
+        let currencyUnit;
+        let reasoning;
+        
+        // Apply conservative detection logic for existing data
+        if (transaction.amount >= 100000000) { // 100M+ likely kobo
+          currencyUnit = 'kobo';
+          reasoning = 'Amount >= 100M, likely kobo';
+        } else if (transaction.amount <= 1000000) { // 1M or less likely naira
+          currencyUnit = 'naira';
+          reasoning = 'Amount <= 1M, likely naira';
         } else {
-            console.warn('Promotion wallet document not found. Please ensure it exists.');
-            // Optionally, create it if it doesn't exist (though usually it's created on first transaction)
-            // await PlatformWallet.create({ type: 'promotion', balance: targetPromotionKobo, lastUpdated: new Date(), transactions: [] });
-            // console.log('Created new promotion wallet.');
+          // For amounts between 1M-100M, you need manual review
+          console.warn(`MANUAL REVIEW NEEDED: Transaction ${transaction._id} has amount ${transaction.amount} - requires manual classification`);
+          
+          // For now, let's assume naira but flag for review
+          currencyUnit = 'naira';
+          reasoning = 'NEEDS_MANUAL_REVIEW - amount in gray area';
         }
-
-        // --- Update Commission Wallet (if applicable) ---
-        if (TARGET_NAIRA_BALANCE_COMMISSION !== null && TARGET_NAIRA_BALANCE_COMMISSION !== undefined) {
-            const targetCommissionKobo = Math.round(TARGET_NAIRA_BALANCE_COMMISSION * 100);
-            const commissionWallet = await PlatformWallet.findOne({ type: 'commission' });
-
-            if (commissionWallet) {
-                console.log(`\n--- Commission Wallet ---`);
-                console.log(`Current raw balance in DB: ${commissionWallet.balance} kobo (₦${(commissionWallet.balance / 100).toFixed(2)})`);
-                console.log(`Desired balance: ₦${TARGET_NAIRA_BALANCE_COMMISSION.toFixed(2)} (${targetCommissionKobo} kobo)`);
-
-                if (commissionWallet.balance === targetCommissionKobo) {
-                    console.log('Commission wallet balance is already correct. No update needed.');
-                } else {
-                    const result = await PlatformWallet.updateOne(
-                        { type: 'commission' },
-                        { $set: { balance: targetCommissionKobo, lastUpdated: new Date() } }
-                    );
-                    if (result.matchedCount > 0) {
-                        console.log(`Successfully updated commission wallet. New balance: ${targetCommissionKobo} kobo (₦${(targetCommissionKobo / 100).toFixed(2)})`);
-                    } else {
-                        console.warn('Commission wallet document not found for update.');
-                    }
-                }
-            } else {
-                console.warn('Commission wallet document not found. Please ensure it exists.');
-                // Optionally, create it
+        
+        await Transaction.updateOne(
+          { _id: transaction._id },
+          { 
+            $set: { 
+              currencyUnit,
+              migrationNote: `Auto-migrated: ${reasoning}` 
             }
-        } else {
-            console.log('\nSkipping commission wallet update as TARGET_NAIRA_BALANCE_COMMISSION is not set.');
-        }
-
-    } catch (error) {
-        console.error('Error updating platform wallet balances:', error);
-    } finally {
-        await mongoose.disconnect();
-        console.log('Disconnected from MongoDB.');
-        process.exit(0);
+          }
+        );
+        
+        console.log(`Updated transaction ${transaction._id}: ${transaction.amount} -> ${currencyUnit} (${reasoning})`);
+        updated++;
+        
+      } catch (error) {
+        console.error(`Error updating transaction ${transaction._id}:`, error);
+        errors++;
+      }
     }
+    
+    console.log(`Migration completed: ${updated} updated, ${errors} errors`);
+    
+    // Show transactions that need manual review
+    const needsReview = await Transaction.find({ 
+      migrationNote: /NEEDS_MANUAL_REVIEW/ 
+    }).select('_id amount createdAt');
+    
+    if (needsReview.length > 0) {
+      console.log('\n=== TRANSACTIONS REQUIRING MANUAL REVIEW ===');
+      needsReview.forEach(tx => {
+        console.log(`ID: ${tx._id}, Amount: ${tx.amount}, Date: ${tx.createdAt}`);
+      });
+    }
+    
+    // ✅ ADDED: Close connection after migration
+    console.log('\n✅ Migration completed. Closing database connection...');
+    await mongoose.connection.close();
+    process.exit(0);
+    
+  } catch (error) {
+    console.error('Migration failed:', error);
+    await mongoose.connection.close();
+    process.exit(1);
+  }
 }
-
-// Run the script
-updatePlatformWalletBalances();

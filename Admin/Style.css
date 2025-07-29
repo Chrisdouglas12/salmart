@@ -596,9 +596,9 @@ body {
 }
 
 .buy-now-button:disabled {
-  background-color: #a6d5b0;
-  color: #fff;
-  border: 1px solid #C8E6C9;
+  background: #f0fdf4;
+  color: #166534;
+ border: 1px solid #bbf7d0;
   cursor: not-allowed;
   opacity: 0.9;
 }
@@ -1275,7 +1275,7 @@ p {
 
 .buy button {
   background: #28a745;
-  padding: 5px;
+  padding: 8px;
   color: #fff;
   border: 1px solid #fff;
   box-shadow: 0 0 10px #ddd;
@@ -1298,9 +1298,10 @@ p {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
 }
 .buy button:disabled {
-  color: #ffff;
-  font-weight: 600;
-  background-color: #a6d5b0;
+background: #f1f3f8;
+      color: #28a745;
+      border: 1px solid #fff;
+      box-shadow: 0 0 10px #ddd;
 }
 
 .buy button:active {

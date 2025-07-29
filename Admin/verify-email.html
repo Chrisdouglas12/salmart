@@ -63,6 +63,7 @@
       width: 40px;
       height: 40px;
       stroke-width: 2.5;
+      color: white;
     }
 
     .loading {
@@ -76,7 +77,7 @@
     }
 
     .error {
-      background: linear-gradient(135deg, #28a745, #28a745);
+      background: linear-gradient(135deg, #ef4444, #dc2626);
       animation: errorShake 0.6s ease-out;
     }
 
@@ -128,7 +129,7 @@
     }
 
     .redirect-info {
-      background: #ffff;
+      background: #f0f9f4;
       border-radius: 12px;
       padding: 20px;
       margin: 24px 0;
@@ -137,7 +138,7 @@
 
     .redirect-text {
       font-size: 14px;
-      color: #ccc;
+      color: #6b7280;
       margin-bottom: 8px;
     }
 
@@ -189,24 +190,24 @@
     }
 
     .btn-primary {
-      background: #fff;
-      color: #28a745;
-      box-shadow: 0 0 10px #ddd
+      background: #28a745;
+      color: white;
+      box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
     }
 
     .btn-primary:hover {
       transform: translateY(-2px);
-      box-shadow: 0 0 10px #ddd
+      box-shadow: 0 8px 25px rgba(40, 167, 69, 0.4);
     }
 
     .btn-secondary {
-      background: #28a745;
+      background: #f8f9fa;
       color: #374151;
-      border: 2px solid #fff;
+      border: 2px solid #e5e7eb;
     }
 
     .btn-secondary:hover {
-      background: #ffff;
+      background: #ffffff;
       border-color: #28a745;
       transform: translateY(-1px);
     }
@@ -214,7 +215,7 @@
     .progress-bar {
       width: 100%;
       height: 4px;
-      background: #fff;
+      background: #e5e7eb;
       border-radius: 2px;
       overflow: hidden;
       margin: 16px 0;
@@ -222,7 +223,7 @@
 
     .progress-fill {
       height: 100%;
-      background: linear-gradient(90deg, #28a745, #28a745);
+      background: linear-gradient(90deg, #28a745, #20c997);
       border-radius: 2px;
       transition: width 1s linear;
     }
@@ -298,7 +299,7 @@
         : 'https://salmart.onrender.com');
     
     const REDIRECT_DELAY = 5; // seconds
-    const LOGIN_URL = '/SignIn.html';
+    const LOGIN_URL = 'SignIn.html';
     
     // DOM Elements
     const verificationBox = document.getElementById('verificationBox');
@@ -373,12 +374,12 @@
         </a>
         <button class="btn btn-secondary" onclick="cancelRedirect()">
           ${createIcon('x')}
-          Cancel
+          Stay Here
         </button>
       `;
       verificationBox.appendChild(actionButtons);
       
-      // Start countdown
+      // Start countdown and auto-redirect
       startCountdown();
     }
     
@@ -400,11 +401,12 @@
         
         if (timeLeft <= 0) {
           clearInterval(countdownInterval);
+          // Automatically redirect to login page
           window.location.href = LOGIN_URL;
         }
       }, 1000);
       
-      // Backup redirect
+      // Backup redirect in case interval fails
       redirectTimeout = setTimeout(() => {
         window.location.href = LOGIN_URL;
       }, REDIRECT_DELAY * 1000);
@@ -421,7 +423,18 @@
       if (redirectInfo) redirectInfo.remove();
       if (progressBar) progressBar.style.display = 'none';
       
-      messageDescription.textContent = 'Auto-redirect cancelled. You can now login manually.';
+      messageDescription.textContent = 'Auto-redirect cancelled. You can login manually when ready.';
+      
+      // Update action buttons
+      const actionButtons = document.querySelector('.action-buttons');
+      if (actionButtons) {
+        actionButtons.innerHTML = `
+          <a href="${LOGIN_URL}" class="btn btn-primary">
+            ${createIcon('logIn')}
+            Go to Login
+          </a>
+        `;
+      }
     };
     
     // Main verification logic
@@ -435,38 +448,59 @@
       }
       
       try {
-        const response = await fetch(`${API_BASE_URL}/verify-email?token=${encodeURIComponent(token)}`);
+        const response = await fetch(`${API_BASE_URL}/verify-email?token=${encodeURIComponent(token)}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
         
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        const data = await response.json();
+        
+        if (response.ok) {
+          // Success - show success message and start auto-redirect
+          setTimeout(() => {
+            showSuccess(data || 'Your email has been verified successfully! You can now sign in to your account.');
+          }, 1500);
+        } else {
+          // Handle specific error cases
+          let errorTitle = 'Verification Failed';
+          let errorDescription = data.message || 'Unable to verify your email address.';
+          
+          if (response.status === 404) {
+            errorTitle = 'Invalid Verification Token';
+            errorDescription = 'This verification link is invalid or has expired. Please request a new verification email.';
+          } else if (response.status === 400) {
+            errorTitle = 'Bad Request';
+            errorDescription = 'The verification request is malformed. Please try clicking the link from your email again.';
+          }
+          
+          setTimeout(() => {
+            showError(errorTitle, errorDescription);
+          }, 1500);
         }
-        
-        const data = await response.text();
-        
-        // Simulate processing time for better UX
-        setTimeout(() => {
-          showSuccess(data || 'Your email has been verified successfully!');
-        }, 1500);
         
       } catch (error) {
         console.error('Verification error:', error);
         
         setTimeout(() => {
           showError(
-            'Verification Failed',
-            'Unable to verify your email at this time. This could be due to an expired token or server issues. Please try again or contact support.'
+            'Connection Failed',
+            'Unable to connect to the verification server. Please check your internet connection and try again.'
           );
         }, 1500);
       }
     }
     
-    // Initialize verification
-    verifyEmail();
-    
-    // Add some visual feedback for loading
-    setTimeout(() => {
-      messageDescription.textContent = 'Connecting to server...';
-    }, 800);
+    // Initialize verification on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      verifyEmail();
+      
+      // Add visual feedback for loading
+      setTimeout(() => {
+        messageDescription.textContent = 'Connecting to server...';
+      }, 800);
+    });
   </script>
 </body>
 </html>

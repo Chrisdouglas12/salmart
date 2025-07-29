@@ -401,14 +401,15 @@ if (!systemUser) {
     }
 
     const amountPaidByBuyerNaira = transaction.amount;
-    
-    if (typeof amountPaidByBuyerNaira !== 'number' || amountPaidByBuyerNaira <= 0) {
-      logger.error('[CONFIRM DELIVERY] Invalid transaction amount for payout calculation', { transactionId, amount: amountPaidByBuyerNaira });
-      return res.status(400).json({
-        error: "Invalid transaction amount. Cannot process payout.",
-        details: `Transaction amount is ${amountPaidByBuyerNaira}. Expected a positive number.`
-      });
-    }
+
+if (typeof amountPaidByBuyerNaira !== 'number' || amountPaidByBuyerNaira <= 0) {
+  logger.error('[CONFIRM DELIVERY] Invalid transaction amount for payout calculation', { transactionId, amount: amountPaidByBuyerNaira });
+  return res.status(400).json({
+    error: "Invalid transaction amount. Cannot process payout.",
+    details: `Transaction amount is ${amountPaidByBuyerNaira}. Expected a positive number.`
+  });
+}
+
 // == Calculate platform's commission == //
 // Paystack fee calculation - FIXED VERSION
 function calculatePaystackFee(amountNaira) {
@@ -425,11 +426,42 @@ function getCommissionRate(amount) {
   return 1;
 }
 
-// IMPORTANT: Ensure amountPaidByBuyerNaira is in Naira, not Kobo
-// If your transaction.amount is stored in kobo, convert it first:
-const amountInNaira = typeof amountPaidByBuyerNaira === 'number' && amountPaidByBuyerNaira > 100000 
-  ? amountPaidByBuyerNaira / 100  // Convert from kobo to naira if amount seems to be in kobo
-  : amountPaidByBuyerNaira;       // Use as-is if already in naira
+// BULLETPROOF APPROACH: Explicit currency unit tracking
+// Step 1: Always check if transaction has explicit currency unit
+if (!transaction.currencyUnit) {
+  logger.error('[CONFIRM DELIVERY] Missing currency unit in transaction', { 
+    transactionId, 
+    amount: amountPaidByBuyerNaira 
+  });
+  return res.status(500).json({
+    error: "Transaction currency unit not specified. Cannot process payout safely.",
+    details: "Please contact support to resolve this transaction."
+  });
+}
+
+// Step 2: Convert to naira based on explicit currency unit
+const amountInNaira = transaction.currencyUnit === 'kobo' 
+  ? amountPaidByBuyerNaira / 100 
+  : amountPaidByBuyerNaira; // Already in naira
+
+// Step 3: Validate the conversion makes sense
+if (amountInNaira <= 0 || !Number.isFinite(amountInNaira)) {
+  logger.error('[CONFIRM DELIVERY] Invalid amount after currency conversion', { 
+    transactionId, 
+    originalAmount: amountPaidByBuyerNaira,
+    currencyUnit: transaction.currencyUnit,
+    convertedAmount: amountInNaira
+  });
+  return res.status(500).json({
+    error: "Invalid amount after currency conversion. Cannot process payout safely.",
+    details: "Please contact support to resolve this transaction."
+  });
+}
+
+// Alternative approach: Add a field to track the currency unit in your transaction model
+// const amountInNaira = transaction.currencyUnit === 'kobo' 
+//   ? amountPaidByBuyerNaira / 100 
+//   : amountPaidByBuyerNaira;
 
 // Step 1: Deduct Paystack fee from buyer's payment
 const paystackFee = calculatePaystackFee(amountInNaira);
@@ -442,7 +474,8 @@ const commissionNaira = (commissionPercent / 100) * netAmount;
 // Step 3: Final amount to transfer to seller
 const amountToTransferNaira = netAmount - commissionNaira;
 const neededAmountKobo = Math.round(amountToTransferNaira * 100);
-    // === Record platform commission ===
+
+// === Record platform commission ===
 try {
   await PlatformWallet.updateOne(
     { type: 'commission' },
@@ -475,73 +508,73 @@ try {
     error: walletErr.message
   });
 }
-    
 
-    logger.debug('[CONFIRM DELIVERY] Payout Calculation', {
-      transactionId,
-      amountPaidByBuyerNaira,
-      commissionPercent,
-      commissionNaira,
-      amountToTransferNaira,
-      neededAmountKobo
-    });
+logger.debug('[CONFIRM DELIVERY] Payout Calculation', {
+  transactionId,
+  originalAmount: amountPaidByBuyerNaira,
+  amountInNaira,
+  paystackFee,
+  netAmount,
+  commissionPercent,
+  commissionNaira,
+  amountToTransferNaira,
+  neededAmountKobo
+});
 
-    if (neededAmountKobo <= 0) {
-      logger.warn('[CONFIRM DELIVERY] Calculated amount to transfer is non-positive', {
-        transactionId,
-        amountToTransferNaira,
-        neededAmountKobo
-      });
-      return res.status(400).json({
-        error: "Calculated payout amount is zero or negative. Cannot proceed.",
-        details: "This might occur if the product price is too low relative to commission."
-      });
-    }
+if (neededAmountKobo <= 0) {
+  logger.warn('[CONFIRM DELIVERY] Calculated amount to transfer is non-positive', {
+    transactionId,
+    amountToTransferNaira,
+    neededAmountKobo
+  });
+  return res.status(400).json({
+    error: "Calculated payout amount is zero or negative. Cannot proceed.",
+    details: "This might occur if the product price is too low relative to commission."
+  });
+}
 
-    let availableBalance = 0;
-    try {
-      const balanceResponse = await axios.get(
-        'https://api.paystack.co/balance',
-        { headers: { Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}` } }
-      );
-      availableBalance = balanceResponse.data.data[0]?.balance || 0;
-      logger.info('[CONFIRM DELIVERY] Paystack Balance Check', { availableBalance });
-    } catch (balanceError) {
-      logger.error('[CONFIRM DELIVERY] Failed to fetch Paystack balance', { error: balanceError.message, responseData: balanceError.response?.data });
-      
-      transaction.status = 'confirmed_pending_payout';
-      transaction.amountDue = amountToTransferNaira;
-      transaction.commission = commissionNaira;
-      transaction.transferRecipient = recipientCode;
-      await transaction.save();
+let availableBalance = 0;
+try {
+  const balanceResponse = await axios.get(
+    'https://api.paystack.co/balance',
+    { headers: { Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}` } }
+  );
+  availableBalance = balanceResponse.data.data[0]?.balance || 0;
+  logger.info('[CONFIRM DELIVERY] Paystack Balance Check', { availableBalance });
+} catch (balanceError) {
+  logger.error('[CONFIRM DELIVERY] Failed to fetch Paystack balance', { error: balanceError.message, responseData: balanceError.response?.data });
 
-      const title = 'Delivery Confirmed – Payout Delayed (Balance Check Failed)';
-      const message = `Your delivery of "${product.title}" has been confirmed. Payout of ₦${amountToTransferNaira.toLocaleString('en-NG')} shall be sent to you within 24 hours time.`;
+  transaction.status = 'confirmed_pending_payout';
+  transaction.amountDue = amountToTransferNaira;
+  transaction.commission = commissionNaira;
+  transaction.transferRecipient = recipientCode;
+  await transaction.save();
 
-      
-      await Notification.create({ 
-        userId: seller._id, 
-        senderId: systemUser._id,
-        postId: product._id,
-        title, 
-        message, 
-        type: 'payment_queued', 
-        metadata: { 
-          transactionId: transaction._id, 
-          productId: product._id, 
-          amountDue: amountToTransferNaira 
-        } 
-      });
-      
+  const title = 'Delivery Confirmed – Payout Delayed (Balance Check Failed)';
+  const message = `Your delivery of "${product.title}" has been confirmed. Payout of ₦${amountToTransferNaira.toLocaleString('en-NG')} shall be sent to you within 24 hours time.`;
 
-      await sendFCMNotification(seller._id, title, message, { type: 'payout_queued_balance_error', transactionId: transaction._id.toString(), productId: product._id.toString(), amountDue: amountToTransferNaira });
+  await Notification.create({ 
+    userId: seller._id, 
+    senderId: systemUser._id,
+    postId: product._id,
+    title, 
+    message, 
+    type: 'payment_queued', 
+    metadata: { 
+      transactionId: transaction._id, 
+      productId: product._id, 
+      amountDue: amountToTransferNaira 
+    } 
+  });
 
-      return res.status(200).json({
-        message: "Delivery confirmed. Payout is temporarily delayed as we could not verify our payment balance. It will be processed soon.",
-        queued: true,
-        balanceCheckFailed: true
-      });
-    }
+  await sendFCMNotification(seller._id, title, message, { type: 'payout_queued_balance_error', transactionId: transaction._id.toString(), productId: product._id.toString(), amountDue: amountToTransferNaira });
+
+  return res.status(200).json({
+    message: "Delivery confirmed. Payout is temporarily delayed as we could not verify our payment balance. It will be processed soon.",
+    queued: true,
+    balanceCheckFailed: true
+  });
+}
 
 
     // ======================

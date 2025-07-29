@@ -144,14 +144,14 @@ await transporter.sendMail({
   to: newUser.email,
   subject: 'Confirm Your Salmart Account',
   html: `
-    <div style="font-family: 'Segoe UI', Roboto, Arial, sans-serif; background-color: #f9f9f9; padding: 40px;">
+    <div style="font-family: 'Segoe UI', Roboto, Arial, sans-serif; background-color: #f9f9f9; padding: 10px;">
       <div style="max-width: 600px; margin: auto; background: #ffffff; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); padding: 30px;">
         <h1 style="color: #333333; margin-bottom: 20px;">Welcome to Salmart, ${newUser.firstName}!</h1>
         <p style="font-size: 16px; color: #555555; line-height: 1.6;">
           We're thrilled to have you on board. Please click the button below to verify your email address and activate your account.
         </p>
         <div style="margin: 30px 0;">
-          <a href="${verifyUrl}" style="display: inline-block; background-color: #007BFF; color: #ffffff; font-size: 16px; padding: 12px 24px; border-radius: 6px; text-decoration: none;">
+          <a href="${verifyUrl}" style="display: inline-block; background-color: #28a745; color: #ffffff; font-size: 16px; padding: 12px 24px; border-radius: 6px; text-decoration: none;">
             Verify Email
           </a>
         </div>
@@ -212,9 +212,9 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ message: 'User not found' });
     }
 
-    if (!user.isVerified) {
-      return res.status(403).json({ message: 'Email not verified. Please check your inbox.' });
-    }
+  //  if (!user.isVerified) {
+ //     return res.status(403).json({ message: 'Email not verified. Please check your inbox.' });
+ //   }
 
     if (user.isBanned) {
       return res.status(403).json({ message: 'Account is banned' });

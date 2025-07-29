@@ -3173,3 +3173,20 @@
 {"level":"info","message":"Notification preferences for user 6865680685b3194e8bc38b92: {\"likes\":true,\"comments\":true,\"messages\":true,\"follows\":true,\"payments\":true,\"delivery\":true}","timestamp":"2025-07-28T09:51:46.225Z"}
 {"level":"info","message":"Preparing FCM message for user 6865680685b3194e8bc38b92: {\"token\":\"fRvF2sEktH52cQsX36vLzF:APA91bG-JXEY6NGI1Yirb2M_h68sKXT5dazLcEjUBjNSxKkwrDhpYVSzBCwYDaOegn8lXUl7TwkvF-6ZOeAs_GqSvNjThhqPeIKqH7JqHxaCRhl6c-UROWc\",\"notification\":{\"title\":\"Payment Released to Your Account\",\"body\":\"Great news! ₦4,180.863 for \\\"Bike\\\" is now in your bank account. We appreciate you for using Salmart!\"},\"data\":{\"type\":\"payment_released\",\"transactionId\":\"68874800058aa4a051e91ad0\",\"productId\":\"687fd347f739481dc104bf30\",\"amountTransferred\":4180.8625,\"reference\":\"7pb9pin3lmqdah6b69kc\",\"userId\":\"6865680685b3194e8bc38b92\"},\"android\":{\"priority\":\"high\"},\"apns\":{\"headers\":{\"apns-priority\":\"10\"}},\"webpush\":{\"headers\":{\"Urgency\":\"high\"},\"notification\":{\"icon\":\"https://salmart.vercel.app/salmart-192x192.png\",\"image\":null,\"requireInteraction\":true}}}","timestamp":"2025-07-28T09:51:46.227Z"}
 {"level":"error","message":"Error sending FCM notification to user 6865680685b3194e8bc38b92: data must only contain string values","timestamp":"2025-07-28T09:51:46.233Z"}
+{"level":"warn","message":"No FCM token for user 68431685432ee393a735a641","timestamp":"2025-07-28T17:32:12.564Z"}
+{"level":"warn","message":"No FCM token for user 6843d062f457581752641ee3","timestamp":"2025-07-28T17:32:12.607Z"}
+{"level":"warn","message":"No FCM token for user 6865680685b3194e8bc38b92","timestamp":"2025-07-28T17:32:48.359Z"}
+{"level":"warn","message":"No FCM token for user 6865680685b3194e8bc38b92","timestamp":"2025-07-28T17:33:18.831Z"}
+{"level":"warn","message":"No FCM token for user 6865680685b3194e8bc38b92","timestamp":"2025-07-28T17:33:25.525Z"}
+{"level":"warn","message":"No FCM token for user 6865680685b3194e8bc38b92","timestamp":"2025-07-28T17:33:52.475Z"}
+{"level":"warn","message":"No FCM token for user 6843d062f457581752641ee3","timestamp":"2025-07-28T17:51:16.430Z"}
+{"level":"warn","message":"No FCM token for user 68431685432ee393a735a641","timestamp":"2025-07-28T17:51:16.471Z"}
+{"level":"warn","message":"No FCM token for user 6865680685b3194e8bc38b92","timestamp":"2025-07-28T17:52:16.683Z"}
+{"level":"warn","message":"No FCM token for user 6865680685b3194e8bc38b92","timestamp":"2025-07-28T17:52:25.893Z"}
+{"level":"warn","message":"No FCM token for user 6865680685b3194e8bc38b92","timestamp":"2025-07-28T18:41:30.674Z"}
+{"level":"warn","message":"No FCM token for user 6843d062f457581752641ee3","timestamp":"2025-07-28T18:50:15.160Z"}
+{"level":"warn","message":"No FCM token for user 68431685432ee393a735a641","timestamp":"2025-07-28T18:50:15.183Z"}
+{"level":"warn","message":"No FCM token for user 6865680685b3194e8bc38b92","timestamp":"2025-07-28T18:51:08.303Z"}
+{"level":"warn","message":"No FCM token for user 6865680685b3194e8bc38b92","timestamp":"2025-07-28T18:51:32.647Z"}
+{"level":"warn","message":"No FCM token for user 6865680685b3194e8bc38b92","timestamp":"2025-07-28T18:51:39.973Z"}
+{"level":"warn","message":"No FCM token for user 6865680685b3194e8bc38b92","timestamp":"2025-07-28T18:52:09.373Z"}

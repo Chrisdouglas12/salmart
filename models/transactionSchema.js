@@ -8,7 +8,14 @@ const transactionSchema = new mongoose.Schema({
 
   buyerEmail: { type: String },
 
-  amount: { type: Number, required: true }, // in Naira
+  amount: { type: Number, required: true },
+  currencyUnit: { 
+    type: String, 
+    enum: ['naira', 'kobo'], 
+    required: true,
+    default: 'naira' // Set default for new transactions
+  },
+  migrationNote: String, 
 
   paymentReference: { type: String, required: true, unique: true },
   paystackTransactionId: { type: String },

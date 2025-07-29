@@ -1,4 +1,6 @@
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", function () {
+  const API_BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart.onrender.com';
+
   // Function to decode JWT token and get user info
   function getLoggedInUserInfo() {
     const token = localStorage.getItem("authToken");
@@ -7,6 +9,7 @@ document.addEventListener("DOMContentLoaded", function() {
       return null;
     }
     try {
+      // Ensure jwt_decode is accessible (it is if you load the CDN in HTML)
       const decoded = jwt_decode(token);
       console.log("Decoded token:", decoded);
       return decoded;
@@ -22,17 +25,6 @@ document.addEventListener("DOMContentLoaded", function() {
   const userInfo = getLoggedInUserInfo();
   const isOwnProfile = !profileOwnerId || (userInfo && profileOwnerId === userInfo.userId);
 
-  // Show file-input-icon for owners
-  const fileInputIcon = document.querySelector('.file-input-icon');
-  if (fileInputIcon && isOwnProfile) {
-    fileInputIcon.classList.add('show');
-    console.log('Showing profile picture upload icon for owner profile');
-  } else if (!fileInputIcon) {
-    console.warn('File input icon (.file-input-icon) not found in DOM');
-  } else {
-    console.log('Profile picture upload icon remains hidden for non-owner profile');
-  }
-
   // Cache DOM elements
   const modal = document.getElementById('profile-pic-modal');
   const closeModalBtn = document.querySelector('#profile-pic-modal .close-modal');
@@ -41,8 +33,8 @@ document.addEventListener("DOMContentLoaded", function() {
   const choosePhotoBtn = document.getElementById('choose-photo-btn');
   const takePhotoBtn = document.getElementById('take-photo-btn');
   const imagePreview = document.getElementById('image-preview');
-  const fileInput = document.getElementById('profile-picture-upload');
-  
+  const fileInput = document.getElementById('profile-picture-upload'); // This is your ONE source of file input
+
   // State management
   let selectedFile = null;
   let isUploading = false;
@@ -50,15 +42,15 @@ document.addEventListener("DOMContentLoaded", function() {
   // Validate file function
   function validateFile(file) {
     if (!file.type.startsWith('image/')) {
-      showToast('Please select an image file', '#e74c3c');
+      window.showToast('Please select an image file', '#e74c3c');
       return false;
     }
-    
-    if (file.size > 5 * 1024 * 1024) {
-      showToast('File size must be less than 5MB', '#e74c3c');
+
+    if (file.size > 5 * 1024 * 1024) { // 5MB limit
+      window.showToast('File size must be less than 5MB', '#e74c3c');
       return false;
     }
-    
+
     return true;
   }
 
@@ -70,141 +62,111 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     selectedFile = file;
-    
+
     const reader = new FileReader();
-    reader.onload = function(event) {
+    reader.onload = function (event) {
       imagePreview.src = event.target.result;
-      enableEditButtons();
+      saveBtn.disabled = false; // Enable save button only after a valid image is selected
     };
-    
-    reader.onerror = function() {
-      showToast('Failed to read image file', '#e74c3c');
+
+    reader.onerror = function () {
+      window.showToast('Failed to read image file', '#e74c3c');
       resetFileInput();
     };
-    
-    reader.readAsDataURL(file);
-  }
 
-  // Enable edit buttons
-  function enableEditButtons() {
-    document.querySelectorAll('.edit-btn').forEach(btn => {
-      btn.disabled = false;
-    });
-    saveBtn.disabled = false;
+    reader.readAsDataURL(file);
   }
 
   // Reset file input and state
   function resetFileInput() {
-    fileInput.value = '';
+    if (fileInput) fileInput.value = ''; // Clear the selected file
     selectedFile = null;
-    imagePreview.src = '';
-    document.querySelectorAll('.edit-btn').forEach(btn => {
-      btn.disabled = true;
-    });
-    saveBtn.disabled = true;
+    if (imagePreview) imagePreview.src = 'default-avatar.png'; // Reset preview
+    if (saveBtn) saveBtn.disabled = true; // Disable save button
+    // Ensure any other relevant buttons or states are reset if needed
   }
 
   // Close modal function
   function closeModal() {
-    if (isUploading) return; // Prevent closing during upload
-    
-    modal.classList.remove('show');
-    resetFileInput();
+    if (isUploading) return; // Prevent closing if an upload is in progress
+    if (modal) modal.classList.remove('show');
+    resetFileInput(); // Always reset when closing
   }
 
-  // Open modal when clicking the camera icon (only for owners)
+  // Open modal when clicking the camera icon
+  const fileInputIcon = document.querySelector('.file-input-icon');
   if (fileInputIcon && isOwnProfile) {
-    fileInputIcon.addEventListener('click', function(e) {
+    fileInputIcon.addEventListener('click', function (e) {
       e.preventDefault();
       e.stopPropagation();
-      modal.classList.add('show');
+      if (modal) modal.classList.add('show');
+      resetFileInput(); // Reset when opening the modal
     });
   }
 
   // Modal event listeners
-  if (closeModalBtn) {
-    closeModalBtn.addEventListener('click', closeModal);
-  }
-  
-  if (cancelBtn) {
-    cancelBtn.addEventListener('click', closeModal);
-  }
-
-  // Click on overlay closes modal
+  if (closeModalBtn) closeModalBtn.addEventListener('click', closeModal);
+  if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
   if (modal) {
-    modal.addEventListener('click', function(e) {
+    modal.addEventListener('click', function (e) {
       if (e.target === modal) {
         closeModal();
       }
     });
   }
 
-  // Choose photo handler - Simplified and more reliable
+  // Choose photo handler: This now correctly triggers the ONE file input
   if (choosePhotoBtn && fileInput) {
-    choosePhotoBtn.addEventListener('click', function(e) {
+    choosePhotoBtn.addEventListener('click', function (e) {
       e.preventDefault();
       e.stopPropagation();
-      
-      // Reset input to ensure change event fires even for same file
-      fileInput.value = '';
-      fileInput.click();
+      fileInput.click(); // Opens the file picker
     });
   }
 
-  // File input change handler - Optimized
+  // File input change handler: Processes the selected file
   if (fileInput) {
-    fileInput.addEventListener('change', function(e) {
+    fileInput.addEventListener('change', function (e) {
       e.stopPropagation();
-      
       const files = e.target.files;
       if (files && files.length > 0) {
         processFile(files[0]);
       }
-    }, { passive: true });
+    }, { passive: true }); // Use passive listener for performance if not preventing default
   }
 
-  // Take photo handler
+  // Take photo button (stub)
   if (takePhotoBtn) {
-    takePhotoBtn.addEventListener('click', function() {
-      showToast('Camera functionality would be implemented here');
+    takePhotoBtn.addEventListener('click', function () {
+      window.showToast('Camera functionality would be implemented here', '#2196F3'); // Use global toast
     });
   }
 
-  // Save button handler - Optimized with better error handling
+  // Save button handler
   if (saveBtn) {
-    saveBtn.addEventListener('click', async function() {
-      if (isUploading) return; // Prevent double uploads
-      
+    saveBtn.addEventListener('click', async function () {
+      if (isUploading) return;
       if (!isOwnProfile) {
         console.warn('Non-owner attempted to save profile picture');
-        showToast('You can only update your own profile picture', '#e74c3c');
+        window.showToast('You can only update your own profile picture', '#e74c3c');
         return;
       }
-
       if (!selectedFile) {
-        showToast('Please select a file first', '#e74c3c');
+        window.showToast('Please select a file first', '#e74c3c');
         return;
       }
 
-      // Set uploading state
       isUploading = true;
       saveBtn.classList.add('uploading');
       saveBtn.disabled = true;
 
       try {
-        // Create FormData to send the file
         const formData = new FormData();
         formData.append('profilePicture', selectedFile);
 
-        // Get auth token for the request
         const token = localStorage.getItem('authToken');
-        
-        if (!token) {
-          throw new Error('Authentication token not found. Please log in again.');
-        }
+        if (!token) throw new Error('Authentication token not found. Please log in again.');
 
-        console.log('Uploading profile picture...');
-        
         const response = await fetch(`${API_BASE_URL}/upload-profile-picture`, {
           method: 'POST',
           headers: {
@@ -214,82 +176,26 @@ document.addEventListener("DOMContentLoaded", function() {
         });
 
         const data = await response.json();
+        if (!response.ok) throw new Error(data.message || 'Upload failed');
 
-        if (!response.ok) {
-          throw new Error(data.message || 'Upload failed');
-        }
-
-        console.log('Profile picture uploaded successfully:', data.profilePicture);
-
-        // Update profile pictures in the DOM
         const profilePic = document.getElementById('profile-picture');
         const profilePic1 = document.getElementById('profile-picture1');
-        
-        if (profilePic) {
-          profilePic.src = data.profilePicture;
-          // Add timestamp to force browser to refresh cached image
-          profilePic.src += '?t=' + Date.now();
-        }
-        if (profilePic1) {
-          profilePic1.src = data.profilePicture;
-          profilePic1.src += '?t=' + Date.now();
-        }
 
-        // Close modal
+        // Update the image sources, add a cache-busting parameter
+        if (profilePic) profilePic.src = `${data.profilePicture}?t=${Date.now()}`;
+        if (profilePic1) profilePic1.src = `${data.profilePicture}?t=${Date.now()}`;
+
         closeModal();
-
-        // Show success message
-        showToast('Profile picture updated successfully!', '#2ecc71');
+        window.showToast('Profile picture updated successfully!', '#2ecc71');
 
       } catch (error) {
         console.error('Upload error:', error);
-        showToast(error.message || 'Failed to upload profile picture', '#e74c3c');
+        window.showToast(error.message || 'Failed to upload profile picture', '#e74c3c');
       } finally {
-        // Reset uploading state
         isUploading = false;
         saveBtn.classList.remove('uploading');
         saveBtn.disabled = false;
       }
     });
-  }
-
-  // Toast notification function
-  function showToast(message, bgColor = '#333') {
-    // Remove existing toasts to prevent spam
-    const existingToasts = document.querySelectorAll('.toast-message');
-    existingToasts.forEach(toast => toast.remove());
-    
-    const toast = document.createElement("div");
-    toast.className = "toast-message show";
-    toast.style.backgroundColor = bgColor;
-    toast.style.cssText = `
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      padding: 15px 20px;
-      border-radius: 5px;
-      color: white;
-      font-weight: 500;
-      z-index: 10000;
-      transform: translateX(100%);
-      transition: transform 0.3s ease;
-    `;
-    toast.innerText = message;
-    document.body.appendChild(toast);
-
-    // Trigger animation
-    setTimeout(() => {
-      toast.style.transform = 'translateX(0)';
-    }, 10);
-
-    // Remove toast after 3 seconds
-    setTimeout(() => {
-      toast.style.transform = 'translateX(100%)';
-      setTimeout(() => {
-        if (toast.parentNode) {
-          toast.remove();
-        }
-      }, 300);
-    }, 3000);
   }
 });

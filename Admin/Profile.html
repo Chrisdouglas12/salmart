@@ -9,18 +9,16 @@
   <script src="https://cdn.jsdelivr.net/npm/jwt-decode/build/jwt-decode.min.js"></script>
   <link rel="stylesheet" href="profile styles.css">
   <link rel="stylesheet" href="Style.css">
-  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <script src="auth.js"></script>
   <script type="module" src="profilePostScript.js"></script>
   <script src="sideBar"></script>
-  <script src="addPic.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;0&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900&display=swap" rel="stylesheet">
 </head>
 
 <body>
   <header style="background-color: white; border: solid 1px #fff; box-shadow: 0 0 10px #ddd; position: fixed; width: 100vw; z-index: 100">
-    <h1 id="profileHeaderUsr" style="font-size: 16px; padding: 10px; margin-top: 10px; color: #28a745; margin-left: -2px">Username</h1>
+    <h1 id="profileHeaderUsr" style="font-size: 16px; margin-top: 10px; color: #28a745; margin-left: -2px">Username</h1>
   </header>
   <div class="menu-icon" style="z-index: 3000">
     <div></div>
@@ -227,38 +225,38 @@
       </form>
     </div>
 
-    <div id="profile-pic-modal" class="modern-profile-modal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3>Update Profile Picture</h3>
-          <button class="close-modal">×</button>
-        </div>
-        <div class="modal-body">
-          <div class="image-preview-container">
-            <img id="image-preview" src="default-avatar.png" alt="Preview">
-          </div>
-          <div class="upload-options">
-            <button id="take-photo-btn" class="option-btn">
-              <i class="fas fa-camera"></i> Take Photo
-            </button>
-            <button id="choose-photo-btn" class="option-btn">
-              <i class="fas fa-image"></i> Choose from Gallery
-            </button>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button id="cancel-upload" class="secondary-button">Cancel</button>
-          <button id="save-profile-pic" class="primary-button" disabled>
-            <span class="button-loader" id="upload-loader"></span>
-            <span class="button-text">Save Changes</span>
-          </button>
-        </div>
+<div id="profile-pic-modal" class="modern-profile-modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Update Profile Picture</h3>
+      <button class="close-modal">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="image-preview-container">
+        <img id="image-preview" src="default-avatar.png" alt="Preview">
+      </div>
+      <div class="upload-options">
+        
+        <button id="choose-photo-btn" class="option-btn">
+          <i class="fas fa-image"></i> Choose from Gallery
+        </button>
       </div>
     </div>
+    <div class="modal-footer">
+      <button id="cancel-upload" class="secondary-button">Cancel</button>
+      <button id="save-profile-pic" class="primary-button" disabled>
+        <span class="button-loader" id="upload-loader" style="display: none;"></span>
+        <span class="button-text">Save Changes</span>
+      </button>
+    </div>
   </div>
+</div>
 
   <script>
     document.addEventListener("DOMContentLoaded", function() {
+      // Keep ONLY the utility functions and basic DOM setup here.
+      // The core logic for the modal and file upload will be moved to the external JS.
+
       function getLoggedInUserInfo() {
         const token = localStorage.getItem("authToken");
         if (!token) {
@@ -288,73 +286,8 @@
         console.warn('File input icon (.file-input-icon) not found in DOM');
       }
 
-      const modal = document.getElementById('profile-pic-modal');
-      const closeModalBtn = document.querySelector('#profile-pic-modal .close-modal');
-      const cancelBtn = document.getElementById('cancel-upload');
-      const saveBtn = document.getElementById('save-profile-pic');
-      const choosePhotoBtn = document.getElementById('choose-photo-btn');
-      const takePhotoBtn = document.getElementById('take-photo-btn');
-      const imagePreview = document.getElementById('image-preview');
-      const fileInput = document.getElementById('profile-picture-upload');
-
-      if (fileInputIcon && isOwnProfile) {
-        fileInputIcon.addEventListener('click', function(e) {
-          e.preventDefault();
-          modal.classList.add('show');
-        });
-      }
-
-      function closeModal() {
-        modal.classList.remove('show');
-      }
-
-      closeModalBtn.addEventListener('click', closeModal);
-      cancelBtn.addEventListener('click', closeModal);
-
-      modal.addEventListener('click', function(e) {
-        if (e.target === modal) {
-          closeModal();
-        }
-      });
-
-      choosePhotoBtn.addEventListener('click', function() {
-        fileInput.click();
-      });
-
-      fileInput.addEventListener('change', function(e) {
-        if (e.target.files && e.target.files[0]) {
-          const reader = new FileReader();
-          reader.onload = function(event) {
-            imagePreview.src = event.target.result;
-            document.querySelectorAll('.edit-btn').forEach(btn => {
-              btn.disabled = false;
-            });
-            saveBtn.disabled = false;
-          };
-          reader.readAsDataURL(e.target.files[0]);
-        }
-      });
-
-      takePhotoBtn.addEventListener('click', function() {
-        showToast('Camera functionality would be implemented here');
-      });
-
-      saveBtn.addEventListener('click', function() {
-        if (!isOwnProfile) {
-          console.warn('Non-owner attempted to save profile picture');
-          return;
-        }
-        saveBtn.classList.add('uploading');
-        setTimeout(function() {
-          saveBtn.classList.remove('uploading');
-          const profilePic = document.getElementById('profile-picture');
-          const profilePic1 = document.getElementById('profile-picture1');
-          if (profilePic) profilePic.src = imagePreview.src;
-          if (profilePic1) profilePic1.src = imagePreview.src;
-          closeModal();
-          showToast('Profile picture updated successfully!', '#2ecc71');
-        }, 1500);
-      });
+      // NO MODAL JS LOGIC HERE ANYMORE
+      // It's all in the external snippet now.
 
       function showToast(message, bgColor = '#333') {
         let toast = document.createElement("div");
@@ -367,6 +300,9 @@
           setTimeout(() => toast.remove(), 500);
         }, 3000);
       }
+
+      // Make showToast globally available for the external script
+      window.showToast = showToast;
     });
   </script>
 
@@ -381,73 +317,77 @@
     });
     document.addEventListener("DOMContentLoaded", async function () {
       const followButton = document.getElementById("follow-button");
+      // Add a check for followButton here if it might not exist on the page
+      // For a profile page, it's generally there, but good practice for robustness
       if (!followButton) {
-        console.error("Follow button not found!");
-        return;
-      }
-      function getProfileOwnerId() {
-        const urlParams = new URLSearchParams(window.location.search);
-        return urlParams.get("userId") ? urlParams.get("userId").trim() : null;
-      }
-      function getLoggedInUserId() {
-        const token = localStorage.getItem("authToken");
-        if (!token) return null;
-        try {
-          const decodedToken = jwt_decode(token);
-          return decodedToken.userId ? decodedToken.userId.toString().trim() : null;
-        } catch (error) {
-          console.error("Error decoding token:", error);
-          return null;
+        // This is fine, as follow button might not be on own profile
+        console.log("Follow button not found, likely on own profile.");
+      } else {
+         // Existing follow button logic
+        function getProfileOwnerId() {
+          const urlParams = new URLSearchParams(window.location.search);
+          return urlParams.get("userId") ? urlParams.get("userId").trim() : null;
         }
-      }
-      const profileOwnerId = getProfileOwnerId();
-      const loggedInUserId = getLoggedInUserId();
-      if (profileOwnerId && loggedInUserId && profileOwnerId === loggedInUserId) {
-        followButton.style.display = "none";
-        return;
-      }
-      async function updateFollowButton() {
-        try {
-          const response = await fetch(`${API_BASE_URL}/follow-status?followerId=${loggedInUserId}&followingId=${profileOwnerId}`);
-          const data = await response.json();
-          if (data.following) {
-            followButton.classList.add("following");
-            followButton.textContent = "Following";
-          } else {
-            followButton.classList.remove("following");
-            followButton.textContent = "Follow";
+        function getLoggedInUserId() {
+          const token = localStorage.getItem("authToken");
+          if (!token) return null;
+          try {
+            const decodedToken = jwt_decode(token);
+            return decodedToken.userId ? decodedToken.userId.toString().trim() : null;
+          } catch (error) {
+            console.error("Error decoding token:", error);
+            return null;
           }
-        } catch (error) {
-          console.error("Error fetching follow status:", error);
         }
-      }
-      followButton.addEventListener("click", async function () {
-        try {
-          const response = await fetch(`${API_BASE_URL}/api/follow`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-              followerId: loggedInUserId,
-              followingId: profileOwnerId
-            })
-          });
-          const data = await response.json();
-          if (data.success) {
-            if (followButton.classList.contains("following")) {
-              followButton.classList.remove("following");
-              followButton.textContent = "Follow";
-            } else {
+        const profileOwnerId = getProfileOwnerId();
+        const loggedInUserId = getLoggedInUserId();
+        if (profileOwnerId && loggedInUserId && profileOwnerId === loggedInUserId) {
+          followButton.style.display = "none";
+          return;
+        }
+        async function updateFollowButton() {
+          try {
+            const response = await fetch(`${API_BASE_URL}/follow-status?followerId=${loggedInUserId}&followingId=${profileOwnerId}`);
+            const data = await response.json();
+            if (data.following) {
               followButton.classList.add("following");
               followButton.textContent = "Following";
+            } else {
+              followButton.classList.remove("following");
+              followButton.textContent = "Follow";
             }
+          } catch (error) {
+            console.error("Error fetching follow status:", error);
           }
-        } catch (error) {
-          console.error("Error following/unfollowing user:", error);
         }
-      });
-      updateFollowButton();
+        followButton.addEventListener("click", async function () {
+          try {
+            const response = await fetch(`${API_BASE_URL}/api/follow`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify({
+                followerId: loggedInUserId,
+                followingId: profileOwnerId
+              })
+            });
+            const data = await response.json();
+            if (data.success) {
+              if (followButton.classList.contains("following")) {
+                followButton.classList.remove("following");
+                followButton.textContent = "Follow";
+              } else {
+                followButton.classList.add("following");
+                followButton.textContent = "Following";
+              }
+            }
+          } catch (error) {
+            console.error("Error following/unfollowing user:", error);
+          }
+        });
+        updateFollowButton();
+      } // End of follow button logic conditional
     });
   </script>
 
