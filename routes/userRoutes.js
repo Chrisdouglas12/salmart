@@ -180,26 +180,31 @@ await transporter.sendMail({
   }
 });
 
-//verify email
+// Verify email router
 router.get('/verify-email', async (req, res) => {
   try {
     const { token } = req.query;
-    if (!token) return res.status(400).send('Verification token missing');
+
+    if (!token) {
+      return res.status(400).json({ error: 'Verification token missing' });
+    }
 
     const user = await User.findOne({ verificationToken: token });
-    if (!user) return res.status(404).send('Invalid or expired verification token');
+
+    if (!user) {
+      return res.status(404).json({ error: 'Invalid or expired verification token' });
+    }
 
     user.isVerified = true;
     user.verificationToken = undefined;
     await user.save();
 
-    res.status(200).json{( message: 'Email verified successfully. You can now log in.')};
+    res.status(200).json({ message: 'Email verified successfully. You can now log in.' });
   } catch (err) {
     console.error('Email verification error:', err);
-    res.status(500).send('Server error');
+    res.status(500).json({ error: 'Server error' });
   }
 });
-
 // Login
 router.post('/login', async (req, res) => {
   console.log('Login attempt:', req.body);
@@ -212,9 +217,9 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ message: 'User not found' });
     }
 
-  //  if (!user.isVerified) {
- //     return res.status(403).json({ message: 'Email not verified. Please check your inbox.' });
- //   }
+ if (!user.isVerified) {
+     return res.status(403).json({ message: 'Email not verified. Please check your inbox.' });
+   }
 
     if (user.isBanned) {
       return res.status(403).json({ message: 'Account is banned' });
