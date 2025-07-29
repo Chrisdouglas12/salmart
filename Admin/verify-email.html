@@ -244,15 +244,15 @@
         padding: 24px;
         margin: 20px;
       }
-      
+
       .message-title {
         font-size: 20px;
       }
-      
+
       .action-buttons {
         flex-direction: column;
       }
-      
+
       .btn {
         width: 100%;
         justify-content: center;
@@ -277,14 +277,14 @@
       </svg>
       Salmart
     </div>
-    
+
     <div class="status-icon loading" id="statusIcon">
       <div class="spinner"></div>
     </div>
-    
+
     <h1 class="message-title" id="messageTitle">Verifying Your Email</h1>
     <p class="message-description" id="messageDescription">Please wait while we verify your email address...</p>
-    
+
     <div class="progress-bar" id="progressBar" style="display: none;">
       <div class="progress-fill" id="progressFill" style="width: 0%"></div>
     </div>
@@ -293,14 +293,14 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.1/lucide.min.js"></script>
   <script>
     // Configuration
-    const API_BASE_URL = window.API_BASE_URL || 
-      (window.location.hostname === 'localhost' 
-        ? 'http://localhost:3000' 
+    const API_BASE_URL = window.API_BASE_URL ||
+      (window.location.hostname === 'localhost'
+        ? 'http://localhost:3000'
         : 'https://salmart.onrender.com');
-    
+
     const REDIRECT_DELAY = 5; // seconds
     const LOGIN_URL = 'SignIn.html';
-    
+
     // DOM Elements
     const verificationBox = document.getElementById('verificationBox');
     const statusIcon = document.getElementById('statusIcon');
@@ -308,11 +308,11 @@
     const messageDescription = document.getElementById('messageDescription');
     const progressBar = document.getElementById('progressBar');
     const progressFill = document.getElementById('progressFill');
-    
+
     // Get token from URL
     const params = new URLSearchParams(window.location.search);
     const token = params.get('token');
-    
+
     // Utility function to create icons
     function createIcon(iconName, className = '') {
       const icon = document.createElement('div');
@@ -320,14 +320,15 @@
       if (className) icon.className = className;
       return icon.innerHTML;
     }
-    
+
     // Show error state
     function showError(title, description) {
       statusIcon.className = 'status-icon error';
       statusIcon.innerHTML = createIcon('alertCircle');
       messageTitle.textContent = title;
       messageDescription.textContent = description;
-      
+      progressBar.style.display = 'none'; // Hide progress bar on error
+
       // Add retry button
       setTimeout(() => {
         const actionButtons = document.createElement('div');
@@ -345,14 +346,14 @@
         verificationBox.appendChild(actionButtons);
       }, 500);
     }
-    
+
     // Show success state with countdown
     function showSuccess(message) {
       statusIcon.className = 'status-icon success';
       statusIcon.innerHTML = createIcon('checkCircle');
       messageTitle.textContent = 'Email Verified Successfully!';
       messageDescription.textContent = message;
-      
+
       // Show redirect info with countdown
       const redirectInfo = document.createElement('div');
       redirectInfo.className = 'redirect-info';
@@ -360,10 +361,20 @@
         <p class="redirect-text">Redirecting to login page in:</p>
         <div class="countdown-timer" id="countdownTimer">${REDIRECT_DELAY}</div>
       `;
+
+      // Insert elements in the correct order
+      // Ensure the progress bar is visible and inserted before the action buttons
+      // Find the element after which we want to insert (e.g., messageDescription.nextSibling or the progressBar itself if it's dynamic)
+      // A robust way is to insert before the existing action buttons if they were added, or at the end if not.
+      // Given the current structure, inserting it before the action buttons (which are added later) or before the very last child is good.
+      // If progressBar is initially display:none, and we want redirectInfo *after* it, ensure progressBar is inserted and visible first.
       
-      progressBar.style.display = 'block';
-      verificationBox.insertBefore(redirectInfo, verificationBox.lastElementChild);
-      
+      // Let's place redirectInfo right before where actionButtons will be appended.
+      // Or simply append it before progressBar if that makes sense visually based on your CSS.
+      // For now, let's put it right after the messageDescription
+      verificationBox.insertBefore(redirectInfo, progressBar); // Insert redirectInfo before progressBar
+      progressBar.style.display = 'block'; // Make sure the progress bar is visible
+
       // Action buttons
       const actionButtons = document.createElement('div');
       actionButtons.className = 'action-buttons';
@@ -378,53 +389,55 @@
         </button>
       `;
       verificationBox.appendChild(actionButtons);
-      
+
       // Start countdown and auto-redirect
       startCountdown();
     }
-    
+
     // Countdown and redirect functionality
     let countdownInterval;
     let redirectTimeout;
-    
+
     function startCountdown() {
       let timeLeft = REDIRECT_DELAY;
       const countdownTimer = document.getElementById('countdownTimer');
-      
+
       countdownInterval = setInterval(() => {
         timeLeft--;
-        countdownTimer.textContent = timeLeft;
-        
+        if (countdownTimer) { // Ensure the element exists before updating
+          countdownTimer.textContent = timeLeft;
+        }
+
         // Update progress bar
         const progress = ((REDIRECT_DELAY - timeLeft) / REDIRECT_DELAY) * 100;
         progressFill.style.width = progress + '%';
-        
+
         if (timeLeft <= 0) {
           clearInterval(countdownInterval);
-          // Automatically redirect to login page
+          clearTimeout(redirectTimeout); // Clear the timeout as we are redirecting now
           window.location.href = LOGIN_URL;
         }
       }, 1000);
-      
-      // Backup redirect in case interval fails
+
+      // Backup redirect in case interval fails, but ideally, interval will handle it
       redirectTimeout = setTimeout(() => {
         window.location.href = LOGIN_URL;
-      }, REDIRECT_DELAY * 1000);
+      }, REDIRECT_DELAY * 1000 + 500); // Add a small buffer just in case
     }
-    
+
     // Cancel redirect function
     window.cancelRedirect = function() {
       clearInterval(countdownInterval);
       clearTimeout(redirectTimeout);
-      
+
       const redirectInfo = document.querySelector('.redirect-info');
-      const progressBar = document.getElementById('progressBar');
-      
+      const progressBarElement = document.getElementById('progressBar'); // Renamed to avoid conflict
+
       if (redirectInfo) redirectInfo.remove();
-      if (progressBar) progressBar.style.display = 'none';
-      
+      if (progressBarElement) progressBarElement.style.display = 'none';
+
       messageDescription.textContent = 'Auto-redirect cancelled. You can login manually when ready.';
-      
+
       // Update action buttons
       const actionButtons = document.querySelector('.action-buttons');
       if (actionButtons) {
@@ -436,7 +449,7 @@
         `;
       }
     };
-    
+
     // Main verification logic
     async function verifyEmail() {
       if (!token) {
@@ -446,7 +459,7 @@
         );
         return;
       }
-      
+
       try {
         const response = await fetch(`${API_BASE_URL}/verify-email?token=${encodeURIComponent(token)}`, {
           method: 'GET',
@@ -454,19 +467,17 @@
             'Content-Type': 'application/json'
           }
         });
-        
+
         const data = await response.json();
-        
+
         if (response.ok) {
-          // Success - show success message and start auto-redirect
-          setTimeout(() => {
-            showSuccess(data || 'Your email has been verified successfully! You can now sign in to your account.');
-          }, 1500);
+          // Success - show success message and start auto-redirect IMMEDIATELY
+          showSuccess(data.message || 'Your email has been verified successfully! You can now sign in to your account.');
         } else {
           // Handle specific error cases
           let errorTitle = 'Verification Failed';
           let errorDescription = data.message || 'Unable to verify your email address.';
-          
+
           if (response.status === 404) {
             errorTitle = 'Invalid Verification Token';
             errorDescription = 'This verification link is invalid or has expired. Please request a new verification email.';
@@ -474,28 +485,28 @@
             errorTitle = 'Bad Request';
             errorDescription = 'The verification request is malformed. Please try clicking the link from your email again.';
           }
-          
-          setTimeout(() => {
+
+          setTimeout(() => { // Keep a small delay for error display
             showError(errorTitle, errorDescription);
-          }, 1500);
+          }, 1000); // Reduced delay slightly
         }
-        
+
       } catch (error) {
         console.error('Verification error:', error);
-        
-        setTimeout(() => {
+
+        setTimeout(() => { // Keep a small delay for error display
           showError(
             'Connection Failed',
             'Unable to connect to the verification server. Please check your internet connection and try again.'
           );
-        }, 1500);
+        }, 1000); // Reduced delay slightly
       }
     }
-    
+
     // Initialize verification on page load
     document.addEventListener('DOMContentLoaded', () => {
       verifyEmail();
-      
+
       // Add visual feedback for loading
       setTimeout(() => {
         messageDescription.textContent = 'Connecting to server...';

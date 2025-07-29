@@ -64,14 +64,14 @@ function showSuccessModal(userEmail) {
   // Create modal content
   const modalContent = document.createElement('div');
   modalContent.style.cssText = `
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background-color: #fff;
     border-radius: 20px;
     padding: 40px 30px;
     max-width: 450px;
     width: 90%;
     text-align: center;
-    color: white;
-    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+    color: #28a745;
+    box-shadow: 0 0 10px #ddd;
     position: relative;
     animation: slideUp 0.4s ease-out;
     transform: translateY(0);
@@ -82,14 +82,14 @@ function showSuccessModal(userEmail) {
       <div style="
         width: 80px;
         height: 80px;
-        background: rgba(255, 255, 255, 0.2);
+        background: #fff;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
         margin: 0 auto 20px;
         backdrop-filter: blur(10px);
-        border: 2px solid rgba(255, 255, 255, 0.3);
+        border: 2px solid #fff;
       ">
         <i class="fas fa-check" style="font-size: 35px; color: #4ade80;"></i>
       </div>
@@ -111,7 +111,7 @@ function showSuccessModal(userEmail) {
     </div>
     
     <div style="
-      background: rgba(255, 255, 255, 0.1);
+      background: #fff;
       border-radius: 12px;
       padding: 20px;
       margin: 25px 0;
@@ -119,7 +119,7 @@ function showSuccessModal(userEmail) {
     ">
       <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 15px;">
         <i class="fas fa-envelope" style="font-size: 20px; color: #fbbf24;"></i>
-        <span style="font-weight: 600; font-size: 16px;">Next Step</span>
+        <span style="font-weight: 600; font-size: 16px;">Next Step de</span>
       </div>
       <p style="margin: 0; font-size: 14px; opacity: 0.9; line-height: 1.4;">
         Check your email and enter the verification code to activate your account and start shopping!
@@ -178,7 +178,7 @@ function showSuccessModal(userEmail) {
   document.getElementById('proceedBtn').addEventListener('click', () => {
     modalOverlay.style.animation = 'fadeOut 0.3s ease-out forwards';
     modalContent.style.animation = 'slideDown 0.3s ease-out forwards';
-    
+
     // Add fadeOut animation
     const fadeOutStyle = document.createElement('style');
     fadeOutStyle.textContent = `
