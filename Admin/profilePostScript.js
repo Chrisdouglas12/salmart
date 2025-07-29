@@ -889,9 +889,12 @@ function escapeHtml(text) {
              // which might mean they should be on the general feed or log in.
              // For a personal profile page, this should ideally not happen if login is enforced.
             postsContainer.innerHTML = `
-                <p style="text-align: center; padding: 20px; color: #666;">
-                    No user specified or logged in to fetch posts.
-                </p>
+                                <div style="text-align: center; padding: 40px; color: #555; font-family: 'Poppins', sans-serif;">
+                    <i class="fas fa-folder-open" style="font-size: 40px; color: #ccc; margin-bottom: 10px;"></i>
+                    <p style="font-size: 16px; margin-top: 10px;">
+                        Nothing to see yet.<br>Please refresh the page or check your connection or create a new post.
+                    </p>
+                </div>
             `;
             isLoading = false;
             return;

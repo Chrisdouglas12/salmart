@@ -867,7 +867,13 @@ sendMessageButtons.forEach((sendMessageBtn) => {
 
   } catch (err) {
     console.error('Error fetching requests:', err);
-    requestFeed.innerHTML = '<p class="error-message">Error loading requests. Please try again later.</p>';
+    requestFeed.innerHTML =  `           <div style="text-align: center; padding: 40px; color: #555; font-family: 'Poppins', sans-serif;">
+                    <i class="fas fa-folder-open" style="font-size: 40px; color: #ccc; margin-bottom: 10px;"></i>
+                    <p style="font-size: 16px; margin-top: 10px;">
+                        Nothing to see yet.<br>Please refresh the page or check your connection.
+                    </p>
+                </div>
+            `;
   }
 }
 
@@ -1039,6 +1045,12 @@ document.addEventListener('DOMContentLoaded', () => {
   if (currentUserId) {
     fetchRequests();
   } else {
-    requestFeed.innerHTML = '<p class="error-message">Please log in to view requests</p>';
+    requestFeed.innerHTML =   `             <div style="text-align: center; padding: 40px; color: #555; font-family: 'Poppins', sans-serif;">
+                    <i class="fas fa-folder-open" style="font-size: 40px; color: #ccc; margin-bottom: 10px;"></i>
+                    <p style="font-size: 16px; margin-top: 10px;">
+                        Nothing to see yet.<br>Please refresh the page or check your connection.
+                    </p>
+                </div>
+            `;
   }
 });

@@ -37,7 +37,7 @@ socket.on('connect', () => {
 
 socket.on('connect_error', (error) => {
     console.error('Socket.IO connection error:', error.message);
-    showToast('Failed to connect to real-time updates. Some features may be delayed.', '#dc3545');
+  
 });
 
 socket.on('profilePictureUpdate', ({ userId, profilePicture }) => {
@@ -1037,7 +1037,6 @@ async function fetchPostsByCategory(category = currentCategory, page = currentPa
                 </div>
             `;
         }
-        showToast('Something went wrong.', '#dc3545');
     } finally {
         isLoading = false;
         postsContainer.classList.remove('loading');
