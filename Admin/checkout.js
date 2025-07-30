@@ -1,19 +1,24 @@
-// checkout.js
 const API_BASE_URL = window.API_BASE_URL || (window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart.onrender.com');
 
 document.addEventListener('DOMContentLoaded', async () => {
     const params = new URLSearchParams(window.location.search);
 
     const productId = params.get('postId');
-    const productImage = params.get('productImage');
+    let productImage = params.get('productImage');
     const productTitle = params.get('productTitle');
     const productDescription = params.get('productDescription');
     const productLocation = params.get('productLocation');
     const productCondition = params.get('productCondition');
     const productPrice = params.get('productPrice');
-    const sellerId = params.get('sellerId'); // Corrected from 'createdBy' to match index.js
+    const sellerId = params.get('sellerId');
 
-    // Populate the HTML elements
+    // Sanitize productImage
+    if (productImage && !productImage.match(/^https?:\/\//)) {
+        productImage = productImage.startsWith('/')
+            ? `${API_BASE_URL}${productImage}`
+            : `${API_BASE_URL}/${productImage}`;
+    }
+
     document.getElementById('productImage').src = productImage || '/salmart-192x192.png';
     document.getElementById('productTitle').textContent = productTitle || 'Untitled Product';
     document.getElementById('productPrice').textContent = productPrice || 'Price not specified';
@@ -37,9 +42,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const user = await response.json();
                 sellerUsername = `${user.firstName} ${user.lastName}` || 'User';
                 sellerProfilePicture = user.profilePicture || '/salmart-192x192.png';
-            } else {
-                console.warn(`Failed to fetch seller details for ID ${sellerId}. Status: ${response.status}`);
-                window.showToast('Could not load seller details.', '#dc3545');
             }
         } catch (error) {
             console.error('Error fetching seller details:', error);
@@ -47,19 +49,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    // Make product data available for buttons
     const productData = {
         postId: productId,
-        productImage: productImage,
-        productTitle: productTitle,
-        productDescription: productDescription,
-        productLocation: productLocation,
-        productCondition: productCondition,
-        productPrice: productPrice,
-        sellerId: sellerId, // Use correct field name
+        productImage,
+        productTitle,
+        productDescription,
+        productLocation,
+        productCondition,
+        productPrice,
+        sellerId,
     };
 
-    // Add event listeners for the new buttons
     const buyWithEscrowBtn = document.getElementById('buyWithEscrowBtn');
     const chatSellerBtn = document.getElementById('chatSellerBtn');
 
@@ -68,46 +68,38 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     if (chatSellerBtn) {
-        // Pass fetched seller details to handleChatSeller
         chatSellerBtn.addEventListener('click', () => handleChatSeller(productData, sellerUsername, sellerProfilePicture));
     }
 
-    // Toast message function
-    function showToast(message, bgColor = '#333') {
+    // Toast definition
+    window.showToast = function showToast(message, bgColor = '#333') {
         const toast = document.getElementById('toast-message');
         if (!toast) {
-            console.error('Toast message element not found.');
             const tempToast = document.createElement('div');
             tempToast.className = 'toast-message';
-            tempToast.style.position = 'fixed';
-            tempToast.style.bottom = '20px';
-            tempToast.style.left = '50%';
-            tempToast.style.transform = 'translateX(-50%)';
-            tempToast.style.backgroundColor = '#333';
-            tempToast.style.color = 'white';
-            tempToast.style.padding = '10px 20px';
-            tempToast.style.borderRadius = '5px';
-            tempToast.style.zIndex = '1000';
-            tempToast.style.transition = 'opacity 0.5s ease-in-out';
-            tempToast.style.opacity = '0';
+            Object.assign(tempToast.style, {
+                position: 'fixed',
+                bottom: '20px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                backgroundColor: bgColor,
+                color: 'white',
+                padding: '10px 20px',
+                borderRadius: '5px',
+                zIndex: '1000',
+                transition: 'opacity 0.5s ease-in-out',
+                opacity: '1',
+            });
+            tempToast.textContent = message;
             document.body.appendChild(tempToast);
-            window.showToast = (msg, bg) => {
-                tempToast.textContent = msg;
-                tempToast.style.backgroundColor = bg;
-                tempToast.style.opacity = '1';
-                setTimeout(() => tempToast.style.opacity = '0', 3000);
-            };
-            window.showToast(message, bgColor);
+            setTimeout(() => tempToast.style.opacity = '0', 3000);
             return;
         }
         toast.textContent = message;
         toast.style.backgroundColor = bgColor;
         toast.classList.add('show');
-        setTimeout(() => {
-            toast.classList.remove('show');
-        }, 3000);
-    }
-    window.showToast = showToast;
+        setTimeout(() => toast.classList.remove('show'), 3000);
+    };
 });
 
 async function handleBuyWithEscrow(product) {
@@ -148,7 +140,7 @@ async function handleBuyWithEscrow(product) {
     }
 }
 
-async function handleChatSeller(product, recipientUsername, recipientProfilePictureUrl) {
+function handleChatSeller(product, recipientUsername, recipientProfilePictureUrl) {
     const loggedInUser = localStorage.getItem('userId');
     if (!loggedInUser) {
         window.showToast("Please log in to chat with the seller.", '#dc3545');
@@ -158,24 +150,19 @@ async function handleChatSeller(product, recipientUsername, recipientProfilePict
         return;
     }
 
-    if (!product || !product.sellerId || !product.postId) {
-        window.showToast('Seller or product information missing.', '#dc3545');
-        console.error('Missing seller or product info for chat:', product);
-        return;
-    }
+    const message = `I'm ready to pay for this now, is it still available?\n\nProduct: ${product.productTitle || product.productDescription}`;
 
-    let productImage = product.productImage;
-    if (productImage && !productImage.match(/^https?:\/\//)) {
-        productImage = productImage.startsWith('/') ? `${API_BASE_URL}${productImage}` : `${API_BASE_URL}/${productImage}`;
-    }
+    // Build chat URL with all data
+    const chatUrl = `Chats.html?` + new URLSearchParams({
+        user_id: loggedInUser,
+        recipient_id: product.sellerId,
+        recipient_username: recipientUsername || 'User',
+        recipient_profile_picture_url: recipientProfilePictureUrl || '/salmart-192x192.png',
+        message: message,
+        product_image: product.productImage || '',
+        product_id: product.postId,
+        product_name: product.productTitle || '',
+    }).toString();
 
-    const message = `I'm ready to pay for this now, is it still available?\n\nProduct: ${product.productDescription || product.productTitle}`;
-    const encodedMessage = encodeURIComponent(message);
-    const encodedProductImage = encodeURIComponent(productImage || '');
-    const encodedRecipientUsername = encodeURIComponent(recipientUsername || 'User');
-    const encodedRecipientProfilePictureUrl = encodeURIComponent(recipientProfilePictureUrl || '/salmart-192x192.png');
-    const encodedProductDescription = encodeURIComponent(product.productDescription || product.productTitle || '');
-
-    const chatUrl = `Chats.html?user_id=${loggedInUser}&recipient_id=${product.sellerId}&recipient_username=${encodedRecipientUsername}&recipient_profile_picture_url=${encodedRecipientProfilePictureUrl}&message=${encodedMessage}&product_image=${encodedProductImage}&product_id=${product.postId}&product_name=${encodedProductDescription}`;
     window.location.href = chatUrl;
 }

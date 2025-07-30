@@ -783,9 +783,9 @@ function escapeHtml(text) {
                     <i class="far fa-comment-alt"></i>
                     <span class="comment-count">${post.comments ? post.comments.length : 0}</span> <span>Comments</span>
                 </button>
-                <button class="action-button share-button" data-post-id="${post._id || ''}">
-                    <i class="fas fa-share"></i>
-                </button>
+               <button class="action-button share-button" data-post-id="${post._id || ''}">
+  <i class="fas fa-share"></i> Share
+</button>
             </div>
         `;
         // Determine the user ID for the profile link

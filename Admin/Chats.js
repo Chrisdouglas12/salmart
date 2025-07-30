@@ -38,6 +38,14 @@ const productId = urlParams.get('product_id') || '';
 const productName = urlParams.get('product_name') ? decodeURIComponent(urlParams.get('product_name')) : '';
 const originalPrice = urlParams.get('original_price') ? parseFloat(urlParams.get('original_price')) : null;
 
+
+if (productImage) {
+    const img = document.createElement('img');
+    img.src = decodeURIComponent(productImage);
+    img.alt = "Product image";
+    img.className = "chat-product-image"; // style accordingly
+    document.querySelector('.chat-header')?.appendChild(img);
+}
 // Set recipient info in the UI
 document.getElementById('chats-userName').textContent = recipientUsername;
 document.getElementById('chatspic').src = recipientProfilePictureUrl;

@@ -37,7 +37,7 @@ socket.on('connect', () => {
 
 socket.on('connect_error', (error) => {
     console.error('Socket.IO connection error:', error.message);
-  
+
 });
 
 socket.on('profilePictureUpdate', ({ userId, profilePicture }) => {
@@ -422,6 +422,7 @@ function renderPromotedPost(post) {
     postElement.dataset.userId = post.createdBy ? post.createdBy.userId : '';
 
     const isPostCreator = post.createdBy && post.createdBy.userId === currentLoggedInUser;
+    const isSold = post.isSold;
 
     let mediaContent = '';
     let productDetails = '';
@@ -441,7 +442,7 @@ function renderPromotedPost(post) {
     if (currentLoggedInUser && !isPostCreator) {
         buttonContent = `
             <div class="button-container">
-                <button class="promoted-cta-button buy-now-button" data-post-id="${post._id || ''}"
+                <button class="promoted-cta-button buy-now-button ${isSold ? 'sold-out' : ''}" data-post-id="${post._id || ''}"
                     data-product-image="${productImageForChat}"
                     data-product-title="${escapeHtml(post.title || 'Untitled Product')}"
                     data-product-description="${escapeHtml(post.description || 'No description available.')}"
@@ -449,16 +450,16 @@ function renderPromotedPost(post) {
                     data-product-condition="${escapeHtml(post.productCondition || 'N/A')}"
                     data-product-price="${post.price ? '₦' + Number(post.price).toLocaleString('en-NG') : '₦0.00'}"
                     data-seller-id="${post.createdBy ? post.createdBy.userId : ''}"
-                    ${post.isSold ? 'disabled' : ''}>
-                    <i class="fas fa-shopping-cart"></i> ${post.isSold ? 'Sold' : 'Buy'}
+                    ${isSold ? 'disabled' : ''}>
+                    <i class="fas fa-shopping-cart"></i> ${isSold ? 'Sold' : 'Buy'}
                 </button>
-                <button class="promoted-cta-button send-message-btn"
+                <button class="promoted-cta-button send-message-btn ${isSold ? 'unavailable' : ''}"
                     data-recipient-id="${post.createdBy ? post.createdBy.userId : ''}"
                     data-product-image="${productImageForChat}"
                     data-product-description="${escapeHtml(post.title || '')}"
                     data-post-id="${post._id || ''}"
-                    ${post.isSold ? 'disabled' : ''}>
-                    <i class="fas fa-paper-plane"></i> ${post.isSold ? 'Unavailable' : 'Message'}
+                    ${isSold ? 'disabled' : ''}>
+                    <i class="fas fa-paper-plane"></i> ${isSold ? 'Unavailable' : 'Message'}
                 </button>
             </div>
         `;
@@ -524,6 +525,7 @@ function renderPost(post) {
 
     const isFollowing = currentFollowingList.includes(post.createdBy?.userId?.toString());
     const isPostCreator = post.createdBy && post.createdBy.userId === currentLoggedInUser;
+    const isSold = post.isSold;
 
     let mediaContent = '';
     let productDetails = '';
@@ -584,8 +586,8 @@ function renderPost(post) {
             </div>
         `;
         buttonContent = `
-            <a href="${post.productLink || '#'}" class="checkout-product-btn" aria-label="Check out product ${post.description || 'product'}" ${!post.productLink ? 'disabled' : ''}>
-                <i class="fas fa-shopping-cart"></i> Check Out Product
+            <a href="${post.productLink || '#'}" class="checkout-product-btn ${isSold ? 'sold-out' : ''}" aria-label="Check out product ${post.description || 'product'}" ${!post.productLink || isSold ? 'disabled' : ''}>
+                <i class="fas fa-shopping-cart"></i> ${isSold ? 'Sold Out' : 'Check Out Product'}
             </a>
         `;
     } else {
@@ -599,20 +601,21 @@ function renderPost(post) {
             <div class="product-image">
                 <div class="badge">${post.productCondition || 'New'}</div>
                 <img class="post-image" onclick="window.openImage('${productImageForChat.replace(/'/g, "\\'")}')" alt="Product Image" onerror="this.src='/salmart-192x192.png'">
+                
             </div>
         `;
         productDetails = `
             <div class="content">
                 <div class="details-grid">
                     <div class="detail-item">
-                        <div class="detail-icon price-icon">₦</div>
+                        <div class="detail-icon price-icon"><i class="fas fa-money-bill-wave"></i></div>
                         <div class="detail-text">
                             <div class="detail-label">Price</div>
                             <div class="detail-value price-value">${post.price ? '₦' + Number(post.price).toLocaleString('en-NG') : 'Price not specified'}</div>
                         </div>
                     </div>
                     <div class="detail-item">
-                        <div class="detail-icon location-icon">📍</div>
+                        <div class="detail-icon location-icon"><i class="fas fa-map-marker-alt"></i></div>
                         <div class="detail-text">
                             <div class="detail-label">Location</div>
                             <div class="detail-value location-value">${escapeHtml(post.location || 'N/A')}</div>
@@ -622,53 +625,38 @@ function renderPost(post) {
             </div>
         `;
         if (currentLoggedInUser) {
-            if (isPostCreator) {
-                buttonContent = !post.isPromoted ? `
-                    <div class="actions">
-                        <button
-                            class="btn btn-primary promote-button"
-                            data-post-id="${post._id || ''}"
-                            aria-label="Promote this post"
-                            ${post.isSold ? 'disabled title="Cannot promote sold out post"' : ''}
-                        >
-                            ${post.isSold ? 'Sold Out' : 'Promote Post'}
-                        </button>
-                    </div>
-                ` : '';
+  if (isPostCreator) {
+    buttonContent = !post.isPromoted ? `
+      <div class="actions">
+        <button class="btn btn-primary promote-button ${isSold ? 'sold-out' : ''}" data-post-id="${post._id || ''}" aria-label="Promote this post" ${isSold ? 'disabled title="Cannot promote sold out post"' : ''} >
+          <i class="${isSold ? 'fas fa-times-circle' : 'fas fa-bullhorn'}"></i> 
+          ${isSold ? 'Sold Out' : 'Promote Post'}
+        </button>
+      </div>
+    ` : '';
+  
             } else {
-                buttonContent = `
-                    <div class="actions">
-                        <button class="btn btn-secondary send-message-btn"
-                            data-recipient-id="${post.createdBy ? post.createdBy.userId : ''}"
-                            data-product-image="${productImageForChat}"
-                            data-product-description="${escapeHtml(post.title || '')}"
-                            data-post-id="${post._id || ''}"
-                            ${post.isSold ? 'disabled' : ''}> <i class="fas fa-paper-plane"></i>
-                            ${post.isSold ? 'Unavailable' : 'Message'}
-                        </button>
-                        <button class="btn btn-primary buy-now-button"
-                                data-post-id="${post._id || ''}"
-                                data-product-image="${productImageForChat}"
-                                data-product-title="${escapeHtml(post.title || 'Untitled Product')}"
-                                data-product-description="${escapeHtml(post.description || 'No description available.')}"
-                                data-product-location="${escapeHtml(post.location || 'N/A')}"
-                                data-product-condition="${escapeHtml(post.productCondition || 'N/A')}"
-                                data-product-price="${post.price ? '₦' + Number(post.price).toLocaleString('en-NG') : '₦0.00'}"
-                                data-seller-id="${post.createdBy ? post.createdBy.userId : ''}"
-                                ${post.isSold ? 'disabled' : ''}> <i class="fas fa-shopping-cart"></i>
-                            ${post.isSold ? 'Sold Out' : 'Buy Now'}
-                        </button>
-                    </div>
-                `;
+buttonContent = `
+  <div class="actions">
+    <button class="btn btn-secondary send-message-btn ${isSold ? 'unavailable' : ''}" data-recipient-id="${post.createdBy ? post.createdBy.userId : ''}" data-product-image="${productImageForChat}" data-product-description="${escapeHtml(post.title || '')}" data-post-id="${post._id || ''}" ${isSold ? 'disabled' : ''}>
+      <i class="fas ${isSold ? 'fa-ban' : 'fa-paper-plane'}"></i> 
+      ${isSold ? 'Unavailable' : 'Message'}
+    </button>
+    <button class="btn btn-primary buy-now-button ${isSold ? 'sold-out' : ''}" data-post-id="${post._id || ''}" data-product-image="${productImageForChat}" data-product-title="${escapeHtml(post.title || 'Untitled Product')}" data-product-description="${escapeHtml(post.description || 'No description available.')}" data-product-location="${escapeHtml(post.location || 'N/A')}" data-product-condition="${escapeHtml(post.productCondition || 'N/A')}" data-product-price="${post.price ? '₦' + Number(post.price).toLocaleString('en-NG') : '₦0.00'}" data-seller-id="${post.createdBy ? post.createdBy.userId : ''}" ${isSold ? 'disabled' : ''}>
+      <i class="fas ${isSold ? 'fa-times-circle' : 'fa-shopping-cart'}"></i> 
+      ${isSold ? 'Sold Out' : 'Buy Now'}
+    </button>
+  </div>
+`;
             }
         } else {
             buttonContent = `
                 <div class="actions">
                     <button class="btn btn-secondary login-required" onclick="redirectToLogin()">
-                        Message
+                        <i class="fas fa-paper-plane"></i> Message
                     </button>
                     <button class="btn btn-primary login-required" onclick="redirectToLogin()">
-                        Buy Now
+                        <i class="fas fa-shopping-cart"></i> Buy Now
                     </button>
                 </div>
             `;
@@ -709,7 +697,7 @@ function renderPost(post) {
                 <span class="comment-count">${post.comments ? post.comments.length : 0}</span> <span>Comments</span>
             </button>
             <button class="action-button share-button" data-post-id="${post._id || ''}">
-                <i class="fas fa-share"></i>
+                <i class="fas fa-share"></i> Share
             </button>
         </div>
     ` : `
@@ -723,7 +711,7 @@ function renderPost(post) {
                 <span class="comment-count">${post.comments ? post.comments.length : 0}</span> <span>Comments</span>
             </button>
             <button class="action-button share-button" data-post-id="${post._id || ''}">
-                <i class="fas fa-share"></i>
+                <i class="fas fa-share"></i> Share
             </button>
         </div>
     `;
@@ -745,10 +733,10 @@ function renderPost(post) {
                 <div class="post-options-menu">
                     <ul>
                         ${isPostCreator ? `
-                            <li><button class="delete-post-button" data-post-id="${post._id || ''}" type="button">Delete Post</button></li>
-                            <li><button class="edit-post-button" data-post-id="${post._id || ''}" data-post-type="${post.postType || 'regular'}" type="button">Edit Post</button></li>
+                            <li><button class="delete-post-button" data-post-id="${post._id || ''}" type="button"><i class="fas fa-trash-alt"></i> Delete Post</button></li>
+                            <li><button class="edit-post-button" data-post-id="${post._id || ''}" data-post-type="${post.postType || 'regular'}" type="button"><i class="fas fa-edit"></i> Edit Post</button></li>
                         ` : ''}
-                        <li><button class="report-post-button" data-post-id="${post._id || ''}" type="button">Report Post</button></li>
+                        <li><button class="report-post-button" data-post-id="${post._id || ''}" type="button"><i class="fas fa-flag"></i> Report Post</button></li>
                     </ul>
                 </div>
             </div>
@@ -830,7 +818,7 @@ function createPromotedPostFiller() {
             transition: all 0.3s ease;
         " onmouseover="this.style.background='rgba(255,255,255,0.3)'"
            onmouseout="this.style.background='rgba(255,255,255,0.2)'">
-            Browse All
+            <i class="fas fa-search"></i> Browse All
         </button>
     `;
 
@@ -846,7 +834,7 @@ function createPromotedPostsRow(posts) {
 
     const headerElement = document.createElement('div');
     headerElement.classList.add('promoted-posts-header');
-    headerElement.innerHTML = '<h3>Suggested products for you</h3>';
+    headerElement.innerHTML = '<h3><i class="fas fa-fire"></i> Suggested products for you</h3>';
     headerElement.style.cssText = `
         font-size: 16px;
         color: #333;
@@ -932,6 +920,7 @@ async function fetchPostsByCategory(category = currentCategory, page = currentPa
             if (postsContainer.children.length === 0) {
                 postsContainer.innerHTML = `
                     <p style="text-align: center; padding: 20px; color: #666;">
+                        <i class="fas fa-box-open" style="font-size: 1.5em; display: block; margin-bottom: 10px;"></i>
                         No posts yet for "${category === 'all' ? 'this category' : escapeHtml(category)}".
                         Try a different category or create one!
                     </p>
@@ -1020,7 +1009,14 @@ async function fetchPostsByCategory(category = currentCategory, page = currentPa
         postsContainer.appendChild(fragment);
 
         if (postsContainer.children.length === 0) {
-            postsContainer.innerHTML = '<p style="text-align: center; margin: 2rem;">No posts available.</p>';
+            postsContainer.innerHTML = `
+                <div style="text-align: center; padding: 40px; color: #555; font-family: 'Poppins', sans-serif;">
+                    <i class="fas fa-folder-open" style="font-size: 40px; color: #ccc; margin-bottom: 10px;"></i>
+                    <p style="font-size: 16px; margin-top: 10px;">
+                        No posts available. Be the first to create one!
+                    </p>
+                </div>
+            `;
         }
 
         window.dispatchEvent(new Event('postsRendered'));
@@ -1030,9 +1026,9 @@ async function fetchPostsByCategory(category = currentCategory, page = currentPa
         if (!postsContainer.children.length) {
             postsContainer.innerHTML = `
                 <div style="text-align: center; padding: 40px; color: #555; font-family: 'Poppins', sans-serif;">
-                    <i class="fas fa-folder-open" style="font-size: 40px; color: #ccc; margin-bottom: 10px;"></i>
+                    <i class="fas fa-exclamation-triangle" style="font-size: 40px; color: #dc3545; margin-bottom: 10px;"></i>
                     <p style="font-size: 16px; margin-top: 10px;">
-                        Nothing to see yet.<br>Please refresh the page or check your connection.
+                        Failed to load posts.<br>Please refresh the page or check your connection.
                     </p>
                 </div>
             `;
@@ -1056,6 +1052,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     await initializeAppData();
 
     if (loadMoreBtn) {
+        loadMoreBtn.innerHTML = '<i class="fas fa-chevron-down"></i> Load More';
         loadMoreBtn.addEventListener('click', () => {
             if (!isLoading) {
                 currentPage++;
@@ -1214,9 +1211,13 @@ document.addEventListener('DOMContentLoaded', async function () {
             return;
         }
 
+if (target.classList.contains('reply-button') && target.dataset.postId) {
+            // This button now consistently navigates to the product detail page for comments
+            window.location.href = `product.html?postId=${target.dataset.postId}`;
+            return;
+        }
 
-
-// edit button handler 
+// edit button handler
 if (target.classList.contains('edit-post-button')) {
     if (!currentLoggedInUser) {
         redirectToLogin();

@@ -493,17 +493,7 @@ a {
 }
 
 /* Animation for the bullhorn icon */
-@keyframes pulse {
-  0% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.1);
-  }
-  100% {
-    transform: scale(1);
-  }
-}
+
 
 .post-time::before {
   content: '•';
@@ -700,7 +690,7 @@ h1 {
   margin-right: 20px;
 }
 
-.profile-sec {
+.profile-sec{
   width: 100%;
   border-bottom: 0.1px solid #fff;
   padding-bottom: 5px;
@@ -714,6 +704,7 @@ h1 {
   border-radius: 100%;
   width: 45px;
   height: 45px;
+  object-fit: cover;
   margin-left: 5px;
   margin-top: 10px;
 }
