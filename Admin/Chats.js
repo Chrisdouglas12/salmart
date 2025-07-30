@@ -154,7 +154,7 @@ function displayMessage(message, isOptimistic = false) {
         if (!displayText && message.content) {
             displayText = message.content;
         } else if (!displayText) {
-            displayText = 'Image'; // Default text for image-only messages
+            displayText = ''; // Default text for image-only messages
         }
     } else {
         let parsedFromJson = {};

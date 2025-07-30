@@ -1361,13 +1361,20 @@ function escapeHtml(text) {
             return;
         }
 
-        if (target.classList.contains('edit-post-button') && target.dataset.postId) {
-            const postId = target.dataset.postId;
-            const postType = target.dataset.postType;
-            window.location.href = `Ads.html?edit=true&postId=${postId}&type=${postType}`;
-            return;
-        }
 
+
+// edit button handler 
+if (target.classList.contains('edit-post-button')) {
+    if (!currentLoggedInUser) {
+        redirectToLogin();
+        return;
+    }
+    const postId = target.dataset.postId;
+    const postType = target.dataset.postType;
+    // Fixed URL with correct parameters
+    window.location.href = `Ads.html?edit=true&postId=${postId}&postType=${postType}`;
+    return;
+}
         if (target.classList.contains('post-options-button')) {
             event.stopPropagation(); // Prevent document click from closing other menus immediately
             const optionsMenu = target.nextElementSibling;

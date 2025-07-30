@@ -1214,17 +1214,20 @@ document.addEventListener('DOMContentLoaded', async function () {
             return;
         }
 
-        // Edit Post Button
-        if (target.classList.contains('edit-post-button')) {
-            if (!currentLoggedInUser) {
-                redirectToLogin();
-                return;
-            }
-            const postId = target.dataset.postId;
-            const postType = target.dataset.postType;
-            window.location.href = `Ads.html?postId=${postId}&type=${postType}`;
-            return;
-        }
+
+
+// edit button handler 
+if (target.classList.contains('edit-post-button')) {
+    if (!currentLoggedInUser) {
+        redirectToLogin();
+        return;
+    }
+    const postId = target.dataset.postId;
+    const postType = target.dataset.postType;
+    // Fixed URL with correct parameters
+    window.location.href = `Ads.html?edit=true&postId=${postId}&postType=${postType}`;
+    return;
+}
     });
 
     document.addEventListener('click', (event) => {

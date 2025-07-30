@@ -3058,3 +3058,28 @@
 {"level":"info","message":"Fetched 5 latest messages for user 6865680685b3194e8bc38b92","timestamp":"2025-07-28T18:53:00.224Z"}
 {"level":"info","message":"Fetched 0 latest messages for user 6888805724d2c93d4470fcd9","timestamp":"2025-07-29T11:29:42.978Z"}
 {"level":"warn","message":"Missing senderId or receiverId in /messages","timestamp":"2025-07-29T11:29:44.671Z"}
+{"level":"warn","message":"Missing senderId or receiverId in /messages","timestamp":"2025-07-29T21:59:20.117Z"}
+{"level":"info","message":"Fetched 11 latest messages for user 68431685432ee393a735a641","timestamp":"2025-07-29T21:59:58.647Z"}
+{"level":"error","message":"Error fetching messages for user 68431685432ee393a735a641: Connection pool for ac-78e8zxz-shard-00-02.bfiorya.mongodb.net:27017 was cleared because another operation failed with: \"connection <monitor> to 65.62.31.3:27017 timed out\"","timestamp":"2025-07-29T22:02:38.357Z"}
+{"level":"info","message":"Fetched 1 latest messages for user 685f0a61b408e815cdf5f34f","timestamp":"2025-07-29T22:39:47.831Z"}
+{"level":"warn","message":"Missing senderId or receiverId in /messages","timestamp":"2025-07-29T22:39:49.193Z"}
+{"level":"info","message":"Fetched 4 latest messages for user 6878bbbf619a967094730b93","timestamp":"2025-07-30T05:49:09.431Z"}
+{"level":"warn","message":"Missing senderId or receiverId in /messages","timestamp":"2025-07-30T05:49:11.106Z"}
+{"level":"info","message":"Fetched 6 messages between 6878bbbf619a967094730b93 and 68431685432ee393a735a641","timestamp":"2025-07-30T05:49:14.976Z"}
+{"level":"info","message":"Fetched 4 latest messages for user 6878bbbf619a967094730b93","timestamp":"2025-07-30T05:50:58.025Z"}
+{"level":"warn","message":"Missing senderId or receiverId in /messages","timestamp":"2025-07-30T05:50:58.926Z"}
+{"level":"info","message":"Fetched 4 latest messages for user 6878bbbf619a967094730b93","timestamp":"2025-07-30T05:52:19.879Z"}
+{"level":"warn","message":"Missing senderId or receiverId in /messages","timestamp":"2025-07-30T05:52:21.092Z"}
+{"level":"info","message":"Fetched 4 latest messages for user 6878bbbf619a967094730b93","timestamp":"2025-07-30T05:52:43.114Z"}
+{"level":"warn","message":"Missing senderId or receiverId in /messages","timestamp":"2025-07-30T05:52:44.082Z"}
+{"level":"info","message":"Fetched 4 latest messages for user 6878bbbf619a967094730b93","timestamp":"2025-07-30T05:52:55.595Z"}
+{"level":"warn","message":"Missing senderId or receiverId in /messages","timestamp":"2025-07-30T05:52:56.534Z"}
+{"level":"info","message":"Fetched 4 latest messages for user 6878bbbf619a967094730b93","timestamp":"2025-07-30T05:53:06.681Z"}
+{"level":"info","message":"Fetched 5 messages between 6878bbbf619a967094730b93 and 6865680685b3194e8bc38b92","timestamp":"2025-07-30T05:53:08.147Z"}
+{"level":"info","message":"Fetched 4 latest messages for user 6878bbbf619a967094730b93","timestamp":"2025-07-30T05:53:13.288Z"}
+{"level":"info","message":"Fetched 4 latest messages for user 6878bbbf619a967094730b93","timestamp":"2025-07-30T05:53:17.527Z"}
+{"level":"warn","message":"Missing senderId or receiverId in /messages","timestamp":"2025-07-30T05:53:18.817Z"}
+{"level":"info","message":"Fetched 7 messages between 6878bbbf619a967094730b93 and 68431685432ee393a735a641","timestamp":"2025-07-30T05:53:39.275Z"}
+{"level":"warn","message":"Missing senderId or receiverId in /messages","timestamp":"2025-07-30T05:55:29.142Z"}
+{"level":"info","message":"Fetched 4 latest messages for user 6878bbbf619a967094730b93","timestamp":"2025-07-30T05:55:33.034Z"}
+{"level":"info","message":"Fetched 8 messages between 6878bbbf619a967094730b93 and 68431685432ee393a735a641","timestamp":"2025-07-30T05:55:41.675Z"}

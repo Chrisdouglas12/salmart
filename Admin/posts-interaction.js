@@ -335,11 +335,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 }
 
             }
-            // --- Reply Button (navigate to product details) ---
-            else if (target.classList.contains('reply-button')) {
-                window.location.href = `product.html?postId=${postId}`;
 
-            }
             // --- Share Button ---
             else if (target.classList.contains('share-button')) {
                 // Collect post data for sharing

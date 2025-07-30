@@ -319,3 +319,10 @@ select option[value=""][disabled] {
       width: 100%;
       box-sizing: border-box;
     }
+    .input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  resize: vertical; /* Allow vertical resizing only */
+}
