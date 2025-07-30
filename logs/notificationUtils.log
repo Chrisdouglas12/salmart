@@ -3202,3 +3202,7 @@
 {"level":"warn","message":"Invalid userId in sendFCMNotification: undefined","timestamp":"2025-07-30T08:51:46.020Z"}
 {"level":"warn","message":"Invalid userId in sendFCMNotification: undefined","timestamp":"2025-07-30T08:55:34.002Z"}
 {"level":"warn","message":"Invalid userId in sendFCMNotification: undefined","timestamp":"2025-07-30T08:57:48.984Z"}
+{"level":"warn","message":"No FCM token for user 6865680685b3194e8bc38b92","timestamp":"2025-07-30T10:48:57.345Z"}
+{"level":"warn","message":"No FCM token for user 6843d062f457581752641ee3","timestamp":"2025-07-30T10:48:58.856Z"}
+{"level":"warn","message":"No FCM token for user 6846e9cc91c8d81ee744f910","timestamp":"2025-07-30T10:49:00.102Z"}
+{"level":"warn","message":"No FCM token for user 6878bbbf619a967094730b93","timestamp":"2025-07-30T10:49:00.994Z"}

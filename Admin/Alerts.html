@@ -706,7 +706,12 @@ if (notification.type === 'like') {
   typeLabel = `<i class="fas fa-bolt" style="color:#28a745; margin-right:5px;"></i> New Post`;
 
           notificationText = `${notification.senderId.firstName} ${notification.senderId.lastName} Created a new Ad`;
-        } else if (notification.type === 'delivery') {
+        } 
+        else if (notification.type === 'notify-followers') {
+  typeLabel = `<i class="fas fa-bolt" style="color:#28a745; margin-right:5px;"></i> New Post`;
+
+          notificationText = `${notification.senderId.firstName} ${notification.senderId.lastName} Is asking you to checkout a product.`;}
+          else if (notification.type === 'delivery') {
           typeLabel = 'Funds Transfer';
           notificationText = `${notification.senderId.firstName} ${notification.senderId.lastName} confirmed delivery of "${notification.payment}". Funds released to your bank account.`;
         } else if (notification.type === 'warning') {

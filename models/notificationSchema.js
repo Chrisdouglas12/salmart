@@ -6,6 +6,7 @@ const notificationSchema = new mongoose.Schema({
     postId: { type: mongoose.Schema.Types.ObjectId, ref: 'Post', required: true },
     type: { type: String, enum: ['like', 'comment', 'payment', 'delivery', 'warning', 'message', 'deal', 'reply', 'new_post','payment_released','payout_queued',
          'refund_rejected',
+         'notify-followers',
       'refund_processed',
     'payout_queued_balance_error' , 'promotion'], required: true },
     message: { type: String, required: true },

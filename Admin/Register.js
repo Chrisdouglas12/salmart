@@ -89,9 +89,9 @@ function showSuccessModal(userEmail) {
         justify-content: center;
         margin: 0 auto 20px;
         backdrop-filter: blur(10px);
-        border: 2px solid #fff;
+        border: 2px solid #28a745;
       ">
-        <i class="fas fa-check" style="font-size: 35px; color: #4ade80;"></i>
+        <i class="fas fa-check" style="font-size: 35px; color: #28a745;"></i>
       </div>
       <h2 style="
         margin: 0 0 15px;
@@ -115,11 +115,11 @@ function showSuccessModal(userEmail) {
       border-radius: 12px;
       padding: 20px;
       margin: 25px 0;
-      border: 1px solid rgba(255, 255, 255, 0.2);
+      border: 1px solid #28a745;
     ">
       <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 15px;">
-        <i class="fas fa-envelope" style="font-size: 20px; color: #fbbf24;"></i>
-        <span style="font-weight: 600; font-size: 16px;">Next Step de</span>
+        <i class="fas fa-envelope" style="font-size: 20px; color: #28a745;"></i>
+        <span style="font-weight: 600; font-size: 16px;">Next Step</span>
       </div>
       <p style="margin: 0; font-size: 14px; opacity: 0.9; line-height: 1.4;">
         Check your email and enter the verification code to activate your account and start shopping!
@@ -127,16 +127,16 @@ function showSuccessModal(userEmail) {
     </div>
 
     <button id="proceedBtn" style="
-      background: linear-gradient(135deg, #4ade80, #22c55e);
+      background: #28a745;
       border: none;
       border-radius: 12px;
       padding: 15px 40px;
-      color: white;
+      color: #fff;
       font-size: 16px;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.3s ease;
-      box-shadow: 0 8px 20px rgba(34, 197, 94, 0.3);
+      box-shadow: 0 8px 20px rgba(40, 167, 69, 0.3);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -144,8 +144,8 @@ function showSuccessModal(userEmail) {
       margin: 0 auto;
       min-width: 180px;
     " 
-    onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 12px 25px rgba(34, 197, 94, 0.4)'"
-    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 8px 20px rgba(34, 197, 94, 0.3)'">
+    onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 12px 25px rgba(40, 167, 69, 0.4)'"
+    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 8px 20px rgba(40, 167, 69, 0.3)'">
       <span>Proceed to Verification</span>
       <i class="fas fa-arrow-right"></i>
     </button>

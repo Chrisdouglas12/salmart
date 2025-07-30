@@ -700,74 +700,108 @@ module.exports = (io) => {
   });
 
   router.post('/post/comment/:postId', verifyToken, async (req, res) => {
-    try {
-      const { text } = req.body;
-      const userId = req.user.userId;
-      const postId = req.params.postId;
+  try {
+    const { text } = req.body;
+    const userId = req.user.userId;
+    const postId = req.params.postId;
 
-      if (!text) {
-        logger.warn(`Comment text missing for post ${postId} by user ${userId}`);
-        return res.status(400).json({ error: 'Comment text is required' });
-      }
+    if (!text) {
+      logger.warn(`Comment text missing for post ${postId} by user ${userId}`);
+      return res.status(400).json({ error: 'Comment text is required' });
+    }
 
-      const user = await User.findById(userId); // Fetch user to get current profile data for immediate response
-      if (!user) {
-        logger.error(`User ${userId} not found`);
-        return res.status(404).json({ error: 'User not found' });
-      }
+    const user = await User.findById(userId);
+    if (!user) {
+      logger.error(`User ${userId} not found`);
+      return res.status(404).json({ error: 'User not found' });
+    }
 
-      const post = await Post.findById(postId);
-      if (!post) {
-        logger.error(`Post ${postId} not found`);
-        return res.status(404).json({ error: 'Post not found' });
-      }
+    const post = await Post.findById(postId).populate('createdBy.userId');
+    if (!post) {
+      logger.error(`Post ${postId} not found`);
+      return res.status(404).json({ error: 'Post not found' });
+    }
 
-      const newComment = {
-        userId: user._id, // Store ONLY the userId reference in the DB
-        text,
+    const newComment = {
+      userId: user._id,
+      text,
+      createdAt: new Date(),
+    };
+
+    post.comments.push(newComment);
+    await post.save();
+
+    // Notify the post owner (if not self)
+    if (post.createdBy.userId.toString() !== userId.toString()) {
+      const notification = new Notification({
+        userId: post.createdBy.userId._id,
+        type: 'comment',
+        senderId: userId,
+        postId,
+        message: `${user.firstName} ${user.lastName} commented on your post`,
         createdAt: new Date(),
-        // Do NOT store profilePicture or name here to avoid stale data
-      };
+      });
+      await notification.save();
 
-      post.comments.push(newComment);
-      await post.save();
+      await sendFCMNotification(
+        post.createdBy.userId._id.toString(),
+        'New Comment',
+        `${user.firstName} ${user.lastName} commented on your post`,
+        { type: 'comment', postId: postId.toString() },
+        req.io
+      );
 
-      if (post.createdBy.userId.toString() !== userId.toString()) {
-        const notification = new Notification({
-          userId: post.createdBy.userId,
-          type: 'comment',
+      await NotificationService.triggerCountUpdate(req.io, post.createdBy.userId._id.toString());
+    }
+
+    //  @shoppers Logic — Notify all followers of the post owner
+    if (text.includes('@shoppers')) {
+      const seller = post.createdBy.userId;
+
+      const followers = await User.find({ _id: { $in: seller.followers } });
+
+      for (const follower of followers) {
+        // Avoid sending to the one who commented
+        if (follower._id.toString() === userId.toString()) continue;
+
+        await Notification.create({
+          userId: follower._id,
           senderId: userId,
           postId,
-          message: `${user.firstName} ${user.lastName} commented on your post`,
-          createdAt: new Date(),
+          type: 'notify-followers',
+          message: `${seller.firstName} just posted a new product`,
+          productName: post.title || '',
         });
-        await notification.save();
-        logger.info(`Created comment notification for user ${post.createdBy.userId} for post ${postId}`);
+
         await sendFCMNotification(
-          post.createdBy.userId.toString(),
-          'New Comment',
-          `${user.firstName} ${user.lastName} commented on your post`,
-          { type: 'comment', postId: postId.toString() },
+          follower._id.toString(),
+          'New Product Alert',
+          `${seller.firstName} just dropped something new – check it out!`,
+          { type: 'notify-followers', postId: postId.toString() },
           req.io
         );
-        await NotificationService.triggerCountUpdate(req.io, post.createdBy.userId.toString());
+
+        await NotificationService.triggerCountUpdate(req.io, follower._id.toString());
       }
 
-      logger.info(`Comment added to post ${postId} by user ${userId}`);
-      // Send back the current user's profile info for immediate client-side display
-      res.json({
-        message: 'Comment added successfully',
-        comment: {
-          ...newComment,
-          name: `${user.firstName} ${user.lastName}`, // Send current name
-          profilePicture: user.profilePicture || 'default-avatar.png', // Send current profile picture
-        }
-      });
-    } catch (error) {
-      logger.error(`Error adding comment to post ${req.params.postId} by user ${req.user.userId}: ${error.message}`);
-      res.status(500).json({ message: 'Server error' });
+      logger.info(`@shoppers triggered by ${userId} for followers of ${seller._id}`);
     }
-  });
+
+    logger.info(`Comment added to post ${postId} by user ${userId}`);
+    res.json({
+      message: 'Comment added successfully',
+      comment: {
+        ...newComment,
+        name: `${user.firstName} ${user.lastName}`,
+        profilePicture: user.profilePicture || 'default-avatar.png',
+      }
+    });
+
+  } catch (error) {
+    logger.error(`Error adding comment to post ${req.params.postId} by user ${req.user.userId}: ${error.message}`);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
 
   router.get('/post/reply/:postId/:commentId', async (req, res) => {
     try {

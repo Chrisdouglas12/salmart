@@ -190,35 +190,169 @@
     // Initial resize
     autoResizeTextarea();
   </script>
-  <script>
-    // Handle mobile keyboard appearance
-    let initialViewportHeight = window.innerHeight;
+ <script>
+   // Enhanced mobile keyboard appearance handling
+let initialViewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+let keyboardTimeout;
+let isKeyboardOpen = false;
 
-    function handleViewportChange() {
-      const currentHeight = window.innerHeight;
-      const heightDifference = initialViewportHeight - currentHeight;
+function handleViewportChange() {
+  const currentHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+  const heightDifference = initialViewportHeight - currentHeight;
+  
+  // Clear any existing timeout
+  clearTimeout(keyboardTimeout);
+  
+  if (heightDifference > 150) { // Keyboard is likely open
+    if (!isKeyboardOpen) {
+      isKeyboardOpen = true;
+      document.body.classList.add('typing');
       
-      if (heightDifference > 150) { // Keyboard is likely open
-        document.body.classList.add('typing');
-      } else {
+      // Ensure header stays fixed
+      const header = document.querySelector('.chats-header');
+      if (header) {
+        header.style.position = 'fixed';
+        header.style.top = '0';
+        header.style.zIndex = '9999';
+        header.style.transform = 'translateZ(0)';
+      }
+      
+      // Scroll to bottom to show latest message
+      setTimeout(() => {
+        const chatMessages = document.getElementById('chat-messages');
+        if (chatMessages) {
+          chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+      }, 100);
+    }
+  } else {
+    // Add slight delay to prevent flickering
+    keyboardTimeout = setTimeout(() => {
+      if (isKeyboardOpen) {
+        isKeyboardOpen = false;
         document.body.classList.remove('typing');
+        
+        // Reset initial height for next keyboard opening
+        initialViewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+      }
+    }, 150);
+  }
+}
+
+// Use better viewport detection
+if (window.visualViewport) {
+  // Modern browsers with Visual Viewport API (more accurate)
+  window.visualViewport.addEventListener('resize', handleViewportChange);
+  window.visualViewport.addEventListener('scroll', handleViewportChange);
+} else {
+  // Fallback for older browsers
+  window.addEventListener('resize', handleViewportChange);
+}
+
+// Enhanced focus/blur events for input
+const typeSection = document.getElementById('type-section');
+
+typeSection.addEventListener('focus', function() {
+  // Add typing class immediately on focus
+  document.body.classList.add('typing');
+  
+  // Double-check after animation
+  setTimeout(() => {
+    if (document.activeElement === typeSection) {
+      document.body.classList.add('typing');
+      isKeyboardOpen = true;
+      
+      // Ensure header positioning
+      const header = document.querySelector('.chats-header');
+      if (header) {
+        header.style.position = 'fixed';
+        header.style.top = '0';
+        header.style.zIndex = '9999';
+      }
+      
+      // Scroll to show latest message
+      const chatMessages = document.getElementById('chat-messages');
+      if (chatMessages) {
+        chatMessages.scrollTop = chatMessages.scrollHeight;
       }
     }
+  }, 300);
+});
 
-    // Listen for viewport changes
-    window.addEventListener('resize', handleViewportChange);
+typeSection.addEventListener('blur', function() {
+  // Don't immediately remove typing class, wait for viewport change
+  setTimeout(() => {
+    if (document.activeElement !== typeSection) {
+      const currentHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+      const heightDifference = initialViewportHeight - currentHeight;
+      
+      // Only remove typing class if keyboard is actually closed
+      if (heightDifference <= 150) {
+        document.body.classList.remove('typing');
+        isKeyboardOpen = false;
+        initialViewportHeight = currentHeight;
+      }
+    }
+  }, 200);
+});
 
-    // Focus/blur events for input
-    document.getElementById('type-section').addEventListener('focus', function() {
-      setTimeout(() => {
-        document.body.classList.add('typing');
-      }, 300);
-    });
+// Handle orientation changes
+window.addEventListener('orientationchange', function() {
+  setTimeout(() => {
+    initialViewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+    document.body.classList.remove('typing');
+    isKeyboardOpen = false;
+  }, 500);
+});
 
-    document.getElementById('type-section').addEventListener('blur', function() {
+// iOS Safari specific fixes
+if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+  // Prevent zoom when focusing input
+  typeSection.addEventListener('touchstart', function() {
+    if (typeSection.style.fontSize !== '16px') {
+      typeSection.style.fontSize = '16px';
+    }
+  });
+  
+  // Handle iOS Safari viewport changes
+  window.addEventListener('resize', function() {
+    if (window.innerHeight < initialViewportHeight * 0.75) {
+      document.body.classList.add('typing');
+      isKeyboardOpen = true;
+    }
+  });
+}
+
+// Android Chrome specific fixes
+if (/Android/.test(navigator.userAgent)) {
+  // Android keyboard detection
+  let androidInitialHeight = window.innerHeight;
+  
+  window.addEventListener('resize', function() {
+    const currentHeight = window.innerHeight;
+    const ratio = currentHeight / androidInitialHeight;
+    
+    if (ratio < 0.75) {
+      document.body.classList.add('typing');
+      isKeyboardOpen = true;
+    } else if (ratio > 0.9) {
       document.body.classList.remove('typing');
-    });
-  </script>
+      isKeyboardOpen = false;
+    }
+  });
+}
+
+// Ensure header stays fixed on page load
+document.addEventListener('DOMContentLoaded', function() {
+  const header = document.querySelector('.chats-header');
+  if (header) {
+    header.style.position = 'fixed';
+    header.style.top = '0';
+    header.style.zIndex = '9999';
+    header.style.width = '100%';
+  }
+});
+ </script>
   <script>
     // Emoji data
     const emojiData = {
