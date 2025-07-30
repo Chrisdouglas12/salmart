@@ -7,8 +7,8 @@ const bargainBtn = document.getElementById('bargain-btn');
 // --- Bargaining State Management ---
 // Track ended bargains, counter-offers, displayed messages, and initial message status
 
-const acceptedOffers = new Set(JSON.parse(localStorage.getItem(`acceptedOffers_${userId}_${receiverId}`) || '[]'));
-const sentCounterOffers = new Set(JSON.parse(localStorage.getItem(`sentCounterOffers_${userId}_${receiverId}`) || '[]'));
+
+
 const displayedSystemMessages = new Set(JSON.parse(localStorage.getItem(`displayedSystemMessages_${userId}_${receiverId}`) || '[]'));
 
 // Function to save bargaining states to localStorage

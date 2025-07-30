@@ -190,6 +190,9 @@
     // Initial resize
     autoResizeTextarea();
   </script>
+    <script src="Chats.js"></script>
+  <script src="bargaining.js"></script>
+    <script src="sw-update-manager.js"></script>
  <script>
    // Enhanced mobile keyboard appearance handling
 let initialViewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
@@ -249,8 +252,6 @@ if (window.visualViewport) {
   window.addEventListener('resize', handleViewportChange);
 }
 
-// Enhanced focus/blur events for input
-const typeSection = document.getElementById('type-section');
 
 typeSection.addEventListener('focus', function() {
   // Add typing class immediately on focus
@@ -460,8 +461,6 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
   </script>
-  <script src="Chats.js"></script>
-  <script src="bargaining.js"></script>
-    <script src="sw-update-manager.js"></script>
+
 </body>
 </html>
