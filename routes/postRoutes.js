@@ -1168,7 +1168,7 @@ module.exports = (io) => {
       `);
     }
 
-    const photo = post?.photo?.[0] || 'https://www.salmartonline.com.ng/default-avater.jpg';
+    const photo = post.photo || 'https://www.salmartonline.com.ng/default-avater.jpg';
     const title = post?.title || 'See this amazing item on Salmart';
     const description = post?.description || 'Shop safely with escrow on Salmart';
     const price = post?.price ? `₦${Number(post.price).toLocaleString('en-NG')}` : '';

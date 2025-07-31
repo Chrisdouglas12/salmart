@@ -13380,3 +13380,17 @@
 {"level":"info","message":"Initializing Socket.IO event handlers","timestamp":"2025-07-31T09:01:04.154Z"}
 {"level":"warn","message":"Socket kbujDbc67PeWicKSAAAB connection attempt: No token provided.","timestamp":"2025-07-31T09:01:35.655Z"}
 {"level":"warn","message":"Socket T3JSk1cWVH-ETj9RAAAD connection attempt: No token provided.","timestamp":"2025-07-31T09:01:35.985Z"}
+{"level":"info","message":"Initializing Socket.IO event handlers","timestamp":"2025-07-31T11:59:20.958Z"}
+{"level":"info","message":"Initializing Socket.IO event handlers","timestamp":"2025-07-31T13:57:02.587Z"}
+{"level":"warn","message":"Socket gx2p0SNrVlmfbO5pAAAD connection attempt: No token provided.","timestamp":"2025-07-31T14:00:55.041Z"}
+{"level":"info","message":"Socket ZAo8Zsd6uPa_HfEQAAAF authenticated for user: 688a0f0358012d5333a69ad7","timestamp":"2025-07-31T14:00:55.729Z"}
+{"level":"info","message":"New client connected: ZAo8Zsd6uPa_HfEQAAAF (Authenticated User: 688a0f0358012d5333a69ad7)","timestamp":"2025-07-31T14:00:55.741Z"}
+{"level":"info","message":"Socket ZAo8Zsd6uPa_HfEQAAAF (User: 688a0f0358012d5333a69ad7) connected and joined user_688a0f0358012d5333a69ad7","timestamp":"2025-07-31T14:00:55.743Z"}
+{"level":"info","message":"Client disconnected: ZAo8Zsd6uPa_HfEQAAAF (User: 688a0f0358012d5333a69ad7)","timestamp":"2025-07-31T14:01:01.143Z"}
+{"level":"info","message":"Removed user 688a0f0358012d5333a69ad7 from userSocketMap on disconnect.","timestamp":"2025-07-31T14:01:01.144Z"}
+{"level":"warn","message":"Socket dG7Ak6xjGf3fX-dvAAAI connection attempt: No token provided.","timestamp":"2025-07-31T14:01:02.353Z"}
+{"level":"info","message":"Socket -QUHkuMu2ltp5qjtAAAJ authenticated for user: 688a0f0358012d5333a69ad7","timestamp":"2025-07-31T14:01:02.439Z"}
+{"level":"info","message":"New client connected: -QUHkuMu2ltp5qjtAAAJ (Authenticated User: 688a0f0358012d5333a69ad7)","timestamp":"2025-07-31T14:01:02.443Z"}
+{"level":"info","message":"Socket -QUHkuMu2ltp5qjtAAAJ (User: 688a0f0358012d5333a69ad7) connected and joined user_688a0f0358012d5333a69ad7","timestamp":"2025-07-31T14:01:02.444Z"}
+{"level":"info","message":"Client disconnected: -QUHkuMu2ltp5qjtAAAJ (User: 688a0f0358012d5333a69ad7)","timestamp":"2025-07-31T14:01:02.527Z"}
+{"level":"info","message":"Removed user 688a0f0358012d5333a69ad7 from userSocketMap on disconnect.","timestamp":"2025-07-31T14:01:02.529Z"}
