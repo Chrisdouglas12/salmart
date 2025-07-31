@@ -20,9 +20,9 @@ const userSchema = new mongoose.Schema({
       message: props => `${props.value} is not a valid Nigerian phone number!`
     }
   },
-  //email verification 
+  //email verification
   isVerified: { type: Boolean, default: false },
-verificationToken: { type: String },
+  verificationToken: { type: String },
 
   // Location fields
   state: {
@@ -42,6 +42,9 @@ verificationToken: { type: String },
   followers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   following: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   blockedUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+
+  // NEW FIELD: User interests (e.g., categories of products, hobbies, etc.)
+  interests: [{ type: String, trim: true }], // Array of strings to store user interests
 
   // Activity & Admin
   createdAt: { type: Date, default: Date.now },
@@ -105,5 +108,6 @@ verificationToken: { type: String },
 
 // Indexes for performance and uniqueness
 userSchema.index({ socketId: 1 });
+userSchema.index({ interests: 1 }); // Consider if you'll query by interests often
 
 module.exports = mongoose.model('User', userSchema);

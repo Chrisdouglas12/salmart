@@ -634,7 +634,7 @@ function renderPost(post) {
         </button>
       </div>
     ` : '';
-  
+
             } else {
 buttonContent = `
   <div class="actions">

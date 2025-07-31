@@ -674,19 +674,58 @@ router.post('/logout', (req, res) => {
   res.status(200).json({ success: true, message: 'Logged out successfully' });
 });
 
-// Get list of users the logged-in user is following
+// New endpoint to fetch combined user data
+router.get('/api/user-data', verifyToken, async (req, res) => {
+  try {
+    const loggedInUserId = req.user.userId; // `req.user.userId` should be set by your `verifyToken` middleware
+
+    // Fetch the user, populating both 'following' and 'interests'
+    const user = await User.findById(loggedInUserId)
+      .populate('following', '_id name avatar') // Populate 'following' with specific fields
+      .lean(); // Use .lean() for faster queries if you don't need Mongoose document methods
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Prepare the following list: filter out any nulls/undefineds if they exist due to old/deleted users
+    // Ensure that each item in 'following' array is an object with an '_id'
+    const followingList = (user.following || []).filter(u => u && u._id);
+
+    // Prepare the interests list: ensure it's an array
+    const userInterests = Array.isArray(user.interests) ? user.interests : [];
+
+    // Send back the user object containing 'following' and 'interests'
+    res.json({
+      user: {
+        _id: user._id, // Include user ID
+        name: user.name, // Include user name (or other relevant top-level user data)
+        email: user.email, // Example, add other fields as needed by your frontend
+        avatar: user.avatar,
+        following: followingList, // Array of populated user objects
+        interests: userInterests, // Array of strings
+        // Add any other user properties your frontend expects here
+      }
+    });
+
+  } catch (error) {
+    console.error('Error fetching user data:', error.message);
+    res.status(500).json({ message: 'Server error while fetching user data' });
+  }
+});
+
+
 router.get('/api/is-following-list', verifyToken, async (req, res) => {
   try {
     const loggedInUserId = req.user.userId;
     const user = await User.findById(loggedInUserId)
-      .populate('following', '_id name avatar') // Add more fields as needed
+      .populate('following', '_id name avatar')
       .lean();
 
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Ensure valid user objects are returned
     const following = (user.following || []).filter(u => u && u._id);
 
     res.json({ following });
@@ -695,6 +734,7 @@ router.get('/api/is-following-list', verifyToken, async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
+
 
 router.get('/api/user-suggestions', verifyToken, async (req, res) => {
   try {

@@ -1,4 +1,3 @@
-
 // IMPORTANT: This file now relies on 'idb-keyval' for IndexedDB operations.
 
 const API_BASE_URL = window.API_BASE_URL || (window.location.hostname === 'localhost'

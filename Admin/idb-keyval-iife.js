@@ -69,13 +69,16 @@ var idbKeyval = (function (exports) {
   exports.clear = clear;
   exports.del = del;
   exports.get = get;
-  exports.entries = entries; // Add entries to exports
+  exports.entries = entries;
   exports.keys = keys;
   exports.set = set;
-  exports.values = values; // Add values to exports
+  exports.values = values;
 
   Object.defineProperty(exports, '__esModule', { value: true });
 
   return exports;
 
 })({});
+
+// ADD THIS LINE AT THE VERY END OF THE FILE
+export const { get, set, del, clear, keys, values, entries } = idbKeyval;
