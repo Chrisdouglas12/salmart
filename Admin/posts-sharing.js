@@ -1,6 +1,9 @@
-// post-sharing.js
+// post-sharing.js (Updated to use backend URL for social sharing)
 document.addEventListener('DOMContentLoaded', function () {
     const showToast = window.showToast; // Utility from auth.js
+    
+    // Backend URL for share links (where meta tags are served)
+    const BACKEND_URL = 'https://salmartonrender.com.ng';
 
     async function copyToClipboard(text) {
         try {
@@ -8,7 +11,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 await navigator.clipboard.writeText(text);
                 return true;
             } else {
-                const textarea = document.createElementa('textarea');
+                // Fixed typo: createElement instead of createElementa
+                const textarea = document.createElement('textarea');
                 textarea.value = text;
                 document.body.appendChild(textarea);
                 textarea.select();
@@ -35,31 +39,37 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function sharePost(post, postLink, platform) {
-        const shareText = `Check out this product: ${post.description || 'No description'} - ${post.photo} - ${post.price ? '₦' + Number(post.price).toLocaleString('en-Ng') : 'Price not specified'}`;
+        // Use the backend share link that has Open Graph meta tags for better previews
+        const shareableLink = postLink; // This points to backend /share/:postId URL
+        const shareText = `Check out this product: ${post.description || 'No description'} - ${post.price ? '₦' + Number(post.price).toLocaleString('en-NG') : 'Price not specified'}`;
 
         switch (platform) {
             case 'copy':
-                copyToClipboard(postLink);
+                copyToClipboard(shareableLink);
                 if (showToast) showToast('Link copied to clipboard!');
                 break;
             case 'whatsapp':
-                const whatsappUrl = `whatsapp://send?text=${encodeURIComponent(shareText + '\n' + postLink)}`;
-                const whatsappWebUrl = `https://wa.me/?text=${encodeURIComponent(shareText + '\n' + postLink)}`;
+                // WhatsApp will automatically generate preview from Open Graph meta tags
+                const whatsappUrl = `whatsapp://send?text=${encodeURIComponent(shareText + '\n' + shareableLink)}`;
+                const whatsappWebUrl = `https://wa.me/?text=${encodeURIComponent(shareText + '\n' + shareableLink)}`;
                 openAppOrWeb(whatsappUrl, whatsappWebUrl);
                 break;
             case 'facebook':
-                const facebookUrl = `fb://sharer.php?u=${encodeURIComponent(postLink)}`;
-                const facebookWebUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(postLink)}`;
+                // Facebook uses Open Graph tags for preview
+                const facebookUrl = `fb://sharer.php?u=${encodeURIComponent(shareableLink)}`;
+                const facebookWebUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareableLink)}`;
                 openAppOrWeb(facebookUrl, facebookWebUrl);
                 break;
             case 'twitter':
-                const twitterUrl = `twitter://post?message=${encodeURIComponent(shareText)}&url=${encodeURIComponent(postLink)}`;
-                const twitterWebUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(postLink)}`;
+                // Twitter uses Twitter Card meta tags
+                const twitterUrl = `twitter://post?message=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareableLink)}`;
+                const twitterWebUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareableLink)}`;
                 openAppOrWeb(twitterUrl, twitterWebUrl);
                 break;
             case 'telegram':
-                const telegramUrl = `tg://msg_url?url=${encodeURIComponent(postLink)}&text=${encodeURIComponent(shareText)}`;
-                const telegramWebUrl = `https://t.me/share/url?url=${encodeURIComponent(postLink)}&text=${encodeURIComponent(shareText)}`;
+                // Telegram will show preview based on Open Graph tags
+                const telegramUrl = `tg://msg_url?url=${encodeURIComponent(shareableLink)}&text=${encodeURIComponent(shareText)}`;
+                const telegramWebUrl = `https://t.me/share/url?url=${encodeURIComponent(shareableLink)}&text=${encodeURIComponent(shareText)}`;
                 openAppOrWeb(telegramUrl, telegramWebUrl);
                 break;
             case 'instagram':
@@ -79,15 +89,20 @@ document.addEventListener('DOMContentLoaded', function () {
         const shareModal = document.createElement('div');
         shareModal.className = 'share-modal';
         
-        const postLink = `${window.location.origin}/product.html?postId=${post._id}${post.images && post.images.length > 0 ? `&photo=${encodeURIComponent(post.images[0])}` : ''}${post.video ? `&video=${encodeURIComponent(post.video)}` : ''}`;
+        // Point to backend URL for proper social media scraping
+        // Backend will serve meta tags and redirect users to frontend
+        const postLink = `${BACKEND_URL}/share/${post._id}`;
         
         shareModal.innerHTML = `
             <div class="share-modal-content">
                 <div class="share-modal-header">
-                    <h3>Share this post</h3>
+                    <h3>Share this product</h3>
                     <span class="close-share-modal">×</span>
                 </div>
                 <div class="share-modal-body">
+                    <div class="share-preview">
+                        <small>Links shared will show a preview with product image</small>
+                    </div>
                     <div class="share-options">
                         <button class="share-option" data-platform="copy">
                             <i class="fas fa-copy"></i>

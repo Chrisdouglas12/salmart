@@ -1149,6 +1149,223 @@ module.exports = (io) => {
       res.status(500).json({ message: 'Server error while fetching likers.', error: error.message });
     }
   });
+  
+  
+  router.get('/share/:postId', async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.postId);
+    
+    if (!post) {
+      return res.status(404).send(`
+        <!DOCTYPE html>
+        <html>
+        <head><title>Product Not Found</title></head>
+        <body>
+          <h1>Product not found</h1>
+          <script>setTimeout(() => window.location.href = "https://www.salmartonline.com.ng", 3000);</script>
+        </body>
+        </html>
+      `);
+    }
+
+    const image = post?.images?.[0] || 'https://www.salmartonline.com.ng/default.jpg';
+    const title = post?.title || 'See this amazing item on Salmart';
+    const description = post?.description || 'Shop safely with escrow on Salmart';
+    const price = post?.price ? `₦${Number(post.price).toLocaleString('en-NG')}` : '';
+    
+    // Enhanced description with price
+    const fullDescription = `${description}${price ? ` - Only ${price}` : ''}`;
+    
+    const redirectUrl = `https://www.salmartonline.com.ng/product.html?postId=${post._id}`;
+    const shareUrl = `https://www.salmartonline.com.ng/share/${post._id}`;
+
+    res.send(`
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <title>${title}</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        <!-- Enhanced Open Graph tags -->
+        <meta property="og:type" content="product" />
+        <meta property="og:title" content="${title}" />
+        <meta property="og:description" content="${fullDescription}" />
+        <meta property="og:image" content="${image}" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta property="og:image:alt" content="${title}" />
+        <meta property="og:url" content="${shareUrl}" />
+        <meta property="og:site_name" content="Salmart Online" />
+        <meta property="og:locale" content="en_NG" />
+        
+        <!-- Product-specific Open Graph tags -->
+        ${price ? `<meta property="product:price:amount" content="${post.price}" />` : ''}
+        <meta property="product:price:currency" content="NGN" />
+        <meta property="product:availability" content="in stock" />
+        
+        <!-- Enhanced Twitter Card -->
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:site" content="@salmartonline" />
+        <meta name="twitter:title" content="${title}" />
+        <meta name="twitter:description" content="${fullDescription}" />
+        <meta name="twitter:image" content="${image}" />
+        <meta name="twitter:image:alt" content="${title}" />
+        
+        <!-- WhatsApp specific (uses Open Graph) -->
+        <meta property="og:image:type" content="image/jpeg" />
+        
+        <!-- Standard meta tags -->
+        <meta name="description" content="${fullDescription}" />
+        <meta name="keywords" content="online shopping, Nigeria, ${post?.category || 'products'}, marketplace" />
+        <meta name="author" content="Salmart Online" />
+        
+        <!-- Favicon -->
+        <link rel="icon" type="image/x-icon" href="https://www.salmartonline.com.ng/favicon.ico" />
+        
+        <!-- Canonical URL -->
+        <link rel="canonical" href="${redirectUrl}" />
+        
+        <style>
+          body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+          }
+          .container {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+          }
+          .logo {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #fff;
+          }
+          .product-info {
+            margin: 20px 0;
+          }
+          .product-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            margin-bottom: 10px;
+          }
+          .product-price {
+            font-size: 1.5em;
+            color: #4ade80;
+            font-weight: bold;
+            margin: 10px 0;
+          }
+          .loading {
+            margin: 20px 0;
+          }
+          .spinner {
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 3px solid white;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+          }
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+          .redirect-text {
+            font-size: 0.9em;
+            opacity: 0.8;
+            margin-top: 15px;
+          }
+          .manual-link {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 25px;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s ease;
+          }
+          .manual-link:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+          }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="logo">Salmart</div>
+          <div class="product-info">
+            <div class="product-title">${title}</div>
+            ${price ? `<div class="product-price">${price}</div>` : ''}
+          </div>
+          <div class="loading">
+            <div class="spinner"></div>
+            <div class="redirect-text">Taking you to the product...</div>
+          </div>
+          <a href="${redirectUrl}" class="manual-link">View Product</a>
+        </div>
+        
+        <script>
+          // Enhanced redirect with fallback
+          let redirected = false;
+          
+          function redirect() {
+            if (!redirected) {
+              redirected = true;
+              window.location.href = "${redirectUrl}";
+            }
+          }
+          
+          // Try immediate redirect
+          setTimeout(redirect, 1000);
+          
+          // Fallback for older browsers or if redirect fails
+          setTimeout(() => {
+            if (!redirected) {
+              document.querySelector('.redirect-text').textContent = 'Click the button below to continue';
+            }
+          }, 5000);
+          
+          // Handle back button
+          window.addEventListener('pageshow', function(event) {
+            if (event.persisted) {
+              redirect();
+            }
+          });
+        </script>
+      </body>
+      </html>
+    `);
+    
+  } catch (error) {
+    console.error('Error in share route:', error);
+    res.status(500).send(`
+      <!DOCTYPE html>
+      <html>
+      <head><title>Error - Salmart</title></head>
+      <body>
+        <h1>Something went wrong</h1>
+        <p>Please try again later.</p>
+        <script>setTimeout(() => window.location.href = "https://www.salmartonline.com.ng", 3000);</script>
+      </body>
+      </html>
+    `);
+  }
+});
 
   return router;
 };

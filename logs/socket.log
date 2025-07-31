@@ -13375,3 +13375,8 @@
 {"level":"info","message":"Client disconnected: CS39qynH5bu_NE2_AAAD (User: 688a0f0358012d5333a69ad7)","timestamp":"2025-07-31T06:59:53.322Z"}
 {"level":"info","message":"Client disconnected: Bl56hQvP4-YK7GASAAAF (User: 688a0f0358012d5333a69ad7)","timestamp":"2025-07-31T06:59:53.327Z"}
 {"level":"info","message":"Removed user 688a0f0358012d5333a69ad7 from userSocketMap on disconnect.","timestamp":"2025-07-31T06:59:53.328Z"}
+{"level":"info","message":"Initializing Socket.IO event handlers","timestamp":"2025-07-31T08:45:56.021Z"}
+{"level":"info","message":"Initializing Socket.IO event handlers","timestamp":"2025-07-31T08:47:25.478Z"}
+{"level":"info","message":"Initializing Socket.IO event handlers","timestamp":"2025-07-31T09:01:04.154Z"}
+{"level":"warn","message":"Socket kbujDbc67PeWicKSAAAB connection attempt: No token provided.","timestamp":"2025-07-31T09:01:35.655Z"}
+{"level":"warn","message":"Socket T3JSk1cWVH-ETj9RAAAD connection attempt: No token provided.","timestamp":"2025-07-31T09:01:35.985Z"}
