@@ -17,5 +17,20 @@
       "sizes": "512x512",
       "type": "image/png"
     }
-  ]
+  ],
+  "share_target": {
+    "action": "/Ads.html",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "description",
+      "files": [
+        {
+          "name": "image",
+          "accept": ["image/*"]
+        }
+      ]
+    }
+  }
 }
