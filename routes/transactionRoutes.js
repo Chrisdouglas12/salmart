@@ -993,14 +993,24 @@ router.post('/update-bank-details', verifyToken, async (req, res) => {
 
 
 
-// Get Bank Details
 router.get('/get-bank-details', verifyToken, async (req, res) => {
   try {
     const user = await User.findById(req.user.userId).select('bankDetails');
     if (!user || !user.bankDetails) {
       return res.status(404).json({ success: false, message: 'Bank details not found' });
     }
-    res.status(200).json({ success: true, bankDetails: user.bankDetails });
+
+    const { accountNumber, accountName, bankCode, bankName } = user.bankDetails;
+
+    res.status(200).json({
+      success: true,
+      bankDetails: {
+        accountNumber,
+        accountName,
+        bankCode,
+        bankName, 
+      },
+    });
   } catch (error) {
     console.error('Get bank details error:', error.message);
     res.status(500).json({ success: false, message: 'Failed to fetch bank details' });

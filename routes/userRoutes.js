@@ -287,23 +287,28 @@ router.patch('/users/:id', verifyToken, async (req, res) => {
 });
 
 
-// Get user profile
 router.get('/users-profile/:id', verifyToken, async (req, res) => {
   try {
     const userId = req.params.id;
     console.log(`Fetching profile for userId: ${userId}`);
+
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
+
+    // ✅ Remove duplicates from followers and following
+    const uniqueFollowers = [...new Set(user.followers.map(f => f.toString()))];
+    const uniqueFollowing = [...new Set(user.following.map(f => f.toString()))];
+
     res.json({
       id: user._id,
       firstName: user.firstName,
       lastName: user.lastName,
       bio: user.bio,
       email: user.email,
-      followers: user.followers || 0,
-      following: user.following || 0,
+      followers: uniqueFollowers,         // Cleaned array
+      following: uniqueFollowing,         // Cleaned array
       products: user.products || [],
       profilePicture: user.profilePicture || 'default-avatar.png',
     });
@@ -573,6 +578,7 @@ router.post('/unfollow/:id', verifyToken, async (req, res) => {
 });
 
 
+
 router.get('/profile/:userId', async (req, res) => {
   try {
     const user = await User.findById(req.params.userId).populate('followers');
@@ -580,42 +586,51 @@ router.get('/profile/:userId', async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // --- Correct way to get products count ---
-    const productsCount = await Post.countDocuments({ createdBy: req.params.userId });
-    // Assuming your Post/Product model has an 'owner' field that references the User ID
+    // Count only products created by user that are NOT sold
+    const productsCount = await Post.countDocuments({
+      'createdBy.userId': req.params.userId,
+      isSold: false,
+    });
+
+    // ✅ Ensure unique follower count
+    const uniqueFollowers = new Set(user.followers.map(f => f.toString()));
+    const followersCount = uniqueFollowers.size;
 
     res.json({
-      followersCount: user.followers?.length || 0,
-      name: `${user.firstName} ${user.lastName}`.trim(), // Combine first and last name for 'name'
+      followersCount,
+      name: `${user.firstName} ${user.lastName}`.trim(),
       profilePicture: user.profilePicture,
-      productsCount: productsCount, // Use the correctly fetched count
+      productsCount,
     });
   } catch (error) {
-    console.error('Get profile error:', error.message);
-    // It's good practice to log the full error for debugging
-    console.error(error); // Log the full error object
+    console.error('Get profile error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
 
 
-// Check follow status
 router.get('/api/is-following/:userId', verifyToken, async (req, res) => {
   try {
     const { userId } = req.params;
     const loggedInUserId = req.user.userId;
+
     const loggedInUser = await User.findById(loggedInUserId);
     if (!loggedInUser) {
       return res.status(404).json({ message: 'User not found' });
     }
-    const isFollowing = loggedInUser.following.includes(userId);
+
+    // remove duplicates from following list
+    loggedInUser.following = [...new Set(loggedInUser.following.map(f => f.toString()))];
+
+    // check if user is following the target user
+    const isFollowing = loggedInUser.following.includes(userId.toString());
+
     res.json({ isFollowing });
   } catch (error) {
     console.error('Check follow status error:', error.message);
     res.status(500).json({ message: 'Server error' });
   }
 });
-
 // Report a user
 router.post('/users/report', verifyToken, async (req, res) => {
   try {

@@ -106,6 +106,13 @@ const userSchema = new mongoose.Schema({
   }
 });
 
+userSchema.pre('save', function (next) {
+  if (Array.isArray(this.following)) {
+    this.following = [...new Set(this.following.map(f => f.toString()))];
+  }
+  next();
+});
+
 // Indexes for performance and uniqueness
 userSchema.index({ socketId: 1 });
 userSchema.index({ interests: 1 }); // Consider if you'll query by interests often
