@@ -1168,7 +1168,7 @@ module.exports = (io) => {
       `);
     }
 
-    const image = post?.images?.[0] || 'https://www.salmartonline.com.ng/default.jpg';
+    const photo = post?.photo?.[0] || 'https://www.salmartonline.com.ng/default-avater.jpg';
     const title = post?.title || 'See this amazing item on Salmart';
     const description = post?.description || 'Shop safely with escrow on Salmart';
     const price = post?.price ? `₦${Number(post.price).toLocaleString('en-NG')}` : '';
@@ -1191,7 +1191,7 @@ module.exports = (io) => {
         <meta property="og:type" content="product" />
         <meta property="og:title" content="${title}" />
         <meta property="og:description" content="${fullDescription}" />
-        <meta property="og:image" content="${image}" />
+        <meta property="og:image" content="${photo}" />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
         <meta property="og:image:alt" content="${title}" />
@@ -1209,7 +1209,7 @@ module.exports = (io) => {
         <meta name="twitter:site" content="@salmartonline" />
         <meta name="twitter:title" content="${title}" />
         <meta name="twitter:description" content="${fullDescription}" />
-        <meta name="twitter:image" content="${image}" />
+        <meta name="twitter:image" content="${photo}" />
         <meta name="twitter:image:alt" content="${title}" />
         
         <!-- WhatsApp specific (uses Open Graph) -->
@@ -1226,84 +1226,101 @@ module.exports = (io) => {
         <!-- Canonical URL -->
         <link rel="canonical" href="${redirectUrl}" />
         
-        <style>
-          body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-          }
-          .container {
-            text-align: center;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 40px;
-            max-width: 500px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-          }
-          .logo {
-            font-size: 2em;
-            font-weight: bold;
-            margin-bottom: 20px;
-            color: #fff;
-          }
-          .product-info {
-            margin: 20px 0;
-          }
-          .product-title {
-            font-size: 1.3em;
-            font-weight: 600;
-            margin-bottom: 10px;
-          }
-          .product-price {
-            font-size: 1.5em;
-            color: #4ade80;
-            font-weight: bold;
-            margin: 10px 0;
-          }
-          .loading {
-            margin: 20px 0;
-          }
-          .spinner {
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            border-top: 3px solid white;
-            width: 30px;
-            height: 30px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto;
-          }
-          @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-          }
-          .redirect-text {
-            font-size: 0.9em;
-            opacity: 0.8;
-            margin-top: 15px;
-          }
-          .manual-link {
-            display: inline-block;
-            margin-top: 15px;
-            padding: 10px 20px;
-            background: rgba(255, 255, 255, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 25px;
-            color: white;
-            text-decoration: none;
-            transition: all 0.3s ease;
-          }
-          .manual-link:hover {
-            background: rgba(255, 255, 255, 0.3);
-            transform: translateY(-2px);
-          }
-        </style>
+<style>
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    margin: 0;
+    padding: 20px;
+    background: linear-gradient(135deg, #28a745 0%, #28a745 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+  }
+
+  .container {
+    text-align: center;
+    background: rgba(40, 167, 69, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 40px;
+    max-width: 500px;
+    border: 1px solid rgba(40, 167, 69, 0.2);
+  }
+
+  .logo {
+    font-size: 2em;
+    font-weight: bold;
+    margin-bottom: 20px;
+    color: #fff;
+  }
+
+  .product-info {
+    margin: 20px 0;
+  }
+
+  .product-title {
+    font-size: 1.3em;
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+
+  .product-price {
+    font-size: 1.5em;
+    color: #fff;
+    font-weight: bold;
+    margin: 10px 0;
+  }
+
+  .loading {
+    margin: 20px 0;
+  }
+
+  .spinner {
+    border: 3px solid rgba(40, 167, 69, 0.3);
+    border-radius: 50%;
+    border-top: 3px solid #fff;
+    width: 30px;
+    height: 30px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto;
+  }
+
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+
+  .redirect-text {
+    font-size: 0.9em;
+    opacity: 0.8;
+    margin-top: 15px;
+  }
+
+  .manual-link {
+    display: inline-block;
+    margin-top: 15px;
+    padding: 10px 20px;
+    background: rgba(40, 167, 69, 0.2);
+    border: 1px solid rgba(40, 167, 69, 0.3);
+    border-radius: 25px;
+    color: #fff;
+    text-decoration: none;
+    transition: all 0.3s ease;
+  }
+
+  .manual-link:hover {
+    background: rgba(40, 167, 69, 0.3);
+    transform: translateY(-2px);
+  }
+</style>
+
       </head>
       <body>
         <div class="container">
