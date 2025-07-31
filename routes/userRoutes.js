@@ -838,7 +838,7 @@ router.post('/api/password-reset/request', async (req, res) => {
     await user.save();
 
     // Send email
-    const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/password-rest.html?token=${resetToken}`;
+    const resetUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/password-reset.html?token=${resetToken}`;
     
     const mailOptions = {
       from: process.env.EMAIL_USER,

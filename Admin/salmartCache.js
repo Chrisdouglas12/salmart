@@ -1,8 +1,7 @@
 // salmartCache.js
 
 // IMPORTANT: This file relies on 'idb-keyval' for IndexedDB operations.
-// You must include the idb-keyval library (e.g., via a <script> tag).
-// For this code to work, we'll assume `get` and `set` are globally available.
+// The library must be loaded for this code to work.
 
 const API_BASE_URL = window.API_BASE_URL || (window.location.hostname === 'localhost'
     ? 'http://localhost:3000'
@@ -11,17 +10,16 @@ const API_BASE_URL = window.API_BASE_URL || (window.location.hostname === 'local
 class SalmartCache {
     constructor() {
         console.log('SalmartCache initialized with IndexedDB support.');
-        this._postCacheStore = 'posts_cache'; // Define a separate store name for posts
     }
 
     /**
      * Fetches data from the given URL with a network fallback.
-     * This method is now a generalized utility for all API calls.
+     * This is a generalized utility for all API calls.
      * @param {string} url - The URL to fetch.
      * @param {object} options - Options for the fetch request.
      * @returns {Promise<any>} - The JSON response from the server.
      */
-    async fetchWithNetworkFallback(url, options = {}) {
+    async _fetchWithNetworkFallback(url, options = {}) {
         const fetchOptions = {
             ...options,
             headers: new Headers(options.headers || {}),
@@ -62,7 +60,7 @@ class SalmartCache {
 
     /**
      * The core function for fetching and managing posts with a delta-sync strategy.
-     * This function is now much cleaner and more efficient.
+     * This method first returns cached posts and then fetches new ones in the background.
      * @param {string} category - The category of posts to fetch.
      * @returns {Promise<Array<object>>} - An array of all posts (cached + new), sorted by date.
      */
@@ -77,8 +75,6 @@ class SalmartCache {
             if (typeof get !== 'undefined') {
                 allPosts = (await get(dbKey)) || [];
                 if (allPosts.length > 0) {
-                    // Find the most recent post's creation time to request new posts from the server.
-                    // Assuming 'createdAt' is a string in ISO format.
                     mostRecentPostTimestamp = allPosts.reduce((latest, post) => {
                         const postDate = new Date(post.createdAt);
                         return postDate > latest ? postDate : latest;
@@ -88,19 +84,18 @@ class SalmartCache {
             }
         } catch (e) {
             console.error('❌ [SalmartCache] Error reading posts from IndexedDB:', e);
-            allPosts = []; // Fallback to empty array on read error
+            allPosts = [];
         }
 
         // 2. Fetch new posts from the network.
         try {
             const url = new URL(`${API_BASE_URL}/post`);
             url.searchParams.set('category', category);
-            // Append the `since` parameter if we have a recent post timestamp.
             if (mostRecentPostTimestamp) {
                 url.searchParams.set('since', mostRecentPostTimestamp.toISOString());
             }
 
-            const newPosts = await this.fetchWithNetworkFallback(url.toString(), {
+            const newPosts = await this._fetchWithNetworkFallback(url.toString(), {
                 priority: 'high',
                 headers: this._getAuthHeaders(),
             });
@@ -108,12 +103,10 @@ class SalmartCache {
             if (newPosts.length > 0) {
                 console.log(`🔄 [SalmartCache] Fetched ${newPosts.length} new posts from network.`);
                 
-                // 3. Merge old and new posts and remove duplicates.
                 const combinedPosts = [...allPosts, ...newPosts];
                 const uniquePostsMap = new Map(combinedPosts.map(post => [post._id, post]));
                 allPosts = Array.from(uniquePostsMap.values());
                 
-                // 4. Update the cache with the new combined list.
                 if (typeof set !== 'undefined') {
                     await set(dbKey, allPosts);
                     console.log(`💾 [SalmartCache] Updated cache with ${allPosts.length} total posts.`);
@@ -121,15 +114,11 @@ class SalmartCache {
             } else if (allPosts.length === 0) {
                 console.log(`⚠️ [SalmartCache] No posts found, even from the network.`);
             }
-
         } catch (error) {
-            // Log a warning, but don't re-throw. We already have the cached data to return.
-            // This is the key to providing a good offline experience.
             console.warn(`⚠️ [SalmartCache] Network update failed. Serving only cached data.`, error.message);
         }
 
-        // 5. Sort the final list and return it.
-        // It's crucial to sort here because the new posts will be appended to the end.
+        // 3. Sort the final list and return it.
         return allPosts.sort((a, b) => {
             const dateA = new Date(a.createdAt);
             const dateB = new Date(b.createdAt);
@@ -138,95 +127,166 @@ class SalmartCache {
     }
 
     /**
-     * Gets a single post by its ID from the cache or network.
-     * @param {string} postId - The ID of the post to get.
-     * @returns {Promise<object|null>} - The post object or null if not found.
+     * Fetches older posts for infinite scrolling.
+     * @param {string} category - The category of posts.
+     * @param {string} lastPostId - The ID of the last post currently displayed.
+     * @returns {Promise<Array<object>>} - An array of older posts.
      */
-    async getPostById(postId) {
-        const dbKey = this._getPersonalizedDBKey('posts_all'); // Assuming a single large cache key
-        let post = null;
+    async getOlderPosts(category = 'all', lastPostId) {
+        if (!lastPostId) {
+            console.warn('No lastPostId provided. Cannot fetch older posts.');
+            return [];
+        }
 
-        // Try to find the post in the cache first
+        try {
+            const url = new URL(`${API_BASE_URL}/post`);
+            url.searchParams.set('category', category);
+            url.searchParams.set('before', lastPostId); 
+
+            const olderPosts = await this._fetchWithNetworkFallback(url.toString(), {
+                priority: 'low',
+                headers: this._getAuthHeaders(),
+            });
+            return olderPosts;
+        } catch (error) {
+            console.error('Error fetching older posts:', error);
+            return null;
+        }
+    }
+
+    /**
+     * Fetches the list of users the current user is following, with caching.
+     * @returns {Promise<string[]>} - A promise that resolves to an array of user IDs.
+     */
+    async fetchFollowingList() {
+        const userId = localStorage.getItem('userId');
+        if (!userId) return [];
+
+        const dbKey = this._getPersonalizedDBKey('following_list');
+        
         try {
             if (typeof get !== 'undefined') {
-                const cachedPosts = (await get(dbKey)) || [];
-                post = cachedPosts.find(p => p._id === postId);
-                if (post) {
-                    console.log(`✅ [SalmartCache] Found post ${postId} in cache.`);
-                    // We can return the cached post immediately
-                    return post;
+                const cachedList = await get(dbKey);
+                if (cachedList) {
+                    console.log("✅ [SalmartCache] Serving following list from IndexedDB.");
+                    // Background fetch to refresh cache
+                    this._fetchWithNetworkFallback(`${API_BASE_URL}/api/is-following-list`, { headers: this._getAuthHeaders() })
+                        .then(response => set(dbKey, response.following.map(u => u._id.toString())))
+                        .catch(e => console.warn('Background following list update failed:', e));
+                    return cachedList;
                 }
             }
-        } catch (e) {
-            console.error('❌ [SalmartCache] Error reading from cache:', e);
-        }
 
-        // If not in cache, or cache read failed, fetch from network
-        try {
-            const url = `${API_BASE_URL}/post/${postId}`;
-            post = await this.fetchWithNetworkFallback(url, { headers: this._getAuthHeaders() });
-            console.log(`🔄 [SalmartCache] Fetched post ${postId} from network.`);
+            const response = await this._fetchWithNetworkFallback(`${API_BASE_URL}/api/is-following-list`, {
+                headers: this._getAuthHeaders()
+            });
+            const following = Array.isArray(response.following)
+                ? [...new Set(response.following.filter(user => user && user._id).map(user => user._id.toString()))]
+                : [];
             
-            // You might want to update the cache with this single post here
-            if (typeof get !== 'undefined' && typeof set !== 'undefined') {
-                 const currentPosts = (await get(dbKey)) || [];
-                 const existingPostIndex = currentPosts.findIndex(p => p._id === postId);
-                 if (existingPostIndex > -1) {
-                    currentPosts[existingPostIndex] = post; // Update existing post
-                 } else {
-                    currentPosts.push(post); // Add new post
-                 }
-                 await set(dbKey, currentPosts);
+            if (typeof set !== 'undefined') {
+                await set(dbKey, following);
             }
-            return post;
+            return following;
         } catch (error) {
-            console.error(`❌ [SalmartCache] Failed to get post ${postId}:`, error);
-            return null; // Return null if post is not found on network either
+            console.error('Error fetching following list:', error);
+            throw error; // Re-throw to allow main.js to handle the error
         }
     }
 
-
-    // The other methods (likePost, deletePost, etc.) should not be modified to
-    // return cached data, as they are actions that modify state. They should
-    // continue to make direct network requests to perform their action.
-    // However, after a successful action (like, delete), you should call
-    // `getPostsByCategory` again to refresh the cache and UI.
-
-    // Example of how to integrate post-action with caching:
-    async likePost(postId) {
+    /**
+     * Toggles the follow status for a user and updates the cache.
+     * @param {string} userIdToFollow - The ID of the user to follow/unfollow.
+     * @param {boolean} isCurrentlyFollowing - The current follow status.
+     * @returns {Promise<object>} - A promise that resolves to the API response.
+     */
+    async toggleFollow(userIdToFollow, isCurrentlyFollowing) {
+        if (!userIdToFollow) {
+            throw new Error('User ID is required to toggle follow status.');
+        }
+        
+        const endpoint = isCurrentlyFollowing ? `${API_BASE_URL}/unfollow/${userIdToFollow}` : `${API_BASE_URL}/follow/${userIdToFollow}`;
+        const dbKey = this._getPersonalizedDBKey('following_list');
+        
         try {
-            const updatedPost = await this.fetchWithNetworkFallback(`${API_BASE_URL}/post/${postId}/like`, {
+            const response = await this._fetchWithNetworkFallback(endpoint, {
                 method: 'POST',
-                headers: {
-                    ...this._getAuthHeaders(),
-                    'Content-Type': 'application/json'
+                headers: this._getAuthHeaders(),
+            });
+            
+            // Optimistically update the cache
+            if (typeof get !== 'undefined' && typeof set !== 'undefined') {
+                let cachedList = await get(dbKey) || [];
+                if (isCurrentlyFollowing) {
+                    cachedList = cachedList.filter(id => id !== userIdToFollow);
+                } else {
+                    cachedList.push(userIdToFollow);
                 }
+                await set(dbKey, [...new Set(cachedList)]);
+            }
+
+            return response;
+        } catch (error) {
+            console.error('Error toggling follow status:', error);
+            throw error; // Re-throw so the UI can handle it
+        }
+    }
+
+    /**
+     * Fetches user suggestions for following, with caching.
+     * @returns {Promise<object[]>} - A promise that resolves to an array of user objects.
+     */
+    async fetchUserSuggestions() {
+        const userId = localStorage.getItem('userId');
+        if (!userId) return [];
+
+        const dbKey = this._getPersonalizedDBKey('user_suggestions');
+        
+        try {
+            // Check cache first
+            if (typeof get !== 'undefined') {
+                const cachedSuggestions = await get(dbKey);
+                if (cachedSuggestions) {
+                    console.log("✅ [SalmartCache] Serving user suggestions from IndexedDB.");
+                    
+                    // Background refresh
+                    this._fetchWithNetworkFallback(`${API_BASE_URL}/api/user-suggestions`, { headers: this._getAuthHeaders() })
+                        .then(response => {
+                            if (response.suggestions) {
+                                set(dbKey, response.suggestions);
+                            }
+                        })
+                        .catch(e => console.warn('Background user suggestions update failed:', e));
+                    
+                    return cachedSuggestions;
+                }
+            }
+            
+            // If not in cache, fetch from network
+            const response = await this._fetchWithNetworkFallback(`${API_BASE_URL}/api/user-suggestions`, {
+                headers: this._getAuthHeaders()
             });
 
-            // Update the cache with the single modified post
-            const dbKey = this._getPersonalizedDBKey(`posts_category_all`); // Or the specific category
-            if (typeof get !== 'undefined' && typeof set !== 'undefined') {
-                const cachedPosts = (await get(dbKey)) || [];
-                const postIndex = cachedPosts.findIndex(p => p._id === postId);
-                if (postIndex > -1) {
-                    cachedPosts[postIndex] = updatedPost;
-                    await set(dbKey, cachedPosts);
+            if (response.suggestions) {
+                if (typeof set !== 'undefined') {
+                    await set(dbKey, response.suggestions);
                 }
+                return response.suggestions;
+            } else {
+                return [];
             }
-            return updatedPost;
-
         } catch (error) {
-            console.error('Error liking post:', error);
-            throw error;
+            console.error('Error fetching user suggestions:', error);
+            throw error; // Re-throw to allow main.js to handle
         }
     }
 
-    // The other methods like deletePost, toggleFollow etc can be structured similarly
-    // to first make the network call, then update the cache with the new state.
-    // This is known as the "write-through" cache strategy.
-    
-    // ... [The rest of your methods like `getTransactions`, `getMessages`, etc., can remain as is] ...
-    
+    // --- You can add other data-related methods here as well ---
+    // For example:
+    // async likePost(postId) {
+    //     // ... API call to like post ...
+    //     // ... optimistic cache update ...
+    // }
 }
 
 export const salmartCache = new SalmartCache();
