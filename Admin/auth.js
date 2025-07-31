@@ -1,15 +1,13 @@
-// auth.js - FIXED VERSION
+// auth.js - FIXED VERSION WITH NETWORK RESILIENCE
 document.addEventListener('DOMContentLoaded', async function () {
     const profilePictureContainer = document.getElementById('profile-picture1');
     const homeProfilePicture = document.getElementById('profile-picture3');
     const usernameContainer = document.getElementById('username1');
 
-    // Define API_BASE_URL early
     const API_BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart.onrender.com';
-    window.API_BASE_URL = API_BASE_URL; // Expose globally immediately
+    window.API_BASE_URL = API_BASE_URL;
 
-    // Global utility functions (now defined once and exposed)
-    if (!window.showToast) { // Prevent re-defining if it's already defined elsewhere
+    if (!window.showToast) {
         window.showToast = function (message, bgColor = '#333') {
             const toast = document.createElement("div");
             toast.className = "toast-message show";
@@ -24,9 +22,8 @@ document.addEventListener('DOMContentLoaded', async function () {
         };
     }
 
-    // Function to show login option when not logged in or token is invalid
     function showLoginOption() {
-        if (profilePictureContainer) { // Check if elements exist before manipulating
+        if (profilePictureContainer) {
             profilePictureContainer.src = 'default-avatar.png';
         }
         if (homeProfilePicture) {
@@ -37,7 +34,34 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
     }
 
-    // Check login status and return the userId if logged in, otherwise null
+    // NEW: Check if error is network-related
+    function isNetworkError(error) {
+        return (
+            error.name === 'TypeError' || // Network errors in fetch
+            error.message.includes('Failed to fetch') ||
+            error.message.includes('NetworkError') ||
+            error.message.includes('network') ||
+            !navigator.onLine // Browser offline
+        );
+    }
+
+    // NEW: Retry mechanism for network failures
+    async function fetchWithRetry(url, options, maxRetries = 2) {
+        for (let i = 0; i <= maxRetries; i++) {
+            try {
+                const response = await fetch(url, options);
+                return response;
+            } catch (error) {
+                if (i === maxRetries || !isNetworkError(error)) {
+                    throw error;
+                }
+                // Wait before retry (exponential backoff)
+                await new Promise(resolve => setTimeout(resolve, Math.pow(2, i) * 1000));
+            }
+        }
+    }
+
+    // IMPROVED: Check login status with network resilience
     window.checkLoginStatus = async function () {
         const token = localStorage.getItem('authToken');
         const tokenExpiry = localStorage.getItem('tokenExpiry');
@@ -45,20 +69,21 @@ document.addEventListener('DOMContentLoaded', async function () {
         // Check for missing token or expired token
         if (!token || !tokenExpiry || Date.now() > parseInt(tokenExpiry, 10)) {
             console.log('Token expired or missing. User is not logged in.');
-            localStorage.removeItem('authToken'); // Clean up expired/invalid token
-            localStorage.removeItem('userId'); // Ensure userId is also cleared
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('userId');
             showLoginOption();
-            return null; // Explicitly return null if not logged in
+            return null;
         }
 
         try {
-            const response = await fetch(`${API_BASE_URL}/verify-token`, {
+            const response = await fetchWithRetry(`${API_BASE_URL}/verify-token`, {
                 method: 'GET',
                 headers: { 'Authorization': `Bearer ${token}` },
             });
 
             if (response.ok) {
                 const userData = await response.json();
+                
                 // Update UI elements if they exist
                 if (profilePictureContainer) {
                     profilePictureContainer.src = userData.profilePicture || 'default-avatar.png';
@@ -70,47 +95,92 @@ document.addEventListener('DOMContentLoaded', async function () {
                     usernameContainer.textContent = `Welcome, ${userData.firstName || 'User'}`;
                 }
 
-                // Store userId in localStorage for broader access
                 localStorage.setItem('userId', userData.userId);
-                return userData.userId; // Return the logged-in user ID
-            } else {
-                // Token invalid on backend side
+                return userData.userId;
+            } else if (response.status === 401) {
+                // Only clear tokens on actual authentication failures (401)
                 localStorage.removeItem('authToken');
                 localStorage.removeItem('userId');
                 console.warn('Auth token invalid or expired. User logged out.');
                 showLoginOption();
                 return null;
+            } else {
+                // Server error (5xx) - don't log out user, just show error
+                console.error('Server error during token verification:', response.status);
+                if (window.showToast) {
+                    window.showToast('Connection issue. Retrying...', '#ff9800');
+                }
+                // Return null but don't clear tokens - user stays "logged in"
+                return localStorage.getItem('userId'); // Return cached userId
             }
         } catch (error) {
             console.error('Error verifying token:', error);
-            localStorage.removeItem('authToken');
-            localStorage.removeItem('userId');
-            showLoginOption();
-            return null; // Return null on network/server error
+            
+            if (isNetworkError(error)) {
+                // Network error - don't log out user
+                console.log('Network error detected. Keeping user logged in.');
+                if (window.showToast) {
+                    window.showToast('You appear to be offline. Some features may not work.', '#ff9800');
+                }
+                // Return cached userId - user stays logged in
+                return localStorage.getItem('userId');
+            } else {
+                // Non-network error - actual auth problem
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('userId');
+                showLoginOption();
+                return null;
+            }
         }
     };
 
-    // --- IMPORTANT CHANGE HERE ---
-    // Instead of directly setting window.loggedInUser, we now await checkLoginStatus
-    // and then set window.loggedInUser *after* it's definitively known.
-    // We also dispatch an event so other scripts can reliably react.
-    const user = await window.checkLoginStatus(); // Get the actual logged-in user ID
-    window.loggedInUser = user; // Set the global variable based on the check result
+    // IMPROVED: Handle initial auth check with better error handling
+    let user;
+    try {
+        user = await window.checkLoginStatus();
+    } catch (error) {
+        console.error('Critical error during initial auth check:', error);
+        user = localStorage.getItem('userId'); // Fallback to cached value
+    }
 
-    // Dispatch a custom event once login status is definitively known
-    // This is what post-renderer.js will listen for.
-    document.dispatchEvent(new CustomEvent('authStatusReady', { detail: { loggedInUser: window.loggedInUser } }));
+    window.loggedInUser = user;
+
+    // Dispatch auth ready event
+    document.dispatchEvent(new CustomEvent('authStatusReady', { 
+        detail: { loggedInUser: window.loggedInUser } 
+    }));
 
     console.log("Auth status ready. Logged-in user:", window.loggedInUser);
+
+    // NEW: Monitor online/offline status
+    window.addEventListener('online', async () => {
+        console.log('Back online - re-verifying auth status');
+        if (window.showToast) {
+            window.showToast('Back online!', '#4CAF50');
+        }
+        // Re-check auth when coming back online
+        const user = await window.checkLoginStatus();
+        if (user !== window.loggedInUser) {
+            window.loggedInUser = user;
+            document.dispatchEvent(new CustomEvent('authStatusChanged', { 
+                detail: { loggedInUser: window.loggedInUser } 
+            }));
+        }
+    });
+
+    window.addEventListener('offline', () => {
+        console.log('Gone offline');
+        if (window.showToast) {
+            window.showToast('You are offline. Some features may not work.', '#ff9800');
+        }
+    });
 });
 
-// ===== SIMPLIFIED Service Worker Registration =====
-// Register service worker ONCE and let it handle everything
+// IMPROVED Service Worker with better update handling
 class SimpleServiceWorkerManager {
     constructor() {
         this.registration = null;
         
-        // Initialize after DOM is ready
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => this.init());
         } else {
@@ -121,81 +191,77 @@ class SimpleServiceWorkerManager {
     async init() {
         if ('serviceWorker' in navigator) {
             try {
-                // Register service worker ONCE
                 this.registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', {
                     scope: '/',
-                    updateViaCache: 'none' // Always check for updates
+                    updateViaCache: 'none'
                 });
                 
                 console.log('✅ [SW Manager] Service Worker registered successfully');
-                console.log('📍 [SW Manager] Registration scope:', this.registration.scope);
                 
-                // Listen for updates
                 this.registration.addEventListener('updatefound', () => {
                     const newWorker = this.registration.installing;
                     console.log('🔄 [SW Manager] New service worker found, installing...');
                     
                     newWorker.addEventListener('statechange', () => {
                         if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                            console.log('🆕 [SW Manager] New version installed, will activate on reload');
+                            console.log('🆕 [SW Manager] New version installed');
                             this.showUpdateNotification();
                         }
                     });
                 });
 
-                // Listen for messages from service worker
                 navigator.serviceWorker.addEventListener('message', (event) => {
                     console.log('📨 [SW Manager] Message from Service Worker:', event.data);
                     
                     if (event.data.type === 'SW_VERSION_UPDATE') {
                         if (event.data.action === 'activated' && event.data.shouldReload) {
-                            console.log('🔄 [SW Manager] Service Worker activated, reloading...');
-                            setTimeout(() => window.location.reload(), 1000);
+                            console.log('🔄 [SW Manager] Service Worker activated');
+                            // Give user more control over when to reload
+                            this.showReloadPrompt();
                         }
                     }
                 });
 
-                // Check for updates periodically
+                // Less aggressive update checking
                 setInterval(() => {
-                    if (!document.hidden) {
+                    if (!document.hidden && navigator.onLine) {
                         this.registration.update();
                     }
-                }, 30000);
+                }, 60000); // Check every minute instead of 30 seconds
                 
             } catch (error) {
                 console.error('❌ [SW Manager] Service Worker registration failed:', error);
-                
-                // More detailed error logging
-                if (error.message.includes('403')) {
-                    console.error('🔍 [SW Manager] 403 Error - Check file permissions and server configuration');
-                } else if (error.message.includes('404')) {
-                    console.error('🔍 [SW Manager] 404 Error - firebase-messaging-sw.js not found in root directory');
-                } else {
-                    console.error('🔍 [SW Manager] Registration error details:', error);
-                }
             }
-        } else {
-            console.warn('⚠️ [SW Manager] Service Workers not supported in this browser');
         }
     }
 
     showUpdateNotification() {
-        // Simple update notification
         if (window.showToast) {
-            window.showToast('New version available! Refresh to update.', '#4CAF50');
+            window.showToast('New version available!', '#4CAF50');
+        }
+    }
+
+    showReloadPrompt() {
+        // Give user choice instead of auto-reloading
+        if (window.showToast) {
+            window.showToast('App updated! Click here to refresh', '#4CAF50');
         }
         
-        // Auto-refresh after 3 seconds
-        setTimeout(() => {
-            window.location.reload();
-        }, 3000);
+        // Optional: Add a "Refresh" button instead of auto-reload
+        const refreshBtn = document.createElement('button');
+        refreshBtn.textContent = 'Refresh App';
+        refreshBtn.style.cssText = `
+            position: fixed; top: 20px; right: 20px; z-index: 10000;
+            background: #4CAF50; color: white; border: none;
+            padding: 10px 20px; border-radius: 5px; cursor: pointer;
+        `;
+        refreshBtn.onclick = () => window.location.reload();
+        document.body.appendChild(refreshBtn);
+        
+        // Auto-remove button after 10 seconds
+        setTimeout(() => refreshBtn.remove(), 10000);
     }
 }
 
-// Initialize the SIMPLIFIED service worker manager
 const swManager = new SimpleServiceWorkerManager();
-
-// Expose globally for debugging
 window.swManager = swManager;
-
-console.log('✅ [SW Manager] Simplified Service Worker Manager initialized');
