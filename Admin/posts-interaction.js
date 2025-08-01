@@ -2,7 +2,6 @@
 document.addEventListener('DOMContentLoaded', async function () {
     // --- Constants and Global Dependencies ---
     const API_BASE_URL = window.API_BASE_URL || (window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart.onrender.com');
-    // Ensure showToast is available, assumed from main.js or a utility file.
     const showToast = window.showToast; 
 
     // --- Helper Functions ---
@@ -33,23 +32,19 @@ document.addEventListener('DOMContentLoaded', async function () {
         `;
 
         document.body.appendChild(modal);
-        // Add a class to the body to prevent scrolling when modal is open
         document.body.classList.add('modal-open'); 
 
         const closeModal = () => {
             document.body.removeChild(modal);
-            document.body.classList.remove('modal-open'); // Restore scrolling
+            document.body.classList.remove('modal-open');
         };
 
-        // Close modal listeners
         modal.querySelector('.close-delete-modal').addEventListener('click', closeModal);
         modal.querySelector('.cancel-delete').addEventListener('click', closeModal);
-        // Close if clicking outside the modal content
         modal.addEventListener('click', (e) => {
             if (e.target === modal) closeModal();
         });
 
-        // Confirm delete action
         modal.querySelector('.confirm-delete').addEventListener('click', async () => {
             try {
                 const response = await fetch(`${API_BASE_URL}/post/delete/${postId}`, {
@@ -65,7 +60,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                     throw new Error(errorData.message || 'Failed to delete post');
                 }
 
-                postElement.remove(); // Remove the post from the DOM
+                postElement.remove();
                 showToast('Post deleted successfully!', '#28a745');
                 closeModal();
             } catch (error) {
@@ -84,7 +79,7 @@ document.addEventListener('DOMContentLoaded', async function () {
      * @param {string} loggedInUser - The ID of the currently logged-in user.
      */
     function showReportModal(postId, authToken, postElement, loggedInUser) {
-        const postOwnerId = postElement.dataset.userId; // Get the user ID of the post creator
+        const postOwnerId = postElement.dataset.userId;
 
         if (postOwnerId === loggedInUser) {
             showToast("You cannot report your own post.", '#ffc107');
@@ -147,7 +142,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 submitButton.disabled = false;
                 otherReasonContainer.style.display = radio.value === 'Other' ? 'block' : 'none';
                 if (radio.value !== 'Other') {
-                    otherReasonTextarea.value = ''; // Clear other reason if not 'Other'
+                    otherReasonTextarea.value = '';
                 }
             });
         });
@@ -203,12 +198,11 @@ document.addEventListener('DOMContentLoaded', async function () {
                 const result = await response.json();
                 if (!response.ok) throw new Error(result.message || 'Failed to report post');
 
-                // Update UI to reflect report status
                 const reportButton = postElement.querySelector(`.report-post-button[data-post-id="${postId}"]`);
                 if (reportButton) {
                     reportButton.innerHTML = '<i class="fas fa-flag"></i> Reported';
                     reportButton.disabled = true;
-                    reportButton.style.backgroundColor = '#cccccc'; // Grey out the button
+                    reportButton.style.backgroundColor = '#cccccc';
                     reportButton.style.color = '#666666';
                 }
                 showToast(result.message || 'Post reported successfully!', '#28a745');
@@ -220,307 +214,284 @@ document.addEventListener('DOMContentLoaded', async function () {
         });
     }
 
-    // --- Main Event Listener for Posts Container ---
-    const postsContainer = document.getElementById('posts-container');
+    /**
+     * Handles the follow/unfollow logic and UI updates.
+     * @param {HTMLElement} target - The follow button element.
+     * @param {string} authToken - The user's auth token.
+     * @param {string} loggedInUser - The logged-in user's ID.
+     */
+    async function handleFollowButton(target, authToken, loggedInUser) {
+        const userIdToFollow = target.dataset.userId;
+        if (!userIdToFollow) {
+            console.error("User ID is missing from the follow button");
+            showToast('Error: User ID not found.', '#dc3545');
+            return;
+        }
 
-    // This event listener assumes `postsRendered` is dispatched from `main.js`
-    window.addEventListener('postsRendered', () => {
-        // Any post-render initialization that might be needed,
-        // though lazyLoadVideo and initializeVideoControls are generally called
-        // directly when rendering individual posts in main.js.
-        // This block can be used for other global post-render tasks if needed.
-    });
+        if (!authToken || !loggedInUser) {
+            window.redirectToLogin();
+            return;
+        }
 
-    if (postsContainer) {
-        postsContainer.addEventListener('click', async (event) => {
-            // Use closest to find the relevant button/link
-            const target = event.target.closest('button, a'); 
-            if (!target) return;
+        if (userIdToFollow === loggedInUser) {
+            showToast("You cannot follow yourself.", '#ffc107');
+            return;
+        }
 
-            // Find the closest parent post element for context
-            const postElement = target.closest('.post');
-            const promotedPostElement = target.closest('.promoted-post');
-            
-            const elementForContext = postElement || promotedPostElement;
-            if (!elementForContext) return;
+        const isCurrentlyFollowing = target.textContent.includes('Following');
 
-            const postId = elementForContext.dataset.postId;
-            const authToken = localStorage.getItem('authToken');
-            const loggedInUser = localStorage.getItem('userId');
+        // Optimistic UI update using the global function from post.js
+        window.updateFollowButtonsUI(userIdToFollow, !isCurrentlyFollowing);
 
-            // --- Send Message Button ---
-            if (target.classList.contains('send-message-btn')) {
-                event.preventDefault(); // Prevent default link/button behavior
+        try {
+            const endpoint = isCurrentlyFollowing ? `${API_BASE_URL}/unfollow/${userIdToFollow}` : `${API_BASE_URL}/follow/${userIdToFollow}`;
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${authToken}`,
+                },
+            });
 
-                // Redirect to login if not authenticated
-                if (!loggedInUser) {
-                    window.redirectToLogin(); // Assumed global function from main.js
-                    return;
-                }
-
-                const recipientId = target.dataset.recipientId;
-                const recipientUsername = elementForContext.querySelector('.post-user-name')?.textContent || elementForContext.querySelector('.promoted-user-name')?.textContent || 'Unknown';
-                const recipientProfilePictureUrl = elementForContext.querySelector('.post-avatar')?.src || elementForContext.querySelector('.promoted-avatar')?.src || '/salmart-192x192.png';
-                let productImage = target.dataset.productImage || '';
-                const productDescription = target.dataset.productDescription || '';
-
-                // Ensure product image URL is absolute
-                if (productImage && !productImage.match(/^https?:\/\//)) {
-                    productImage = productImage.startsWith('/') ? `${API_BASE_URL}${productImage}` : `${API_BASE_URL}/${productImage}`;
-                }
-
-                const message = `I'm interested in this item: ${productDescription}. Is it still available?`;
-                
-                const params = new URLSearchParams();
-                params.append('user_id', loggedInUser);
-                params.append('recipient_id', recipientId);
-                params.append('recipient_username', recipientUsername);
-                params.append('recipient_profile_picture_url', recipientProfilePictureUrl);
-                params.append('message', message);
-                params.append('product_image', productImage);
-                params.append('product_id', postId);
-                params.append('product_name', productDescription);
-
-                window.location.href = `Chats.html?${params.toString()}`;
-
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to update follow status');
             }
-            // --- Buy Now Button ---
-            else if (target.classList.contains('buy-now-button')) {
-                event.preventDefault();
-                if (!loggedInUser) {
-                    window.redirectToLogin();
-                    return;
-                }
-                if (!postId) {
-                    console.error("Post ID is missing");
-                    showToast('Error: Post ID not found.', '#dc3545');
-                    return;
-                }
 
-                const recipientUsername = elementForContext.querySelector('.post-user-name')?.textContent ||
+            const data = await response.json();
+            showToast(data.message || 'Follow status updated!', '#28a745');
+
+        } catch (error) {
+            console.error('Follow/Unfollow error:', error);
+            showToast(error.message || 'Failed to update follow status.', '#dc3545');
+            // Revert UI on error
+            window.updateFollowButtonsUI(userIdToFollow, isCurrentlyFollowing);
+        }
+    }
+
+    // --- Main Event Listener for Posts Container ---
+    // Using document.body for a more general listener to catch all buttons
+    // including those inside user suggestion cards.
+    document.body.addEventListener('click', async (event) => {
+        // Use closest to find the relevant button/link
+        const target = event.target.closest('button, a'); 
+        if (!target) return;
+
+        const authToken = localStorage.getItem('authToken');
+        const loggedInUser = localStorage.getItem('userId');
+
+        // --- FIX: Handle Follow Buttons FIRST ---
+        // This logic is now at the top so it doesn't depend on finding a parent post.
+        if (target.classList.contains('follow-button')) {
+            event.preventDefault();
+            handleFollowButton(target, authToken, loggedInUser);
+            return;
+        }
+
+        // --- All other button logic is tied to a specific post container ---
+        const postElement = target.closest('.post');
+        const promotedPostElement = target.closest('.promoted-post');
+        
+        const elementForContext = postElement || promotedPostElement;
+        if (!elementForContext) return; // Exit if the click wasn't inside a post
+
+        const postId = elementForContext.dataset.postId;
+
+        // --- Send Message Button ---
+        if (target.classList.contains('send-message-btn')) {
+            event.preventDefault();
+            if (!loggedInUser) {
+                window.redirectToLogin();
+                return;
+            }
+            const recipientId = target.dataset.recipientId;
+            const recipientUsername = elementForContext.querySelector('.post-user-name')?.textContent || elementForContext.querySelector('.promoted-user-name')?.textContent || 'Unknown';
+            const recipientProfilePictureUrl = elementForContext.querySelector('.post-avatar')?.src || elementForContext.querySelector('.promoted-avatar')?.src || '/salmart-192x192.png';
+            let productImage = target.dataset.productImage || '';
+
+            if (productImage && !productImage.match(/^https?:\/\//)) {
+                productImage = productImage.startsWith('/') ? `${API_BASE_URL}${productImage}` : `${API_BASE_URL}/${productImage}`;
+            }
+
+            const message = `I'm interested in this item: ${target.dataset.productDescription}. Is it still available?`;
+            
+            const params = new URLSearchParams();
+            params.append('user_id', loggedInUser);
+            params.append('recipient_id', recipientId);
+            params.append('recipient_username', recipientUsername);
+            params.append('recipient_profile_picture_url', recipientProfilePictureUrl);
+            params.append('message', message);
+            params.append('product_image', productImage);
+            params.append('product_id', postId);
+            params.append('product_name', target.dataset.productDescription);
+
+            window.location.href = `Chats.html?${params.toString()}`;
+
+        }
+        // --- Buy Now Button ---
+        else if (target.classList.contains('buy-now-button')) {
+            event.preventDefault();
+            if (!loggedInUser) {
+                window.redirectToLogin();
+                return;
+            }
+            if (!postId) {
+                console.error("Post ID is missing");
+                showToast('Error: Post ID not found.', '#dc3545');
+                return;
+            }
+
+            const recipientUsername = elementForContext.querySelector('.post-user-name')?.textContent ||
                                          elementForContext.querySelector('.promoted-user-name')?.textContent || 'Unknown';
-                const recipientProfilePictureUrl = elementForContext.querySelector('.post-avatar')?.src ||
+            const recipientProfilePictureUrl = elementForContext.querySelector('.post-avatar')?.src ||
                                                   elementForContext.querySelector('.promoted-avatar')?.src || '/salmart-192x192.png';
 
-                const productData = {
-                    postId: postId,
-                    productImage: target.dataset.productImage || '',
-                    productTitle: target.dataset.productTitle || '',
-                    productDescription: target.dataset.productDescription || '',
-                    productLocation: target.dataset.productLocation || '',
-                    productCondition: target.dataset.productCondition || '',
-                    productPrice: target.dataset.productPrice || '',
-                    sellerId: target.dataset.sellerId || '',
-                    recipient_username: encodeURIComponent(recipientUsername),
-                    recipient_profile_picture_url: encodeURIComponent(recipientProfilePictureUrl)
-                };
+            const productData = {
+                postId: postId,
+                productImage: target.dataset.productImage || '',
+                productTitle: target.dataset.productTitle || '',
+                productDescription: target.dataset.productDescription || '',
+                productLocation: target.dataset.productLocation || '',
+                productCondition: target.dataset.productCondition || '',
+                productPrice: target.dataset.productPrice || '',
+                sellerId: target.dataset.sellerId || '',
+                recipient_username: encodeURIComponent(recipientUsername),
+                recipient_profile_picture_url: encodeURIComponent(recipientProfilePictureUrl)
+            };
 
-                const queryParams = new URLSearchParams(productData).toString();
-                window.location.href = `checkout.html?${queryParams}`;
-            }
-
-            // --- Like Button ---
-            else if (target.classList.contains('like-button')) {
-                if (!authToken || !loggedInUser) {
-                    showToast('Please log in to like posts.', '#dc3545');
-                    return;
-                }
-
-                const likeCountElement = target.querySelector('.like-count');
-                const icon = target.querySelector('i');
-                const isCurrentlyLiked = icon.classList.contains('fas'); 
-                const currentLikes = parseInt(likeCountElement.textContent, 10);
-
-                // Optimistic UI Update: Disable button to prevent multiple clicks
-                target.disabled = true; 
-                likeCountElement.textContent = isCurrentlyLiked ? Math.max(0, currentLikes - 1) : currentLikes + 1;
-                icon.classList.toggle('fas', !isCurrentlyLiked);
-                icon.classList.toggle('far', isCurrentlyLiked);
-
-                try {
-                    const response = await fetch(`${API_BASE_URL}/post/like/${postId}`, {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': `Bearer ${authToken}`,
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ action: isCurrentlyLiked ? 'unlike' : 'like' }),
-                    });
-
-                    if (!response.ok) {
-                        const errorData = await response.json();
-                        throw new Error(errorData.message || 'Failed to like/unlike post');
-                    }
-
-                    const data = await response.json();
-                    // Update UI with actual count from server
-                    likeCountElement.textContent = data.likes.length;
-                    // Ensure icon state matches server response for consistency
-                    const userLikes = data.likes.includes(loggedInUser);
-                    icon.classList.toggle('fas', userLikes);
-                    icon.classList.toggle('far', !userLikes);
-
-                } catch (error) {
-                    console.error('Like error:', error);
-                    // Revert UI on error
-                    likeCountElement.textContent = currentLikes;
-                    icon.classList.toggle('fas', isCurrentlyLiked);
-                    icon.classList.toggle('far', !isCurrentlyLiked);
-                    showToast(error.message || 'Failed to update like status.', '#dc3545');
-                } finally {
-                    target.disabled = false; // Re-enable button
-                }
-
-            }
-
-            // --- Share Button ---
-            else if (target.classList.contains('share-button')) {
-                // Collect post data for sharing
-                const postData = {
-                    _id: postId,
-                    description: postElement.querySelector('.post-description-text p')?.textContent || postElement.querySelector('.product-title')?.textContent || '',
-                    price: parseFloat(postElement.querySelector('.price-value')?.textContent?.replace('₦', '').replace(/,/g, '')) || null,
-                };
-                // Ensure showShareModal is available globally or imported from a separate share utility file
-                if (window.showShareModal) {
-                    window.showShareModal(postData);
-                } else {
-                    console.warn('showShareModal not found. Make sure share-utilities.js is loaded.');
-                    showToast('Share functionality not available.', '#ffc107');
-                }
-            }
-            // --- Follow Button ---
-            else if (target.classList.contains('follow-button')) {
-                const userIdToFollow = target.dataset.userId;
-                if (!authToken || !loggedInUser) {
-                    window.redirectToLogin();
-                    return;
-                }
-
-                // Prevent self-follow
-                if (userIdToFollow === loggedInUser) {
-                    showToast("You cannot follow yourself.", '#ffc107');
-                    return;
-                }
-
-                const isCurrentlyFollowing = target.textContent.includes('Following');
-
-                // Optimistic UI update for follow button
-                if (window.updateFollowButtonsUI) {
-                    window.updateFollowButtonsUI(userIdToFollow, !isCurrentlyFollowing);
-                } else {
-                    // Fallback if global function isn't loaded (less ideal)
-                    target.textContent = isCurrentlyFollowing ? 'Follow' : 'Following';
-                    target.classList.toggle('following', !isCurrentlyFollowing);
-                }
-
-                try {
-                    const endpoint = isCurrentlyFollowing ? `${API_BASE_URL}/unfollow/${userIdToFollow}` : `${API_BASE_URL}/follow/${userIdToFollow}`;
-                    const response = await fetch(endpoint, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${authToken}`,
-                        },
-                    });
-
-                    if (!response.ok) {
-                        const errorData = await response.json();
-                        throw new Error(errorData.message || 'Failed to update follow status');
-                    }
-
-                    const data = await response.json();
-                    showToast(data.message || 'Follow status updated!', '#28a745');
-
-                } catch (error) {
-                    console.error('Follow/Unfollow error:', error);
-                    showToast(error.message || 'Failed to update follow status.', '#dc3545');
-                    // Revert UI on error
-                    if (window.updateFollowButtonsUI) {
-                        window.updateFollowButtonsUI(userIdToFollow, isCurrentlyFollowing);
-                    } else {
-                        target.textContent = isCurrentlyFollowing ? 'Following' : 'Follow';
-                        target.classList.toggle('following', isCurrentlyFollowing);
-                    }
-                }
-            }
-            // --- Promote Button ---
-            else if (target.classList.contains('promote-button')) {
-                const postId = target.dataset.postId;
-                if (!postId) {
-                    showToast('Invalid post ID for promotion', '#dc3545');
-                    return;
-                }
-                window.location.href = `promote.html?postId=${postId}`;
+            const queryParams = new URLSearchParams(productData).toString();
+            window.location.href = `checkout.html?${queryParams}`;
+        }
+        // --- Like Button ---
+        else if (target.classList.contains('like-button')) {
+            if (!authToken || !loggedInUser) {
+                showToast('Please log in to like posts.', '#dc3545');
                 return;
             }
-            // --- Reply Button ---
-            else if (target.classList.contains('reply-button')) {
-                window.location.href = `product.html?postId=${postId}`;
-                return;
-            }
-            // --- Delete Post Button ---
-            else if (target.classList.contains('delete-post-button')) {
-                event.preventDefault(); // Crucial: Prevent any default browser behavior
-                // Trigger our custom confirmation modal instead of browser alert
-                showDeleteConfirmationModal(postId, authToken, postElement);
-            }
-            // --- Edit Post Button ---
-            else if (target.classList.contains('edit-post-button')) {
-                if (!loggedInUser) {
-                    window.redirectToLogin();
-                    return;
-                }
-                const postType = target.dataset.postType; // Get the post type from data-attribute
-                window.location.href = `Ads.html?edit=true&postId=${postId}&postType=${postType}`; // Pass postType
-            }
-            // --- Report Post Button ---
-            else if (target.classList.contains('report-post-button')) {
-                if (!authToken) {
-                    window.redirectToLogin();
-                    return;
-                }
-                // Call the custom report modal function
-                showReportModal(postId, authToken, postElement, loggedInUser);
-            }
-            // --- Post Options Menu Toggle ---
-            else if (target.classList.contains('post-options-button')) {
-                event.preventDefault(); // Prevent default button behavior
-                const optionsMenu = target.nextElementSibling;
 
-                // Close any other open menus
-                document.querySelectorAll('.post-options-menu.active').forEach(menu => {
-                    if (menu !== optionsMenu) {
-                        menu.classList.remove('active');
-                    }
+            const likeCountElement = target.querySelector('.like-count');
+            const icon = target.querySelector('i');
+            const isCurrentlyLiked = icon.classList.contains('fas'); 
+            const currentLikes = parseInt(likeCountElement.textContent, 10);
+
+            target.disabled = true; 
+            likeCountElement.textContent = isCurrentlyLiked ? Math.max(0, currentLikes - 1) : currentLikes + 1;
+            icon.classList.toggle('fas', !isCurrentlyLiked);
+            icon.classList.toggle('far', isCurrentlyLiked);
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/post/like/${postId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ action: isCurrentlyLiked ? 'unlike' : 'like' }),
                 });
-                // Toggle current menu
-                optionsMenu.classList.toggle('active');
-            }
-        });
 
-        // Close post options menu if clicked anywhere else on the document
-        document.addEventListener('click', (event) => {
-            if (!event.target.closest('.post-options')) {
-                document.querySelectorAll('.post-options-menu.active').forEach(menu => menu.classList.remove('active'));
-            }
-        });
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Failed to like/unlike post');
+                }
 
-        // --- Category Buttons (Delegated to post-renderer.js/main.js, ensure the call is correct) ---
-        // This block ensures that if category buttons are within postsContainer, their clicks
-        // are correctly handled by the `window.fetchPosts` function exposed by main.js.
-        // It's a good practice to centralize category filtering logic in the main rendering script.
-        document.querySelectorAll('.category-btn').forEach(button => {
-            button.addEventListener('click', function () {
-                const selectedCategory = this.getAttribute('data-category');
-                // Ensure `fetchPosts` is available globally from `main.js`
-                if (window.fetchPosts) {
-                    window.fetchPosts(selectedCategory, 1, true); // Reset to page 1, clear existing
-                } else {
-                    console.error('fetchPosts function not available. Ensure main.js loads correctly.');
-                    showToast('Category filtering not available.', '#dc3545');
+                const data = await response.json();
+                likeCountElement.textContent = data.likes.length;
+                const userLikes = data.likes.includes(loggedInUser);
+                icon.classList.toggle('fas', userLikes);
+                icon.classList.toggle('far', !userLikes);
+
+            } catch (error) {
+                console.error('Like error:', error);
+                likeCountElement.textContent = currentLikes;
+                icon.classList.toggle('fas', isCurrentlyLiked);
+                icon.classList.toggle('far', !isCurrentlyLiked);
+                showToast(error.message || 'Failed to update like status.', '#dc3545');
+            } finally {
+                target.disabled = false;
+            }
+        }
+        // --- Share Button ---
+        else if (target.classList.contains('share-button')) {
+            const postData = {
+                _id: postId,
+                description: postElement.querySelector('.post-description-text p')?.textContent || postElement.querySelector('.product-title')?.textContent || '',
+                price: parseFloat(postElement.querySelector('.price-value')?.textContent?.replace('₦', '').replace(/,/g, '')) || null,
+            };
+            if (window.showShareModal) {
+                window.showShareModal(postData);
+            } else {
+                console.warn('showShareModal not found. Make sure share-utilities.js is loaded.');
+                showToast('Share functionality not available.', '#ffc107');
+            }
+        }
+        // --- Promote Button ---
+        else if (target.classList.contains('promote-button')) {
+            const postId = target.dataset.postId;
+            if (!postId) {
+                showToast('Invalid post ID for promotion', '#dc3545');
+                return;
+            }
+            window.location.href = `promote.html?postId=${postId}`;
+            return;
+        }
+        // --- Reply Button ---
+        else if (target.classList.contains('reply-button')) {
+            window.location.href = `product.html?postId=${postId}`;
+            return;
+        }
+        // --- Delete Post Button ---
+        else if (target.classList.contains('delete-post-button')) {
+            event.preventDefault();
+            showDeleteConfirmationModal(postId, authToken, postElement);
+        }
+        // --- Edit Post Button ---
+        else if (target.classList.contains('edit-post-button')) {
+            if (!loggedInUser) {
+                window.redirectToLogin();
+                return;
+            }
+            const postType = target.dataset.postType;
+            window.location.href = `Ads.html?edit=true&postId=${postId}&postType=${postType}`;
+        }
+        // --- Report Post Button ---
+        else if (target.classList.contains('report-post-button')) {
+            if (!authToken) {
+                window.redirectToLogin();
+                return;
+            }
+            showReportModal(postId, authToken, postElement, loggedInUser);
+        }
+        // --- Post Options Menu Toggle ---
+        else if (target.classList.contains('post-options-button')) {
+            event.preventDefault();
+            const optionsMenu = target.nextElementSibling;
+
+            document.querySelectorAll('.post-options-menu.active').forEach(menu => {
+                if (menu !== optionsMenu) {
+                    menu.classList.remove('active');
                 }
             });
+            optionsMenu.classList.toggle('active');
+        }
+    });
+
+    // Close post options menu if clicked anywhere else on the document
+    document.addEventListener('click', (event) => {
+        if (!event.target.closest('.post-options')) {
+            document.querySelectorAll('.post-options-menu.active').forEach(menu => menu.classList.remove('active'));
+        }
+    });
+
+    // --- Category Buttons (Delegated to post-renderer.js/main.js, ensure the call is correct) ---
+    document.querySelectorAll('.category-btn').forEach(button => {
+        button.addEventListener('click', function () {
+            const selectedCategory = this.getAttribute('data-category');
+            if (window.fetchPosts) {
+                window.fetchPosts(selectedCategory, 1, true);
+            } else {
+                console.error('fetchPosts function not available. Ensure main.js loads correctly.');
+                showToast('Category filtering not available.', '#dc3545');
+            }
         });
-    }
+    });
 });

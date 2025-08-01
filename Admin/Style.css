@@ -820,10 +820,10 @@ h1 {
 .post-input {
   margin-bottom: 0;
   border: 1px solid white;
-  width: 45%;
+  width: 48.5%;
   height: 40px;
   margin-top: 70px;
-  box-shadow: 0 0 10px #d3d3d3;
+  box-shadow: 0 0 10px #ddd;
   border-radius: 30px;
   color: grey;
 }
@@ -1264,7 +1264,7 @@ p {
 }
 
 .post-options-menu button:hover {
-  color: #007bff;
+  color: #f3f8f1;
 }
 
 .buy button {
@@ -1685,7 +1685,7 @@ background: #f1f3f8;
 
 .reply-button:hover i,
 .share-button:hover i {
-  color: #007bff;
+  color: #f1f3f8;
 }
 
 .post-video-container {
@@ -1786,7 +1786,7 @@ background: #f1f3f8;
 
 .progress-bar {
   height: 100%;
-  background: #1e90ff;
+  background: #28a745;
   width: 0;
   position: absolute;
   top: 0;
@@ -1994,7 +1994,7 @@ background: #f1f3f8;
 }
 
 .user-suggestion-follow-btn {
-  background-color: #007bff;
+  background-color: #28a745;
   color: white;
   border: none;
   border-radius: 5px;

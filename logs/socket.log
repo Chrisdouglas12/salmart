@@ -14555,3 +14555,5 @@
 {"level":"info","message":"Client disconnected: 3-90rwmclZk4DnIEAABd (User: 68431685432ee393a735a641)","timestamp":"2025-08-01T09:45:54.287Z"}
 {"level":"info","message":"Client disconnected: H75hj6hrA7Y7REhnAABf (User: 68431685432ee393a735a641)","timestamp":"2025-08-01T09:45:54.292Z"}
 {"level":"info","message":"Removed user 68431685432ee393a735a641 from userSocketMap on disconnect.","timestamp":"2025-08-01T09:45:54.293Z"}
+{"level":"info","message":"Initializing Socket.IO event handlers","timestamp":"2025-08-01T15:39:12.874Z"}
+{"level":"info","message":"Initializing Socket.IO event handlers","timestamp":"2025-08-01T16:05:45.434Z"}

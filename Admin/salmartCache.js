@@ -1,7 +1,6 @@
 // salmartCache.js
 
-// IMPORTANT: This file relies on 'idb-keyval' for IndexedDB operations.
-// The library must be loaded for this code to work.
+import { get, set, del } from './idb-keyval-iife.js';
 
 const API_BASE_URL = window.API_BASE_URL || (window.location.hostname === 'localhost'
     ? 'http://localhost:3000'
@@ -59,98 +58,107 @@ class SalmartCache {
     }
 
     /**
-     * The core function for fetching and managing posts with a delta-sync strategy.
-     * This method first returns cached posts and then fetches new ones in the background.
+     * Fetches posts for a given category, handling both initial load and infinite scrolling.
+     * It combines network and cache data and ensures no duplicates.
      * @param {string} category - The category of posts to fetch.
-     * @returns {Promise<Array<object>>} - An array of all posts (cached + new), sorted by date.
+     * @param {string} [lastPostId=null] - The ID of the last post for pagination.
+     * @returns {Promise<Array<object>>} - A promise that resolves to an array of posts.
      */
-    async getPostsByCategory(category = 'all') {
+    async getPosts(category = 'all', lastPostId = null) {
         const dbKey = this._getPersonalizedDBKey(`posts_category_${category}`);
         
-        let allPosts = [];
-        let mostRecentPostTimestamp = null;
-        
-        // 1. Get posts from IndexedDB first for instant rendering.
-        try {
-            if (typeof get !== 'undefined') {
-                allPosts = (await get(dbKey)) || [];
-                if (allPosts.length > 0) {
-                    mostRecentPostTimestamp = allPosts.reduce((latest, post) => {
-                        const postDate = new Date(post.createdAt);
-                        return postDate > latest ? postDate : latest;
-                    }, new Date(0));
+        // Return cached data immediately for initial load, then update in background.
+        if (!lastPostId) {
+            try {
+                if (typeof get !== 'undefined') {
+                    const cachedPosts = (await get(dbKey)) || [];
+                    if (cachedPosts.length > 0) {
+                        console.log(`✅ [SalmartCache] Serving ${cachedPosts.length} posts for category '${category}' from IndexedDB.`);
+                        // Sort by createdAt and return the cached posts.
+                        const sortedCachedPosts = cachedPosts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                        
+                        // Background update for delta-sync
+                        this._backgroundSyncNewPosts(category, sortedCachedPosts).catch(e => console.warn('Background sync failed:', e));
+                        
+                        return sortedCachedPosts;
+                    }
                 }
-                console.log(`✅ [SalmartCache] Serving ${allPosts.length} posts for category '${category}' from IndexedDB.`);
+            } catch (e) {
+                console.error('❌ [SalmartCache] Error reading posts from IndexedDB:', e);
             }
-        } catch (e) {
-            console.error('❌ [SalmartCache] Error reading posts from IndexedDB:', e);
-            allPosts = [];
         }
-
-        // 2. Fetch new posts from the network.
+        
+        // Network fetch for new posts or older posts.
         try {
             const url = new URL(`${API_BASE_URL}/post`);
             url.searchParams.set('category', category);
-            if (mostRecentPostTimestamp) {
-                url.searchParams.set('since', mostRecentPostTimestamp.toISOString());
+            
+            // For infinite scroll, use the 'before' parameter.
+            if (lastPostId) {
+                url.searchParams.set('before', lastPostId);
+                console.log(`🔄 [SalmartCache] Fetching older posts before ID: ${lastPostId}.`);
+            } else {
+                console.log(`🔄 [SalmartCache] Initial fetch for category: ${category}.`);
             }
 
+            const postsFromNetwork = await this._fetchWithNetworkFallback(url.toString(), {
+                priority: lastPostId ? 'low' : 'high',
+                headers: this._getAuthHeaders(),
+            });
+            
+            // If it's the initial load, cache the fetched posts.
+            if (!lastPostId) {
+                if (postsFromNetwork.length > 0 && typeof set !== 'undefined') {
+                    await set(dbKey, postsFromNetwork);
+                    console.log(`💾 [SalmartCache] Saved ${postsFromNetwork.length} posts to cache.`);
+                }
+            }
+            
+            return postsFromNetwork;
+
+        } catch (error) {
+            console.error('❌ [SalmartCache] Failed to fetch posts from network.', error);
+            // If the network call fails on the initial load, and there's no cache, return an empty array.
+            return (await get(dbKey)) || [];
+        }
+    }
+
+    /**
+     * Internal method to fetch new posts since the most recent cached post.
+     * This runs in the background and updates the cache without blocking the UI.
+     * @param {string} category 
+     * @param {Array<object>} cachedPosts 
+     */
+    async _backgroundSyncNewPosts(category, cachedPosts) {
+        if (cachedPosts.length === 0) return;
+
+        const dbKey = this._getPersonalizedDBKey(`posts_category_${category}`);
+        const mostRecentPostTimestamp = cachedPosts[0].createdAt; // Assumes sorted list
+        
+        try {
+            const url = new URL(`${API_BASE_URL}/post`);
+            url.searchParams.set('category', category);
+            url.searchParams.set('since', mostRecentPostTimestamp);
+
             const newPosts = await this._fetchWithNetworkFallback(url.toString(), {
-                priority: 'high',
+                priority: 'low',
                 headers: this._getAuthHeaders(),
             });
 
             if (newPosts.length > 0) {
-                console.log(`🔄 [SalmartCache] Fetched ${newPosts.length} new posts from network.`);
+                console.log(`🔄 [SalmartCache] Fetched ${newPosts.length} new posts in background.`);
                 
-                const combinedPosts = [...allPosts, ...newPosts];
+                const combinedPosts = [...newPosts, ...cachedPosts];
                 const uniquePostsMap = new Map(combinedPosts.map(post => [post._id, post]));
-                allPosts = Array.from(uniquePostsMap.values());
+                const updatedPosts = Array.from(uniquePostsMap.values()).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
                 
                 if (typeof set !== 'undefined') {
-                    await set(dbKey, allPosts);
-                    console.log(`💾 [SalmartCache] Updated cache with ${allPosts.length} total posts.`);
+                    await set(dbKey, updatedPosts);
+                    console.log(`💾 [SalmartCache] Updated cache with ${updatedPosts.length} total posts.`);
                 }
-            } else if (allPosts.length === 0) {
-                console.log(`⚠️ [SalmartCache] No posts found, even from the network.`);
             }
         } catch (error) {
-            console.warn(`⚠️ [SalmartCache] Network update failed. Serving only cached data.`, error.message);
-        }
-
-        // 3. Sort the final list and return it.
-        return allPosts.sort((a, b) => {
-            const dateA = new Date(a.createdAt);
-            const dateB = new Date(b.createdAt);
-            return dateB.getTime() - dateA.getTime();
-        });
-    }
-
-    /**
-     * Fetches older posts for infinite scrolling.
-     * @param {string} category - The category of posts.
-     * @param {string} lastPostId - The ID of the last post currently displayed.
-     * @returns {Promise<Array<object>>} - An array of older posts.
-     */
-    async getOlderPosts(category = 'all', lastPostId) {
-        if (!lastPostId) {
-            console.warn('No lastPostId provided. Cannot fetch older posts.');
-            return [];
-        }
-
-        try {
-            const url = new URL(`${API_BASE_URL}/post`);
-            url.searchParams.set('category', category);
-            url.searchParams.set('before', lastPostId); 
-
-            const olderPosts = await this._fetchWithNetworkFallback(url.toString(), {
-                priority: 'low',
-                headers: this._getAuthHeaders(),
-            });
-            return olderPosts;
-        } catch (error) {
-            console.error('Error fetching older posts:', error);
-            return null;
+            console.warn('⚠️ [SalmartCache] Background sync failed:', error.message);
         }
     }
 
@@ -169,9 +177,13 @@ class SalmartCache {
                 const cachedList = await get(dbKey);
                 if (cachedList) {
                     console.log("✅ [SalmartCache] Serving following list from IndexedDB.");
-                    // Background fetch to refresh cache
                     this._fetchWithNetworkFallback(`${API_BASE_URL}/api/is-following-list`, { headers: this._getAuthHeaders() })
-                        .then(response => set(dbKey, response.following.map(u => u._id.toString())))
+                        .then(response => {
+                            if (response && Array.isArray(response.following)) {
+                                const following = response.following.filter(u => u && u._id).map(u => u._id.toString());
+                                set(dbKey, [...new Set(following)]);
+                            }
+                        })
                         .catch(e => console.warn('Background following list update failed:', e));
                     return cachedList;
                 }
@@ -190,7 +202,7 @@ class SalmartCache {
             return following;
         } catch (error) {
             console.error('Error fetching following list:', error);
-            throw error; // Re-throw to allow main.js to handle the error
+            throw error;
         }
     }
 
@@ -228,7 +240,7 @@ class SalmartCache {
             return response;
         } catch (error) {
             console.error('Error toggling follow status:', error);
-            throw error; // Re-throw so the UI can handle it
+            throw error;
         }
     }
 
@@ -243,13 +255,10 @@ class SalmartCache {
         const dbKey = this._getPersonalizedDBKey('user_suggestions');
         
         try {
-            // Check cache first
             if (typeof get !== 'undefined') {
                 const cachedSuggestions = await get(dbKey);
                 if (cachedSuggestions) {
                     console.log("✅ [SalmartCache] Serving user suggestions from IndexedDB.");
-                    
-                    // Background refresh
                     this._fetchWithNetworkFallback(`${API_BASE_URL}/api/user-suggestions`, { headers: this._getAuthHeaders() })
                         .then(response => {
                             if (response.suggestions) {
@@ -257,12 +266,10 @@ class SalmartCache {
                             }
                         })
                         .catch(e => console.warn('Background user suggestions update failed:', e));
-                    
                     return cachedSuggestions;
                 }
             }
             
-            // If not in cache, fetch from network
             const response = await this._fetchWithNetworkFallback(`${API_BASE_URL}/api/user-suggestions`, {
                 headers: this._getAuthHeaders()
             });
@@ -277,16 +284,9 @@ class SalmartCache {
             }
         } catch (error) {
             console.error('Error fetching user suggestions:', error);
-            throw error; // Re-throw to allow main.js to handle
+            throw error;
         }
     }
-
-    // --- You can add other data-related methods here as well ---
-    // For example:
-    // async likePost(postId) {
-    //     // ... API call to like post ...
-    //     // ... optimistic cache update ...
-    // }
 }
 
 export const salmartCache = new SalmartCache();
