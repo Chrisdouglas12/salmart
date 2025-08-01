@@ -358,6 +358,17 @@
       transform: translateY(-2px);
       box-shadow: 0 8px 25px rgba(40, 167, 69, 0.4);
     }
+    
+    button.promote-btn {
+      background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+      color: #333;
+      box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
+    }
+
+    button.promote-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(255, 193, 7, 0.4);
+    }
 
     button:disabled {
       opacity: 0.6;
@@ -401,6 +412,11 @@
       border-top: 6px solid 
       #28a745
     }
+    
+    .modal-content.promote-modal {
+        max-width: 500px;
+        border-top-color: #ffc107;
+    }
 
     @keyframes modalSlideIn {
       from { transform: translateY(-70px) scale(0.95); opacity: 0; }
@@ -443,6 +459,23 @@
     .evidence-img:hover {
       transform: scale(1.02);
     }
+    
+    .modal-input {
+        width: 100%;
+        padding: 12px;
+        margin-top: 15px;
+        margin-bottom: 25px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: border-color 0.3s;
+    }
+    
+    .modal-input:focus {
+        border-color: #28a745;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.1);
+    }
 
     .no-data {
       padding: 40px;
@@ -470,6 +503,11 @@
     .status-active {
       background: rgba(40, 167, 69, 0.15);
       color: #28a745;
+    }
+    
+    .status-promoted {
+      background: rgba(255, 193, 7, 0.15);
+      color: #ffc107;
     }
 
     .status-banned {
@@ -729,13 +767,11 @@
     <div class="panel-description">Monitor wallet balances and withdraw platform funds.</div>
   </div>
 
-  <!-- Tabs for wallet types -->
   <div class="wallet-tabs">
     <button class="tab-btn active" onclick="switchWalletTab('commission')">Commission</button>
     <button class="tab-btn" onclick="switchWalletTab('promotion')">Promotion</button>
   </div>
 
-  <!-- Commission Wallet Panel -->
   <div class="wallet-panel" id="commission-wallet" style="display: block;">
     <div class="wallet-info">
       <p>Current Commission Balance:</p>
@@ -750,7 +786,6 @@
     </div>
   </div>
 
-  <!-- Promotion Wallet Panel -->
   <div class="wallet-panel" id="promotion-wallet" style="display: none;">
     <div class="wallet-info">
       <p>Current Promotion Balance:</p>
@@ -766,11 +801,20 @@
   </div>
 </div>
 
-<!-- Modal -->
 <div class="modal" id="detail-modal">
   <div class="modal-content">
-    <span class="close-btn" onclick="closeModal()">×</span>
+    <span class="close-btn" onclick="closeModal('detail-modal')">×</span>
     <div id="modal-body"></div>
+  </div>
+</div>
+
+<div class="modal" id="promote-modal">
+  <div class="modal-content promote-modal">
+    <span class="close-btn" onclick="closeModal('promote-modal')">×</span>
+    <h3 style="color: #ffc107; margin-bottom: 15px;">Manually Promote Post</h3>
+    <p>Enter the number of days you want to promote this post for.</p>
+    <input type="number" id="promotion-duration" class="modal-input" placeholder="Duration in days (e.g., 7)" min="1" required />
+    <button class="promote-btn" onclick="promotePost(this)"><span>Promote Post</span></button>
   </div>
 </div>
 
@@ -942,152 +986,270 @@ if (urlParams.toString() && !authToken) {
     });
 
 
+let currentPostIdToPromote = null;
 
-    // Modal controls
-    function openModal(content) {
-      document.getElementById('modal-body').innerHTML = content;
-      document.getElementById('detail-modal').style.display = 'flex';
-    }
+// Modal controls
+function openModal(modalId, content = '') {
+  const modal = document.getElementById(modalId);
+  if (content) {
+    document.getElementById('modal-body').innerHTML = content;
+  }
+  modal.style.display = 'flex';
+}
 
-    function closeModal() {
-      document.getElementById('detail-modal').style.display = 'none';
-      document.getElementById('modal-body').innerHTML = ''; // Clear content on close
-    }
+function closeModal(modalId) {
+  const modal = document.getElementById(modalId);
+  modal.style.display = 'none';
+  if (modalId === 'detail-modal') {
+    document.getElementById('modal-body').innerHTML = ''; // Clear content on close
+  }
+}
 
-    // Close modal when clicking outside
-    document.getElementById('detail-modal').addEventListener('click', (e) => {
-      if (e.target === document.getElementById('detail-modal')) {
-        closeModal();
-      }
+// Close modals when clicking outside
+document.getElementById('detail-modal').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('detail-modal')) {
+    closeModal('detail-modal');
+  }
+});
+document.getElementById('promote-modal').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('promote-modal')) {
+    closeModal('promote-modal');
+  }
+});
+
+// Get Admin Profile
+async function fetchAdminProfile() {
+  const token = localStorage.getItem('adminToken'); // Assuming token is stored here
+  if (!token) {
+    console.warn('No admin token found. Admin profile cannot be fetched.');
+    document.getElementById('admin-name').textContent = 'Guest Admin';
+    return;
+  }
+  try {
+    const response = await fetch(`${API_BASE_URL}/admin/me`, {
+      headers: { 'Authorization': `Bearer ${token}` }
     });
+    if (!response.ok) {
+      throw new Error('Failed to fetch admin profile');
+    }
+    const data = await response.json();
+    if (data.success && data.admin) {
+      document.getElementById('admin-name').textContent = `${data.admin.firstName} ${data.admin.lastName}`;
+      const avatarDiv = document.getElementById('admin-avatar');
+      if (data.admin.profilePicture) {
+        avatarDiv.innerHTML = `<img src="${data.admin.profilePicture}" alt="Admin Avatar">`;
+      } else {
+        avatarDiv.textContent = data.admin.firstName.charAt(0).toUpperCase();
+      }
+    }
+  } catch (error) {
+    console.error('Error fetching admin profile:', error.message);
+    document.getElementById('admin-name').textContent = 'Admin'; // Fallback
+  }
+}
+fetchAdminProfile();
 
-    // Get Admin Profile
-    async function fetchAdminProfile() {
-      const token = localStorage.getItem('adminToken'); // Assuming token is stored here
-      if (!token) {
-        console.warn('No admin token found. Admin profile cannot be fetched.');
-        document.getElementById('admin-name').textContent = 'Guest Admin';
+
+// Generic Fetch and Render Data Function
+async function fetchRender(endpoint, elementId, formatter) {
+  const container = document.getElementById(elementId);
+  container.innerHTML = '<li class="no-data"><div class="loading"></div><span>Loading data...</span></li>';
+  const token = localStorage.getItem('adminToken');
+
+  try {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP error! Status: ${response.status} - ${errorText}`);
+    }
+    let data = await response.json();
+    
+    // Adjust for backend response structures if they return { success: true, data: [...] }
+    if (data.success && (Array.isArray(data.reports) || Array.isArray(data.data))) {
+        data = data.reports || data.data;
+    } else if (data.success && typeof data.admin === 'object') {
+        // For single object returns like admin profile, handle separately or ensure formatter expects an array
+        // This case might not be directly handled by list formatters.
+        // console.warn("Fetched a single object, list formatter might not render correctly:", data);
+    } else if (!Array.isArray(data)) {
+        // If data is not an array after unwrapping, it might be an error or unexpected format
+        throw new Error('Unexpected data format received from API');
+    }
+
+
+    if (!data || data.length === 0) {
+        container.innerHTML = '<li class="no-data">No data found.</li>';
+    } else {
+        container.innerHTML = data.map(formatter).join('');
+    }
+  } catch (error) {
+    console.error(`Fetch error for ${endpoint}:`, error);
+    container.innerHTML = `<li class="no-data">Error loading data: ${error.message}. Please refresh the page.</li>`;
+    showAlert(`Error: ${error.message}`, 'error');
+  }
+}
+
+// Handle actions (resolve, approve, deny, ban, unban, approve-payment)
+async function resolveAction(endpoint, btn, elementId, formatter, actionType = 'default', reportId = null, additionalData = {}) {
+  const originalText = btn.textContent;
+  btn.disabled = true;
+  btn.innerHTML = '<div class="loading"></div><span>Processing...</span>';
+  const token = localStorage.getItem('adminToken');
+  
+  try {
+    let options = {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(additionalData)
+    };
+
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
+    const data = await response.json();
+    if (!data.success) {
+        throw new Error(data.message || 'Action failed');
+    }
+    
+    showAlert(data.message || 'Action successful!', 'success');
+
+    // Determine which panel to refresh
+    let refreshEndpoint;
+    switch (elementId) {
+        case 'all-users-list': refreshEndpoint = '/api/admin/users'; break;
+        case 'banned-users-list': refreshEndpoint = '/api/admin/users/banned'; break;
+        case 'reported-users': refreshEndpoint = '/api/reported-users'; break;
+        case 'reported-posts': refreshEndpoint = '/admin/reports/pending'; break;
+        case 'refund-requests': refreshEndpoint = '/api/admin/refunds'; break;
+        case 'transactions-list': refreshEndpoint = '/api/admin/transactions'; break;
+        case 'pending-transactions-list': refreshEndpoint = '/admin/transactions/pending'; break;
+        case 'platform-wallet': fetchPlatformWallet(); return; // Specific refresh for wallet
+        default: console.warn('No specific refresh endpoint for elementId:', elementId); return;
+    }
+
+    // Use a timeout to give the backend a moment to update
+    setTimeout(() => {
+        fetchRender(refreshEndpoint, elementId, formatter);
+        closeModal('detail-modal'); // Close modal after successful action
+    }, 500); 
+
+  } catch (error) {
+    console.error('Action error:', error);
+    showAlert(`Action failed: ${error.message}`, 'error');
+    btn.disabled = false;
+    btn.innerHTML = `<span>${originalText}</span>`;
+  }
+}
+
+// Formatter for post items
+function postItem(report) {
+    const post = report.relatedPost;
+    const reportedBy = report.reportedBy;
+    const details = `
+      <h3 style="color: #1a73e8; margin-bottom: 20px;">Post Report Details</h3>
+      <div style="line-height: 1.8; font-size: 0.95rem;">
+        <p><strong>Report ID:</strong> ${report._id}</p>
+        <p><strong>Post ID:</strong> ${post?._id || 'N/A'}</p>
+        <p><strong>Post Title:</strong> ${post?.title || 'N/A'}</p>
+        <p><strong>Post Description:</strong> ${post?.description || 'No description'}</p>
+        <p><strong>Reported By:</strong> ${reportedBy?.firstName} ${reportedBy?.lastName} (${reportedBy?.email})</p>
+        <p><strong>Reason:</strong> ${report.reason}</p>
+        <p><strong>Reported At:</strong> ${new Date(report.createdAt).toLocaleString()}</p>
+        ${post?.isPromoted ? `<p><strong>Promotion Status:</strong> <span class="status-badge status-promoted">Promoted</span> (until ${new Date(post.promotionDetails?.endDate).toLocaleDateString()})</p>` : ''}
+        ${report.evidence && report.evidence.length ? `<h4>Evidence:</h4> ${report.evidence.map(img => `<img src="${img}" class="evidence-img" alt="Evidence">`).join('')}` : ''}
+        ${post?.images && post.images.length ? `<h4>Post Images:</h4> ${post.images.map(img => `<img src="${img}" class="evidence-img" alt="Post Image">`).join('')}` : 'No post images provided'}
+      </div>
+      <hr style="margin: 25px 0; border: 0; border-top: 1px solid #eee;">
+      <h3 style="color: #1a73e8; margin-bottom: 15px;">Admin Action</h3>
+      <textarea id="admin-notes-${report._id}" rows="4" placeholder="Add optional admin notes here..." style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 15px; font-family: inherit; font-size: 0.9rem;"></textarea>
+      <div class="list-item-actions" style="margin-top: 0;">
+          <button class="danger" onclick="confirmReportAction('${report._id}', 'post_removed', 'reported-posts', postItem)"><span>Remove Post</span></button>
+          <button class="success" onclick="confirmReportAction('${report._id}', 'warn', 'reported-posts', postItem)"><span>Warn Poster</span></button>
+          <button class="primary" onclick="confirmReportAction('${report._id}', 'resolve', 'reported-posts', postItem)"><span>Mark as Resolved (Keep Post)</span></button>
+      </div>
+    `;
+    
+    // Add the Promote Post button to the list item
+    const promoteButton = `<button class="promote-btn" onclick="openPromoteModal('${post?._id}')"><span>Promote Post</span></button>`;
+    
+    return `
+      <li>
+        <div class="list-item-header">
+          <div class="list-item-details">
+            <strong style="color: #1a73e8;">Report ID:</strong> ${report._id}<br>
+            <strong>Reason:</strong> ${report.reason}<br>
+            <small style="color: #666;">Reported: ${new Date(report.createdAt).toLocaleString()}</small>
+            <span class="status-badge status-pending">Pending Review</span>
+          </div>
+          <div class="list-item-actions">
+            ${post && !post.isPromoted ? promoteButton : ''}
+            <button class="primary" onclick="openModal('detail-modal', \`${details.replace(/`/g, '\\`').replace(/\$/g, '\\$')}\`)"><span>View & Resolve</span></button>
+          </div>
+        </div>
+      </li>
+    `;
+}
+
+function openPromoteModal(postId) {
+    currentPostIdToPromote = postId; // Store the post ID globally or in a data attribute
+    openModal('promote-modal');
+}
+
+async function promotePost(button) {
+    const durationInput = document.getElementById('promotion-duration');
+    const durationDays = parseInt(durationInput.value, 10);
+    const postId = currentPostIdToPromote;
+
+    if (!postId || isNaN(durationDays) || durationDays < 1) {
+        showAlert('Please enter a valid number of days for the promotion.', 'error');
         return;
-      }
-      try {
-        const response = await fetch(`${API_BASE_URL}/admin/me`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (!response.ok) {
-          throw new Error('Failed to fetch admin profile');
-        }
-        const data = await response.json();
-        if (data.success && data.admin) {
-          document.getElementById('admin-name').textContent = `${data.admin.firstName} ${data.admin.lastName}`;
-          const avatarDiv = document.getElementById('admin-avatar');
-          if (data.admin.profilePicture) {
-            avatarDiv.innerHTML = `<img src="${data.admin.profilePicture}" alt="Admin Avatar">`;
-          } else {
-            avatarDiv.textContent = data.admin.firstName.charAt(0).toUpperCase();
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching admin profile:', error.message);
-        document.getElementById('admin-name').textContent = 'Admin'; // Fallback
-      }
-    }
-    fetchAdminProfile();
-
-
-    // Generic Fetch and Render Data Function
-    async function fetchRender(endpoint, elementId, formatter) {
-      const container = document.getElementById(elementId);
-      container.innerHTML = '<li class="no-data"><div class="loading"></div><span>Loading data...</span></li>';
-      const token = localStorage.getItem('adminToken');
-
-      try {
-        const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`HTTP error! Status: ${response.status} - ${errorText}`);
-        }
-        let data = await response.json();
-        
-        // Adjust for backend response structures if they return { success: true, data: [...] }
-        if (data.success && (Array.isArray(data.reports) || Array.isArray(data.data))) {
-            data = data.reports || data.data;
-        } else if (data.success && typeof data.admin === 'object') {
-            // For single object returns like admin profile, handle separately or ensure formatter expects an array
-            // This case might not be directly handled by list formatters.
-            // console.warn("Fetched a single object, list formatter might not render correctly:", data);
-        } else if (!Array.isArray(data)) {
-            // If data is not an array after unwrapping, it might be an error or unexpected format
-            throw new Error('Unexpected data format received from API');
-        }
-
-
-        if (!data || data.length === 0) {
-            container.innerHTML = '<li class="no-data">No data found.</li>';
-        } else {
-            container.innerHTML = data.map(formatter).join('');
-        }
-      } catch (error) {
-        console.error(`Fetch error for ${endpoint}:`, error);
-        container.innerHTML = `<li class="no-data">Error loading data: ${error.message}. Please refresh the page.</li>`;
-        showAlert(`Error: ${error.message}`, 'error');
-      }
     }
 
-    // Handle actions (resolve, approve, deny, ban, unban, approve-payment)
-    async function resolveAction(endpoint, btn, elementId, formatter, actionType = 'default', reportId = null, additionalData = {}) {
-      const originalText = btn.textContent;
-      btn.disabled = true;
-      btn.innerHTML = '<div class="loading"></div><span>Processing...</span>';
-      const token = localStorage.getItem('adminToken');
-      
-      try {
-        let options = {
+    const originalText = button.textContent;
+    button.disabled = true;
+    button.innerHTML = '<div class="loading"></div><span>Promoting...</span>';
+    
+    const token = localStorage.getItem('adminToken');
+    
+    try {
+        const response = await fetch(`${API_BASE_URL}/admin/promote-post`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
             },
-            body: JSON.stringify(additionalData)
-        };
-
-        const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
+            body: JSON.stringify({ postId, durationDays })
+        });
+        
         const data = await response.json();
-        if (!data.success) {
-            throw new Error(data.message || 'Action failed');
+        
+        if (!response.ok) {
+            throw new Error(data.message || 'Failed to promote post.');
         }
         
-        showAlert(data.message || 'Action successful!', 'success');
-
-        // Determine which panel to refresh
-        let refreshEndpoint;
-        switch (elementId) {
-            case 'all-users-list': refreshEndpoint = '/api/admin/users'; break;
-            case 'banned-users-list': refreshEndpoint = '/api/admin/users/banned'; break;
-            case 'reported-users': refreshEndpoint = '/api/reported-users'; break;
-            case 'reported-posts': refreshEndpoint = '/admin/reports/pending'; break;
-            case 'refund-requests': refreshEndpoint = '/api/admin/refunds'; break;
-            case 'transactions-list': refreshEndpoint = '/api/admin/transactions'; break;
-            case 'pending-transactions-list': refreshEndpoint = '/admin/transactions/pending'; break;
-            case 'platform-wallet': fetchPlatformWallet(); return; // Specific refresh for wallet
-            default: console.warn('No specific refresh endpoint for elementId:', elementId); return;
-        }
-
-        // Use a timeout to give the backend a moment to update
+        showAlert(data.message, 'success');
+        
+        // Refresh the reported posts list to show the updated status
         setTimeout(() => {
-            fetchRender(refreshEndpoint, elementId, formatter);
-            closeModal(); // Close modal after successful action
-        }, 500); 
-
-      } catch (error) {
-        console.error('Action error:', error);
-        showAlert(`Action failed: ${error.message}`, 'error');
-        btn.disabled = false;
-        btn.innerHTML = `<span>${originalText}</span>`;
-      }
+            fetchRender('/admin/reports/pending', 'reported-posts', postItem);
+            closeModal('promote-modal');
+        }, 500);
+        
+    } catch (error) {
+        console.error('Error promoting post:', error);
+        showAlert(`Error: ${error.message}`, 'error');
+    } finally {
+        button.disabled = false;
+        button.innerHTML = `<span>${originalText}</span>`;
+        durationInput.value = '';
     }
+}
 
+
+// The rest of your existing formatter functions remain unchanged
     // Formatters for each panel
     function userItem(report) {
       const user = report.reportedUser;
@@ -1125,49 +1287,7 @@ if (urlParams.toString() && !authToken) {
                 <span class="status-badge status-pending">Pending Review</span>
             </div>
             <div class="list-item-actions">
-              <button class="primary" onclick="openModal(\`${details.replace(/`/g, '\\`').replace(/\$/g, '\\$')}\`)"><span>View & Resolve</span></button>
-            </div>
-          </div>
-        </li>
-      `;
-    }
-
-    function postItem(report) { // Changed to 'report' as per backend structure for pending reports
-      const post = report.relatedPost;
-      const reportedBy = report.reportedBy;
-      const details = `
-        <h3 style="color: #1a73e8; margin-bottom: 20px;">Post Report Details</h3>
-        <div style="line-height: 1.8; font-size: 0.95rem;">
-          <p><strong>Report ID:</strong> ${report._id}</p>
-          <p><strong>Post ID:</strong> ${post?._id || 'N/A'}</p>
-          <p><strong>Post Title:</strong> ${post?.title || 'N/A'}</p>
-          <p><strong>Post Description:</strong> ${post?.description || 'No description'}</p>
-          <p><strong>Reported By:</strong> ${reportedBy?.firstName} ${reportedBy?.lastName} (${reportedBy?.email})</p>
-          <p><strong>Reason:</strong> ${report.reason}</p>
-          <p><strong>Reported At:</strong> ${new Date(report.createdAt).toLocaleString()}</p>
-          ${report.evidence && report.evidence.length ? `<h4>Evidence:</h4> ${report.evidence.map(img => `<img src="${img}" class="evidence-img" alt="Evidence">`).join('')}` : ''}
-          ${post?.images && post.images.length ? `<h4>Post Images:</h4> ${post.images.map(img => `<img src="${img}" class="evidence-img" alt="Post Image">`).join('')}` : 'No post images provided'}
-        </div>
-        <hr style="margin: 25px 0; border: 0; border-top: 1px solid #eee;">
-        <h3 style="color: #1a73e8; margin-bottom: 15px;">Admin Action</h3>
-        <textarea id="admin-notes-${report._id}" rows="4" placeholder="Add optional admin notes here..." style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 15px; font-family: inherit; font-size: 0.9rem;"></textarea>
-        <div class="list-item-actions" style="margin-top: 0;">
-            <button class="danger" onclick="confirmReportAction('${report._id}', 'post_removed', 'reported-posts', postItem)"><span>Remove Post</span></button>
-            <button class="success" onclick="confirmReportAction('${report._id}', 'warn', 'reported-posts', postItem)"><span>Warn Poster</span></button>
-            <button class="primary" onclick="confirmReportAction('${report._id}', 'resolve', 'reported-posts', postItem)"><span>Mark as Resolved (Keep Post)</span></button>
-        </div>
-      `;
-      return `
-        <li>
-          <div class="list-item-header">
-            <div class="list-item-details">
-              <strong style="color: #1a73e8;">Report ID:</strong> ${report._id}<br>
-              <strong>Reason:</strong> ${report.reason}<br>
-              <small style="color: #666;">Reported: ${new Date(report.createdAt).toLocaleString()}</small>
-              <span class="status-badge status-pending">Pending Review</span>
-            </div>
-            <div class="list-item-actions">
-              <button class="primary" onclick="openModal(\`${details.replace(/`/g, '\\`').replace(/\$/g, '\\$')}\`)"><span>View & Resolve</span></button>
+              <button class="primary" onclick="openModal('detail-modal', \`${details.replace(/`/g, '\\`').replace(/\$/g, '\\$')}\`)"><span>View & Resolve</span></button>
             </div>
           </div>
         </li>
@@ -1218,7 +1338,7 @@ if (urlParams.toString() && !authToken) {
               <span class="status-badge status-${refund.status.toLowerCase().replace(/ /g, '_')}">${refund.status}</span>
             </div>
             <div class="list-item-actions">
-              <button class="primary" onclick="openModal(\`${details.replace(/`/g, '\\`').replace(/\$/g, '\\$')}\`)"><span>View Details</span></button>
+              <button class="primary" onclick="openModal('detail-modal', \`${details.replace(/`/g, '\\`').replace(/\$/g, '\\$')}\`)"><span>View Details</span></button>
               ${refund.status === 'Refund Requested' ? `
                 <button class="success" onclick="resolveAction('/api/admin/refunds/${refund.transactionId._id}/approve', this, 'refund-requests', refundItem)"><span>Approve Refund</span></button>
                 <button class="danger" onclick="resolveAction('/api/admin/refunds/${refund.transactionId._id}/deny', this, 'refund-requests', refundItem)"><span>Deny Refund</span></button>
@@ -1260,7 +1380,7 @@ if (urlParams.toString() && !authToken) {
               <span class="status-badge status-${tx.status.toLowerCase().replace(/ /g, '_')}">${tx.status}</span>
             </div>
             <div class="list-item-actions">
-              <button class="primary" onclick="openModal(\`${details.replace(/`/g, '\\`').replace(/\$/g, '\\$')}\`)"><span>View Details</span></button>
+              <button class="primary" onclick="openModal('detail-modal', \`${details.replace(/`/g, '\\`').replace(/\$/g, '\\$')}\`)"><span>View Details</span></button>
             </div>
           </div>
         </li>
@@ -1298,7 +1418,7 @@ if (urlParams.toString() && !authToken) {
               <span class="status-badge status-${txn.status.toLowerCase().replace(/ /g, '_')}">${txn.status}</span>
             </div>
             <div class="list-item-actions">
-              <button class="primary" onclick="openModal(\`${details.replace(/`/g, '\\`').replace(/\$/g, '\\$')}\`)"><span>View Details</span></button>
+              <button class="primary" onclick="openModal('detail-modal', \`${details.replace(/`/g, '\\`').replace(/\$/g, '\\$')}\`)"><span>View Details</span></button>
               <button class="success" onclick="resolveAction('/admin/approve-payment', this, 'pending-transactions-list', pendingTransactionItem, 'approve-payment', null, { reference: '${txn.paymentReference}' })"><span>Approve Payout</span></button>
             </div>
           </div>
@@ -1334,149 +1454,4 @@ if (urlParams.toString() && !authToken) {
                 <span class="status-badge status-${user.isBanned ? 'banned' : 'active'}">${user.isBanned ? 'Banned' : 'Active'}</span>
             </div>
             <div class="list-item-actions">
-              <button class="primary" onclick="openModal(\`${details.replace(/`/g, '\\`').replace(/\$/g, '\\$')}\`)"><span>View Details</span></button>
-              ${user.isBanned
-                ? `<button class="success" onclick="resolveAction('/api/admin/users/${user._id}/unban', this, 'all-users-list', allUsersItem)"><span>Unban</span></button>`
-                : `<button class="danger" onclick="resolveAction('/api/admin/users/${user._id}/ban', this, 'all-users-list', allUsersItem)"><span>Ban</span></button>`
-              }
-            </div>
-          </div>
-        </li>
-      `;
-    }
-
-    function bannedUsersItem(user) {
-      const details = `
-        <h3 style="color: #1a73e8; margin-bottom: 20px;">Banned User Details</h3>
-        <div style="line-height: 1.8; font-size: 0.95rem;">
-          <p><strong>User ID:</strong> ${user._id}</p>
-          <p><strong>Name:</strong> ${user.firstName} ${user.lastName}</p>
-          <p><strong>Email:</strong> ${user.email}</p>
-          <p><strong>Status:</strong> Banned</p>
-          <p><strong>Created At:</strong> ${new Date(user.createdAt).toLocaleString()}</p>
-          ${user.profilePicture ? `<h4 style="margin-top: 20px;">Profile Picture:</h4> <img src="${user.profilePicture}" class="evidence-img" alt="Profile Picture">` : ''}
-        </div>
-      `;
-      return `
-        <li>
-          <div class="user-list-item-content">
-            <div class="avatar">
-                ${user.profilePicture ? `<img src="${user.profilePicture}" alt="Avatar">` : user.firstName.charAt(0).toUpperCase()}
-            </div>
-            <div class="user-details">
-                <strong style="color: #1a73e8;">${user.firstName} ${user.lastName}</strong><br>
-                <strong>Email:</strong> ${user.email}<br>
-                <span class="status-badge status-banned">Banned</span>
-            </div>
-            <div class="list-item-actions">
-              <button class="primary" onclick="openModal(\`${details.replace(/`/g, '\\`').replace(/\$/g, '\\$')}\`)"><span>View Details</span></button>
-              <button class="success" onclick="resolveAction('/api/admin/users/${user._id}/unban', this, 'banned-users-list', bannedUsersItem)"><span>Unban</span></button>
-            </div>
-          </div>
-        </li>
-      `;
-    }
-
-
-
-async function fetchPlatformWallet(type) {
-  const balanceEl = document.getElementById(`${type}-balance`);
-  const lastUpdatedEl = document.getElementById(`${type}-last-updated`);
-
-  // Show loading states
-  balanceEl.innerHTML = '<div class="loading"></div>';
-  lastUpdatedEl.textContent = 'Loading...';
-
-  const token = localStorage.getItem('adminToken');
-
-  try {
-    const response = await fetch(`${API_BASE_URL}/admin/platform-wallet?type=${type}`, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`HTTP error! Status: ${response.status} - ${errorText}`);
-    }
-
-    const data = await response.json();
-
-    // The backend now sends the balance in KOBO.
-    const balanceInKobo = data.wallet.balance || 0; // This will be e.g., 720000
-
-    // --- CRITICAL FIX: Convert Kobo to Naira for display ---
-    const balanceInNaira = balanceInKobo / 100; // Converts 720000 to 7200
-
-    // Format the Naira balance to 2 decimal places and handle potential NaN
-    const formattedBalance = isNaN(balanceInNaira) ? '0.00' : balanceInNaira.toFixed(2);
-
-    // Display the formatted balance with Naira symbol and locale-specific formatting (e.g., commas)
-    balanceEl.textContent = `₦${parseFloat(formattedBalance).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`; // Ensure 2 decimal places with toLocaleString
-
-    // Update last updated timestamp
-    lastUpdatedEl.textContent = data.wallet.lastUpdated
-      ? new Date(data.wallet.lastUpdated).toLocaleString()
-      : 'N/A';
-
-  } catch (error) {
-    console.error(`Error fetching ${type} wallet:`, error.message);
-    balanceEl.textContent = 'Error';
-    lastUpdatedEl.textContent = 'Failed to load';
-    showAlert(`Error fetching ${type} wallet: ${error.message}`, 'error');
-  }
-}
-
-
-
-
-async function withdrawWallet(buttonElement, type) {
-    const amountInputId = `${type}-withdrawal-amount`;
-    const amountInput = document.getElementById(amountInputId);
-    let amount = parseFloat(amountInput.value);
-
-    if (isNaN(amount) || amount <= 0) {
-        showAlert('Please enter a valid amount to withdraw.', 'error');
-        return;
-    }
-
-    // Convert Naira to Kobo
-    const amountInKobo = Math.round(amount * 100); // Avoid floating point issues
-
-    const originalButtonText = buttonElement.innerHTML;
-    buttonElement.disabled = true;
-    buttonElement.innerHTML = '<div class="loading"></div><span>Withdrawing...</span>';
-
-    try {
-        const token = localStorage.getItem('adminToken');
-        const response = await fetch(`${API_BASE_URL}/admin/platform-wallet/withdraw`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({ type, amount: amountInKobo }) // ✅ Send amount in Kobo
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            throw new Error(data.error || `Failed to initiate ${type} withdrawal`);
-        }
-
-        showAlert(data.message || `${type} withdrawal successful`, 'success');
-        amountInput.value = '';
-        fetchPlatformWallet(type); // Refresh updated wallet balance
-
-    } catch (error) {
-        console.error(`Error during ${type} withdrawal:`, error);
-        showAlert(`Withdrawal failed: ${error.message}`, 'error');
-    } finally {
-        buttonElement.disabled = false;
-        buttonElement.innerHTML = originalButtonText;
-    }
-}
-    // Initial data fetch for the first active panel
-    fetchRender('/api/reported-users', 'reported-users', userItem);
-  </script>
-</body>
-</html>
+              <button class="primary" onclick="openModal('detail-

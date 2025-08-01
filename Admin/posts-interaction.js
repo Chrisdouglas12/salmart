@@ -1,5 +1,4 @@
 // post-interactions.js
-
 document.addEventListener('DOMContentLoaded', async function () {
     // --- Constants and Global Dependencies ---
     const API_BASE_URL = window.API_BASE_URL || (window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart.onrender.com');
@@ -240,9 +239,12 @@ document.addEventListener('DOMContentLoaded', async function () {
 
             // Find the closest parent post element for context
             const postElement = target.closest('.post');
-            if (!postElement) return;
+            const promotedPostElement = target.closest('.promoted-post');
+            
+            const elementForContext = postElement || promotedPostElement;
+            if (!elementForContext) return;
 
-            const postId = postElement.dataset.postId;
+            const postId = elementForContext.dataset.postId;
             const authToken = localStorage.getItem('authToken');
             const loggedInUser = localStorage.getItem('userId');
 
@@ -257,8 +259,8 @@ document.addEventListener('DOMContentLoaded', async function () {
                 }
 
                 const recipientId = target.dataset.recipientId;
-                const recipientUsername = postElement.querySelector('.post-user-name')?.textContent || postElement.querySelector('.promoted-user-name')?.textContent || 'Unknown';
-                const recipientProfilePictureUrl = postElement.querySelector('.post-avatar')?.src || postElement.querySelector('.promoted-avatar')?.src || '/salmart-192x192.png';
+                const recipientUsername = elementForContext.querySelector('.post-user-name')?.textContent || elementForContext.querySelector('.promoted-user-name')?.textContent || 'Unknown';
+                const recipientProfilePictureUrl = elementForContext.querySelector('.post-avatar')?.src || elementForContext.querySelector('.promoted-avatar')?.src || '/salmart-192x192.png';
                 let productImage = target.dataset.productImage || '';
                 const productDescription = target.dataset.productDescription || '';
 
@@ -282,6 +284,41 @@ document.addEventListener('DOMContentLoaded', async function () {
                 window.location.href = `Chats.html?${params.toString()}`;
 
             }
+            // --- Buy Now Button ---
+            else if (target.classList.contains('buy-now-button')) {
+                event.preventDefault();
+                if (!loggedInUser) {
+                    window.redirectToLogin();
+                    return;
+                }
+                if (!postId) {
+                    console.error("Post ID is missing");
+                    showToast('Error: Post ID not found.', '#dc3545');
+                    return;
+                }
+
+                const recipientUsername = elementForContext.querySelector('.post-user-name')?.textContent ||
+                                         elementForContext.querySelector('.promoted-user-name')?.textContent || 'Unknown';
+                const recipientProfilePictureUrl = elementForContext.querySelector('.post-avatar')?.src ||
+                                                  elementForContext.querySelector('.promoted-avatar')?.src || '/salmart-192x192.png';
+
+                const productData = {
+                    postId: postId,
+                    productImage: target.dataset.productImage || '',
+                    productTitle: target.dataset.productTitle || '',
+                    productDescription: target.dataset.productDescription || '',
+                    productLocation: target.dataset.productLocation || '',
+                    productCondition: target.dataset.productCondition || '',
+                    productPrice: target.dataset.productPrice || '',
+                    sellerId: target.dataset.sellerId || '',
+                    recipient_username: encodeURIComponent(recipientUsername),
+                    recipient_profile_picture_url: encodeURIComponent(recipientProfilePictureUrl)
+                };
+
+                const queryParams = new URLSearchParams(productData).toString();
+                window.location.href = `checkout.html?${queryParams}`;
+            }
+
             // --- Like Button ---
             else if (target.classList.contains('like-button')) {
                 if (!authToken || !loggedInUser) {
@@ -407,6 +444,21 @@ document.addEventListener('DOMContentLoaded', async function () {
                     }
                 }
             }
+            // --- Promote Button ---
+            else if (target.classList.contains('promote-button')) {
+                const postId = target.dataset.postId;
+                if (!postId) {
+                    showToast('Invalid post ID for promotion', '#dc3545');
+                    return;
+                }
+                window.location.href = `promote.html?postId=${postId}`;
+                return;
+            }
+            // --- Reply Button ---
+            else if (target.classList.contains('reply-button')) {
+                window.location.href = `product.html?postId=${postId}`;
+                return;
+            }
             // --- Delete Post Button ---
             else if (target.classList.contains('delete-post-button')) {
                 event.preventDefault(); // Crucial: Prevent any default browser behavior
@@ -437,20 +489,20 @@ document.addEventListener('DOMContentLoaded', async function () {
                 const optionsMenu = target.nextElementSibling;
 
                 // Close any other open menus
-                document.querySelectorAll('.post-options-menu.show').forEach(menu => {
+                document.querySelectorAll('.post-options-menu.active').forEach(menu => {
                     if (menu !== optionsMenu) {
-                        menu.classList.remove('show');
+                        menu.classList.remove('active');
                     }
                 });
                 // Toggle current menu
-                optionsMenu.classList.toggle('show');
+                optionsMenu.classList.toggle('active');
             }
         });
 
         // Close post options menu if clicked anywhere else on the document
         document.addEventListener('click', (event) => {
-            if (!event.target.closest('.post-options-button') && !event.target.closest('.post-options-menu')) {
-                document.querySelectorAll('.post-options-menu.show').forEach(menu => menu.classList.remove('show'));
+            if (!event.target.closest('.post-options')) {
+                document.querySelectorAll('.post-options-menu.active').forEach(menu => menu.classList.remove('active'));
             }
         });
 

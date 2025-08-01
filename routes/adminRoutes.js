@@ -878,6 +878,104 @@ router.post('/api/admin/refunds/:id/:action', verifyToken, async (req, res) => {
   }
 });
 
+router.post('/admin/promote-post', verifyToken, async (req, res) => {
+  try {
+    const { postId, durationDays } = req.body;
+    const adminId = req.user.adminId; 
+
+    // 1. Validate Admin Token
+    if (!adminId) {
+      return res.status(403).json({ success: false, message: 'Unauthorized: Admin access required' });
+    }
+
+    // 2. Validate input
+    if (!postId || !durationDays || durationDays < 1) {
+      return res.status(400).json({ success: false, message: 'Post ID and a valid duration (in days) are required.' });
+    }
+
+    // 3. Find the post and its owner
+    const post = await Post.findById(postId).populate('createdBy');
+    if (!post) {
+      return res.status(404).json({ success: false, message: 'Post not found.' });
+    }
+
+    const postOwnerId = post.createdBy._id;
+    const postOwnerEmail = post.createdBy.email;
+
+    // 4. Create a new "manual" payment record
+    const payment = new Payment({
+      userId: postOwnerId,
+      postId: post._id,
+      amount: 0, // No payment was made
+      status: 'manual',
+      promotedByAdmin: true,
+      durationDays: durationDays,
+      createdAt: new Date(),
+    });
+    await payment.save();
+
+    // 5. Update the post to be promoted
+    const startDate = new Date();
+    const endDate = new Date(startDate);
+    endDate.setDate(startDate.getDate() + durationDays);
+
+    post.isPromoted = true;
+    post.promotionDetails = {
+      startDate,
+      endDate,
+      durationDays,
+      amountPaid: 0,
+      paymentReference: 'ADMIN_PROMOTION',
+      promotedAt: new Date(),
+    };
+    await post.save();
+
+    // 6. Notify the user
+    const notificationTitle = 'Your post has been promoted!';
+    const notificationMessage = `An admin has manually promoted your post "${post.title}" for ${durationDays} days.`;
+
+    const systemUser = await User.findOne({ isSystemUser: true });
+    if (systemUser) {
+        await Notification.create({
+            userId: postOwnerId,
+            senderId: systemUser._id,
+            postId: post._id,
+            title: notificationTitle,
+            message: notificationMessage,
+            type: 'admin_promotion',
+            metadata: {
+                paymentId: payment._id,
+                promotedByAdminId: adminId
+            }
+        });
+        // You can also send an FCM notification here if you have the user's token
+        // await sendFCMNotification(postOwnerId, notificationTitle, notificationMessage, ...);
+    }
+    
+    // 7. Log the action for auditing
+    logger.info(`Post manually promoted by admin`, {
+      postId: post._id.toString(),
+      adminId,
+      durationDays,
+      postOwnerId: postOwnerId.toString()
+    });
+
+    res.status(200).json({
+      success: true,
+      message: `Post "${post.title}" successfully promoted for ${durationDays} days.`,
+      promotionDetails: post.promotionDetails
+    });
+
+  } catch (error) {
+    logger.error('Error promoting post by admin:', error.message, {
+      stack: error.stack,
+      requestBody: req.body
+    });
+    res.status(500).json({ success: false, message: 'Server error occurred during promotion.' });
+  }
+});
+
+
 module.exports = router;
 
 

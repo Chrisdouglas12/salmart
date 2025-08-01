@@ -13,19 +13,22 @@ const paymentSchema = new mongoose.Schema({
   },
   amount: {
     type: Number,
-    required: true,
     min: [100, 'Amount must be at least 100 kobo'],
   },
   reference: {
     type: String,
-    required: true,
     unique: true,
+    sparse: true, // Allows multiple null values
     trim: true,
   },
   status: {
     type: String,
-    enum: ['pending', 'success', 'failed'],
+    enum: ['pending', 'success', 'failed', 'manual'],
     default: 'pending',
+  },
+  promotedByAdmin: {
+    type: Boolean,
+    default: false,
   },
   durationDays: {
     type: Number,

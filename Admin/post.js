@@ -1,10 +1,104 @@
-// main.js
-import { salmartCache } from './salmartCache.js';
+// post.js
+import {
+    salmartCache
+} from './salmartCache.js';
 
 // --- Constants ---
 const API_BASE_URL = window.API_BASE_URL || (window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart.onrender.com');
 const SOCKET_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart.onrender.com';
 const DEFAULT_PLACEHOLDER_IMAGE = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+
+// --- Optimized Image Loading (New) ---
+class ImageLoader {
+    constructor() {
+        this.cache = new Map();
+        this.observer = new IntersectionObserver(this.handleIntersections.bind(this), {
+            rootMargin: '800px 0px 800px 0px', // Load images much further away
+            threshold: 0.01
+        });
+        this.loader = new Image();
+        this.batch = [];
+    }
+
+    observe(imgElement, originalSrc) {
+        if (!originalSrc || this.cache.has(originalSrc)) {
+            this.setSource(imgElement, originalSrc || '');
+            return;
+        }
+
+        imgElement.dataset.originalSrc = originalSrc;
+        imgElement.classList.add('lazy-loading');
+        this.observer.observe(imgElement);
+    }
+
+    setSource(imgElement, src) {
+        const isPlaceholder = src === DEFAULT_PLACEHOLDER_IMAGE || !src;
+        if (isPlaceholder) {
+            imgElement.src = DEFAULT_PLACEHOLDER_IMAGE;
+            imgElement.classList.add('lazy-loading');
+            return;
+        }
+
+        if (this.cache.has(src)) {
+            imgElement.src = this.cache.get(src);
+            imgElement.classList.remove('lazy-loading');
+            imgElement.classList.add('loaded');
+            return;
+        }
+
+        imgElement.src = src;
+        imgElement.onload = () => {
+            imgElement.classList.remove('lazy-loading');
+            imgElement.classList.add('loaded');
+            this.cache.set(src, src);
+        };
+        imgElement.onerror = () => {
+            imgElement.src = '/salmart-192x192.png';
+            imgElement.classList.remove('lazy-loading');
+            console.error(`Failed to load image: ${src}`);
+        };
+    }
+
+    handleIntersections(entries, observer) {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const imgElement = entry.target;
+                const originalSrc = imgElement.dataset.originalSrc;
+                if (originalSrc) {
+                    this.batch.push({
+                        imgElement,
+                        originalSrc
+                    });
+                    observer.unobserve(imgElement);
+                }
+            }
+        });
+        if (this.batch.length > 0) {
+            this.processBatch();
+        }
+    }
+
+    processBatch() {
+        this.batch.forEach(({
+            imgElement,
+            originalSrc
+        }) => {
+            this.setSource(imgElement, originalSrc);
+        });
+        this.batch = [];
+    }
+
+    disconnect() {
+        this.observer.disconnect();
+    }
+}
+
+const imageLoader = new ImageLoader();
+
+function lazyLoadImage(imgElement, originalSrc) {
+    if (!imgElement) return;
+    imageLoader.observe(imgElement, originalSrc);
+}
 
 // --- Cached DOM Elements ---
 const postsContainer = document.getElementById('posts-container');
@@ -22,7 +116,9 @@ let scrollObserver; // The IntersectionObserver for infinite scrolling
 
 // --- Socket.IO Initialization ---
 const socket = io(SOCKET_URL, {
-    auth: { token: localStorage.getItem('authToken') },
+    auth: {
+        token: localStorage.getItem('authToken')
+    },
     reconnectionAttempts: 5,
     reconnectionDelay: 1000,
 });
@@ -38,7 +134,10 @@ socket.on('connect_error', (error) => {
     console.error('Socket.IO connection error:', error.message);
 });
 
-socket.on('profilePictureUpdate', ({ userId, profilePicture }) => {
+socket.on('profilePictureUpdate', ({
+    userId,
+    profilePicture
+}) => {
     console.log(`Received profile picture update for user ${userId}`);
     updateProfilePictures(userId, profilePicture);
 });
@@ -138,48 +237,15 @@ window.updateFollowButtonsUI = function(userId, isFollowing) {
  * @param {string} profilePicture - The new URL of the profile picture.
  */
 function updateProfilePictures(userId, profilePicture) {
-    const cacheBustedUrl = `${profilePicture}?v=${Date.now()}`;
+    const cleanedUrl = profilePicture.split('?')[0];
     document.querySelectorAll(`img.post-avatar[data-user-id="${userId}"], img.promoted-avatar[data-user-id="${userId}"], img.user-suggestion-avatar[data-user-id="${userId}"]`).forEach(img => {
-        img.src = cacheBustedUrl;
-        img.onerror = () => { img.src = '/salmart-192x192.png'; };
+        img.src = cleanedUrl;
+        img.onerror = () => {
+            img.src = '/salmart-192x192.png';
+        };
     });
 }
 
-/**
- * Applies lazy loading to an image element using Intersection Observer.
- * It initially sets a placeholder and loads the high-res image when it enters the viewport.
- * @param {HTMLImageElement} imgElement - The image DOM element to lazy load.
- * @param {string} originalSrc - The URL of the high-resolution image.
- */
-function lazyLoadImage(imgElement, originalSrc) {
-    imgElement.src = DEFAULT_PLACEHOLDER_IMAGE;
-    imgElement.classList.add('lazy-loading');
-
-    const observer = new IntersectionObserver((entries, observer) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                const lazyImage = entry.target;
-                lazyImage.src = originalSrc;
-                lazyImage.onload = () => {
-                    lazyImage.classList.remove('lazy-loading');
-                    lazyImage.classList.add('loaded');
-                    observer.unobserve(lazyImage);
-                };
-                lazyImage.onerror = () => {
-                    lazyImage.src = '/salmart-192x192.png';
-                    lazyImage.classList.remove('lazy-loading');
-                    console.error(`Failed to load image: ${originalSrc}`);
-                    observer.unobserve(lazyImage);
-                };
-            }
-        });
-    }, {
-        rootMargin: '0px 0px 200px 0px',
-        threshold: 0.01
-    });
-
-    observer.observe(imgElement);
-}
 
 /**
  * Initializes lazy loading for a video element.
@@ -236,7 +302,7 @@ function renderUserSuggestion(user) {
     `;
     const avatarImg = suggestionElement.querySelector('.user-suggestion-avatar');
     if (avatarImg) {
-        lazyLoadImage(avatarImg, `${user.profilePicture || '/salmart-192x192.png'}?v=${Date.now()}`);
+        lazyLoadImage(avatarImg, user.profilePicture || '/salmart-192x192.png');
     }
     return suggestionElement;
 }
@@ -359,11 +425,11 @@ function renderPromotedPost(post) {
 
     const promotedImgElement = postElement.querySelector('.promoted-image');
     if (promotedImgElement) {
-        lazyLoadImage(promotedImgElement, `${productImageForChat}?v=${Date.now()}`);
+        lazyLoadImage(promotedImgElement, productImageForChat);
     }
     const promotedAvatarElement = postElement.querySelector('.promoted-avatar');
     if (promotedAvatarElement) {
-        lazyLoadImage(promotedAvatarElement, `${post.createdBy?.profilePicture || '/salmart-192x192.png'}?v=${Date.now()}`);
+        lazyLoadImage(promotedAvatarElement, post.createdBy?.profilePicture || '/salmart-192x192.png');
     }
 
     return postElement;
@@ -429,7 +495,7 @@ function renderPost(post) {
 
     const productImageForChat = post.postType === 'video_ad' ? (post.thumbnail || '/salmart-192x192.png') : (post.photo || '/salmart-192x192.png');
 
-        if (post.postType === 'video_ad') {
+    if (post.postType === 'video_ad') {
         descriptionContent = `
             <h2 class="product-title">${escapeHtml(post.title || '')}</h2>
             <div class="post-description-text" style="margin-bottom: 10px; padding: 0 15px;">
@@ -520,8 +586,8 @@ function renderPost(post) {
             </div>
         `;
         if (currentLoggedInUser) {
-  if (isPostCreator) {
-    buttonContent = !post.isPromoted ? `
+            if (isPostCreator) {
+                buttonContent = !post.isPromoted ? `
       <div class="actions">
         <button class="btn btn-primary promote-button ${isSold ? 'sold-out' : ''}" data-post-id="${post._id || ''}" aria-label="Promote this post" ${isSold ? 'disabled title="Cannot promote sold out post"' : ''} >
           <i class="${isSold ? 'fas fa-times-circle' : 'fas fa-bullhorn'}"></i> 
@@ -531,7 +597,7 @@ function renderPost(post) {
     ` : '';
 
             } else {
-buttonContent = `
+                buttonContent = `
   <div class="actions">
     <button class="btn btn-secondary send-message-btn ${isSold ? 'unavailable' : ''}" data-recipient-id="${post.createdBy ? post.createdBy.userId : ''}" data-product-image="${productImageForChat}" data-product-description="${escapeHtml(post.title || '')}" data-post-id="${post._id || ''}" ${isSold ? 'disabled' : ''}>
       <i class="fas ${isSold ? 'fa-ban' : 'fa-paper-plane'}"></i> 
@@ -653,7 +719,7 @@ buttonContent = `
 
     const postAvatarElement = postElement.querySelector('.post-avatar');
     if (postAvatarElement) {
-        lazyLoadImage(postAvatarElement, `${post.createdBy?.profilePicture || '/salmart-192x192.png'}?v=${Date.now()}`);
+        lazyLoadImage(postAvatarElement, post.createdBy?.profilePicture || '/salmart-192x192.png');
     }
 
     if (post.postType === 'video_ad') {
@@ -667,7 +733,7 @@ buttonContent = `
     } else {
         const postImgElement = postElement.querySelector('.post-image');
         if (postImgElement) {
-            lazyLoadImage(postImgElement, `${productImageForChat}?v=${Date.now()}`);
+            lazyLoadImage(postImgElement, productImageForChat);
         }
     }
 
@@ -783,13 +849,13 @@ async function fetchInitialPosts(category = currentCategory, clearExisting = fal
                 }
             }
         }
-        
+
         postsContainer.appendChild(fragment);
 
         if (postsContainer.children.length === 0) {
             postsContainer.innerHTML = `<p style="text-align: center; padding: 20px; color: #666;">No posts available.</p>`;
         }
-        
+
         window.dispatchEvent(new Event('postsRendered'));
 
         // Start observing the last post for infinite scroll
@@ -821,7 +887,7 @@ async function fetchMorePosts(category, lastPostId) {
 
     try {
         const olderPosts = await salmartCache.getOlderPosts(category, lastPostId);
-        
+
         if (olderPosts && olderPosts.length > 0) {
             const fragment = document.createDocumentFragment();
             olderPosts.forEach(post => {
@@ -830,7 +896,7 @@ async function fetchMorePosts(category, lastPostId) {
             });
             postsContainer.appendChild(fragment);
             console.log(`Rendered ${olderPosts.length} older posts.`);
-            
+
             // Re-observe the new last post
             const newLastPostElement = postsContainer.querySelector('.post:last-of-type');
             if (newLastPostElement) {
@@ -858,18 +924,18 @@ window.redirectToLogin = function() {
     }, 1000);
 };
 
-// --- Event Listeners and Initializers ---
+// --- Initializers ---
 
-document.addEventListener('DOMContentLoaded', async function () {
-    scrollObserver = new IntersectionObserver(async (entries) => {
+document.addEventListener('DOMContentLoaded', async function() {
+    scrollObserver = new IntersectionObserver(async(entries) => {
         const lastEntry = entries[0];
         if (lastEntry.isIntersecting && !isLoading) {
             const lastPostElement = postsContainer.querySelector('.post:last-of-type');
             if (lastPostElement) {
-                 const lastPostId = lastPostElement.dataset.postId;
-                 if (lastPostId) {
-                     await fetchMorePosts(currentCategory, lastPostId);
-                 }
+                const lastPostId = lastPostElement.dataset.postId;
+                if (lastPostId) {
+                    await fetchMorePosts(currentCategory, lastPostId);
+                }
             }
         }
     }, {
@@ -878,7 +944,6 @@ document.addEventListener('DOMContentLoaded', async function () {
         threshold: 0.1
     });
 
-    // Remove the old load more button listener since we're using infinite scroll
     const loadMoreBtn = document.getElementById('load-more-btn');
     if (loadMoreBtn) {
         loadMoreBtn.style.display = 'none';
@@ -886,164 +951,6 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     await initializeAppData();
 
-    document.addEventListener('click', async (event) => {
-        const target = event.target.closest('button, a');
-        if (!target) return;
-
-        const authToken = localStorage.getItem('authToken');
-
-        if (target.classList.contains('promote-button')) {
-            const postId = target.dataset.postId;
-            if (!postId) {
-                showToast('Invalid post ID for promotion', '#dc3545');
-                return;
-            }
-            window.location.href = `promote.html?postId=${postId}`;
-            return;
-        }
-
-        if (target.classList.contains('send-message-btn')) {
-            event.preventDefault();
-            if (!currentLoggedInUser) {
-                redirectToLogin();
-                return;
-            }
-
-            const recipientId = target.dataset.recipientId;
-            const postElement = target.closest('.post') || target.closest('.promoted-post');
-
-            if (!postElement) {
-                console.error("Could not find parent post element for send message button.");
-                showToast('Error: Post information not found.', '#dc3545');
-                return;
-            }
-
-            const recipientUsername = postElement.querySelector('.post-user-name')?.textContent || postElement.querySelector('.promoted-user-name')?.textContent || 'Unknown';
-            const recipientProfilePictureUrl = postElement.querySelector('.post-avatar')?.src || postElement.querySelector('.promoted-avatar')?.src;
-            let productImage = target.dataset.productImage || '';
-            const productDescription = target.dataset.productDescription || '';
-            const postId = target.dataset.postId;
-
-            if (productImage && !productImage.match(/^https?:\/\//)) {
-                productImage = productImage.startsWith('/') ? `${API_BASE_URL}${productImage}` : `${API_BASE_URL}/${productImage}`;
-            }
-
-            const message = `I'm ready to pay for this now, is it still available?\n\nProduct: ${productDescription}`;
-            const encodedMessage = encodeURIComponent(message);
-            const encodedProductImage = encodeURIComponent(productImage);
-            const encodedRecipientUsername = encodeURIComponent(recipientUsername);
-            const encodedRecipientProfilePictureUrl = encodeURIComponent(recipientProfilePictureUrl);
-            const encodedProductDescription = encodeURIComponent(productDescription);
-
-            const chatUrl = `Chats.html?user_id=${currentLoggedInUser}&recipient_id=${recipientId}&recipient_username=${encodedRecipientUsername}&recipient_profile_picture_url=${encodedRecipientProfilePictureUrl}&message=${encodedMessage}&product_image=${encodedProductImage}&product_id=${postId}&product_name=${encodedProductDescription}`;
-            window.location.href = chatUrl;
-            return;
-        }
-
-        if (target.classList.contains('buy-now-button')) {
-            event.preventDefault();
-            if (!currentLoggedInUser) {
-                redirectToLogin();
-                return;
-            }
-            const postId = target.dataset.postId;
-            if (!postId) {
-                console.error("Post ID is missing");
-                showToast('Error: Post ID not found.', '#dc3545');
-                return;
-            }
-
-            const postElement = target.closest('.post') || target.closest('.promoted-post');
-            const recipientUsername = postElement.querySelector('.post-user-name')?.textContent ||
-                                     postElement.querySelector('.promoted-user-name')?.textContent || 'Unknown';
-            const recipientProfilePictureUrl = postElement.querySelector('.post-avatar')?.src ||
-                                              postElement.querySelector('.promoted-avatar')?.src || '/salmart-192x192.png';
-
-            const productData = {
-                postId: postId,
-                productImage: target.dataset.productImage || '',
-                productTitle: target.dataset.productTitle || '',
-                productDescription: target.dataset.productDescription || '',
-                productLocation: target.dataset.productLocation || '',
-                productCondition: target.dataset.productCondition || '',
-                productPrice: target.dataset.productPrice || '',
-                sellerId: target.dataset.sellerId || '',
-                recipient_username: encodeURIComponent(recipientUsername),
-                recipient_profile_picture_url: encodeURIComponent(recipientProfilePictureUrl)
-            };
-
-            const queryParams = new URLSearchParams(productData).toString();
-            window.location.href = `checkout.html?${queryParams}`;
-            return;
-        }
-
-        if (target.classList.contains('follow-button') && target.dataset.userId) {
-            const userIdToFollow = target.dataset.userId;
-            if (!authToken || !currentLoggedInUser) {
-                redirectToLogin();
-                return;
-            }
-
-            const isCurrentlyFollowing = currentFollowingList.includes(userIdToFollow);
-            window.updateFollowButtonsUI(userIdToFollow, !isCurrentlyFollowing);
-
-            try {
-                await salmartCache.toggleFollow(userIdToFollow, isCurrentlyFollowing);
-
-                if (isCurrentlyFollowing) {
-                    currentFollowingList = currentFollowingList.filter(id => id !== userIdToFollow);
-                } else {
-                    currentFollowingList.push(userIdToFollow);
-                }
-                showToast('Follow status updated!', '#28a745');
-            } catch (error) {
-                console.error('Follow/Unfollow error:', error);
-                showToast(error.message || 'Failed to update follow status.', '#dc3545');
-                window.updateFollowButtonsUI(userIdToFollow, isCurrentlyFollowing); // Revert UI on error
-            }
-            return;
-        }
-
-        // Post Options Menu Toggle
-        if (target.classList.contains('post-options-button')) {
-            const menu = target.nextElementSibling;
-            if (menu && menu.classList.contains('post-options-menu')) {
-                menu.classList.toggle('active');
-                event.stopPropagation();
-            }
-            return;
-        }
-
-        if (target.classList.contains('delete-post-button')) {
-            event.preventDefault();
-            event.stopPropagation();
-            return;
-        }
-
-        if (target.classList.contains('reply-button') && target.dataset.postId) {
-            window.location.href = `product.html?postId=${target.dataset.postId}`;
-            return;
-        }
-
-        if (target.classList.contains('edit-post-button')) {
-            if (!currentLoggedInUser) {
-                redirectToLogin();
-                return;
-            }
-            const postId = target.dataset.postId;
-            const postType = target.dataset.postType;
-            window.location.href = `Ads.html?edit=true&postId=${postId}&postType=${postType}`;
-            return;
-        }
-    });
-
-    document.addEventListener('click', (event) => {
-        if (!event.target.closest('.post-options')) {
-            document.querySelectorAll('.post-options-menu.active').forEach(menu => {
-                menu.classList.remove('active');
-            });
-        }
-    });
 });
 
 /**
@@ -1074,4 +981,6 @@ window.addEventListener('beforeunload', () => {
             window.videoIntersectionObserver.unobserve(video);
         });
     }
+    // ADD THIS LINE:
+    imageLoader.disconnect();
 });
