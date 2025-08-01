@@ -711,30 +711,30 @@ a .active {
   --warning-yellow: #ffc107;
   --star-gold: #f1c40f;
   --star-inactive: #e9ecef;
-  
+
   --text-primary: #333;
   --text-secondary: #555;
   --text-muted: #777;
   --text-light: #999;
-  
+
   --bg-primary: #ffffff;
   --bg-secondary: #f8f9fa;
   --bg-light: #f9f9f9;
-  
+
   --border-color: #e0e0e0;
   --border-focus: var(--primary-green);
-  
+
   --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
   --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
-  
+
   --radius-sm: 6px;
   --radius-md: 8px;
   --radius-lg: 12px;
-  
+
   --transition-fast: 0.2s ease;
   --transition-smooth: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  
+
   --font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
@@ -1070,36 +1070,36 @@ a .active {
   .reviews-container {
     margin: 1rem 0;
   }
-  
+
   .review-form-container {
     margin-bottom: 1.5rem;
   }
-  
+
   .review-form-container h3 {
     font-size: 1.5rem;
   }
-  
-  
+
+
   .review-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.5rem;
   }
-  
+
   .review-rating {
     margin-left: 0;
     margin-top: 0.5rem;
   }
-  
+
   .reviewer-avatar {
     width: 40px;
     height: 40px;
   }
-  
+
   .stars i {
     font-size: 1.5rem;
   }
-  
+
   .submit-review-btn {
     width: 100%;
     padding: 1rem;
@@ -1112,12 +1112,12 @@ a .active {
     align-items: flex-start;
     gap: 0.75rem;
   }
-  
+
   .form-group textarea {
     min-height: 100px;
     padding: 0.875rem;
   }
-  
+
 
 
 /* ===== ACCESSIBILITY IMPROVEMENTS ===== */
@@ -1254,5 +1254,68 @@ header {
   box-shadow: 0 0 10px #ddd;
   border-radius: 50%;
 }
+/* Add these styles to your CSS file */
 
+/* Utility class to hide elements */
+.hidden {
+  display: none !important;
+}
 
+/* Header and Profile Styling */
+.header {
+  background-color: white;
+  border: solid 1px #fff;
+  box-shadow: 0 0 10px #ddd;
+  position: fixed;
+  width: 100vw;
+  z-index: 100;
+}
+
+.profile-header-user {
+  font-size: 16px;
+  margin-top: 10px;
+  padding: 10px;
+  color: #28a745;
+  margin-left: -2px;
+}
+
+/* Sidebar and Copyright */
+.menu-icon,
+.side-bar {
+  z-index: 3000;
+}
+
+.copyright {
+  font-size: 10px;
+  text-align: center;
+  margin-top: 40px;
+  color: green;
+}
+
+/* Main Layout and Stats */
+.stats {
+  width: 350px; /* Adjust as needed */
+}
+
+.stats-item p,
+.stats-item h3 {
+  display: none; /* Initially hidden, shown by JS */
+}
+
+/* Tabs and Content */
+#posts-container {
+  padding: 0;
+  margin-top: -18px;
+}
+
+#reviews-tab {
+  width: 350px; /* Adjust as needed */
+  padding: 0;
+  margin-bottom: 60px;
+  margin-top: -5px;
+}
+
+/* Profile Picture Modal */
+.hidden {
+  display: none;
+}

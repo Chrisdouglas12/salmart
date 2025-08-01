@@ -1,3 +1,5 @@
+//Firebase app
+
 // Import Firebase modular SDK
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js';
 import { getMessaging, getToken, onMessage } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-messaging.js';
@@ -10,6 +12,105 @@ const firebaseConfig = {
   messagingSenderId: "396604566472",
   appId: "1:396604566472:web:60eff66ef26ab223a12efd",
 };
+
+// --- NEW CUSTOM PROMPT ---
+/**
+ * Creates and displays a beautiful, custom in-app prompt to enable notifications.
+ * @param {string} message The primary message for the prompt.
+ */
+function showNotificationPrompt(message) {
+  // Check if a prompt is already showing to avoid duplicates
+  if (document.getElementById('notification-prompt')) {
+    console.log('ℹ️ [Prompt] Notification prompt already exists.');
+    return;
+  }
+
+  const promptContainer = document.createElement('div');
+  promptContainer.id = 'notification-prompt';
+  promptContainer.style.cssText = `
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    max-width: 400px;
+    background: #00796B; /* A pleasant, vibrant color */
+    color: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    z-index: 10001;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    font-family: 'Poppins', sans-serif;
+    animation: fadeIn 0.5s ease-out;
+  `;
+
+  promptContainer.innerHTML = `
+    <div style="font-size: 2.5rem; margin-bottom: 15px;">🔔</div>
+    <div style="font-size: 1.25rem; font-weight: 600; margin-bottom: 10px;">Don't Miss a Thing!</div>
+    <div style="font-size: 1rem; opacity: 0.9; line-height: 1.4; margin-bottom: 20px;">
+      ${message}
+    </div>
+    <button id="enable-notifications-btn" style="
+      background-color: white;
+      color: #00796B;
+      border: none;
+      padding: 12px 25px;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+      transition: transform 0.2s, background-color 0.2s;
+    ">
+      Enable Notifications
+    </button>
+    <button id="dismiss-notifications-btn" style="
+      background: transparent;
+      color: rgba(255, 255, 255, 0.8);
+      border: none;
+      padding: 10px;
+      margin-top: 10px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: color 0.2s;
+    ">
+      No, thanks
+    </button>
+  `;
+
+  document.body.appendChild(promptContainer);
+
+  // Add the slide-in animation to the head
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+      to { opacity: 1; transform: translateX(-50%) translateY(0); }
+    }
+  `;
+  document.head.appendChild(style);
+
+  // Add event listeners to the buttons
+  document.getElementById('enable-notifications-btn').addEventListener('click', async () => {
+    // Request permission directly
+    const permission = await Notification.requestPermission();
+    if (permission === 'granted') {
+      console.log('✅ [Prompt] Permission granted via custom prompt');
+      await initializeNotifications();
+    }
+    promptContainer.remove();
+  });
+
+  document.getElementById('dismiss-notifications-btn').addEventListener('click', () => {
+    promptContainer.remove();
+    console.log('❌ [Prompt] Notification prompt dismissed');
+  });
+}
+// --- END CUSTOM PROMPT ---
 
 // Enhanced showToast function using the #toast element
 function showToast(message, color = '#28a745') {
@@ -94,9 +195,14 @@ async function initializeNotifications() {
     console.log('🔐 [Notifications] Requesting notification permission...');
     let permission = Notification.permission;
     
+    // --- UPDATED LOGIC HERE ---
     if (permission === 'default') {
-      permission = await Notification.requestPermission();
+      console.warn('⚠️ [Notifications] Permission is default. Displaying custom prompt...');
+      // This is the key change. We now show a beautiful prompt instead of the browser's default.
+      showNotificationPrompt('Get real-time updates, messages, and alerts directly to your device.');
+      return; // Exit here. The prompt's button will trigger the rest of the flow.
     }
+    // --- END UPDATED LOGIC ---
     
     console.log('ℹ️ [Notifications] Notification permission result:', permission);
 
@@ -350,11 +456,11 @@ navigator.serviceWorker.addEventListener('message', (event) => {
 // Request persistent notification permission on user interaction
 document.addEventListener('click', async () => {
   if (Notification.permission === 'default') {
-    const permission = await Notification.requestPermission();
-    if (permission === 'granted') {
-      console.log('✅ [Notifications] Permission granted after user interaction');
-      showToast('Notifications enabled!', '#28a745');
-    }
+    // --- UPDATED LOGIC HERE ---
+    // Instead of requesting permission, we'll now show the custom prompt.
+    // The prompt's buttons will handle the permission request.
+    showNotificationPrompt('Get real-time updates, messages, and alerts directly to your device.');
+    // --- END UPDATED LOGIC ---
   }
 }, { once: true });
 

@@ -561,7 +561,7 @@ function renderPost(post) {
         mediaContent = `
             <div class="product-image">
                 <div class="badge">${post.productCondition || 'New'}</div>
-                <img class="post-image" onclick="window.openImage('${productImageForChat.replace(/'/g, "\\'")}')" alt="Product Image" onerror="this.src='/salmart-192x192.png'">
+                <img class="post-image" onclick="window.openImage('${productImageForChat.replace(/'/g, "\\'")}')" onerror="this.src='/salmart-192x192.png'">
                 
             </div>
         `;
@@ -680,7 +680,7 @@ function renderPost(post) {
     postElement.innerHTML = `
         <div class="post-header">
             <a href="Profile.html?userId=${post.createdBy ? post.createdBy.userId : ''}">
-                <img class="post-avatar" data-user-id="${post.createdBy?.userId || ''}" onerror="this.src='/salmart-192x192.png'" alt="User Avatar">
+                <img class="post-avatar" data-user-id="${post.createdBy?.userId || ''}" onerror="this.src='/salmart-192x192.png'">
             </a>
             <div class="post-user-info">
                 <a href="Profile.html?userId=${post.createdBy ? post.createdBy.userId : ''}">

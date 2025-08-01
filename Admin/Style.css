@@ -7,6 +7,8 @@
   --border-radius: 12px;
 }
 
+
+
 /* --- Styles to add/update in your main.css file --- */
 
 /* Basic styling for images during lazy loading */
@@ -86,12 +88,12 @@ img.lazy-loading.loaded {
 .media-card {
   flex: 1; /* Allows media to take available space */
   position: relative;
-  background-color: #f3f8f1;
+  background-color: #fff;
   display: flex;
   justify-content: center;
   align-items: center;
   overflow: hidden;
-  min-height: 40px; /* Ensure media card has a minimum height */
+  min-height: 70px; /* Ensure media card has a minimum height */
   scroll-behavior: smooth;
 }
 
@@ -112,6 +114,7 @@ img.lazy-loading.loaded {
   background-color: #fff; /* White background for details */
   display: flex;
   flex-direction: column;
+  min-height: 50px;
   justify-content: space-between; /* Pushes content and actions apart */
   scroll-behavior: smooth;
 }
