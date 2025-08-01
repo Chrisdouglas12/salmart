@@ -50,14 +50,7 @@ header {
   padding-top: 20px;
 }
 
-#posts-container {
-  width: 100%;
-  max-width: 800px;
-  margin: 0 auto;
-  margin-top: -40px;
-  margin-bottom: 80px;
-  padding: 10px;
-}
+
 
 .sidebar.left, .sidebar.right {
   display: none; /* Hide sidebars by default */
@@ -1318,4 +1311,82 @@ header {
 /* Profile Picture Modal */
 .hidden {
   display: none;
+}
+
+/*
+ * This media query targets screens smaller than 768px (common mobile breakpoint).
+ * It restructures the main layout and post containers for a mobile-first, edge-to-edge design.
+ */
+@media (max-width: 767px) {
+  
+  /* --- Layout & Container Fixes --- */
+  
+  /* This is the most important fix. It forces the main content area to take up the full width. */
+  .main-layout {
+    width: 100%;
+    padding: 0;
+  }
+  
+  /* Ensures the tab content area, which wraps your posts, also takes full width. */
+  .tab-content {
+    width: 100%;
+    padding: 0;
+  }
+
+  /* This fixes the specific inline margin on the posts container. */
+  #posts-container {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    max-width: 100% !important;
+    margin-top: -18px; /* Keep this specific margin from your HTML for spacing */
+  }
+  
+  /*
+   * 2. Remove padding from the individual post containers to allow
+   * the media elements inside to stretch to the full width.
+   */
+  .post {
+    padding-left: 0;
+    padding-right: 0;
+  }
+  
+  /*
+   * 3. Selectively add padding back to the *text content* inside the posts
+   * to ensure it remains neatly aligned and doesn't touch the screen edges.
+   */
+  .post-header,
+  .post-user-info,
+  .product-title,
+  .post-description-text,
+  .product-details,
+  .buy,
+  .post-actions,
+  .actions {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  /*
+   * 4. Ensure the media-specific containers take up the full width
+   * and remove any rounded corners for an edge-to-edge look.
+   */
+  .media-card,
+  .post-video-container {
+    border-radius: 0 !important;
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+    left: auto;
+    right: auto;
+  }
+  
+  /*
+   * 5. Make the images and videos themselves have square corners.
+   * The !important rule ensures this overrides any other border-radius rule.
+   */
+  .post-image,
+  .post-video {
+    width: 100%;
+    border-radius: 0 !important;
+  }
 }

@@ -127,6 +127,10 @@ img.lazy-loading.loaded {
   line-height: 1.3;
 }
 
+.post-description{
+  margin-left: -5px;
+}
+
 .details-grid {
   display: grid;
   grid-template-columns: 1fr 1fr; /* Two columns */
@@ -2075,3 +2079,114 @@ background: #f1f3f8;
 }
 
 
+/*
+ * This media query targets screens smaller than 768px.
+ * It removes the horizontal padding from the main posts container
+ * to allow post images to touch the screen edges on mobile.
+ */
+@media (max-width: 767px) {
+  #posts-container {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    max-width: 100% !important;
+  }
+}
+
+/*
+ * This media query targets screens smaller than 768px.
+ * It removes the horizontal padding from the main posts container
+ * to allow post images to touch the screen edges on mobile.
+ */
+@media (max-width: 767px) {
+  #posts-container {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    max-width: 100% !important;
+  }
+
+  /*
+   * Keep a consistent horizontal padding for the text content
+   * inside the post, but only on the sides.
+   */
+  .post-header,
+  .post-description-text,
+  .product-details, /* If this is a separate element */
+  .product-title,
+  .post-description-text p,
+  .buy,
+  .post-actions {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+  
+  /* Reset the padding for the post container itself to allow media to break out */
+  .post {
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  /*
+   * The media-card and its children (image, video)
+   * now take up the full width of the #posts-container.
+   */
+  .media-card,
+  .post-video-container {
+    border-radius: 0;
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+    left: auto;
+    right: auto;
+  }
+
+  .post-image {
+    width: 100%;
+    border-radius: 0; /* Remove rounded corners for edge-to-edge effect */
+  }
+
+  /* Apply the same logic to the promoted posts */
+  .promoted-post-row {
+    padding-left: 10px; /* Add some padding to the container for scrolling */
+    padding-right: 10px;
+  }
+}
+/*
+ * This media query targets screens smaller than 768px.
+ * It removes the horizontal padding from the main posts container
+ * to allow post images to touch the screen edges on mobile.
+ */
+@media (max-width: 767px) {
+  #posts-container {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    max-width: 100% !important;
+  }
+
+  /* ... other rules remain the same ... */
+
+  /*
+   * The media-card and its children (image, video)
+   * now take up the full width of the #posts-container.
+   */
+  .media-card,
+  .post-video-container {
+    border-radius: 0 !important; /* Force no border radius on the container */
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+    left: auto;
+    right: auto;
+  }
+
+  /* Force no border radius on the image itself */
+  .post-image {
+    width: 100%;
+    border-radius: 0 !important; /* Force no border radius on the image */
+  }
+
+  /* Apply the same logic to the promoted posts */
+  .promoted-post-row {
+    padding-left: 10px; /* Add some padding to the container for scrolling */
+    padding-right: 10px;
+  }
+}

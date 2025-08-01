@@ -554,7 +554,7 @@ function renderPost(post) {
     } else {
         descriptionContent = `
             <h2 class="product-title">${escapeHtml(post.title || 'No description')}</h2>
-            <div class="post-description-text" style="margin-bottom: 10px;">
+            <div class="post-description-text" style="margin-bottom: 10px; margin-left: -10px;">
                 <p>${escapeHtml(post.description || '')}</p>
             </div>
         `;

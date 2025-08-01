@@ -668,7 +668,7 @@ function escapeHtml(text) {
         } else { // Regular post
             descriptionContent = `
                 <h2 class="product-title">${escapeHtml(post.title || 'No title')}</h2>
-                <div class="post-description-text" style="margin-bottom: 10px;">
+                <div class="post-description-text" style="margin-bottom: 10px; margin-left: -10px;">
                     <p>${escapeHtml(post.description || '')}</p>
                 </div>
             `;
