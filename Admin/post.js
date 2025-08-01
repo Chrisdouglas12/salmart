@@ -219,8 +219,8 @@ window.updateFollowButtonsUI = function(userId, isFollowing) {
     document.querySelectorAll(`.follow-button[data-user-id="${userId}"]`).forEach(button => {
         if (isFollowing) {
             button.innerHTML = '<i class="fas fa-user-check"></i> Following';
-            button.style.backgroundColor = '#fff';
-            button.style.color = '#28a745';
+            button.style.backgroundColor = '#28a745';
+            button.style.color = '#fff';
             button.disabled = true;
         } else {
             button.innerHTML = '<i class="fas fa-user-plus"></i> Follow';
@@ -291,14 +291,34 @@ function renderUserSuggestion(user) {
     const suggestionElement = document.createElement('div');
     suggestionElement.classList.add('user-suggestion-card');
     const isFollowingUser = currentFollowingList.includes(user._id.toString());
+    
+    let followButtonHtml = '';
+    if (currentLoggedInUser) {
+        if (user._id === currentLoggedInUser) {
+            followButtonHtml = '';
+        } else {
+            followButtonHtml = isFollowingUser ?
+                `<button class="follow-button" data-user-id="${user._id}" style="background-color: #28a745; color: #fff;" disabled>
+                    <i class="fas fa-user-check"></i> Following
+                </button>` :
+                `<button class="follow-button" data-user-id="${user._id}">
+                    <i class="fas fa-user-plus"></i> Follow
+                </button>`;
+        }
+    } else {
+        followButtonHtml = `
+            <button class="follow-button login-required" onclick="redirectToLogin()">
+                <i class="fas fa-user-plus"></i> Follow
+            </button>
+        `;
+    }
+
     suggestionElement.innerHTML = `
         <a href="Profile.html?userId=${user._id}" class="user-info-link">
             <img class="user-suggestion-avatar" data-user-id="${user._id}" alt="${escapeHtml(user.name)}'s profile picture" onerror="this.src='/salmart-192x192.png'">
             <h5 class="user-suggestion-name">${escapeHtml(user.name)}</h5>
         </a>
-        <button class="follow-button user-suggestion-follow-btn" data-user-id="${user._id}" ${isFollowingUser ? 'disabled' : ''}>
-            ${isFollowingUser ? '<i class="fas fa-user-check"></i> Following' : '<i class="fas fa-user-plus"></i> Follow'}
-        </button>
+        ${followButtonHtml}
     `;
     const avatarImg = suggestionElement.querySelector('.user-suggestion-avatar');
     if (avatarImg) {
@@ -631,7 +651,7 @@ function renderPost(post) {
                 followButtonHtml = '';
             } else {
                 followButtonHtml = isFollowing ?
-                    `<button class="follow-button" data-user-id="${post.createdBy.userId}" style="background-color: #fff; color: #28a745;" disabled>
+                    `<button class="follow-button" data-user-id="${post.createdBy.userId}" style="background-color: #28a745; color: #fff;" disabled>
                         <i class="fas fa-user-check"></i> Following
                     </button>` :
                     `<button class="follow-button" data-user-id="${post.createdBy.userId}">
@@ -981,6 +1001,5 @@ window.addEventListener('beforeunload', () => {
             window.videoIntersectionObserver.unobserve(video);
         });
     }
-    // ADD THIS LINE:
     imageLoader.disconnect();
 });

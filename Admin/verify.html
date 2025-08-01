@@ -495,7 +495,7 @@
       </svg>
     </div>
     <p class="countdown-text">Resend option available in:</p>
-    <div class="countdown-timer" id="countdownTimer">30</div>
+    <div class="countdown-timer" id="countdownTimer">15</div>
     <p class="countdown-label">Seconds</p>
   </div>
 
@@ -532,10 +532,11 @@
       ? 'http://localhost:3000' 
       : 'https://salmart.onrender.com');
 
-  // Countdown configuration
-  const COUNTDOWN_DURATION = 30; // seconds
+  // Countdown configuration - Reduced to 15 seconds for smoother UX
+  const COUNTDOWN_DURATION = 15; // seconds (reduced from 30)
   let countdownTime = COUNTDOWN_DURATION;
   let countdownInterval;
+  let backgroundTimer; // For background timing
 
   // DOM Elements
   const countdownSection = document.getElementById('countdownSection');
@@ -553,6 +554,10 @@
   progressCircle.style.strokeDasharray = circumference;
   progressCircle.style.strokeDashoffset = circumference;
 
+  // Store timer start time for background calculation
+  let timerStartTime = Date.now();
+  let wasVisible = true;
+
   // Update progress circle
   function updateProgress(timeLeft) {
     const progress = (COUNTDOWN_DURATION - timeLeft) / COUNTDOWN_DURATION;
@@ -560,8 +565,11 @@
     progressCircle.style.strokeDashoffset = offset;
   }
 
-  // Start countdown
+  // Start countdown with background support
   function startCountdown() {
+    timerStartTime = Date.now();
+    wasVisible = true;
+    
     countdownInterval = setInterval(() => {
       countdownTime--;
       countdownTimer.textContent = countdownTime;
@@ -572,10 +580,38 @@
         showResendSection();
       }
     }, 1000);
+
+    // Background timer fallback
+    backgroundTimer = setTimeout(() => {
+      if (countdownTime > 0) {
+        countdownTime = 0;
+        showResendSection();
+      }
+    }, COUNTDOWN_DURATION * 1000);
+  }
+
+  // Calculate time passed when page becomes visible again
+  function calculateBackgroundTime() {
+    const currentTime = Date.now();
+    const elapsed = Math.floor((currentTime - timerStartTime) / 1000);
+    const remaining = Math.max(0, COUNTDOWN_DURATION - elapsed);
+    
+    if (remaining <= 0) {
+      countdownTime = 0;
+      showResendSection();
+      return false;
+    } else {
+      countdownTime = remaining;
+      countdownTimer.textContent = countdownTime;
+      updateProgress(countdownTime);
+      return true;
+    }
   }
 
   // Show resend section
   function showResendSection() {
+    clearInterval(countdownInterval);
+    clearTimeout(backgroundTimer);
     countdownSection.style.display = 'none';
     resendSection.style.display = 'block';
   }
@@ -592,6 +628,8 @@
 
   // Reset countdown
   function resetCountdown() {
+    clearInterval(countdownInterval);
+    clearTimeout(backgroundTimer);
     countdownTime = COUNTDOWN_DURATION;
     countdownTimer.textContent = countdownTime;
     updateProgress(0);
@@ -600,7 +638,7 @@
     startCountdown();
   }
 
-  // Resend functionality
+  // Enhanced resend functionality with better error handling
   resendBtn.addEventListener('click', async () => {
     resendBtn.disabled = true;
     resendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
@@ -616,25 +654,39 @@
         return;
       }
 
+      // Add timeout to prevent hanging requests
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
       const response = await fetch(`${API_BASE_URL}/resend-verification`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ email })
+        body: JSON.stringify({ email }),
+        signal: controller.signal
       });
 
+      clearTimeout(timeoutId);
       const data = await response.json();
 
       if (response.ok) {
-        showStatusMessage('Verification email sent successfully! Check your inbox.', 'success', 'fa-check-circle');
+        showStatusMessage('✅ Verification email sent successfully! Check your inbox.', 'success', 'fa-check-circle');
         resetCountdown();
       } else {
-        showStatusMessage(data.message || 'Failed to send email. Please try again.', 'error', 'fa-exclamation-circle');
+        const errorMessage = data.message || 'Failed to send email. Please try again.';
+        showStatusMessage(errorMessage, 'error', 'fa-exclamation-circle');
       }
     } catch (error) {
       console.error('Resend error:', error);
-      showStatusMessage('Network error. Please check your connection and try again.', 'error', 'fa-wifi');
+      
+      if (error.name === 'AbortError') {
+        showStatusMessage('Request timed out. Please check your connection and try again.', 'error', 'fa-clock');
+      } else if (error.message.includes('fetch')) {
+        showStatusMessage('Network error. Please check your connection and try again.', 'error', 'fa-wifi');
+      } else {
+        showStatusMessage('Something went wrong. Please try again later.', 'error', 'fa-exclamation-triangle');
+      }
     } finally {
       resendBtn.disabled = false;
       resendBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Resend Verification Email';
@@ -658,26 +710,81 @@
     }
   }
 
-  // Initialize
+  // Enhanced visibility change handling for background timer
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      // Page is now hidden - timer continues in background
+      clearInterval(countdownInterval);
+      wasVisible = false;
+    } else {
+      // Page is now visible - check if timer should still be running
+      if (!wasVisible && countdownTime > 0 && resendSection.style.display === 'none') {
+        if (calculateBackgroundTime()) {
+          // Continue countdown if time remaining
+          startCountdown();
+        }
+      }
+      wasVisible = true;
+    }
+  });
+
+  // Handle page focus/blur for better background timer support
+  window.addEventListener('focus', () => {
+    if (countdownTime > 0 && resendSection.style.display === 'none') {
+      calculateBackgroundTime();
+    }
+  });
+
+  // Prevent timer issues on page unload/reload
+  window.addEventListener('beforeunload', () => {
+    clearInterval(countdownInterval);
+    clearTimeout(backgroundTimer);
+  });
+
+  // Initialize everything when DOM is ready
   document.addEventListener('DOMContentLoaded', () => {
+    console.log('📧 Email verification page loaded');
     updateEmailButton();
     startCountdown();
     
-    // Add some visual feedback
+    // Add some visual feedback after initial load
     setTimeout(() => {
       const tips = document.querySelector('.tips-section');
-      tips.style.animation = 'slideIn 0.6s ease-out';
+      if (tips) {
+        tips.style.animation = 'slideIn 0.6s ease-out';
+      }
     }, 2000);
-  });
 
-  // Handle visibility change to pause/resume countdown
-  document.addEventListener('visibilitychange', () => {
-    if (document.hidden) {
-      clearInterval(countdownInterval);
-    } else if (countdownTime > 0 && resendSection.style.display === 'none') {
-      startCountdown();
+    // Log email for debugging
+    const email = localStorage.getItem("pending_email");
+    if (email) {
+      console.log('📧 Verification email will be sent to:', email);
+    } else {
+      console.warn('⚠️ No pending email found in localStorage');
     }
   });
+
+  // Add service worker support for background timers (if available)
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.ready.then(registration => {
+      // Send timer info to service worker for background handling
+      registration.active?.postMessage({
+        type: 'START_COUNTDOWN',
+        duration: COUNTDOWN_DURATION,
+        startTime: Date.now()
+      });
+    }).catch(err => {
+      console.log('Service worker not available for background timer support');
+    });
+  }
+
+  // Expose timer functions for debugging
+  window.VerificationTimer = {
+    getRemainingTime: () => countdownTime,
+    resetTimer: resetCountdown,
+    showResend: showResendSection,
+    getStartTime: () => timerStartTime
+  };
 </script>
 
 </body>

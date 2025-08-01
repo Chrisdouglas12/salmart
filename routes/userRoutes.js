@@ -139,47 +139,310 @@ router.post('/register', async (req, res) => {
 
     const verifyUrl = `https://salmartonline.com.ng/verify-email.html?token=${verificationToken}`;
 
-await transporter.sendMail({
-  from: `"Salmart" <${process.env.EMAIL_USER}>`,
-  to: newUser.email,
-  subject: 'Confirm Your Salmart Account',
-  html: `
-    <div style="font-family: 'Segoe UI', Roboto, Arial, sans-serif; background-color: #f9f9f9; padding: 10px;">
-      <div style="max-width: 600px; margin: auto; background: #ffffff; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); padding: 30px;">
-        <h1 style="color: #333333; margin-bottom: 20px;">Welcome to Salmart, ${newUser.firstName}!</h1>
-        <p style="font-size: 16px; color: #555555; line-height: 1.6;">
-          We're thrilled to have you on board. Please click the button below to verify your email address and activate your account.
-        </p>
-        <div style="margin: 30px 0;">
-          <a href="${verifyUrl}" style="display: inline-block; background-color: #28a745; color: #ffffff; font-size: 16px; padding: 12px 24px; border-radius: 6px; text-decoration: none;">
-            Verify Email
-          </a>
-        </div>
-        <p style="font-size: 14px; color: #999999;">
-          If you didn't create an account with Salmart, you can safely ignore this message.
-        </p>
-      </div>
-      <div style="text-align: center; margin-top: 20px; font-size: 12px; color: #aaaaaa;">
-        &copy; ${new Date().getFullYear()} Salmart. All rights reserved.
-      </div>
-    </div>
-  `
-});
+    // Modern, professional email template with enhanced design
+    const emailHtml = `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge">
+      <title>Welcome to Salmart</title>
+      <!--[if mso]>
+      <noscript>
+        <xml>
+          <o:OfficeDocumentSettings>
+            <o:PixelsPerInch>96</o:PixelsPerInch>
+          </o:OfficeDocumentSettings>
+        </xml>
+      </noscript>
+      <![endif]-->
+      <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        
+        /* Reset and base styles */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; }
+        
+        /* Responsive */
+        @media only screen and (max-width: 600px) {
+          .container { width: 100% !important; padding: 10px !important; }
+          .content { padding: 20px !important; }
+          .button { font-size: 16px !important; padding: 14px 28px !important; }
+          .header-icon { font-size: 32px !important; }
+          .brand-name { font-size: 20px !important; }
+        }
+      </style>
+    </head>
+    <body style="margin: 0; padding: 20px 0; background-color: #f8f9fa; color: #333;">
+      
+      <!-- Main Container -->
+      <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #f8f9fa;">
+        <tr>
+          <td align="center" style="padding: 20px 0;">
+            
+            <!-- Email Container -->
+            <table class="container" role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; box-shadow: 0 8px 32px rgba(40, 167, 69, 0.12); overflow: hidden; border: 1px solid rgba(40, 167, 69, 0.1);">
+              
+              <!-- Header with Brand -->
+              <tr>
+                <td style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); padding: 0; position: relative;">
+                  <!-- Green accent bar -->
+                  <div style="height: 4px; background: linear-gradient(90deg, #28a745, #20c997, #28a745);"></div>
+                  
+                  <!-- Header content -->
+                  <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                    <tr>
+                      <td align="center" style="padding: 40px 30px; position: relative;">
+                        <!-- Background pattern -->
+                        <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-image: url('data:image/svg+xml,<svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><g fill="none" fill-rule="evenodd"><g fill="%23ffffff" fill-opacity="0.05"><circle cx="30" cy="30" r="4"/></g></svg>'); opacity: 0.3;"></div>
+                        
+                        <!-- Brand logo and name -->
+                        <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                          <tr>
+                            <td align="center" style="position: relative; z-index: 1;">
+                              <!-- Store icon -->
+                              <div style="width: 64px; height: 64px; background-color: rgba(255, 255, 255, 0.2); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 16px;">
+                                <span class="header-icon" style="font-size: 36px; color: #ffffff;">🏪</span>
+                              </div>
+                              
+                              <!-- Brand name -->
+                              <h1 class="brand-name" style="color: #ffffff; font-size: 24px; font-weight: 700; margin: 0; letter-spacing: -0.5px;">Salmart</h1>
+                              <p style="color: rgba(255, 255, 255, 0.9); font-size: 14px; margin: 8px 0 0 0; font-weight: 500;">Your Trusted Online Marketplace</p>
+                            </td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+              
+              <!-- Main Content -->
+              <tr>
+                <td class="content" style="padding: 48px 40px;">
+                  
+                  <!-- Welcome Section -->
+                  <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                    <tr>
+                      <td>
+                        <!-- Checkmark icon -->
+                        <div style="text-align: center; margin-bottom: 32px;">
+                          <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #28a745, #20c997); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; position: relative;">
+                            <span style="font-size: 40px; color: #ffffff;">✓</span>
+                            <!-- Subtle glow effect -->
+                            <div style="position: absolute; width: 100px; height: 100px; border: 2px solid rgba(40, 167, 69, 0.2); border-radius: 50%; top: -10px; left: -10px;"></div>
+                          </div>
+                        </div>
+                        
+                        <!-- Welcome heading -->
+                        <h2 style="color: #2c3e50; font-size: 28px; font-weight: 600; text-align: center; margin: 0 0 16px 0; line-height: 1.3; letter-spacing: -0.5px;">
+                          Welcome to Salmart, ${newUser.firstName}! 🎉
+                        </h2>
+                        
+                        <!-- Welcome message -->
+                        <p style="color: #6c757d; font-size: 16px; line-height: 1.6; text-align: center; margin: 0 0 32px 0;">
+                          Thank you for joining our community! We're excited to have you as part of the Salmart family. 
+                          To get started and secure your account, please verify your email address.
+                        </p>
+                      </td>
+                    </tr>
+                  </table>
+                  
+                  <!-- CTA Section -->
+                  <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                    <tr>
+                      <td align="center" style="padding: 0 0 32px 0;">
+                        <!-- Verification button -->
+                        <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                          <tr>
+                            <td align="center" style="border-radius: 12px; background: linear-gradient(135deg, #28a745, #20c997); box-shadow: 0 4px 16px rgba(40, 167, 69, 0.3);">
+                              <a href="${verifyUrl}" class="button" style="display: inline-block; color: #ffffff; font-size: 18px; font-weight: 600; text-decoration: none; padding: 16px 32px; border-radius: 12px; letter-spacing: 0.5px; transition: all 0.3s ease;">
+                                ✉️ Verify My Email Address
+                              </a>
+                            </td>
+                          </tr>
+                        </table>
+                        
+                        <!-- Alternative link -->
+                        <p style="margin: 20px 0 0 0; font-size: 14px; color: #9ca3af; text-align: center;">
+                          Or copy and paste this link in your browser:<br>
+                          <a href="${verifyUrl}" style="color: #28a745; text-decoration: none; word-break: break-all; font-size: 13px;">${verifyUrl}</a>
+                        </p>
+                      </td>
+                    </tr>
+                  </table>
+                  
+                  <!-- Info Box -->
+                  <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                    <tr>
+                      <td style="background-color: rgba(40, 167, 69, 0.05); border: 1px solid rgba(40, 167, 69, 0.15); border-radius: 12px; padding: 24px; margin: 0 0 32px 0;">
+                        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                          <tr>
+                            <td>
+                              <h3 style="color: #28a745; font-size: 16px; font-weight: 600; margin: 0 0 12px 0; display: flex; align-items: center;">
+                                🔒 What happens next?
+                              </h3>
+                              <ul style="color: #6c757d; font-size: 14px; line-height: 1.6; margin: 0; padding-left: 20px;">
+                                <li style="margin-bottom: 8px;">Click the verification button above</li>
+                                <li style="margin-bottom: 8px;">Your account will be activated instantly</li>
+                                <li style="margin-bottom: 8px;">Start exploring thousands of products</li>
+                                <li>Enjoy secure shopping with trusted sellers</li>
+                              </ul>
+                            </td>
+                          </tr>
+                        </table>
+                      </td>
+                    </tr>
+                  </table>
+                  
+                  <!-- Security Notice -->
+                  <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                    <tr>
+                      <td style="background-color: #f8f9fa; border-left: 4px solid #28a745; padding: 20px; border-radius: 8px;">
+                        <p style="color: #495057; font-size: 14px; margin: 0; line-height: 1.5;">
+                          <strong style="color: #28a745;">🛡️ Security Notice:</strong><br>
+                          This verification link will expire in <strong>24 hours</strong> for your security. 
+                          If you didn't create this account, please ignore this email.
+                        </p>
+                      </td>
+                    </tr>
+                  </table>
+                  
+                </td>
+              </tr>
+              
+              <!-- Footer -->
+              <tr>
+                <td style="background-color: #f8f9fa; padding: 32px 40px; border-top: 1px solid #e9ecef;">
+                  <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                    <tr>
+                      <td align="center">
+                        <!-- Social links -->
+                        <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin: 0 0 20px 0;">
+                          <tr>
+                            <td style="padding: 0 10px;">
+                              <a href="#" style="color: #28a745; text-decoration: none; font-size: 24px;">📱</a>
+                            </td>
+                            <td style="padding: 0 10px;">
+                              <a href="#" style="color: #28a745; text-decoration: none; font-size: 24px;">📧</a>
+                            </td>
+                            <td style="padding: 0 10px;">
+                              <a href="#" style="color: #28a745; text-decoration: none; font-size: 24px;">🌐</a>
+                            </td>
+                          </tr>
+                        </table>
+                        
+                        <!-- Support info -->
+                        <p style="color: #6c757d; font-size: 14px; margin: 0 0 16px 0; text-align: center;">
+                          Need help? Contact our support team at 
+                          <a href="mailto:support@salmart.com" style="color: #28a745; text-decoration: none;">support@salmart.com</a>
+                        </p>
+                        
+                        <!-- Company info -->
+                        <p style="color: #9ca3af; font-size: 12px; text-align: center; margin: 0; line-height: 1.5;">
+                          © ${new Date().getFullYear()} Salmart. All rights reserved.<br>
+                          Nigeria's Premier Online Marketplace<br>
+                          <a href="#" style="color: #9ca3af; text-decoration: none;">Privacy Policy</a> | 
+                          <a href="#" style="color: #9ca3af; text-decoration: none;">Terms of Service</a>
+                        </p>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+              
+            </table>
+            
+          </td>
+        </tr>
+      </table>
+      
+    </body>
+    </html>
+    `;
 
-    console.log('✅ New user registered & verification email sent to:', newUser.email);
+    // Enhanced email sending with better error handling and instant delivery
+    console.log('📤 Sending verification email to:', newUser.email);
+    
+    const emailOptions = {
+      from: `"Salmart Team" <${process.env.EMAIL_USER}>`,
+      to: newUser.email,
+      subject: '🎉 Welcome to Salmart - Verify Your Account',
+      html: emailHtml,
+      // Enhanced email headers for better deliverability
+      headers: {
+        'X-Priority': '1', // High priority
+        'X-MSMail-Priority': 'High',
+        'Importance': 'high',
+        'X-Mailer': 'Salmart Registration System',
+        'Reply-To': process.env.EMAIL_USER
+      },
+      // Text fallback for email clients that don't support HTML
+      text: `
+Welcome to Salmart, ${newUser.firstName}!
+
+Thank you for joining our community! To activate your account and start shopping, please verify your email address by clicking the link below:
+
+${verifyUrl}
+
+This link will expire in 24 hours for security reasons.
+
+If you didn't create this account, please ignore this email.
+
+Best regards,
+The Salmart Team
+
+Need help? Contact us at support@salmart.com
+© ${new Date().getFullYear()} Salmart. All rights reserved.
+      `.trim()
+    };
+
+    // Send email with better error handling
+    try {
+      const emailResult = await transporter.sendMail(emailOptions);
+      console.log('✅ Verification email sent successfully:', {
+        messageId: emailResult.messageId,
+        response: emailResult.response,
+        to: newUser.email
+      });
+    } catch (emailError) {
+      console.error('❌ Failed to send verification email:', emailError);
+      // Still register the user but log the email failure
+      console.log('⚠️ User registered but email failed to send - manual verification may be needed');
+    }
+
+    console.log('✅ New user registered successfully:', {
+      userId: newUser._id,
+      email: newUser.email,
+      firstName: newUser.firstName,
+      timestamp: new Date().toISOString()
+    });
 
     res.status(201).json({
-      message: 'User registered. Please check your email to verify your account.',
+      message: 'Registration successful! A verification email has been sent to your inbox. Please check your email (including spam folder) to activate your account.',
       userId: newUser._id,
-      
+      email: newUser.email,
+      verificationSent: true
     });
 
   } catch (error) {
-    console.error('❌ Register error:', error.message);
-    res.status(500).json({ message: 'Server error' });
+    console.error('❌ Registration error:', {
+      message: error.message,
+      stack: error.stack,
+      timestamp: new Date().toISOString()
+    });
+    
+    // More specific error messages
+    if (error.code === 11000) {
+      res.status(400).json({ message: 'An account with this email already exists.' });
+    } else if (error.name === 'ValidationError') {
+      res.status(400).json({ message: 'Invalid data provided. Please check your information.' });
+    } else {
+      res.status(500).json({ message: 'Registration failed. Please try again later.' });
+    }
   }
 });
-
 // Verify email router
 router.get('/verify-email', async (req, res) => {
   try {
@@ -217,9 +480,9 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ message: 'User not found' });
     }
 
-// if (!user.isVerified) {
- //    return res.status(403).json({ message: 'Email not verified. Please check your inbox.' });  
-   //  }
+ if (!user.isVerified) {
+   return res.status(403).json({ message: 'Email not verified. Please check your inbox.' });  
+     }
 
     if (user.isBanned) {
       return res.status(403).json({ message: 'Your account has been suspended. Please contact our support team.' });

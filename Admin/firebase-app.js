@@ -13,9 +13,9 @@ const firebaseConfig = {
   appId: "1:396604566472:web:60eff66ef26ab223a12efd",
 };
 
-// --- NEW CUSTOM PROMPT ---
+// --- UPDATED CUSTOM PROMPT ---
 /**
- * Creates and displays a beautiful, custom in-app prompt to enable notifications.
+ * Creates and displays a clean, professional notification prompt from the top.
  * @param {string} message The primary message for the prompt.
  */
 function showNotificationPrompt(message) {
@@ -29,88 +29,163 @@ function showNotificationPrompt(message) {
   promptContainer.id = 'notification-prompt';
   promptContainer.style.cssText = `
     position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 90%;
-    max-width: 400px;
-    background: #00796B; /* A pleasant, vibrant color */
-    color: white;
-    padding: 20px;
-    border-radius: 12px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    top: 0;
+    left: 0;
+    right: 0;
+    background: #28a745;
+    color: #fff;
+    padding: 16px 20px;
     z-index: 10001;
     display: flex;
-    flex-direction: column;
     align-items: center;
-    text-align: center;
-    font-family: 'Poppins', sans-serif;
-    animation: fadeIn 0.5s ease-out;
+    justify-content: space-between;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    transform: translateY(-100%);
+    transition: transform 0.3s ease-out;
   `;
 
   promptContainer.innerHTML = `
-    <div style="font-size: 2.5rem; margin-bottom: 15px;">🔔</div>
-    <div style="font-size: 1.25rem; font-weight: 600; margin-bottom: 10px;">Don't Miss a Thing!</div>
-    <div style="font-size: 1rem; opacity: 0.9; line-height: 1.4; margin-bottom: 20px;">
-      ${message}
+    <div style="display: flex; align-items: center; flex: 1;">
+      <div style="font-size: 1.2rem; margin-right: 12px;">🔔</div>
+      <div style="font-size: 0.95rem; line-height: 1.3;">
+        ${message}
+      </div>
     </div>
-    <button id="enable-notifications-btn" style="
-      background-color: white;
-      color: #00796B;
-      border: none;
-      padding: 12px 25px;
-      border-radius: 8px;
-      font-size: 1rem;
-      font-weight: 600;
-      cursor: pointer;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-      transition: transform 0.2s, background-color 0.2s;
-    ">
-      Enable Notifications
-    </button>
-    <button id="dismiss-notifications-btn" style="
-      background: transparent;
-      color: rgba(255, 255, 255, 0.8);
-      border: none;
-      padding: 10px;
-      margin-top: 10px;
-      font-size: 0.9rem;
-      cursor: pointer;
-      transition: color 0.2s;
-    ">
-      No, thanks
-    </button>
+    <div style="display: flex; align-items: center; gap: 12px; margin-left: 16px;">
+      <button id="enable-notifications-btn" style="
+        background-color: #fff;
+        color: #28a745;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+      ">
+        Enable
+      </button>
+      <button id="dismiss-notifications-btn" style="
+        background: transparent;
+        color: #fff;
+        border: none;
+        padding: 8px 12px;
+        font-size: 0.85rem;
+        cursor: pointer;
+        opacity: 0.9;
+        transition: opacity 0.2s;
+      ">
+        Dismiss
+      </button>
+    </div>
   `;
 
   document.body.appendChild(promptContainer);
 
-  // Add the slide-in animation to the head
-  const style = document.createElement('style');
-  style.textContent = `
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateX(-50%) translateY(20px); }
-      to { opacity: 1; transform: translateX(-50%) translateY(0); }
-    }
-  `;
-  document.head.appendChild(style);
+  // Trigger slide-down animation
+  setTimeout(() => {
+    promptContainer.style.transform = 'translateY(0)';
+  }, 10);
+
+  // Add hover effects
+  const enableBtn = document.getElementById('enable-notifications-btn');
+  const dismissBtn = document.getElementById('dismiss-notifications-btn');
+
+  enableBtn.addEventListener('mouseenter', () => {
+    enableBtn.style.transform = 'scale(1.05)';
+    enableBtn.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.2)';
+  });
+
+  enableBtn.addEventListener('mouseleave', () => {
+    enableBtn.style.transform = 'scale(1)';
+    enableBtn.style.boxShadow = 'none';
+  });
+
+  dismissBtn.addEventListener('mouseenter', () => {
+    dismissBtn.style.opacity = '1';
+  });
+
+  dismissBtn.addEventListener('mouseleave', () => {
+    dismissBtn.style.opacity = '0.9';
+  });
 
   // Add event listeners to the buttons
-  document.getElementById('enable-notifications-btn').addEventListener('click', async () => {
-    // Request permission directly
-    const permission = await Notification.requestPermission();
-    if (permission === 'granted') {
-      console.log('✅ [Prompt] Permission granted via custom prompt');
-      await initializeNotifications();
+  enableBtn.addEventListener('click', async () => {
+    console.log('🔔 [Prompt] Enable button clicked');
+    
+    try {
+      // Request permission directly
+      const permission = await Notification.requestPermission();
+      console.log('🔐 [Prompt] Permission result:', permission);
+      
+      if (permission === 'granted') {
+        console.log('✅ [Prompt] Permission granted via custom prompt');
+        hidePrompt(promptContainer);
+        // Continue with the initialization process
+        await continueNotificationSetup();
+      } else {
+        console.warn('⚠️ [Prompt] Permission denied');
+        showToast('Notifications were not enabled. You can enable them later in browser settings.', '#e74c3c');
+        hidePrompt(promptContainer);
+      }
+    } catch (error) {
+      console.error('❌ [Prompt] Error requesting permission:', error);
+      showToast('Error requesting notification permission.', '#e74c3c');
+      hidePrompt(promptContainer);
     }
-    promptContainer.remove();
   });
 
-  document.getElementById('dismiss-notifications-btn').addEventListener('click', () => {
-    promptContainer.remove();
+  dismissBtn.addEventListener('click', () => {
     console.log('❌ [Prompt] Notification prompt dismissed');
+    hidePrompt(promptContainer);
   });
+
+  // Function to hide prompt with animation
+  function hidePrompt(container) {
+    container.style.transform = 'translateY(-100%)';
+    setTimeout(() => {
+      if (container.parentNode) {
+        container.parentNode.removeChild(container);
+      }
+    }, 300);
+  }
 }
-// --- END CUSTOM PROMPT ---
+
+// Continue notification setup after permission is granted
+async function continueNotificationSetup() {
+  if (!messaging) {
+    console.warn('⚠️ [Notifications] Firebase Messaging not initialized');
+    showToast('Notifications unavailable due to initialization error.', '#e74c3c');
+    return;
+  }
+
+  try {
+    console.log('📡 [ServiceWorker] Registering service worker...');
+    const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', { scope: '/' });
+    console.log('✅ [ServiceWorker] ServiceWorker registered');
+
+    showToast('Generating notification token...', '#28a745');
+
+    try {
+      // Generate FCM token
+      console.log('🔑 [FCM] Generating FCM token...');
+      const token = await getToken(messaging, {
+        vapidKey: 'BCtAsyYJYCSfpg_kXL2aO59szQsPFE3DvmqqLOnW03JTVR88Jb435-jDnUgj0j0mL5VCWLiGGfErTuwQ-XUArho',
+        serviceWorkerRegistration: registration,
+      });
+      console.log('🎉 [FCM] FCM Token generated:', token);
+      await saveToken(token);
+    } catch (tokenErr) {
+      console.error('❌ [FCM] Error generating FCM token:', tokenErr);
+      showToast('Failed to generate notification token.', '#e74c3c');
+    }
+  } catch (err) {
+    console.error('❌ [Notifications] Error in notification setup:', err);
+    showToast('Failed to complete notification setup: ' + err.message, '#e74c3c');
+  }
+}
+// --- END UPDATED CUSTOM PROMPT ---
 
 // Enhanced showToast function using the #toast element
 function showToast(message, color = '#28a745') {
@@ -178,59 +253,20 @@ async function initializeNotifications() {
   }
   console.log('✅ [Notifications] ServiceWorker API supported');
 
-  try {
-    // Register ServiceWorker with detailed logging
-    console.log('📡 [ServiceWorker] Registering service worker at /firebase-messaging-sw.js...');
-    const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', { scope: '/' });
-    console.log('✅ [ServiceWorker] ServiceWorker registered with scope:', registration.scope);
-
-    // Log active ServiceWorker state
-    if (registration.active) {
-      console.log('ℹ️ [ServiceWorker] Active ServiceWorker state:', registration.active.state);
-    } else {
-      console.warn('⚠️ [ServiceWorker] No active ServiceWorker yet');
-    }
-
-    // Request notification permission with more persistent approach
-    console.log('🔐 [Notifications] Requesting notification permission...');
-    let permission = Notification.permission;
-    
-    // --- UPDATED LOGIC HERE ---
-    if (permission === 'default') {
-      console.warn('⚠️ [Notifications] Permission is default. Displaying custom prompt...');
-      // This is the key change. We now show a beautiful prompt instead of the browser's default.
-      showNotificationPrompt('Get real-time updates, messages, and alerts directly to your device.');
-      return; // Exit here. The prompt's button will trigger the rest of the flow.
-    }
-    // --- END UPDATED LOGIC ---
-    
-    console.log('ℹ️ [Notifications] Notification permission result:', permission);
-
-    if (permission === 'granted') {
-      console.log('✅ [Notifications] Notification permission granted');
-      showToast('Notifications enabled, generating FCM token', '#28a745');
-
-      try {
-        // Generate FCM token
-        console.log('🔑 [FCM] Generating FCM token...');
-        const token = await getToken(messaging, {
-          vapidKey: 'BCtAsyYJYCSfpg_kXL2aO59szQsPFE3DvmqqLOnW03JTVR88Jb435-jDnUgj0j0mL5VCWLiGGfErTuwQ-XUArho',
-          serviceWorkerRegistration: registration,
-        });
-        console.log('🎉 [FCM] FCM Token generated:', token);
-        await saveToken(token);
-      } catch (tokenErr) {
-        console.error('❌ [FCM] Error generating FCM token:', tokenErr, tokenErr.stack);
-        showToast('Failed to generate notification token.', '#e74c3c');
-      }
-    } else {
-      console.warn('⚠️ [Notifications] Notification permission denied:', permission);
-      showToast('Please enable notifications in your browser settings for the best experience.', '#e74c3c');
-    }
-  } catch (err) {
-    console.error('❌ [Notifications] Error initializing notifications:', err, err.stack);
-    showToast('Failed to initialize notifications: ' + err.message, '#e74c3c');
-    throw err;
+  // Check current permission status
+  let permission = Notification.permission;
+  console.log('🔐 [Notifications] Current permission status:', permission);
+  
+  if (permission === 'default') {
+    console.log('ℹ️ [Notifications] Permission is default. Showing custom prompt...');
+    showNotificationPrompt('Enable notifications to get real-time updates and alerts.');
+    return; // Exit here. The prompt will handle the rest.
+  } else if (permission === 'granted') {
+    console.log('✅ [Notifications] Permission already granted, continuing setup...');
+    await continueNotificationSetup();
+  } else {
+    console.warn('⚠️ [Notifications] Notifications previously denied:', permission);
+    showToast('Notifications are disabled. Enable them in browser settings if needed.', '#e74c3c');
   }
 }
 
@@ -456,11 +492,7 @@ navigator.serviceWorker.addEventListener('message', (event) => {
 // Request persistent notification permission on user interaction
 document.addEventListener('click', async () => {
   if (Notification.permission === 'default') {
-    // --- UPDATED LOGIC HERE ---
-    // Instead of requesting permission, we'll now show the custom prompt.
-    // The prompt's buttons will handle the permission request.
-    showNotificationPrompt('Get real-time updates, messages, and alerts directly to your device.');
-    // --- END UPDATED LOGIC ---
+    showNotificationPrompt('Enable notifications to get real-time updates and alerts.');
   }
 }, { once: true });
 
