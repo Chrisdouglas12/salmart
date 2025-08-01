@@ -769,7 +769,7 @@ async function fetchInitialPosts(category = currentCategory, clearExisting = fal
     }
 
     try {
-        const allPosts = await salmartCache.getPostsByCategory(category);
+        const allPosts = await salmartCache.getPosts(category);
 
         if (!Array.isArray(allPosts) || allPosts.length === 0) {
             if (postsContainer.children.length === 0) {
@@ -886,7 +886,8 @@ async function fetchMorePosts(category, lastPostId) {
     isLoading = true;
 
     try {
-        const olderPosts = await salmartCache.getOlderPosts(category, lastPostId);
+        const olderPosts = await salmartCache.getPosts(category, lastPostId);
+
 
         if (olderPosts && olderPosts.length > 0) {
             const fragment = document.createDocumentFragment();
