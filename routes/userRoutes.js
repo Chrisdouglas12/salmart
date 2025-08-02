@@ -182,17 +182,14 @@ router.post('/register', async (req, res) => {
                     <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
                       <tr>
                         <td align="center" style="padding: 40px 30px; position: relative;">
-                          <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-image: url('data:image/svg+xml,<svg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"><g fill="none" fill-rule="evenodd"><g fill="%23ffffff" fill-opacity="0.05"><circle cx="30" cy="30" r="4"/></g></g></svg>');"></div>
-                          
+                         
                           <table role="presentation" cellspacing="0" cellpadding="0" border="0">
                             <tr>
                               <td align="center" style="position: relative; z-index: 1;">
-                                <div style="width: 64px; height: 64px; background-color: rgba(255, 255, 255, 0.2); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 16px;">
-                                  <span class="header-icon" style="font-size: 36px; color: #ffffff;">🏪</span>
-                                </div>
+                               
                                 
                                 <h1 class="brand-name" style="color: #ffffff; font-size: 24px; font-weight: 700; margin: 0; letter-spacing: -0.5px;">Salmart</h1>
-                                <p style="color: rgba(255, 255, 255, 0.9); font-size: 14px; margin: 8px 0 0 0; font-weight: 500;">Your Trusted Online Marketplace</p>
+                                <p style="color: rgba(255, 255, 255, 0.9); font-size: 14px; margin: 8px 0 0 0; font-weight: 500;">Your Online Social Marketplace</p>
                               </td>
                             </tr>
                           </table>
@@ -250,41 +247,49 @@ router.post('/register', async (req, res) => {
                     
                     <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
                       <tr>
-                        <td style="background-color: rgba(40, 167, 69, 0.05); border: 1px solid rgba(40, 167, 69, 0.15); border-radius: 12px; padding: 24px; margin: 0 0 32px 0;">
-                          <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
-                            <tr>
-                              <td>
-                                <h3 style="color: #28a745; font-size: 16px; font-weight: 600; margin: 0 0 12px 0; display: flex; align-items: center;">
-                                  🔒 What happens next?
-                                </h3>
-                                <ul style="color: #6c757d; font-size: 14px; line-height: 1.6; margin: 0; padding-left: 20px;">
-                                  <li style="margin-bottom: 8px;">Click the verification button above</li>
-                                  <li style="margin-bottom: 8px;">Your account will be activated instantly</li>
-                                  <li style="margin-bottom: 8px;">Start exploring thousands of products</li>
-                                  <li>Enjoy secure shopping with trusted sellers</li>
-                                </ul>
-                              </td>
-                            </tr>
-                          </table>
-                        </td>
-                      </tr>
-                    </table>
-                    
-                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
-                      <tr>
-                        <td style="background-color: #f8f9fa; border-left: 4px solid #28a745; padding: 20px; border-radius: 8px;">
-                          <p style="color: #495057; font-size: 14px; margin: 0; line-height: 1.5;">
-                            <strong style="color: #28a745;">🛡️ Security Notice:</strong><br>
-                            This verification link will expire in <strong>24 hours</strong> for your security. 
-                            If you didn't create this account, please ignore this email.
-                          </p>
-                        </td>
-                      </tr>
-                    </table>
-                    
-                  </td>
-                </tr>
-                
+
+                <!-- First Box -->
+<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+  <tr>
+    <td style="background-color: rgba(40, 167, 69, 0.05); border: 1px solid rgba(40, 167, 69, 0.15); border-radius: 12px; padding: 24px;">
+      <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+        <tr>
+          <td>
+            <h3 style="color: #28a745; font-size: 16px; font-weight: 600; margin: 0 0 12px 0; display: flex; align-items: center;">
+              🔒 What happens next?
+            </h3>
+            <ul style="color: #6c757d; font-size: 14px; line-height: 1.6; margin: 0; padding-left: 20px;">
+              <li style="margin-bottom: 8px;">Click the verification button above</li>
+              <li style="margin-bottom: 8px;">Your account will be activated instantly</li>
+              <li style="margin-bottom: 8px;">Start exploring thousands of products</li>
+              <li>Enjoy secure shopping with trusted sellers</li>
+            </ul>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+<!-- Spacer Row (Acts like vertical space between blocks) -->
+<table role="presentation" width="100%">
+  <tr>
+    <td height="24" style="line-height: 24px;">&nbsp;</td>
+  </tr>
+</table>
+
+<!-- Second Box -->
+<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+  <tr>
+    <td style="background-color: #f8f9fa; border-left: 4px solid #28a745; padding: 20px; border-radius: 8px; padding-top: 10px;">
+      <p style="color: #495057; font-size: 14px; margin: 0; line-height: 1.5;">
+        <strong style="color: #28a745;">🛡️ Security Notice:</strong><br>
+        This verification link will expire in <strong>24 hours</strong> for your security. 
+        If you didn't create this account, please ignore this email.
+      </p>
+    </td>
+  </tr>
+</table>
                 <tr>
                   <td style="background-color: #f8f9fa; padding: 32px 40px; border-top: 1px solid #e9ecef;">
                     <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
@@ -306,14 +311,14 @@ router.post('/register', async (req, res) => {
                           
                           <p style="color: #6c757d; font-size: 14px; margin: 0 0 16px 0; text-align: center;">
                             Need help? Contact our support team at 
-                            <a href="mailto:support@salmart.com" style="color: #28a745; text-decoration: none;">support@salmart.com</a>
+                            <a href="mailto:support@salmart.com" style="color: #28a745; text-decoration: none;">support@salmartonline.com.ng</a>
                           </p>
                           
                           <p style="color: #9ca3af; font-size: 12px; text-align: center; margin: 0; line-height: 1.5;">
                             © ${new Date().getFullYear()} Salmart. All rights reserved.<br>
-                            Nigeria's Premier Online Marketplace<br>
-                            <a href="#" style="color: #9ca3af; text-decoration: none;">Privacy Policy</a> | 
-                            <a href="#" style="color: #9ca3af; text-decoration: none;">Terms of Service</a>
+                            Nigeria's first social E-commerce Marketplace<br>
+                            <a href="https://salmartonline.com.ng/Privacy.html" style="color: #9ca3af; text-decoration: none;">Privacy Policy</a> | 
+                            <a href="https://salmartonline.com.ng/Community.html" style="color: #9ca3af; text-decoration: none;">Terms of Service</a>
                           </p>
                         </td>
                       </tr>
@@ -435,7 +440,7 @@ router.post('/login', async (req, res) => {
     }
 
  if (!user.isVerified) {
-   return res.status(403).json({ message: 'Email not verified. Please check your inbox.' });  
+  return res.status(403).json({ message: 'Email not verified. Please check your email inbox.' });  
      }
 
     if (user.isBanned) {

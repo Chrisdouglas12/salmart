@@ -44,4 +44,4 @@ async function deleteUserByEmail(emailToDelete) {
 }
 
 // ✅ Call the function with your desired email
-deleteUserByEmail('chrisdouglas1700@gmail.com');
+deleteUserByEmail('christianfridaydouglas@gmail.com');

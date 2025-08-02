@@ -6148,3 +6148,17 @@
 {"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-08-02T08:38:04.388Z"}
 {"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-08-02T08:38:24.247Z"}
 {"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-08-02T08:38:33.222Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-08-02T18:23:40.727Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-08-02T18:24:53.520Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-08-02T18:29:05.591Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-08-02T19:56:30.623Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-08-02T19:58:38.205Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-08-02T19:59:10.537Z"}
+{"body":{"buyerId":"6843d062f457581752641ee3","currency":"NGN","email":"deb@gmail.com","postId":"688dd86d48b47f75bfc622f5"},"level":"info","message":"Payment initiation started","requestId":"PAY_1754164750542","timestamp":"2025-08-02T19:59:10.543Z"}
+{"body":{"buyerId":"6843d062f457581752641ee3","currency":"NGN","email":"deb@gmail.com","postId":"688dd86d48b47f75bfc622f5"},"error":"connection <monitor> to 65.62.31.9:27017 closed","level":"error","message":"Payment initiation failed","requestId":"PAY_1754164750542","stack":"MongoServerSelectionError: connection <monitor> to 65.62.31.9:27017 closed\n    at Timeout._onTimeout (/storage/emulated/0/Download/My web/Backend/node_modules/mongodb/lib/sdam/topology.js:292:38)\n    at listOnTimeout (node:internal/timers:614:17)\n    at process.processTimers (node:internal/timers:549:7)","timestamp":"2025-08-02T19:59:15.561Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-08-02T20:19:49.424Z"}
+{"body":{"buyerId":"6843d062f457581752641ee3","currency":"NGN","email":"deb@gmail.com","postId":"688dd86d48b47f75bfc622f5"},"level":"info","message":"Payment initiation started","requestId":"PAY_1754165989439","timestamp":"2025-08-02T20:19:49.442Z"}
+{"level":"info","message":"Payment initialized successfully with Paystack","reference":"ajtsdiwvsc","requestId":"PAY_1754165989439","timestamp":"2025-08-02T20:19:57.285Z"}
+{"level":"info","message":"Attached io to request object in paymentRoutes","timestamp":"2025-08-02T20:43:31.989Z"}
+{"body":{"buyerId":"6843d062f457581752641ee3","currency":"NGN","email":"deb@gmail.com","postId":"688dd86d48b47f75bfc622f5"},"level":"info","message":"Payment initiation started","requestId":"PAY_1754167412002","timestamp":"2025-08-02T20:43:32.003Z"}
+{"level":"info","message":"Payment initialized successfully with Paystack","reference":"k46azlysqz","requestId":"PAY_1754167412002","timestamp":"2025-08-02T20:43:33.928Z"}

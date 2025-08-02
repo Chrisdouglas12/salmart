@@ -3242,3 +3242,11 @@
 {"level":"warn","message":"No FCM token for user 6843d062f457581752641ee3","timestamp":"2025-08-02T09:20:47.158Z"}
 {"level":"warn","message":"No FCM token for user 685cfc99d8a56197d12a2534","timestamp":"2025-08-02T09:20:47.344Z"}
 {"level":"warn","message":"No FCM token for user 6865680685b3194e8bc38b92","timestamp":"2025-08-02T09:20:51.518Z"}
+{"level":"warn","message":"Invalid userId in sendFCMNotification: ","timestamp":"2025-08-02T18:36:29.511Z"}
+{"level":"warn","message":"Invalid userId in sendFCMNotification: ","timestamp":"2025-08-02T18:36:46.167Z"}
+{"level":"warn","message":"Invalid userId in sendFCMNotification: ","timestamp":"2025-08-02T18:53:29.124Z"}
+{"level":"warn","message":"Invalid userId in sendFCMNotification: ","timestamp":"2025-08-02T18:54:12.184Z"}
+{"level":"warn","message":"Invalid userId in sendFCMNotification: ","timestamp":"2025-08-02T18:55:48.782Z"}
+{"level":"warn","message":"Invalid userId in sendFCMNotification: ","timestamp":"2025-08-02T19:47:18.406Z"}
+{"level":"warn","message":"Invalid userId in sendFCMNotification: ","timestamp":"2025-08-02T19:57:29.311Z"}
+{"level":"warn","message":"No FCM tokens for user 68431685432ee393a735a641","timestamp":"2025-08-02T19:58:19.691Z"}

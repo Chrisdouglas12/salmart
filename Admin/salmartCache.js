@@ -1,4 +1,4 @@
-// Enhanced salmartCache.js with real-time sync
+// salmartCache.js
 import { get, set, del } from './idb-keyval-iife.js';
 
 const API_BASE_URL = window.API_BASE_URL || (window.location.hostname === 'localhost'
@@ -10,6 +10,42 @@ class SalmartCache {
         this.pendingUpdates = new Map(); // Track pending updates
         console.log('SalmartCache initialized with IndexedDB support and real-time sync.');
     }
+
+    // New generic get/set/del methods for any data.
+    // These methods allow other modules (like Messages.js) to use SalmartCache
+    // as a general-purpose key-value store for IndexedDB.
+    async get(key) {
+        if (typeof get !== 'undefined') {
+            try {
+                return await get(key);
+            } catch (error) {
+                console.error(`❌ [SalmartCache] Error getting key '${key}':`, error);
+                return null;
+            }
+        }
+        return null;
+    }
+
+    async set(key, value) {
+        if (typeof set !== 'undefined') {
+            try {
+                await set(key, value);
+            } catch (error) {
+                console.error(`❌ [SalmartCache] Error setting key '${key}':`, error);
+            }
+        }
+    }
+    
+    async del(key) {
+        if (typeof del !== 'undefined') {
+            try {
+                await del(key);
+            } catch (error) {
+                console.error(`❌ [SalmartCache] Error deleting key '${key}':`, error);
+            }
+        }
+    }
+
 
     /**
      * Fetches data from the given URL with a network fallback.
@@ -157,15 +193,14 @@ class SalmartCache {
                 this._updateLikeUI(postId, updatedLikes, userId);
             }
 
-// Fix: Use the correct endpoint format
-const response = await this._fetchWithNetworkFallback(`${API_BASE_URL}/post/like/${postId}`, {
-    method: 'POST',
-    headers: {
-        ...this._getAuthHeaders(),
-        'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ action: isLiked ? 'like' : 'unlike' }),
-});
+            const response = await this._fetchWithNetworkFallback(`${API_BASE_URL}/post/like/${postId}`, {
+                method: 'POST',
+                headers: {
+                    ...this._getAuthHeaders(),
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ action: isLiked ? 'like' : 'unlike' }),
+            });
 
             // Update cache with server response
             if (response.likes) {
@@ -180,49 +215,49 @@ const response = await this._fetchWithNetworkFallback(`${API_BASE_URL}/post/like
             console.error('❌ [SalmartCache] Error in optimistic like update:', error);
             
             this.pendingUpdates.delete(`like_${postId}`);
-            // Revert optimistic update on error
             
+            // Revert optimistic update on error
             // Re-fetch the post to get accurate data
             await this._refreshPostData(postId, category);
         }
     }
 
 
-
-/**
- * Adds a new post to the cache after creation
- * @param {object} newPost - The newly created post
- * @param {string} category - The category of the post
- */
-async addNewPostToCache(newPost, category = 'all') {
-    try {
-        const dbKey = this._getPersonalizedDBKey(`posts_category_${category}`);
-        
-        if (typeof get !== 'undefined' && typeof set !== 'undefined') {
-            let cachedPosts = (await get(dbKey)) || [];
+    /**
+     * Adds a new post to the cache after creation
+     * @param {object} newPost - The newly created post
+     * @param {string} category - The category of the post
+     */
+    async addNewPostToCache(newPost, category = 'all') {
+        try {
+            const dbKey = this._getPersonalizedDBKey(`posts_category_${category}`);
             
-            // Add new post to the beginning (most recent)
-            const updatedPosts = [newPost, ...cachedPosts];
-            
-            // Remove duplicates by ID
-            const uniquePosts = updatedPosts.filter((post, index, arr) => 
-                arr.findIndex(p => p._id === post._id) === index
-            );
-            
-            await set(dbKey, uniquePosts);
-            console.log(`💾 [SalmartCache] Added new post to cache for category: ${category}`);
-            
-            // Also add to 'all' category if not already 'all'
-            if (category !== 'all') {
-                await this.addNewPostToCache(newPost, 'all');
+            if (typeof get !== 'undefined' && typeof set !== 'undefined') {
+                let cachedPosts = (await get(dbKey)) || [];
+                
+                // Add new post to the beginning (most recent)
+                const updatedPosts = [newPost, ...cachedPosts];
+                
+                // Remove duplicates by ID
+                const uniquePosts = updatedPosts.filter((post, index, arr) => 
+                    arr.findIndex(p => p._id === post._id) === index
+                );
+                
+                await set(dbKey, uniquePosts);
+                console.log(`💾 [SalmartCache] Added new post to cache for category: ${category}`);
+                
+                // Also add to 'all' category if not already 'all'
+                if (category !== 'all') {
+                    await this.addNewPostToCache(newPost, 'all');
+                }
             }
+        } catch (error) {
+            console.error('❌ [SalmartCache] Error adding new post to cache:', error);
+            // Fallback: clear cache
+            await this.clearCache(category);
         }
-    } catch (error) {
-        console.error('❌ [SalmartCache] Error adding new post to cache:', error);
-        // Fallback: clear cache
-        await this.clearCache(category);
     }
-}
+
     /**
      * Updates the like UI elements
      * @param {string} postId - The post ID
