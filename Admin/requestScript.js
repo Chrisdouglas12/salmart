@@ -1,6 +1,82 @@
 const requestFeed = document.getElementById('request-feed');
-let currentUserId = null; // Set when user logs in
-// Create Comment Modal
+let currentUserId = null;
+
+// Helper function for formatting currency
+function formatNaira(amount) {
+  if (isNaN(amount) || amount === null) {
+    return '';
+  }
+  return `₦${Number(amount).toLocaleString('en-US')}`;
+}
+
+// Helper function for escaping HTML
+function escapeHtml(unsafe) {
+  if (!unsafe) return '';
+  return unsafe
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function timeAgo(date) {
+  const seconds = Math.floor((new Date() - date) / 1000);
+  let interval = Math.floor(seconds / 31536000);
+  if (interval >= 1) return interval + "y";
+  interval = Math.floor(seconds / 2592000);
+  if (interval >= 1) return interval + "mo";
+  interval = Math.floor(seconds / 86400);
+  if (interval >= 1) return interval + "d";
+  interval = Math.floor(seconds / 3600);
+  if (interval >= 1) return interval + "h";
+  interval = Math.floor(seconds / 60);
+  if (interval >= 1) return interval + "m";
+  return Math.floor(seconds) + "s";
+}
+
+
+// --- Modal Elements and Setup ---
+
+const overlay = document.createElement('div');
+overlay.classList.add('modal-overlay');
+document.body.appendChild(overlay);
+
+function createGenericModal(title, bodyHtml, footerHtml) {
+  const modal = document.createElement('div');
+  modal.classList.add('generic-modal');
+  modal.innerHTML = `
+    <div class="generic-modal-content">
+      <div class="generic-modal-header">
+        <h3>${title}</h3>
+        <button class="close-generic-modal">×</button>
+      </div>
+      <div class="generic-modal-body">${bodyHtml}</div>
+      <div class="generic-modal-footer">${footerHtml}</div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  return modal;
+}
+
+const errorModal = createGenericModal(
+  'Error',
+  '<p class="error-message-text"></p>',
+  '<button class="modal-btn close-error-btn">OK</button>'
+);
+
+const confirmDeleteModal = createGenericModal(
+  'Confirm Delete',
+  '<p>Are you sure you want to delete this request?</p>',
+  '<button class="modal-btn cancel-delete-btn">Cancel</button><button class="modal-btn confirm-delete-btn">Delete</button>'
+);
+
+const reportModal = createGenericModal(
+  'Report Request',
+  '<p>Please enter the reason for reporting this request:</p><textarea class="report-reason-input" placeholder="Enter reason..."></textarea>',
+  '<button class="modal-btn cancel-report-btn">Cancel</button><button class="modal-btn submit-report-btn">Submit</button>'
+);
+
 const commentModal = document.createElement('div');
 commentModal.classList.add('comment-modal');
 commentModal.innerHTML = `
@@ -16,476 +92,10 @@ commentModal.innerHTML = `
     </div>
   </div>
 `;
-document.body.prepend(commentModal);
+document.body.appendChild(commentModal);
 
-// Create Error Modal
-const errorModal = document.createElement('div');
-errorModal.classList.add('generic-modal');
-errorModal.innerHTML = `
-  <div class="generic-modal-content">
-    <div class="generic-modal-header">
-      <h3>Error</h3>
-      <button class="close-generic-modal">×</button>
-    </div>
-    <div class="generic-modal-body">
-      <p class="error-message-text"></p>
-    </div>
-    <div class="generic-modal-footer">
-      <button class="modal-btn close-error-btn">OK</button>
-    </div>
-  </div>
-`;
-document.body.appendChild(errorModal);
-
-// Create Confirm Delete Modal
-const confirmDeleteModal = document.createElement('div');
-confirmDeleteModal.classList.add('generic-modal');
-confirmDeleteModal.innerHTML = `
-  <div class="generic-modal-content">
-    <div class="generic-modal-header">
-      <h3>Confirm Delete</h3>
-      <button class="close-generic-modal">×</button>
-    </div>
-    <div class="generic-modal-body">
-      <p>Are you sure you want to delete this request?</p>
-    </div>
-    <div class="generic-modal-footer">
-      <button class="modal-btn cancel-delete-btn">Cancel</button>
-      <button class="modal-btn confirm-delete-btn">Delete</button>
-    </div>
-  </div>
-`;
-document.body.appendChild(confirmDeleteModal);
-
-// Create Report Modal
-const reportModal = document.createElement('div');
-reportModal.classList.add('generic-modal');
-reportModal.innerHTML = `
-  <div class="generic-modal-content">
-    <div class="generic-modal-header">
-      <h3>Report Request</h3>
-      <button class="close-generic-modal">×</button>
-    </div>
-    <div class="generic-modal-body">
-      <p>Please enter the reason for reporting this request:</p>
-      <textarea class="report-reason-input" placeholder="Enter reason..."></textarea>
-    </div>
-    <div class="generic-modal-footer">
-      <button class="modal-btn cancel-report-btn">Cancel</button>
-      <button class="modal-btn submit-report-btn">Submit</button>
-    </div>
-  </div>
-`;
-document.body.appendChild(reportModal);
-
-// CSS for Modals and Existing Components
-const style = document.createElement('style');
-style.textContent = `
-  /* Comment Modal */
-  .comment-modal {
-    position: fixed;
-    bottom: -100%;
-    left: 0;
-    right: 0;
-    height: 100vh;
-    background: white;
-    border-radius: 15px 15px 0 0;
-    box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-    transition: bottom 0.3s ease-out;
-    z-index: 100000;
-    display: flex;
-    flex-direction: column-reverse;
-  }
-
-  .comment-modal.active {
-    bottom: 0;
-  }
-
-  .comment-modal-content {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    padding: 15px;
-  }
-
-  .comment-modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding-bottom: 10px;
-    border-bottom: 1px solid #eee;
-    margin-bottom: 10px;
-  }
-
-  .close-comment-modal {
-    background: none;
-    border: none;
-    font-size: 24px;
-    cursor: pointer;
-  }
-
-  .comments-container {
-    flex: 1;
-    overflow-y: auto;
-    padding: 10px 0;
-    
-  }
-
-  .comment {
-    display: flex;
-    margin-bottom: 15px;
-    padding: 20px;
-    background: #fff;
-    border: 1px #fff solid;
-    box-shadow: 0 0 10px #ddd;
-    border-radius: 8px;
-  }
-.comment-time{
-font-size: 10px;
-background: #f3f8f1;
-  padding: 3px;
-  border-radius: 8px;
-}
-  .comment-avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    margin-right: 10px;
-    object-fit: cover;
-    border: solid 2px #ddd;
-  }
-
-  .comment-content {
-    flex: 1;
-  }
-
-  .comment-user {
-    font-weight: bold;
-    margin-right: 5px;
-    font-size: 13px;
-    background: #f3f8f1;
-    padding: 3px;
-    border-radius: 8px;
-  }
-
-.comment-text {
-  margin-top: 3px;
-  word-break: break-word;
-  font-size: 13px;
-  background: #f3f8f1;
-  padding: 3px;
-  border-radius: 8px;
-  display: inline-block;
-  font-weight: 500px;
-}
-
-
-  .comment-input-container {
-    display: flex;
-    padding-top: 10px;
-    border-top: 1px solid #eee;
-  }
-
-  .comment-input {
-    flex: 1;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 20px;
-    margin-right: 10px;
-    outline: none;
-  }
-
-  .post-comment-btn {
-    padding: 10px 15px;
-    background: #28a745;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-  }
-
-  .post-comment-btn:disabled {
-    background: #cccccc;
-    cursor: not-allowed;
-  }
-
-  /* Generic Modal (Error, Confirm, Report) */
-  .generic-modal {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%) scale(0);
-    background: white;
-    border-radius: 10px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-    z-index: 1001;
-    max-width: 400px;
-    width: 90%;
-    transition: transform 0.3s ease-out;
-    display: none;
-  }
-
-  .generic-modal.active {
-    transform: translate(-50%, -50%) scale(1);
-    display: block;
-  }
-
-  .generic-modal-content {
-    padding: 20px;
-  }
-
-  .generic-modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 10px;
-    margin-bottom: 15px;
-  }
-
-  .generic-modal-header h3 {
-    margin: 0;
-    font-size: 18px;
-  }
-
-  .close-generic-modal {
-    background: none;
-    border: none;
-    font-size: 24px;
-    cursor: pointer;
-  }
-
-  .generic-modal-body {
-    margin-bottom: 15px;
-  }
-
-  .generic-modal-body p {
-    margin: 0 0 10px;
-  }
-
-  .report-reason-input {
-    width: 100%;
-    height: 80px;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    resize: none;
-    outline: none;
-  }
-
-  .generic-modal-footer {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-  }
-
-  .modal-btn {
-    padding: 8px 15px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-  }
-
-  .modal-btn.close-error-btn,
-  .modal-btn.cancel-delete-btn,
-  .modal-btn.cancel-report-btn {
-    background: #f0f0f0;
-    color: #333;
-  }
-
-  .modal-btn.confirm-delete-btn {
-    background: #d33;
-    color: white;
-  }
-
-  .modal-btn.submit-report-btn {
-    background: #4267B2;
-    color: white;
-  }
-
-  .modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0,0,0,0.5);
-    z-index: 999;
-    display: none;
-  }
-
-  .modal-overlay.active {
-    display: block;
-  }
-
-  .no-comments {
-    text-align: center;
-    color: #888;
-    padding: 20px;
-  }
-
-  /* Request Card Styles */
-  .request-card {
-    background: white;
-    border-radius: 10px;
-    padding: 15px;
-    margin-bottom: 15px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-  }
-
-  .user-info {
-    display: flex;
-    align-items: center;
-    margin-bottom: 10px;
-  }
-
-  .user-info img {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    margin-right: 10px;
-    object-fit: cover;
-  }
-
-  .text {
-    margin-bottom: 10px;
-    word-break: break-word;
-  }
-
-  .request-actions-container {
-    margin-left: auto;
-    position: relative;
-  }
-
-  .ellipsis-btn {
-    background: none;
-    border: none;
-    font-size: 16px;
-    cursor: pointer;
-  }
-
-  .dropdown-menu {
-    display: none;
-    position: absolute;
-    right: 0;
-    background: white;
-    border-radius: 5px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-    z-index: 10;
-  }
-
-  .dropdown-menu.show {
-    display: block;
-  }
-
-  .dropdown-item {
-    display: block;
-    padding: 10px 15px;
-    background: none;
-    border: none;
-    width: 100%;
-    text-align: left;
-    cursor: pointer;
-  }
-
-  .dropdown-item:hover {
-    background: #f0f0f0;
-  }
-
-  .request-actions {
-    display: flex;
-    padding-top: 10px;
-  }
-
-  .like-form, .comment-btn {
-    margin-right: 15px;
-    background: none;
-    border: none;
-    cursor: pointer;
-  }
-
-  .like-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 5px 10px;
-    border-radius: 5px;
-  }
-
-  .like-btn.liked {
-    color: #4267B2;
-  }
-
-  .like-count, .comment-count {
-    margin-left: 5px;
-  }
-
-  .comment-btn {
-    padding: 5px 10px;
-    border-radius: 5px;
-  }
-
-  .no-requests, .error-message {
-    text-align: center;
-    padding: 20px;
-    color: #888;
-  }
-
-  .engagement-actions {
-    display: flex;
-    font-size: 15px;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-  }
-
-  .request-details {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 20px;
-    margin-top: 15px;
-  }
-
-  .edit-textarea {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    margin-bottom: 10px;
-    resize: vertical;
-  }
-
-  .save-edit-btn {
-    background: #4267B2;
-    color: white;
-    padding: 8px 15px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    margin-right: 10px;
-  }
-
-  .cancel-edit-btn {
-    background: #f0f0f0;
-    color: #333;
-    padding: 8px 15px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-  }
-`;
-document.head.appendChild(style);
-
-// Create Overlay
-const overlay = document.createElement('div');
-overlay.classList.add('modal-overlay');
-document.body.appendChild(overlay);
-
-// Current request ID for comments
 let currentRequestId = null;
 
-// Modal Management Functions
 function showModal(modal) {
   modal.classList.add('active');
   overlay.classList.add('active');
@@ -495,8 +105,11 @@ function showModal(modal) {
 
 function closeModal(modal) {
   modal.classList.remove('active');
-  overlay.classList.remove('active');
-  document.body.style.overflow = '';
+  const anyModalActive = document.querySelector('.generic-modal.active, .comment-modal.active');
+  if (!anyModalActive) {
+    overlay.classList.remove('active');
+    document.body.style.overflow = '';
+  }
   if (modal === commentModal) currentRequestId = null;
 }
 
@@ -505,49 +118,38 @@ function showErrorModal(message) {
   showModal(errorModal);
 }
 
-// Comment Modal Functions
-function openCommentModal(requestId) {
-  currentRequestId = requestId;
-  showModal(commentModal);
-  fetchComments(requestId);
+function closeAllModals() {
+    [commentModal, errorModal, confirmDeleteModal, reportModal].forEach(closeModal);
 }
 
-function closeCommentModal() {
-  closeModal(commentModal);
-}
+document.addEventListener('click', (e) => {
+  if (e.target === overlay) {
+    closeAllModals();
+  }
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    closeAllModals();
+  }
+});
 
-// Event Listeners for Modals
-commentModal.querySelector('.close-comment-modal').addEventListener('click', closeCommentModal);
+commentModal.querySelector('.close-comment-modal').addEventListener('click', () => closeModal(commentModal));
 errorModal.querySelector('.close-generic-modal').addEventListener('click', () => closeModal(errorModal));
 errorModal.querySelector('.close-error-btn').addEventListener('click', () => closeModal(errorModal));
 confirmDeleteModal.querySelector('.close-generic-modal').addEventListener('click', () => closeModal(confirmDeleteModal));
 confirmDeleteModal.querySelector('.cancel-delete-btn').addEventListener('click', () => closeModal(confirmDeleteModal));
 reportModal.querySelector('.close-generic-modal').addEventListener('click', () => closeModal(reportModal));
 reportModal.querySelector('.cancel-report-btn').addEventListener('click', () => closeModal(reportModal));
-overlay.addEventListener('click', () => {
-  closeModal(commentModal);
-  closeModal(errorModal);
-  closeModal(confirmDeleteModal);
-  closeModal(reportModal);
-});
 
-// Keyboard Accessibility
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') {
-    closeModal(commentModal);
-    closeModal(errorModal);
-    closeModal(confirmDeleteModal);
-    closeModal(reportModal);
-  }
-});
 
-// Post Comment Functionality
+// --- Comment Logic ---
+
 const postCommentBtn = commentModal.querySelector('.post-comment-btn');
 const commentInput = commentModal.querySelector('.comment-input');
 
 postCommentBtn.addEventListener('click', async () => {
   const text = commentInput.value.trim();
-  if (!text || !currentRequestId) return;
+  if (!text || !currentRequestId || !currentUserId) return;
 
   postCommentBtn.disabled = true;
 
@@ -582,7 +184,12 @@ commentInput.addEventListener('keypress', (e) => {
   if (e.key === 'Enter') postCommentBtn.click();
 });
 
-// Fetch and Display Comments
+function openCommentModal(requestId) {
+  currentRequestId = requestId;
+  showModal(commentModal);
+  fetchComments(requestId);
+}
+
 async function fetchComments(requestId) {
   try {
     const res = await fetch(`${API_BASE_URL}/requests/comments/${requestId}`);
@@ -603,11 +210,13 @@ async function fetchComments(requestId) {
       commentElement.innerHTML = `
         <img src="${comment.user.profilePicture || '/default-avatar.png'}" class="comment-avatar" alt="${comment.user.firstName}">
         <div class="comment-content">
-          <div>
-            <span class="comment-user">${comment.user.firstName} ${comment.user.lastName}</span>
-            <span class="comment-time">${timeAgo(new Date(comment.createdAt))}</span>
-          </div>
-          <div class="comment-text">${escapeHtml(comment.text)}</div>
+            <div class="comment-bubble">
+                <span class="comment-user">${escapeHtml(comment.user.firstName)} ${escapeHtml(comment.user.lastName)}</span>
+                <span class="comment-text">${escapeHtml(comment.text)}</span>
+            </div>
+            <div class="comment-metadata">
+                <span class="comment-time">${timeAgo(new Date(comment.createdAt))}</span>
+            </div>
         </div>
       `;
       commentsContainer.appendChild(commentElement);
@@ -622,7 +231,6 @@ async function fetchComments(requestId) {
   }
 }
 
-// Update Comment Count
 async function updateCommentCount(requestId) {
   try {
     const res = await fetch(`${API_BASE_URL}/requests/${requestId}/comments/count`);
@@ -630,43 +238,53 @@ async function updateCommentCount(requestId) {
 
     const data = await res.json();
     if (data.success) {
-      const commentBtn = document.querySelector(`.request-card[data-id="${requestId}"] .comment-btn .comment-count`);
-      if (commentBtn) commentBtn.textContent = data.count;
+      const commentCountElement = document.querySelector(`.request-card[data-id="${requestId}"] .comment-count`);
+      if (commentCountElement) commentCountElement.textContent = data.count;
     }
   } catch (err) {
     console.error('Error updating comment count:', err);
   }
 }
 
-// Dropdown Menu Setup
+// --- Request Feed Logic ---
+
 function setupDropdownMenu(cardElement, requestId, isOwner) {
   const ellipsisBtn = cardElement.querySelector('.ellipsis-btn');
   const dropdownMenu = cardElement.querySelector('.dropdown-menu');
+  
+  if (!ellipsisBtn || !dropdownMenu) return;
 
   ellipsisBtn.addEventListener('click', (e) => {
     e.stopPropagation();
+    document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
+        if (menu !== dropdownMenu) menu.classList.remove('show');
+    });
     dropdownMenu.classList.toggle('show');
   });
 
-  document.addEventListener('click', () => {
-    dropdownMenu.classList.remove('show');
+  document.addEventListener('click', (e) => {
+    if (!dropdownMenu.contains(e.target) && e.target !== ellipsisBtn) {
+      dropdownMenu.classList.remove('show');
+    }
   });
 
   if (isOwner) {
     cardElement.querySelector('.edit-btn').addEventListener('click', () => {
       handleEditRequest(requestId);
+      dropdownMenu.classList.remove('show');
     });
     cardElement.querySelector('.delete-btn').addEventListener('click', () => {
       showConfirmDeleteModal(requestId);
+      dropdownMenu.classList.remove('show');
     });
   } else {
     cardElement.querySelector('.report-btn').addEventListener('click', () => {
       showReportModal(requestId);
+      dropdownMenu.classList.remove('show');
     });
   }
 }
 
-// Fetch and Display Requests
 async function fetchRequests(category = '') {
   try {
     const res = await fetch(`${API_BASE_URL}/requests?category=${encodeURIComponent(category)}&sort=-createdAt`);
@@ -679,141 +297,101 @@ async function fetchRequests(category = '') {
     requestFeed.innerHTML = '';
 
     if (requests.length === 0) {
-      requestFeed.innerHTML = '<p class="no-requests">No requests found.</p>';
+      requestFeed.innerHTML = `<p class="no-requests">No requests found.</p>`;
       return;
     }
 
-    window.requestsForMixing = [];
-    console.log('Rendering requests:', requests.map(r => ({ id: r._id, createdAt: r.createdAt })));
-
-    for (const request of requests) {
-      const requestCard = document.createElement('div');
-      requestCard.classList.add('request-card');
-      requestCard.setAttribute('data-id', request._id);
-      requestCard.dataset.createdAt = request.createdAt;
-
+    requests.forEach(request => {
       const isLiked = currentUserId && request.likes.includes(currentUserId);
       const isOwner = String(currentUserId) === String(request.user._id);
 
+      const requestCard = document.createElement('div');
+      requestCard.classList.add('request-card');
+      requestCard.setAttribute('data-id', request._id);
+
       requestCard.innerHTML = `
-        <div class="user-info">
-          <img src="${request.user.profilePicture || '/default-avatar.png'}" alt="${request.user.firstName}" />
-          <span>${request.user.firstName} ${request.user.lastName}</span>
-          <div class="request-actions-container">
-            <button class="ellipsis-btn"><i class="fas fa-ellipsis-h"></i></button>
-            <div class="dropdown-menu">
-              ${isOwner ? `
-                <button class="dropdown-item edit-btn">Edit</button>
-                <button class="dropdown-item delete-btn">Delete</button>
-              ` : `
-                <button class="dropdown-item report-btn">Report</button>
-              `}
+        <div class="request-header">
+            <div class="user-info">
+                <img src="${request.user.profilePicture || '/default-avatar.png'}" alt="${request.user.firstName}" class="user-avatar" />
+                <div class="user-details">
+                    <span class="user-name">${escapeHtml(request.user.firstName)} ${escapeHtml(request.user.lastName)}</span>
+                    <span class="timestamp">${timeAgo(new Date(request.createdAt))}</span>
+                </div>
             </div>
-          </div>
+            <div class="request-actions-container">
+                <button class="ellipsis-btn"><i class="fas fa-ellipsis-h"></i></button>
+                <ul class="dropdown-menu">
+                    ${isOwner ? `
+                        <li><button class="dropdown-item edit-btn"><i class="fas fa-edit"></i> Edit Request</button></li>
+                        <li><button class="dropdown-item delete-btn"><i class="fas fa-trash-alt"></i> Delete Request</button></li>
+                    ` : `
+                        <li><button class="dropdown-item report-btn"><i class="fas fa-flag"></i> Report Request</button></li>
+                    `}
+                </ul>
+            </div>
         </div>
-        <div class="timestamp">${timeAgo(new Date(request.createdAt))}</div>
-        <div class="request-tab">
-          <button>#Request</button>
+        <div class="request-content">
+            <div class="text">${escapeHtml(request.text)}</div>
         </div>
-        <div class="request-bg">
-          <div class="text">${escapeHtml(request.text)}</div>
+        <div class="request-meta">
+            ${request.location ? `<span class="location"><i class="fas fa-map-marker-alt"></i> ${escapeHtml(request.location)}</span>` : ''}
+            ${request.budget ? `<span class="budget"><i class="fas fa-naira-sign"></i> ${formatNaira(request.budget)}</span>` : ''}
         </div>
-        <div class="request-details">
-          ${request.location ? `<div class="location">Location: ${escapeHtml(request.location)}</div>` : ''}
-          ${request.budget ? `<div class="budget">Budget: ₦${escapeHtml(request.budget.toString())}</div>` : ''}
-        </div>
-     ${isOwner ? '' : `
-  <div class="contact-btn">
-    <a id="contact-link">
-      <button 
-        data-recipient-id="${request.user._id}" 
-        data-recipient-username="${request.user.firstName} ${request.user.lastName || 'Request Creator'}" 
-        data-profile-picture="${request.user.profilePicture || 'default-avatar.png'}"
-        data-original-request="${request.text || request.description || 'Request details'}"
-        id="contact-creator-link"
-      >
-        <i class="fas fa-paper-plane"></i> Send message
-      </button>
-    </a>
-  </div>
-`}
+        ${isOwner ? '' : `
+            <div class="contact-btn">
+                <button class="contact-creator-btn" 
+                        data-recipient-id="${request.user._id}" 
+                        data-recipient-username="${escapeHtml(request.user.firstName)} ${escapeHtml(request.user.lastName || 'Request Creator')}" 
+                        data-profile-picture="${request.user.profilePicture || 'default-avatar.png'}"
+                        data-original-request="${escapeHtml(request.text || request.description || 'Request details')}">
+                    <i class="fas fa-paper-plane"></i> Send message
+                </button>
+            </div>
+        `}
         <div class="engagement-actions">
-          <form class="like-form">
-            <button type="submit" class="like-btn ${isLiked ? 'liked' : ''}">
-              <i class="fa${isLiked ? 's' : 'r'} fa-heart"></i>
-              <span class="like-count">${request.likes.length} </span>
-                    </button>
-          </form>
-          <button class="comment-btn">
-            <i class="far fa-comment-alt"></i>
-            <span class="comment-count">${request.comments.length}</span>
-         </button>
+            <button class="action-btn like-btn ${isLiked ? 'liked' : ''}">
+                <i class="fa${isLiked ? 's' : 'r'} fa-heart"></i>
+                <span class="like-count">${request.likes.length}</span>
+            </button>
+            <button class="action-btn comment-btn">
+                <i class="far fa-comment-alt"></i>
+                <span class="comment-count">${request.comments.length}</span>
+            </button>
         </div>
       `;
 
-      setupDropdownMenu(requestCard, request._id, isOwner);
       requestFeed.appendChild(requestCard);
-      console.log(`Prepended request ${request._id} created at ${request.createdAt}`);
-    }
+      setupDropdownMenu(requestCard, request._id, isOwner);
+    });
 
-    // Message Sending Functionality
-    // Message Sending Functionality
-const sendMessageButtons = document.querySelectorAll("#contact-creator-link");
-const userId = localStorage.getItem("userId");
+    setupEngagementListeners();
+    setupContactListeners();
 
-sendMessageButtons.forEach((sendMessageBtn) => {
-  const recipientId = sendMessageBtn.dataset.recipientId;
-  
-  // Check if user is trying to message themselves
-  if (userId === recipientId) {
-    sendMessageBtn.disabled = true;
-    sendMessageBtn.title = "You cannot message yourself";
-    sendMessageBtn.classList.add('disabled'); // Add visual styling
-    return; // Skip adding event listener for disabled buttons
+  } catch (err) {
+    console.error('Error fetching requests:', err);
+    requestFeed.innerHTML = `
+      <div class="no-requests">
+        <i class="fas fa-exclamation-circle" style="font-size: 40px; margin-bottom: 10px;"></i>
+        <p>Could not load requests. Please check your connection and try again.</p>
+      </div>
+    `;
   }
+}
 
-  sendMessageBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-    
-    // Check if user is logged in
-    if (!userId) {
-      showErrorModal("Please log in to send a message");
-      return;
-    }
-
-    // Get recipient data
-    const recipientUsername = sendMessageBtn.dataset.recipientUsername || "Request Creator";
-    const recipientProfilePictureUrl = sendMessageBtn.dataset.profilePicture || 'default-avatar.png';
-    
-    // Get original request content for WhatsApp-style reply
-    const originalRequest = sendMessageBtn.dataset.originalRequest || "Request details";
-    
-    // Create WhatsApp-style reply format
-    const replyMessage = `┌─ ${recipientUsername}:\n│ ${originalRequest}\n└─\n\nDo you still need this item?`;
-    
-    // Encode parameters
-    const encodedMessage = encodeURIComponent(replyMessage);
-    const encodedRecipientUsername = encodeURIComponent(recipientUsername);
-    const encodedRecipientProfilePictureUrl = encodeURIComponent(recipientProfilePictureUrl);
-
-    // Navigate to chat
-    window.location.href = `Chats.html?user_id=${userId}&recipient_id=${recipientId}&recipient_username=${encodedRecipientUsername}&recipient_profile_picture_url=${encodedRecipientProfilePictureUrl}&message=${encodedMessage}`;
-  });
-});
-
-       
-
-    // Like Button Event Listeners
-    document.querySelectorAll('.like-form').forEach(form => {
-      form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const card = form.closest('.request-card');
+function setupEngagementListeners() {
+    document.querySelectorAll('.like-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const card = btn.closest('.request-card');
         const requestId = card.getAttribute('data-id');
-        const likeBtn = form.querySelector('.like-btn');
-        const icon = likeBtn.querySelector('i');
-        const count = likeBtn.querySelector('.like-count');
+        const icon = btn.querySelector('i');
+        const count = btn.querySelector('.like-count');
+        
+        if (!currentUserId) {
+             showErrorModal('You must be logged in to like a request.');
+             return;
+        }
 
-        likeBtn.disabled = true;
+        btn.disabled = true;
 
         try {
           const token = localStorage.getItem('authToken');
@@ -828,35 +406,22 @@ sendMessageButtons.forEach((sendMessageBtn) => {
 
           const data = await res.json();
           if (data.success) {
-            const requestIndex = requests.findIndex(r => r._id === requestId);
-            if (requestIndex !== -1) {
-              if (data.liked) {
-                requests[requestIndex].likes.push(currentUserId);
-              } else {
-                requests[requestIndex].likes = requests[requestIndex].likes.filter(id => id !== currentUserId);
-              }
-            }
-
-            likeBtn.classList.toggle('liked', data.liked);
+            btn.classList.toggle('liked', data.liked);
             icon.classList.toggle('fas', data.liked);
             icon.classList.toggle('far', !data.liked);
             count.textContent = data.totalLikes;
-
-            icon.style.transform = 'scale(1.3)';
-            setTimeout(() => {
-              icon.style.transform = 'scale(1)';
-            }, 300);
+            icon.style.animation = 'heartBeat 0.5s';
+            setTimeout(() => { icon.style.animation = 'none'; }, 500);
           }
         } catch (err) {
           console.error('Error liking request:', err);
           showErrorModal('Failed to like request. Please try again.');
         } finally {
-          likeBtn.disabled = false;
+          btn.disabled = false;
         }
       });
     });
 
-    // Comment Button Event Listeners
     document.querySelectorAll('.comment-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const card = btn.closest('.request-card');
@@ -864,24 +429,42 @@ sendMessageButtons.forEach((sendMessageBtn) => {
         openCommentModal(requestId);
       });
     });
-
-  } catch (err) {
-    console.error('Error fetching requests:', err);
-    requestFeed.innerHTML =  `           <div style="text-align: center; padding: 40px; color: #555; font-family: 'Poppins', sans-serif;">
-                    <i class="fas fa-folder-open" style="font-size: 40px; color: #ccc; margin-bottom: 10px;"></i>
-                    <p style="font-size: 16px; margin-top: 10px;">
-                        Nothing to see yet.<br>Please refresh the page or check your connection.
-                    </p>
-                </div>
-            `;
-  }
 }
 
-// Delete Request Handler
+function setupContactListeners() {
+    document.querySelectorAll('.contact-creator-btn').forEach(btn => {
+        const recipientId = btn.dataset.recipientId;
+        if (currentUserId === recipientId) {
+            btn.disabled = true;
+            btn.textContent = 'You are the creator';
+            btn.classList.add('disabled');
+            return;
+        }
+
+        btn.addEventListener('click', () => {
+            if (!currentUserId) {
+                showErrorModal('Please log in to send a message.');
+                return;
+            }
+
+            const recipientUsername = btn.dataset.recipientUsername || "Request Creator";
+            const recipientProfilePictureUrl = btn.dataset.profilePicture || 'default-avatar.png';
+            const originalRequest = btn.dataset.originalRequest || "Request details";
+
+            const replyMessage = `┌─ ${recipientUsername}:\n│ ${originalRequest}\n└─\n\nDo you still need this item?`;
+            const encodedMessage = encodeURIComponent(replyMessage);
+            const encodedRecipientUsername = encodeURIComponent(recipientUsername);
+            const encodedRecipientProfilePictureUrl = encodeURIComponent(recipientProfilePictureUrl);
+
+            window.location.href = `Chats.html?user_id=${currentUserId}&recipient_id=${recipientId}&recipient_username=${encodedRecipientUsername}&recipient_profile_picture_url=${encodedRecipientProfilePictureUrl}&message=${encodedMessage}`;
+        });
+    });
+}
+
 function showConfirmDeleteModal(requestId) {
   showModal(confirmDeleteModal);
   const confirmBtn = confirmDeleteModal.querySelector('.confirm-delete-btn');
-  const newConfirmBtn = confirmBtn.cloneNode(true); // Clone to avoid duplicate event listeners
+  const newConfirmBtn = confirmBtn.cloneNode(true);
   confirmBtn.replaceWith(newConfirmBtn);
 
   newConfirmBtn.addEventListener('click', async () => {
@@ -889,9 +472,7 @@ function showConfirmDeleteModal(requestId) {
       const token = localStorage.getItem('authToken');
       const res = await fetch(`${API_BASE_URL}/requests/${requestId}`, {
         method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        headers: { 'Authorization': `Bearer ${token}` }
       });
 
       if (res.ok) {
@@ -909,23 +490,26 @@ function showConfirmDeleteModal(requestId) {
   });
 }
 
-// Edit Request Handler
 function handleEditRequest(requestId) {
   const requestCard = document.querySelector(`.request-card[data-id="${requestId}"]`);
-  const requestText = requestCard.querySelector('.text').textContent;
+  const requestContent = requestCard.querySelector('.request-content');
+  const requestTextDiv = requestContent.querySelector('.text');
+  const requestText = requestTextDiv.textContent;
 
-  const editForm = document.createElement('form');
+  const editForm = document.createElement('div');
   editForm.innerHTML = `
     <textarea class="edit-textarea">${requestText}</textarea>
-    <button type="submit" class="save-edit-btn">Save</button>
-    <button type="button" class="cancel-edit-btn">Cancel</button>
+    <div class="edit-actions">
+        <button type="button" class="cancel-edit-btn">Cancel</button>
+        <button type="submit" class="save-edit-btn">Save</button>
+    </div>
   `;
+  requestContent.replaceWith(editForm);
+  const newTextarea = editForm.querySelector('.edit-textarea');
+  newTextarea.focus();
 
-  requestCard.querySelector('.text').replaceWith(editForm);
-
-  editForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const newText = editForm.querySelector('.edit-textarea').value.trim();
+  editForm.querySelector('.save-edit-btn').addEventListener('click', async () => {
+    const newText = newTextarea.value.trim();
     if (newText) {
       try {
         const token = localStorage.getItem('authToken');
@@ -939,10 +523,10 @@ function handleEditRequest(requestId) {
         });
 
         if (res.ok) {
-          const textDiv = document.createElement('div');
-          textDiv.classList.add('text');
-          textDiv.textContent = newText;
-          editForm.replaceWith(textDiv);
+          const newRequestContent = document.createElement('div');
+          newRequestContent.classList.add('request-content');
+          newRequestContent.innerHTML = `<div class="text">${escapeHtml(newText)}</div>`;
+          editForm.replaceWith(newRequestContent);
         } else {
           throw new Error('Failed to update request');
         }
@@ -954,21 +538,19 @@ function handleEditRequest(requestId) {
   });
 
   editForm.querySelector('.cancel-edit-btn').addEventListener('click', () => {
-    const textDiv = document.createElement('div');
-    textDiv.classList.add('text');
-    textDiv.textContent = requestText;
-    editForm.replaceWith(textDiv);
+    const newRequestContent = document.createElement('div');
+    newRequestContent.classList.add('request-content');
+    newRequestContent.innerHTML = `<div class="text">${escapeHtml(requestText)}</div>`;
+    editForm.replaceWith(newRequestContent);
   });
 }
 
-// Report Request Handler
 function showReportModal(requestId) {
   showModal(reportModal);
   const reportInput = reportModal.querySelector('.report-reason-input');
   const submitBtn = reportModal.querySelector('.submit-report-btn');
   reportInput.value = '';
 
-  // Prevent multiple event listeners on cloned button
   const newSubmitBtn = submitBtn.cloneNode(true);
   submitBtn.replaceWith(newSubmitBtn);
 
@@ -981,7 +563,7 @@ function showReportModal(requestId) {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`
+            'Authorization': `Bearer ${token}`
           },
           body: JSON.stringify({ reason })
         });
@@ -1006,51 +588,18 @@ function showReportModal(requestId) {
   });
 }
 
-// Helper Functions
-function escapeHtml(unsafe) {
-  if (!unsafe) return '';
-  return unsafe
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-}
 
-function timeAgo(date) {
-  const seconds = Math.floor((new Date() - date) / 1000);
-  let interval = Math.floor(seconds / 31536000);
-  if (interval >= 1) return interval + " year" + (interval === 1 ? "" : "s") + " ago";
-  interval = Math.floor(seconds / 2592000);
-  if (interval >= 1) return interval + " month" + (interval === 1 ? "" : "s") + " ago";
-  interval = Math.floor(seconds / 86400);
-  if (interval >= 1) return interval + " day" + (interval === 1 ? "" : "s") + " ago";
-  interval = Math.floor(seconds / 3600);
-  if (interval >= 1) return interval + " hour" + (interval === 1 ? "" : "s") + " ago";
-  interval = Math.floor(seconds / 60);
-  if (interval >= 1) return interval + " minute" + (interval === 1 ? "" : "s") + " ago";
-  return Math.floor(seconds) + " second" + (seconds === 1 ? "" : "s") + " ago";
-}
-
-// Initialize App
 document.addEventListener('DOMContentLoaded', () => {
   currentUserId = localStorage.getItem('userId') || null;
-  document.querySelectorAll('.category-btn').forEach(button => {
-    button.addEventListener('click', function () {
-      const selectedCategory = this.getAttribute('data-category');
-      fetchRequests(selectedCategory);
-    });
-  });
-
+  
   if (currentUserId) {
     fetchRequests();
   } else {
-    requestFeed.innerHTML =   `             <div style="text-align: center; padding: 40px; color: #555; font-family: 'Poppins', sans-serif;">
-                    <i class="fas fa-folder-open" style="font-size: 40px; color: #ccc; margin-bottom: 10px;"></i>
-                    <p style="font-size: 16px; margin-top: 10px;">
-                        Nothing to see yet.<br>Please refresh the page or check your connection.
-                    </p>
-                </div>
-            `;
+    requestFeed.innerHTML = `
+      <div class="no-requests">
+        <i class="fas fa-user-circle" style="font-size: 40px; margin-bottom: 10px;"></i>
+        <p>Please log in to view the requests feed.</p>
+      </div>
+    `;
   }
 });

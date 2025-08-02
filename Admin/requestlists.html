@@ -4,172 +4,157 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-
     <title>Requests | Salmart</title>
-
-<link rel="stylesheet" href="./Style.css">
+    <link rel="stylesheet" href="./Style.css">
+    
+     <link rel="stylesheet" href="request-styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-   <link rel="preconnect" href="https://fonts.googleapis.com">
-
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
-
-  <title>MarketPlace</title>
-
-<script src="addPic.js"></script>
-
-
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+    <title>MarketPlace</title>
 </head>
 <body>
   <div class="Genenral-container">
-    <div class="loader" id="loader">
-
-    </div>
+    <div class="loader" id="loader"></div>
     <div class="menu-icon">
       <div></div>
       <div></div>
       <div></div>
     </div>
     <div class="profile-pic">
-  <img id="profile-picture3" src="default-avatar.png" style="border-radius: 50%">
-</div>
+        <img id="profile-picture3" src="default-avatar.png" style="border-radius: 50%" width="40" height="40">
+    </div>
     <div style="text-align:center">
       <div style="z-index: 3; position: fixed; margin-left: 83.5%; margin-top: 16px; font-size: 16px;">
         <a href="Search.html">
           <i class="fas fa-search" style="color:#28a745; border: 0.1px solid #fff; border-radius: 20px; padding: 8.5px; background-color:#fff; box-shadow: 0 0 10px #ddd; font-weight: light; margin-left: auto"></i>
         </a>
       </div>
-<h2 class="head" style="
-  color: #28a745;
-  background-color: white;
-  padding: 20px 0;
-  margin: 0;
-  box-shadow: 0 0px 10px 0px #ddd;
-  border: 1px solid #fff;
-  position: fixed;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 1;
-  text-align: center;
-  font-size: 19px;
-  font-family: 'Poppins', sans-serif;
-  width: 100vw;
-">
-  Salmart
-</h2>
+      <h2 class="head" style="
+        color: #28a745;
+        background-color: white;
+        padding: 20px 0;
+        margin: 0;
+        box-shadow: 0 0px 10px 0px #ddd;
+        border: 1px solid #fff;
+        position: fixed;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 1;
+        text-align: center;
+        font-size: 19px;
+        font-family: 'Poppins', sans-serif;
+        width: 100vw;
+      ">
+        Salmart
+      </h2>
     </div>
 
-  <div style="text-align: center">
-
-    <!-- Delete Confirmation Modal -->
-<div id="delete-modal" class="modern-modal">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h3>Confirm Deletion</h3>
-      <button class="close-modal">&times;</button>
-    </div>
-    <div class="modal-body">
-      <div class="modal-icon">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#e74c3c">
-          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
-        </svg>
+    <div style="text-align: center">
+      <div id="delete-modal" class="modern-modal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3>Confirm Deletion</h3>
+            <button class="close-modal">&times;</button>
+          </div>
+          <div class="modal-body">
+            <div class="modal-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#e74c3c">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+              </svg>
+            </div>
+            <p>Are you sure you want to delete this Ad?</p>
+            <p class="secondary-text">This action cannot be undone and the Ad will be permanently removed.</p>
+          </div>
+          <div class="modal-footer">
+            <button id="cancel-delete" class="secondary-button">Cancel</button>
+            <button id="confirm-delete" class="danger-button">
+              <span class="button-loader" id="delete-loader"></span>
+              <span class="button-text">Delete</span>
+            </button>
+          </div>
+        </div>
       </div>
-      <p>Are you sure you want to delete this Ad?</p>
-      <p class="secondary-text">This action cannot be undone and the Ad will be permanently removed.</p>
-    </div>
-    <div class="modal-footer">
-      <button id="cancel-delete" class="secondary-button">Cancel</button>
-      <button id="confirm-delete" class="danger-button">
-        <span class="button-loader" id="delete-loader"></span>
-        <span class="button-text">Delete</span>
-      </button>
-    </div>
-  </div>
-</div>
-   
-   <nav id="navbar">
-  <ul>
-    <li>
-      <a href="index.html" class="active">
-        <i class="fas fa-store"></i>
-        <span>Market</span>
-      </a>
-    </li>
-    <li>
-      <a href="requestlists.html">
-        <i class="fas fa-clipboard-list"></i>
-        <span>Requests</span>
-      </a>
-    </li>
-    <li>
-      <a href="Alerts.html" onclick="clearBadge('alerts')">
-        <span class="icon-with-badge">
-          <i class="fas fa-bell"></i>
-          <span class="notification-badge" id="alerts-badge"></span>
-        </span>
-        <span>Alerts</span>
-      </a>
-    </li>
-    <li>
-      <a href="Messages.html" onclick="clearBadge('messages')">
-        <span class="icon-with-badge">
-          <i class="fas fa-comments"></i>
-          <span class="notification-badge" id="messages-badge"></span>
-        </span>
-        <span>Messages</span>
-      </a>
-    </li>
-    <li>
-      <a href="Deals.html" onclick="clearBadge('deals')">
-        <span class="icon-with-badge">
-          <i class="fas fa-cart-plus"></i>
-          <span class="notification-badge" id="deals-badge"></span>
-        </span>
-        <span>Deals</span>
-      </a>
-    </li>
-    <li>
-      <a href="Profile.html">
-        <i class="fas fa-user"></i>
-        <span>Profile</span>
-      </a>
-    </li>
-  </ul>
-</nav>
-
-    <!-- toast notification -->
-<div id="toast" style="display: none; position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); padding: 5px; border-radius: 5px; color: #fff; z-index: 1000; font-size: 12px"></div>
-
-
-  </div>
-  <div class="side-bar">
-    <div class="profile-sec">
-      <img src="default-avatar.png" alt="pic" id="profile-picture1">
-      <h1 id="username1">Username</h1>
-    </div>
-    <ul>
-      <li><a href="index.html" class="active"><i class="fas fa-store"></i>Market</a></li>
-      <li><a href="Alerts.html"><i class="fas fa-bell"></i> Alerts</a></li>
-      <li><a href="Messages.html"><i class="fas fa-comment"></i>Messages</a></li> 
-            <li><a href="Deals.html"><i class="fas fa-cart-plus"></i>Deals</a></li>
-      <li><a href="Profile.html"><i class="fas fa-user"></i> Profile</a></li>
       
+      <nav id="navbar">
+        <ul>
+          <li>
+            <a href="index.html" class="active">
+              <i class="fas fa-store"></i>
+              <span>Market</span>
+            </a>
+          </li>
+          <li>
+            <a href="requestlists.html">
+              <i class="fas fa-clipboard-list"></i>
+              <span>Requests</span>
+            </a>
+          </li>
+          <li>
+            <a href="Alerts.html" onclick="clearBadge('alerts')">
+              <span class="icon-with-badge">
+                <i class="fas fa-bell"></i>
+                <span class="notification-badge" id="alerts-badge"></span>
+              </span>
+              <span>Alerts</span>
+            </a>
+          </li>
+          <li>
+            <a href="Messages.html" onclick="clearBadge('messages')">
+              <span class="icon-with-badge">
+                <i class="fas fa-comments"></i>
+                <span class="notification-badge" id="messages-badge"></span>
+              </span>
+              <span>Messages</span>
+            </a>
+          </li>
+          <li>
+            <a href="Deals.html" onclick="clearBadge('deals')">
+              <span class="icon-with-badge">
+                <i class="fas fa-cart-plus"></i>
+                <span class="notification-badge" id="deals-badge"></span>
+              </span>
+              <span>Deals</span>
+            </a>
+          </li>
+          <li>
+            <a href="Profile.html">
+              <i class="fas fa-user"></i>
+              <span>Profile</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+
+      <div id="toast" style="display: none; position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); padding: 5px; border-radius: 5px; color: #fff; z-index: 1000; font-size: 12px"></div>
+    </div>
+    <div class="side-bar">
+      <div class="profile-sec">
+        <img src="default-avatar.png" alt="pic" id="profile-picture1">
+        <h1 id="username1">Username</h1>
+      </div>
+      <ul>
+        <li><a href="index.html" class="active"><i class="fas fa-store"></i>Market</a></li>
+        <li><a href="Alerts.html"><i class="fas fa-bell"></i> Alerts</a></li>
+        <li><a href="Messages.html"><i class="fas fa-comment"></i>Messages</a></li> 
+        <li><a href="Deals.html"><i class="fas fa-cart-plus"></i>Deals</a></li>
+        <li><a href="Profile.html"><i class="fas fa-user"></i> Profile</a></li>
         <li><a href="Profile.html"><i class="fa-solid fa-lock"></i> Privacy Policy</a></li>
-         <li><a href="Privacy.html"><i class="fa-solid fa-circle-info"></i> Community Standards</a></li>
-<li><a href="SignIn.html" id="logout-link"><i class="fas fa-sign-out-alt"></i> <span id="logout-text">Log out</span></a></li>
-    </ul>
-    <pre style="font-size: 10px; text-align: center; margin-top: 40px; color: green">&copy;Salmart Technologies 2025</pre>
-  </div>
+        <li><a href="Privacy.html"><i class="fa-solid fa-circle-info"></i> Community Standards</a></li>
+        <li><a href="SignIn.html" id="logout-link"><i class="fas fa-sign-out-alt"></i> <span id="logout-text">Log out</span></a></li>
+      </ul>
+      <pre style="font-size: 10px; text-align: center; margin-top: 40px; color: green">&copy;Salmart Technologies 2025</pre>
+    </div>
 
-
-   <div class="create-post-container">
+    <div class="create-post-container">
       <div>
-        <a href="Ads.html"><button  class="post-input" style="background-color: #fff; color: #28a745; font-family: 'Poppins'; border: solid: 1px #fff; box-shadow: 0 0 10px #ddd; font-size: 12px; font-weight: 500; max-width: 250px;"><i class="fas fa-bullhorn"></i> Create an ad</button></a>
+        <a href="Ads.html"><button class="post-input" style="background-color: #fff; color: #28a745; font-family: 'Poppins'; border: solid: 1px #fff; box-shadow: 0 0 10px #ddd; font-size: 12px; font-weight: 500; max-width: 250px;"><i class="fas fa-bullhorn"></i> Create an ad</button></a>
         <a href="Request.html"><button class="post-input" style="background-color: #fff; color: #28a745; font-family: 'Poppins'; border: solid: 1px #fff; box-shadow: 0 0 10px #ddd; font-size: 12px;font-weight: 500;max-width: 250px;">Create a request <i class="fas fa-circle-plus"></i></button></a>
       </div>
 
-      <div class="category-filter" ">
+      <div class="category-filter">
         <div class="category-scroll-wrapper">
           <div class="category-scroll">
             <button class="category-btn active" data-category="all"><i class="fas fa-layer-group"></i> All</button>
@@ -184,568 +169,247 @@
       </div> 
     </div>
 
-     <div class="main-layout">
-  <!-- Left Sidebar: Login -->
-  <div class="sidebar left">
-    <iframe src="login.html" frameborder="0"></iframe>
-  </div>
+    <div class="main-layout">
+      <div class="sidebar left">
+        <iframe src="login.html" frameborder="0"></iframe>
+      </div>
 
-  <!-- Center Feed -->
-  <div class="feed request-feed" id="request-feed">
-    <div class="skeleton-post">
-      <div class="skeleton-header">
-        <div class="skeleton-avatar"></div>
-        <div class="skeleton-user-info">
+      <div class="feed request-feed" id="request-feed">
+        <div class="skeleton-post">
+          <div class="skeleton-header">
+            <div class="skeleton-avatar"></div>
+            <div class="skeleton-user-info">
+              <div class="skeleton-line short"></div>
+              <div class="skeleton-line very-short"></div>
+            </div>
+          </div>
+          <div class="skeleton-line"></div>
           <div class="skeleton-line short"></div>
-          <div class="skeleton-line very-short"></div>
+          <div class="skeleton-line short"></div>
+          <div class="skeleton-line short"></div>
+          <div class="skeleton-image"></div>
+          <div class="skeleton-button"></div>
+          <div class="skeleton-actions">
+            <div class="skeleton-line very-short"></div>
+            <div class="skeleton-line very-short"></div>
+          </div>
+        </div>
+
+        <div class="skeleton-post">
+          <div class="skeleton-header">
+            <div class="skeleton-avatar"></div>
+            <div class="skeleton-user-info">
+              <div class="skeleton-line short"></div>
+              <div class="skeleton-line very-short"></div>
+            </div>
+          </div>
+          <div class="skeleton-line"></div>
+          <div class="skeleton-line short"></div>
+          <div class="skeleton-line short"></div>
+          <div class="skeleton-line short"></div>
+          <div class="skeleton-image"></div>
+          <div class="skeleton-button"></div>
+          <div class="skeleton-actions">
+            <div class="skeleton-line very-short"></div>
+            <div class="skeleton-line very-short"></div>
+          </div>
+        </div>
+
+        <div class="skeleton-post">
+          <div class="skeleton-header">
+            <div class="skeleton-avatar"></div>
+            <div class="skeleton-user-info">
+              <div class="skeleton-line short"></div>
+              <div class="skeleton-line very-short"></div>
+            </div>
+          </div>
+          <div class="skeleton-line"></div>
+          <div class="skeleton-line short"></div>
+          <div class="skeleton-line short"></div>
+          <div class="skeleton-line short"></div>
+          <div class="skeleton-image"></div>
+          <div class="skeleton-button"></div>
+          <div class="skeleton-actions">
+            <div class="skeleton-line very-short"></div>
+            <div class="skeleton-line very-short"></div>
+          </div>
         </div>
       </div>
-      <div class="skeleton-line"></div>
-      <div class="skeleton-line short"></div>
-      <div class="skeleton-line short"></div>
-      <div class="skeleton-line short"></div>
-      <div class="skeleton-image"></div>
-      <div class="skeleton-button"></div>
-      <div class="skeleton-actions">
-        <div class="skeleton-line very-short"></div>
-        <div class="skeleton-line very-short"></div>
+
+      <div class="sidebar right">
+        <iframe src="Community.html" frameborder="0"></iframe>
       </div>
     </div>
 
-    <div class="skeleton-post">
-      <div class="skeleton-header">
-        <div class="skeleton-avatar"></div>
-        <div class="skeleton-user-info">
-          <div class="skeleton-line short"></div>
-          <div class="skeleton-line very-short"></div>
-        </div>
-      </div>
-      <div class="skeleton-line"></div>
-      <div class="skeleton-line short"></div>
-      <div class="skeleton-line short"></div>
-      <div class="skeleton-line short"></div>
-      <div class="skeleton-image"></div>
-      <div class="skeleton-button"></div>
-      <div class="skeleton-actions">
-        <div class="skeleton-line very-short"></div>
-        <div class="skeleton-line very-short"></div>
-      </div>
+    <div id="imageModal" class="modal">
+        <span class="close">&times;</span>
+        <img class="modal-content" id="fullImage">
     </div>
+    <div id="image-preview-container" style="display: flex; gap: 5px; margin-top: 10px;"></div>
 
-    <div class="skeleton-post">
-      <div class="skeleton-header">
-        <div class="skeleton-avatar"></div>
-        <div class="skeleton-user-info">
-          <div class="skeleton-line short"></div>
-          <div class="skeleton-line very-short"></div>
-        </div>
-      </div>
-      <div class="skeleton-line"></div>
-      <div class="skeleton-line short"></div>
-      <div class="skeleton-line short"></div>
-      <div class="skeleton-line short"></div>
-      <div class="skeleton-image"></div>
-      <div class="skeleton-button"></div>
-      <div class="skeleton-actions">
-        <div class="skeleton-line very-short"></div>
-        <div class="skeleton-line very-short"></div>
-      </div>
+    <div id="galleryModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); justify-content: center; align-items: center;">
+        <div id="galleryContent" style="display: flex; flex-wrap: wrap; gap: 10px; max-width: 90%; max-height: 90%; overflow-y: auto;"></div>
     </div>
-  </div>
+    
+    <script src="addPic.js"></script>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script>
+      const API_BASE_URL = window.location.hostname === 'localhost' 
+      ? 'http://localhost:3000' 
+      : 'https://salmart.onrender.com';
+      // Connect to your backend
+      const socket = io(`${API_BASE_URL}`,
+       {
+        path: '/socket.io',
+        transports: ['websocket', 'polling']});
+      // Check connection
+      socket.on('connect', () => {
+        console.log('Connected to server');
+      });
+    </script>
+    <script>
+    const menuIcon = document.querySelector('.menu-icon');
+    const sideBar = document.querySelector('.side-bar');
+    const body = document.body;
 
-  <!-- Right Sidebar: Community -->
-  <div class="sidebar right">
-    <iframe src="Community.html" frameborder="0"></iframe>
-  </div>
-</div>
-
-
-
-<script>
-const menuIcon = document.querySelector('.menu-icon');
-const sideBar = document.querySelector('.side-bar');
-const body = document.body;
-
-menuIcon.addEventListener('click', () => {
-  sideBar.style.display = sideBar.style.display === 'block' ? 'none' : 'block';
-  body.classList.toggle('no-scroll');
-});
-
-document.body.addEventListener('click', (e) => {
-  if (sideBar.style.display === 'block' && !sideBar.contains(e.target) && !menuIcon.contains(e.target)) {
-    sideBar.style.display = 'none';
-    body.classList.remove('no-scroll');
-  }
-});
-
-</script>
-<script>
-window.onload = function() {
-    const isLoggedIn = localStorage.getItem('userId');
-    const logoutText = document.getElementById('logout-text');
-    const logoutLink = document.getElementById('logout-link');
-
-    if (isLoggedIn) {
-        logoutText.innerText = 'Log out';
-        logoutLink.href = '#';
-        logoutLink.addEventListener('click', function(event) {
-            event.preventDefault();
-            localStorage.removeItem('userId');
-            window.location.href = 'SignIn.html';
-        });
-    } else {
-        logoutText.innerText = 'Log in';
-        logoutLink.href = 'SignIn.html';
-    }
-};
-</script>
-
-<!-- Load Socket.IO from CDN -->
-<script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
-<script>
-  const API_BASE_URL = window.location.hostname === 'localhost' 
-  ? 'http://localhost:3000' 
-  : 'https://salmart.onrender.com';
-  // Connect to your backend
-  const socket = io(`${API_BASE_URL}`,
-   {
-    path: '/socket.io',
-    transports: ['websocket', 'polling']});
-
-  // Check connection
-  socket.on('connect', () => {
-    console.log('Connected to server');
-  });
-</script>
-
-<div id="imageModal" class="modal">
-    <span class="close">&times;</span>
-    <img class="modal-content" id="fullImage">
-</div>
-<!-- Preview for additional images -->
-<div id="image-preview-container" style="display: flex; gap: 5px; margin-top: 10px;"></div>
-
-<!-- Image Gallery Modal -->
-<div id="galleryModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); justify-content: center; align-items: center;">
-    <div id="galleryContent" style="display: flex; flex-wrap: wrap; gap: 10px; max-width: 90%; max-height: 90%; overflow-y: auto;"></div>
-</div>
-
-<style>
-/* Modal Styling */
-.thumbnail {
-    width: 60px;
-    height: 60px;
-    object-fit: cover;
-    border-radius: 5px;
-    border: 2px solid #ddd;
-    cursor: pointer;
-}
-
-.gallery-image {
-    width: 100%;
-    max-width: 500px;
-    border-radius: 5px;
-    box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-}
-
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 1000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.8);
-    justify-content: center;
-    align-items: center;
-}
-
-/* Image inside Modal */
-.modal-content {
-    max-width: 90%;
-    max-height: 90%;
-    display: block;
-    margin: auto;
-}
-
-/* Close Button */
-.close {
-    position: absolute;
-    top: 20px;
-    right: 30px;
-    color: white;
-    font-size: 40px;
-    cursor: pointer;
-}
-
-
-.request-feed-container {
-  width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 10px;
-  box-sizing: border-box;
-  display: flex;
-  margin-top: -16px;
-  margin-bottom: 50px;
-}
-.request-feed {
-  display: flex;
-  flex-direction: column;
-}
-
-/* Style for the individual request cards */
-.request-card {
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  margin-bottom: 20px;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.request-card:hover {
-  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
-}
-.request-bg {
-    position: relative;
-    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-    border-radius: 16px;
-    padding: 30px;
-    margin: 20px 0;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-    overflow: hidden;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.request-bg::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-image: 
-        linear-gradient(45deg, rgba(255,255,255,0.03) 25%, transparent 25%),
-        linear-gradient(-45deg, rgba(255,255,255,0.03) 25%, transparent 25%);
-    background-size: 20px 20px;
-}
-
-.request-bg .text {
-    position: relative;
-    z-index: 2;
-    color: white;
-    font-size: 18px;
-    font-weight: 600;
-    line-height: 1.6;
-    text-align: center;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-}
-
-
-/* Styling for the user info section */
-.request-card .user-info {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.request-card .user-info img {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
-.request-card .user-info span {
-  font-size: 14px;
-  font-weight: bold;
-  color: #333;
-  margin-left: 45px;
-  margin-top: -45px;
-}
-
-/* Styling for the request text */
-.request-card .text {
-  font-size: 16px;
-  line-height: 1.5;
-  color: #555;
-  text-align: center;
-  font-weight: 600;
-  color: white;
-}
-
-.profile-pic img {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
-
-/* Styling for the location and budget info */
-.request-card .location,
-.request-card .budget {
-  font-size: 14px;
-  color: #777;
-  margin-top: -15px;
-
-}
-
-.contact-btn button{
-    width: 100%;
-    height: 34px;
-    margin-top: -15px;
-    background-color: #fff;
-    color: #28a745;
-    border: solid 1px #fff;
-    box-shadow: 0 2px 0 rgba(0, 0, 0, 0.2);
-    border-radius: 8px;
-  }
-  .contact-btn button:hover{
-       transition: all 0.2s ease;
-&:hover { transform: scale(1.02); }
-background-color: #ccc
-  }
-  .request-tab button{
-    width: 100%;
-    height: 34px;
-    margin-top: -15px;
-    background-color: #fff;
-    color: #28a745;
-    border: solid 1px #fff;
-    box-shadow:  0 -2px 0 0 rgba(0, 0, 0, 0.2);
-    border-radius: 8px;
-  }
-
-.request-card .location {
-  color: red;
-  font-weight: bold;
-}
-
-.request-card .location i {
-  color: #007bff;
-}
-
-.request-card .budget {
-  font-size: 15px;
-  color: #28a745;
-  font-weight: bold;
-}
-/* Styling for the timestamp */
-.request-card .timestamp {
-  font-size: 12px;
-  color: #888;
-  margin-top: -30px;
-  margin-left: 46px;
-}
-
-@media (max-width: 768px) {
-  .request-card {
-    padding: 15px;
-  }
-}
-  .request-card .user-info {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .request-card .text {
-    font-size: 16px;
-  }
-  .request-actions {
-  display: flex;
-  gap: 5px;
-  margin-top: 10px;
-}
-
-
-.request-actions button:hover {
-  color: #28a745;
-}
-.like-btn {
-  color: #666; /* Default color */
-  transition: all 0.2s ease;
-}
-
-.like-btn.liked {
-  color: #28a745; /* Red color for liked state */
-}
-
-.like-btn:hover {
-  color: #ff0000; /* Red on hover */
-  transform: scale(1.1);
-}
-
-  .request-card .location,
-  .request-card .budget {
-    font-size: 13px;
-  }
-/* Add to your existing styles */
-.like-btn i {
-  transition: all 0.3s ease;
-}
-
-.like-btn:disabled i {
-  opacity: 0.7;
-}
-
-.like-btn.liked i {
-  animation: heartBeat 0.5s;
-}
-
-
-.request-actions-container {
-  position: relative;
-  margin-left: auto;
-  margin-top: -30px;
-}
-
-.ellipsis-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: #666;
-  padding: 5px 10px;
-  border-radius: 50%;
-  transition: background 0.2s;
-}
-
-.ellipsis-btn:hover {
-  background: #f0f0f0;
-}
-
-.dropdown-menu {
-  position: absolute;
-  right: 0;
-  top: 100%;
-  background: white;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-  z-index: 100;
-  display: none;
-  min-width: 150px;
-  overflow: hidden;
-}
-
-.dropdown-menu.show {
-  display: block;
-}
-
-.dropdown-item {
-  display: block;
-  width: 100%;
-  padding: 10px 15px;
-  text-align: left;
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 14px;
-  transition: background 0.2s;
-}
-
-.dropdown-item:hover {
-  background: #f5f5f5;
-}
-
-.dropdown-item i {
-  margin-right: 8px;
-  width: 18px;
-  text-align: center;
-}
-
-.delete-btn {
-  color: #e74c3c;
-}
-
-.report-btn {
-  color: #e67e22;
-}
-
-.edit-btn {
-  color: #3498db;
-}
-</style>
-
-<script>
-  function showToast(message, color = '#28a745') {
-    const toast = document.getElementById("toast");
-    toast.textContent = message;
-    toast.style.backgroundColor = color;
-    toast.style.display = "block";
-
-    setTimeout(() => {
-      toast.style.display = "none";
-    }, 3000);
-  }
-</script>
-<script>
-  // Category Filter Functionality
-let currentCategory = 'all';
-let allRequestsCache = [];
-document.addEventListener('DOMContentLoaded', function() {
-  const categoryBtns = document.querySelectorAll('.category-btn');
-
-  // Initialize category buttons
-  categoryBtns.forEach(btn => {
-    btn.addEventListener('click', async function() {
-      // Update active button
-      categoryBtns.forEach(b => b.classList.remove('active'));
-      this.classList.add('active');
-
-      // Set current category and fetch posts
-      currentCategory = this.dataset.category;
-      await fetchRequestsByCategory();
+    menuIcon.addEventListener('click', () => {
+      sideBar.style.display = sideBar.style.display === 'block' ? 'none' : 'block';
+      body.classList.toggle('no-scroll');
     });
-  });
-});
 
+    document.body.addEventListener('click', (e) => {
+      if (sideBar.style.display === 'block' && !sideBar.contains(e.target) && !menuIcon.contains(e.target)) {
+        sideBar.style.display = 'none';
+        body.classList.remove('no-scroll');
+      }
+    });
 
-</script>
-<script>
-  document.addEventListener('DOMContentLoaded', function() {
-  const categoryFilter = document.querySelector('.category-filter');
-  const header = document.querySelector('.head');
-  const headerHeight = header.offsetHeight;
+    </script>
+    <script>
+    window.onload = function() {
+        const isLoggedIn = localStorage.getItem('userId');
+        const logoutText = document.getElementById('logout-text');
+        const logoutLink = document.getElementById('logout-link');
 
-  // Calculate the exact position where it should stick (60px from top)
-  const stickyPosition = 60;
+        if (isLoggedIn) {
+            logoutText.innerText = 'Log out';
+            logoutLink.href = '#';
+            logoutLink.addEventListener('click', function(event) {
+                event.preventDefault();
+                localStorage.removeItem('userId');
+                window.location.href = 'SignIn.html';
+            });
+        } else {
+            logoutText.innerText = 'Log in';
+            logoutLink.href = 'SignIn.html';
+        }
+    };
+    </script>
+    <script>
+      function showToast(message, color = '#28a745') {
+        const toast = document.getElementById("toast");
+        toast.textContent = message;
+        toast.style.backgroundColor = color;
+        toast.style.display = "block";
 
-  // Create spacer element
-  const spacer = document.createElement('div');
-  spacer.style.height = categoryFilter.offsetHeight + 'px';
-  spacer.style.display = 'none';
-  categoryFilter.parentNode.insertBefore(spacer, categoryFilter.nextSibling);
+        setTimeout(() => {
+          toast.style.display = "none";
+        }, 3000);
+      }
+    </script>
+    <script>
+      // Category Filter Functionality
+    let currentCategory = 'all';
+    let allRequestsCache = [];
+    document.addEventListener('DOMContentLoaded', function() {
+      const categoryBtns = document.querySelectorAll('.category-btn');
 
-  // Initial positioning
-  const initialTop = categoryFilter.getBoundingClientRect().top + window.scrollY;
+      // Initialize category buttons
+      categoryBtns.forEach(btn => {
+        btn.addEventListener('click', async function() {
+          // Update active button
+          categoryBtns.forEach(b => b.classList.remove('active'));
+          this.classList.add('active');
 
-  window.addEventListener('scroll', function() {
-    const scrollY = window.scrollY || window.pageYOffset;
+          // Set current category and fetch posts
+          currentCategory = this.dataset.category;
+          await fetchRequestsByCategory();
+        });
+      });
+    });
+    </script>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+      const categoryFilter = document.querySelector('.category-filter');
+      const header = document.querySelector('.head');
+      const headerHeight = header.offsetHeight;
 
-    if (scrollY >= initialTop - stickyPosition) {
-      // Apply fixed positioning immediately
-      categoryFilter.style.position = 'fixed';
-      categoryFilter.style.top = stickyPosition + 'px';
-      categoryFilter.style.left = '0';
-      categoryFilter.style.right = '0';
-      categoryFilter.style.zIndex = '100';
-      spacer.style.display = 'block';
-    } else {
-      // Return to normal flow
-      categoryFilter.style.position = 'static';
+      // Calculate the exact position where it should stick (60px from top)
+      const stickyPosition = 60;
+
+      // Create spacer element
+      const spacer = document.createElement('div');
+      spacer.style.height = categoryFilter.offsetHeight + 'px';
       spacer.style.display = 'none';
-    }
-  });
+      categoryFilter.parentNode.insertBefore(spacer, categoryFilter.nextSibling);
 
-  // Force initial calculation to prevent any jump
-  window.dispatchEvent(new Event('scroll'));
-});
+      // Initial positioning
+      const initialTop = categoryFilter.getBoundingClientRect().top + window.scrollY;
+
+      window.addEventListener('scroll', function() {
+        const scrollY = window.scrollY || window.pageYOffset;
+
+        if (scrollY >= initialTop - stickyPosition) {
+          // Apply fixed positioning immediately
+          categoryFilter.style.position = 'fixed';
+          categoryFilter.style.top = stickyPosition + 'px';
+          categoryFilter.style.left = '0';
+          categoryFilter.style.right = '0';
+          categoryFilter.style.zIndex = '100';
+          spacer.style.display = 'block';
+        } else {
+          // Return to normal flow
+          categoryFilter.style.position = 'static';
+          spacer.style.display = 'none';
+        }
+      });
+
+      // Force initial calculation to prevent any jump
+      window.dispatchEvent(new Event('scroll'));
+    });
+    </script>
+    
+    <script>
+  let lastScrollY = window.scrollY;
+  const navbar = document.getElementById('navbar');
+  const desktopMediaQuery = window.matchMedia('(min-width: 900px)');
+
+  function handleScroll() {
+    // Only apply the scroll-hide effect if the screen is not in desktop mode
+    if (!desktopMediaQuery.matches) {
+      // Logic for mobile view
+      if (lastScrollY < window.scrollY && window.scrollY > 100) {
+        navbar.classList.add('nav-hidden');
+      } else {
+        navbar.classList.remove('nav-hidden');
+      }
+    } else {
+      // Logic for desktop view: The nav bar should always be visible
+      // We explicitly remove the hidden class to ensure it's always shown
+      navbar.classList.remove('nav-hidden');
+    }
+    lastScrollY = window.scrollY;
+  }
+
+  // Initial check and event listener
+  window.addEventListener('scroll', handleScroll);
+  window.addEventListener('resize', handleScroll); // Listen for resize to adjust behavior
+
+  // Run on page load
+  handleScroll();
 </script>
-<script src="Badge.js"></script>
-<script src="requestScript.js"></script>
-</html> 
+    <script src="Badge.js"></script>
+    <script src="requestScript.js"></script>
+    
+</body>
+</html>

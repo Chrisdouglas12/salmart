@@ -1,0 +1,568 @@
+/*
+    -------------------------------------------
+    File: styles.css
+    Description: CSS styles for the Request Feed feature, including card layout,
+                 modals, and engagement animations.
+    -------------------------------------------
+*/
+
+/* --- General Body and Layout --- */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+
+:root {
+    --primary-green: #28a745;
+    --background-gray: #f0f2f5;
+    --card-background: #fff;
+    --text-color-primary: #1c1e21;
+    --text-color-secondary: #65676b;
+    --border-color: #e5e5e5;
+    --shadow-light: 0 1px 2px rgba(0, 0, 0, 0.1);
+    --shadow-hover: 0 2px 8px rgba(0, 0, 0, 0.1);
+    --hover-gray: #f2f2f2;
+    --link-blue: #0d6efd;
+    --delete-red: #e74c3c;
+    --report-yellow: #f1c40f;
+    --edit-blue: #3498db;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    margin: 0;
+    padding: 0;
+    line-height: 1.6;
+    color: var(--text-color-primary);
+    background-color: #fff;
+}
+
+.request-feed-container {
+    width: 100%;
+    max-width: 680px;
+    margin: 20px auto;
+    margin-bottom: 50px;
+    padding: 0 15px;
+    box-sizing: border-box;
+}
+
+.request-feed {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* --- Request Card Styles --- */
+.request-card {
+    background-color: var(--card-background);
+    border-radius: 8px;
+    box-shadow: var(--shadow-light);
+    padding: 16px;
+    transition: box-shadow 0.2s ease-in-out;
+}
+
+.request-card:hover {
+    box-shadow: var(--shadow-hover);
+}
+
+.request-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--border-color);
+}
+
+.user-details {
+    display: flex;
+    flex-direction: column;
+}
+
+.user-name {
+    font-weight: 600;
+    color: var(--text-color-primary);
+    font-size: 15px;
+}
+
+.timestamp {
+    font-size: 12px;
+    color: var(--text-color-secondary);
+}
+
+.request-card .text {
+    font-size: 15px;
+    line-height: 1.4;
+    color: var(--text-color-primary);
+    margin-bottom: 12px;
+    word-break: break-word;
+}
+
+.request-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    color: var(--text-color-secondary);
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 8px;
+    margin-bottom: 8px;
+}
+
+.location, .budget {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.location i { color: #fa3e3e; }
+.budget i { color: var(--primary-green); }
+
+/* --- Engagement and Actions --- */
+.engagement-actions {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding-top: 8px;
+}
+
+.action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    flex: 1;
+    background: none;
+    border: none;
+    padding: 8px;
+    border-radius: 6px;
+    color: var(--text-color-secondary);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.action-btn:hover { background-color: var(--hover-gray); }
+
+.action-btn i { font-size: 14px; }
+
+.like-btn.liked i { color: #28a745 }
+.like-btn.liked { color: #28a745; }
+
+/* --- Dropdown Menu --- */
+.request-actions-container { position: relative; }
+
+.ellipsis-btn {
+    background: none;
+    border: none;
+    color: var(--text-color-secondary);
+    cursor: pointer;
+    font-size: 18px;
+    padding: 4px;
+    border-radius: 50%;
+    transition: background-color 0.2s;
+}
+
+.ellipsis-btn:hover { background-color: var(--hover-gray); }
+
+.dropdown-menu {
+    position: absolute;
+    right: 0;
+    top: 100%;
+    background: var(--card-background);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    z-index: 100;
+    display: none;
+    min-width: 150px;
+    overflow: hidden;
+    list-style: none;
+    padding: 4px 0;
+}
+
+.dropdown-menu.show { display: block; }
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 10px 15px;
+    text-align: left;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--text-color-primary);
+    transition: background-color 0.2s;
+}
+
+.dropdown-item:hover { background-color: var(--hover-gray); }
+.dropdown-item i { margin-right: 8px; }
+.delete-btn { color: var(--delete-red); }
+.report-btn { color: var(--report-yellow); }
+.edit-btn { color: var(--edit-blue); }
+
+/* --- Contact Button --- */
+.contact-btn { margin-top: 12px; }
+
+.contact-btn button {
+    width: 100%;
+    background-color: var(--hover-gray);
+    color: #28a745;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    padding: 10px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.contact-btn button:hover { background-color: #ddd; }
+
+.contact-btn button.disabled {
+    background-color: var(--background-gray);
+    color: #b0b3b8;
+    cursor: not-allowed;
+}
+
+/* --- Edit State --- */
+.edit-textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    margin-bottom: 10px;
+    resize: vertical;
+}
+
+.save-edit-btn, .cancel-edit-btn {
+    padding: 8px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.save-edit-btn {
+    background: var(--link-blue);
+    color: var(--card-background);
+    border: none;
+}
+
+.cancel-edit-btn {
+    background: var(--hover-gray);
+    color: var(--text-color-primary);
+    border: none;
+}
+
+/* --- Modals --- */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(5px);
+    z-index: 999;
+    display: none;
+}
+
+.modal-overlay.active { display: block; }
+
+.generic-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.9);
+    background: var(--card-background);
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    z-index: 1001;
+    max-width: 400px;
+    width: 90%;
+    opacity: 0;
+    visibility: hidden;
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
+}
+
+.generic-modal.active {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+    visibility: visible;
+}
+
+.generic-modal-content { padding: 20px; }
+
+.generic-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 12px;
+    margin-bottom: 15px;
+}
+
+.generic-modal-header h3 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.close-generic-modal {
+    background: var(--hover-gray);
+    border: none;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    font-size: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.generic-modal-body p {
+    margin: 0 0 10px;
+    font-size: 15px;
+    color: var(--text-color-primary);
+}
+
+.report-reason-input {
+    width: 100%;
+    height: 100px;
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    resize: none;
+    font-family: inherit;
+    box-sizing: border-box;
+}
+
+.generic-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.modal-btn {
+    padding: 10px 18px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background-color 0.2s;
+}
+
+.modal-btn.close-error-btn,
+.modal-btn.cancel-delete-btn,
+.modal-btn.cancel-report-btn {
+    background: var(--hover-gray);
+    color: var(--text-color-primary);
+}
+
+.modal-btn.confirm-delete-btn {
+    background: var(--delete-red);
+    color: var(--card-background);
+}
+
+.modal-btn.submit-report-btn {
+    background: var(--link-blue);
+    color: var(--card-background);
+}
+
+/* --- Comment Modal --- */
+.comment-modal {
+    position: fixed;
+    bottom: -100%;
+    left: 0;
+    right: 0;
+    height: 100%;
+    max-height: 80vh;
+    background: var(--card-background);
+    border-radius: 12px 12px 0 0;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+    transition: bottom 0.3s ease-out;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+}
+
+.comment-modal.active { bottom: 0; }
+
+.comment-modal-content {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 16px;
+}
+
+.comment-modal-header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 10px;
+}
+
+.comment-modal-header .comment-count-display {
+    font-weight: 600;
+    font-size: 16px;
+}
+
+.close-comment-modal {
+    position: absolute;
+    right: 0;
+    background: var(--hover-gray);
+    border: none;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    font-size: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.comments-container {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.comment { display: flex; gap: 10px; }
+
+.comment-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.comment-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.comment-bubble {
+    background-color: var(--background-gray);
+    border-radius: 18px;
+    padding: 8px 12px;
+    word-break: break-word;
+}
+
+.comment-user {
+    font-weight: 600;
+    font-size: 13px;
+    margin-right: 5px;
+}
+
+.comment-text {
+    font-size: 14px;
+    line-height: 1.3;
+}
+
+.comment-metadata {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text-color-secondary);
+    margin-top: 4px;
+    margin-left: 12px;
+}
+
+.comment-time { font-size: 11px; }
+
+.comment-input-container {
+    display: flex;
+    align-items: center;
+    padding-top: 10px;
+    border-top: 1px solid var(--border-color);
+}
+
+.comment-input {
+    flex: 1;
+    padding: 10px 15px;
+    border: none;
+    background-color: var(--background-gray);
+    border-radius: 20px;
+    margin-right: 10px;
+    outline: none;
+    font-family: inherit;
+}
+
+.post-comment-btn {
+    padding: 8px 15px;
+    background: var(--link-blue);
+    color: var(--card-background);
+    border: none;
+    border-radius: 20px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.post-comment-btn:hover { background-color: #0b5ed7; }
+.post-comment-btn:disabled {
+    background: #cccccc;
+    cursor: not-allowed;
+}
+
+/* --- Utility Classes and Animations --- */
+.no-requests,
+.no-comments {
+    text-align: center;
+    padding: 20px;
+    color: var(--text-color-secondary);
+    font-size: 16px;
+    background-color: var(--card-background);
+    border-radius: 8px;
+    box-shadow: var(--shadow-light);
+}
+
+.loading-spinner {
+    border: 4px solid var(--border-color);
+    border-top: 4px solid var(--primary-green);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin: 50px auto;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes heartBeat {
+    0% { transform: scale(1); }
+    25% { transform: scale(1.2); }
+    50% { transform: scale(1); }
+    75% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+@media (max-width: 768px) {
+    .request-feed-container { margin-top: 10px; }
+    .comment-modal { max-height: 90vh; }
+}

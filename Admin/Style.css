@@ -2215,6 +2215,7 @@ background: #f1f3f8;
     width: 100%;
     margin-left: 0;
     margin-right: 0;
+    margin-bottom: -20px;
     left: auto;
     right: auto;
   }
