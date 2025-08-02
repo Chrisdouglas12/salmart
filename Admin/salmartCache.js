@@ -1,5 +1,4 @@
-// salmartCache.js
-
+// Enhanced salmartCache.js with real-time sync
 import { get, set, del } from './idb-keyval-iife.js';
 
 const API_BASE_URL = window.API_BASE_URL || (window.location.hostname === 'localhost'
@@ -8,7 +7,8 @@ const API_BASE_URL = window.API_BASE_URL || (window.location.hostname === 'local
 
 class SalmartCache {
     constructor() {
-        console.log('SalmartCache initialized with IndexedDB support.');
+        this.pendingUpdates = new Map(); // Track pending updates
+        console.log('SalmartCache initialized with IndexedDB support and real-time sync.');
     }
 
     /**
@@ -58,8 +58,243 @@ class SalmartCache {
     }
 
     /**
+     * Updates a specific post in the cache with new data (likes, comments, etc.)
+     * @param {string} postId - The ID of the post to update
+     * @param {object} updates - The updates to apply to the post
+     * @param {string} category - The category of the post
+     */
+    async updatePostInCache(postId, updates, category = 'all') {
+        if (!postId || !updates) return;
+
+        const dbKey = this._getPersonalizedDBKey(`posts_category_${category}`);
+        
+        try {
+            if (typeof get !== 'undefined' && typeof set !== 'undefined') {
+                let cachedPosts = (await get(dbKey)) || [];
+                
+                const postIndex = cachedPosts.findIndex(post => post._id === postId);
+                if (postIndex !== -1) {
+                    // Update the post with new data
+                    cachedPosts[postIndex] = { ...cachedPosts[postIndex], ...updates };
+                    await set(dbKey, cachedPosts);
+                    console.log(`💾 [SalmartCache] Updated post ${postId} in cache for category ${category}`);
+                    
+                    // Also update other categories if the post exists there
+                    await this._updatePostInAllCategories(postId, updates);
+                }
+            }
+        } catch (error) {
+            console.error('❌ [SalmartCache] Error updating post in cache:', error);
+        }
+    }
+
+    /**
+     * Updates a post across all cached categories
+     * @param {string} postId - The ID of the post to update
+     * @param {object} updates - The updates to apply
+     */
+    async _updatePostInAllCategories(postId, updates) {
+        const categories = ['all', 'electronics', 'fashion', 'home', 'sports', 'books', 'automotive'];
+        const userId = localStorage.getItem('userId') || 'anonymous';
+        
+        for (const category of categories) {
+            try {
+                const dbKey = `posts_category_${category}_${userId}`;
+                if (typeof get !== 'undefined' && typeof set !== 'undefined') {
+                    let cachedPosts = (await get(dbKey)) || [];
+                    const postIndex = cachedPosts.findIndex(post => post._id === postId);
+                    
+                    if (postIndex !== -1) {
+                        cachedPosts[postIndex] = { ...cachedPosts[postIndex], ...updates };
+                        await set(dbKey, cachedPosts);
+                    }
+                }
+            } catch (error) {
+                console.warn(`⚠️ [SalmartCache] Could not update post in category ${category}:`, error);
+            }
+        }
+    }
+
+    /**
+     * Optimistically updates likes in cache and syncs with server
+     * @param {string} postId - The post ID
+     * @param {boolean} isLiked - Whether the post is being liked or unliked
+     * @param {string} userId - The current user's ID
+     * @param {string} category - The post category
+     */
+    async optimisticLikeUpdate(postId, isLiked, userId, category = 'all') {
+        if (!postId || !userId) return;
+
+        // Store pending update
+        this.pendingUpdates.set(`like_${postId}`, { isLiked, timestamp: Date.now() });
+
+        try {
+            // Get current cached post to update likes optimistically
+            const dbKey = this._getPersonalizedDBKey(`posts_category_${category}`);
+            let cachedPosts = [];
+            
+            if (typeof get !== 'undefined') {
+                cachedPosts = (await get(dbKey)) || [];
+            }
+
+            const postIndex = cachedPosts.findIndex(post => post._id === postId);
+            if (postIndex !== -1) {
+                const post = cachedPosts[postIndex];
+                let updatedLikes = [...(post.likes || [])];
+
+                if (isLiked) {
+                    if (!updatedLikes.includes(userId)) {
+                        updatedLikes.push(userId);
+                    }
+                } else {
+                    updatedLikes = updatedLikes.filter(id => id !== userId);
+                }
+
+                // Update cache optimistically
+                await this.updatePostInCache(postId, { likes: updatedLikes }, category);
+                
+                // Update UI immediately
+                this._updateLikeUI(postId, updatedLikes, userId);
+            }
+
+// Fix: Use the correct endpoint format
+const response = await this._fetchWithNetworkFallback(`${API_BASE_URL}/post/like/${postId}`, {
+    method: 'POST',
+    headers: {
+        ...this._getAuthHeaders(),
+        'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ action: isLiked ? 'like' : 'unlike' }),
+});
+
+            // Update cache with server response
+            if (response.likes) {
+                await this.updatePostInCache(postId, { likes: response.likes }, category);
+                this._updateLikeUI(postId, response.likes, userId);
+            }
+
+            // Remove pending update
+            this.pendingUpdates.delete(`like_${postId}`);
+
+        } catch (error) {
+            console.error('❌ [SalmartCache] Error in optimistic like update:', error);
+            
+            this.pendingUpdates.delete(`like_${postId}`);
+            // Revert optimistic update on error
+            
+            // Re-fetch the post to get accurate data
+            await this._refreshPostData(postId, category);
+        }
+    }
+
+
+
+/**
+ * Adds a new post to the cache after creation
+ * @param {object} newPost - The newly created post
+ * @param {string} category - The category of the post
+ */
+async addNewPostToCache(newPost, category = 'all') {
+    try {
+        const dbKey = this._getPersonalizedDBKey(`posts_category_${category}`);
+        
+        if (typeof get !== 'undefined' && typeof set !== 'undefined') {
+            let cachedPosts = (await get(dbKey)) || [];
+            
+            // Add new post to the beginning (most recent)
+            const updatedPosts = [newPost, ...cachedPosts];
+            
+            // Remove duplicates by ID
+            const uniquePosts = updatedPosts.filter((post, index, arr) => 
+                arr.findIndex(p => p._id === post._id) === index
+            );
+            
+            await set(dbKey, uniquePosts);
+            console.log(`💾 [SalmartCache] Added new post to cache for category: ${category}`);
+            
+            // Also add to 'all' category if not already 'all'
+            if (category !== 'all') {
+                await this.addNewPostToCache(newPost, 'all');
+            }
+        }
+    } catch (error) {
+        console.error('❌ [SalmartCache] Error adding new post to cache:', error);
+        // Fallback: clear cache
+        await this.clearCache(category);
+    }
+}
+    /**
+     * Updates the like UI elements
+     * @param {string} postId - The post ID
+     * @param {Array} likes - Array of user IDs who liked the post
+     * @param {string} currentUserId - Current user's ID
+     */
+    _updateLikeUI(postId, likes, currentUserId) {
+        const likeButtons = document.querySelectorAll(`.like-button[data-post-id="${postId}"]`);
+        const isLiked = likes.includes(currentUserId);
+        
+        likeButtons.forEach(button => {
+            const icon = button.querySelector('i');
+            const countSpan = button.querySelector('.like-count');
+            
+            if (icon) {
+                icon.className = isLiked ? 'fas fa-heart' : 'far fa-heart';
+            }
+            if (countSpan) {
+                countSpan.textContent = likes.length;
+            }
+        });
+    }
+
+    /**
+     * Updates comment count in cache
+     * @param {string} postId - The post ID
+     * @param {number} commentCount - New comment count
+     * @param {string} category - Post category
+     */
+    async updateCommentCount(postId, commentCount, category = 'all') {
+        await this.updatePostInCache(postId, { 
+            comments: Array(commentCount).fill(null) // Simple way to set length
+        }, category);
+
+        // Update UI
+        const commentButtons = document.querySelectorAll(`.reply-button[data-post-id="${postId}"]`);
+        commentButtons.forEach(button => {
+            const countSpan = button.querySelector('.comment-count');
+            if (countSpan) {
+                countSpan.textContent = commentCount;
+            }
+        });
+    }
+
+    /**
+     * Refreshes a specific post's data from the server
+     * @param {string} postId - The post ID
+     * @param {string} category - Post category
+     */
+    async _refreshPostData(postId, category = 'all') {
+        try {
+            const response = await this._fetchWithNetworkFallback(`${API_BASE_URL}/post/${postId}`, {
+                headers: this._getAuthHeaders(),
+            });
+
+            if (response) {
+                await this.updatePostInCache(postId, response, category);
+                
+                // Update UI with fresh data
+                const currentUserId = localStorage.getItem('userId');
+                if (response.likes && currentUserId) {
+                    this._updateLikeUI(postId, response.likes, currentUserId);
+                }
+            }
+        } catch (error) {
+            console.error('❌ [SalmartCache] Error refreshing post data:', error);
+        }
+    }
+
+    /**
      * Fetches posts for a given category, handling both initial load and infinite scrolling.
-     * It combines network and cache data and ensures no duplicates.
+     * Now includes real-time sync for interactions data.
      * @param {string} category - The category of posts to fetch.
      * @param {string} [lastPostId=null] - The ID of the last post for pagination.
      * @returns {Promise<Array<object>>} - A promise that resolves to an array of posts.
@@ -77,8 +312,9 @@ class SalmartCache {
                         // Sort by createdAt and return the cached posts.
                         const sortedCachedPosts = cachedPosts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
                         
-                        // Background update for delta-sync
+                        // Background update for delta-sync AND interactions sync
                         this._backgroundSyncNewPosts(category, sortedCachedPosts).catch(e => console.warn('Background sync failed:', e));
+                        this._syncInteractionsData(sortedCachedPosts, category).catch(e => console.warn('Interactions sync failed:', e));
                         
                         return sortedCachedPosts;
                     }
@@ -124,6 +360,94 @@ class SalmartCache {
     }
 
     /**
+     * Syncs interaction data (likes, comments) for cached posts
+     * @param {Array} cachedPosts - The cached posts
+     * @param {string} category - Post category
+     */
+    async _syncInteractionsData(cachedPosts, category) {
+        if (!cachedPosts.length) return;
+
+        try {
+            const postIds = cachedPosts.map(post => post._id).filter(Boolean);
+            if (postIds.length === 0) return;
+
+            // Fetch interaction data for all posts
+            const response = await this._fetchWithNetworkFallback(`${API_BASE_URL}/posts/interactions`, {
+                method: 'POST',
+                headers: {
+                    ...this._getAuthHeaders(),
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ postIds }),
+            });
+
+            if (response.interactions) {
+                const dbKey = this._getPersonalizedDBKey(`posts_category_${category}`);
+                let hasUpdates = false;
+
+                // Update cached posts with latest interaction data
+                const updatedPosts = cachedPosts.map(post => {
+                    const interaction = response.interactions.find(i => i.postId === post._id);
+                    if (interaction) {
+                        const needsUpdate = 
+                            (post.likes?.length || 0) !== (interaction.likes?.length || 0) ||
+                            (post.comments?.length || 0) !== (interaction.comments?.length || 0);
+
+                        if (needsUpdate) {
+                            hasUpdates = true;
+                            return {
+                                ...post,
+                                likes: interaction.likes || [],
+                                comments: interaction.comments || []
+                            };
+                        }
+                    }
+                    return post;
+                });
+
+                if (hasUpdates) {
+                    if (typeof set !== 'undefined') {
+                        await set(dbKey, updatedPosts);
+                        console.log(`🔄 [SalmartCache] Updated interaction data for ${category} posts`);
+                    }
+
+                    // Update UI with latest data
+                    this._updateInteractionUI(response.interactions);
+                }
+            }
+        } catch (error) {
+            console.warn('⚠️ [SalmartCache] Failed to sync interactions data:', error);
+        }
+    }
+
+    /**
+     * Updates UI elements with latest interaction data
+     * @param {Array} interactions - Array of interaction data
+     */
+    _updateInteractionUI(interactions) {
+        const currentUserId = localStorage.getItem('userId');
+        if (!currentUserId) return;
+
+        interactions.forEach(({ postId, likes, comments }) => {
+            // Update like buttons
+            if (likes) {
+                this._updateLikeUI(postId, likes, currentUserId);
+            }
+
+            // Update comment counts
+            if (comments) {
+                const commentButtons = document.querySelectorAll(`.reply-button[data-post-id="${postId}"]`);
+                commentButtons.forEach(button => {
+                    const countSpan = button.querySelector('.comment-count');
+                    if (countSpan) {
+                        countSpan.textContent = comments.length;
+                    }
+                });
+            }
+        });
+    }
+
+    /**
      * Internal method to fetch new posts since the most recent cached post.
      * This runs in the background and updates the cache without blocking the UI.
      * @param {string} category 
@@ -159,6 +483,36 @@ class SalmartCache {
             }
         } catch (error) {
             console.warn('⚠️ [SalmartCache] Background sync failed:', error.message);
+        }
+    }
+
+    /**
+     * Clears cache for a specific category or all categories
+     * @param {string} [category=null] - Category to clear, or null for all
+     */
+    async clearCache(category = null) {
+        try {
+            if (category) {
+                const dbKey = this._getPersonalizedDBKey(`posts_category_${category}`);
+                if (typeof del !== 'undefined') {
+                    await del(dbKey);
+                    console.log(`🗑️ [SalmartCache] Cleared cache for category: ${category}`);
+                }
+            } else {
+                // Clear all post caches
+                const categories = ['all', 'electronics', 'fashion', 'home', 'sports', 'books', 'automotive'];
+                const userId = localStorage.getItem('userId') || 'anonymous';
+                
+                for (const cat of categories) {
+                    const dbKey = `posts_category_${cat}_${userId}`;
+                    if (typeof del !== 'undefined') {
+                        await del(dbKey);
+                    }
+                }
+                console.log('🗑️ [SalmartCache] Cleared all post caches');
+            }
+        } catch (error) {
+            console.error('❌ [SalmartCache] Error clearing cache:', error);
         }
     }
 
@@ -243,6 +597,8 @@ class SalmartCache {
             throw error;
         }
     }
+    
+
 
     /**
      * Fetches user suggestions for following, with caching.

@@ -642,24 +642,30 @@ async function submitAd() {
     const { success, data } = await handleResponse(response);
 
     if (success) {
-      showToast(isEditMode ? 'Ad updated successfully!' : 'Ad created successfully!', '#28a745');
-      form.reset();
-      document.getElementById('photo-preview-container').innerHTML = '';
-      document.getElementById('video-preview-container').innerHTML = '';
-      hideProcessingStatus();
-      processedVideoFile = null;
-      existingPhotoUrlInput.value = '';
-      existingVideoUrlInput.value = '';
-      existingThumbnailUrlInput.value = '';
+  showToast(isEditMode ? 'Ad updated successfully!' : 'Ad created successfully!', '#28a745');
+  
+  // Signal that a post was just created
+  if (!isEditMode) {
+    sessionStorage.setItem('justCreatedPost', 'true');
+  }
 
-      if (!isEditMode) {
-        switchTab('normal');
-      }
-      
-      setTimeout(() => {
-        window.location.href = 'index.html';
-      }, 1000);
-    } else {
+  form.reset();
+  document.getElementById('photo-preview-container').innerHTML = '';
+  document.getElementById('video-preview-container').innerHTML = '';
+  hideProcessingStatus();
+  processedVideoFile = null;
+  existingPhotoUrlInput.value = '';
+  existingVideoUrlInput.value = '';
+  existingThumbnailUrlInput.value = '';
+
+  if (!isEditMode) {
+    switchTab('normal');
+  }
+  
+  setTimeout(() => {
+    window.location.href = 'index.html';
+  }, 1000);
+} else {
       const errorMessage = data.message || `Server error: ${response.status} ${response.statusText}`;
       console.error('Server error:', errorMessage);
       showToast(errorMessage, '#dc3545');

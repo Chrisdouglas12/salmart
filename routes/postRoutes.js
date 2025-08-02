@@ -1384,5 +1384,50 @@ module.exports = (io) => {
   }
 });
 
+// POST /posts/interactions - Get interaction data for multiple posts
+router.post('/posts/interactions', verifyToken, async (req, res) => {
+    try {
+        const { postIds } = req.body;
+        
+        if (!Array.isArray(postIds) || postIds.length === 0) {
+            return res.status(400).json({ message: 'postIds array is required' });
+        }
+
+        // Validate postIds are valid ObjectIds
+        const validPostIds = postIds.filter(id => mongoose.Types.ObjectId.isValid(id));
+        
+        if (validPostIds.length === 0) {
+            return res.status(400).json({ message: 'No valid post IDs provided' });
+        }
+
+        // Fetch posts with only interaction data we need
+        const posts = await Post.find(
+            { 
+                _id: { $in: validPostIds },
+                status: 'active' // Only get active posts
+            },
+            { 
+                _id: 1, 
+                likes: 1, 
+                comments: 1, 
+                isSold: 1 
+            }
+        ).lean(); // Use lean() for better performance
+
+        const interactions = posts.map(post => ({
+            postId: post._id.toString(),
+            likes: post.likes ? post.likes.map(id => id.toString()) : [],
+            comments: post.comments || [],
+            isSold: post.isSold || false
+        }));
+
+        res.json({ interactions });
+        
+    } catch (error) {
+        console.error('Error fetching interactions data:', error);
+        res.status(500).json({ message: 'Failed to fetch interactions data' });
+    }
+});
+
   return router;
 };

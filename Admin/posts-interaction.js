@@ -1,4 +1,6 @@
 // post-interactions.js
+import { salmartCache } from './salmartCache.js';
+
 document.addEventListener('DOMContentLoaded', async function () {
     // --- Constants and Global Dependencies ---
     const API_BASE_URL = window.API_BASE_URL || (window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart.onrender.com');
@@ -59,6 +61,9 @@ document.addEventListener('DOMContentLoaded', async function () {
                     const errorData = await response.json();
                     throw new Error(errorData.message || 'Failed to delete post');
                 }
+
+                // Clear from cache when deleted
+                await salmartCache.clearCache(); // Clear all caches to remove deleted post
 
                 postElement.remove();
                 showToast('Post deleted successfully!', '#28a745');
@@ -244,22 +249,9 @@ document.addEventListener('DOMContentLoaded', async function () {
         window.updateFollowButtonsUI(userIdToFollow, !isCurrentlyFollowing);
 
         try {
-            const endpoint = isCurrentlyFollowing ? `${API_BASE_URL}/unfollow/${userIdToFollow}` : `${API_BASE_URL}/follow/${userIdToFollow}`;
-            const response = await fetch(endpoint, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${authToken}`,
-                },
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Failed to update follow status');
-            }
-
-            const data = await response.json();
-            showToast(data.message || 'Follow status updated!', '#28a745');
+            // Use cache's toggle follow method
+            await salmartCache.toggleFollow(userIdToFollow, isCurrentlyFollowing);
+            showToast('Follow status updated!', '#28a745');
 
         } catch (error) {
             console.error('Follow/Unfollow error:', error);
@@ -369,42 +361,27 @@ document.addEventListener('DOMContentLoaded', async function () {
                 return;
             }
 
-            const likeCountElement = target.querySelector('.like-count');
             const icon = target.querySelector('i');
-            const isCurrentlyLiked = icon.classList.contains('fas'); 
-            const currentLikes = parseInt(likeCountElement.textContent, 10);
-
-            target.disabled = true; 
-            likeCountElement.textContent = isCurrentlyLiked ? Math.max(0, currentLikes - 1) : currentLikes + 1;
-            icon.classList.toggle('fas', !isCurrentlyLiked);
-            icon.classList.toggle('far', isCurrentlyLiked);
-
+            const isCurrentlyLiked = icon.classList.contains('fas');
+            
+            // Disable button to prevent double clicks
+            target.disabled = true;
+            
             try {
-                const response = await fetch(`${API_BASE_URL}/post/like/${postId}`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${authToken}`,
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ action: isCurrentlyLiked ? 'unlike' : 'like' }),
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.message || 'Failed to like/unlike post');
+                // Use optimistic update from cache
+                await salmartCache.optimisticLikeUpdate(postId, !isCurrentlyLiked, loggedInUser, 'all');
+                
+                // Emit socket event for real-time updates to other users
+                if (window.socket && window.socket.connected) {
+                    window.socket.emit('likePost', { 
+                        postId, 
+                        userId: loggedInUser, 
+                        action: isCurrentlyLiked ? 'unlike' : 'like' 
+                    });
                 }
-
-                const data = await response.json();
-                likeCountElement.textContent = data.likes.length;
-                const userLikes = data.likes.includes(loggedInUser);
-                icon.classList.toggle('fas', userLikes);
-                icon.classList.toggle('far', !userLikes);
-
+                
             } catch (error) {
                 console.error('Like error:', error);
-                likeCountElement.textContent = currentLikes;
-                icon.classList.toggle('fas', isCurrentlyLiked);
-                icon.classList.toggle('far', !isCurrentlyLiked);
                 showToast(error.message || 'Failed to update like status.', '#dc3545');
             } finally {
                 target.disabled = false;
@@ -414,8 +391,8 @@ document.addEventListener('DOMContentLoaded', async function () {
         else if (target.classList.contains('share-button')) {
             const postData = {
                 _id: postId,
-                description: postElement.querySelector('.post-description-text p')?.textContent || postElement.querySelector('.product-title')?.textContent || '',
-                price: parseFloat(postElement.querySelector('.price-value')?.textContent?.replace('₦', '').replace(/,/g, '')) || null,
+                description: postElement?.querySelector('.post-description-text p')?.textContent || postElement?.querySelector('.product-title')?.textContent || '',
+                price: parseFloat(postElement?.querySelector('.price-value')?.textContent?.replace('₦', '').replace(/,/g, '')) || null,
             };
             if (window.showShareModal) {
                 window.showShareModal(postData);
@@ -487,7 +464,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         button.addEventListener('click', function () {
             const selectedCategory = this.getAttribute('data-category');
             if (window.fetchPosts) {
-                window.fetchPosts(selectedCategory, 1, true);
+                window.fetchPosts(selectedCategory, true);
             } else {
                 console.error('fetchPosts function not available. Ensure main.js loads correctly.');
                 showToast('Category filtering not available.', '#dc3545');

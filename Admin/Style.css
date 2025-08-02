@@ -1026,32 +1026,20 @@ p {
   background-color: white;
   box-shadow: 0 0 10px #ddd;
   z-index: 1000;
-  display: flex; /* Added for proper alignment */
+  display: flex;
   justify-content: center;
   align-items: center;
   border-top-left-radius: 12px;
   border-top-right-radius: 12px;
-  transition: all 0.3s ease-in-out;
+  /* CHANGE: Use a 'bottom' transition instead of 'transform' */
+  transition: bottom 0.3s ease-in-out;
 }
 
-/* Desktop: Move to top-right */
-@media (min-width: 900px) {
-  #navbar {
-    top: -4px;
-    bottom: auto;
-    left: auto;
-    right: 0px;
-    transform: none;
-    max-width: 400px;
-    background-color: transparent;
-    box-shadow: none;
-  }
-}
-
-@media (min-width: 900px) {
-  #navbar a span:not(.notification-badge):not(.icon-with-badge) {
-    display: none;
-  }
+/* * CORRECTED: Hide the nav bar by changing its 'bottom' property.
+ * This is a pure vertical movement and won't interfere with translateX.
+ */
+#navbar.nav-hidden {
+  bottom: -100px; /* Use a value larger than the navbar's height */
 }
 
 #navbar ul {
@@ -1085,11 +1073,6 @@ p {
   font-weight: 500;
 }
 
-#navbar i.active {
-  color: #28a745;
-  font-weight: 500;
-}
-
 #navbar a i {
   font-size: 14px;
   margin-bottom: 5px;
@@ -1104,6 +1087,33 @@ p {
   align-items: center;
   border-radius: 50%;
 }
+
+/* --- Media Queries for Desktop --- */
+@media (min-width: 900px) {
+  #navbar {
+    top: -4px;
+    bottom: auto;
+    left: auto;
+    right: 0px;
+    transform: none;
+    max-width: 400px;
+    background-color: transparent;
+    box-shadow: none;
+  }
+  
+  /* On desktop, the nav bar should always be visible, so no hidden state is needed */
+  #navbar.nav-hidden {
+    /* Reset the bottom property so the element is not hidden */
+    bottom: auto; 
+    /* The desktop version will also be fixed at the top, so no need for translateY */
+    transform: none; 
+  }
+
+  #navbar a span:not(.notification-badge):not(.icon-with-badge) {
+    display: none;
+  }
+}
+
 
 .icon-badge-wrapper {
   position: relative;

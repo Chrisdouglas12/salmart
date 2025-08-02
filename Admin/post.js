@@ -8,6 +8,9 @@ const API_BASE_URL = window.API_BASE_URL || (window.location.hostname === 'local
 const SOCKET_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart.onrender.com';
 const DEFAULT_PLACEHOLDER_IMAGE = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
 
+
+
+
 // --- Optimized Image Loading (New) ---
 class ImageLoader {
     constructor() {
@@ -142,6 +145,23 @@ socket.on('profilePictureUpdate', ({
     updateProfilePictures(userId, profilePicture);
 });
 
+socket.on('postLiked', async ({ postId, likes, category }) => {
+    await salmartCache.updatePostInCache(postId, { likes }, category || currentCategory);
+    const currentUserId = localStorage.getItem('userId');
+    if (currentUserId) {
+        salmartCache._updateLikeUI(postId, likes, currentUserId);
+    }
+});
+
+socket.on('postCommented', async ({ postId, commentCount, category }) => {
+    await salmartCache.updateCommentCount(postId, commentCount, category || currentCategory);
+});
+
+socket.on('postSoldStatusChanged', async ({ postId, isSold, category }) => {
+    await salmartCache.updatePostInCache(postId, { isSold }, category || currentCategory);
+    updatePostSoldStatus(postId, isSold);
+});
+
 // --- Utility Functions (Correctly kept here) ---
 
 /**
@@ -166,6 +186,38 @@ function showToast(message, bgColor = '#333') {
 }
 window.showToast = showToast; // Expose globally
 
+//realtime events
+function updatePostSoldStatus(postId, isSold) {
+    const postElements = document.querySelectorAll(`[data-post-id="${postId}"]`);
+    
+    postElements.forEach(element => {
+        const buyButtons = element.querySelectorAll('.buy-now-button, .promoted-cta-button');
+        buyButtons.forEach(button => {
+            if (isSold) {
+                button.classList.add('sold-out');
+                button.disabled = true;
+                button.innerHTML = '<i class="fas fa-times-circle"></i> Sold Out';
+            } else {
+                button.classList.remove('sold-out');
+                button.disabled = false;
+                button.innerHTML = '<i class="fas fa-shopping-cart"></i> Buy Now';
+            }
+        });
+        
+        const messageButtons = element.querySelectorAll('.send-message-btn');
+        messageButtons.forEach(button => {
+            if (isSold) {
+                button.classList.add('unavailable');
+                button.disabled = true;
+                button.innerHTML = '<i class="fas fa-ban"></i> Unavailable';
+            } else {
+                button.classList.remove('unavailable');
+                button.disabled = false;
+                button.innerHTML = '<i class="fas fa-paper-plane"></i> Message';
+            }
+        });
+    });
+}
 /**
  * Formats a timestamp into a human-readable relative time string.
  * @param {string} timestamp - The ISO timestamp string.
@@ -855,6 +907,11 @@ async function fetchInitialPosts(category = currentCategory, clearExisting = fal
         if (postsContainer.children.length === 0) {
             postsContainer.innerHTML = `<p style="text-align: center; padding: 20px; color: #666;">No posts available.</p>`;
         }
+        // After rendering posts, set up real-time sync for visible posts
+const visiblePostIds = sortedPosts.map(post => post._id).filter(Boolean);
+if (visiblePostIds.length > 0) {
+    socket.emit('watchPosts', { postIds: visiblePostIds });
+}
 
         window.dispatchEvent(new Event('postsRendered'));
 
@@ -898,12 +955,12 @@ async function fetchMorePosts(category, lastPostId) {
             postsContainer.appendChild(fragment);
             console.log(`Rendered ${olderPosts.length} older posts.`);
 
-            // Re-observe the new last post
-            const newLastPostElement = postsContainer.querySelector('.post:last-of-type');
-            if (newLastPostElement) {
-                scrollObserver.unobserve(lastPostElement);
-                scrollObserver.observe(newLastPostElement);
-            }
+// Re-observe the new last post
+const newLastPostElement = postsContainer.querySelector('.post:last-of-type');
+const currentLastPostElement = postsContainer.querySelector('.post:last-of-type');
+if (newLastPostElement && scrollObserver) {
+    scrollObserver.observe(newLastPostElement);
+}
         } else {
             console.log('No more older posts to load.');
             const lastPostElement = postsContainer.querySelector('.post:last-of-type');
@@ -966,13 +1023,46 @@ async function initializeAppData() {
         currentFollowingList = await salmartCache.fetchFollowingList();
         socket.emit('join', `user_${currentLoggedInUser}`);
     }
+        // ADD THIS: Check for new post flag and clear cache if needed
+    const justCreatedPost = sessionStorage.getItem('justCreatedPost');
+    if (justCreatedPost) {
+        sessionStorage.removeItem('justCreatedPost');
+        console.log('🔄 Detected return from post creation, clearing cache...');
+        await salmartCache.clearCache();
+    }
     isAuthReady = true;
     console.log('App initialization complete. User:', currentLoggedInUser ? currentLoggedInUser : 'Not logged in');
     await fetchInitialPosts(currentCategory, true);
 }
 
 window.fetchPosts = fetchInitialPosts;
+window.salmartCache = salmartCache;
+// Listen for page visibility changes to refresh posts when returning from other pages
+document.addEventListener('visibilitychange', async () => {
+    if (!document.hidden && isAuthReady) {
+        // Check if we just returned from creating a post
+        const justCreatedPost = sessionStorage.getItem('justCreatedPost');
+        if (justCreatedPost) {
+            sessionStorage.removeItem('justCreatedPost');
+            console.log('🔄 Detected return from post creation, clearing cache...');
+            await salmartCache.clearCache();
+            await fetchInitialPosts(currentCategory, true);
+        }
+    }
+});
 
+// Also listen for focus events as a backup
+window.addEventListener('focus', async () => {
+    if (isAuthReady) {
+        const justCreatedPost = sessionStorage.getItem('justCreatedPost');
+        if (justCreatedPost) {
+            sessionStorage.removeItem('justCreatedPost');
+            console.log('🔄 Detected return from post creation via focus, clearing cache...');
+            await salmartCache.clearCache();
+            await fetchInitialPosts(currentCategory, true);
+        }
+    }
+});
 window.addEventListener('beforeunload', () => {
     if (socket) {
         socket.disconnect();

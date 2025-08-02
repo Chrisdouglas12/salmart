@@ -156,8 +156,8 @@ try {
 }
 
 // ===== Enhanced Update Management =====
-// UPDATE THIS LINE ON EVERY DEPLOYMENT
-const BUILD_TIMESTAMP = '2024-08-01-v1.76.29'; // <-- CHANGE THIS EACH TIME YOU DEPLOY
+
+const BUILD_TIMESTAMP = '2024-08-02-v1.76.30'; 
 
 const CACHE_NAME = `salmart-cache-${BUILD_TIMESTAMP}`;
 const DYNAMIC_CACHE_NAME = `salmart-dynamic-${BUILD_TIMESTAMP}`;
