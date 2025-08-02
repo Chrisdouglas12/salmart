@@ -54,6 +54,37 @@ img.lazy-loading.loaded {
 .post-video.lazy-loading.loaded {
     opacity: 1; /* Fade in video once loaded */
 }
+/* This is the key container for the image */
+.post-image-wrapper {
+    position: relative; /* Essential for positioning the badge */
+    width: 100%;
+    /* The magic here: use padding-top to create a 1:1 aspect ratio */
+    /* For a standard square image: */
+    padding-top: 75%; 
+    /* If you prefer a rectangular aspect ratio, e.g., 4:3 */
+    /* padding-top: 75%; */
+    /* Or 16:9 */
+    /* padding-top: 56.25%; */
+    overflow: hidden; /* Hides any part of the image that overflows */
+}
+
+/* Style the image itself to fill the new container */
+.post-image-wrapper img.post-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* This is crucial. It makes the image fill the container without distortion. */
+    cursor: pointer;
+}
+
+/* Update the badge position to work with the new wrapper */
+.post-image-wrapper .badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+}
 
 
 * {
@@ -511,7 +542,7 @@ a {
 .post-image {
   width: 100%;
   height: auto;
-  max-height: 300px;
+  max-height: 400px;
   object-fit: cover;
   cursor: pointer;
   transition: all 0.3s ease;

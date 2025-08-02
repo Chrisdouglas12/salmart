@@ -1,5 +1,6 @@
 const Notification = require('../models/notificationSchema.js');
-const Message = require('../models/messageSchema.js'); // Ensure Message model exists
+const Message = require('../models/messageSchema.js'); 
+
 const mongoose = require('mongoose');
 const winston = require('winston');
 
@@ -25,20 +26,42 @@ const getNotificationCounts = async (userId) => {
       logger.error(`MongoDB not connected: readyState=${mongoose.connection.readyState}`);
       throw new Error('Database connection lost');
     }
-    const notificationCount = await Notification.countDocuments({ userId, isRead: false }).catch(err => {
-      logger.error(`MongoDB query error for notifications: ${err.message}`);
+    
+    // Count general unread alerts (all notifications except 'deal' and 'message')
+    const notificationCount = await Notification.countDocuments({
+      userId,
+      isRead: false,
+      type: { $nin: ['deal', 'message'] } // Exclude deals and messages from general alerts
+    }).catch(err => {
+      logger.error(`MongoDB query error for general notifications: ${err.message}`);
       return 0;
     });
-    const messagesCount = await Message.countDocuments({ receiverId: userId, status: 'sent' }).catch(err => {
+
+    // Count unread messages
+    const messagesCount = await Message.countDocuments({ 
+      receiverId: userId, 
+      status: 'sent' 
+    }).catch(err => {
       logger.error(`MongoDB query error for messages: ${err.message}`);
       return 0;
     });
-    const counts = { notificationCount, messagesCount };
-    logger.info(`Fetched counts for user ${userId}: ${JSON.stringify(counts)}`, { notificationCount, messagesCount });
+
+    // Count unread deal notifications
+    const dealsCount = await Notification.countDocuments({
+      userId,
+      isRead: false,
+      type: 'deal'
+    }).catch(err => {
+      logger.error(`MongoDB query error for deals: ${err.message}`);
+      return 0;
+    });
+    
+    const counts = { notificationCount, messagesCount, dealsCount };
+    logger.info(`Fetched counts for user ${userId}: ${JSON.stringify(counts)}`, { userId, ...counts });
     return counts;
   } catch (error) {
     logger.error(`Error fetching notification counts for user ${userId}: ${error.message}`);
-    return { notificationCount: 0, messagesCount: 0 };
+    return { notificationCount: 0, messagesCount: 0, dealsCount: 0 };
   }
 };
 

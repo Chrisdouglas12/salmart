@@ -30,7 +30,7 @@ async function checkForNewContent() {
     console.log(`📊 Received notification counts: ${JSON.stringify(data)}`);
     updateBadge('alerts-badge', data.notificationCount || 0);
     updateBadge('messages-badge', data.messagesCount || 0);
-    updateBadge('deals-badge', 0);
+    updateBadge('deals-badge', data.dealsCount || 0); // Assuming dealsCount exists
   } catch (error) {
     console.error(`💥 Error fetching notification counts: ${error.message}`);
     updateBadge('alerts-badge', 0);
@@ -94,16 +94,63 @@ socket.on('connect_error', (error) => {
 // Socket.IO notification handlers
 socket.on('notification', (data) => {
   console.log('📢 Received notification:', data);
-  const message =
-    data.type === 'follow'
-      ? `${data.sender.firstName} ${data.sender.lastName} followed you`
-      : data.type === 'like'
-      ? `${data.sender.firstName} ${data.sender.lastName} liked your post`
-      : data.type === 'comment'
-      ? `${data.sender.firstName} ${data.sender.lastName} commented on your post`
-      : data.type === 'reply'
-      ? `${data.sender.firstName} ${data.sender.lastName} replied to your comment`
-      : 'New notification';
+  const senderName = data.sender ? `${data.sender.firstName} ${data.sender.lastName}` : 'A user';
+  let message;
+
+  switch (data.type) {
+    case 'like':
+      message = `${senderName} liked your post`;
+      break;
+    case 'comment':
+      message = `${senderName} commented on your post`;
+      break;
+    case 'reply':
+      message = `${senderName} replied to your comment`;
+      break;
+    case 'follow':
+      message = `${senderName} followed you`;
+      break;
+    case 'payment':
+      message = `${senderName} has paid for "${data.data?.productName}". Kindly share the delivery address.`;
+      break;
+    case 'payment_released':
+      message = `Funds for "${data.data?.productName}" have been released to your bank account.`;
+      break;
+    case 'payout_queued':
+      message = `Your payout of ₦${data.data?.amount} has been queued for processing.`;
+      break;
+    case 'payout_queued_balance_error':
+      message = `Your payout failed due to a balance error. Please contact support.`;
+      break;
+    case 'delivery':
+      message = `${senderName} confirmed delivery of "${data.data?.productName}".`;
+      break;
+    case 'refund_rejected':
+      message = `The refund request for "${data.data?.productName}" has been rejected.`;
+      break;
+    case 'refund_processed':
+      message = `The refund for "${data.data?.productName}" has been processed.`;
+      break;
+    case 'new_post':
+      message = `${senderName} has posted a new product.`;
+      break;
+    case 'notify-followers':
+      message = `${senderName} is asking you to check out a product.`;
+      break;
+    case 'deal':
+      message = `${senderName} made a new deal offer on your post.`;
+      break;
+    case 'promotion':
+      message = `Your promotion has been approved.`;
+      break;
+    case 'warning':
+      message = `A warning has been issued on your account.`;
+      break;
+    default:
+      message = data.message || 'You have a new notification';
+      break;
+  }
+
   showToast(message, '#28a745');
   checkForNewContent();
 });
@@ -112,7 +159,7 @@ socket.on('badge-update', (data) => {
   const userId = localStorage.getItem('userId');
   if (data.userId === userId) {
     console.log(`✅ Received badge-update: ${JSON.stringify(data)}`);
-    const badgeId = data.type === 'message' ? 'messages-badge' : data.type === 'deal' ? 'deals-badge' : 'alerts-badge';
+    const badgeId = data.type === 'messages' ? 'messages-badge' : data.type === 'deals' ? 'deals-badge' : 'alerts-badge';
     updateBadge(badgeId, data.count || 0);
   }
 });

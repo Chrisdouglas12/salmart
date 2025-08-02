@@ -458,22 +458,69 @@ function showInAppNotification(title, body) {
     }, 300);
   }, 4000);
 }
-
 // Helper function to generate notification URL
 function getNotificationUrl(type, postId, senderId) {
   console.log('🔗 [FCM] Generating notification URL:', { type, postId, senderId });
-  if (type === 'like' || type === 'comment') {
-    const url = `product.html?postId=${postId}`;
-    console.log('✅ [FCM] Generated URL:', url);
-    return url;
-  } else if (type === 'message') {
-    const url = `Messages.html?userId=${senderId}`;
-    console.log('✅ [FCM] Generated URL:', url);
-    return url;
+  let url = '/'; // Default fallback URL
+
+  switch (type) {
+    case 'like':
+    case 'comment':
+    case 'new_post':
+    case 'notify-followers':
+    case 'deal':
+    case 'reply':
+      // Likes, comments, new posts, and deals are typically associated with a specific post
+      if (postId) {
+        url = `product.html?postId=${postId}`;
+      }
+      break;
+
+    case 'payment':
+    case 'payment_released':
+    case 'payout_queued':
+    case 'payout_queued_balance_error':
+    case 'refund_rejected':
+    case 'refund_processed':
+    case 'warning':
+      // Payment-related notifications should go to a page that lists transactions or deals
+      url = 'Deals.html'; 
+      break;
+
+    case 'delivery':
+      // Delivery notifications are also deal-related
+      if (postId) {
+        url = `Deals.html?postId=${postId}`;
+      } else {
+        url = 'Deals.html';
+      }
+      break;
+
+    case 'message':
+      
+      // Messages and replies should go to the message/chat page
+      if (senderId) {
+        url = `Messages.html?userId=${senderId}`;
+      } else {
+        url = 'Messages.html';
+      }
+      break;
+
+    case 'promotion':
+      // Promotions could link to a promotions dashboard or the user's profile
+      url = 'index.html';
+      break;
+
+    // For other types or cases where data is missing, the default URL ('/') is used.
+    default:
+      console.log('ℹ️ [FCM] Notification type not explicitly handled, falling back to homepage.');
   }
-  console.log('ℹ️ [FCM] Fallback URL: /');
-  return '/';
+
+  console.log('✅ [FCM] Generated URL:', url);
+  return url;
 }
+
+
 
 // Enhanced service worker message handling
 navigator.serviceWorker.addEventListener('message', (event) => {

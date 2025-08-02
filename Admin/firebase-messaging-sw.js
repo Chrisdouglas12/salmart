@@ -91,6 +91,7 @@ try {
               if (client.url.includes(self.location.origin)) {
                 console.log('🔍 [ServiceWorker] Found existing client, focusing and navigating');
                 client.focus();
+                // This message handler should be in your main app script
                 client.postMessage({
                   type: 'NOTIFICATION_CLICKED',
                   url,
@@ -144,20 +145,55 @@ try {
     );
   });
 
+  // --- UPDATED getNotificationUrl function ---
   function getNotificationUrl(type, postId, senderId) {
     const baseUrl = self.location.origin;
-    if (type === 'like' || type === 'comment') return `${baseUrl}/product.html?postId=${postId}`;
-    if (type === 'message') return `${baseUrl}/Messages.html?userId=${senderId}`;
-    return baseUrl;
-  }
+    let url = baseUrl;
 
+    switch (type) {
+      case 'like':
+      case 'comment':
+      case 'new_post':
+      case 'notify-followers':
+        if (postId) url = `${baseUrl}/product.html?postId=${postId}`;
+        break;
+
+      case 'deal':
+      case 'payment':
+      case 'payment_released':
+      case 'delivery':
+        // These are related to deals and transactions
+        url = `${baseUrl}/Deals.html`;
+        break;
+
+      case 'payout_queued':
+      case 'payout_queued_balance_error':
+      case 'refund_rejected':
+      case 'refund_processed':
+      case 'warning':
+      case 'promotion':
+        case 'reply':
+        // These are alerts and account-related
+        url = `${baseUrl}/Alerts.html`;
+        break;
+
+      case 'message':
+      
+        if (senderId) url = `${baseUrl}/Messages.html?userId=${senderId}`;
+        break;
+      
+      default:
+        console.log('ℹ️ [ServiceWorker] No specific URL for this notification type. Using default.');
+    }
+    return url;
+  }
 } catch (error) {
   console.error('❌ [ServiceWorker] Firebase init failed:', error);
 }
 
 // ===== Enhanced Update Management =====
 
-const BUILD_TIMESTAMP = '2024-08-02-v1.76.30'; 
+const BUILD_TIMESTAMP = '2024-08-02-v1.76.31'; 
 
 const CACHE_NAME = `salmart-cache-${BUILD_TIMESTAMP}`;
 const DYNAMIC_CACHE_NAME = `salmart-dynamic-${BUILD_TIMESTAMP}`;

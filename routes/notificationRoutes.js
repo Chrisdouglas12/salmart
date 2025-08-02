@@ -47,7 +47,7 @@ module.exports = (io) => {
     }
   });
 
-  // Save FCM Token
+  // --- UPDATED save-fcm-token endpoint ---
   router.post('/api/save-fcm-token', verifyToken, async (req, res) => {
     try {
       const { token } = req.body;
@@ -57,12 +57,13 @@ module.exports = (io) => {
         logger.warn(`Token missing in save-fcm-token request for user ${userId}`);
         return res.status(400).json({ error: 'Token is required' });
       }
-
+      
+      // Use $addToSet to add the token to the array without creating duplicates
       await User.findByIdAndUpdate(userId, {
-        fcmToken: token,
+        $addToSet: { fcmTokens: token },
         notificationEnabled: true
       });
-      logger.info(`FCM token saved for user ${userId}: ${token}`);
+      logger.info(`FCM token added for user ${userId}: ${token}`);
       res.json({ success: true });
     } catch (error) {
       const userId = req.user?.userId || 'unknown';
@@ -71,13 +72,14 @@ module.exports = (io) => {
     }
   });
 
-  // Debug Endpoint to Check FCM Token
+  // --- UPDATED check-fcm-token debug endpoint ---
   router.get('/check-fcm-token', verifyToken, async (req, res) => {
     try {
       const userId = req.user.userId;
       const user = await User.findById(userId);
-      logger.info(`Checked FCM token for user ${userId}: ${user?.fcmToken || 'none'}, notificationEnabled: ${user?.notificationEnabled}`);
-      res.json({ fcmToken: user?.fcmToken, notificationEnabled: user?.notificationEnabled });
+      const tokenCount = user?.fcmTokens?.length || 0;
+      logger.info(`Checked FCM tokens for user ${userId}. Count: ${tokenCount}, Enabled: ${user?.notificationEnabled}`);
+      res.json({ fcmTokenCount: tokenCount, notificationEnabled: user?.notificationEnabled });
     } catch (error) {
       const userId = req.user?.userId || 'unknown';
       logger.error(`Error checking FCM token for user ${userId}: ${error.message}`);
@@ -103,7 +105,7 @@ module.exports = (io) => {
         return res.status(404).send('User not found');
       }
 
-      if (!user.fcmToken) {
+      if (!user.fcmTokens || user.fcmTokens.length === 0) {
         logger.error(`User with ID ${userId} does not have an FCM token`);
         return res.status(404).send('User token not found');
       }
@@ -203,30 +205,34 @@ module.exports = (io) => {
     }
   });
 
-  // Mark Deals as Viewed
+  // --- UPDATED deals/mark-as-viewed endpoint ---
   router.post('/deals/mark-as-viewed', verifyToken, async (req, res) => {
     try {
       const userId = req.user.userId;
-      const result = await Transaction.updateMany(
-        {
-          $or: [{ buyerId: userId }, { sellerId: userId }],
-          status: 'pending',
-          viewed: false
-        },
-        { $set: { viewed: true } }
+      
+      // Update all unread notifications of type 'deal' to isRead: true
+      const result = await Notification.updateMany(
+        { userId, type: 'deal', isRead: false },
+        { $set: { isRead: true } }
       );
-      logger.info(`Marked ${result.modifiedCount} deals as viewed for user ${userId}`);
+      
+      logger.info(`Marked ${result.modifiedCount} deal notifications as viewed for user ${userId}`);
+      
       if (result.modifiedCount > 0) {
-        const count = await Transaction.countDocuments({
-          $or: [{ buyerId: userId }, { sellerId: userId }],
-          status: 'pending',
-          viewed: false
+        // Recalculate the count after the update
+        const dealsCount = await Notification.countDocuments({
+          userId,
+          isRead: false,
+          type: 'deal'
         });
-        req.io.to(`user_${userId}`).emit('badge-update', { type: 'deals', count, userId });
+        
+        // Emit an update to the client with the new count (which should be 0)
+        req.io.to(`user_${userId}`).emit('badge-update', { type: 'deals', count: dealsCount, userId });
         await NotificationService.triggerCountUpdate(req.io, userId);
-        res.json({ success: true, message: 'Deals marked as viewed', updated: result.modifiedCount });
+        
+        res.json({ success: true, message: 'Deal notifications marked as viewed', updated: result.modifiedCount });
       } else {
-        res.json({ success: true, message: 'No unviewed pending deals to mark' });
+        res.json({ success: true, message: 'No unread deal notifications to mark as viewed' });
       }
     } catch (error) {
       const userId = req.user?.userId || 'unknown';

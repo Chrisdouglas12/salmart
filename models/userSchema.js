@@ -1,4 +1,3 @@
-// models/User.js
 const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
@@ -62,12 +61,27 @@ const userSchema = new mongoose.Schema({
 
   // Notifications & Preferences
   notificationPreferences: {
+    // All notification types with a default of 'true'
     likes: { type: Boolean, default: true },
     comments: { type: Boolean, default: true },
-    messages: { type: Boolean, default: true },
-    follows: { type: Boolean, default: true },
-    payments: { type: Boolean, default: true },
+    reply: { type: Boolean, default: true },
+    new_post: { type: Boolean, default: true },
+    'notify-followers': { type: Boolean, default: true },
+    payment: { type: Boolean, default: true },
+    payment_released: { type: Boolean, default: true },
+    payout_queued: { type: Boolean, default: true },
+    payout_queued_balance_error: { type: Boolean, default: true },
     delivery: { type: Boolean, default: true },
+    refund_rejected: { type: Boolean, default: true },
+    refund_processed: { type: Boolean, default: true },
+    warning: { type: Boolean, default: true },
+    message: { type: Boolean, default: true },
+    deal: { type: Boolean, default: true },
+    promotion: { type: Boolean, default: true },
+  },
+  fcmTokens: {
+    type: [String],
+    default: []
   },
   socketId: { type: String, default: null },
   notificationEnabled: { type: Boolean, default: true },
@@ -115,6 +129,6 @@ userSchema.pre('save', function (next) {
 
 // Indexes for performance and uniqueness
 userSchema.index({ socketId: 1 });
-userSchema.index({ interests: 1 }); // Consider if you'll query by interests often
+userSchema.index({ interests: 1 });
 
-module.exports = mongoose.model('User', userSchema);
+module.exports = mongoose.models.user || mongoose.model('User', userSchema);

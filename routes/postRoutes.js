@@ -731,8 +731,11 @@ module.exports = (io) => {
     post.comments.push(newComment);
     await post.save();
 
-    // Notify the post owner (if not self)
-    if (post.createdBy.userId.toString() !== userId.toString()) {
+    // --- New Logic: Check if the commenter is the post creator ---
+    const isPostCreator = post.createdBy.userId.toString() === userId.toString();
+
+    // Notify the post owner (if not the creator themselves)
+    if (!isPostCreator) {
       const notification = new Notification({
         userId: post.createdBy.userId._id,
         type: 'comment',
@@ -754,16 +757,19 @@ module.exports = (io) => {
       await NotificationService.triggerCountUpdate(req.io, post.createdBy.userId._id.toString());
     }
 
-    //  @shoppers Logic — Notify all followers of the post owner
+    // @shoppers Logic — Notify all followers of the post owner
     if (text.includes('@shoppers')) {
       const seller = post.createdBy.userId;
 
-      const followers = await User.find({ _id: { $in: seller.followers } });
+      // Find all followers, excluding the user who is commenting
+      const followers = await User.find({ 
+        _id: { 
+          $in: seller.followers, 
+          $ne: userId 
+        } 
+      });
 
       for (const follower of followers) {
-        // Avoid sending to the one who commented
-        if (follower._id.toString() === userId.toString()) continue;
-
         await Notification.create({
           userId: follower._id,
           senderId: userId,
@@ -802,6 +808,7 @@ module.exports = (io) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
+
 
   router.get('/post/reply/:postId/:commentId', async (req, res) => {
     try {

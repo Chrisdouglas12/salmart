@@ -613,6 +613,35 @@
       }
     });
   </script>
+  <script>
+  let lastScrollY = window.scrollY;
+  const navbar = document.getElementById('navbar');
+  const desktopMediaQuery = window.matchMedia('(min-width: 900px)');
+
+  function handleScroll() {
+    // Only apply the scroll-hide effect if the screen is not in desktop mode
+    if (!desktopMediaQuery.matches) {
+      // Logic for mobile view
+      if (lastScrollY < window.scrollY && window.scrollY > 100) {
+        navbar.classList.add('nav-hidden');
+      } else {
+        navbar.classList.remove('nav-hidden');
+      }
+    } else {
+      // Logic for desktop view: The nav bar should always be visible
+      // We explicitly remove the hidden class to ensure it's always shown
+      navbar.classList.remove('nav-hidden');
+    }
+    lastScrollY = window.scrollY;
+  }
+
+  // Initial check and event listener
+  window.addEventListener('scroll', handleScroll);
+  window.addEventListener('resize', handleScroll); // Listen for resize to adjust behavior
+
+  // Run on page load
+  handleScroll();
+</script>
   <script src="Badge.js"></script>
   <script src="reviews.js"></script>
   <script src="posts-interaction.js"></script>
