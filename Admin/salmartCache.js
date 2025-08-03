@@ -635,6 +635,220 @@ class SalmartCache {
     
 
 
+/**
+ * Fetches messages with proper cache-to-server sync (similar to getPosts)
+ * @param {string} userId - The current user's ID
+ * @returns {Promise<Array>} - Array of messages
+ */
+async getMessages(userId) {
+    if (!userId) return [];
+    
+    const dbKey = `messages_${userId}`;
+    
+    // Return cached data immediately, then update in background
+    try {
+        if (typeof get !== 'undefined') {
+            const cachedMessages = (await get(dbKey)) || [];
+            if (cachedMessages.length > 0) {
+                console.log(`✅ [SalmartCache] Serving ${cachedMessages.length} messages from IndexedDB.`);
+                
+                // Background sync for new messages (similar to posts)
+                this._backgroundSyncNewMessages(userId, cachedMessages)
+                    .catch(e => console.warn('Background message sync failed:', e));
+                
+                return cachedMessages.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            }
+        }
+    } catch (e) {
+        console.error('❌ [SalmartCache] Error reading messages from IndexedDB:', e);
+    }
+    
+    // Network fetch if no cache
+    try {
+        console.log(`🔄 [SalmartCache] Initial fetch for messages.`);
+        const messagesFromNetwork = await this._fetchWithNetworkFallback(`${API_BASE_URL}/api/messages?userId=${userId}`, {
+            headers: this._getAuthHeaders(),
+        });
+        
+        // Cache the fetched messages
+        if (messagesFromNetwork.length > 0 && typeof set !== 'undefined') {
+            await set(dbKey, messagesFromNetwork);
+            console.log(`💾 [SalmartCache] Saved ${messagesFromNetwork.length} messages to cache.`);
+        }
+        
+        return messagesFromNetwork;
+
+    } catch (error) {
+        console.error('❌ [SalmartCache] Failed to fetch messages from network.', error);
+        return [];
+    }
+}
+
+/**
+ * Background sync for new messages (similar to _backgroundSyncNewPosts)
+ * @param {string} userId - Current user ID
+ * @param {Array} cachedMessages - Currently cached messages
+ */
+async _backgroundSyncNewMessages(userId, cachedMessages) {
+    if (cachedMessages.length === 0) return;
+
+    const dbKey = `messages_${userId}`;
+    const mostRecentMessageTimestamp = cachedMessages[0].createdAt;
+    
+    try {
+        console.log(`🔄 [SalmartCache] Background sync for new messages since:`, mostRecentMessageTimestamp);
+        
+        const url = new URL(`${API_BASE_URL}/api/messages`);
+        url.searchParams.set('userId', userId);
+        url.searchParams.set('since', mostRecentMessageTimestamp);
+
+        const newMessages = await this._fetchWithNetworkFallback(url.toString(), {
+            priority: 'low',
+            headers: this._getAuthHeaders(),
+        });
+
+        if (newMessages.length > 0) {
+            console.log(`🔄 [SalmartCache] Fetched ${newMessages.length} new messages in background.`);
+            
+            // Combine and deduplicate
+            const combinedMessages = [...newMessages, ...cachedMessages];
+            const uniqueMessagesMap = new Map(combinedMessages.map(msg => [msg._id, msg]));
+            const updatedMessages = Array.from(uniqueMessagesMap.values())
+                .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            
+            if (typeof set !== 'undefined') {
+                await set(dbKey, updatedMessages);
+                console.log(`💾 [SalmartCache] Updated message cache with ${updatedMessages.length} total messages.`);
+                
+                // Notify the UI about new messages
+                this._notifyNewMessages(newMessages);
+            }
+        } else {
+            console.log(`✅ [SalmartCache] No new messages found in background sync.`);
+        }
+    } catch (error) {
+        console.warn('⚠️ [SalmartCache] Background message sync failed:', error.message);
+    }
+}
+
+/**
+ * Updates a message in cache
+ * @param {string} userId - User ID
+ * @param {string} messageId - Message ID to update
+ * @param {object} updates - Updates to apply
+ */
+async updateMessageInCache(userId, messageId, updates) {
+    if (!userId || !messageId || !updates) return;
+
+    const dbKey = `messages_${userId}`;
+    
+    try {
+        if (typeof get !== 'undefined' && typeof set !== 'undefined') {
+            let cachedMessages = (await get(dbKey)) || [];
+            
+            const messageIndex = cachedMessages.findIndex(msg => msg._id === messageId);
+            if (messageIndex !== -1) {
+                cachedMessages[messageIndex] = { ...cachedMessages[messageIndex], ...updates };
+                await set(dbKey, cachedMessages);
+                console.log(`💾 [SalmartCache] Updated message ${messageId} in cache`);
+            }
+        }
+    } catch (error) {
+        console.error('❌ [SalmartCache] Error updating message in cache:', error);
+    }
+}
+
+/**
+ * Adds a new message to cache
+ * @param {string} userId - User ID
+ * @param {object} newMessage - New message to add
+ */
+async addNewMessageToCache(userId, newMessage) {
+    if (!userId || !newMessage) return;
+
+    const dbKey = `messages_${userId}`;
+    
+    try {
+        if (typeof get !== 'undefined' && typeof set !== 'undefined') {
+            let cachedMessages = (await get(dbKey)) || [];
+            
+            // Check for duplicates
+            const exists = cachedMessages.some(msg => msg._id === newMessage._id);
+            if (!exists) {
+                cachedMessages.unshift(newMessage);
+                
+                // Sort by date
+                cachedMessages.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                
+                await set(dbKey, cachedMessages);
+                console.log(`💾 [SalmartCache] Added new message to cache`);
+            }
+        }
+    } catch (error) {
+        console.error('❌ [SalmartCache] Error adding message to cache:', error);
+    }
+}
+
+/**
+ * Forces a refresh of messages from server
+ * @param {string} userId - User ID
+ */
+async refreshMessages(userId) {
+    if (!userId) return [];
+
+    const dbKey = `messages_${userId}`;
+    
+    try {
+        console.log(`🔄 [SalmartCache] Force refreshing messages from server`);
+        
+        const messagesFromNetwork = await this._fetchWithNetworkFallback(`${API_BASE_URL}/api/messages?userId=${userId}`, {
+            headers: this._getAuthHeaders(),
+        });
+        
+        if (typeof set !== 'undefined') {
+            await set(dbKey, messagesFromNetwork);
+            console.log(`💾 [SalmartCache] Force updated message cache with ${messagesFromNetwork.length} messages.`);
+        }
+        
+        return messagesFromNetwork;
+    } catch (error) {
+        console.error('❌ [SalmartCache] Error force refreshing messages:', error);
+        return [];
+    }
+}
+
+/**
+ * Clears message cache for a user
+ * @param {string} userId - User ID
+ */
+async clearMessageCache(userId) {
+    if (!userId) return;
+    
+    const dbKey = `messages_${userId}`;
+    try {
+        if (typeof del !== 'undefined') {
+            await del(dbKey);
+            console.log(`🗑️ [SalmartCache] Cleared message cache for user: ${userId}`);
+        }
+    } catch (error) {
+        console.error('❌ [SalmartCache] Error clearing message cache:', error);
+    }
+}
+
+/**
+ * Notifies UI about new messages (can be overridden by implementing classes)
+ * @param {Array} newMessages - Array of new messages
+ */
+_notifyNewMessages(newMessages) {
+    // Dispatch custom event for UI to listen to
+    if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('newMessagesFromCache', {
+            detail: { messages: newMessages }
+        }));
+    }
+}
+
+
     /**
      * Fetches user suggestions for following, with caching.
      * @returns {Promise<object[]>} - A promise that resolves to an array of user objects.

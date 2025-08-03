@@ -110,58 +110,7 @@ function setupSocketIO() {
   });
 }
 
-async function handleNewMessage(newMessage) {
-    try {
-        if (messages.some(msg => msg._id === newMessage._id)) {
-            console.log('Duplicate message skipped:', newMessage._id);
-            return;
-        }
 
-        // Add new message and remove duplicates
-        messages.unshift(newMessage);
-        
-        // Remove any duplicate messages by ID
-        const messageMap = new Map();
-        messages.forEach(msg => {
-            if (!messageMap.has(msg._id)) {
-                messageMap.set(msg._id, msg);
-            }
-        });
-        messages = Array.from(messageMap.values());
-        
-        // Sort by creation date (newest first)
-        messages.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-        
-        await salmartCache.set(MESSAGE_DB_KEY, messages); 
-        console.log('💾 [Messages] Added new message to cache.');
-
-        renderMessages();
-        messageListElement.scrollTop = 0;
-        emptyStateElement.style.display = "none";
-
-        if (messageUpdateTimeouts.has(newMessage._id)) {
-            clearTimeout(messageUpdateTimeouts.get(newMessage._id));
-        }
-
-        const timeoutId = setTimeout(() => {
-            const messageElement = document.querySelector(`[data-message-id="${newMessage._id}"]`);
-            if (messageElement) {
-                messageElement.classList.remove('new');
-            }
-            messageUpdateTimeouts.delete(newMessage._id);
-        }, 500);
-
-        messageUpdateTimeouts.set(newMessage._id, timeoutId);
-
-        // Force a fresh render
-        setTimeout(() => {
-            renderMessages();
-        }, 100);
-    } catch (error) {
-        console.error('Error handling newMessage:', error);
-        fetchMessages();
-    }
-}
 
 function createSkeletonLoader() {
   return `
@@ -192,56 +141,161 @@ function showErrorMessage(message) {
   emptyStateElement.style.display = "none";
 }
 
+// Replace your fetchMessages function in Messages.js with this:
+
 async function fetchMessages() {
     if (isInitialLoad) {
         showSkeletonLoaders();
     }
 
-    let hasCachedData = false;
     try {
-        const cachedMessages = await salmartCache.get(MESSAGE_DB_KEY);
-        if (cachedMessages && cachedMessages.length > 0) {
-            messages = cachedMessages;
-            renderMessages();
-            console.log('✅ [Messages] Serving messages from cache.');
-            hasCachedData = true;
-        }
-    } catch (e) {
-        console.error('❌ [Messages] Error loading from cache:', e);
-    }
-
-    try {
-        console.log('🔄 [Messages] Fetching latest messages from network...');
-        const response = await fetch(`${API_BASE_URL}/api/messages?userId=${userId}`, {
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-            }
-        });
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-
-        const fetchedMessages = await response.json();
+        console.log('🔄 [Messages] Fetching messages using cache...');
         
-        if (JSON.stringify(fetchedMessages) !== JSON.stringify(messages)) {
-            messages = fetchedMessages;
-            await salmartCache.set(MESSAGE_DB_KEY, messages);
-            console.log('💾 [Messages] Updated messages in cache.');
-            renderMessages();
+        // Use the proper cache method (similar to how posts work)
+        const fetchedMessages = await salmartCache.getMessages(userId);
+        
+        console.log('📥 Received messages:', {
+            count: fetchedMessages.length,
+            first3: fetchedMessages.slice(0, 3).map(m => ({
+                id: m._id,
+                from: m.senderId,
+                to: m.receiverId,
+                partner: m.chatPartnerName,
+                text: m.text?.substring(0, 30)
+            }))
+        });
+        
+        // Update local messages array
+        messages = fetchedMessages;
+        renderMessages();
+        
+        if (messages.length === 0) {
+            emptyStateElement.style.display = "block";
         } else {
-            console.log('No new messages from network.');
+            emptyStateElement.style.display = "none";
         }
 
     } catch (error) {
-        console.warn('⚠️ [Messages] Network fetch failed:', error);
-        if (!hasCachedData) {
-            showErrorMessage('You are offline. Failed to load messages.');
-        }
+        console.error('❌ [Messages] Failed to fetch messages:', error);
+        showErrorMessage('Failed to load messages. Please check your connection.');
     } finally {
         isInitialLoad = false;
     }
 }
+
+// Update handleNewMessage to use cache properly
+async function handleNewMessage(newMessage) {
+    try {
+        console.log('📨 Handling new message:', newMessage._id);
+        
+        // Check for exact duplicates in current messages array
+        const existingMessage = messages.find(msg => msg._id === newMessage._id);
+        if (existingMessage) {
+            console.log('❌ Duplicate message skipped:', newMessage._id);
+            return;
+        }
+
+        // Validate message structure
+        if (!newMessage._id || !newMessage.senderId || !newMessage.receiverId) {
+            console.error('❌ Invalid message structure:', newMessage);
+            return;
+        }
+
+        // Add to cache using proper method
+        await salmartCache.addNewMessageToCache(userId, newMessage);
+        
+        // Update local array
+        messages.unshift(newMessage);
+        
+        // Remove duplicates and sort
+        const seenIds = new Set();
+        messages = messages.filter(msg => {
+            if (seenIds.has(msg._id)) {
+                return false;
+            }
+            seenIds.add(msg._id);
+            return true;
+        }).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        
+        // Update UI
+        renderMessages();
+        messageListElement.scrollTop = 0;
+        emptyStateElement.style.display = "none";
+
+        console.log('✅ New message processed successfully');
+
+    } catch (error) {
+        console.error('❌ Error in handleNewMessage:', error);
+        // Force refresh on error
+        setTimeout(() => fetchMessages(), 1000);
+    }
+}
+
+// Add listener for cache notifications
+window.addEventListener('newMessagesFromCache', (event) => {
+    console.log('🔔 New messages detected from cache background sync:', event.detail.messages);
+    
+    // Update local messages and re-render
+    event.detail.messages.forEach(newMsg => {
+        const exists = messages.some(msg => msg._id === newMsg._id);
+        if (!exists) {
+            messages.unshift(newMsg);
+        }
+    });
+    
+    // Sort and re-render
+    messages.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    renderMessages();
+});
+
+// Add force refresh function for testing
+async function forceRefreshMessages() {
+    console.log('🔄 Force refreshing messages...');
+    showSkeletonLoaders();
+    
+    try {
+        const freshMessages = await salmartCache.refreshMessages(userId);
+        messages = freshMessages;
+        renderMessages();
+        console.log('✅ Force refresh completed');
+    } catch (error) {
+        console.error('❌ Force refresh failed:', error);
+        showErrorMessage('Failed to refresh messages');
+    }
+}
+
+// Add clear cache function for testing
+async function clearMessageCache() {
+    console.log('🗑️ Clearing message cache...');
+    await salmartCache.clearMessageCache(userId);
+    messages = [];
+    renderMessages();
+    console.log('✅ Message cache cleared');
+}
+
+// Make functions available for debugging
+window.forceRefreshMessages = forceRefreshMessages;
+window.clearMessageCache = clearMessageCache;
+
+// Add periodic refresh (every 30 seconds) to catch missed messages
+setInterval(() => {
+    if (!document.hidden && !isInitialLoad) {
+        console.log('⏰ Periodic message refresh...');
+        fetchMessages();
+    }
+}, 30000);
+
+// Add focus refresh with debouncing
+let focusTimeout;
+window.addEventListener('focus', () => {
+    if (!document.hidden) {
+        clearTimeout(focusTimeout);
+        focusTimeout = setTimeout(() => {
+            console.log('👁️ Window focused, refreshing messages...');
+            fetchMessages();
+        }, 1000);
+    }
+});
 
 function debugMessages() {
   console.log('Current messages count:', messages.length);

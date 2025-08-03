@@ -54,24 +54,44 @@ module.exports = (io) => {
     }
   });
 
-  // Get latest messages for a user
-  router.get('/api/messages', verifyToken, async (req, res) => {
-    const { userId } = req.query;
+ // Updated /api/messages endpoint with caching support
+router.get('/api/messages', verifyToken, async (req, res) => {
+  const { userId, since } = req.query;
 
-    if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
-      logger.warn(`Invalid or missing userId in /api/messages: ${userId}`);
-      return res.status(400).json({ error: 'Invalid or missing user ID' });
+  if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+    logger.warn(`Invalid or missing userId in /api/messages: ${userId}`);
+    return res.status(400).json({ error: 'Invalid or missing user ID' });
+  }
+
+  const userIdObjectId = new mongoose.Types.ObjectId(userId);
+
+  try {
+    let matchCondition = {
+      $or: [{ senderId: userIdObjectId }, { receiverId: userIdObjectId }],
+    };
+
+    // If 'since' parameter is provided, only fetch messages newer than that timestamp
+    if (since) {
+      const sinceDate = new Date(since);
+      if (!isNaN(sinceDate.getTime())) {
+        matchCondition.createdAt = { $gt: sinceDate };
+        logger.info(`Fetching messages since: ${since} for user ${userId}`);
+      } else {
+        logger.warn(`Invalid 'since' timestamp: ${since}`);
+      }
     }
 
-    const userIdObjectId = new mongoose.Types.ObjectId(userId);
+    let latestMessages;
 
-    try {
-      const latestMessages = await Message.aggregate([
-        {
-          $match: {
-            $or: [{ senderId: userIdObjectId }, { receiverId: userIdObjectId }],
-          },
-        },
+    if (since) {
+      // For background sync (since parameter), get ALL new messages, not just latest per conversation
+      latestMessages = await Message.find(matchCondition)
+        .sort({ createdAt: -1 })
+        .limit(50); // Reasonable limit for background sync
+    } else {
+      // For initial load, get latest message per conversation (existing logic)
+      latestMessages = await Message.aggregate([
+        { $match: matchCondition },
         { $sort: { createdAt: -1 } },
         {
           $group: {
@@ -87,97 +107,175 @@ module.exports = (io) => {
         },
         { $replaceRoot: { newRoot: '$latestMessage' } },
       ]);
-
-      const systemMessageTypes = [
-        'bargainStart',
-        'end-bargain',
-        'buyerAccept',
-        'sellerAccept',
-        'sellerDecline',
-        'buyerDeclineResponse',
-        'offer',
-        'counter-offer',
-      ];
-
-      const populatedMessages = await Promise.all(
-        latestMessages.map(async (msg) => {
-          const sender = await User.findById(msg.senderId);
-          const receiver = await User.findById(msg.receiverId);
-
-          const chatPartner = msg.senderId.toString() === userId ? receiver : sender;
-          const isSystem = systemMessageTypes.includes(msg.messageType);
-
-          let messageText = msg.text || '';
-          if (isSystem && (!messageText || messageText.trim() === '')) {
-            switch (msg.messageType) {
-              case 'bargainStart':
-                messageText = 'Bargain started';
-                break;
-              case 'end-bargain':
-                messageText =
-                  msg.bargainStatus === 'accepted'
-                    ? 'Bargain ended - Accepted'
-                    : msg.bargainStatus === 'declined'
-                    ? 'Bargain ended - Declined'
-                    : 'Bargain ended';
-                break;
-              case 'buyerAccept':
-                messageText = 'Buyer accepted the offer';
-                break;
-              case 'sellerAccept':
-                messageText = 'Seller accepted the offer';
-                break;
-              case 'sellerDecline':
-                messageText = 'Seller declined the offer';
-                break;
-              case 'buyerDeclineResponse':
-                messageText = 'Buyer declined the offer';
-                break;
-              case 'offer':
-                messageText = 'New offer made';
-                break;
-              case 'counter-offer':
-                messageText = 'Counter-offer made';
-                break;
-              default:
-                messageText = 'System notification';
-            }
-          } else if (messageText.startsWith('{')) {
-            try {
-              const parsed = JSON.parse(messageText);
-              messageText = parsed.text || parsed.content || parsed.message || 'No message';
-            } catch (e) {
-              messageText = messageText.substring(messageText.indexOf('}') + 1).trim() || 'No message';
-            }
-          }
-
-          return {
-            _id: msg._id,
-            senderId: msg.senderId,
-            receiverId: msg.receiverId,
-            chatPartnerId: chatPartner?._id || null,
-            chatPartnerName: chatPartner
-              ? `${chatPartner.firstName} ${chatPartner.lastName}`
-              : isSystem
-              ? 'System'
-              : 'Unknown',
-            chatPartnerProfilePicture: chatPartner?.profilePicture || 'default.jpg',
-            text: messageText,
-            status: msg.status,
-            isSystem,
-            messageType: msg.messageType,
-            createdAt: msg.createdAt.toISOString(),
-          };
-        })
-      );
-
-      logger.info(`Fetched ${populatedMessages.length} latest messages for user ${userId}`);
-      res.status(200).json(populatedMessages);
-    } catch (error) {
-      logger.error(`Error fetching messages for user ${userId}: ${error.message}`);
-      res.status(500).json({ error: 'Failed to fetch messages', details: error.message });
     }
-  });
+
+    const systemMessageTypes = [
+      'bargainStart',
+      'end-bargain',
+      'buyerAccept',
+      'sellerAccept',
+      'sellerDecline',
+      'buyerDeclineResponse',
+      'offer',
+      'counter-offer',
+    ];
+
+    const populatedMessages = await Promise.all(
+      latestMessages.map(async (msg) => {
+        const sender = await User.findById(msg.senderId);
+        const receiver = await User.findById(msg.receiverId);
+
+        const chatPartner = msg.senderId.toString() === userId ? receiver : sender;
+        const isSystem = systemMessageTypes.includes(msg.messageType);
+
+        let messageText = msg.text || '';
+        if (isSystem && (!messageText || messageText.trim() === '')) {
+          switch (msg.messageType) {
+            case 'bargainStart':
+              messageText = 'Bargain started';
+              break;
+            case 'end-bargain':
+              messageText =
+                msg.bargainStatus === 'accepted'
+                  ? 'Bargain ended - Accepted'
+                  : msg.bargainStatus === 'declined'
+                  ? 'Bargain ended - Declined'
+                  : 'Bargain ended';
+              break;
+            case 'buyerAccept':
+              messageText = 'Buyer accepted the offer';
+              break;
+            case 'sellerAccept':
+              messageText = 'Seller accepted the offer';
+              break;
+            case 'sellerDecline':
+              messageText = 'Seller declined the offer';
+              break;
+            case 'buyerDeclineResponse':
+              messageText = 'Buyer declined the offer';
+              break;
+            case 'offer':
+              messageText = 'New offer made';
+              break;
+            case 'counter-offer':
+              messageText = 'Counter-offer made';
+              break;
+            default:
+              messageText = 'System notification';
+          }
+        } else if (messageText.startsWith('{')) {
+          try {
+            const parsed = JSON.parse(messageText);
+            messageText = parsed.text || parsed.content || parsed.message || 'No message';
+          } catch (e) {
+            messageText = messageText.substring(messageText.indexOf('}') + 1).trim() || 'No message';
+          }
+        }
+
+        return {
+          _id: msg._id,
+          senderId: msg.senderId,
+          receiverId: msg.receiverId,
+          chatPartnerId: chatPartner?._id || null,
+          chatPartnerName: chatPartner
+            ? `${chatPartner.firstName} ${chatPartner.lastName}`
+            : isSystem
+            ? 'System'
+            : 'Unknown',
+          chatPartnerProfilePicture: chatPartner?.profilePicture || 'default.jpg',
+          text: messageText,
+          status: msg.status,
+          isRead: msg.isRead || false, // Include isRead status
+          isSystem,
+          messageType: msg.messageType,
+          createdAt: msg.createdAt.toISOString(),
+          // Additional fields for better client-side rendering
+          senderName: sender ? `${sender.firstName} ${sender.lastName}` : 'Unknown',
+          senderProfilePicture: sender?.profilePicture || 'default.jpg',
+          receiverName: receiver ? `${receiver.firstName} ${receiver.lastName}` : 'Unknown',
+          receiverProfilePicture: receiver?.profilePicture || 'default.jpg',
+          // Metadata for system messages
+          metadata: {
+            isSystemMessage: isSystem,
+            bargainStatus: msg.bargainStatus,
+            originalMessageType: msg.messageType
+          }
+        };
+      })
+    );
+
+    // Sort by creation date (newest first)
+    populatedMessages.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    const logMessage = since 
+      ? `Background sync: Fetched ${populatedMessages.length} new messages for user ${userId}`
+      : `Initial load: Fetched ${populatedMessages.length} latest messages for user ${userId}`;
+    
+    logger.info(logMessage);
+    res.status(200).json(populatedMessages);
+    
+  } catch (error) {
+    logger.error(`Error fetching messages for user ${userId}: ${error.message}`);
+    res.status(500).json({ error: 'Failed to fetch messages', details: error.message });
+  }
+});
+
+// Optional: Add a separate endpoint for marking messages as read
+router.put('/api/messages/mark-as-read', verifyToken, async (req, res) => {
+  const { messageIds, userId } = req.body;
+
+  if (!messageIds || !Array.isArray(messageIds) || !userId) {
+    return res.status(400).json({ error: 'messageIds array and userId are required' });
+  }
+
+  try {
+    const result = await Message.updateMany(
+      {
+        _id: { $in: messageIds },
+        receiverId: new mongoose.Types.ObjectId(userId), // Only mark as read if user is receiver
+        isRead: false
+      },
+      { 
+        $set: { 
+          isRead: true,
+          readAt: new Date()
+        } 
+      }
+    );
+
+    logger.info(`Marked ${result.modifiedCount} messages as read for user ${userId}`);
+    res.status(200).json({ 
+      success: true, 
+      modifiedCount: result.modifiedCount 
+    });
+    
+  } catch (error) {
+    logger.error(`Error marking messages as read: ${error.message}`);
+    res.status(500).json({ error: 'Failed to mark messages as read' });
+  }
+});
+
+// Optional: Add endpoint to get unread message count
+router.get('/api/messages/unread-count', verifyToken, async (req, res) => {
+  const { userId } = req.query;
+
+  if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+    return res.status(400).json({ error: 'Valid userId is required' });
+  }
+
+  try {
+    const unreadCount = await Message.countDocuments({
+      receiverId: new mongoose.Types.ObjectId(userId),
+      isRead: false
+    });
+
+    res.status(200).json({ unreadCount });
+    
+  } catch (error) {
+    logger.error(`Error getting unread count for user ${userId}: ${error.message}`);
+    res.status(500).json({ error: 'Failed to get unread count' });
+  }
+});
 
   // Send a new message
   router.post('/send', verifyToken, async (req, res) => {
