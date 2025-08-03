@@ -8,7 +8,7 @@ let socket = null;
 let isInitialLoad = true;
 let isClickProcessing = false;
 let messages = [];
-let followers = []; // New array to store followers
+let followers = []; // Array to store followers
 let messageUpdateTimeouts = new Map();
 let selectedPartnerId = null;
 
@@ -16,7 +16,7 @@ let selectedPartnerId = null;
 const messageListElement = document.getElementById("message-list");
 const emptyStateElement = document.getElementById("empty-state");
 const chatIframe = document.getElementById("desktop-iframe");
-const followersListElement = document.getElementById("followers-list"); // New DOM element
+const followersListElement = document.getElementById("followers-list");
 
 // Initialize app
 if (!userId) {
@@ -57,7 +57,7 @@ function setupEventListeners() {
     }
   });
   
-  // New event delegation for follower clicks
+  // Event delegation for follower clicks
   followersListElement.addEventListener('click', (e) => {
     const followerItem = e.target.closest('.follower-item');
     if (followerItem) {
@@ -84,6 +84,57 @@ function setupEventListeners() {
     touchEndY = e.changedTouches[0].screenY;
     if (touchEndY - touchStartY > 100 && messageListElement.scrollTop === 0) {
       fetchMessages();
+      fetchFollowers(); // Also refresh followers on pull-to-refresh
+    }
+  });
+
+  // Add listener for message cache notifications
+  window.addEventListener('newMessagesFromCache', (event) => {
+    console.log('🔔 New messages detected from cache background sync:', event.detail.messages);
+    
+    // Update local messages and re-render
+    event.detail.messages.forEach(newMsg => {
+      const exists = messages.some(msg => msg._id === newMsg._id);
+      if (!exists) {
+        messages.unshift(newMsg);
+      }
+    });
+    
+    // Sort and re-render
+    messages.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    renderMessages();
+  });
+
+  // Add listener for follower cache notifications
+  window.addEventListener('followersUpdateFromCache', (event) => {
+    console.log('🔔 Followers updated from cache background sync:', event.detail.followers);
+    
+    // Update local followers and re-render
+    followers = event.detail.followers;
+    renderFollowers();
+  });
+
+  // Add focus refresh with debouncing for messages
+  let focusTimeout;
+  window.addEventListener('focus', () => {
+    if (!document.hidden) {
+      clearTimeout(focusTimeout);
+      focusTimeout = setTimeout(() => {
+        console.log('👁️ Window focused, refreshing messages...');
+        fetchMessages();
+      }, 1000);
+    }
+  });
+
+  // Add follower refresh on window focus (with debouncing)
+  let followerFocusTimeout;
+  window.addEventListener('focus', () => {
+    if (!document.hidden) {
+      clearTimeout(followerFocusTimeout);
+      followerFocusTimeout = setTimeout(() => {
+        console.log('👁️ Window focused, refreshing followers...');
+        fetchFollowers();
+      }, 1500); // Slight delay after message refresh
     }
   });
 }
@@ -128,37 +179,35 @@ function setupSocketIO() {
   });
 }
 
-// NEW: Function to fetch followers
+// UPDATED: Function to fetch followers using cache (similar to fetchMessages)
 async function fetchFollowers() {
-  console.log('Fetching followers...');
-  const token = localStorage.getItem('authToken');
-  if (!token) {
-    console.error('Auth token not found.');
-    return;
-  }
-
+  console.log('🔄 [Messages] Fetching followers using cache...');
+  
   try {
-    const response = await fetch(`${API_BASE_URL}/followers`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
+    // Use the new cache method
+    const fetchedFollowers = await salmartCache.getFollowers(userId);
+    
+    console.log('📥 Received followers:', {
+      count: fetchedFollowers.length,
+      first3: fetchedFollowers.slice(0, 3).map(f => ({
+        id: f._id,
+        name: `${f.firstName} ${f.lastName}`,
+        profile: f.profilePicture
+      }))
     });
-
-    if (!response.ok) {
-      throw new Error(`Server returned ${response.status}: ${response.statusText}`);
-    }
-
-    followers = await response.json();
-    console.log(`Fetched ${followers.length} followers.`);
+    
+    // Update local followers array
+    followers = fetchedFollowers;
     renderFollowers();
+    
   } catch (error) {
-    console.error('Failed to fetch followers:', error);
+    console.error('❌ [Messages] Failed to fetch followers:', error);
+    // Show empty state or error message for followers section
+    followersListElement.innerHTML = '<div class="error-message">Failed to load followers</div>';
   }
 }
 
-// NEW: Function to render the followers list
+// Function to render the followers list
 function renderFollowers() {
   if (followers.length === 0) {
     followersListElement.innerHTML = '';
@@ -300,24 +349,7 @@ async function handleNewMessage(newMessage) {
     }
 }
 
-// Add listener for cache notifications
-window.addEventListener('newMessagesFromCache', (event) => {
-    console.log('🔔 New messages detected from cache background sync:', event.detail.messages);
-    
-    // Update local messages and re-render
-    event.detail.messages.forEach(newMsg => {
-        const exists = messages.some(msg => msg._id === newMsg._id);
-        if (!exists) {
-            messages.unshift(newMsg);
-        }
-    });
-    
-    // Sort and re-render
-    messages.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-    renderMessages();
-});
-
-// Add force refresh function for testing
+// Add force refresh function for testing messages
 async function forceRefreshMessages() {
     console.log('🔄 Force refreshing messages...');
     showSkeletonLoaders();
@@ -333,7 +365,7 @@ async function forceRefreshMessages() {
     }
 }
 
-// Add clear cache function for testing
+// Add clear cache function for testing messages
 async function clearMessageCache() {
     console.log('🗑️ Clearing message cache...');
     await salmartCache.clearMessageCache(userId);
@@ -342,9 +374,35 @@ async function clearMessageCache() {
     console.log('✅ Message cache cleared');
 }
 
+// Add force refresh function for testing followers
+async function forceRefreshFollowers() {
+    console.log('🔄 Force refreshing followers...');
+    
+    try {
+        const freshFollowers = await salmartCache.refreshFollowers(userId);
+        followers = freshFollowers;
+        renderFollowers();
+        console.log('✅ Follower force refresh completed');
+    } catch (error) {
+        console.error('❌ Follower force refresh failed:', error);
+        followersListElement.innerHTML = '<div class="error-message">Failed to refresh followers</div>';
+    }
+}
+
+// Add clear follower cache function for testing
+async function clearFollowerCache() {
+    console.log('🗑️ Clearing follower cache...');
+    await salmartCache.clearFollowerCache(userId);
+    followers = [];
+    renderFollowers();
+    console.log('✅ Follower cache cleared');
+}
+
 // Make functions available for debugging
 window.forceRefreshMessages = forceRefreshMessages;
 window.clearMessageCache = clearMessageCache;
+window.forceRefreshFollowers = forceRefreshFollowers;
+window.clearFollowerCache = clearFollowerCache;
 
 // Add periodic refresh (every 30 seconds) to catch missed messages
 setInterval(() => {
@@ -354,17 +412,13 @@ setInterval(() => {
     }
 }, 30000);
 
-// Add focus refresh with debouncing
-let focusTimeout;
-window.addEventListener('focus', () => {
-    if (!document.hidden) {
-        clearTimeout(focusTimeout);
-        focusTimeout = setTimeout(() => {
-            console.log('👁️ Window focused, refreshing messages...');
-            fetchMessages();
-        }, 1000);
+// Add periodic refresh for followers (every 2 minutes to avoid too frequent calls)
+setInterval(() => {
+    if (!document.hidden && !isInitialLoad) {
+        console.log('⏰ Periodic follower refresh...');
+        fetchFollowers();
     }
-});
+}, 120000); // 2 minutes
 
 function debugMessages() {
   console.log('Current messages count:', messages.length);
@@ -375,6 +429,15 @@ function debugMessages() {
     text: m.text?.substring(0, 30),
     date: m.createdAt,
     isRead: m.isRead
+  })));
+}
+
+function debugFollowers() {
+  console.log('Current followers count:', followers.length);
+  console.log('First 3 followers:', followers.slice(0, 3).map(f => ({
+    id: f._id,
+    name: `${f.firstName} ${f.lastName}`,
+    profile: f.profilePicture
   })));
 }
 
@@ -579,6 +642,7 @@ window.addEventListener('beforeunload', () => {
 document.addEventListener('visibilitychange', () => {
   if (!document.hidden && !isInitialLoad) {
     fetchMessages();
+    fetchFollowers(); // Also refresh followers when page becomes visible
   }
 });
 

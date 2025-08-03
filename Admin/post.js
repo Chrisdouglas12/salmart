@@ -613,7 +613,7 @@ function renderPost(post) {
             </div>
         `;
         buttonContent = `
-        <div style="margin-top: -20px">
+        <div style="margin-top: -50px">
             <a href="${post.productLink || '#'}" class="checkout-product-btn ${isSold ? 'sold-out' : ''}" aria-label="Check out product ${post.description || 'product'}" ${!post.productLink || isSold ? 'disabled' : ''}>
                 <i class="fas fa-shopping-cart"></i> ${isSold ? 'Sold Out' : 'Check Out Product'}
             </a>

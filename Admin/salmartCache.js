@@ -550,6 +550,243 @@ class SalmartCache {
         }
     }
 
+// Add these methods to your SalmartCache class after the existing message methods
+
+/**
+ * Fetches followers with proper cache-to-server sync (similar to getMessages/getPosts)
+ * @param {string} userId - The current user's ID
+ * @returns {Promise<Array>} - Array of followers
+ */
+async getFollowers(userId) {
+    if (!userId) return [];
+    
+    const dbKey = `followers_${userId}`;
+    
+    // Return cached data immediately, then update in background
+    try {
+        if (typeof get !== 'undefined') {
+            const cachedFollowers = (await get(dbKey)) || [];
+            if (cachedFollowers.length > 0) {
+                console.log(`✅ [SalmartCache] Serving ${cachedFollowers.length} followers from IndexedDB.`);
+                
+                // Background sync for updated follower data
+                this._backgroundSyncFollowers(userId, cachedFollowers)
+                    .catch(e => console.warn('Background follower sync failed:', e));
+                
+                return cachedFollowers;
+            }
+        }
+    } catch (e) {
+        console.error('❌ [SalmartCache] Error reading followers from IndexedDB:', e);
+    }
+    
+    // Network fetch if no cache
+    try {
+        console.log(`🔄 [SalmartCache] Initial fetch for followers.`);
+        const followersFromNetwork = await this._fetchWithNetworkFallback(`${API_BASE_URL}/followers`, {
+            headers: this._getAuthHeaders(),
+        });
+        
+        // Cache the fetched followers
+        if (followersFromNetwork.length > 0 && typeof set !== 'undefined') {
+            await set(dbKey, followersFromNetwork);
+            console.log(`💾 [SalmartCache] Saved ${followersFromNetwork.length} followers to cache.`);
+        }
+        
+        return followersFromNetwork;
+
+    } catch (error) {
+        console.error('❌ [SalmartCache] Failed to fetch followers from network.', error);
+        // Return cached data as fallback, even if empty
+        return (await get(dbKey)) || [];
+    }
+}
+
+/**
+ * Background sync for updated follower data
+ * @param {string} userId - Current user ID
+ * @param {Array} cachedFollowers - Currently cached followers
+ */
+async _backgroundSyncFollowers(userId, cachedFollowers) {
+    const dbKey = `followers_${userId}`;
+    
+    try {
+        console.log(`🔄 [SalmartCache] Background sync for followers data...`);
+
+        const updatedFollowers = await this._fetchWithNetworkFallback(`${API_BASE_URL}/followers`, {
+            priority: 'low',
+            headers: this._getAuthHeaders(),
+        });
+
+        // Check if there are any changes
+        const hasChanges = this._hasFollowerChanges(cachedFollowers, updatedFollowers);
+        
+        if (hasChanges) {
+            console.log(`🔄 [SalmartCache] Follower data changed, updating cache.`);
+            
+            if (typeof set !== 'undefined') {
+                await set(dbKey, updatedFollowers);
+                console.log(`💾 [SalmartCache] Updated follower cache with ${updatedFollowers.length} total followers.`);
+                
+                // Notify the UI about follower updates
+                this._notifyFollowerUpdates(updatedFollowers);
+            }
+        } else {
+            console.log(`✅ [SalmartCache] No follower changes found in background sync.`);
+        }
+    } catch (error) {
+        console.warn('⚠️ [SalmartCache] Background follower sync failed:', error.message);
+    }
+}
+
+/**
+ * Checks if there are changes between cached and new follower data
+ * @param {Array} cachedFollowers - Cached followers
+ * @param {Array} newFollowers - New followers from server
+ * @returns {boolean} - True if there are changes
+ */
+_hasFollowerChanges(cachedFollowers, newFollowers) {
+    if (cachedFollowers.length !== newFollowers.length) {
+        return true;
+    }
+    
+    // Create sets of follower IDs for comparison
+    const cachedIds = new Set(cachedFollowers.map(f => f._id));
+    const newIds = new Set(newFollowers.map(f => f._id));
+    
+    // Check if any IDs are different
+    if (cachedIds.size !== newIds.size) {
+        return true;
+    }
+    
+    for (const id of cachedIds) {
+        if (!newIds.has(id)) {
+            return true;
+        }
+    }
+    
+    return false;
+}
+
+/**
+ * Adds a new follower to cache
+ * @param {string} userId - User ID
+ * @param {object} newFollower - New follower to add
+ */
+async addNewFollowerToCache(userId, newFollower) {
+    if (!userId || !newFollower) return;
+
+    const dbKey = `followers_${userId}`;
+    
+    try {
+        if (typeof get !== 'undefined' && typeof set !== 'undefined') {
+            let cachedFollowers = (await get(dbKey)) || [];
+            
+            // Check for duplicates
+            const exists = cachedFollowers.some(follower => follower._id === newFollower._id);
+            if (!exists) {
+                cachedFollowers.push(newFollower);
+                
+                await set(dbKey, cachedFollowers);
+                console.log(`💾 [SalmartCache] Added new follower to cache`);
+                
+                // Notify UI
+                this._notifyFollowerUpdates(cachedFollowers);
+            }
+        }
+    } catch (error) {
+        console.error('❌ [SalmartCache] Error adding follower to cache:', error);
+    }
+}
+
+/**
+ * Removes a follower from cache
+ * @param {string} userId - User ID
+ * @param {string} followerId - Follower ID to remove
+ */
+async removeFollowerFromCache(userId, followerId) {
+    if (!userId || !followerId) return;
+
+    const dbKey = `followers_${userId}`;
+    
+    try {
+        if (typeof get !== 'undefined' && typeof set !== 'undefined') {
+            let cachedFollowers = (await get(dbKey)) || [];
+            
+            const originalLength = cachedFollowers.length;
+            cachedFollowers = cachedFollowers.filter(follower => follower._id !== followerId);
+            
+            if (cachedFollowers.length !== originalLength) {
+                await set(dbKey, cachedFollowers);
+                console.log(`💾 [SalmartCache] Removed follower from cache`);
+                
+                // Notify UI
+                this._notifyFollowerUpdates(cachedFollowers);
+            }
+        }
+    } catch (error) {
+        console.error('❌ [SalmartCache] Error removing follower from cache:', error);
+    }
+}
+
+/**
+ * Forces a refresh of followers from server
+ * @param {string} userId - User ID
+ */
+async refreshFollowers(userId) {
+    if (!userId) return [];
+
+    const dbKey = `followers_${userId}`;
+    
+    try {
+        console.log(`🔄 [SalmartCache] Force refreshing followers from server`);
+        
+        const followersFromNetwork = await this._fetchWithNetworkFallback(`${API_BASE_URL}/followers`, {
+            headers: this._getAuthHeaders(),
+        });
+        
+        if (typeof set !== 'undefined') {
+            await set(dbKey, followersFromNetwork);
+            console.log(`💾 [SalmartCache] Force updated follower cache with ${followersFromNetwork.length} followers.`);
+        }
+        
+        return followersFromNetwork;
+    } catch (error) {
+        console.error('❌ [SalmartCache] Error force refreshing followers:', error);
+        return [];
+    }
+}
+
+/**
+ * Clears follower cache for a user
+ * @param {string} userId - User ID
+ */
+async clearFollowerCache(userId) {
+    if (!userId) return;
+    
+    const dbKey = `followers_${userId}`;
+    try {
+        if (typeof del !== 'undefined') {
+            await del(dbKey);
+            console.log(`🗑️ [SalmartCache] Cleared follower cache for user: ${userId}`);
+        }
+    } catch (error) {
+        console.error('❌ [SalmartCache] Error clearing follower cache:', error);
+    }
+}
+
+/**
+ * Notifies UI about follower updates (can be overridden by implementing classes)
+ * @param {Array} updatedFollowers - Array of updated followers
+ */
+_notifyFollowerUpdates(updatedFollowers) {
+    // Dispatch custom event for UI to listen to
+    if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('followersUpdateFromCache', {
+            detail: { followers: updatedFollowers }
+        }));
+    }
+}
     /**
      * Fetches the list of users the current user is following, with caching.
      * @returns {Promise<string[]>} - A promise that resolves to an array of user IDs.
@@ -631,8 +868,310 @@ class SalmartCache {
             throw error;
         }
     }
-    
 
+
+/**
+ * Fetches notifications with proper cache-to-server sync (similar to getMessages/getPosts)
+ * @param {string} userId - The current user's ID
+ * @returns {Promise<Array>} - Array of notifications
+ */
+async getNotifications(userId) {
+    if (!userId) return [];
+    
+    const dbKey = `notifications_${userId}`;
+    
+    // Return cached data immediately, then update in background
+    try {
+        if (typeof get !== 'undefined') {
+            const cachedNotifications = (await get(dbKey)) || [];
+            if (cachedNotifications.length > 0) {
+                console.log(`✅ [SalmartCache] Serving ${cachedNotifications.length} notifications from IndexedDB.`);
+                
+                // Background sync for new notifications
+                this._backgroundSyncNotifications(userId, cachedNotifications)
+                    .catch(e => console.warn('Background notification sync failed:', e));
+                
+                return cachedNotifications.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            }
+        }
+    } catch (e) {
+        console.error('❌ [SalmartCache] Error reading notifications from IndexedDB:', e);
+    }
+    
+    // Network fetch if no cache
+    try {
+        console.log(`🔄 [SalmartCache] Initial fetch for notifications.`);
+        const notificationsFromNetwork = await this._fetchWithNetworkFallback(`${API_BASE_URL}/notifications`, {
+            headers: this._getAuthHeaders(),
+        });
+        
+        // Cache the fetched notifications
+        if (notificationsFromNetwork.length > 0 && typeof set !== 'undefined') {
+            await set(dbKey, notificationsFromNetwork);
+            console.log(`💾 [SalmartCache] Saved ${notificationsFromNetwork.length} notifications to cache.`);
+        }
+        
+        return notificationsFromNetwork;
+
+    } catch (error) {
+        console.error('❌ [SalmartCache] Failed to fetch notifications from network.', error);
+        // Return cached data as fallback, even if empty
+        return (await get(dbKey)) || [];
+    }
+}
+
+/**
+ * Background sync for new notifications (similar to _backgroundSyncNewMessages)
+ * @param {string} userId - Current user ID
+ * @param {Array} cachedNotifications - Currently cached notifications
+ */
+async _backgroundSyncNotifications(userId, cachedNotifications) {
+    const dbKey = `notifications_${userId}`;
+    const mostRecentNotificationTimestamp = cachedNotifications.length > 0 ? cachedNotifications[0].createdAt : null;
+    
+    try {
+        console.log(`🔄 [SalmartCache] Background sync for new notifications since:`, mostRecentNotificationTimestamp || 'beginning of time');
+        
+        const url = new URL(`${API_BASE_URL}/notifications`);
+        
+        if (mostRecentNotificationTimestamp) {
+            url.searchParams.set('since', mostRecentNotificationTimestamp);
+        }
+
+        const newNotifications = await this._fetchWithNetworkFallback(url.toString(), {
+            priority: 'low',
+            headers: this._getAuthHeaders(),
+        });
+
+        if (newNotifications.length > 0) {
+            console.log(`🔄 [SalmartCache] Fetched ${newNotifications.length} new notifications in background.`);
+            
+            // Combine and deduplicate
+            const combinedNotifications = [...newNotifications, ...cachedNotifications];
+            const uniqueNotificationsMap = new Map(combinedNotifications.map(notif => [notif._id, notif]));
+            const updatedNotifications = Array.from(uniqueNotificationsMap.values())
+                .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            
+            if (typeof set !== 'undefined') {
+                await set(dbKey, updatedNotifications);
+                console.log(`💾 [SalmartCache] Updated notification cache with ${updatedNotifications.length} total notifications.`);
+                
+                // Notify the UI about new notifications
+                this._notifyNewNotifications(newNotifications);
+            }
+        } else {
+            console.log(`✅ [SalmartCache] No new notifications found in background sync.`);
+        }
+    } catch (error) {
+        console.warn('⚠️ [SalmartCache] Background notification sync failed:', error.message);
+    }
+}
+
+/**
+ * Adds a new notification to cache (for real-time notifications)
+ * @param {string} userId - User ID
+ * @param {object} newNotification - New notification to add
+ */
+async addNewNotificationToCache(userId, newNotification) {
+    if (!userId || !newNotification) return;
+
+    const dbKey = `notifications_${userId}`;
+    
+    try {
+        if (typeof get !== 'undefined' && typeof set !== 'undefined') {
+            let cachedNotifications = (await get(dbKey)) || [];
+            
+            // Check for duplicates
+            const exists = cachedNotifications.some(notif => notif._id === newNotification._id);
+            if (!exists) {
+                cachedNotifications.unshift(newNotification);
+                
+                // Sort by date
+                cachedNotifications.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                
+                await set(dbKey, cachedNotifications);
+                console.log(`💾 [SalmartCache] Added new notification to cache`);
+                
+                // Notify UI
+                this._notifyNewNotifications([newNotification]);
+            }
+        }
+    } catch (error) {
+        console.error('❌ [SalmartCache] Error adding notification to cache:', error);
+    }
+}
+
+/**
+ * Updates a notification in cache (for marking as read, dismissing, etc.)
+ * @param {string} userId - User ID
+ * @param {string} notificationId - Notification ID to update
+ * @param {object} updates - Updates to apply
+ */
+async updateNotificationInCache(userId, notificationId, updates) {
+    if (!userId || !notificationId || !updates) return;
+
+    const dbKey = `notifications_${userId}`;
+    
+    try {
+        if (typeof get !== 'undefined' && typeof set !== 'undefined') {
+            let cachedNotifications = (await get(dbKey)) || [];
+            
+            const notificationIndex = cachedNotifications.findIndex(notif => notif._id === notificationId);
+            if (notificationIndex !== -1) {
+                cachedNotifications[notificationIndex] = { ...cachedNotifications[notificationIndex], ...updates };
+                await set(dbKey, cachedNotifications);
+                console.log(`💾 [SalmartCache] Updated notification ${notificationId} in cache`);
+            }
+        }
+    } catch (error) {
+        console.error('❌ [SalmartCache] Error updating notification in cache:', error);
+    }
+}
+
+/**
+ * Removes a notification from cache (for dismissing)
+ * @param {string} userId - User ID
+ * @param {string} notificationId - Notification ID to remove
+ */
+async removeNotificationFromCache(userId, notificationId) {
+    if (!userId || !notificationId) return;
+
+    const dbKey = `notifications_${userId}`;
+    
+    try {
+        if (typeof get !== 'undefined' && typeof set !== 'undefined') {
+            let cachedNotifications = (await get(dbKey)) || [];
+            
+            const originalLength = cachedNotifications.length;
+            cachedNotifications = cachedNotifications.filter(notif => notif._id !== notificationId);
+            
+            if (cachedNotifications.length !== originalLength) {
+                await set(dbKey, cachedNotifications);
+                console.log(`💾 [SalmartCache] Removed notification from cache`);
+                
+                // Notify UI
+                this._notifyNotificationRemoved(notificationId);
+            }
+        }
+    } catch (error) {
+        console.error('❌ [SalmartCache] Error removing notification from cache:', error);
+    }
+}
+
+/**
+ * Marks all notifications as read in cache
+ * @param {string} userId - User ID
+ */
+async markAllNotificationsAsReadInCache(userId) {
+    if (!userId) return;
+
+    const dbKey = `notifications_${userId}`;
+    
+    try {
+        if (typeof get !== 'undefined' && typeof set !== 'undefined') {
+            let cachedNotifications = (await get(dbKey)) || [];
+            
+            let hasChanges = false;
+            const updatedNotifications = cachedNotifications.map(notif => {
+                if (!notif.isRead) {
+                    hasChanges = true;
+                    return { ...notif, isRead: true };
+                }
+                return notif;
+            });
+            
+            if (hasChanges) {
+                await set(dbKey, updatedNotifications);
+                console.log(`💾 [SalmartCache] Marked all notifications as read in cache`);
+                
+                // Notify UI
+                this._notifyNotificationsMarkedAsRead();
+            }
+        }
+    } catch (error) {
+        console.error('❌ [SalmartCache] Error marking notifications as read in cache:', error);
+    }
+}
+
+/**
+ * Forces a refresh of notifications from server
+ * @param {string} userId - User ID
+ */
+async refreshNotifications(userId) {
+    if (!userId) return [];
+
+    const dbKey = `notifications_${userId}`;
+    
+    try {
+        console.log(`🔄 [SalmartCache] Force refreshing notifications from server`);
+        
+        const notificationsFromNetwork = await this._fetchWithNetworkFallback(`${API_BASE_URL}/notifications`, {
+            headers: this._getAuthHeaders(),
+        });
+        
+        if (typeof set !== 'undefined') {
+            await set(dbKey, notificationsFromNetwork);
+            console.log(`💾 [SalmartCache] Force updated notification cache with ${notificationsFromNetwork.length} notifications.`);
+        }
+        
+        return notificationsFromNetwork;
+    } catch (error) {
+        console.error('❌ [SalmartCache] Error force refreshing notifications:', error);
+        return [];
+    }
+}
+
+/**
+ * Clears notification cache for a user
+ * @param {string} userId - User ID
+ */
+async clearNotificationCache(userId) {
+    if (!userId) return;
+    
+    const dbKey = `notifications_${userId}`;
+    try {
+        if (typeof del !== 'undefined') {
+            await del(dbKey);
+            console.log(`🗑️ [SalmartCache] Cleared notification cache for user: ${userId}`);
+        }
+    } catch (error) {
+        console.error('❌ [SalmartCache] Error clearing notification cache:', error);
+    }
+}
+
+/**
+ * Notifies UI about new notifications (can be overridden by implementing classes)
+ * @param {Array} newNotifications - Array of new notifications
+ */
+_notifyNewNotifications(newNotifications) {
+    // Dispatch custom event for UI to listen to
+    if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('newNotificationsFromCache', {
+            detail: { notifications: newNotifications }
+        }));
+    }
+}
+
+/**
+ * Notifies UI about notification removal
+ * @param {string} notificationId - ID of removed notification
+ */
+_notifyNotificationRemoved(notificationId) {
+    if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('notificationRemovedFromCache', {
+            detail: { notificationId }
+        }));
+    }
+}
+
+/**
+ * Notifies UI that all notifications have been marked as read
+ */
+_notifyNotificationsMarkedAsRead() {
+    if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('notificationsMarkedAsReadFromCache'));
+    }
+}
 
 /**
  * Fetches messages with proper cache-to-server sync (similar to getPosts)
