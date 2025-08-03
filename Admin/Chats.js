@@ -1,11 +1,8 @@
-
-import { SalmartCache } from '/salmartCache.js'
 // API base URL configuration for local and production environments
 const API_BASE_URL = window.location.hostname === 'localhost'
     ? 'http://localhost:3000'
     : 'https://salmart.onrender.com';
-// Initialize SalmartCache instance for offline support
-const cache = new SalmartCache();
+
 // Initialize Socket.IO connection with WebSocket and polling transports
 // IMPORTANT: Ensure the auth token is always sent on connection
 const socket = io(API_BASE_URL, {
@@ -636,25 +633,28 @@ closeImagePreview.addEventListener('click', () => {
     pendingFile = null; // Clear pending file
 });
 
+// Send a new message from the chat input (modified to handle pending image)
 sendBtn.onclick = async () => {
     const text = typeSection.value.trim();
     const isInitialMessage = !isInitialMessageSent && predefinedMessage && productImage;
-    const isViewOnce = viewOnceToggle.checked;
+    const isViewOnce = viewOnceToggle.checked; // Get view-once status from toggle
 
-    // Handle pending image (keep existing image handling logic but add cache support)
+    // If an image is pending, send it
     if (pendingFile) {
         const file = pendingFile;
         const tempMessageId = `temp_${Date.now()}`;
 
+        // Create a FileReader to get a preview (data URL) for optimistic display
         const reader = new FileReader();
-        reader.onload = async (e) => {
-            const localImageUrl = e.target.result;
+        reader.onload = (e) => {
+            const localImageUrl = e.target.result; // Data URL for immediate display
 
-            const messageData = {
+            // Optimistically display the image message
+            displayMessage({
                 senderId: userId,
                 receiverId: receiverId,
                 messageType: 'image',
-                content: text,
+                content: text, // Use text as caption for image
                 attachment: { url: localImageUrl, filename: file.name },
                 createdAt: new Date().toISOString(),
                 isRead: false,
@@ -663,140 +663,132 @@ sendBtn.onclick = async () => {
                 viewOnce: {
                     enabled: isViewOnce,
                     viewed: false,
-                    deleteAt: isViewOnce ? new Date(Date.now() + 5 * 60 * 1000).toISOString() : null
+                    deleteAt: isViewOnce ? new Date(Date.now() + 5 * 60 * 1000).toISOString() : null // 5 minutes if view-once
                 }
-            };
-
-            // Add to cache immediately
-            await cache.addNewChatMessageToCache(userId, receiverId, messageData);
-            displayMessage(messageData, true);
-
-            // Check if online, if not queue the message
-            if (!cache.isOnline()) {
-                await cache.queueMessageForSending(userId, receiverId, {
-                    ...messageData,
-                    file: file, // Store file for later upload
-                    isImageUpload: true
-                });
-                showToast('Message queued - will send when online', 'info');
-            } else {
-                // Send immediately (keep existing upload logic)
-                const formData = new FormData();
-                formData.append('image', file);
-                formData.append('senderId', userId);
-                formData.append('receiverId', receiverId);
-                formData.append('messageType', 'image');
-                formData.append('tempId', tempMessageId);
-                formData.append('content', text);
-                formData.append('viewOnce', JSON.stringify(messageData.viewOnce));
-
-                try {
-                    const response = await fetch(`${API_BASE_URL}/upload-image`, {
-                        method: 'POST',
-                        headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` },
-                        body: formData
-                    });
-
-                    if (!response.ok) {
-                        throw new Error('Image upload failed');
-                    }
-
-                    const data = await response.json();
-                    const messageToSend = {
-                        ...messageData,
-                        attachment: {
-                            url: data.imageUrl,
-                            fileType: 'image',
-                            cloudinaryPublicId: data.publicId
-                        }
-                    };
-
-                    socket.emit('sendMessage', messageToSend);
-                } catch (error) {
-                    console.error('Error uploading image:', error);
-                    await cache.queueMessageForSending(userId, receiverId, {
-                        ...messageData,
-                        file: file,
-                        isImageUpload: true
-                    });
-                    showToast('Image queued - will send when online', 'warning');
-                }
-            }
+            }, true);
         };
         reader.readAsDataURL(file);
 
-        // Clear preview and input
+        const formData = new FormData();
+        formData.append('image', file);
+        formData.append('senderId', userId);
+        formData.append('receiverId', receiverId);
+        formData.append('messageType', 'image');
+        formData.append('tempId', tempMessageId);
+        formData.append('content', text); // Send text as caption
+        formData.append('viewOnce', JSON.stringify({
+            enabled: isViewOnce,
+            viewed: false,
+            deleteAt: isViewOnce ? new Date(Date.now() + 5 * 60 * 1000).toISOString() : null
+        }));
+
+        fetch(`${API_BASE_URL}/upload-image`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+            },
+            body: formData
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(err => { throw new Error(err.message || 'Image upload failed'); });
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Image upload successful:', data);
+
+            const messageToSend = {
+                receiverId,
+                text: text, // Caption
+                messageType: 'image',
+                attachment: {
+                    url: data.imageUrl,
+                    fileType: 'image',
+                    cloudinaryPublicId: data.publicId
+                },
+                viewOnce: {
+                    enabled: isViewOnce,
+                    viewed: false,
+                    deleteAt: isViewOnce ? new Date(Date.now() + 5 * 60 * 1000).toISOString() : null
+                },
+                tempId: tempMessageId,
+                senderId: userId,
+                createdAt: new Date().toISOString(),
+                isRead: false
+            };
+
+            socket.emit('sendMessage', messageToSend);
+            console.log('Emitted image message via socket:', messageToSend);
+        })
+        .catch(error => {
+            console.error('Error uploading image:', error);
+            showToast(`Failed to send image: ${error.message}`, 'error');
+            removeOptimisticMessage(tempMessageId);
+        });
+
+        // Clear preview and input after sending
         imagePreviewContainer.style.display = 'none';
         imagePreview.src = '';
         imageInput.value = '';
         pendingFile = null;
-        typeSection.value = '';
-        viewOnceToggle.checked = false;
-        return;
+        typeSection.value = ''; // Clear text input as well
+        viewOnceToggle.checked = false; // Reset toggle
+
+        return; // Exit as image sending is handled
     }
 
-    // Handle text messages
+    // If no image is pending, proceed with text message
     if (!text && !predefinedMessage) {
         showToast('Please enter a message or select an image.', 'error');
         return;
     }
 
+    // Generate a temporary ID for optimistic UI
     const tempMessageId = `temp_${Date.now()}`;
+
+    // Construct the message object to send
     const messageToSend = {
         receiverId,
         text: isInitialMessage ? JSON.stringify({ text, image: productImage }) : text,
-        messageType: 'text',
-        createdAt: new Date().toISOString(),
+        messageType: 'text', // Default to text
+        createdAt: new Date().toISOString(), // Use client-side timestamp for optimistic display
         isRead: false,
-        tempId: tempMessageId,
-        senderId: userId,
-        status: 'sending'
+        tempId: tempMessageId, // Include tempId for optimistic UI
+        senderId: userId, // Ensure senderId is explicitly set
+        // Add other properties if relevant (e.g., offerDetails, attachment)
+        // For predefined message, the server will handle offerDetails from `text` JSON
     };
 
-    // Add to cache and display optimistically
-    await cache.addNewChatMessageToCache(userId, receiverId, messageToSend);
-    displayMessage({ ...messageToSend, _id: tempMessageId }, true);
+    // Optimistically display the message immediately
+    // Pass the message with the tempId as its _id for initial display logic
+    displayMessage({ ...messageToSend, _id: tempMessageId, status: 'sending' }, true);
 
-    // Clear input
+    // Clear input field
     typeSection.value = '';
-    viewOnceToggle.checked = false;
+    viewOnceToggle.checked = false; // Reset toggle
 
-    // Handle initial message flag cleanup
+    // Handle initial message flag and UI cleanup
     if (isInitialMessage) {
         isInitialMessageSent = true;
         localStorage.setItem(`initialMessageSent_${productId}_${receiverId}`, 'true');
         const previewContainer = document.getElementById('product-preview');
-        if (previewContainer) previewContainer.remove();
+        if (previewContainer) {
+            previewContainer.remove();
+        }
     }
 
-    // Check if online, if not queue the message
-    if (!cache.isOnline()) {
-        await cache.queueMessageForSending(userId, receiverId, messageToSend);
-        await cache.updateChatMessageInCache(userId, receiverId, tempMessageId, { 
-            status: 'queued',
-            isQueued: true 
-        });
-        showToast('Message queued - will send when online', 'info');
-    } else {
-        // Send immediately
-        socket.emit('sendMessage', messageToSend);
-    }
+    // --- Send message via Socket.IO instead of Fetch ---
+    socket.emit('sendMessage', messageToSend);
+    console.log('Emitted sendMessage:', messageToSend);
+    // Error handling for sendMessage is now via socket.on('messageError')
 };
 
 // --- Socket.IO Event Listeners ---
 
 // NEW: Listener for message status updates (primarily for the sender's own messages)
 // This will update the tempId to the real _id and update the status (e.g., to 'delivered').
-socket.on('messageStatusUpdate', async ({ _id, tempId, status, createdAt, attachment, viewOnce }) => {
-    // Update message in cache
-    await cache.updateChatMessageInCache(userId, receiverId, _id || tempId, { 
-        _id, 
-        status, 
-        createdAt, 
-        attachment, 
-        viewOnce 
-    });
-    
+socket.on('messageStatusUpdate', ({ _id, tempId, status, createdAt, attachment, viewOnce }) => {
     console.log(`Received messageStatusUpdate: tempId=${tempId}, _id=${_id}, status=${status}`);
     if (tempId) {
         // Retrieve the optimistic message from the map
@@ -870,51 +862,73 @@ socket.on('messageStatusUpdate', async ({ _id, tempId, status, createdAt, attach
     localStorage.setItem(`chat_${userId}_${receiverId}`, JSON.stringify(storedMessages));
 });
 
+
 // Handle incoming messages for display
 // This event is fired when a message is sent to the chat room,
 // meaning both sender and receiver will receive it here if they're in the chat.
-socket.on('newMessage', async message => {
+socket.on('newMessage', message => {
     console.log('Received newMessage (from chat_room):', message);
 
-    // Add message to cache
-    await cache.addNewChatMessageToCache(userId, receiverId, message);
-
+    // If the message has a tempId and we have an optimistic message matching it,
+    // this means it's the server's confirmation for our own sent message.
+    // `messageStatusUpdate` should have updated the DOM for the sender.
+    // For the receiver, it's always a new message.
     if (!displayedMessages.has(message._id)) {
-        displayMessage(message);
+        displayMessage(message); // Display the message
         console.log(`Displaying new message with _id: ${message._id}`);
     } else {
-        // Update existing message status
+        // If message is already displayed (by its _id), it could be a redundant emit
+        // or a status update for an existing message (e.g., if a previous `newMessage` only had 'sent' status
+        // and a later one confirms 'delivered' for some edge case).
+        // It's safer to only update its visual status if it's already rendered.
         console.log(`Message ${message._id} already in DOM. Checking for status update.`);
         const messageElement = chatMessages.querySelector(`[data-message-id="${message._id}"]`);
         if (messageElement) {
             const timestampElement = messageElement.querySelector('.message-timestamp');
             if (timestampElement) {
-                let statusText = timestampElement.textContent.split(' ')[0];
+                let statusText = timestampElement.textContent.split(' ')[0]; // Get only the time part
                 if (message.status === 'seen') {
                     statusText += ' ✔✔';
                 } else if (message.status === 'delivered') {
                     statusText += ' ✔';
                 }
-                timestampElement.textContent = statusText;
+                timestampElement.textContent = statusText; // Update checkmarks
             }
         }
     }
 
-    // Mark as seen logic (keep existing)
+    // Mark as seen if this message is received by the current user and not yet seen
+    // Ensure this is only for messages *from* the other person *to* us *in this chat*.
     if (message.receiverId === userId && message.senderId === receiverId && message.status !== 'seen') {
         console.log('Emitting markAsSeen for message:', message._id);
         socket.emit('markAsSeen', {
             messageIds: [message._id],
-            senderId: message.senderId,
-            receiverId: userId
+            senderId: message.senderId, // The person who sent the message
+            receiverId: userId // The person who received and is now seeing it
         });
     }
 
-    // Show toast for incoming messages
+    // Update local storage for persistence
+    const storedMessages = JSON.parse(localStorage.getItem(`chat_${userId}_${receiverId}`) || '[]');
+    const existingIndex = storedMessages.findIndex(msg => msg._id === message._id); // Find by actual _id
+
+    if (existingIndex !== -1) {
+        storedMessages[existingIndex] = message; // Update existing message with new status/details
+    } else {
+        // Only push if it's a truly new message to store (and has a confirmed _id)
+        if (message._id && !message._id.startsWith('temp_')) {
+             storedMessages.push(message);
+        }
+    }
+    localStorage.setItem(`chat_${userId}_${receiverId}`, JSON.stringify(storedMessages));
+
+    // Show toast for new incoming messages from other users
+    // This listener also gets our own messages back, so only toast if from the other user
     if (message.senderId !== userId) {
         showToast(`New message from ${recipientUsername}`, 'success');
     }
 });
+
 // Handle 'messagesSeen' event (for sender's UI to update checkmarks)
 socket.on('messagesSeen', ({ messageIds, seenBy, seenAt }) => {
     console.log(`Received messagesSeen event for IDs: ${messageIds} seen by ${seenBy}`);
@@ -1003,66 +1017,8 @@ socket.on('imageViewDeleted', ({ messageId }) => {
     }
 });
 
-// Setup network monitoring for offline support
-cache.setupNetworkMonitoring(
-    // onOnline callback
-    async () => {
-        showToast('Back online! Sending queued messages...', 'success');
-        
-        // Process queued messages
-        await cache.processMessageQueue(userId, async (queuedMessage) => {
-            try {
-                if (queuedMessage.isImageUpload && queuedMessage.file) {
-                    // Handle queued image uploads
-                    const formData = new FormData();
-                    formData.append('image', queuedMessage.file);
-                    formData.append('senderId', queuedMessage.senderId);
-                    formData.append('receiverId', queuedMessage.receiverId);
-                    formData.append('messageType', 'image');
-                    formData.append('tempId', queuedMessage.tempId);
-                    formData.append('content', queuedMessage.content || '');
-                    if (queuedMessage.viewOnce) {
-                        formData.append('viewOnce', JSON.stringify(queuedMessage.viewOnce));
-                    }
-
-                    const response = await fetch(`${API_BASE_URL}/upload-image`, {
-                        method: 'POST',
-                        headers: { 'Authorization': `Bearer ${localStorage.getItem('authToken')}` },
-                        body: formData
-                    });
-
-                    if (!response.ok) throw new Error('Upload failed');
-                    
-                    const data = await response.json();
-                    socket.emit('sendMessage', {
-                        ...queuedMessage,
-                        attachment: {
-                            url: data.imageUrl,
-                            fileType: 'image',
-                            cloudinaryPublicId: data.publicId
-                        }
-                    });
-                    
-                    return { success: true };
-                } else {
-                    // Handle regular text messages
-                    socket.emit('sendMessage', queuedMessage);
-                    return { success: true };
-                }
-            } catch (error) {
-                console.error('Failed to send queued message:', error);
-                return { success: false, error: error.message };
-            }
-        });
-    },
-    // onOffline callback
-    () => {
-        showToast('You are offline. Messages will be queued.', 'warning');
-    }
-);
 
 // Load chat history (still useful for initial load and offline sync)
-// Load chat history using cache-first strategy
 async function loadChatHistory() {
     try {
         const token = localStorage.getItem('authToken');
@@ -1072,15 +1028,37 @@ async function loadChatHistory() {
             return;
         }
 
-        // Use cache to get messages (serves cached first, then syncs in background)
-        const messages = await cache.getChatMessages(userId, receiverId);
+        const res = await fetch(`${API_BASE_URL}/messages?user1=${userId}&user2=${receiverId}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!res.ok) {
+            const errorText = await res.text();
+            throw new Error(`Failed to fetch messages: ${res.status} ${res.statusText}`);
+        }
 
-        // Filter and validate messages (keep existing validation logic)
+        const rawText = await res.text();
+        let messages;
+        try {
+            messages = JSON.parse(rawText);
+        } catch (e) {
+            console.error('Invalid JSON response:', rawText);
+            showToast('Failed to parse chat history.', 'error');
+            messages = [];
+        }
+
+        if (!Array.isArray(messages)) {
+            console.warn('Response is not an array:', messages);
+            showToast('Invalid chat history format.', 'error');
+            messages = JSON.parse(localStorage.getItem(`chat_${userId}_${receiverId}`) || '[]');
+        }
+
+        // Filter and validate messages
         const validMessages = messages.filter(msg => {
             if (!msg || typeof msg !== 'object' || !msg.messageType) {
                 console.warn(`Skipping invalid message object:`, msg);
                 return false;
             }
+            // Basic check for message content or type for non-text messages
             if (!msg.text && !['image', 'payment-completed', 'bargainStart', 'end-bargain', 'buyerAccept', 'sellerAccept', 'offer', 'counter-offer'].includes(msg.messageType)) {
                 console.warn(`Skipping message (no text, unknown special type):`, msg);
                 return false;
@@ -1413,21 +1391,4 @@ typeSection.addEventListener('input', sendTypingSignal);
 // Debug all socket events for development
 socket.onAny((event, ...args) => {
     console.log(`Socket event received: ${event}`, args);
-});
-// Listen for new messages from cache background sync
-window.addEventListener('newChatMessagesFromCache', (event) => {
-    const { messages, userId: eventUserId, receiverId: eventReceiverId } = event.detail;
-    
-    // Only process if it's for the current chat
-    if (eventUserId === userId && eventReceiverId === receiverId) {
-        messages.forEach(message => {
-            if (!displayedMessages.has(message._id)) {
-                displayMessage(message);
-            }
-        });
-        
-        if (messages.length > 0) {
-            showToast(`${messages.length} new message(s) synced`, 'info');
-        }
-    }
 });
