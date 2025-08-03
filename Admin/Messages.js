@@ -1,4 +1,4 @@
-import { salmartCache } from './Salmartcache.js';
+import { salmartCache } from './salmartCache.js';
 
 // Global variables
 const userId = localStorage?.getItem("userId");
