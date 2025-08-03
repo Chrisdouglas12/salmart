@@ -559,12 +559,12 @@ function renderPost(post) {
     let descriptionContent = '';
     let buttonContent = '';
 
-    const productImageForChat = post.postType === 'video_ad' ? (post.thumbnail || '/salmart-192x192.png') : (post.photo || '/salmart-192x192.png');
+    const productImageForChat = post.postType === 'video_ad' ? (post.thumbnail || '') : (post.photo || '');
 
     if (post.postType === 'video_ad') {
         descriptionContent = `
             <h2 class="product-title">${escapeHtml(post.title || '')}</h2>
-            <div class="post-description-text" style="margin-bottom: 10px; padding: 0 15px;">
+            <div class="post-description-text" style="margin-bottom: 10px;">
                 <p>${escapeHtml(post.description || '')}</p>
             </div>
         `;

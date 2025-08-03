@@ -1,4 +1,3 @@
-// salmartCache.js
 import { get, set, del } from './idb-keyval-iife.js';
 
 const API_BASE_URL = window.API_BASE_URL || (window.location.hostname === 'localhost'
@@ -690,17 +689,18 @@ async getMessages(userId) {
  * @param {Array} cachedMessages - Currently cached messages
  */
 async _backgroundSyncNewMessages(userId, cachedMessages) {
-    if (cachedMessages.length === 0) return;
-
     const dbKey = `messages_${userId}`;
-    const mostRecentMessageTimestamp = cachedMessages[0].createdAt;
+    const mostRecentMessageTimestamp = cachedMessages.length > 0 ? cachedMessages[0].createdAt : null;
     
     try {
-        console.log(`🔄 [SalmartCache] Background sync for new messages since:`, mostRecentMessageTimestamp);
+        console.log(`🔄 [SalmartCache] Background sync for new messages since:`, mostRecentMessageTimestamp || 'beginning of time');
         
         const url = new URL(`${API_BASE_URL}/api/messages`);
         url.searchParams.set('userId', userId);
-        url.searchParams.set('since', mostRecentMessageTimestamp);
+        
+        if (mostRecentMessageTimestamp) {
+            url.searchParams.set('since', mostRecentMessageTimestamp);
+        }
 
         const newMessages = await this._fetchWithNetworkFallback(url.toString(), {
             priority: 'low',

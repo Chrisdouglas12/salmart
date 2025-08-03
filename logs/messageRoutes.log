@@ -3354,3 +3354,29 @@
 {"level":"warn","message":"Missing senderId or receiverId in /messages","timestamp":"2025-08-03T08:05:19.202Z"}
 {"level":"info","message":"Fetching messages since: 2025-08-03T08:01:29.525Z for user 6843d062f457581752641ee3","timestamp":"2025-08-03T08:05:21.864Z"}
 {"level":"info","message":"Background sync: Fetched 0 new messages for user 6843d062f457581752641ee3","timestamp":"2025-08-03T08:05:22.867Z"}
+{"level":"info","message":"Fetched 8 followers for user 6843d062f457581752641ee3","timestamp":"2025-08-03T08:11:18.825Z"}
+{"level":"info","message":"Fetching messages since: 2025-08-03T08:01:29.525Z for user 6843d062f457581752641ee3","timestamp":"2025-08-03T08:11:19.125Z"}
+{"level":"info","message":"Background sync: Fetched 0 new messages for user 6843d062f457581752641ee3","timestamp":"2025-08-03T08:11:19.348Z"}
+{"level":"warn","message":"Missing senderId or receiverId in /messages","timestamp":"2025-08-03T08:11:20.176Z"}
+{"level":"info","message":"Fetching messages since: 2025-08-03T08:01:29.525Z for user 6843d062f457581752641ee3","timestamp":"2025-08-03T08:11:30.397Z"}
+{"level":"info","message":"Background sync: Fetched 0 new messages for user 6843d062f457581752641ee3","timestamp":"2025-08-03T08:11:30.633Z"}
+{"level":"info","message":"Fetching messages since: 2025-08-03T08:01:29.525Z for user 6843d062f457581752641ee3","timestamp":"2025-08-03T08:11:31.405Z"}
+{"level":"info","message":"Background sync: Fetched 0 new messages for user 6843d062f457581752641ee3","timestamp":"2025-08-03T08:11:31.618Z"}
+{"level":"info","message":"Fetching messages since: 2025-08-03T08:01:29.525Z for user 6843d062f457581752641ee3","timestamp":"2025-08-03T08:11:38.076Z"}
+{"level":"info","message":"Background sync: Fetched 0 new messages for user 6843d062f457581752641ee3","timestamp":"2025-08-03T08:11:38.257Z"}
+{"level":"info","message":"Fetching messages since: 2025-08-03T08:01:29.525Z for user 6843d062f457581752641ee3","timestamp":"2025-08-03T08:13:09.639Z"}
+{"level":"info","message":"Background sync: Fetched 0 new messages for user 6843d062f457581752641ee3","timestamp":"2025-08-03T08:13:10.070Z"}
+{"level":"info","message":"Fetched 8 followers for user 6843d062f457581752641ee3","timestamp":"2025-08-03T08:36:00.507Z"}
+{"level":"info","message":"Fetching messages since: 2025-08-03T08:01:29.525Z for user 6843d062f457581752641ee3","timestamp":"2025-08-03T08:36:00.718Z"}
+{"level":"info","message":"Background sync: Fetched 0 new messages for user 6843d062f457581752641ee3","timestamp":"2025-08-03T08:36:00.982Z"}
+{"level":"warn","message":"Missing senderId or receiverId in /messages","timestamp":"2025-08-03T08:36:01.130Z"}
+{"level":"info","message":"Fetching messages since: 2025-08-03T08:01:29.525Z for user 6843d062f457581752641ee3","timestamp":"2025-08-03T08:36:07.861Z"}
+{"level":"info","message":"Background sync: Fetched 0 new messages for user 6843d062f457581752641ee3","timestamp":"2025-08-03T08:36:08.077Z"}
+{"level":"info","message":"Fetching messages since: 2025-08-03T08:01:29.525Z for user 6843d062f457581752641ee3","timestamp":"2025-08-03T08:36:08.101Z"}
+{"level":"info","message":"Background sync: Fetched 0 new messages for user 6843d062f457581752641ee3","timestamp":"2025-08-03T08:36:08.274Z"}
+{"level":"info","message":"Fetched 7 messages between 6843d062f457581752641ee3 and 6843d062f457581752641ee3","timestamp":"2025-08-03T08:36:10.487Z"}
+{"level":"info","message":"Fetching messages since: 2025-08-03T08:01:29.525Z for user 6843d062f457581752641ee3","timestamp":"2025-08-03T08:36:11.497Z"}
+{"level":"info","message":"Background sync: Fetched 0 new messages for user 6843d062f457581752641ee3","timestamp":"2025-08-03T08:36:11.792Z"}
+{"level":"info","message":"Fetched 19 messages between 6843d062f457581752641ee3 and 685cfc99d8a56197d12a2534","timestamp":"2025-08-03T08:36:16.469Z"}
+{"level":"info","message":"Fetching messages since: 2025-08-03T08:01:29.525Z for user 6843d062f457581752641ee3","timestamp":"2025-08-03T08:36:23.948Z"}
+{"level":"info","message":"Background sync: Fetched 1 new messages for user 6843d062f457581752641ee3","timestamp":"2025-08-03T08:36:24.524Z"}
