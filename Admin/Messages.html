@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Messages</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
@@ -10,10 +9,8 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js"></script>
   <script src="addPic.js"></script>
   <link rel="stylesheet" href="Messages.css">
-  
 </head>
 <body>
-  <!-- Header -->
   <header class="header">
     <h1 class="header-title">
       <i class="fas fa-comments"></i>
@@ -27,78 +24,84 @@
     </div>
   </header>
 
-  <!-- Main Container -->
-  <div class="main-container">
-    <!-- Message List Container -->
-    <div class="message-container">
-      <div id="message-list"></div>
+  <div class="app-view-container">
+
+    <div class="message-pane">
       
-      <!-- Empty State -->
-      <div class="empty-state" id="empty-state">
-        <div class="empty-state-icon">
-          <i class="fas fa-comments"></i>
+      <div id="followers-list-container" style="margin-top: -20px;">
+        <div class="followers-list-header">
         </div>
-        <h3>No messages yet</h3>
-        <p>Start a conversation to see your messages here</p>
+        <div id="followers-list" class="horizontal-scroll-container">
+          </div>
+      </div>
+
+      <div class="message-list-container">
+        <div id="message-list">
+          </div>
+        <div class="empty-state" id="empty-state">
+          <div class="empty-state-icon">
+            <i class="fas fa-comments"></i>
+          </div>
+          <h3>No messages yet</h3>
+          <p>Start a conversation to see your messages here</p>
+        </div>
       </div>
     </div>
 
-    <!-- Iframe Container -->
-    <div class="iframe-container desktop-only">
+    <div class="chat-pane desktop-only">
       <iframe id="desktop-iframe" class="desktop-iframe" src="Chats.html" frameborder="0"></iframe>
     </div>
   </div>
 
-  <!-- Navigation -->
-<nav id="navbar">
-  <ul>
-    <li>
-      <a href="index.html">
-        <i class="fas fa-store"></i>
-        <span>Market</span>
-      </a>
-    </li>
-    <li>
-      <a href="requestlists.html">
-        <i class="fas fa-clipboard-list"></i>
-        <span>Requests</span>
-      </a>
-    </li>
-    <li>
-      <a href="Alerts.html" onclick="clearBadge('alerts')">
-        <span class="icon-with-badge">
-          <i class="fas fa-bell"></i>
-          <span class="notification-badge" id="alerts-badge"></span>
-        </span>
-        <span>Alerts</span>
-      </a>
-    </li>
-    <li>
-      <a href="Messages.html" onclick="clearBadge('messages')">
-        <span class="icon-with-badge">
-          <i class="fas fa-comments"></i>
-          <span class="notification-badge" id="messages-badge"></span>
-        </span>
-        <span>Messages</span>
-      </a>
-    </li>
-    <li>
-      <a href="Deals.html" onclick="clearBadge('deals')">
-        <span class="icon-with-badge">
-          <i class="fas fa-cart-plus"></i>
-          <span class="notification-badge" id="deals-badge"></span>
-        </span>
-        <span>Deals</span>
-      </a>
-    </li>
-    <li>
-      <a href="Profile.html">
-        <i class="fas fa-user"></i>
-        <span>Profile</span>
-      </a>
-    </li>
-  </ul>
-</nav>
+  <nav id="navbar">
+    <ul>
+      <li>
+        <a href="index.html">
+          <i class="fas fa-store"></i>
+          <span>Market</span>
+        </a>
+      </li>
+      <li>
+        <a href="requestlists.html">
+          <i class="fas fa-clipboard-list"></i>
+          <span>Requests</span>
+        </a>
+      </li>
+      <li>
+        <a href="Alerts.html" onclick="clearBadge('alerts')">
+          <span class="icon-with-badge">
+            <i class="fas fa-bell"></i>
+            <span class="notification-badge" id="alerts-badge"></span>
+          </span>
+          <span>Alerts</span>
+        </a>
+      </li>
+      <li>
+        <a href="Messages.html" onclick="clearBadge('messages')">
+          <span class="icon-with-badge">
+            <i class="fas fa-comments"></i>
+            <span class="notification-badge" id="messages-badge"></span>
+          </span>
+          <span>Messages</span>
+        </a>
+      </li>
+      <li>
+        <a href="Deals.html" onclick="clearBadge('deals')">
+          <span class="icon-with-badge">
+            <i class="fas fa-cart-plus"></i>
+            <span class="notification-badge" id="deals-badge"></span>
+          </span>
+          <span>Deals</span>
+        </a>
+      </li>
+      <li>
+        <a href="Profile.html">
+          <i class="fas fa-user"></i>
+          <span>Profile</span>
+        </a>
+      </li>
+    </ul>
+  </nav>
 
   <script type="module" src="Messages.js"></script>
   <script src="Badge.js"></script>

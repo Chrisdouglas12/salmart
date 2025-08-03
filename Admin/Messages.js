@@ -8,6 +8,7 @@ let socket = null;
 let isInitialLoad = true;
 let isClickProcessing = false;
 let messages = [];
+let followers = []; // New array to store followers
 let messageUpdateTimeouts = new Map();
 let selectedPartnerId = null;
 
@@ -15,6 +16,7 @@ let selectedPartnerId = null;
 const messageListElement = document.getElementById("message-list");
 const emptyStateElement = document.getElementById("empty-state");
 const chatIframe = document.getElementById("desktop-iframe");
+const followersListElement = document.getElementById("followers-list"); // New DOM element
 
 // Initialize app
 if (!userId) {
@@ -27,6 +29,7 @@ if (!userId) {
 async function initialize() {
   console.log('Initializing Messages page...');
   setupSocketIO();
+  await fetchFollowers(); // Fetch followers first
   await fetchMessages();
   setupEventListeners();
 }
@@ -46,6 +49,21 @@ function setupEventListeners() {
       const partnerName = messageItem.getAttribute('data-partner-name');
       const partnerProfile = messageItem.getAttribute('data-partner-profile');
 
+      handleMessageClick(
+        encodeURIComponent(partnerId),
+        encodeURIComponent(partnerName),
+        encodeURIComponent(partnerProfile)
+      );
+    }
+  });
+  
+  // New event delegation for follower clicks
+  followersListElement.addEventListener('click', (e) => {
+    const followerItem = e.target.closest('.follower-item');
+    if (followerItem) {
+      const partnerId = followerItem.getAttribute('data-partner-id');
+      const partnerName = followerItem.getAttribute('data-partner-name');
+      const partnerProfile = followerItem.getAttribute('data-partner-profile');
       handleMessageClick(
         encodeURIComponent(partnerId),
         encodeURIComponent(partnerName),
@@ -110,7 +128,60 @@ function setupSocketIO() {
   });
 }
 
+// NEW: Function to fetch followers
+async function fetchFollowers() {
+  console.log('Fetching followers...');
+  const token = localStorage.getItem('authToken');
+  if (!token) {
+    console.error('Auth token not found.');
+    return;
+  }
 
+  try {
+    const response = await fetch(`${API_BASE_URL}/followers`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+    }
+
+    followers = await response.json();
+    console.log(`Fetched ${followers.length} followers.`);
+    renderFollowers();
+  } catch (error) {
+    console.error('Failed to fetch followers:', error);
+  }
+}
+
+// NEW: Function to render the followers list
+function renderFollowers() {
+  if (followers.length === 0) {
+    followersListElement.innerHTML = '';
+    return;
+  }
+
+  const followersHTML = followers.map(follower => {
+    const profilePic = follower.profilePicture || 'default-avater.png';
+    const fullName = `${follower.firstName} ${follower.lastName}`;
+    return `
+      <div class="follower-item" 
+           data-partner-id="${escapeHTML(follower._id)}" 
+           data-partner-name="${escapeHTML(fullName)}"
+           data-partner-profile="${escapeHTML(profilePic)}">
+        <div class="follower-avatar">
+          <img src="${escapeHTML(profilePic)}" alt="${escapeHTML(fullName)}" onerror="this.src='default-avater.png'">
+        </div>
+        <p class="follower-name">${escapeHTML(follower.firstName)}</p>
+      </div>
+    `;
+  }).join('');
+  followersListElement.innerHTML = followersHTML;
+}
 
 function createSkeletonLoader() {
   return `
@@ -140,8 +211,6 @@ function showErrorMessage(message) {
   `;
   emptyStateElement.style.display = "none";
 }
-
-// Replace your fetchMessages function in Messages.js with this:
 
 async function fetchMessages() {
     if (isInitialLoad) {

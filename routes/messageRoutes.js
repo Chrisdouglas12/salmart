@@ -383,6 +383,42 @@ router.get('/api/messages/unread-count', verifyToken, async (req, res) => {
       res.status(500).json({ error: 'Server error' });
     }
   });
+  
+  router.get('/followers', verifyToken, async (req, res) => {
+  const userId = req.user.userId; // Get the user ID from the verified token
+
+  try {
+    const user = await User.findById(userId).populate({
+      path: 'followers',
+      select: 'firstName lastName profilePicture updatedAt' // Select specific fields to return
+    });
+
+    if (!user) {
+      logger.warn(`User with ID ${userId} not found`);
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Sort the followers by their 'updatedAt' field in descending order (newest first)
+    // The 'updatedAt' field is a good proxy for recent activity.
+    const sortedFollowers = user.followers.sort((a, b) => {
+      if (!a.updatedAt) return 1;
+      if (!b.updatedAt) return -1;
+      return b.updatedAt.getTime() - a.updatedAt.getTime();
+    });
+
+    
+     const blockedUserIds = user.blockedUsers.map(id => id.toString());
+    const filteredFollowers = sortedFollowers.filter(follower => !blockedUserIds.includes(follower._id.toString()));
+
+    logger.info(`Fetched ${sortedFollowers.length} followers for user ${userId}`);
+    res.status(200).json(sortedFollowers);
+
+  } catch (error) {
+    logger.error(`Error fetching followers for user ${userId}: ${error.message}`);
+    res.status(500).json({ error: 'Failed to fetch followers', details: error.message });
+  }
+});
+
 
   return router;
 };
