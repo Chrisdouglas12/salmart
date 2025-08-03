@@ -3409,3 +3409,12 @@
 {"level":"info","message":"Fetching messages since: 2025-08-03T08:36:22.310Z for user 6843d062f457581752641ee3","timestamp":"2025-08-03T09:18:53.719Z"}
 {"level":"info","message":"Background sync: Fetched 0 new messages for user 6843d062f457581752641ee3","timestamp":"2025-08-03T09:18:53.949Z"}
 {"level":"warn","message":"Missing senderId or receiverId in /messages","timestamp":"2025-08-03T09:18:54.740Z"}
+{"level":"warn","message":"User with ID 6843d062f457581752641ee3 not found","timestamp":"2025-08-03T11:59:36.217Z"}
+{"level":"info","message":"Fetching messages since: 2025-08-03T08:36:22.310Z for user 6843d062f457581752641ee3","timestamp":"2025-08-03T11:59:37.029Z"}
+{"level":"info","message":"Background sync: Fetched 0 new messages for user 6843d062f457581752641ee3","timestamp":"2025-08-03T11:59:37.252Z"}
+{"level":"info","message":"Fetching messages since: 2025-08-03T08:36:22.310Z for user 6843d062f457581752641ee3","timestamp":"2025-08-03T11:59:43.225Z"}
+{"level":"info","message":"Background sync: Fetched 0 new messages for user 6843d062f457581752641ee3","timestamp":"2025-08-03T11:59:43.521Z"}
+{"level":"warn","message":"User with ID 6843d062f457581752641ee3 not found","timestamp":"2025-08-03T11:59:43.530Z"}
+{"level":"info","message":"Fetching messages since: 2025-08-03T08:36:22.310Z for user 6843d062f457581752641ee3","timestamp":"2025-08-03T11:59:46.199Z"}
+{"level":"info","message":"Background sync: Fetched 0 new messages for user 6843d062f457581752641ee3","timestamp":"2025-08-03T11:59:46.593Z"}
+{"level":"warn","message":"User with ID 6843d062f457581752641ee3 not found","timestamp":"2025-08-03T11:59:46.604Z"}

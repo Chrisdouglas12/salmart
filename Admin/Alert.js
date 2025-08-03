@@ -1,9 +1,7 @@
 // Import the cache at the top of your notification file
 import { salmartCache } from './salmartCache.js';
 
-const API_BASE_URL = window.location.hostname === 'localhost' 
-  ? 'http://localhost:3000' 
-  : 'https://salmart.onrender.com';
+const API_BASE_URL = window.API_BASE_URL || (window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart.onrender.com');
 
 const socket = io(API_BASE_URL, {
   path: '/socket.io',
