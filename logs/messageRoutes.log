@@ -3394,3 +3394,13 @@
 {"level":"info","message":"Background sync: Fetched 0 new messages for user 6843d062f457581752641ee3","timestamp":"2025-08-03T08:49:05.604Z"}
 {"level":"info","message":"Fetching messages since: 2025-08-03T08:36:22.310Z for user 6843d062f457581752641ee3","timestamp":"2025-08-03T08:49:35.388Z"}
 {"level":"info","message":"Background sync: Fetched 0 new messages for user 6843d062f457581752641ee3","timestamp":"2025-08-03T08:49:36.009Z"}
+{"level":"warn","message":"Missing senderId or receiverId in /messages","timestamp":"2025-08-03T09:03:15.269Z"}
+{"level":"error","message":"Error fetching followers for user 6843d062f457581752641ee3: Operation `users.findOne()` buffering timed out after 10000ms","timestamp":"2025-08-03T09:03:23.678Z"}
+{"level":"info","message":"Fetching messages since: 2025-08-03T08:36:22.310Z for user 6843d062f457581752641ee3","timestamp":"2025-08-03T09:05:21.445Z"}
+{"level":"info","message":"Background sync: Fetched 0 new messages for user 6843d062f457581752641ee3","timestamp":"2025-08-03T09:05:21.923Z"}
+{"level":"info","message":"Fetching messages since: 2025-08-03T08:36:22.310Z for user 6843d062f457581752641ee3","timestamp":"2025-08-03T09:05:22.624Z"}
+{"level":"info","message":"Background sync: Fetched 0 new messages for user 6843d062f457581752641ee3","timestamp":"2025-08-03T09:05:22.960Z"}
+{"level":"info","message":"Fetched 8 followers for user 6843d062f457581752641ee3","timestamp":"2025-08-03T09:05:29.132Z"}
+{"level":"info","message":"Fetching messages since: 2025-08-03T08:36:22.310Z for user 6843d062f457581752641ee3","timestamp":"2025-08-03T09:05:29.291Z"}
+{"level":"info","message":"Background sync: Fetched 0 new messages for user 6843d062f457581752641ee3","timestamp":"2025-08-03T09:05:29.526Z"}
+{"level":"warn","message":"Missing senderId or receiverId in /messages","timestamp":"2025-08-03T09:05:29.679Z"}
