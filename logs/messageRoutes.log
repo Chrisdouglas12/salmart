@@ -3404,3 +3404,8 @@
 {"level":"info","message":"Fetching messages since: 2025-08-03T08:36:22.310Z for user 6843d062f457581752641ee3","timestamp":"2025-08-03T09:05:29.291Z"}
 {"level":"info","message":"Background sync: Fetched 0 new messages for user 6843d062f457581752641ee3","timestamp":"2025-08-03T09:05:29.526Z"}
 {"level":"warn","message":"Missing senderId or receiverId in /messages","timestamp":"2025-08-03T09:05:29.679Z"}
+{"level":"warn","message":"Missing senderId or receiverId in /messages","timestamp":"2025-08-03T09:18:01.057Z"}
+{"level":"info","message":"Fetched 8 followers for user 6843d062f457581752641ee3","timestamp":"2025-08-03T09:18:53.557Z"}
+{"level":"info","message":"Fetching messages since: 2025-08-03T08:36:22.310Z for user 6843d062f457581752641ee3","timestamp":"2025-08-03T09:18:53.719Z"}
+{"level":"info","message":"Background sync: Fetched 0 new messages for user 6843d062f457581752641ee3","timestamp":"2025-08-03T09:18:53.949Z"}
+{"level":"warn","message":"Missing senderId or receiverId in /messages","timestamp":"2025-08-03T09:18:54.740Z"}

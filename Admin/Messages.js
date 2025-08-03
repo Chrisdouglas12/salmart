@@ -2,7 +2,7 @@ import { salmartCache } from './Salmartcache.js';
 
 // Global variables
 const userId = localStorage?.getItem("userId");
-const API_BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart.onrender.com';
+const API_BASE_URL = window.API_BASE_URL || (window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart.onrender.com');
 const MESSAGE_DB_KEY = `messages_${userId}`; 
 let socket = null;
 let isInitialLoad = true;
