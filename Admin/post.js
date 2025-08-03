@@ -9,7 +9,19 @@ const SOCKET_URL = window.location.hostname === 'localhost' ? 'http://localhost:
 const DEFAULT_PLACEHOLDER_IMAGE = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
 
 
-
+// Throttle utility function
+function throttle(func, limit) {
+    let inThrottle;
+    return function() {
+        const args = arguments;
+        const context = this;
+        if (!inThrottle) {
+            func.apply(context, args);
+            inThrottle = true;
+            setTimeout(() => inThrottle = false, limit);
+        }
+    }
+}
 
 // --- Optimized Image Loading (New) ---
 class ImageLoader {
@@ -56,7 +68,7 @@ class ImageLoader {
             this.cache.set(src, src);
         };
         imgElement.onerror = () => {
-            imgElement.src = '/salmart-192x192.png';
+            imgElement.src = '';
             imgElement.classList.remove('lazy-loading');
             console.error(`Failed to load image: ${src}`);
         };
@@ -318,9 +330,8 @@ function lazyLoadVideo(videoElement) {
                     });
                     video.load();
                     video.classList.remove('lazy-loading');
-                    if (video.paused) {
-                        video.play().catch(e => console.warn("Video auto-play blocked:", e));
-                    }
+                    // REMOVED AUTOPLAY - Don't auto-play videos
+                    video.removeAttribute('autoplay');
                 } else {
                     if (!video.paused) {
                         video.pause();
@@ -329,11 +340,14 @@ function lazyLoadVideo(videoElement) {
             });
         }, {
             rootMargin: '0px 0px 300px 0px',
-            threshold: 0.5
+            threshold: 0.1 // Reduced for better performance
         });
     }
 
     videoElement.classList.add('lazy-loading');
+    // Disable autoplay and set proper attributes
+    videoElement.removeAttribute('autoplay');
+    videoElement.setAttribute('preload', 'metadata');
     window.videoIntersectionObserver.observe(videoElement);
 }
 
@@ -345,7 +359,7 @@ function renderUserSuggestion(user) {
     const isFollowingUser = currentFollowingList.includes(user._id.toString());
     suggestionElement.innerHTML = `
         <a href="Profile.html?userId=${user._id}" class="user-info-link">
-            <img class="user-suggestion-avatar" data-user-id="${user._id}" alt="${escapeHtml(user.name)}'s profile picture" onerror="this.src='/salmart-192x192.png'">
+            <img class="user-suggestion-avatar" data-user-id="${user._id}" onerror="this.src='/default-avater.png'">
             <h5 class="user-suggestion-name">${escapeHtml(user.name)}</h5>
         </a>
         <button class="follow-button user-suggestion-follow-btn" data-user-id="${user._id}" ${isFollowingUser ? 'disabled' : ''}>
@@ -556,7 +570,7 @@ function renderPost(post) {
         `;
         mediaContent = `
             <div class="post-video-container">
-                <video class="post-video" preload="none" aria-label="Video ad for ${post.description || 'product'}" poster="${post.thumbnail || ''}">
+                <video class="post-video" preload="metadata" muted playsinline aria-label="Video ad for ${post.description || 'product'}" poster="${post.thumbnail || ''}">
                     <source data-src="${post.video || ''}" type="video/mp4" />
                     <source data-src="${post.video ? post.video.replace('.mp4', '.webm') : ''}" type="video/webm" />
                     <source data-src="${post.video ? post.video.replace('.mp4', '.ogg') : ''}" type="video/ogg" />
@@ -936,6 +950,7 @@ if (visiblePostIds.length > 0) {
 }
 
 
+
 /**
  * Fetches older posts for infinite scrolling.
  * @param {string} category - The category.
@@ -960,7 +975,7 @@ async function fetchMorePosts(category, lastPostId) {
 
 // Re-observe the new last post
 const newLastPostElement = postsContainer.querySelector('.post:last-of-type');
-const currentLastPostElement = postsContainer.querySelector('.post:last-of-type');
+
 if (newLastPostElement && scrollObserver) {
     scrollObserver.observe(newLastPostElement);
 }
@@ -1053,6 +1068,90 @@ document.addEventListener('visibilitychange', async () => {
         }
     }
 });
+
+// Scroll performance optimization
+let isScrolling = false;
+let scrollTimeout;
+
+function optimizeVideoControlsDuringScroll() {
+    const videoContainers = document.querySelectorAll('.post-video-container');
+    
+    videoContainers.forEach(container => {
+        if (isScrolling) { // Use the global isScrolling variable
+            container.classList.add('scrolling');
+            // Temporarily disable expensive hover effects
+            const seekPreview = container.querySelector('.seek-preview');
+            if (seekPreview) {
+                seekPreview.style.display = 'none';
+            }
+        } else {
+            container.classList.remove('scrolling');
+        }
+    });
+}
+
+// Throttled scroll handler
+const throttledScrollHandler = throttle(() => {
+    if (!isScrolling) {
+        isScrolling = true;
+        optimizeVideoControlsDuringScroll();
+    }
+    
+    clearTimeout(scrollTimeout);
+    scrollTimeout = setTimeout(() => {
+        isScrolling = false;
+        optimizeVideoControlsDuringScroll();
+    }, 150);
+}, 16); // ~60fps
+
+// Add scroll listener
+window.addEventListener('scroll', throttledScrollHandler, { passive: true });
+
+
+
+// Debounce function for expensive operations
+function debounce(func, delay) {
+    let timeoutId;
+    return function() {
+        const args = arguments;
+        const context = this;
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => func.apply(context, args), delay);
+    }
+}
+
+// Performance monitoring (optional - for debugging)
+function monitorScrollPerformance() {
+    let lastScrollTime = performance.now();
+    let frameCount = 0;
+    
+    function checkScrollFPS() {
+        const now = performance.now();
+        frameCount++;
+        
+        if (now - lastScrollTime >= 1000) {
+            const fps = frameCount;
+            if (fps < 30) {
+                console.warn(`Low scroll FPS detected: ${fps}fps`);
+            }
+            frameCount = 0;
+            lastScrollTime = now;
+        }
+        
+        if (isScrolling) {
+            requestAnimationFrame(checkScrollFPS);
+        }
+    }
+    
+    window.addEventListener('scroll', () => {
+        if (!isScrolling) {
+            requestAnimationFrame(checkScrollFPS);
+        }
+    }, { passive: true });
+}
+
+// Call this if you want to monitor performance (optional)
+// monitorScrollPerformance();
 
 // Also listen for focus events as a backup
 window.addEventListener('focus', async () => {

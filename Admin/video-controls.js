@@ -1,20 +1,40 @@
-// Function to show toast notification (copied for independence, or can be passed from main script)
-function showToast(message, bgColor = '#333') {
-    const toast = document.querySelector('.toast-message') || document.createElement('div');
-    if (!toast.parentNode) {
-        toast.className = 'toast-message';
-        document.body.appendChild(toast);
+// Optimized video loading and controls for better scrolling performance
+
+function lazyLoadVideo(videoElement) {
+    const sourceElements = videoElement.querySelectorAll('source[data-src]');
+    if (sourceElements.length === 0) return;
+
+    if (!window.videoIntersectionObserver) {
+        window.videoIntersectionObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                const video = entry.target;
+                if (entry.isIntersecting) {
+                    video.querySelectorAll('source[data-src]').forEach(source => {
+                        source.src = source.dataset.src;
+                    });
+                    video.load();
+                    video.classList.remove('lazy-loading');
+                    // Remove autoplay - videos will only play when user clicks play
+                } else {
+                    if (!video.paused) {
+                        video.pause();
+                    }
+                }
+            });
+        }, {
+            rootMargin: '0px 0px 300px 0px',
+            threshold: 0.5
+        });
     }
-    toast.textContent = message;
-    toast.style.backgroundColor = bgColor;
-    toast.classList.add('show');
-    setTimeout(() => {
-        toast.classList.remove('show');
-        setTimeout(() => toast.remove(), 500);
-    }, 3000);
+
+    videoElement.classList.add('lazy-loading');
+    // Disable autoplay by default
+    videoElement.removeAttribute('autoplay');
+    videoElement.setAttribute('preload', 'metadata'); // Changed from 'none' to 'metadata' for better UX
+    window.videoIntersectionObserver.observe(videoElement);
 }
 
-// Initialize video controls
+// Optimized video controls with performance improvements
 function initializeVideoControls(postElement) {
     const container = postElement.querySelector('.post-video-container');
     if (!container) return;
@@ -35,12 +55,40 @@ function initializeVideoControls(postElement) {
     const currentTimeDisplay = container.querySelector('.current-time');
     const durationDisplay = container.querySelector('.duration');
 
+    // Disable autoplay and set appropriate attributes
     video.setAttribute('playsinline', '');
     video.setAttribute('webkit-playsinline', '');
     video.setAttribute('crossorigin', 'anonymous');
+    video.removeAttribute('autoplay'); // Explicitly remove autoplay
+    video.muted = true; // Keep muted for better UX
+
+    // Throttle functions for better performance
+    const throttle = (func, limit) => {
+        let inThrottle;
+        return function() {
+            const args = arguments;
+            const context = this;
+            if (!inThrottle) {
+                func.apply(context, args);
+                inThrottle = true;
+                setTimeout(() => inThrottle = false, limit);
+            }
+        }
+    };
+
+    // Debounce function for expensive operations
+    const debounce = (func, delay) => {
+        let timeoutId;
+        return function() {
+            const args = arguments;
+            const context = this;
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(() => func.apply(context, args), delay);
+        }
+    };
 
     video.addEventListener('loadedmetadata', () => {
-        video.currentTime = 2; // Set a brief time for thumbnail generation
+        video.currentTime = 2;
     });
 
     video.addEventListener('seeked', () => {
@@ -51,7 +99,7 @@ function initializeVideoControls(postElement) {
             ctx.drawImage(video, 0, 0, thumbnailCanvas.width, thumbnailCanvas.height);
             video.poster = thumbnailCanvas.toDataURL('image/jpeg');
             video.dataset.thumbnailGenerated = 'true';
-            video.currentTime = 0; // Reset to 0 after thumbnail generation
+            video.currentTime = 0;
         }
     });
 
@@ -65,7 +113,8 @@ function initializeVideoControls(postElement) {
         durationDisplay.textContent = formatVideoTime(video.duration);
     });
 
-    video.addEventListener('timeupdate', () => {
+    // Throttled time update for better performance
+    const throttledTimeUpdate = throttle(() => {
         const progress = (video.currentTime / video.duration) * 100;
         progressBar.style.width = `${progress}%`;
         progressBar.setAttribute('aria-valuenow', progress);
@@ -76,7 +125,9 @@ function initializeVideoControls(postElement) {
             const bufferedPercent = (bufferedEnd / video.duration) * 100;
             bufferedBar.style.width = `${bufferedPercent}%`;
         }
-    });
+    }, 100); // Update every 100ms instead of on every timeupdate
+
+    video.addEventListener('timeupdate', throttledTimeUpdate);
 
     playPauseBtn.addEventListener('click', () => {
         if (video.paused) {
@@ -105,11 +156,11 @@ function initializeVideoControls(postElement) {
         volumeSlider.value = video.muted ? 0 : video.volume * 100;
     });
 
-    volumeSlider.addEventListener('input', () => {
+    volumeSlider.addEventListener('input', throttle(() => {
         video.volume = volumeSlider.value / 100;
         video.muted = volumeSlider.value == 0;
         muteBtn.innerHTML = video.muted ? '<i class="fas fa-volume-mute"></i>' : '<i class="fas fa-volume-up"></i>';
-    });
+    }, 50));
 
     playbackSpeed.addEventListener('change', () => {
         video.playbackRate = parseFloat(playbackSpeed.value);
@@ -147,6 +198,7 @@ function initializeVideoControls(postElement) {
     });
 
     let isDragging = false;
+    let isHoveringProgress = false;
 
     const updateProgress = (e, isTouch = false) => {
         const rect = progressContainer.getBoundingClientRect();
@@ -158,20 +210,18 @@ function initializeVideoControls(postElement) {
         video.currentTime = seekTime;
         progressBar.style.width = `${progress * 100}%`;
         progressBar.setAttribute('aria-valuenow', progress * 100);
-
-        seekPreview.style.left = `${posX}px`;
-        seekPreviewCanvas.width = 120;
-        seekPreviewCanvas.height = 68;
-        // Temporarily set video.currentTime for accurate seek preview drawing
-        video.currentTime = seekTime;
-        setTimeout(() => {
-            const ctx = seekPreviewCanvas.getContext('2d');
-            ctx.drawImage(video, 0, 0, seekPreviewCanvas.width, seekPreviewCanvas.height);
-            // Revert video.currentTime if it was changed by the setTimeout
-            // This line ensures the actual video playback position isn't disturbed by the preview seek.
-            video.currentTime = seekTime; // Re-set to ensure consistency for visual updates
-        }, 100); // Small delay to allow video to seek
     };
+
+    // Optimized seek preview with debouncing and simplified rendering
+    const debouncedSeekPreview = debounce((posX, seekTime) => {
+        if (!isDragging && isHoveringProgress) {
+            seekPreview.style.display = 'block';
+            seekPreview.style.left = `${posX}px`;
+            
+            // Simplified preview - only show time, not video frame for better performance
+            seekPreview.innerHTML = `<div style="background: rgba(0,0,0,0.8); color: white; padding: 2px 6px; border-radius: 3px; font-size: 12px;">${formatVideoTime(seekTime)}</div>`;
+        }
+    }, 100);
 
     progressContainer.addEventListener('mousedown', (e) => {
         isDragging = true;
@@ -187,32 +237,22 @@ function initializeVideoControls(postElement) {
         seekPreview.style.display = 'none';
     });
 
-    progressContainer.addEventListener('mousemove', (e) => {
+    // Optimized mouse move handler with throttling
+    progressContainer.addEventListener('mousemove', throttle((e) => {
         if (!isDragging) {
+            isHoveringProgress = true;
             const rect = progressContainer.getBoundingClientRect();
             const posX = e.clientX - rect.left;
             const width = rect.width;
             let progress = posX / width;
             progress = Math.max(0, Math.min(1, progress));
             const seekTime = progress * video.duration;
-            seekPreview.style.display = 'block';
-            seekPreview.style.left = `${posX}px`;
-            seekPreviewCanvas.width = 120;
-            seekPreviewCanvas.height = 68;
-            video.currentTime = seekTime;
-            setTimeout(() => {
-                const ctx = seekPreviewCanvas.getContext('2d');
-                ctx.drawImage(video, 0, 0, seekPreviewCanvas.width, seekPreviewCanvas.height);
-                // Ensure video.currentTime is reset to its actual position after preview
-                // This is crucial to not interrupt current playback if not dragging.
-                // However, for seek preview, you generally *want* the video to seek to that point momentarily.
-                // The current implementation changes `video.currentTime` and relies on `timeupdate` to refresh.
-                // If you want to preview without changing actual playback, you'd need a separate video element or more complex canvas rendering.
-            }, 100);
+            debouncedSeekPreview(posX, seekTime);
         }
-    });
+    }, 50));
 
     progressContainer.addEventListener('mouseleave', () => {
+        isHoveringProgress = false;
         if (!isDragging) seekPreview.style.display = 'none';
     });
 
@@ -220,20 +260,22 @@ function initializeVideoControls(postElement) {
         updateProgress(e);
     });
 
+    // Touch events with throttling
     progressContainer.addEventListener('touchstart', (e) => {
         isDragging = true;
         updateProgress(e, true);
     });
 
-    document.addEventListener('touchmove', (e) => {
+    document.addEventListener('touchmove', throttle((e) => {
         if (isDragging) updateProgress(e, true);
-    });
+    }, 50));
 
     document.addEventListener('touchend', () => {
         isDragging = false;
         seekPreview.style.display = 'none';
     });
 
+    // Keyboard controls
     postElement.addEventListener('keydown', (e) => {
         if (e.target === video || e.target === container) {
             switch (e.key) {
@@ -262,4 +304,9 @@ function initializeVideoControls(postElement) {
         progressBar.style.width = '0%';
         progressBar.setAttribute('aria-valuenow', 0);
     });
+
+    // Add passive event listeners where possible for better scroll performance
+    progressContainer.addEventListener('wheel', (e) => {
+        e.stopPropagation(); // Prevent wheel events from bubbling up during scroll
+    }, { passive: true });
 }

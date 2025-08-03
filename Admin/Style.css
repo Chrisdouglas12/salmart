@@ -27,6 +27,115 @@ img.lazy-loading.loaded {
 }
 
 
+/* Performance optimizations for video controls */
+.post-video-container {
+    /* Use GPU acceleration for smoother animations */
+    transform: translateZ(0);
+    will-change: transform;
+    /* Contain layout recalculations */
+    contain: layout style;
+}
+
+.post-video {
+    /* Optimize video rendering */
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    /* Reduce paint operations */
+    will-change: transform;
+}
+
+.custom-controls {
+    /* Optimize control overlay */
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    /* Use compositor for smooth transitions */
+    will-change: opacity, transform;
+    /* Reduce repaints during hover */
+    contain: layout;
+}
+
+/* Optimize progress bar animations */
+.progress-bar,
+.buffered-bar {
+    /* Use transform instead of width changes for better performance */
+    transform: translateZ(0);
+    will-change: transform;
+    contain: strict;
+}
+
+/* Optimize seek preview */
+.seek-preview {
+    /* Reduce paint operations */
+    will-change: transform, opacity;
+    contain: layout style;
+    /* Use GPU acceleration */
+    transform: translateZ(0);
+}
+
+/* Optimize hover effects */
+.control-button {
+    /* Reduce repaints on hover */
+    will-change: background-color, transform;
+    transform: translateZ(0);
+    transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.control-button:hover {
+    /* Use transform instead of changing dimensions */
+    transform: translateZ(0) scale(1.1);
+}
+
+/* Optimize volume slider */
+.volume-slider {
+    will-change: transform;
+    contain: layout;
+}
+
+/* Smooth scrolling optimizations */
+.post {
+    /* Contain layout changes to individual posts */
+    contain: layout style;
+    /* Optimize for scroll performance */
+    transform: translateZ(0);
+}
+
+/* Optimize for smooth scrolling over video areas */
+.post-video-container:hover {
+    /* Prevent unnecessary repaints during scroll */
+    contain: layout style paint;
+}
+
+/* Reduce layout thrashing during scroll */
+.post-video-container * {
+    /* Prevent unnecessary layout recalculations */
+    will-change: auto;
+}
+
+/* Override will-change during scroll for better performance */
+.post-video-container.scrolling * {
+    will-change: auto !important;
+}
+
+/* Optimize media queries for better performance */
+@media (prefers-reduced-motion: reduce) {
+    .custom-controls,
+    .control-button,
+    .progress-bar,
+    .seek-preview {
+        transition: none !important;
+        animation: none !important;
+    }
+}
+
+/* Better scrolling on mobile */
+@media (max-width: 768px) {
+    .post-video-container {
+        /* Optimize touch scrolling */
+        -webkit-overflow-scrolling: touch;
+        /* Better mobile performance */
+        transform: translate3d(0, 0, 0);
+    }
+}
 
 
 /* Styling for videos during lazy loading */
@@ -2215,7 +2324,6 @@ background: #f1f3f8;
     width: 100%;
     margin-left: 0;
     margin-right: 0;
-    margin-bottom: -20px;
     left: auto;
     right: auto;
   }
