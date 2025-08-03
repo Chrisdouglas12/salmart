@@ -102,7 +102,13 @@
       </li>
     </ul>
   </nav>
-
+<script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+<script>
+  // Only enable in development or if explicitly turned on
+  if (location.hostname === 'localhost' || localStorage.getItem('eruda') === 'true') {
+    eruda.init();
+  }
+</script>
   <script type="module" src="Messages.js"></script>
   <script src="Badge.js"></script>
 </body>

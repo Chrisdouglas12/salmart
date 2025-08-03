@@ -3380,3 +3380,17 @@
 {"level":"info","message":"Fetched 19 messages between 6843d062f457581752641ee3 and 685cfc99d8a56197d12a2534","timestamp":"2025-08-03T08:36:16.469Z"}
 {"level":"info","message":"Fetching messages since: 2025-08-03T08:01:29.525Z for user 6843d062f457581752641ee3","timestamp":"2025-08-03T08:36:23.948Z"}
 {"level":"info","message":"Background sync: Fetched 1 new messages for user 6843d062f457581752641ee3","timestamp":"2025-08-03T08:36:24.524Z"}
+{"level":"info","message":"Fetching messages since: 2025-08-03T08:36:22.310Z for user 6843d062f457581752641ee3","timestamp":"2025-08-03T08:47:49.253Z"}
+{"level":"info","message":"Background sync: Fetched 0 new messages for user 6843d062f457581752641ee3","timestamp":"2025-08-03T08:47:49.510Z"}
+{"level":"info","message":"Fetching messages since: 2025-08-03T08:36:22.310Z for user 6843d062f457581752641ee3","timestamp":"2025-08-03T08:48:01.846Z"}
+{"level":"info","message":"Background sync: Fetched 0 new messages for user 6843d062f457581752641ee3","timestamp":"2025-08-03T08:48:02.224Z"}
+{"level":"info","message":"Fetched 8 followers for user 6843d062f457581752641ee3","timestamp":"2025-08-03T08:48:06.125Z"}
+{"level":"info","message":"Fetching messages since: 2025-08-03T08:36:22.310Z for user 6843d062f457581752641ee3","timestamp":"2025-08-03T08:48:06.499Z"}
+{"level":"info","message":"Background sync: Fetched 0 new messages for user 6843d062f457581752641ee3","timestamp":"2025-08-03T08:48:06.730Z"}
+{"level":"warn","message":"Missing senderId or receiverId in /messages","timestamp":"2025-08-03T08:48:07.010Z"}
+{"level":"info","message":"Fetching messages since: 2025-08-03T08:36:22.310Z for user 6843d062f457581752641ee3","timestamp":"2025-08-03T08:48:35.361Z"}
+{"level":"info","message":"Background sync: Fetched 0 new messages for user 6843d062f457581752641ee3","timestamp":"2025-08-03T08:48:35.618Z"}
+{"level":"info","message":"Fetching messages since: 2025-08-03T08:36:22.310Z for user 6843d062f457581752641ee3","timestamp":"2025-08-03T08:49:05.353Z"}
+{"level":"info","message":"Background sync: Fetched 0 new messages for user 6843d062f457581752641ee3","timestamp":"2025-08-03T08:49:05.604Z"}
+{"level":"info","message":"Fetching messages since: 2025-08-03T08:36:22.310Z for user 6843d062f457581752641ee3","timestamp":"2025-08-03T08:49:35.388Z"}
+{"level":"info","message":"Background sync: Fetched 0 new messages for user 6843d062f457581752641ee3","timestamp":"2025-08-03T08:49:36.009Z"}
