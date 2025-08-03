@@ -7,45 +7,30 @@ const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true, trim: true },
   password: { type: String, required: true },
   profilePicture: { type: String },
+
   phoneNumber: {
     type: String,
     required: true,
     trim: true,
     validate: {
       validator: function (v) {
-        // Accepts +2348012345678 or 08012345678
         return /^(\+234|0)[789][01]\d{8}$/.test(v);
       },
       message: props => `${props.value} is not a valid Nigerian phone number!`
     }
   },
-  //email verification
+
   isVerified: { type: Boolean, default: false },
   verificationToken: { type: String },
 
-  // Location fields
-  state: {
-    type: String,
-    trim: true,
-    required: true,
-    maxlength: 50
-  },
-  city: {
-    type: String,
-    trim: true,
-    required: true,
-    maxlength: 50
-  },
+  state: { type: String, trim: true, required: true, maxlength: 50 },
+  city: { type: String, trim: true, required: true, maxlength: 50 },
 
-  // Social Graph
   followers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   following: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   blockedUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  interests: [{ type: String, trim: true }],
 
-  // NEW FIELD: User interests (e.g., categories of products, hobbies, etc.)
-  interests: [{ type: String, trim: true }], // Array of strings to store user interests
-
-  // Activity & Admin
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date },
   viewCount: { type: Number, default: 0 },
@@ -55,13 +40,10 @@ const userSchema = new mongoose.Schema({
   isAdmin: { type: Boolean, default: false },
   isSystemUser: { type: Boolean, default: false },
 
-  // Password Reset
   resetPasswordToken: { type: String, default: undefined },
   resetPasswordExpiry: { type: Date, default: undefined },
 
-  // Notifications & Preferences
   notificationPreferences: {
-    // All notification types with a default of 'true'
     likes: { type: Boolean, default: true },
     comments: { type: Boolean, default: true },
     reply: { type: Boolean, default: true },
@@ -79,26 +61,18 @@ const userSchema = new mongoose.Schema({
     deal: { type: Boolean, default: true },
     promotion: { type: Boolean, default: true },
   },
-  fcmTokens: {
-    type: [String],
-    default: []
-  },
+
+  fcmTokens: { type: [String], default: [] },
   socketId: { type: String, default: null },
   notificationEnabled: { type: Boolean, default: true },
 
-  // AI or Matching Systems
   userRelevanceScores: [{
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     score: Number,
   }],
 
-  // --- Paystack Integration ---
   paystack: {
-    customerId: {
-      type: String,
-      unique: true,
-      sparse: true
-    },
+    customerId: { type: String, unique: true, sparse: true },
     dedicatedAccount: {
       accountName: String,
       accountNumber: String,
@@ -106,12 +80,9 @@ const userSchema = new mongoose.Schema({
       bankSlug: String,
       id: String
     },
-    recipientCode: {
-      type: String,
-      unique: true,
-      sparse: true
-    }
+    recipientCode: { type: String, unique: true, sparse: true }
   },
+
   bankDetails: {
     accountName: String,
     accountNumber: String,
@@ -120,14 +91,38 @@ const userSchema = new mongoose.Schema({
   }
 });
 
+// 🧼 Pre-save hook to deduplicate all relevant arrays
 userSchema.pre('save', function (next) {
+  const toObjectIdStr = id => id.toString();
+
   if (Array.isArray(this.following)) {
-    this.following = [...new Set(this.following.map(f => f.toString()))];
+    this.following = [...new Set(this.following.map(toObjectIdStr))];
   }
+  if (Array.isArray(this.followers)) {
+    this.followers = [...new Set(this.followers.map(toObjectIdStr))];
+  }
+  if (Array.isArray(this.blockedUsers)) {
+    this.blockedUsers = [...new Set(this.blockedUsers.map(toObjectIdStr))];
+  }
+  if (Array.isArray(this.fcmTokens)) {
+    this.fcmTokens = [...new Set(this.fcmTokens)];
+  }
+  if (Array.isArray(this.interests)) {
+    this.interests = [...new Set(this.interests.map(i => i.trim().toLowerCase()))];
+  }
+  if (Array.isArray(this.userRelevanceScores)) {
+    const uniqueMap = new Map();
+    this.userRelevanceScores.forEach(score => {
+      const key = score.userId.toString();
+      if (!uniqueMap.has(key)) uniqueMap.set(key, score);
+    });
+    this.userRelevanceScores = Array.from(uniqueMap.values());
+  }
+
   next();
 });
 
-// Indexes for performance and uniqueness
+// Helpful indexes
 userSchema.index({ socketId: 1 });
 userSchema.index({ interests: 1 });
 

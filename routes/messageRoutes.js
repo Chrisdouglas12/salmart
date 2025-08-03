@@ -385,12 +385,12 @@ router.get('/api/messages/unread-count', verifyToken, async (req, res) => {
   });
   
   router.get('/followers', verifyToken, async (req, res) => {
-  const userId = req.user.userId; // Get the user ID from the verified token
+  const userId = req.user.userId;
 
   try {
     const user = await User.findById(userId).populate({
       path: 'followers',
-      select: 'firstName lastName profilePicture updatedAt' // Select specific fields to return
+      select: 'firstName lastName profilePicture updatedAt'
     });
 
     if (!user) {
@@ -398,27 +398,34 @@ router.get('/api/messages/unread-count', verifyToken, async (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    // Sort the followers by their 'updatedAt' field in descending order (newest first)
-    // The 'updatedAt' field is a good proxy for recent activity.
-    const sortedFollowers = user.followers.sort((a, b) => {
+    // 1. Deduplicate populated followers by _id
+    const uniqueFollowersMap = new Map();
+    for (const follower of user.followers) {
+      uniqueFollowersMap.set(follower._id.toString(), follower);
+    }
+    const deduplicatedFollowers = Array.from(uniqueFollowersMap.values());
+
+    // 2. Sort by updatedAt (descending)
+    const sortedFollowers = deduplicatedFollowers.sort((a, b) => {
       if (!a.updatedAt) return 1;
       if (!b.updatedAt) return -1;
       return b.updatedAt.getTime() - a.updatedAt.getTime();
     });
 
-    
-     const blockedUserIds = user.blockedUsers.map(id => id.toString());
-    const filteredFollowers = sortedFollowers.filter(follower => !blockedUserIds.includes(follower._id.toString()));
+    // 3. Filter out blocked users
+    const blockedUserIds = user.blockedUsers.map(id => id.toString());
+    const filteredFollowers = sortedFollowers.filter(follower => 
+      !blockedUserIds.includes(follower._id.toString())
+    );
 
-    logger.info(`Fetched ${sortedFollowers.length} followers for user ${userId}`);
-    res.status(200).json(sortedFollowers);
+    logger.info(`Fetched ${filteredFollowers.length} followers for user ${userId}`);
+    res.status(200).json(filteredFollowers);
 
   } catch (error) {
     logger.error(`Error fetching followers for user ${userId}: ${error.message}`);
     res.status(500).json({ error: 'Failed to fetch followers', details: error.message });
   }
 });
-
 
   return router;
 };
