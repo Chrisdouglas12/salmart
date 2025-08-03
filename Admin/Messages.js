@@ -1,4 +1,3 @@
-// Messages.js
 import { salmartCache } from './Salmartcache.js';
 
 // Global variables
@@ -118,7 +117,19 @@ async function handleNewMessage(newMessage) {
             return;
         }
 
+        // Add new message and remove duplicates
         messages.unshift(newMessage);
+        
+        // Remove any duplicate messages by ID
+        const messageMap = new Map();
+        messages.forEach(msg => {
+            if (!messageMap.has(msg._id)) {
+                messageMap.set(msg._id, msg);
+            }
+        });
+        messages = Array.from(messageMap.values());
+        
+        // Sort by creation date (newest first)
         messages.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         
         await salmartCache.set(MESSAGE_DB_KEY, messages); 
@@ -141,6 +152,11 @@ async function handleNewMessage(newMessage) {
         }, 500);
 
         messageUpdateTimeouts.set(newMessage._id, timeoutId);
+
+        // Force a fresh render
+        setTimeout(() => {
+            renderMessages();
+        }, 100);
     } catch (error) {
         console.error('Error handling newMessage:', error);
         fetchMessages();
@@ -227,7 +243,21 @@ async function fetchMessages() {
     }
 }
 
+function debugMessages() {
+  console.log('Current messages count:', messages.length);
+  console.log('First 3 messages:', messages.slice(0, 3).map(m => ({
+    id: m._id,
+    from: m.senderId,
+    to: m.receiverId,
+    text: m.text?.substring(0, 30),
+    date: m.createdAt,
+    isRead: m.isRead
+  })));
+}
+
 function renderMessages() {
+  debugMessages();
+  
   if (messages.length === 0) {
     console.log('No messages to display');
     messageListElement.innerHTML = '';
@@ -243,8 +273,21 @@ function generateMessageHTML(messages) {
   const uniqueChats = {};
   messages.forEach(msg => {
     const chatPartnerId = msg.senderId === userId ? msg.receiverId : msg.senderId;
-    if (!uniqueChats[chatPartnerId] || new Date(msg.createdAt) > new Date(uniqueChats[chatPartnerId].createdAt)) {
+    if (!uniqueChats[chatPartnerId]) {
       uniqueChats[chatPartnerId] = msg;
+    } else {
+      // Always keep the most recent message OR prioritize unread messages
+      const currentMsg = uniqueChats[chatPartnerId];
+      const newMsgDate = new Date(msg.createdAt);
+      const currentMsgDate = new Date(currentMsg.createdAt);
+      
+      // Show this message if it's newer OR if it's unread and current isn't
+      const msgIsUnread = !msg.isRead && msg.senderId !== userId;
+      const currentIsUnread = !currentMsg.isRead && currentMsg.senderId !== userId;
+      
+      if (newMsgDate > currentMsgDate || (msgIsUnread && !currentIsUnread)) {
+        uniqueChats[chatPartnerId] = msg;
+      }
     }
   });
 
@@ -303,7 +346,6 @@ function generateMessageHTML(messages) {
   }).join('');
 }
 
-// **This is the updated function with the fix**
 async function handleMessageClick(partnerId, partnerName, partnerProfile) {
     if (isClickProcessing) {
         console.log('Click processing, ignoring...');
@@ -354,7 +396,6 @@ async function handleMessageClick(partnerId, partnerName, partnerProfile) {
     } catch (error) {
         console.error('Error in handleMessageClick:', error);
     } finally {
-        // Reset the flag immediately after the try/catch block finishes
         isClickProcessing = false;
     }
 }
