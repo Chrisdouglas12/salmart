@@ -3267,3 +3267,5 @@
 {"level":"warn","message":"No FCM tokens for user 68431685432ee393a735a641","timestamp":"2025-08-03T18:27:36.650Z"}
 {"level":"warn","message":"No FCM tokens for user 685cfc99d8a56197d12a2534","timestamp":"2025-08-03T18:27:36.702Z"}
 {"level":"warn","message":"No FCM tokens for user 6865680685b3194e8bc38b92","timestamp":"2025-08-03T18:27:39.459Z"}
+{"level":"warn","message":"Invalid userId in sendFCMNotification: ","timestamp":"2025-08-04T21:08:52.305Z"}
+{"level":"warn","message":"Invalid userId in sendFCMNotification: ","timestamp":"2025-08-04T21:09:42.678Z"}

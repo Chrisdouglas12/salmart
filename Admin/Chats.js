@@ -1,16 +1,38 @@
-// API base URL configuration for local and production environments
+import SalmartCache2 from './salmartCache2.js';
+
+
 const API_BASE_URL = window.location.hostname === 'localhost'
     ? 'http://localhost:3000'
     : 'https://salmart.onrender.com';
 
-// Initialize Socket.IO connection with WebSocket and polling transports
-// IMPORTANT: Ensure the auth token is always sent on connection
 const socket = io(API_BASE_URL, {
     path: '/socket.io',
     transports: ['websocket', 'polling'],
     auth: { token: localStorage.getItem('authToken') } // CRITICAL FOR SOCKET AUTHENTICATION
 });
 
+// Initialize the cache system
+const chatCache = new SalmartCache2(API_BASE_URL);
+
+// Setup network monitoring with cache
+chatCache.setupNetworkMonitoring(
+    async () => {
+        // When network comes back online
+        showToast('Connection restored', 'success');
+        await chatCache.processMessageQueue(userId, async (queuedMessage) => {
+            // Your existing send message logic here
+            return new Promise((resolve) => {
+                socket.emit('sendMessage', queuedMessage);
+                // You might need to track success/failure differently
+                resolve({ success: true });
+            });
+        });
+    },
+    () => {
+        // When network goes offline
+        showToast('Connection lost - messages will be queued', 'warning');
+    }
+);
 // DOM elements for chat interface
 const chatMessages = document.getElementById('chat-messages');
 const typeSection = document.getElementById('type-section');
@@ -100,21 +122,6 @@ function createSystemMessage(text) {
     return div;
 }
 
-// Global sets for bargain state management (ensure these persist if needed across sessions)
-// Consider using localStorage or a more robust state management for these if critical
-const acceptedOffers = new Set();
-const endedBargains = new Set();
-const bargainingSessions = new Map(); // Potentially map productId to last offer message ID
-const sentCounterOffers = new Set();
-
-// Function to update local storage for bargain states
-function saveBargainStates() {
-    // For simplicity, not fully implementing persistence here.
-    // In a real app, you might serialize these sets/maps to localStorage
-    // or fetch them from server on load.
-    // Example: localStorage.setItem('acceptedOffers', JSON.stringify(Array.from(acceptedOffers)));
-}
-
 /**
  * Displays a message in the chat interface.
  * Handles optimistic updates, status indicators, and special message types.
@@ -153,7 +160,7 @@ function displayMessage(message, isOptimistic = false) {
 
     let displayText = message.content || message.text || '';
     let displayImageUrl = null; // Renamed from displayImage to avoid confusion with DOM element
-    let offerDetails = message.offerDetails || {};
+
 
     // Parse message content for images or structured data
     if (message.messageType === 'image') {
@@ -171,7 +178,6 @@ function displayMessage(message, isOptimistic = false) {
                 parsedFromJson = JSON.parse(message.text);
                 displayText = parsedFromJson.text || displayText;
                 displayImageUrl = parsedFromJson.image || displayImageUrl;
-                offerDetails = { ...offerDetails, ...parsedFromJson }; // Merge any offer details from text
             } catch (e) {
                 console.warn('Failed to parse message text as JSON:', message.text, e);
                 displayText = message.text; // Fallback to raw text
@@ -190,27 +196,9 @@ function displayMessage(message, isOptimistic = false) {
         lastDisplayedDate = formattedDate;
     }
 
-    // Update bargain states based on offer messages
-    if (offerDetails && offerDetails.productId) {
-        const productKey = offerDetails.productId;
-        if (['accepted', 'completed'].includes(offerDetails.status)) {
-            acceptedOffers.add(productKey);
-            bargainingSessions.delete(`${productKey}-${message.senderId}`); // End active session for this product
-            endedBargains.add(productKey);
-        } else if (offerDetails.status === 'rejected' || message.messageType === 'end-bargain') {
-            endedBargains.add(productKey);
-            bargainingSessions.delete(`${productKey}-${message.senderId}`);
-        }
-    }
-    if (message.messageType === 'counter-offer' && message.senderId === userId && offerDetails?.productId) {
-        sentCounterOffers.add(offerDetails.productId);
-    }
-    saveBargainStates(); // Save updated states (if implementation exists)
-
-    // Handle system messages (offer accept/decline, bargain end, payment completion)
+    // Handle system messages (payment completion)
     const isSystemMessageType = [
-        'bargainStart', 'end-bargain', 'buyerAccept', 'sellerAccept', 'sellerDecline',
-        'buyerDeclineResponse', 'offer', 'counter-offer', 'payment-completed'
+        'payment-completed'
     ].includes(message.messageType) && message.metadata?.isSystemMessage;
 
     if (isSystemMessageType) {
@@ -218,23 +206,8 @@ function displayMessage(message, isOptimistic = false) {
         let systemImage = displayImageUrl;
 
         // Customize system message text based on type
-        if (message.messageType === 'bargainStart') {
-             // Example: "You started a bargain for Product X at $Y"
-            systemText = message.senderId === userId ?
-                `You started a bargain for ${offerDetails.productName || 'Product'} at ₦${(offerDetails.proposedPrice || 0).toLocaleString('en-NG')}.` :
-                `${recipientUsername} started a bargain for ${offerDetails.productName || 'Product'} at ₦${(offerDetails.proposedPrice || 0).toLocaleString('en-NG')}.`;
-        } else if (message.messageType === 'buyerAccept') {
-            systemText = `Offer for ${offerDetails.productName || 'Product'} at ₦${(offerDetails.proposedPrice || 0).toLocaleString('en-NG')} was accepted.`;
-            // Add specific buttons/actions for the buyer if this is the message they receive
-        } else if (message.messageType === 'sellerAccept') {
-            systemText = `Accepted the offer of ₦${(offerDetails.proposedPrice || 0).toLocaleString('en-NG')} for "${offerDetails.productName || 'Product'}".`;
-            // Add specific buttons/actions for the seller if this is the message they receive
-        } else if (message.messageType === 'sellerDecline' || message.messageType === 'buyerDeclineResponse') {
-            systemText = `Offer for ${offerDetails.productName || 'Product'} was rejected.`;
-        } else if (message.messageType === 'end-bargain') {
-            systemText = `${message.senderId === userId ? 'You' : recipientUsername} ended the bargain for ${offerDetails.productName || 'Product'}.`;
-        } else if (message.messageType === 'payment-completed') {
-            systemText = `Payment completed for ${offerDetails.productName || 'Product'}.`;
+        if (message.messageType === 'payment-completed') {
+            systemText = `Payment completed for ${productName || 'Product'}.`;
             systemImage = message.attachment?.url || systemImage;
         }
 
@@ -244,66 +217,12 @@ function displayMessage(message, isOptimistic = false) {
             const imageContainer = document.createElement('div');
             imageContainer.style.margin = '10px 0';
             imageContainer.innerHTML = `
-                <img src="${systemImage}" class="product-photo-preview" alt="${offerDetails.productName || 'Product'}"
+                <img src="${systemImage}" class="product-photo-preview" alt="${productName || 'Product'}"
                     style="max-width: 200px; border-radius: 5px;"
                     onerror="this.style.display='none';this.nextElementSibling.style.display='block';">
                 <p style="display:none;color:red;">Failed to load image.</p>
             `;
             systemDiv.appendChild(imageContainer);
-        }
-
-        // Add action buttons for system messages (e.g., "Proceed to Payment")
-        if (message.messageType === 'sellerAccept' && message.receiverId === userId) {
-            const paymentBtn = document.createElement('button');
-            paymentBtn.className = 'proceed-to-payment-btn';
-            paymentBtn.textContent = 'Proceed to Payment';
-
-            const verifyPaymentStatus = async (productId, userId) => {
-                // You would typically make an API call here to check payment status
-                // For now, return false to simulate not paid
-                console.log(`Verifying payment for product ${productId} by user ${userId}`);
-                // Example: const response = await fetch(`${API_BASE_URL}/payments/status/${productId}/${userId}`);
-                // const data = await response.json();
-                // return data.isPaid;
-                return false;
-            };
-
-            const initiatePayment = (productId, price, productName, button) => {
-                console.log(`Initiating payment for ${productName} (ID: ${productId}) at ₦${price}`);
-                showToast(`Initiating payment for ${productName}...`, 'info');
-                // Simulate payment initiation (replace with actual payment gateway redirection/modal)
-                setTimeout(() => {
-                    showToast('Payment initiated. Follow prompts.', 'success');
-                    button.disabled = true;
-                    button.textContent = 'Payment Initiated';
-                    button.style.backgroundColor = 'gray';
-                    button.style.cursor = 'not-allowed';
-                    // In a real app, this would redirect or open a payment modal
-                }, 1500);
-            };
-
-            const checkAndSetPaymentButton = async () => {
-                const isPaid = await verifyPaymentStatus(offerDetails.productId, userId);
-                if (isPaid) {
-                    paymentBtn.disabled = true;
-                    paymentBtn.textContent = 'Payment Completed';
-                    paymentBtn.style.backgroundColor = 'gray';
-                    paymentBtn.style.cursor = 'not-allowed';
-                } else {
-                    paymentBtn.onclick = () => initiatePayment(offerDetails.productId, offerDetails.proposedPrice, offerDetails.productName, paymentBtn);
-                }
-            };
-            checkAndSetPaymentButton(); // Call immediately to set initial state
-            systemDiv.appendChild(paymentBtn);
-        } else if (message.messageType === 'buyerAccept' && message.receiverId === userId) {
-            // For the seller, indicating waiting for buyer's payment
-            const waitingForPaymentBtn = document.createElement('button');
-            waitingForPaymentBtn.className = 'waiting-for-payment-btn';
-            waitingForPaymentBtn.textContent = 'Waiting for Payment';
-            waitingForPaymentBtn.disabled = true;
-            waitingForPaymentBtn.style.backgroundColor = '#f0ad4e';
-            waitingForPaymentBtn.style.cursor = 'not-allowed';
-            systemDiv.appendChild(waitingForPaymentBtn);
         }
 
         chatMessages.appendChild(systemDiv);
@@ -425,89 +344,6 @@ if (message.messageType === 'image') {
         <div class="message-timestamp">${time} ${statusCheckmark}</div>
     `;
 }
-
-    // --- Offer/Counter-offer buttons (existing logic) ---
-    // Ensure buttons only appear on relevant messages and if not already accepted/ended
-    const isOfferAccepted = offerDetails.productId && acceptedOffers.has(offerDetails.productId);
-    const isBargainEnded = offerDetails.productId && endedBargains.has(offerDetails.productId);
-
-    if (message.messageType === 'offer' && offerDetails.proposedPrice && message.receiverId === userId && message.senderId === receiverId && !isOfferAccepted && !isBargainEnded) {
-        const acceptBtn = document.createElement('button');
-        acceptBtn.className = 'accept-offer-btn';
-        acceptBtn.textContent = 'Accept Offer';
-        acceptBtn.onclick = async () => {
-            // Emit to server to accept offer
-            socket.emit('acceptOffer', {
-                offerId: message._id,
-                acceptorId: userId,
-                productId: offerDetails.productId,
-                proposedPrice: offerDetails.proposedPrice,
-                productName: offerDetails.productName,
-                productImage: offerDetails.image
-            });
-            showToast('Accepting offer...', 'info');
-            // Disable buttons immediately to prevent double-clicks
-            acceptBtn.disabled = true;
-            msgDiv.querySelector('.decline-offer-btn').disabled = true;
-        };
-        msgDiv.appendChild(acceptBtn);
-
-        const declineBtn = document.createElement('button');
-        declineBtn.className = 'decline-offer-btn';
-        declineBtn.textContent = 'Decline Offer';
-        declineBtn.onclick = () => {
-            // Emit to server to decline offer
-            socket.emit('declineOffer', {
-                offerId: message._id,
-                declinerId: userId,
-                productId: offerDetails.productId,
-                productName: offerDetails.productName,
-                productImage: offerDetails.image
-            });
-            showToast('Declining offer...', 'info');
-            acceptBtn.disabled = true;
-            declineBtn.disabled = true;
-        };
-        msgDiv.appendChild(declineBtn);
-    }
-
-    if (message.messageType === 'counter-offer' && offerDetails.proposedPrice && message.receiverId === userId && message.senderId === receiverId && !isOfferAccepted && !isBargainEnded) {
-        const acceptBtn = document.createElement('button');
-        acceptBtn.className = 'accept-offer-btn';
-        acceptBtn.textContent = 'Accept Last Price';
-        acceptBtn.onclick = async () => {
-            // Emit to server to accept counter offer (same as acceptOffer event)
-            socket.emit('acceptOffer', {
-                offerId: message._id,
-                acceptorId: userId,
-                productId: offerDetails.productId,
-                proposedPrice: offerDetails.proposedPrice,
-                productName: offerDetails.productName,
-                productImage: offerDetails.image
-            });
-            showToast('Accepting counter offer...', 'info');
-            acceptBtn.disabled = true;
-            msgDiv.querySelector('.end-bargain-btn').disabled = true;
-        };
-        msgDiv.appendChild(acceptBtn);
-
-        const endBargainBtn = document.createElement('button');
-        endBargainBtn.className = 'end-bargain-btn';
-        endBargainBtn.textContent = 'End Bargain';
-        endBargainBtn.onclick = async () => {
-            // Emit to server to end bargain
-            socket.emit('endBargain', {
-                offerId: message._id, // Pass the ID of the offer being ended
-                enderId: userId,
-                productId: offerDetails.productId,
-                productName: offerDetails.productName
-            });
-            showToast('Ending bargain...', 'info');
-            acceptBtn.disabled = true;
-            endBargainBtn.disabled = true;
-        };
-        msgDiv.appendChild(endBargainBtn);
-    }
 
     // Append the message element
     chatMessages.appendChild(msgDiv);
@@ -756,8 +592,7 @@ sendBtn.onclick = async () => {
         isRead: false,
         tempId: tempMessageId, // Include tempId for optimistic UI
         senderId: userId, // Ensure senderId is explicitly set
-        // Add other properties if relevant (e.g., offerDetails, attachment)
-        // For predefined message, the server will handle offerDetails from `text` JSON
+        // Add other properties if relevant (e.g., attachment)
     };
 
     // Optimistically display the message immediately
@@ -788,7 +623,7 @@ sendBtn.onclick = async () => {
 
 // NEW: Listener for message status updates (primarily for the sender's own messages)
 // This will update the tempId to the real _id and update the status (e.g., to 'delivered').
-socket.on('messageStatusUpdate', ({ _id, tempId, status, createdAt, attachment, viewOnce }) => {
+socket.on('messageStatusUpdate', async ({ _id, tempId, status, createdAt, attachment, viewOnce }) => {
     console.log(`Received messageStatusUpdate: tempId=${tempId}, _id=${_id}, status=${status}`);
     if (tempId) {
         // Retrieve the optimistic message from the map
@@ -841,32 +676,20 @@ socket.on('messageStatusUpdate', ({ _id, tempId, status, createdAt, attachment, 
         }
     }
 
-    // Also, if this message is being updated to 'delivered' or 'seen', ensure it's saved to localStorage
-    const storedMessages = JSON.parse(localStorage.getItem(`chat_${userId}_${receiverId}`) || '[]');
-    const existingIndex = storedMessages.findIndex(msg => msg._id === _id || msg.tempId === tempId);
-
-    if (existingIndex !== -1) {
-        // Update existing message in localStorage with new _id, status, and createdAt
-        const updatedMsg = { ...storedMessages[existingIndex], _id, status, createdAt };
-        if (tempId) delete updatedMsg.tempId; // Remove tempId once real ID is known
-        if (attachment) updatedMsg.attachment = attachment;
-        if (typeof viewOnce === 'boolean') updatedMsg.viewOnce = { enabled: viewOnce, viewed: false, deleteAt: null };
-        if (typeof viewOnce === 'object' && viewOnce !== null) updatedMsg.viewOnce = viewOnce;
-        storedMessages[existingIndex] = updatedMsg;
+// Update cache using SalmartCache2
+    if (tempId) {
+        await chatCache.updateChatMessageInCache(userId, receiverId, tempId, { _id, status, createdAt, attachment, viewOnce });
     } else {
-        // If it's a new confirmed message not previously in local storage (e.g., from another device)
-        // You might need to fetch the full message details from the server or ensure `newMessage` handles it.
-        // For now, this scenario should largely be covered by the `newMessage` listener.
-        console.warn(`messageStatusUpdate received for _id ${_id} but not found in local storage for update.`);
+        await chatCache.updateChatMessageInCache(userId, receiverId, _id, { status, createdAt, attachment, viewOnce });
     }
-    localStorage.setItem(`chat_${userId}_${receiverId}`, JSON.stringify(storedMessages));
 });
+
 
 
 // Handle incoming messages for display
 // This event is fired when a message is sent to the chat room,
 // meaning both sender and receiver will receive it here if they're in the chat.
-socket.on('newMessage', message => {
+socket.on('newMessage', async message => {
     console.log('Received newMessage (from chat_room):', message);
 
     // If the message has a tempId and we have an optimistic message matching it,
@@ -908,20 +731,8 @@ socket.on('newMessage', message => {
         });
     }
 
-    // Update local storage for persistence
-    const storedMessages = JSON.parse(localStorage.getItem(`chat_${userId}_${receiverId}`) || '[]');
-    const existingIndex = storedMessages.findIndex(msg => msg._id === message._id); // Find by actual _id
-
-    if (existingIndex !== -1) {
-        storedMessages[existingIndex] = message; // Update existing message with new status/details
-    } else {
-        // Only push if it's a truly new message to store (and has a confirmed _id)
-        if (message._id && !message._id.startsWith('temp_')) {
-             storedMessages.push(message);
-        }
-    }
-    localStorage.setItem(`chat_${userId}_${receiverId}`, JSON.stringify(storedMessages));
-
+ // Update cache using SalmartCache2
+await chatCache.addNewChatMessageToCache(message.senderId, message.receiverId, message);
     // Show toast for new incoming messages from other users
     // This listener also gets our own messages back, so only toast if from the other user
     if (message.senderId !== userId) {
@@ -1028,28 +839,13 @@ async function loadChatHistory() {
             return;
         }
 
-        const res = await fetch(`${API_BASE_URL}/messages?user1=${userId}&user2=${receiverId}`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (!res.ok) {
-            const errorText = await res.text();
-            throw new Error(`Failed to fetch messages: ${res.status} ${res.statusText}`);
-        }
-
-        const rawText = await res.text();
-        let messages;
-        try {
-            messages = JSON.parse(rawText);
-        } catch (e) {
-            console.error('Invalid JSON response:', rawText);
-            showToast('Failed to parse chat history.', 'error');
-            messages = [];
-        }
+        // Use cache system instead of direct fetch
+        const messages = await chatCache.getChatMessages(userId, receiverId);
 
         if (!Array.isArray(messages)) {
             console.warn('Response is not an array:', messages);
             showToast('Invalid chat history format.', 'error');
-            messages = JSON.parse(localStorage.getItem(`chat_${userId}_${receiverId}`) || '[]');
+            return;
         }
 
         // Filter and validate messages
@@ -1058,8 +854,7 @@ async function loadChatHistory() {
                 console.warn(`Skipping invalid message object:`, msg);
                 return false;
             }
-            // Basic check for message content or type for non-text messages
-            if (!msg.text && !['image', 'payment-completed', 'bargainStart', 'end-bargain', 'buyerAccept', 'sellerAccept', 'offer', 'counter-offer'].includes(msg.messageType)) {
+            if (!msg.text && !['image', 'payment-completed'].includes(msg.messageType)) {
                 console.warn(`Skipping message (no text, unknown special type):`, msg);
                 return false;
             }
@@ -1068,7 +863,6 @@ async function loadChatHistory() {
 
         // Check if initial message was already sent based on history
         const initialMessageExists = validMessages.some(msg => {
-            // Only check for messages from the current user (senderId)
             if (msg.senderId === userId && msg.messageType === 'text' && typeof msg.text === 'string' && msg.text.startsWith('{')) {
                 try {
                     const parsed = JSON.parse(msg.text);
@@ -1085,16 +879,14 @@ async function loadChatHistory() {
             localStorage.setItem(`initialMessageSent_${productId}_${receiverId}`, 'true');
         }
 
-        renderProductPreview(); // Render product preview if applicable
-        lastDisplayedDate = null; // Reset date for fresh render
-        displayedMessages.clear(); // Clear previously displayed messages for fresh load
-        optimisticMessagesMap.clear(); // Clear any lingering optimistic messages
-        validMessages.forEach(msg => displayMessage(msg)); // Display all valid messages
-        localStorage.setItem(`chat_${userId}_${receiverId}`, JSON.stringify(validMessages)); // Update local storage
-        chatMessages.scrollTop = chatMessages.scrollHeight; // Scroll to bottom
+        renderProductPreview();
+        lastDisplayedDate = null;
+        displayedMessages.clear();
+        optimisticMessagesMap.clear();
+        validMessages.forEach(msg => displayMessage(msg));
+        chatMessages.scrollTop = chatMessages.scrollHeight;
 
-        // After loading history, if the current user is the receiver and there are unread messages from this sender,
-        // mark them as seen.
+        // Mark unread messages as seen
         const unreadMessagesFromSender = validMessages.filter(msg =>
             msg.receiverId === userId && msg.senderId === receiverId && !msg.isRead && msg.status !== 'seen'
         ).map(msg => msg._id);
@@ -1103,14 +895,15 @@ async function loadChatHistory() {
             console.log(`Marking ${unreadMessagesFromSender.length} messages as seen after loading history.`);
             socket.emit('markAsSeen', {
                 messageIds: unreadMessagesFromSender,
-                senderId: receiverId, // The other participant is the sender of these messages
-                receiverId: userId // We are the receiver
+                senderId: receiverId,
+                receiverId: userId
             });
         }
 
     } catch (error) {
         console.error('Error loading chat history:', error);
         showToast(`Failed to load messages: ${error.message}`, 'error');
+    
         // Fallback to local storage if API call fails
         const storedMessages = JSON.parse(localStorage.getItem(`chat_${userId}_${receiverId}`) || '[]');
         lastDisplayedDate = null;
@@ -1146,10 +939,6 @@ socket.on('messageError', ({ tempId, error }) => {
     if (tempId) {
         removeOptimisticMessage(tempId); // Remove the optimistic message if sending failed
     }
-});
-
-socket.on('offerError', ({ error }) => {
-    showToast(`Offer error: ${error}`, 'error');
 });
 
 socket.on('markSeenError', ({ error }) => {
