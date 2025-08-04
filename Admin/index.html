@@ -73,6 +73,21 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
     <style>
+    .side-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 260px;
+  height: 100vh;
+  overflow-y: auto; /* scrolls independently */
+  background-color: #fff;
+  z-index: 1000;
+  display: none; /* initially hidden */
+}
+
+body.no-scroll {
+  overflow: hidden; /* disables body scroll */
+}
         /* Skeleton Loader */
         .skeleton-post {
             background: white;
@@ -534,25 +549,29 @@
 </nav>
       <div id="toast" style="display:none;"></div>
     </div>
-    <div class="side-bar">
-      <div class="profile-sec">
-        <img src="default-avater.png" alt="pic" id="profile-picture1">
-        <h1 id="username1">Username</h1>
-      </div>
-      <ul>
-        <li><a href="index.html" class="active"><i class="fas fa-store"></i>Market</a></li>
-        <li><a href="Alerts.html"><i class="fas fa-bell"></i> Alerts</a></li>
-        <li><a href="Messages.html"><i class="fas fa-comment"></i>Messages</a></li> 
-        <li><a href="Deals.html"><i class="fas fa-cart-plus"></i>Deals</a></li>
-        <li><a href="Profile.html"><i class="fas fa-user"></i> Profile</a></li>
-        <li><a href="Profile.html"><i class="fa-solid fa-lock"></i> Privacy Policy</a></li>
-       <li><a href="Community.html"><i class="fa-solid fa-circle-info"></i> Community Standards</a></li>
-       <li><a href="refund-policy.html"><i class="fa-solid fa-rotate-left"></i> Refunds Policy</a></li>
-      <li><a href="salmart-hub.html"><i class="fas fa-shield-alt"></i> Salmart Hub</a></li>
-        <li><a href="SignIn.html" id="logout-link"><i class="fas fa-sign-out-alt"></i> <span id="logout-text">Log out</span></a></li>
-      </ul>
-      <pre style="font-size: 10px; text-align: center; margin-top: 40px; color: green">©Salmart Technologies 2025</pre>
-    </div>
+<div class="side-bar">
+  <div class="profile-sec">
+    <img src="default-avater.png" alt="pic" id="profile-picture1">
+    <h1 id="username1">Username</h1>
+  </div>
+  <ul>
+    <li><a href="index.html" class="active"><i class="fas fa-store"></i>Market</a></li>
+    <li><a href="Alerts.html"><i class="fas fa-bell"></i> Alerts</a></li>
+    <li><a href="Messages.html"><i class="fas fa-comment"></i>Messages</a></li> 
+    <li><a href="Deals.html"><i class="fas fa-cart-plus"></i>Deals</a></li>
+    <li><a href="Profile.html"><i class="fas fa-user"></i> Profile</a></li>
+    <li><a href="Privacy.html"><i class="fa-solid fa-lock"></i> Privacy Policy</a></li>
+    <li><a href="Community.html"><i class="fa-solid fa-circle-info"></i> Community Standards</a></li>
+    <li><a href="refund-policy.html"><i class="fa-solid fa-rotate-left"></i> Refunds Policy</a></li>
+    <li><a href="salmart-hub.html"><i class="fas fa-shield-alt"></i> Salmart Hub</a></li>
+    <li><a href="SignIn.html" id="logout-link"><i class="fas fa-sign-out-alt"></i> <span id="logout-text">Log out</span></a></li>
+  </ul>
+  
+  <footer style="margin-top: 40px; text-align: center; font-size: 10px; color: #28a745;">
+    <p style="font-size: 10px;">© 2025 Salmart Technologies <br>  RC: 8494162</p>
+    <p><a href="mailto:support@salmartonline.com.ng" style="color: #28a745; text-decoration: none; font-size: 10px">support@salmartonline.com.ng</a></p>
+  </footer>
+</div>
     
            <div class="create-post-container">
       <div>
@@ -662,21 +681,27 @@
     </div>
 
     
-    <script>
-    const menuIcon = document.querySelector('.menu-icon');
-    const sideBar = document.querySelector('.side-bar');
-    const body = document.body;
-    menuIcon.addEventListener('click', () => {
-      sideBar.style.display = sideBar.style.display === 'block' ? 'none' : 'block';
-      body.classList.toggle('no-scroll');
-    });
-    document.body.addEventListener('click', (e) => {
-      if (sideBar.style.display === 'block' && !sideBar.contains(e.target) && !menuIcon.contains(e.target)) {
-        sideBar.style.display = 'none';
-        body.classList.remove('no-scroll');
-      }
-    });
-    </script>
+<script>
+  const menuIcon = document.querySelector('.menu-icon');
+  const sideBar = document.querySelector('.side-bar');
+  const body = document.body;
+
+  menuIcon.addEventListener('click', () => {
+    const isOpen = sideBar.style.display === 'block';
+    sideBar.style.display = isOpen ? 'none' : 'block';
+    body.classList.toggle('no-scroll', !isOpen);
+  });
+
+  document.body.addEventListener('click', (e) => {
+    const clickedOutsideSidebar = !sideBar.contains(e.target) && !menuIcon.contains(e.target);
+    const sidebarOpen = sideBar.style.display === 'block';
+
+    if (sidebarOpen && clickedOutsideSidebar) {
+      sideBar.style.display = 'none';
+      body.classList.remove('no-scroll');
+    }
+  });
+</script>
     <script>
     window.onload = function() {
       const isLoggedIn = localStorage.getItem('userId');
