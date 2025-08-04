@@ -345,13 +345,14 @@ if (message.messageType === 'image') {
     `;
 }
 
-    // Append the message element
-    chatMessages.appendChild(msgDiv);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-
-    // Add message ID to displayed set (use real ID if available, otherwise tempId)
-    // This is crucial to prevent re-rendering already displayed messages.
-    displayedMessages.add(messageId);
+// Append the message element
+chatMessages.appendChild(msgDiv);
+// Only auto-scroll for new messages (not during initial load)
+if (chatMessages.style.scrollBehavior === 'smooth') {
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+// Add message ID to displayed set
+displayedMessages.add(messageId);
 }
 
 // Helper functions for optimistic updates
@@ -829,7 +830,6 @@ socket.on('imageViewDeleted', ({ messageId }) => {
 });
 
 
-// Load chat history (still useful for initial load and offline sync)
 async function loadChatHistory() {
     try {
         const token = localStorage.getItem('authToken');
@@ -839,7 +839,11 @@ async function loadChatHistory() {
             return;
         }
 
-        // Use cache system instead of direct fetch
+        // Clear chat messages and disable smooth scrolling during load
+        chatMessages.innerHTML = '';
+        chatMessages.style.scrollBehavior = 'auto';
+        
+        // Use cache system - should be instant from IndexedDB
         const messages = await chatCache.getChatMessages(userId, receiverId);
 
         if (!Array.isArray(messages)) {
@@ -861,7 +865,7 @@ async function loadChatHistory() {
             return true;
         });
 
-        // Check if initial message was already sent based on history
+        // Check if initial message was already sent
         const initialMessageExists = validMessages.some(msg => {
             if (msg.senderId === userId && msg.messageType === 'text' && typeof msg.text === 'string' && msg.text.startsWith('{')) {
                 try {
@@ -879,12 +883,18 @@ async function loadChatHistory() {
             localStorage.setItem(`initialMessageSent_${productId}_${receiverId}`, 'true');
         }
 
+        // Reset tracking variables
         renderProductPreview();
         lastDisplayedDate = null;
         displayedMessages.clear();
         optimisticMessagesMap.clear();
+
+        // Batch render all messages instantly
         validMessages.forEach(msg => displayMessage(msg));
+
+        // Instantly scroll to bottom, then re-enable smooth scrolling
         chatMessages.scrollTop = chatMessages.scrollHeight;
+        chatMessages.style.scrollBehavior = 'smooth';
 
         // Mark unread messages as seen
         const unreadMessagesFromSender = validMessages.filter(msg =>
@@ -904,14 +914,20 @@ async function loadChatHistory() {
         console.error('Error loading chat history:', error);
         showToast(`Failed to load messages: ${error.message}`, 'error');
     
-        // Fallback to local storage if API call fails
+        // Fallback to local storage
         const storedMessages = JSON.parse(localStorage.getItem(`chat_${userId}_${receiverId}`) || '[]');
+        chatMessages.innerHTML = '';
+        chatMessages.style.scrollBehavior = 'auto';
+        
         lastDisplayedDate = null;
         displayedMessages.clear();
-        optimisticMessagesMap.clear(); // Clear optimistic on fallback too
+        optimisticMessagesMap.clear();
+        
         storedMessages.forEach(msg => displayMessage(msg));
         renderProductPreview();
+        
         chatMessages.scrollTop = chatMessages.scrollHeight;
+        chatMessages.style.scrollBehavior = 'smooth';
     }
 }
 

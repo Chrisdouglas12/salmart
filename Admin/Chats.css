@@ -45,6 +45,9 @@ html, body {
   isolation: isolate;
 }
 
+.chat-messages {
+    scroll-behavior: smooth;
+}
 /* Prevent body scroll and maintain header position */
 body.typing {
   position: fixed !important;

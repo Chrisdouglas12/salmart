@@ -1,5 +1,12 @@
+// request-feed.js
+
+// Import the new cache manager
+import salmartCache from './salmartCache3.js';
+
 const requestFeed = document.getElementById('request-feed');
 let currentUserId = null;
+let currentRequests = []; // Store the current state of requests
+let currentComments = {}; // Store comments per request ID
 
 // Helper function for formatting currency
 function formatNaira(amount) {
@@ -141,109 +148,140 @@ confirmDeleteModal.querySelector('.cancel-delete-btn').addEventListener('click',
 reportModal.querySelector('.close-generic-modal').addEventListener('click', () => closeModal(reportModal));
 reportModal.querySelector('.cancel-report-btn').addEventListener('click', () => closeModal(reportModal));
 
-
 // --- Comment Logic ---
 
-const postCommentBtn = commentModal.querySelector('.post-comment-btn');
-const commentInput = commentModal.querySelector('.comment-input');
-
-postCommentBtn.addEventListener('click', async () => {
-  const text = commentInput.value.trim();
-  if (!text || !currentRequestId || !currentUserId) return;
-
-  postCommentBtn.disabled = true;
-
-  try {
-    const token = localStorage.getItem('authToken');
-    const res = await fetch(`${API_BASE_URL}/requests/comment/${currentRequestId}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify({ text })
-    });
-
-    if (!res.ok) throw new Error('Failed to post comment');
-
-    const data = await res.json();
-    if (data.success) {
-      commentInput.value = '';
-      fetchComments(currentRequestId);
-      updateCommentCount(currentRequestId);
+function updateCommentCountOnCard(requestId, count) {
+    const commentCountElement = document.querySelector(`.request-card[data-id="${requestId}"] .comment-count`);
+    if (commentCountElement) {
+        commentCountElement.textContent = count;
     }
-  } catch (err) {
-    console.error('Error posting comment:', err);
-    showErrorModal('Failed to post comment. Please try again.');
-  } finally {
-    postCommentBtn.disabled = false;
-  }
-});
-
-commentInput.addEventListener('keypress', (e) => {
-  if (e.key === 'Enter') postCommentBtn.click();
-});
+}
 
 function openCommentModal(requestId) {
-  currentRequestId = requestId;
-  showModal(commentModal);
-  fetchComments(requestId);
+    currentRequestId = requestId;
+    showModal(commentModal);
+    fetchComments(requestId);
+    
+    const commentInputContainer = commentModal.querySelector('.comment-input-container');
+
+    const oldPostCommentBtn = commentModal.querySelector('.post-comment-btn');
+    const oldCommentInput = commentModal.querySelector('.comment-input');
+    if (oldPostCommentBtn) oldPostCommentBtn.removeEventListener('click', postComment);
+    if (oldCommentInput) oldCommentInput.removeEventListener('keypress', postComment);
+
+    if (!currentUserId) {
+      commentInputContainer.innerHTML = `
+        <div style="text-align: center; padding: 15px; color: #666;">
+          <p>Please log in to comment on this request.</p>
+        </div>
+      `;
+    } else {
+      commentInputContainer.innerHTML = `
+        <input type="text" class="comment-input" placeholder="Write a comment...">
+        <button class="post-comment-btn">Post</button>
+      `;
+      
+      const newPostCommentBtn = commentInputContainer.querySelector('.post-comment-btn');
+      const newCommentInput = commentInputContainer.querySelector('.comment-input');
+      
+      newPostCommentBtn.addEventListener('click', () => postComment(newCommentInput, newPostCommentBtn));
+      newCommentInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') postComment(newCommentInput, newPostCommentBtn);
+      });
+    }
+}
+
+async function postComment(commentInput, postCommentBtn) {
+    const text = commentInput.value.trim();
+    if (!text || !currentRequestId) return;
+    
+    if (!currentUserId) {
+        showErrorModal('You must be logged in to comment.');
+        return;
+    }
+
+    const tempCommentId = `temp-${Date.now()}`;
+    const newComment = {
+        _id: tempCommentId,
+        text: text,
+        user: { 
+            _id: currentUserId,
+            firstName: "You", // This should be replaced with the actual user's name
+            lastName: "",
+            profilePicture: "/default-avater.png"
+        },
+        createdAt: new Date().toISOString()
+    };
+    
+    const commentsForRequest = currentComments[currentRequestId] || [];
+    currentComments[currentRequestId] = [...commentsForRequest, newComment];
+    renderComments(currentComments[currentRequestId]);
+    updateCommentCountOnCard(currentRequestId, currentComments[currentRequestId].length);
+    commentInput.value = '';
+    
+    try {
+        const token = localStorage.getItem('authToken');
+        const res = await fetch(`${API_BASE_URL}/requests/comment/${currentRequestId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ text })
+        });
+        
+        if (!res.ok) throw new Error('Failed to post comment');
+        
+        const data = await res.json();
+        if (data.success) {
+            await salmartCache.addCommentToCache(currentRequestId, data.comment);
+        } else {
+            throw new Error(data.message || 'Failed to post comment');
+        }
+    } catch (err) {
+        console.error('Error posting comment:', err);
+        showErrorModal('Failed to post comment. Please try again.');
+        
+        currentComments[currentRequestId] = currentComments[currentRequestId].filter(c => c._id !== tempCommentId);
+        renderComments(currentComments[currentRequestId]);
+        updateCommentCountOnCard(currentRequestId, currentComments[currentRequestId].length);
+        commentInput.value = text;
+    }
 }
 
 async function fetchComments(requestId) {
-  try {
-    const res = await fetch(`${API_BASE_URL}/requests/comments/${requestId}`);
-    if (!res.ok) throw new Error('Failed to fetch comments');
-
-    const comments = await res.json();
     const commentsContainer = commentModal.querySelector('.comments-container');
-    commentsContainer.innerHTML = '';
-
-    if (comments.length === 0) {
-      commentsContainer.innerHTML = '<p class="no-comments">No comments yet. Be the first to comment!</p>';
-      return;
-    }
-
-    comments.forEach(comment => {
-      const commentElement = document.createElement('div');
-      commentElement.classList.add('comment');
-      commentElement.innerHTML = `
-        <img src="${comment.user.profilePicture || '/default-avatar.png'}" class="comment-avatar" alt="${comment.user.firstName}">
-        <div class="comment-content">
-            <div class="comment-bubble">
-                <span class="comment-user">${escapeHtml(comment.user.firstName)} ${escapeHtml(comment.user.lastName)}</span>
-                <span class="comment-text">${escapeHtml(comment.text)}</span>
-            </div>
-            <div class="comment-metadata">
-                <span class="comment-time">${timeAgo(new Date(comment.createdAt))}</span>
-            </div>
-        </div>
-      `;
-      commentsContainer.appendChild(commentElement);
-    });
-
-    commentModal.querySelector('.comment-count-display').textContent = `Comments (${comments.length})`;
-    commentsContainer.scrollTop = commentsContainer.scrollHeight;
-  } catch (err) {
-    console.error('Error fetching comments:', err);
-    const commentsContainer = commentModal.querySelector('.comments-container');
-    commentsContainer.innerHTML = '<p class="no-comments">Error loading comments. Please try again.</p>';
-  }
+    commentsContainer.innerHTML = '<div class="spinner"></div>';
+    
+    const comments = await salmartCache.getComments(requestId);
+    currentComments[requestId] = comments;
+    renderComments(comments);
 }
 
-async function updateCommentCount(requestId) {
-  try {
-    const res = await fetch(`${API_BASE_URL}/requests/${requestId}/comments/count`);
-    if (!res.ok) throw new Error('Failed to fetch comment count');
+function renderComments(comments) {
+    const commentsContainer = commentModal.querySelector('.comments-container');
+    const commentCountDisplay = commentModal.querySelector('.comment-count-display');
+    
+    commentsContainer.innerHTML = '';
+    commentCountDisplay.textContent = `Comments (${comments.length})`;
 
-    const data = await res.json();
-    if (data.success) {
-      const commentCountElement = document.querySelector(`.request-card[data-id="${requestId}"] .comment-count`);
-      if (commentCountElement) commentCountElement.textContent = data.count;
+    if (comments.length === 0) {
+        commentsContainer.innerHTML = '<p class="no-comments-message">No comments yet. Be the first!</p>';
+    } else {
+        comments.forEach(comment => {
+            const commentElement = document.createElement('div');
+            commentElement.classList.add('comment');
+            commentElement.innerHTML = `
+                <div class="comment-header">
+                    <img src="${comment.user.profilePicture || '/default-avater.png'}"  class="comment-avatar" />
+                    <span class="comment-user-name">${escapeHtml(comment.user.firstName)} ${escapeHtml(comment.user.lastName)}</span>
+                    <span class="comment-timestamp">${timeAgo(new Date(comment.createdAt))}</span>
+                </div>
+                <p class="comment-text">${escapeHtml(comment.text)}</p>
+            `;
+            commentsContainer.appendChild(commentElement);
+        });
     }
-  } catch (err) {
-    console.error('Error updating comment count:', err);
-  }
 }
 
 // --- Request Feed Logic ---
@@ -285,20 +323,30 @@ function setupDropdownMenu(cardElement, requestId, isOwner) {
   }
 }
 
+window.addEventListener('requestsUpdated', (e) => {
+    currentRequests = e.detail.requests;
+    renderRequests(currentRequests);
+});
+
+window.addEventListener('commentsUpdated', (e) => {
+    if (e.detail.requestId === currentRequestId) {
+        currentComments[e.detail.requestId] = e.detail.comments;
+        renderComments(e.detail.comments);
+    }
+    updateCommentCountOnCard(e.detail.requestId, e.detail.comments.length);
+});
+
 async function fetchRequests(category = '') {
-  try {
-    const res = await fetch(`${API_BASE_URL}/requests?category=${encodeURIComponent(category)}&sort=-createdAt`);
-    if (!res.ok) throw new Error('Failed to fetch requests');
+    const requests = await salmartCache.getRequests(category);
+    renderRequests(requests);
+}
 
-    const requests = await res.json();
-    if (!Array.isArray(requests)) throw new Error('Expected an array of requests');
-
-    requests.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+function renderRequests(requests) {
     requestFeed.innerHTML = '';
 
-    if (requests.length === 0) {
-      requestFeed.innerHTML = `<p class="no-requests">No requests found.</p>`;
-      return;
+    if (!requests || requests.length === 0) {
+        requestFeed.innerHTML = `<p class="no-requests">No requests found.</p>`;
+        return;
     }
 
     requests.forEach(request => {
@@ -312,7 +360,7 @@ async function fetchRequests(category = '') {
       requestCard.innerHTML = `
         <div class="request-header">
             <div class="user-info">
-                <img src="${request.user.profilePicture || '/default-avatar.png'}" alt="${request.user.firstName}" class="user-avatar" />
+                <img src="${request.user.profilePicture || '/default-avater.png'}"  class="user-avatar" />
                 <div class="user-details">
                     <span class="user-name">${escapeHtml(request.user.firstName)} ${escapeHtml(request.user.lastName)}</span>
                     <span class="timestamp">${timeAgo(new Date(request.createdAt))}</span>
@@ -342,7 +390,7 @@ async function fetchRequests(category = '') {
                 <button class="contact-creator-btn" 
                         data-recipient-id="${request.user._id}" 
                         data-recipient-username="${escapeHtml(request.user.firstName)} ${escapeHtml(request.user.lastName || 'Request Creator')}" 
-                        data-profile-picture="${request.user.profilePicture || 'default-avatar.png'}"
+                        data-profile-picture="${request.user.profilePicture || 'default-avater.png'}"
                         data-original-request="${escapeHtml(request.text || request.description || 'Request details')}">
                     <i class="fas fa-paper-plane"></i> Send message
                 </button>
@@ -355,27 +403,16 @@ async function fetchRequests(category = '') {
             </button>
             <button class="action-btn comment-btn">
                 <i class="far fa-comment-alt"></i>
-                <span class="comment-count">${request.comments.length}</span>
+                <span class="comment-count">${(request.comments || []).length}</span>
             </button>
         </div>
       `;
-
       requestFeed.appendChild(requestCard);
       setupDropdownMenu(requestCard, request._id, isOwner);
     });
 
     setupEngagementListeners();
     setupContactListeners();
-
-  } catch (err) {
-    console.error('Error fetching requests:', err);
-    requestFeed.innerHTML = `
-      <div class="no-requests">
-        <i class="fas fa-exclamation-circle" style="font-size: 40px; margin-bottom: 10px;"></i>
-        <p>Could not load requests. Please check your connection and try again.</p>
-      </div>
-    `;
-  }
 }
 
 function setupEngagementListeners() {
@@ -383,16 +420,26 @@ function setupEngagementListeners() {
       btn.addEventListener('click', async (e) => {
         const card = btn.closest('.request-card');
         const requestId = card.getAttribute('data-id');
-        const icon = btn.querySelector('i');
-        const count = btn.querySelector('.like-count');
-        
+        const isLiked = btn.classList.contains('liked');
+
         if (!currentUserId) {
              showErrorModal('You must be logged in to like a request.');
              return;
         }
 
-        btn.disabled = true;
+        const updatedRequests = currentRequests.map(req => {
+            if (req._id === requestId) {
+                const newLikes = isLiked
+                    ? req.likes.filter(id => id !== currentUserId)
+                    : [...req.likes, currentUserId];
+                return { ...req, likes: newLikes };
+            }
+            return req;
+        });
 
+        renderRequests(updatedRequests);
+        currentRequests = updatedRequests;
+        
         try {
           const token = localStorage.getItem('authToken');
           const res = await fetch(`${API_BASE_URL}/requests/like/${requestId}`, {
@@ -401,23 +448,26 @@ function setupEngagementListeners() {
               'Authorization': `Bearer ${token}`
             }
           });
-
+          
           if (!res.ok) throw new Error('Failed to like request');
-
+          
           const data = await res.json();
-          if (data.success) {
-            btn.classList.toggle('liked', data.liked);
-            icon.classList.toggle('fas', data.liked);
-            icon.classList.toggle('far', !data.liked);
-            count.textContent = data.totalLikes;
-            icon.style.animation = 'heartBeat 0.5s';
-            setTimeout(() => { icon.style.animation = 'none'; }, 500);
-          }
+          // The `requestsUpdated` event from the cache will handle the final update
         } catch (err) {
           console.error('Error liking request:', err);
           showErrorModal('Failed to like request. Please try again.');
-        } finally {
-          btn.disabled = false;
+          
+          const rolledBackRequests = currentRequests.map(req => {
+              if (req._id === requestId) {
+                  const newLikes = isLiked
+                      ? [...req.likes, currentUserId]
+                      : req.likes.filter(id => id !== currentUserId);
+                  return { ...req, likes: newLikes };
+              }
+              return req;
+          });
+          renderRequests(rolledBackRequests);
+          currentRequests = rolledBackRequests;
         }
       });
     });
@@ -476,9 +526,8 @@ function showConfirmDeleteModal(requestId) {
       });
 
       if (res.ok) {
-        const cardToRemove = document.querySelector(`.request-card[data-id="${requestId}"]`);
-        if (cardToRemove) cardToRemove.remove();
         closeModal(confirmDeleteModal);
+        await salmartCache.deleteRequestFromCache(requestId);
       } else {
         throw new Error('Failed to delete request');
       }
@@ -491,58 +540,61 @@ function showConfirmDeleteModal(requestId) {
 }
 
 function handleEditRequest(requestId) {
-  const requestCard = document.querySelector(`.request-card[data-id="${requestId}"]`);
-  const requestContent = requestCard.querySelector('.request-content');
-  const requestTextDiv = requestContent.querySelector('.text');
-  const requestText = requestTextDiv.textContent;
+    const requestCard = document.querySelector(`.request-card[data-id="${requestId}"]`);
+    const requestContent = requestCard.querySelector('.request-content');
+    const requestTextDiv = requestContent.querySelector('.text');
+    const requestText = requestTextDiv.textContent;
 
-  const editForm = document.createElement('div');
-  editForm.innerHTML = `
-    <textarea class="edit-textarea">${requestText}</textarea>
-    <div class="edit-actions">
-        <button type="button" class="cancel-edit-btn">Cancel</button>
-        <button type="submit" class="save-edit-btn">Save</button>
-    </div>
-  `;
-  requestContent.replaceWith(editForm);
-  const newTextarea = editForm.querySelector('.edit-textarea');
-  newTextarea.focus();
+    const editForm = document.createElement('div');
+    editForm.innerHTML = `
+      <textarea class="edit-textarea">${requestText}</textarea>
+      <div class="edit-actions">
+          <button type="button" class="cancel-edit-btn">Cancel</button>
+          <button type="submit" class="save-edit-btn">Save</button>
+      </div>
+    `;
+    requestContent.replaceWith(editForm);
+    const newTextarea = editForm.querySelector('.edit-textarea');
+    newTextarea.focus();
 
-  editForm.querySelector('.save-edit-btn').addEventListener('click', async () => {
-    const newText = newTextarea.value.trim();
-    if (newText) {
-      try {
-        const token = localStorage.getItem('authToken');
-        const res = await fetch(`${API_BASE_URL}/requests/${requestId}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({ text: newText })
-        });
+    editForm.querySelector('.save-edit-btn').addEventListener('click', async () => {
+      const newText = newTextarea.value.trim();
+      if (newText) {
+        try {
+          const token = localStorage.getItem('authToken');
+          const res = await fetch(`${API_BASE_URL}/requests/${requestId}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ text: newText })
+          });
 
-        if (res.ok) {
-          const newRequestContent = document.createElement('div');
-          newRequestContent.classList.add('request-content');
-          newRequestContent.innerHTML = `<div class="text">${escapeHtml(newText)}</div>`;
-          editForm.replaceWith(newRequestContent);
-        } else {
-          throw new Error('Failed to update request');
+          if (res.ok) {
+            const data = await res.json();
+            const newRequestContent = document.createElement('div');
+            newRequestContent.classList.add('request-content');
+            newRequestContent.innerHTML = `<div class="text">${escapeHtml(newText)}</div>`;
+            editForm.replaceWith(newRequestContent);
+            
+            await salmartCache.updateRequestInCache(data.request);
+          } else {
+            throw new Error('Failed to update request');
+          }
+        } catch (err) {
+          console.error('Error updating request:', err);
+          showErrorModal('Failed to update request. Please try again.');
         }
-      } catch (err) {
-        console.error('Error updating request:', err);
-        showErrorModal('Failed to update request. Please try again.');
       }
-    }
-  });
+    });
 
-  editForm.querySelector('.cancel-edit-btn').addEventListener('click', () => {
-    const newRequestContent = document.createElement('div');
-    newRequestContent.classList.add('request-content');
-    newRequestContent.innerHTML = `<div class="text">${escapeHtml(requestText)}</div>`;
-    editForm.replaceWith(newRequestContent);
-  });
+    editForm.querySelector('.cancel-edit-btn').addEventListener('click', () => {
+      const newRequestContent = document.createElement('div');
+      newRequestContent.classList.add('request-content');
+      newRequestContent.innerHTML = `<div class="text">${escapeHtml(requestText)}</div>`;
+      editForm.replaceWith(newRequestContent);
+    });
 }
 
 function showReportModal(requestId) {
@@ -591,15 +643,5 @@ function showReportModal(requestId) {
 
 document.addEventListener('DOMContentLoaded', () => {
   currentUserId = localStorage.getItem('userId') || null;
-  
-  if (currentUserId) {
-    fetchRequests();
-  } else {
-    requestFeed.innerHTML = `
-      <div class="no-requests">
-        <i class="fas fa-user-circle" style="font-size: 40px; margin-bottom: 10px;"></i>
-        <p>Please log in to view the requests feed.</p>
-      </div>
-    `;
-  }
+  fetchRequests();
 });
