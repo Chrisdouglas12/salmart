@@ -509,7 +509,7 @@ function generateMessageHTML(messages) {
         
         <div class="message-avatar">
           <img src="${escapeHTML(message.chatPartnerProfilePicture) || 'default-avater.png'}" 
-               alt="${escapeHTML(message.chatPartnerName)}" 
+               
                onerror="this.src='default-avater.png'">
         </div>
         
