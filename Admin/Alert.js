@@ -1,5 +1,5 @@
 // Import the cache at the top of your notification file
-import { salmartCache } from './salmartCache.js';
+import { salmartNotificationCache } from './salmartCache4.js';
 
 const API_BASE_URL = window.API_BASE_URL || (window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart.onrender.com');
 
@@ -201,7 +201,7 @@ async function fetchNotifications() {
     console.log('🔄 [Notifications] Fetching notifications using cache...');
     
     // Use the cache method
-    const fetchedNotifications = await salmartCache.getNotifications(userId);
+    const fetchedNotifications = await salmartNotificationCache.getNotifications(userId);
     
     console.log('📥 Received notifications:', {
       count: fetchedNotifications.length,
@@ -255,7 +255,7 @@ async function markNotificationsAsRead() {
     }
 
     // Update cache first (optimistic)
-    await salmartCache.markAllNotificationsAsReadInCache(userId);
+    await salmartNotificationCache.markAllNotificationsAsReadInCache(userId);
 
     // Then update server
     const response = await fetch(`${API_BASE_URL}/alerts/mark-as-viewed`, {
@@ -278,7 +278,7 @@ async function markNotificationsAsRead() {
 async function dismissNotification(notificationId) {
   try {
     // Remove from cache first (optimistic)
-    await salmartCache.removeNotificationFromCache(userId, notificationId);
+    await salmartNotificationCache.removeNotificationFromCache(userId, notificationId);
     
     // Remove from local array
     notifications = notifications.filter(n => n._id !== notificationId);
@@ -321,7 +321,7 @@ socket.on('notification', async (notification) => {
   
   try {
     // Add to cache
-    await salmartCache.addNewNotificationToCache(userId, notification);
+    await salmartNotificationCache.addNewNotificationToCache(userId, notification);
     
     // Add to local array
     const exists = notifications.some(n => n._id === notification._id);

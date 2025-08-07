@@ -25,6 +25,7 @@ const messageRoutes = require('./routes/messageRoutes.js'); // Your REST message
 const paymentRoutes = require('./routes/paymentRoutes.js');
 const transactionRoutes = require('./routes/transactionRoutes.js');
 const adminRoutes = require('./routes/adminRoutes.js');
+const adminRoutes1 = require('./routes/adminRoutes1.js');
 const promoteRoutes = require('./routes/promoteRoutes.js');
 const cleanupPromotions = require('./cron/promotionCleanUp.js');
 const initializeSocket = require('./routes/socketRoutes.js'); // Import your socket handler
@@ -133,11 +134,11 @@ app.use(userRoutes(io));
 app.use(postRoutes(io));
 app.use(requestRoutes(io));
 app.use(notificationRoutes(io));
-// messageRoutes (your REST API for history) can still be used
-app.use(messageRoutes(io)); // Pass io if it needs to emit notifications for history related actions
+app.use(messageRoutes(io)); 
 app.use(paymentRoutes(io));
 app.use(transactionRoutes(io));
 app.use(adminRoutes(io));
+app.use(adminRoutes1(io));
 app.use(promoteRoutes(io));
 
 

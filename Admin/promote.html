@@ -14,7 +14,7 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #fff; /* Changed to #fff */
+            background-color: #fff;
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -24,10 +24,10 @@
 
         /* Container */
         .container {
-            background: #fff; /* Changed to #fff */
+            background: #fff;
             border-radius: 20px;
             padding: 40px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1); /* Adjusted shadow for lighter background */
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
             max-width: 800px;
             width: 100%;
         }
@@ -35,7 +35,7 @@
         /* Headings & Subtitle */
         h2 {
             text-align: center;
-            color: #28a745; /* Changed to #28a745 */
+            color: #28a745;
             margin-bottom: 10px;
             font-size: 2.5rem;
             font-weight: 700;
@@ -43,7 +43,7 @@
 
         .subtitle {
             text-align: center;
-            color: #555; /* Adjusted for better contrast on white */
+            color: #555;
             margin-bottom: 40px;
             font-size: 1.1rem;
         }
@@ -58,7 +58,7 @@
 
         /* Individual Plan Card */
         .plan {
-            background-color: #28a745; /* Changed to #28a745 */
+            background-color: #28a745;
             border-radius: 15px;
             padding: 30px 20px;
             text-align: center;
@@ -70,7 +70,7 @@
 
         .plan:hover {
             transform: translateY(-5px);
-            box-shadow: 0 15px 30px rgba(40, 167, 69, 0.4); /* Adjusted shadow color */
+            box-shadow: 0 15px 30px rgba(40, 167, 69, 0.4);
         }
 
         .plan::before {
@@ -85,7 +85,7 @@
         }
 
         .plan.popular {
-            background-color: #218838; /* Slightly darker green for popular */
+            background-color: #218838;
             transform: scale(1.05);
         }
 
@@ -94,7 +94,7 @@
             position: absolute;
             top: 15px;
             right: -30px;
-            background: #dc3545; /* Red for popular badge */
+            background: #dc3545;
             color: white;
             padding: 5px 40px;
             font-size: 0.8rem;
@@ -165,7 +165,7 @@
             border-radius: 15px;
             padding: 20px;
             margin-bottom: 30px;
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.05); /* Subtle inner shadow */
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.05);
         }
 
         .post-preview h4 {
@@ -182,7 +182,7 @@
         }
 
         .stat-card {
-            background-color: #e9f7ef; /* Light green background */
+            background-color: #e9f7ef;
             padding: 20px;
             border-radius: 15px;
             text-align: center;
@@ -190,7 +190,7 @@
         }
 
         .stat-card h5 {
-            color: #28a745; /* Green color for heading */
+            color: #28a745;
             font-size: 1.2rem;
             margin-bottom: 5px;
         }
@@ -246,15 +246,15 @@
         /* Custom Plan Section */
         .custom-plan {
             margin-top: 30px;
-            padding: 25px; /* Slightly more padding */
-            background: #f0f8f0; /* Very light green background */
+            padding: 25px;
+            background: #f0f8f0;
             border-radius: 15px;
-            border: 1px solid #e0e0e0; /* Subtle border */
+            border: 1px solid #e0e0e0;
         }
 
         .custom-plan h4 {
             margin-bottom: 20px;
-            color: #28a745; /* Green color for heading */
+            color: #28a745;
             text-align: center;
             font-size: 1.3rem;
         }
@@ -262,14 +262,14 @@
         .custom-inputs {
             display: grid;
             grid-template-columns: 1fr 1fr auto;
-            gap: 20px; /* Increased gap */
-            align-items: center; /* Align items vertically in the center */
+            gap: 20px;
+            align-items: center;
         }
 
         .custom-inputs div {
             display: flex;
             flex-direction: column;
-            gap: 8px; /* Gap between label and input */
+            gap: 8px;
         }
 
         .custom-inputs label {
@@ -280,8 +280,8 @@
 
         .custom-inputs input[type="number"],
         .custom-inputs input[type="text"] {
-            padding: 12px; /* More padding for inputs */
-            border: 2px solid #ccc; /* Softer border */
+            padding: 12px;
+            border: 2px solid #ccc;
             border-radius: 8px;
             font-size: 1rem;
             color: #333;
@@ -291,25 +291,24 @@
         .custom-inputs input[type="number"]:focus,
         .custom-inputs input[type="text"]:focus {
             outline: none;
-            border-color: #28a745; /* Green focus border */
-            box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.2); /* Green focus shadow */
+            border-color: #28a745;
+            box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.2);
         }
 
         .custom-inputs input[readonly] {
-            background-color: #e9ecef; /* Light gray for readonly */
+            background-color: #e9ecef;
             cursor: default;
         }
         
         #customPlanBtn {
-            /* Inherits select-plan styles, but needs some adjustments for its grid position */
-            align-self: end; /* Align button to the bottom of its grid cell */
-            padding: 12px 25px; /* Adjust padding for standalone button */
-            background-color: #28a745; /* Primary green for custom button */
+            align-self: end;
+            padding: 12px 25px;
+            background-color: #28a745;
             border-color: #28a745;
         }
 
         #customPlanBtn:hover {
-            background-color: #218838; /* Darker green on hover */
+            background-color: #218838;
             border-color: #218838;
         }
 
@@ -328,10 +327,10 @@
             }
             
             .custom-inputs {
-                grid-template-columns: 1fr; /* Stack inputs vertically */
+                grid-template-columns: 1fr;
             }
             #customPlanBtn {
-                width: 100%; /* Full width button on small screens */
+                width: 100%;
             }
         }
     </style>
@@ -420,7 +419,9 @@
         <div id="payment-status" style="display: none;"></div>
     </div>
 
-    <script>
+    <script type="module">
+        import { salmartCache } from './salmartCache.js';
+
         document.addEventListener('DOMContentLoaded', () => {
             const API_BASE_URL = window.API_BASE_URL || (window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart.onrender.com');
             const DAILY_RATE = 800; // ₦800 per day
@@ -447,7 +448,6 @@
             // Get post ID from URL
             const urlParams = new URLSearchParams(window.location.search);
             const postId = urlParams.get('postId');
-            // Get status and reference from URL for post-payment verification/display
             const paymentStatus = urlParams.get('status');
             const paymentReference = urlParams.get('reference');
 
@@ -457,7 +457,6 @@
                 return;
             }
 
-            // Handle post-payment redirects
             if (paymentStatus === 'success' && paymentReference) {
                 verifyPromotionPayment(postId, paymentReference);
             } else if (paymentStatus === 'error') {
@@ -532,7 +531,7 @@
                 const amount = parseInt(button.dataset.amount);
                 const duration = parseInt(button.dataset.duration);
 
-                if (!amount || !duration || amount < DAILY_RATE) { // Ensure minimum amount for custom plan
+                if (!amount || !duration || amount < DAILY_RATE) {
                     showToast('Please select a valid plan or enter at least 1 day for a custom plan.', 'error');
                     return;
                 }
@@ -541,16 +540,12 @@
                 const userId = localStorage.getItem('userId');
                 const token = localStorage.getItem('authToken');
 
-                // Log for debugging
-                console.log('Plan Selection Data:', { postId, amount, duration, email, userId, token });
-
                 if (!email || !userId || !token || !postId) {
                     showToast('Please log in to promote your post.', 'error');
                     setTimeout(() => window.location.href = 'login.html', 2000);
                     return;
                 }
 
-                // Validate email format
                 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
                 if (!emailRegex.test(email)) {
                     showToast('Invalid email address. Please log in again.', 'error');
@@ -558,12 +553,10 @@
                     return;
                 }
 
-                // Convert amount to kobo for Paystack
                 const amountInKobo = amount * 100;
 
-                // Disable all buttons during processing
                 selectPlanButtons.forEach(btn => btn.disabled = true);
-                customPlanBtn.disabled = true; // Ensure custom button is also disabled
+                customPlanBtn.disabled = true;
                 showToast('Processing payment...', 'loading');
 
                 try {
@@ -574,7 +567,6 @@
                         email: email,
                         dailyRate: DAILY_RATE
                     };
-                    console.log('Sending payload to backend:', payload); // Debug log
 
                     const response = await fetch(`${API_BASE_URL}/initiate`, {
                         method: 'POST',
@@ -593,20 +585,19 @@
                     } else {
                         showToast(`Payment failed: ${result.message || 'Please try again.'}`, 'error');
                         selectPlanButtons.forEach(btn => btn.disabled = false);
-                        if (parseInt(customDaysInput.value) > 0) customPlanBtn.disabled = false; // Re-enable if days > 0
+                        if (parseInt(customDaysInput.value) > 0) customPlanBtn.disabled = false;
                     }
                 } catch (error) {
                     console.error('Payment error:', error);
                     showToast('Failed to process payment. Please try again.', 'error');
                     selectPlanButtons.forEach(btn => btn.disabled = false);
-                    if (parseInt(customDaysInput.value) > 0) customPlanBtn.disabled = false; // Re-enable if days > 0
+                    if (parseInt(customDaysInput.value) > 0) customPlanBtn.disabled = false;
                 }
             }
             
-            // New function to handle payment verification after redirect from Paystack
             async function verifyPromotionPayment(postId, reference) {
                 const token = localStorage.getItem('authToken');
-                const email = localStorage.getItem('email'); // Get email for verification
+                const email = localStorage.getItem('email');
                 if (!token || !email) {
                     showToast('Authentication token or email missing for verification. Please log in again.', 'error');
                     return;
@@ -614,24 +605,35 @@
 
                 showToast('Verifying payment...', 'loading');
                 try {
-                    // Corrected endpoint to match your backend router setup (e.g., /api/promotion/verify)
                     const response = await fetch(`${API_BASE_URL}/verify`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${token}` // Send the JWT token
+                            'Authorization': `Bearer ${token}`
                         },
                         body: JSON.stringify({
                             postId: postId,
-                            email: email, // Include email in verification payload
+                            email: email,
                             reference: reference
                         })
                     });
 
                     const result = await response.json();
 
-                    if (response.ok && result.success) {
+                    if (response.ok && result.success && result.post) {
                         showToast('Payment verified and post promoted successfully!', 'success');
+                        
+                        // **IMPORTANT UPDATE**
+                        // Update the cache with the new promotion status and expiry date
+                        await salmartCache.updatePostInCache(
+                            result.post._id,
+                            { 
+                                isPromoted: result.post.isPromoted, 
+                                promotionExpiryDate: result.post.promotionExpiryDate 
+                            }, 
+                            result.post.category
+                        );
+
                         // Clean up URL parameters to prevent re-verification on refresh
                         const newUrl = new URL(window.location.href);
                         newUrl.searchParams.delete('status');
@@ -645,24 +647,9 @@
                     console.error('Error during payment verification:', error);
                     showToast('Network error during payment verification. Please try again.', 'error');
                 } finally {
-                    // Always re-enable buttons after verification attempt
                     selectPlanButtons.forEach(btn => btn.disabled = false);
-                    if (parseInt(customDaysInput.value) > 0) customPlanBtn.disabled = false; // Re-enable if days > 0
+                    if (parseInt(customDaysInput.value) > 0) customPlanBtn.disabled = false;
                 }
-            }
-
-            // Utility function to format currency (though toLocaleString is used directly now)
-            function formatCurrency(amount) {
-                return new Intl.NumberFormat('en-NG', {
-                    style: 'currency',
-                    currency: 'NGN'
-                }).format(amount);
-            }
-
-            // Add analytics tracking
-            function trackPromotionEvent(action, plan, amount) {
-                // Add your analytics tracking here
-                console.log(`Promotion ${action}:`, { plan, amount, postId });
             }
         });
     </script>

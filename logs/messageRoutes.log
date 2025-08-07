@@ -3570,3 +3570,60 @@
 {"level":"info","message":"Fetching messages since: 2025-08-04T21:09:42.254Z for user 6843d062f457581752641ee3","timestamp":"2025-08-04T22:53:49.845Z"}
 {"level":"info","message":"Background sync: Fetched 0 new messages for user 6843d062f457581752641ee3","timestamp":"2025-08-04T22:53:50.041Z"}
 {"level":"info","message":"Fetched 8 followers for user 6843d062f457581752641ee3","timestamp":"2025-08-04T22:53:50.335Z"}
+{"level":"info","message":"Fetched 101 messages between 68431685432ee393a735a641 and 6843d062f457581752641ee3","timestamp":"2025-08-06T18:25:10.706Z"}
+{"level":"info","message":"Fetching messages since: 2025-08-03T12:49:37.447Z for user 68431685432ee393a735a641","timestamp":"2025-08-07T10:10:12.421Z"}
+{"level":"error","message":"Error fetching followers for user 68431685432ee393a735a641: connection timed out","timestamp":"2025-08-07T10:10:16.645Z"}
+{"level":"error","message":"Error fetching messages for user 68431685432ee393a735a641: connection timed out","timestamp":"2025-08-07T10:10:17.438Z"}
+{"level":"info","message":"Fetching messages since: 2025-08-03T12:49:37.447Z for user 68431685432ee393a735a641","timestamp":"2025-08-07T10:10:26.689Z"}
+{"level":"error","message":"Error fetching messages for user 68431685432ee393a735a641: getaddrinfo ENOTFOUND ac-78e8zxz-shard-00-01.bfiorya.mongodb.net","timestamp":"2025-08-07T10:10:31.702Z"}
+{"level":"info","message":"Fetching messages since: 2025-08-03T12:49:37.447Z for user 68431685432ee393a735a641","timestamp":"2025-08-07T10:10:31.737Z"}
+{"level":"error","message":"Error fetching followers for user 68431685432ee393a735a641: getaddrinfo ENOTFOUND ac-78e8zxz-shard-00-01.bfiorya.mongodb.net","timestamp":"2025-08-07T10:10:31.769Z"}
+{"level":"error","message":"Error fetching messages for user 68431685432ee393a735a641: getaddrinfo ENOTFOUND ac-78e8zxz-shard-00-01.bfiorya.mongodb.net","timestamp":"2025-08-07T10:10:36.747Z"}
+{"level":"info","message":"Fetching messages since: 2025-08-03T12:49:37.447Z for user 68431685432ee393a735a641","timestamp":"2025-08-07T10:10:36.768Z"}
+{"level":"error","message":"Error fetching followers for user 68431685432ee393a735a641: getaddrinfo ENOTFOUND ac-78e8zxz-shard-00-01.bfiorya.mongodb.net","timestamp":"2025-08-07T10:10:36.805Z"}
+{"level":"error","message":"Error fetching messages for user 68431685432ee393a735a641: connection <monitor> to 65.62.31.187:27017 closed","timestamp":"2025-08-07T10:10:41.777Z"}
+{"level":"error","message":"Error fetching followers for user 68431685432ee393a735a641: connection <monitor> to 65.62.31.187:27017 closed","timestamp":"2025-08-07T10:10:41.835Z"}
+{"level":"error","message":"Error fetching messages between 68431685432ee393a735a641 and 6878bbbf619a967094730b93: connection <monitor> to 65.62.31.187:27017 closed","timestamp":"2025-08-07T10:10:44.737Z"}
+{"level":"info","message":"Fetching messages since: 2025-08-03T12:49:37.447Z for user 68431685432ee393a735a641","timestamp":"2025-08-07T10:10:46.154Z"}
+{"level":"error","message":"Error fetching followers for user 68431685432ee393a735a641: connection <monitor> to 65.62.31.187:27017 closed","timestamp":"2025-08-07T10:10:51.104Z"}
+{"level":"error","message":"Error fetching messages for user 68431685432ee393a735a641: connection <monitor> to 65.62.31.187:27017 closed","timestamp":"2025-08-07T10:10:51.164Z"}
+{"level":"error","message":"Error fetching messages between 68431685432ee393a735a641 and 6843d062f457581752641ee3: connection <monitor> to 65.62.31.187:27017 closed","timestamp":"2025-08-07T10:11:00.181Z"}
+{"level":"info","message":"Fetching messages since: 2025-08-04T21:09:42.254Z for user 6843d062f457581752641ee3","timestamp":"2025-08-07T14:25:53.074Z"}
+{"level":"info","message":"Fetched 8 followers for user 6843d062f457581752641ee3","timestamp":"2025-08-07T14:25:54.612Z"}
+{"level":"info","message":"Background sync: Fetched 1 new messages for user 6843d062f457581752641ee3","timestamp":"2025-08-07T14:25:55.125Z"}
+{"level":"info","message":"Fetching messages since: 2025-08-06T18:25:19.736Z for user 6843d062f457581752641ee3","timestamp":"2025-08-07T14:27:44.885Z"}
+{"level":"info","message":"Background sync: Fetched 1 new messages for user 6843d062f457581752641ee3","timestamp":"2025-08-07T14:27:45.637Z"}
+{"level":"info","message":"Fetching messages since: 2025-08-03T12:49:37.447Z for user 68431685432ee393a735a641","timestamp":"2025-08-07T15:39:04.728Z"}
+{"level":"info","message":"Fetched 8 followers for user 68431685432ee393a735a641","timestamp":"2025-08-07T15:39:06.631Z"}
+{"level":"info","message":"Background sync: Fetched 3 new messages for user 68431685432ee393a735a641","timestamp":"2025-08-07T15:39:06.694Z"}
+{"level":"info","message":"Fetching messages since: 2025-08-07T14:26:50.234Z for user 68431685432ee393a735a641","timestamp":"2025-08-07T15:40:14.946Z"}
+{"level":"info","message":"Background sync: Fetched 0 new messages for user 68431685432ee393a735a641","timestamp":"2025-08-07T15:40:15.136Z"}
+{"level":"info","message":"Fetched 8 followers for user 68431685432ee393a735a641","timestamp":"2025-08-07T15:40:15.286Z"}
+{"level":"info","message":"Fetching messages since: 2025-08-07T14:26:50.234Z for user 68431685432ee393a735a641","timestamp":"2025-08-07T15:40:16.820Z"}
+{"level":"info","message":"Background sync: Fetched 0 new messages for user 68431685432ee393a735a641","timestamp":"2025-08-07T15:40:17.093Z"}
+{"level":"info","message":"Fetching messages since: 2025-08-07T14:26:50.234Z for user 68431685432ee393a735a641","timestamp":"2025-08-07T15:40:17.120Z"}
+{"level":"info","message":"Background sync: Fetched 0 new messages for user 68431685432ee393a735a641","timestamp":"2025-08-07T15:40:17.290Z"}
+{"level":"info","message":"Fetched 103 messages between 68431685432ee393a735a641 and 6843d062f457581752641ee3","timestamp":"2025-08-07T15:40:20.141Z"}
+{"level":"info","message":"Fetching messages since: 2025-08-07T14:26:50.234Z for user 68431685432ee393a735a641","timestamp":"2025-08-07T15:40:27.497Z"}
+{"level":"info","message":"Background sync: Fetched 1 new messages for user 68431685432ee393a735a641","timestamp":"2025-08-07T15:40:29.439Z"}
+{"level":"info","message":"Fetching messages since: 2025-08-07T15:40:25.068Z for user 68431685432ee393a735a641","timestamp":"2025-08-07T15:40:38.308Z"}
+{"level":"info","message":"Background sync: Fetched 0 new messages for user 68431685432ee393a735a641","timestamp":"2025-08-07T15:40:39.081Z"}
+{"level":"info","message":"Fetched 8 followers for user 68431685432ee393a735a641","timestamp":"2025-08-07T15:40:39.335Z"}
+{"level":"info","message":"Fetching messages since: 2025-08-07T15:40:25.068Z for user 68431685432ee393a735a641","timestamp":"2025-08-07T15:40:45.801Z"}
+{"level":"info","message":"Background sync: Fetched 0 new messages for user 68431685432ee393a735a641","timestamp":"2025-08-07T15:40:46.343Z"}
+{"level":"info","message":"Fetched 66 messages between 68431685432ee393a735a641 and 6865680685b3194e8bc38b92","timestamp":"2025-08-07T15:40:48.715Z"}
+{"level":"info","message":"Fetching messages since: 2025-08-07T15:40:25.068Z for user 68431685432ee393a735a641","timestamp":"2025-08-07T15:40:53.597Z"}
+{"level":"info","message":"Background sync: Fetched 1 new messages for user 68431685432ee393a735a641","timestamp":"2025-08-07T15:40:54.319Z"}
+{"level":"info","message":"Fetched 4 followers for user 685f09f1b408e815cdf5f314","timestamp":"2025-08-07T15:43:08.216Z"}
+{"level":"info","message":"Initial load: Fetched 4 latest messages for user 685f09f1b408e815cdf5f314","timestamp":"2025-08-07T15:43:09.534Z"}
+{"level":"info","message":"Fetched 6 messages between 685f09f1b408e815cdf5f314 and 68431685432ee393a735a641","timestamp":"2025-08-07T15:43:16.565Z"}
+{"level":"info","message":"Fetching messages since: 2025-08-02T18:36:29.034Z for user 685f09f1b408e815cdf5f314","timestamp":"2025-08-07T15:44:17.993Z"}
+{"level":"info","message":"Background sync: Fetched 1 new messages for user 685f09f1b408e815cdf5f314","timestamp":"2025-08-07T15:44:18.568Z"}
+{"level":"info","message":"Fetching messages since: 2025-08-07T15:43:29.013Z for user 685f09f1b408e815cdf5f314","timestamp":"2025-08-07T15:44:22.581Z"}
+{"level":"info","message":"Background sync: Fetched 0 new messages for user 685f09f1b408e815cdf5f314","timestamp":"2025-08-07T15:44:22.775Z"}
+{"level":"info","message":"Fetched 4 followers for user 685f09f1b408e815cdf5f314","timestamp":"2025-08-07T15:44:22.980Z"}
+{"level":"info","message":"Fetching messages since: 2025-08-07T15:43:29.013Z for user 685f09f1b408e815cdf5f314","timestamp":"2025-08-07T15:44:36.111Z"}
+{"level":"info","message":"Background sync: Fetched 0 new messages for user 685f09f1b408e815cdf5f314","timestamp":"2025-08-07T15:44:36.314Z"}
+{"level":"info","message":"Fetched 4 followers for user 685f09f1b408e815cdf5f314","timestamp":"2025-08-07T15:44:36.495Z"}
+{"level":"info","message":"Fetched 5 followers for user 685f0a61b408e815cdf5f34f","timestamp":"2025-08-07T16:04:31.040Z"}
+{"level":"info","message":"Initial load: Fetched 1 latest messages for user 685f0a61b408e815cdf5f34f","timestamp":"2025-08-07T16:04:31.991Z"}

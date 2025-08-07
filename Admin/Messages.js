@@ -1,4 +1,4 @@
-import { salmartCache } from './salmartCache.js';
+import { salmartMessagesFollowersCache } from './salmartCache5.js';
 
 // Global variables
 const userId = localStorage?.getItem("userId");
@@ -185,7 +185,7 @@ async function fetchFollowers() {
   
   try {
     // Use the new cache method
-    const fetchedFollowers = await salmartCache.getFollowers(userId);
+    const fetchedFollowers = await salmartMessagesFollowersCache.getFollowers(userId);
     
     console.log('📥 Received followers:', {
       count: fetchedFollowers.length,
@@ -270,7 +270,7 @@ async function fetchMessages() {
         console.log('🔄 [Messages] Fetching messages using cache...');
         
         // Use the proper cache method (similar to how posts work)
-        const fetchedMessages = await salmartCache.getMessages(userId);
+        const fetchedMessages = await salmartMessagesFollowersCache.getMessages(userId);
         
         console.log('📥 Received messages:', {
             count: fetchedMessages.length,
@@ -320,7 +320,7 @@ async function handleNewMessage(newMessage) {
         }
 
         // Add to cache using proper method
-        await salmartCache.addNewMessageToCache(userId, newMessage);
+        await salmartMessagesFollowersCache.addNewMessageToCache(userId, newMessage);
         
         // Update local array
         messages.unshift(newMessage);
@@ -355,7 +355,7 @@ async function forceRefreshMessages() {
     showSkeletonLoaders();
     
     try {
-        const freshMessages = await salmartCache.refreshMessages(userId);
+        const freshMessages = await salmartMessagesFollowersCache.refreshMessages(userId);
         messages = freshMessages;
         renderMessages();
         console.log('✅ Force refresh completed');
@@ -368,7 +368,7 @@ async function forceRefreshMessages() {
 // Add clear cache function for testing messages
 async function clearMessageCache() {
     console.log('🗑️ Clearing message cache...');
-    await salmartCache.clearMessageCache(userId);
+    await salmartMessagesFollowersCache.clearMessageCache(userId);
     messages = [];
     renderMessages();
     console.log('✅ Message cache cleared');
@@ -379,7 +379,7 @@ async function forceRefreshFollowers() {
     console.log('🔄 Force refreshing followers...');
     
     try {
-        const freshFollowers = await salmartCache.refreshFollowers(userId);
+        const freshFollowers = await salmartMessagesFollowersCache.refreshFollowers(userId);
         followers = freshFollowers;
         renderFollowers();
         console.log('✅ Follower force refresh completed');
@@ -392,7 +392,7 @@ async function forceRefreshFollowers() {
 // Add clear follower cache function for testing
 async function clearFollowerCache() {
     console.log('🗑️ Clearing follower cache...');
-    await salmartCache.clearFollowerCache(userId);
+    await salmartMessagesFollowersCache.clearFollowerCache(userId);
     followers = [];
     renderFollowers();
     console.log('✅ Follower cache cleared');
@@ -552,7 +552,7 @@ async function handleMessageClick(partnerId, partnerName, partnerProfile) {
             };
         });
         messages = updatedMessages;
-        await salmartCache.set(MESSAGE_DB_KEY, messages);
+        await salmartMessagesFollowersCache.set(MESSAGE_DB_KEY, messages);
         renderMessages();
 
         if (window.innerWidth >= 768) {

@@ -4,6 +4,7 @@ import { salmartCache } from './salmartCache.js';
 document.addEventListener('DOMContentLoaded', async function () {
     // --- Constants and Global Dependencies ---
     const API_BASE_URL = window.API_BASE_URL || (window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart.onrender.com');
+    // Ensure showToast is available, typically from another script like main.js or a separate utility
     const showToast = window.showToast; 
 
     // --- Helper Functions ---
@@ -62,8 +63,9 @@ document.addEventListener('DOMContentLoaded', async function () {
                     throw new Error(errorData.message || 'Failed to delete post');
                 }
 
-                // Clear from cache when deleted
-                await salmartCache.clearCache(); // Clear all caches to remove deleted post
+                // --- UPDATED LOGIC ---
+                // Use a targeted method to remove the post from the cache instead of clearing everything
+                await salmartCache.removePostFromCache(postId);
 
                 postElement.remove();
                 showToast('Post deleted successfully!', '#28a745');
@@ -272,8 +274,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         const authToken = localStorage.getItem('authToken');
         const loggedInUser = localStorage.getItem('userId');
 
-        // --- FIX: Handle Follow Buttons FIRST ---
-        // This logic is now at the top so it doesn't depend on finding a parent post.
+        // --- Handle Follow Buttons FIRST ---
         if (target.classList.contains('follow-button')) {
             event.preventDefault();
             handleFollowButton(target, authToken, loggedInUser);
@@ -416,6 +417,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             window.location.href = `product.html?postId=${postId}`;
             return;
         }
+        
         // --- Delete Post Button ---
         else if (target.classList.contains('delete-post-button')) {
             event.preventDefault();
