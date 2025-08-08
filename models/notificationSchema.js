@@ -29,7 +29,7 @@ const notificationSchema = new mongoose.Schema({
         'like', 'comment', 'reply', 'new_post', 'notify-followers',
         'payment', 'payment_released', 'payout_queued', 'payout_queued_balance_error',
         'delivery', 'refund_rejected', 'refund_processed', 
-        'warning', 'message', 'deal', 'promotion'
+        'warning', 'message', 'deal', 'promotion', 'admin_promotion'
       ], 
       required: true 
     },

@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+const mongoose = require('mongoose')
 
 const paymentSchema = new mongoose.Schema({
   userId: {
@@ -17,9 +17,8 @@ const paymentSchema = new mongoose.Schema({
   },
   reference: {
     type: String,
-    unique: true,
-    sparse: true, // Allows multiple null values
     trim: true,
+    index: true, // no uniqueness at schema level
   },
   status: {
     type: String,
@@ -40,5 +39,3 @@ const paymentSchema = new mongoose.Schema({
     default: Date.now,
   },
 });
-
-module.exports = mongoose.model('Payment', paymentSchema);

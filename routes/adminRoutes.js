@@ -19,7 +19,7 @@ const RefundRequests = require('../models/refundSchema.js');
 const Report = require('../models/reportSchema.js');
 const Payout = require('../models/payoutSchema.js');
 const Payment = require('../models/paymentSchema.js');
-const verifyToken = require('../middleware/auths.js');
+const verifyAdmin = require('../middleware/verifyAdmin.js');
 const Notification = require('../models/notificationSchema.js');
 const NotificationService = require('../services/notificationService.js');
 const { sendFCMNotification } = require('../services/notificationUtils.js');
@@ -161,54 +161,119 @@ module.exports = (io) => {
   });
 
 
-  // Admin Login
-  router.post('/admin/login', async (req, res) => {
-    const { email, password } = req.body;
-  
-    try {
-      const admin = await Admin.findOne({ email });
-      if (!admin) {
-        return res.status(404).json({ success: false, message: 'Admin not found' });
-      }
-  
-      const isMatch = await bcrypt.compare(password, admin.password);
-      if (!isMatch) {
-        return res.status(401).json({ success: false, message: 'Invalid password' });
-      }
-  
-      const token = jwt.sign(
-        { adminId: admin._id },
-        process.env.JWT_SECRET || 'fallback_secret',
-        { expiresIn: '2d' }
-      );
-  
-      res.json({ success: true, token, message: 'Login successful' });
-    } catch (err) {
-      console.error('[ADMIN LOGIN ERROR]', err.message);
-      res.status(500).json({ success: false, message: 'Server error during login' });
+// Admin Login - Fixed
+router.post('/admin/login', async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    const admin = await Admin.findOne({ email });
+    if (!admin) {
+      return res.status(404).json({ success: false, message: 'Admin not found' });
     }
-  });
+
+    const isMatch = await bcrypt.compare(password, admin.password);
+    if (!isMatch) {
+      return res.status(401).json({ success: false, message: 'Invalid password' });
+    }
+
+    const token = jwt.sign(
+      { id: admin._id }, // ✅ Use "id" to match middleware expectation
+      process.env.JWT_SECRET || 'fallback_secret',
+      { expiresIn: '2d' }
+    );
+
+    res.json({ 
+      success: true, 
+      token, 
+      message: 'Login successful',
+      admin: {
+        id: admin._id,
+        firstName: admin.firstName,
+        lastName: admin.lastName,
+        email: admin.email,
+        profilePicture: admin.profilePicture
+      }
+    });
+  } catch (err) {
+    console.error('[ADMIN LOGIN ERROR]', err.message);
+    res.status(500).json({ success: false, message: 'Server error during login' });
+  }
+});
 
 
-  // Get current admin details
-  router.get('/admin/me', verifyToken, async (req, res) => {
-    try {
-      const admin = await Admin.findById(req.admin?.adminId || req.user?.userId).select('-password');
-      if (!admin) {
-        return res.status(404).json({ success: false, message: 'Admin not found' });
+// Fixed Admin Routes
+
+// ✅ Fixed: Get current admin details
+router.get('/admin/me', verifyAdmin, async (req, res) => {
+  try {
+    // req.user is already the full admin object from middleware
+    const admin = req.user;
+    res.status(200).json({ 
+      success: true, 
+      admin: {
+        id: admin._id,
+        firstName: admin.firstName,
+        lastName: admin.lastName,
+        email: admin.email,
+        profilePicture: admin.profilePicture,
+        adminCode: admin.adminCode,
+        createdAt: admin.createdAt
       }
-      res.status(200).json({ success: true, admin });
-    } catch (error) {
-      console.error('Get admin details error:', error.message);
-      res.status(500).json({ success: false, message: 'Server error' });
+    });
+  } catch (error) {
+    console.error('Get admin details error:', error.message);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// ✅ Fixed: Resolve a report
+router.post('/admin/resolve-report', verifyAdmin, async (req, res) => {
+  try {
+    const { reportId, action, adminNotes } = req.body;
+    const adminId = req.user._id; // ✅ Correct admin ID
+
+    const report = await Report.findById(reportId);
+    if (!report) {
+      return res.status(404).json({ success: false, message: 'Report not found' });
     }
-  });
+
+    report.status = 'resolved';
+    report.resolvedBy = adminId;
+    report.resolution = action;
+    report.adminNotes = adminNotes;
+    report.resolvedAt = new Date();
+
+    if (action === 'ban') {
+      await User.findByIdAndUpdate(report.reportedUser, { isBanned: true });
+    } else if (action === 'post_removed') {
+      await Post.findByIdAndUpdate(report.relatedPost, { status: 'removed' });
+    } else if (action === 'warn') {
+      const notification = new Notification({
+        userId: report.reportedUser,
+        type: 'warning',
+        message: 'You have received a warning for violating community guidelines',
+        createdAt: new Date(),
+      });
+      await notification.save();
+    }
+
+    await report.save();
+    res.status(200).json({ 
+      success: true, 
+      message: `Report resolved with action: ${action}`, 
+      report 
+    });
+  } catch (error) {
+    console.error('Resolve report error:', error.message);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
 
 
   // --- User Management Routes ---
   
 // Get all users
-router.get('/api/admin/users', verifyToken, async (req, res) => {
+router.get('/api/admin/users', verifyAdmin, async (req, res) => {
   try {
     const users = await User.find().select(
       'firstName lastName email profilePicture phoneNumber isVerified state city followers following blockedUsers interests createdAt updatedAt viewCount reportCount isReported isBanned isAdmin isSystemUser notificationPreferences fcmTokens notificationEnabled paystack bankDetails'
@@ -224,7 +289,7 @@ router.get('/api/admin/users', verifyToken, async (req, res) => {
 
 
   // Ban a user
-  router.post('/api/admin/users/:id/ban', verifyToken, async (req, res) => {
+  router.post('/api/admin/users/:id/ban', verifyAdmin, async (req, res) => {
     try {
       const user = await User.findById(req.params.id);
       if (!user) {
@@ -244,7 +309,7 @@ router.get('/api/admin/users', verifyToken, async (req, res) => {
 
 
   // Get all banned users
-  router.get('/api/admin/users/banned', verifyToken, async (req, res) => {
+  router.get('/api/admin/users/banned', verifyAdmin, async (req, res) => {
     try {
       const bannedUsers = await User.find({ isBanned: true }).select('firstName lastName email profilePicture createdAt').sort({ createdAt: -1 });
       res.status(200).json(bannedUsers);
@@ -256,7 +321,7 @@ router.get('/api/admin/users', verifyToken, async (req, res) => {
 
 
   // Unban a user
-  router.post('/api/admin/users/:id/unban', verifyToken, async (req, res) => {
+  router.post('/api/admin/users/:id/unban', verifyAdmin, async (req, res) => {
     try {
       const user = await User.findById(req.params.id);
       if (!user) {
@@ -276,7 +341,7 @@ router.get('/api/admin/users', verifyToken, async (req, res) => {
 
 
   // Get reported users (all pending)
-  router.get('/api/reported-users', verifyToken, async (req, res) => {
+  router.get('/api/reported-users', verifyAdmin, async (req, res) => {
     try {
       const reports = await Report.find({ status: 'pending' })
         .populate('reportedUser', 'firstName lastName email profilePicture createdAt')
@@ -290,53 +355,11 @@ router.get('/api/admin/users', verifyToken, async (req, res) => {
   });
 
 
-  // Resolve a report
-  router.post('/admin/resolve-report', verifyToken, async (req, res) => {
-    try {
-      const { reportId, action, adminNotes } = req.body;
-      const adminId = req.user.userId;
-  
-      const admin = await User.findById(adminId);
-      if (!admin || !admin.isAdmin) {
-        return res.status(403).json({ success: false, message: 'Unauthorized: Admin access required' });
-      }
-  
-      const report = await Report.findById(reportId);
-      if (!report) {
-        return res.status(404).json({ success: false, message: 'Report not found' });
-      }
-  
-      report.status = 'resolved';
-      report.resolvedBy = adminId;
-      report.resolution = action;
-      report.adminNotes = adminNotes;
-      report.resolvedAt = new Date();
-  
-      if (action === 'ban') {
-        await User.findByIdAndUpdate(report.reportedUser, { isBanned: true });
-      } else if (action === 'post_removed') {
-        await Post.findByIdAndUpdate(report.relatedPost, { status: 'removed' });
-      } else if (action === 'warn') {
-        const notification = new Notification({
-          userId: report.reportedUser,
-          type: 'warning',
-          message: 'You have received a warning for violating community guidelines',
-          createdAt: new Date(),
-        });
-        await notification.save();
-      }
-  
-      await report.save();
-      res.status(200).json({ success: true, message: `Report resolved with action: ${action}`, report });
-    } catch (error) {
-      console.error('Resolve report error:', error.message);
-      res.status(500).json({ success: false, message: 'Server error' });
-    }
-  });
+
 
 
   // Get all pending reports
-  router.get('/admin/reports/pending', verifyToken, async (req, res) => {
+  router.get('/admin/reports/pending', verifyAdmin, async (req, res) => {
     try {
       const reports = await Report.find({ status: 'pending' })
         .populate('reportedUser', 'firstName lastName email profilePicture')
@@ -353,108 +376,122 @@ router.get('/api/admin/users', verifyToken, async (req, res) => {
 
   // --- Promotion Route ---
   
-  // Promote a post
-  router.post('/admin/promote-post', verifyToken, async (req, res) => {
-    try {
-      const { postId, durationDays } = req.body;
-      
-  
-      if (!postId || !durationDays || durationDays < 1) {
-        return res.status(400).json({ success: false, message: 'Post ID and a valid duration (in days) are required.' });
-      }
-  
-      const post = await Post.findById(postId).populate('createdBy');
-      if (!post) {
-        return res.status(404).json({ success: false, message: 'Post not found.' });
-      }
-  
-      const postOwnerId = post.createdBy._id;
-  
-      const payment = new Payment({
-        userId: postOwnerId,
-        postId: post._id,
-        amount: 0,
-        status: 'manual',
-        promotedByAdmin: true,
-        durationDays: durationDays,
-        createdAt: new Date(),
-      });
-      await payment.save();
-  
-      const startDate = new Date();
-      const endDate = new Date(startDate);
-      endDate.setDate(startDate.getDate() + durationDays);
-  
-      post.isPromoted = true;
-      post.promotionDetails = {
-        startDate,
-        endDate,
-        durationDays,
-        amountPaid: 0,
-        paymentReference: 'ADMIN_PROMOTION',
-        promotedAt: new Date(),
-      };
-      await post.save();
-  
-      const notificationTitle = 'Your post has been promoted!';
-      const notificationMessage = `An admin has manually promoted your post "${post.title}" for ${durationDays} days.`;
-  
-      const systemUser = await User.findOne({ isSystemUser: true });
-      if (systemUser) {
-          await Notification.create({
-              userId: postOwnerId,
-              senderId: systemUser._id,
-              postId: post._id,
-              title: notificationTitle,
-              message: notificationMessage,
-              type: 'admin_promotion',
-              metadata: {
-                  paymentId: payment._id,
-                  promotedByAdminId: adminId
-              }
-          });
-      }
-      
-      logger.info(`Post manually promoted by admin`, {
-        postId: post._id.toString(),
-        adminId,
-        durationDays,
-        postOwnerId: postOwnerId.toString()
-      });
-  
-      res.status(200).json({
-        success: true,
-        message: `Post "${post.title}" successfully promoted for ${durationDays} days.`,
-        promotionDetails: post.promotionDetails
-      });
-  
-    } catch (error) {
-      logger.error('Error promoting post by admin:', error.message, {
-        stack: error.stack,
-        requestBody: req.body
-      });
-      res.status(500).json({ success: false, message: 'Server error occurred during promotion.' });
-    }
-  });
-
-// Delete a post by Admin
-router.delete('/admin/posts/:postId', verifyToken, async (req, res) => {
+// Updated Promote Post Endpoint for Admin
+router.post('/admin/promote-post', verifyAdmin, async (req, res) => {
   try {
-    
-    const { postId } = req.params;
+    console.log('🚀 Starting post promotion...');
+    console.log('📝 Request body:', req.body);
 
+    const { postId, durationDays } = req.body;
+    const adminId = req.user._id;
+
+    if (!postId || !durationDays || durationDays < 1) {
+      return res.status(400).json({
+        success: false,
+        message: 'Post ID and a valid duration (in days) are required.'
+      });
+    }
+
+    const post = await Post.findById(postId).populate('createdBy.userId');
+    if (!post) {
+      return res.status(404).json({ success: false, message: 'Post not found.' });
+    }
+
+    // Get the post owner ID
+    let postOwnerId;
+    if (post.createdBy?.userId) {
+      postOwnerId = post.createdBy.userId._id || post.createdBy.userId;
+    } else if (post.createdBy?._id) {
+      postOwnerId = post.createdBy._id;
+    } else {
+      return res.status(400).json({ success: false, message: 'Invalid post owner information.' });
+    }
+
+    // Admin promotions skip payment record creation
+    console.log('ℹ️ Admin promotion - skipping payment record');
+    const paymentId = null;
+
+    // Promotion dates
+    const startDate = new Date();
+    const endDate = new Date(startDate);
+    endDate.setDate(startDate.getDate() + parseInt(durationDays));
+
+    // Update post with promotion details
+    post.isPromoted = true;
+    post.promotionDetails = {
+      startDate,
+      endDate,
+      durationDays: parseInt(durationDays),
+      amountPaid: 0, // Free for admin
+      
+      paymentReference: `ADMIN_${Date.now()}`,
+      promotedAt: new Date(),
+      promotedByAdmin: true
+    };
     
+    
+    await post.save();
+
+    // Create notification
+    const systemUser = await User.findOne({ isSystemUser: true });
+    if (systemUser) {
+      await Notification.create({
+        userId: postOwnerId,
+        senderId: systemUser._id,
+        postId: post._id,
+        title: 'Your post has been promoted!',
+        message: `Cheers! you have recieved free promotion for your post "${post.title}" for ${durationDays} day(s).`,
+        type: 'admin_promotion',
+        metadata: {
+          paymentId: paymentId,
+          promotedByAdminId: adminId
+        }
+      });
+    }
+
+    logger.info(`Post manually promoted by admin`, {
+      postId: post._id.toString(),
+      adminId: adminId.toString(),
+      durationDays: parseInt(durationDays),
+      postOwnerId: postOwnerId.toString()
+    });
+
+    res.status(200).json({
+      success: true,
+      message: `Post "${post.title}" successfully promoted for ${durationDays} days.`,
+      promotionDetails: post.promotionDetails
+    });
+
+  } catch (error) {
+    console.log('💥 Error in post promotion:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error occurred during promotion.'
+    });
+  }
+});
+
+// Fixed Delete Post Endpoint
+router.delete('/admin/posts/:postId', verifyAdmin, async (req, res) => {
+  try {
+    const { postId } = req.params;
+    const adminId = req.user._id; // ✅ MongoDB ObjectId
+    
+
 
     const post = await Post.findById(postId);
     if (!post) {
-      return res.status(404).json({ success: false, message: 'Post not found.' });
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Post not found.' 
+      });
     }
 
     await Post.findByIdAndDelete(postId);
 
     logger.info(`Post deleted by admin`, {
       postId: postId,
-      adminId
+      adminId: adminId.toString() // ✅ Now properly defined
     });
 
     res.status(200).json({
@@ -467,13 +504,52 @@ router.delete('/admin/posts/:postId', verifyToken, async (req, res) => {
       stack: error.stack,
       postId: req.params.postId
     });
-    res.status(500).json({ success: false, message: 'Server error occurred during post deletion.' });
+    res.status(500).json({ 
+      success: false, 
+      message: 'Server error occurred during post deletion.' 
+    });
   }
 });
 
+// Fixed Frontend - Update token consistency
+async function resolveAction(endpoint, btn, elementId, formatter, actionType = 'default', reportId = null, additionalData = {}) {
+  const originalText = btn.textContent;
+  btn.disabled = true;
+  btn.innerHTML = '<div class="loading"></div><span>Processing...</span>';
+  const token = localStorage.getItem('authToken'); // ✅ Consistent token key
+
+  try {
+    let options = {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(additionalData)
+    };
+
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
+    const data = await response.json();
+    
+    if (!data.success) {
+        throw new Error(data.message || 'Action failed');
+    }
+
+    showAlert(data.message || 'Action successful!', 'success');
+
+    // Rest of the function remains the same...
+    
+  } catch (error) {
+    console.error('Action error:', error);
+    showAlert(`Action failed: ${error.message}`, 'error');
+    btn.disabled = false;
+    btn.innerHTML = `<span>${originalText}</span>`;
+  }
+}
+
 
 // GET /api/admin/posts - Get all posts with pagination and filtering
-router.get('/api/admin/posts', verifyToken, async (req, res) => {
+router.get('/api/admin/posts', verifyAdmin, async (req, res) => {
   try {
     const { page = 1, limit = 20, status, postType, category } = req.query;
 
@@ -505,7 +581,7 @@ router.get('/api/admin/posts', verifyToken, async (req, res) => {
 });
 
 // GET /api/admin/posts/:id - Get a single post by ID
-router.get('/api/admin/posts/:id', verifyToken, async (req, res) => {
+router.get('/api/admin/posts/:id', verifyAdmin, async (req, res) => {
   try {
     const post = await Post.findById(req.params.id)
       .populate('createdBy.userId', 'firstName lastName email profilePicture')

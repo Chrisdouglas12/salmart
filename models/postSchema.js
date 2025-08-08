@@ -45,7 +45,7 @@ const postSchema = new mongoose.Schema({
         if (this.postType !== 'video_ad') return true;
         try {
           const url = new URL(value);
-          const validDomain = process.env.NODE_ENV === 'production' ? 'salmartonline.com.ng' : 'localhost';
+          const validDomain = process.env.NODE_ENV === 'production' ? 'salmartonline.com.ng' || 'salmart.onrender.com' : 'localhost';
           return url.hostname === validDomain;
         } catch (e) {
           return false;
@@ -176,12 +176,12 @@ const postSchema = new mongoose.Schema({
       min: [0, 'Amount paid cannot be negative'],
     },
     paymentReference: {
-      type: String,
-      required: function () {
-        return this.isPromoted;
-      },
-      trim: true,
-    },
+  type: String,
+  required: function () {
+    return this.isPromoted && !this.promotionDetails.promotedByAdmin;
+  },
+  trim: true,
+},
   },
 });
 

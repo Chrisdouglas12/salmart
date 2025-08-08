@@ -195,6 +195,9 @@ img.lazy-loading.loaded {
     left: 10px;
 }
 
+.post-image{
+  height: 800px;
+}
 
 * {
   box-sizing: border-box;
@@ -244,7 +247,7 @@ img.lazy-loading.loaded {
   height: 100%;
   object-fit: contain; /* Ensures entire image/video is visible */
   display: block;
-  max-height: 350px; /* Max height for the media */
+  max-height: 500px; /* Max height for the media */
   min-height: 50px;
   scroll-behavior: smooth;
 }
@@ -651,7 +654,7 @@ a {
 .post-image {
   width: 100%;
   height: auto;
-  max-height: 400px;
+  max-height:700px;
   object-fit: cover;
   cursor: pointer;
   transition: all 0.3s ease;

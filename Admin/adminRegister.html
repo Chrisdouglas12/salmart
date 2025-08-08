@@ -112,6 +112,20 @@
       margin: 0 auto 1rem auto;
       display: none;
     }
+
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 2px solid #ffffff;
+      border-radius: 50%;
+      border-top-color: transparent;
+      animation: spin 1s ease-in-out infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
   </style>
 </head>
 <body>
@@ -177,7 +191,27 @@
 
     let isLogin = true;
 
-    toggleLink.addEventListener('click', () => {
+    // Check if already logged in
+    const existingToken = localStorage.getItem('authToken');
+    if (existingToken) {
+      // Verify token is still valid
+      fetch(`${API_BASE_URL}/admin/me`, {
+        headers: { 'Authorization': `Bearer ${existingToken}` }
+      })
+      .then(response => {
+        if (response.ok) {
+          window.location.href = '/admin-dashboard.html';
+        } else {
+          localStorage.removeItem('authToken');
+        }
+      })
+      .catch(() => {
+        localStorage.removeItem('authToken');
+      });
+    }
+
+    toggleLink.addEventListener('click', (e) => {
+      e.preventDefault();
       isLogin = !isLogin;
       formTitle.textContent = isLogin ? 'Admin Login' : 'Admin Registration';
       submitBtn.textContent = isLogin ? 'Login' : 'Register';
@@ -187,6 +221,7 @@
       adminCodeField.style.display = isLogin ? 'none' : 'block';
       preview.style.display = 'none';
       message.textContent = '';
+      form.reset();
     });
 
     document.getElementById('profilePicture').addEventListener('change', function () {
@@ -198,12 +233,35 @@
           preview.style.display = 'block';
         };
         reader.readAsDataURL(file);
+      } else {
+        preview.style.display = 'none';
       }
     });
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      submitBtn.disabled = true;
+      
+      // Validate required fields
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value.trim();
+      
+      if (!email || !password) {
+        showMessage('Please fill in all required fields.', 'error');
+        return;
+      }
+
+      if (!isLogin) {
+        const firstName = document.getElementById('firstName').value.trim();
+        const lastName = document.getElementById('lastName').value.trim();
+        const adminCode = document.getElementById('adminCode').value.trim();
+        
+        if (!firstName || !lastName || !adminCode) {
+          showMessage('Please fill in all required fields.', 'error');
+          return;
+        }
+      }
+
+      setLoading(true);
       message.textContent = '';
 
       const endpoint = isLogin ? `${API_BASE_URL}/admin/login` : `${API_BASE_URL}/admin/register`;
@@ -212,17 +270,14 @@
       let headers = {};
 
       if (isLogin) {
-        body = JSON.stringify({
-          email: document.getElementById('email').value.trim(),
-          password: document.getElementById('password').value.trim()
-        });
+        body = JSON.stringify({ email, password });
         headers['Content-Type'] = 'application/json';
       } else {
         body = new FormData();
         body.append('firstName', document.getElementById('firstName').value.trim());
         body.append('lastName', document.getElementById('lastName').value.trim());
-        body.append('email', document.getElementById('email').value.trim());
-        body.append('password', document.getElementById('password').value.trim());
+        body.append('email', email);
+        body.append('password', password);
         body.append('adminCode', document.getElementById('adminCode').value.trim());
 
         const file = document.getElementById('profilePicture').files[0];
@@ -237,26 +292,54 @@
         });
 
         const result = await res.json();
+        
         if (result.success) {
-          message.className = 'message success';
-          message.textContent = result.message;
-          if (isLogin) {
-            localStorage.setItem('adminToken', result.token);
+          showMessage(result.message, 'success');
+          
+          if (isLogin && result.token) {
+            // ✅ Store token with consistent key name
+            localStorage.setItem('authToken', result.token);
+            
+            // Optional: Also store admin info for quick access
+            if (result.admin) {
+              localStorage.setItem('adminInfo', JSON.stringify(result.admin));
+            }
+            
+            showMessage('Login successful! Redirecting...', 'success');
             setTimeout(() => {
               window.location.href = '/admin-dashboard.html';
-            }, 1000);
+            }, 1500);
+          } else if (!isLogin) {
+            // Registration successful, switch to login
+            setTimeout(() => {
+              toggleLink.click();
+              showMessage('Registration successful! Please login.', 'success');
+            }, 2000);
           }
         } else {
-          message.className = 'message error';
-          message.textContent = result.message || 'An error occurred';
+          showMessage(result.message || 'An error occurred', 'error');
         }
       } catch (err) {
-        message.className = 'message error';
-        message.textContent = 'Network error. Please try again.';
+        console.error('Auth error:', err);
+        showMessage('Network error. Please check your connection and try again.', 'error');
       } finally {
-        submitBtn.disabled = false;
+        setLoading(false);
       }
     });
+
+    function showMessage(text, type) {
+      message.className = `message ${type}`;
+      message.textContent = text;
+    }
+
+    function setLoading(loading) {
+      submitBtn.disabled = loading;
+      if (loading) {
+        submitBtn.innerHTML = '<div class="loading"></div> Processing...';
+      } else {
+        submitBtn.textContent = isLogin ? 'Login' : 'Register';
+      }
+    }
   </script>
 </body>
 </html>

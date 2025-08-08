@@ -247,7 +247,7 @@ async function resolveAction(endpoint, btn, elementId, formatter, actionType = '
   const originalText = btn.textContent;
   btn.disabled = true;
   btn.innerHTML = '<div class="loading"></div><span>Processing...</span>';
-  const token = localStorage.getItem('adminToken');
+  const token = localStorage.getItem('authToken');
 
   try {
     let options = {
@@ -440,7 +440,7 @@ async function handlePostAction(postId, action, durationDays = null) {
 
   if (confirm(confirmMessage)) {
     const endpoint = isDelete
-      ? `/admin/delete-posts/${postId}`
+      ? `/admin/posts/${postId}`
       : `/admin/promote-post`;
     const method = isDelete ? 'DELETE' : 'POST';
     const body = isDelete ? null : JSON.stringify({ postId, durationDays });

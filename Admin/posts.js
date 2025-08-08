@@ -463,7 +463,7 @@ function renderPromotedPost(post) {
     let buttonContent = '';
     const productImageForChat = post.photo || '/salmart-192x192.png';
 
-    mediaContent = `<img class="promoted-image" alt="Promoted Product" onerror="this.src='/salmart-192x192.png'">`;
+    mediaContent = `<img class="promoted-image"  onerror="this.src='/salmart-192x192.png'">`;
     productDetails = `
         <div class="promoted-product-info">
             <h4 class="promoted-title">${escapeHtml(post.title || 'No description')}</h4>
