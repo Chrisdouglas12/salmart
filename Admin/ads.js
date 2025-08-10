@@ -2,7 +2,7 @@
     const MAX_FILE_SIZE = 6 * 1024 * 1024; // 6MB
     const MAX_VIDEO_DURATION = 60; // 60 seconds (1 minute)
     // Removed MAX_DESCRIPTION_LENGTH and MAX_TEXT_LENGTH as they are not universally applied or strictly enforced here
-    const API_BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart.onrender.com';
+    const API_BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart.onrender.com' : 'https://salmartonline.com.ng';
 let isSubmitting = false
     // DOM references
     const normalForm = document.getElementById('normal-ad-form');
@@ -23,13 +23,6 @@ let isSubmitting = false
     const existingVideoUrlInput = document.getElementById('existing-video-url'); // New: For video ads
     const existingThumbnailUrlInput = document.getElementById('existing-thumbnail-url'); // New: For video ads
 
-    // New input fields added to HTML:
-    // Make sure you add these hidden inputs inside your normal-ad-form and video-ad-form respectively
-    // Example for normal-ad-form:
-    // <input type="hidden" id="existing-photo-url" name="existingPhotoUrl" />
-    // For video-ad-form:
-    // <input type="hidden" id="existing-video-url" name="existingVideoUrl" />
-    // <input type="hidden" id="existing-thumbnail-url" name="existingThumbnailUrl" />
 
 
     // Track state
@@ -409,7 +402,7 @@ let isSubmitting = false
     }
 
     function isValidSalmartLink(link) {
-      const VALID_BASE_DOMAIN = 'salmartonline.com.ng';
+      const VALID_BASE_DOMAIN = 'salmartonline.com.ng' || 'salmart.onrender.com';
       const VALID_LOCALHOST_DOMAIN = 'localhost'; // Added localhost to valid domains
 
       try {
@@ -419,7 +412,7 @@ let isSubmitting = false
         const isSecure = url.protocol === 'https:' || (isLocalhost && url.protocol === 'http:'); // Allow http for localhost
 
         if (!(isLocalhost || isSalmartDomain)) {
-          return { valid: false, error: 'Link must be from Salmart (e.g., https://salmartonline.com.ng/product.html?id=123)' };
+          return { valid: false, error: 'Link must be from Salmart (e.g., https://salmartonline.com.ng/)' };
         }
 
         if (!isSecure) {
@@ -428,7 +421,7 @@ let isSubmitting = false
 
         const pathname = url.pathname;
         // Allows /product or /product.html or /product/ID
-        const isValidProductPath = pathname.startsWith('/product') || pathname === '/product.html';
+        const isValidProductPath = pathname.startsWith('/product') || pathname === '/product.html'|| '/share';
 
         if (!isValidProductPath) {
           return { valid: false, error: 'Link must lead to a product page on Salmart' };

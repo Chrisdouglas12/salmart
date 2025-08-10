@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const showToast = window.showToast; // Utility from auth.js
     
     // Backend URL for share links (where meta tags are served)
-    const BACKEND_URL = 'https://salmartonline.com.ng';
+    const BACKEND_URL = 'https://salmart.onrender.com.ng';
 
     async function copyToClipboard(text) {
         try {

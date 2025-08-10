@@ -197,7 +197,7 @@ app.get('/search', async (req, res) => {
 });
 // Root Endpoint
 app.get('/', (req, res) => {
-  res.send('Salmart API is running');
+  res.send('Salmart API is running on port 3000');
 });
 
 // Nodemailer Configuration

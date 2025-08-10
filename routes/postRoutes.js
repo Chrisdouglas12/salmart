@@ -199,7 +199,7 @@ module.exports = (io) => {
         let photoUrl = null;
         let videoUrl = null;
 
-        const validDomain = isProduction ? 'salmartonline.com.ng' : 'localhost';
+        const validDomain = isProduction ? 'salmartonline.com.ng' || 'salmart.onrender.com' : 'localhost';
         const isValidSalmartLink = (link) => {
           try {
             const url = new URL(link);

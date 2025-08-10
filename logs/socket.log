@@ -21977,3 +21977,4 @@
 {"level":"info","message":"Client disconnected: h13KNt_9LspM1uBfAAA8 (User: 6843d062f457581752641ee3)","timestamp":"2025-08-08T00:19:43.482Z"}
 {"level":"info","message":"Client disconnected: a4xzZ87h6u5JRb-qAAA- (User: 6843d062f457581752641ee3)","timestamp":"2025-08-08T00:19:43.487Z"}
 {"level":"info","message":"Removed user 6843d062f457581752641ee3 from userSocketMap on disconnect.","timestamp":"2025-08-08T00:19:43.488Z"}
+{"level":"info","message":"Initializing Socket.IO event handlers","timestamp":"2025-08-10T19:08:20.238Z"}
