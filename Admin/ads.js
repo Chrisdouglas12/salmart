@@ -2,7 +2,11 @@
     const MAX_FILE_SIZE = 6 * 1024 * 1024; // 6MB
     const MAX_VIDEO_DURATION = 60; // 60 seconds (1 minute)
     // Removed MAX_DESCRIPTION_LENGTH and MAX_TEXT_LENGTH as they are not universally applied or strictly enforced here
-    const API_BASE_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart.onrender.com' : 'https://salmartonline.com.ng';
+    const API_BASE_URL = window.location.hostname === 'localhost' 
+  ? 'http://localhost:3000' 
+  : window.location.hostname === 'salmart.onrender.com' 
+    ? 'https://salmart.onrender.com' 
+    : 'https://salmartonline.com.ng';
 let isSubmitting = false
     // DOM references
     const normalForm = document.getElementById('normal-ad-form');
@@ -28,6 +32,8 @@ let isSubmitting = false
     // Track state
     let activeTab = 'normal';
     let processedVideoFile = null;
+    // Video editor integration
+const originalVideoInputHandler = true; // Mark that we're integrating with video editor
     let isEditMode = false;
     let currentPostId = null; // Renamed from currentProductId to currentPostId for consistency
     let currentPostType = null; // New state variable
@@ -345,61 +351,69 @@ let isSubmitting = false
       });
     }
 
-    // Video preview and validation with processing
-    if (videoInput) {
-      videoInput.addEventListener('change', async function (e) {
-        const videoError = document.getElementById('video-error');
-        const previewContainer = document.getElementById('video-preview-container');
-        previewContainer.innerHTML = '';
-        videoError.style.display = 'none';
-        hideProcessingStatus();
-        processedVideoFile = null;
+// Video preview and validation with processing (Updated for video editor)
+if (videoInput) {
+  videoInput.addEventListener('change', async function (e) {
+    const videoError = document.getElementById('video-error');
+    const previewContainer = document.getElementById('video-preview-container');
+    const editBtn = document.getElementById('edit-video-btn');
+    
+    previewContainer.innerHTML = '';
+    videoError.style.display = 'none';
+    hideProcessingStatus();
+    processedVideoFile = null;
+    
+    const file = e.target.files[0];
+    if (file) {
+      if (file.type !== 'video/mp4') {
+        videoError.textContent = 'Only MP4 videos are allowed';
+        videoError.style.display = 'block';
+        this.value = '';
+        editBtn.style.display = 'none';
+        return;
+      }
+      
+      try {
+        // Process the video (basic analysis)
+        processedVideoFile = await processVideo(file);
         
-        const file = e.target.files[0];
-        if (file) {
-          if (file.type !== 'video/mp4') {
-            videoError.textContent = 'Only MP4 videos are allowed';
-            videoError.style.display = 'block';
-            this.value = '';
-            return;
-          }
-          
-          try {
-            // Process the video (will return the file itself if no client-side processing)
-            processedVideoFile = await processVideo(file);
-            
-            // Show preview of the file (could be original or processed by FFmpeg if you integrate it)
-            const video = document.createElement('video');
-            video.src = URL.createObjectURL(processedVideoFile);
-            video.controls = true;
-            video.muted = true;
-            video.style.maxWidth = '100%';
-            video.style.maxHeight = '200px';
-            previewContainer.appendChild(video);
-            
-            // Clear existing video/thumbnail URLs if a new video is uploaded
-            existingVideoUrlInput.value = '';
-            existingThumbnailUrlInput.value = '';
-            
-          } catch (error) {
-            console.error('Video processing error:', error);
-            videoError.textContent = 'Error processing video. Please try again.';
-            videoError.style.display = 'block';
-            this.value = '';
-          }
-        } else if (isEditMode && existingVideoUrlInput.value) {
-            // If in edit mode and no new file selected, but there was an existing one,
-            // re-display the existing one.
-            const videoElement = document.createElement('video');
-            videoElement.src = existingVideoUrlInput.value;
-            videoElement.controls = true;
-            videoElement.muted = true;
-            videoElement.style.maxWidth = '100%';
-            videoElement.style.maxHeight = '200px';
-            previewContainer.appendChild(videoElement);
-        }
-      });
+        // Show preview
+        const video = document.createElement('video');
+        video.src = URL.createObjectURL(processedVideoFile);
+        video.controls = true;
+        video.muted = true;
+        video.style.maxWidth = '100%';
+        video.style.maxHeight = '200px';
+        previewContainer.appendChild(video);
+        
+        // Show edit button
+        editBtn.style.display = 'inline-block';
+        
+        // Clear existing URLs
+        existingVideoUrlInput.value = '';
+        existingThumbnailUrlInput.value = '';
+        
+      } catch (error) {
+        console.error('Video processing error:', error);
+        videoError.textContent = 'Error processing video. Please try again.';
+        videoError.style.display = 'block';
+        this.value = '';
+        editBtn.style.display = 'none';
+      }
+    } else {
+      editBtn.style.display = 'none';
+      if (isEditMode && existingVideoUrlInput.value) {
+        const videoElement = document.createElement('video');
+        videoElement.src = existingVideoUrlInput.value;
+        videoElement.controls = true;
+        videoElement.muted = true;
+        videoElement.style.maxWidth = '100%';
+        videoElement.style.maxHeight = '200px';
+        previewContainer.appendChild(videoElement);
+      }
     }
+  });
+}
 
     function isValidSalmartLink(link) {
   const VALID_BASE_DOMAINS = ['salmartonline.com.ng', 'salmart.onrender.com'];

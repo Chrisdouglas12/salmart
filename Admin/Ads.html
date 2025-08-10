@@ -23,37 +23,41 @@
         <button class="tab-button" id="video-tab" type="button">Video Ad</button>
       </div>
 
+      <!-- NORMAL AD FORM -->
       <form id="normal-ad-form" class="ad-form" enctype="multipart/form-data" novalidate>
         <div class="input-form">
           <label for="title">Enter product title</label>
           <input id="title" name="title" type="text" class="input" placeholder="e.g. LG Television" maxlength="20" required />
           <div class="error" id="normal-title-error"></div>
         </div>
-<div class="input-form">
-  <label for="description">Enter product description</label>
-  <textarea id="description" name="description" class="input" placeholder="Enter more details about your product" maxlength="2000"></textarea>
-  <div class="error" id="normal-description-error"></div>
-</div>
+
+        <div class="input-form">
+          <label for="description">Enter product description</label>
+          <textarea id="description" name="description" class="input" placeholder="Enter more details about your product" maxlength="2000"></textarea>
+          <div class="error" id="normal-description-error"></div>
+        </div>
 
         <div class="input-form">
           <label for="productCondition">Product Condition</label>
           <input id="productCondition" name="productCondition" type="text" class="input" placeholder="e.g. New, Used" required maxlength="15" />
           <div class="error" id="normal-condition-error"></div>
         </div>
-      <div class="input-form">
-  <label for="price-display">Product Price ₦</label>
-  <input id="price-display" type="text" class="input" placeholder="Enter Price" autocomplete="off" required />
-  <input id="price" name="price" type="hidden" />
-  <div class="error" id="normal-price-error"></div>
 
-  <!-- Seller earnings feedback -->
-  <small id="sellerEarningsInfo" style="color: green; display: block; margin-top: 5px;"></small>
-</div>
+        <div class="input-form">
+          <label for="price-display">Product Price ₦</label>
+          <input id="price-display" type="text" class="input" placeholder="Enter Price" autocomplete="off" required />
+          <input id="price" name="price" type="hidden" />
+          <div class="error" id="normal-price-error"></div>
+          <!-- Seller earnings feedback -->
+          <small id="sellerEarningsInfo" style="color: green; display: block; margin-top: 5px;"></small>
+        </div>
+
         <div class="input-form">
           <label for="location">Location</label>
           <input id="location" name="location" type="text" class="input" placeholder="Enter Location" required maxlength="100" />
           <div class="error" id="normal-location-error"></div>
         </div>
+
         <div class="input-form">
           <label for="category">Product Category</label>
           <select id="category" name="category" class="input" required>
@@ -67,6 +71,7 @@
           </select>
           <div class="error" id="normal-category-error"></div>
         </div>
+
         <div class="file-section">
           <label for="photo-input">Upload Image (Max 6MB)</label>
           <br />
@@ -75,34 +80,37 @@
           <div id="photo-preview-container" class="preview-container"></div>
           <input type="hidden" id="existing-photo-url" name="existingPhotoUrl" />
         </div>
+
         <input type="hidden" name="postType" value="regular" />
       </form>
 
+      <!-- VIDEO AD FORM -->
       <form id="video-ad-form" class="ad-form" enctype="multipart/form-data" style="display: none;" novalidate>
         <div class="input-form">
           <label for="video-description">Video Description</label>
-         <textarea id="video-description" name="description" placeholder="Describe your video..." 
-    maxlength="500" required
-    style="
-        width: 100%;
-        height: 80px;
-        padding: 12px 16px;
-        font-size: 14px;
-        font-family: 'Poppins', sans-serif;
-        color: #333;
-        background-color: #fff;
-        border: 1px solid #ccc;
-        border-radius: 8px;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-        outline: none;
-        resize: vertical;
-        transition: all 0.2s ease-in-out;
-    "
-    onfocus="this.style.borderColor='#28a745'; this.style.boxShadow='0 0 0 2px rgba(40,167,69,0.2)'"
-    onblur="this.style.borderColor='#ccc'; this.style.boxShadow='0 1px 2px rgba(0,0,0,0.05)'"
-></textarea>
+          <textarea id="video-description" name="description" placeholder="Describe your video..." 
+            maxlength="500" required
+            style="
+                width: 100%;
+                height: 80px;
+                padding: 12px 16px;
+                font-size: 14px;
+                font-family: 'Poppins', sans-serif;
+                color: #333;
+                background-color: #fff;
+                border: 1px solid #ccc;
+                border-radius: 8px;
+                box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+                outline: none;
+                resize: vertical;
+                transition: all 0.2s ease-in-out;
+            "
+            onfocus="this.style.borderColor='#28a745'; this.style.boxShadow='0 0 0 2px rgba(40,167,69,0.2)'"
+            onblur="this.style.borderColor='#ccc'; this.style.boxShadow='0 1px 2px rgba(0,0,0,0.05)'"
+          ></textarea>
           <div class="error" id="video-description-error"></div>
         </div>
+
         <div class="input-form">
           <label for="video-category">Product Category</label>
           <select id="video-category" name="category" class="input" required>
@@ -116,22 +124,25 @@
           </select>
           <div class="error" id="video-category-error"></div>
         </div>
+
         <div class="input-form">
           <label for="product-link">Salmart Product Link</label>
           <input id="product-link" name="productLink" type="url" class="input" placeholder="e.g. https://salmartonline.com/product/123" required />
-          <input type="hidden" id="existing-photo-url" name="existingPhotoUrl" />
           <div class="error" id="product-link-error"></div>
         </div>
+
         <div class="file-section">
           <label for="video-input">Upload Video (Max 6MB, Auto-processed to 1min max)</label>
           <br />
           <input id="video-input" type="file" class="media-input" name="video" accept="video/mp4" required />
+          <button type="button" class="edit-video-btn" id="edit-video-btn" style="display: none;">Edit Video</button>
           <input type="hidden" id="existing-video-url" name="existingVideoUrl" />
-     <input type="hidden" id="existing-thumbnail-url" name="existingThumbnailUrl" />
+          <input type="hidden" id="existing-thumbnail-url" name="existingThumbnailUrl" />
           <div class="error" id="video-error"></div>
           <div id="video-processing-status" style="display: none; margin-top: 10px; padding: 10px; background: #f0f0f0; border-radius: 4px; font-size: 14px;"></div>
           <div id="video-preview-container" class="preview-container"></div>
         </div>
+
         <input type="hidden" name="postType" value="video_ad" />
       </form>
 
@@ -147,6 +158,7 @@
     </div>
   </div>
 
+  <!-- LOADING MODAL -->
   <div id="loading-modal" class="loading-modal">
     <div class="loading-content">
       <div class="spinner"></div>
@@ -154,6 +166,7 @@
     </div>
   </div>
 
+  <!-- VIDEO PROCESSING MODAL -->
   <div id="video-processing-modal" class="loading-modal" style="display: none;">
     <div class="loading-content">
       <div class="spinner"></div>
@@ -161,67 +174,156 @@
       <div id="processing-progress" style="margin-top: 10px; font-size: 14px;"></div>
     </div>
   </div>
-<script>
-  const priceDisplayInput = document.getElementById('price-display');
-  const priceHiddenInput = document.getElementById('price');
-  const earningsInfo = document.getElementById('sellerEarningsInfo');
-  const errorDisplay = document.getElementById('normal-price-error');
-  const minimumPrice = 100;
 
-  function getCommissionRate(amount) {
-    if (amount < 10000) return 3.5;
-    if (amount < 50000) return 3;
-    if (amount < 200000) return 2.5;
-    return 1;
-  }
+  <!-- VIDEO EDITOR MODAL -->
+  <div id="video-editor-modal" class="video-editor-modal">
+    <div class="video-editor-container">
+      <div class="video-editor-header">
+        <h3>Edit Video</h3>
+        <button class="close-editor" id="close-video-editor">&times;</button>
+      </div>
+      
+      <div class="video-editor-content">
+        <div class="video-preview-section">
+          <div class="video-canvas-container" id="video-canvas-container">
+            <canvas class="video-canvas" id="video-canvas"></canvas>
+            <div class="video-overlay" id="video-overlay"></div>
+          </div>
+          
+          <div class="video-controls">
+            <button class="control-btn" id="play-pause-btn">▶️</button>
+            <span id="current-time">0:00</span> / <span id="total-time">0:00</span>
+          </div>
+        </div>
+        
+        <div class="timeline-section">
+          <label>Trim Video (Max 60 seconds)</label>
+          <div class="timeline-container" id="timeline-container">
+            <div class="timeline-track"></div>
+            <div class="trim-handle start" id="start-handle">⫸</div>
+            <div class="trim-handle end" id="end-handle">⫷</div>
+            <div class="playhead" id="playhead"></div>
+          </div>
+          <div class="trim-info">
+            <span>Start: <span id="start-time">0:00</span></span>
+            <span>End: <span id="end-time">0:00</span></span>
+            <span>Duration: <span id="trim-duration">0:00</span></span>
+          </div>
+        </div>
+        
+        <div class="text-tools-section">
+          <div class="tools-header">
+            <h4>Add Text</h4>
+            <button class="tool-btn" id="add-text-btn">+ Add Text</button>
+          </div>
+          
+          <div class="text-editor" id="text-editor" style="display: none;">
+            <input type="text" id="text-input" placeholder="Enter text..." maxlength="50">
+            <div class="text-options">
+              <select id="font-size">
+                <option value="16">Small</option>
+                <option value="24" selected>Medium</option>
+                <option value="32">Large</option>
+              </select>
+              <input type="color" id="text-color" value="#ffffff">
+              <button id="apply-text-btn">Apply</button>
+              <button id="cancel-text-btn">Cancel</button>
+            </div>
+          </div>
+        </div>
+        
+        <div class="compression-settings">
+          <h4>Quality Settings</h4>
+          <div class="quality-options">
+            <label>
+              <input type="radio" name="quality" value="high" checked>
+              High Quality (larger file)
+            </label>
+            <label>
+              <input type="radio" name="quality" value="medium">
+              Medium Quality (recommended)
+            </label>
+            <label>
+              <input type="radio" name="quality" value="low">
+              Low Quality (smaller file)
+            </label>
+          </div>
+        </div>
+        
+        <div class="editor-actions">
+          <button class="action-btn cancel" id="cancel-edit-btn">Cancel</button>
+          <button class="action-btn process" id="process-video-btn">Process Video</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
-  function getPaystackFee(amount) {
-    let fee = (1.5 / 100) * amount;
-    if (amount >= 2500) {
-      fee += 100;
+  <!-- INLINE SCRIPTS -->
+  <script>
+    const priceDisplayInput = document.getElementById('price-display');
+    const priceHiddenInput = document.getElementById('price');
+    const earningsInfo = document.getElementById('sellerEarningsInfo');
+    const errorDisplay = document.getElementById('normal-price-error');
+    const minimumPrice = 100;
+
+    function getCommissionRate(amount) {
+      if (amount < 10000) return 3.5;
+      if (amount < 50000) return 3;
+      if (amount < 200000) return 2.5;
+      return 1;
     }
-    return Math.min(fee, 2000);
-  }
 
-  priceDisplayInput.addEventListener('input', () => {
-    const raw = priceDisplayInput.value.replace(/[^0-9.]/g, '');
-    const price = parseFloat(raw);
+    function getPaystackFee(amount) {
+      let fee = (1.5 / 100) * amount;
+      if (amount >= 2500) {
+        fee += 100;
+      }
+      return Math.min(fee, 2000);
+    }
 
-    if (!isNaN(price)) {
-      if (price < minimumPrice) {
-        errorDisplay.textContent = `Minimum price allowed is ₦${minimumPrice}`;
+    priceDisplayInput.addEventListener('input', () => {
+      const raw = priceDisplayInput.value.replace(/[^0-9.]/g, '');
+      const price = parseFloat(raw);
+
+      if (!isNaN(price)) {
+        if (price < minimumPrice) {
+          errorDisplay.textContent = `Minimum price allowed is ₦${minimumPrice}`;
+          earningsInfo.textContent = '';
+          priceHiddenInput.value = '';
+        } else {
+          const paystackFee = getPaystackFee(price);
+          const amountAfterPaystack = price - paystackFee;
+
+          const platformRate = getCommissionRate(amountAfterPaystack);
+          const platformFee = (platformRate / 100) * amountAfterPaystack;
+
+          const sellerReceives = amountAfterPaystack - platformFee;
+
+          priceHiddenInput.value = price;
+          errorDisplay.textContent = '';
+          earningsInfo.textContent = `You'll receive ₦${sellerReceives.toLocaleString('en-NG', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+          })} after ₦${paystackFee.toFixed(2)} Payment gateway fee and ${platformRate}% platform fee.`;
+        }
+      } else {
+        errorDisplay.textContent = '';
         earningsInfo.textContent = '';
         priceHiddenInput.value = '';
-      } else {
-        const paystackFee = getPaystackFee(price);
-        const amountAfterPaystack = price - paystackFee;
-
-        const platformRate = getCommissionRate(amountAfterPaystack);
-        const platformFee = (platformRate / 100) * amountAfterPaystack;
-
-        const sellerReceives = amountAfterPaystack - platformFee;
-
-        priceHiddenInput.value = price;
-        errorDisplay.textContent = '';
-        earningsInfo.textContent = `You'll receive ₦${sellerReceives.toLocaleString('en-NG', {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2
-        })} after ₦${paystackFee.toFixed(2)} Payment gateway fee and ${platformRate}% platform fee.`;
       }
-    } else {
-      errorDisplay.textContent = '';
-      earningsInfo.textContent = '';
-      priceHiddenInput.value = '';
-    }
-  });
-  const textarea = document.getElementById('description');
+    });
 
-textarea.addEventListener('input', function() {
-  this.style.height = 'auto';
-  this.style.height = this.scrollHeight + 'px';
-});
-</script>
-<script src="ads.js"></script>
+    const textarea = document.getElementById('description');
+
+    textarea.addEventListener('input', function() {
+      this.style.height = 'auto';
+      this.style.height = this.scrollHeight + 'px';
+    });
+  </script>
+
+  <!-- EXTERNAL SCRIPTS -->
+  <script src="ads.js"></script>
+  <script src="video-editor.js"></script>
   
 </body>
 </html>
