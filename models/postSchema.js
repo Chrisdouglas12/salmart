@@ -41,19 +41,26 @@ const postSchema = new mongoose.Schema({
     },
     trim: true,
     validate: {
-      validator: function (value) {
-        if (this.postType !== 'video_ad') return true;
-        try {
-          const url = new URL(value);
-          const validDomain = process.env.NODE_ENV === 'production' ? 'salmartonline.com.ng' || 'salmart.onrender.com' : 'localhost';
-          return url.hostname === validDomain;
-        } catch (e) {
-          return false;
-        }
-      },
-      message: 'Product link must be a valid Salmart URL (e.g., https://salmartonline.com.ng)',
-    },
+  validator: function (value) {
+    // Only validate links for video ads
+    if (this.postType !== 'video_ad') return true;
+
+    try {
+      const { hostname } = new URL(value);
+
+      // Set allowed domains based on environment
+      const validDomains = process.env.NODE_ENV === 'production'
+        ? ['salmartonline.com.ng', 'salmart.onrender.com']
+        : ['localhost'];
+
+      return validDomains.includes(hostname);
+    } catch {
+      return false;
+    }
   },
+  message: 'Product link must be a valid Salmart URL (e.g., https://salmartonline.com.ng)',
+}
+},
   location: {
     type: String,
     required: function () {

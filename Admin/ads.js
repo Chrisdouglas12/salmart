@@ -402,37 +402,48 @@ let isSubmitting = false
     }
 
     function isValidSalmartLink(link) {
-      const VALID_BASE_DOMAIN = 'salmartonline.com.ng' || 'salmart.onrender.com';
-      const VALID_LOCALHOST_DOMAIN = 'localhost'; // Added localhost to valid domains
+  const VALID_BASE_DOMAINS = ['salmartonline.com.ng', 'salmart.onrender.com'];
+  const VALID_LOCALHOST_DOMAIN = 'localhost'; // Allow localhost in dev
 
-      try {
-        const url = new URL(link);
-        const isLocalhost = url.hostname === VALID_LOCALHOST_DOMAIN;
-        const isSalmartDomain = url.hostname === VALID_BASE_DOMAIN || url.hostname.endsWith(`.${VALID_BASE_DOMAIN}`);
-        const isSecure = url.protocol === 'https:' || (isLocalhost && url.protocol === 'http:'); // Allow http for localhost
+  try {
+    const url = new URL(link);
+    const hostname = url.hostname;
 
-        if (!(isLocalhost || isSalmartDomain)) {
-          return { valid: false, error: 'Link must be from Salmart (e.g., https://salmartonline.com.ng/)' };
-        }
+    // Check if hostname is localhost
+    const isLocalhost = hostname === VALID_LOCALHOST_DOMAIN;
 
-        if (!isSecure) {
-          return { valid: false, error: 'Link must use HTTPS (or HTTP for localhost)' };
-        }
+    // Check if hostname matches any Salmart domain (with or without www.)
+    const isSalmartDomain = VALID_BASE_DOMAINS.some(domain =>
+      hostname === domain || hostname === `www.${domain}`
+    );
 
-        const pathname = url.pathname;
-        // Allows /product or /product.html or /product/ID
-        const isValidProductPath = pathname.startsWith('/product') || pathname === '/product.html'|| '/share';
+    // Enforce HTTPS in production, allow HTTP for localhost
+    const isSecure = url.protocol === 'https:' || (isLocalhost && url.protocol === 'http:');
 
-        if (!isValidProductPath) {
-          return { valid: false, error: 'Link must lead to a product page on Salmart' };
-        }
-
-        return { valid: true };
-      } catch (e) {
-        return { valid: false, error: 'Invalid URL format' };
-      }
+    if (!(isLocalhost || isSalmartDomain)) {
+      return { valid: false, error: 'Link must be from Salmart (e.g., https://salmartonline.com.ng/)' };
     }
 
+    if (!isSecure) {
+      return { valid: false, error: 'Link must use HTTPS (or HTTP for localhost)' };
+    }
+
+    // Allow product paths: /product, /product.html, /product/ID, or /share
+    const pathname = url.pathname;
+    const isValidProductPath =
+      pathname.startsWith('/product') ||
+      pathname === '/product.html' ||
+      pathname.startsWith('/share');
+
+    if (!isValidProductPath) {
+      return { valid: false, error: 'Link must lead to a product or share page on Salmart' };
+    }
+
+    return { valid: true };
+  } catch {
+    return { valid: false, error: 'Invalid URL format' };
+  }
+}
     // Switch tabs
     function switchTab(type) {
       // Allow tab switching only if not in edit mode

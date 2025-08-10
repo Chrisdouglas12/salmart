@@ -199,15 +199,20 @@ module.exports = (io) => {
         let photoUrl = null;
         let videoUrl = null;
 
-        const validDomain = isProduction ? 'salmartonline.com.ng' || 'salmart.onrender.com' : 'localhost';
-        const isValidSalmartLink = (link) => {
-          try {
-            const url = new URL(link);
-            return url.hostname === validDomain;
-          } catch (e) {
-            return false;
-          }
-        };
+        const isProduction = process.env.NODE_ENV === 'production';
+
+const validDomains = isProduction
+  ? ['salmartonline.com.ng', 'salmart.onrender.com']
+  : ['localhost'];
+
+const isValidSalmartLink = (link) => {
+  try {
+    const { hostname } = new URL(link);
+    return validDomains.includes(hostname);
+  } catch {
+    return false;
+  }
+};
 
         if (postType === 'video_ad') {
           if (!description || !category || !req.files?.video?.[0] || !productLink) {
