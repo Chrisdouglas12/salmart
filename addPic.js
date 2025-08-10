@@ -1,9 +1,9 @@
 const mongoose = require('mongoose');
 require('dotenv').config();
 
-const User = require('./models/userSchema'); // Adjust path if needed
+const Admin = require('./models/adminSchema'); // Adjust path if needed
 
-async function deleteUserByEmail(emailToDelete) {
+async function deleteAdminByEmail(emailToDelete) {
   try {
     await mongoose.connect(process.env.MONGO_URI, {
       useNewUrlParser: true,
@@ -13,18 +13,18 @@ async function deleteUserByEmail(emailToDelete) {
     });
     console.log('✅ MongoDB connected');
 
-    const user = await User.findOne({ email: emailToDelete });
+    const admin = await Admin.findOne({ email: emailToDelete });
 
-    if (!user) {
+    if (!admin) {
       console.log(`⚠️ No user found with email: ${emailToDelete}`);
     } else {
-      console.log(`📋 Found user: ${user.firstName} ${user.lastName} (${user.email})`);
-      console.log(`   Phone: ${user.phoneNumber || 'N/A'}`);
-      console.log(`   Admin: ${user.isAdmin ? 'Yes' : 'No'}`);
-      console.log(`   Verified: ${user.isVerified ? 'Yes' : 'No'}`);
-      console.log(`   Created At: ${user.createdAt}`);
+      console.log(`📋 Found user: ${admin.firstName} ${admin.lastName} (${admin.email})`);
+      console.log(`   Phone: ${admin.phoneNumber || 'N/A'}`);
+      console.log(`   Admin: ${admin.isAdmin ? 'Yes' : 'No'}`);
+      console.log(`   Verified: ${admin.isVerified ? 'Yes' : 'No'}`);
+      console.log(`   Created At: ${admin.createdAt}`);
 
-      const result = await User.deleteOne({ email: emailToDelete });
+      const result = await Admin.deleteOne({ email: emailToDelete });
       if (result.deletedCount > 0) {
         console.log(`✅ User with email "${emailToDelete}" deleted.`);
       } else {
@@ -44,4 +44,4 @@ async function deleteUserByEmail(emailToDelete) {
 }
 
 // ✅ Call the function with your desired email
-deleteUserByEmail('christianfridaydouglas@gmail.com');
+deleteAdminByEmail('chrisdouglas1700@gmail.com');
