@@ -733,15 +733,15 @@ function renderPost(post) {
             </div>
         `;
         mediaContent = `
-         <div class="media-card">
-    <div class="post-image-wrapper">
-        <div class="badge">${post.productCondition || 'New'}</div>
-        <img class="post-image" onclick="window.openImage('${productImageForChat.replace(/'/g, "\\'")}')" onerror="this.src='/salmart-192x192.png'">
-    </div>
-</div>
+  <div class="post-image-wrapper" >
+                <div class="product-image">
+                    <div class="badge">${post.productCondition || 'New'}</div>
+                    <img class="post-image" onclick="window.openImage('${productImageForChat.replace(/'/g, "\\'")}')" alt="Product Image" onerror="this.src='/salmart-192x192.png'">
+                </div>
+                </div>
+            `;
 
 
-        `;
         productDetails = `
             <div class="content">
                 <div class="details-grid">
