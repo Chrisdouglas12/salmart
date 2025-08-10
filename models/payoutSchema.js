@@ -13,7 +13,3 @@ const payoutLogSchema = new mongoose.Schema({
 
 module.exports = mongoose.model('PayoutLog', payoutLogSchema
 
-const numberOfLoginAttempts = 5
-if(password && numberOfLoginAttempts < 5) {
-  return res.status(400).json({message: 'Invalid password'})
-}
