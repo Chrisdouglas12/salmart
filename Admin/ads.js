@@ -2,11 +2,7 @@
     const MAX_FILE_SIZE = 6 * 1024 * 1024; // 6MB
     const MAX_VIDEO_DURATION = 60; // 60 seconds (1 minute)
     // Removed MAX_DESCRIPTION_LENGTH and MAX_TEXT_LENGTH as they are not universally applied or strictly enforced here
-    const API_BASE_URL = window.location.hostname === 'localhost' 
-  ? 'http://localhost:3000' 
-  : window.location.hostname === 'salmart.onrender.com' 
-    ? 'https://salmart.onrender.com' 
-    : 'https://salmartonline.com.ng';
+    const API_BASE_URL = window.API_BASE_URL || (window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart.onrender.com');
 let isSubmitting = false
     // DOM references
     const normalForm = document.getElementById('normal-ad-form');
