@@ -5,6 +5,7 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const nodemailer = require('nodemailer');
+const cron = require('node-cron');
 const jwt = require('jsonwebtoken');
 const Post = require('../models/postSchema.js');
 const Review = require('../models/reviewSchema.js');
@@ -1421,6 +1422,368 @@ router.post('/resend-verification', async (req, res) => {
   }
 });
 
+
+
+// 3. Add this function to send verification reminders
+async function sendVerificationReminders(isInitialCheck = false) {
+  try {
+    console.log(`🔄 Starting verification reminder job... (Initial Check: ${isInitialCheck})`);
+
+    let userSearchQuery;
+    const now = new Date();
+    const ninetyMinutesAgo = new Date(now.getTime() - 90 * 60 * 1000);
+    const sixHoursAgo = new Date(now.getTime() - 6 * 60 * 60 * 1000);
+
+    if (isInitialCheck) {
+      // Logic for the first reminder, 90 minutes after registration
+      userSearchQuery = {
+        isVerified: false,
+        isBanned: false,
+        createdAt: { $lt: ninetyMinutesAgo },
+        $or: [
+          { verificationReminderCount: { $eq: 0 } },
+          { verificationReminderCount: { $exists: false } }
+        ],
+        email: { $exists: true, $ne: "" },
+      };
+      console.log('🔍 Searching for users needing their FIRST reminder...');
+
+    } else {
+      // Logic for subsequent reminders, every 6 hours
+      userSearchQuery = {
+        isVerified: false,
+        isBanned: false,
+        verificationReminderCount: { $gt: 0, $lt: 5 }, // Users who already got at least one reminder
+        lastVerificationReminderSent: { $lt: sixHoursAgo },
+        email: { $exists: true, $ne: "" },
+      };
+      console.log('🔍 Searching for users needing a SUBSEQUENT reminder...');
+    }
+
+    const unverifiedUsers = await User.find(userSearchQuery);
+    console.log(`📧 Found ${unverifiedUsers.length} users for verification reminders`);
+
+    if (unverifiedUsers.length === 0) {
+      console.log('✅ No users need verification reminders at this time');
+      return;
+    }
+
+    let successCount = 0;
+    let errorCount = 0;
+    const errors = [];
+
+    const batchSize = 5;
+    for (let i = 0; i < unverifiedUsers.length; i += batchSize) {
+      const batch = unverifiedUsers.slice(i, i + batchSize);
+
+      await Promise.all(batch.map(async (user) => {
+        try {
+          if (!user.verificationToken) {
+            user.verificationToken = crypto.randomBytes(32).toString('hex');
+          }
+
+          const verifyUrl = `https://salmartonline.com.ng/verify-email.html?token=${user.verificationToken}`;
+          const reminderCount = (user.verificationReminderCount || 0) + 1;
+
+          let subject;
+          let urgencyMessage;
+
+          // Customized messages based on reminder count
+          if (reminderCount === 1) {
+            subject = '👋 Welcome to Salmart! Just one more step...';
+            urgencyMessage = `
+              <div style="background-color: #d1ecf1; border: 1px solid #bee5eb; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                <p style="color: #0c5460; margin: 0; font-weight: 500;">
+                  This is your first reminder! We're excited to have you, and verifying your email is the last step to unlock all the features.
+                </p>
+              </div>
+            `;
+          } else if (reminderCount >= 3) {
+            subject = '⚠️ Action Required: Final reminder to verify your Salmart account';
+            urgencyMessage = `
+              <div style="background-color: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                <p style="color: #856404; font-weight: 600; margin: 0;">
+                  ⏰ This is reminder #${reminderCount}. To keep your account active and secure, please verify your email now.
+                </p>
+              </div>
+            `;
+          } else {
+            subject = `📧 Friendly Reminder: Verify your Salmart account`;
+            urgencyMessage = `
+              <div style="background-color: #d1ecf1; border: 1px solid #bee5eb; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                <p style="color: #0c5460; margin: 0; font-weight: 500;">
+                  This is reminder #${reminderCount}. Don't miss out on all the great features!
+                </p>
+              </div>
+            `;
+          }
+
+          const emailHtml = `
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>${subject}</title>
+              <style>
+                @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+                @media only screen and (max-width: 600px) {
+                  .container { width: 100% !important; padding: 10px !important; }
+                  .content { padding: 20px !important; }
+                }
+              </style>
+            </head>
+            <body style="margin: 0; padding: 20px 0; background-color: #f8f9fa; font-family: 'Inter', sans-serif;">
+              <table role="presentation" width="100%" style="background-color: #f8f9fa;">
+                <tr>
+                  <td align="center" style="padding: 20px 0;">
+                    <table class="container" role="presentation" width="600" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; box-shadow: 0 8px 32px rgba(40, 167, 69, 0.12); overflow: hidden;">
+                      
+                      <tr>
+                        <td style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); padding: 40px 30px; text-align: center;">
+                          <h1 style="color: #ffffff; font-size: 24px; font-weight: 700; margin: 0;">Salmart</h1>
+                          <p style="color: rgba(255, 255, 255, 0.9); font-size: 14px; margin: 8px 0 0 0;">Your Online Social Marketplace</p>
+                        </td>
+                      </tr>
+                      
+                      <tr>
+                        <td class="content" style="padding: 40px;">
+                          <div style="text-align: center; margin-bottom: 30px;">
+                            <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #ffc107, #fd7e14); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 20px;">
+                              <span style="font-size: 36px;">⏳</span>
+                            </div>
+                            <h2 style="color: #2c3e50; font-size: 24px; font-weight: 600; margin: 0 0 16px 0;">
+                              Hey ${user.firstName}, don't forget to verify! 
+                            </h2>
+                          </div>
+                          
+                          ${urgencyMessage}
+                          
+                          <p style="color: #6c757d; font-size: 16px; line-height: 1.6; text-align: center; margin: 0 0 30px 0;">
+                            Your Salmart account is almost ready. Verifying your email is a quick, one-click step that unlocks all the features you'll love!
+                          </p>
+                          
+                          <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                            <ul style="color: #495057; font-size: 14px; line-height: 1.6; margin: 0; padding-left: 20px;">
+                              <li>🛒 Buy and sell products safely</li>
+                              <li>💬 Message other users securely</li>
+                              <li>⭐ Leave and receive reviews</li>
+                              <li>🔔 Get important account notifications</li>
+                            </ul>
+                          </div>
+                          
+                          <div style="text-align: center; margin: 30px 0;">
+                            <a href="${verifyUrl}" style="display: inline-block; padding: 16px 32px; background: linear-gradient(135deg, #28a745, #20c997); color: white; text-decoration: none; border-radius: 12px; font-weight: 600; font-size: 18px; box-shadow: 0 4px 16px rgba(40, 167, 69, 0.3);">
+                              🎯 Verify My Account Now
+                            </a>
+                          </div>
+                          
+                          <p style="color: #6c757d; font-size: 14px; text-align: center; margin: 20px 0;">
+                            Or copy and paste this link into your browser:<br>
+                            <a href="${verifyUrl}" style="color: #28a745; word-break: break-all; font-size: 12px;">${verifyUrl}</a>
+                          </p>
+                          
+                          <div style="background-color: #f8f9fa; border-left: 4px solid #28a745; padding: 15px; margin: 20px 0;">
+                            <p style="color: #495057; font-size: 13px; margin: 0;">
+                              <strong>🔒 Quick & Secure:</strong> Verification is a simple step to keep your account safe!
+                            </p>
+                          </div>
+                        </td>
+                      </tr>
+                      
+                      <tr>
+                        <td style="background-color: #f8f9fa; padding: 30px; text-align: center; border-top: 1px solid #e9ecef;">
+                          <p style="color: #6c757d; font-size: 14px; margin: 0 0 10px 0;">
+                            Need help? Contact us at 
+                            <a href="mailto:support@salmartonline.com.ng" style="color: #28a745;">support@salmartonline.com.ng</a>
+                          </p>
+                          <p style="color: #9ca3af; font-size: 12px; margin: 0;">
+                            © ${new Date().getFullYear()} Salmart. All rights reserved.<br>
+                            If you didn't create this account, please ignore this email.
+                          </p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </body>
+            </html>
+          `;
+
+          const emailOptions = {
+            from: `"Salmart Team" <${process.env.EMAIL_USER}>`,
+            to: user.email,
+            subject: subject,
+            html: emailHtml,
+            text: `
+              Hi ${user.firstName},
+
+              This is reminder #${reminderCount} to verify your Salmart account.
+              
+              Click here to verify: ${verifyUrl}
+              
+              Verification unlocks features like secure buying/selling, messaging, reviews, and notifications.
+              
+              If you didn't create this account, please ignore this email.
+              
+              Best regards,
+              Salmart Team
+            `.trim()
+          };
+
+          await transporter.sendMail(emailOptions);
+
+          user.verificationReminderCount = reminderCount;
+          user.lastVerificationReminderSent = new Date();
+          await user.save();
+
+          successCount++;
+          console.log(`✅ Reminder sent to ${user.email} (reminder #${reminderCount})`);
+
+        } catch (error) {
+          errorCount++;
+          errors.push({ email: user.email, error: error.message });
+          console.error(`❌ Failed to send reminder to ${user.email}:`, error.message);
+        }
+      }));
+
+      if (i + batchSize < unverifiedUsers.length) {
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      }
+    }
+
+    console.log(`📊 Verification reminder job completed:`);
+    console.log(`   ✅ Success: ${successCount}`);
+    console.log(`   ❌ Errors: ${errorCount}`);
+
+    if (errors.length > 0) {
+      console.log('   📋 Error details:', errors.slice(0, 5));
+    }
+
+  } catch (error) {
+    console.error('🚨 Critical error in verification reminder job:', error);
+  }
+}
+
+// 4. Add manual route to trigger verification reminders (for testing)
+router.post('/admin/send-verification-reminders', async (req, res) => {
+  try {
+    console.log('🔧 Manual verification reminder job triggered');
+    await sendVerificationReminders(true); // Manually trigger initial check
+    await sendVerificationReminders(false); // Manually trigger subsequent check
+    res.json({
+      success: true,
+      message: 'Verification reminder jobs completed successfully'
+    });
+  } catch (error) {
+    console.error('Manual verification reminder error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to send verification reminders',
+      error: error.message
+    });
+  }
+});
+
+// 5. Add route to get unverified users stats (for monitoring)
+router.get('/admin/unverified-stats', async (req, res) => {
+  try {
+    const stats = await User.aggregate([
+      { $match: { isVerified: false } },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: 1 },
+          needingReminders: {
+            $sum: {
+              $cond: [
+                {
+                  $and: [
+                    { $gt: ['$createdAt', new Date(Date.now() - 90 * 60 * 1000)] }, // Registered recently
+                    { $lt: [{ $ifNull: ['$verificationReminderCount', 0] }, 5] }
+                  ]
+                }, 1, 0
+              ]
+            }
+          },
+          maxRemindersReached: {
+            $sum: {
+              $cond: [
+                { $gte: [{ $ifNull: ['$verificationReminderCount', 0] }, 5] }, 1, 0
+              ]
+            }
+          }
+        }
+      }
+    ]);
+
+    const result = stats[0] || { total: 0, needingReminders: 0, maxRemindersReached: 0 };
+    res.json({
+      success: true,
+      stats: {
+        totalUnverified: result.total,
+        needingReminders: result.needingReminders,
+        maxRemindersReached: result.maxRemindersReached,
+        lastJobRun: new Date().toISOString()
+      }
+    });
+  } catch (error) {
+    console.error('Unverified stats error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to get stats'
+    });
+  }
+});
+
+// 6. Set up the cron jobs - Add this at the bottom of your userRoute.js
+// before the module.exports statement
+
+// Run a check for initial 90-minute reminders every 30 minutes
+cron.schedule('*/30 * * * *', () => {
+  console.log('🕐 Running scheduled check for 90-min verification reminders...');
+  sendVerificationReminders(true);
+}, {
+  scheduled: true,
+  timezone: "Africa/Lagos"
+});
+
+// Run a check for subsequent 6-hour interval reminders every 6 hours
+cron.schedule('0 */6 * * *', () => {
+  console.log('🕐 Running scheduled job for 6-hour interval reminders...');
+  sendVerificationReminders(false);
+}, {
+  scheduled: true,
+  timezone: "Africa/Lagos"
+});
+
+console.log('⏰ Verification reminder cron jobs scheduled.');
+
+// 7. Optional: Add cleanup job for very old unverified accounts (runs daily)
+cron.schedule('0 2 * * *', async () => {
+  try {
+    console.log('🧹 Running cleanup job for old unverified accounts...');
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
+    const result = await User.deleteMany({
+      isVerified: false,
+      createdAt: { $lt: thirtyDaysAgo },
+      verificationReminderCount: { $gte: 3 }
+    });
+
+    console.log(`🗑️ Cleanup completed: ${result.deletedCount} old unverified accounts removed`);
+  } catch (error) {
+    console.error('🚨 Cleanup job error:', error);
+  }
+}, {
+  scheduled: true,
+  timezone: "Africa/Lagos"
+});
+
+console.log('🧹 Old account cleanup job scheduled to run daily at 2 AM');
+
+module.exports.sendVerificationReminders = sendVerificationReminders;
 
 module.exports = router;
   return router;

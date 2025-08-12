@@ -39,6 +39,9 @@ const userSchema = new mongoose.Schema({
   isBanned: { type: Boolean, default: false },
   isAdmin: { type: Boolean, default: false },
   isSystemUser: { type: Boolean, default: false },
+  verificationReminderSent: { type: Boolean, default: false },
+verificationReminderCount: { type: Number, default: 0 },
+lastVerificationReminderSent: { type: Date },
 
   resetPasswordToken: { type: String, default: undefined },
   resetPasswordExpiry: { type: Date, default: undefined },

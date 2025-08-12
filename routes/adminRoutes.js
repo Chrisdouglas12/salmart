@@ -598,5 +598,82 @@ router.get('/api/admin/posts/:id', verifyAdmin, async (req, res) => {
   }
 });
 
+//manual route to trigger verification reminders (for testing)
+router.post('/admin/send-verification-reminders', async (req, res) => {
+  try {
+    console.log('🔧 Manual verification reminder job triggered');
+    await sendVerificationReminders();
+    res.json({ 
+      success: true, 
+      message: 'Verification reminder job completed successfully' 
+    });
+  } catch (error) {
+    console.error('Manual verification reminder error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to send verification reminders',
+      error: error.message 
+    });
+  }
+});
+
+// 6. Add route to get unverified users stats (for monitoring)
+router.get('/admin/unverified-stats', async (req, res) => {
+  try {
+    const stats = await User.aggregate([
+      {
+        $match: { isVerified: false }
+      },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: 1 },
+          needingReminders: {
+            $sum: {
+              $cond: [
+                {
+                  $and: [
+                    { $lt: ['$createdAt', new Date(Date.now() - 6 * 60 * 60 * 1000)] },
+                    { $lt: [{ $ifNull: ['$verificationReminderCount', 0] }, 5] }
+                  ]
+                },
+                1,
+                0
+              ]
+            }
+          },
+          maxRemindersReached: {
+            $sum: {
+              $cond: [
+                { $gte: [{ $ifNull: ['$verificationReminderCount', 0] }, 5] },
+                1,
+                0
+              ]
+            }
+          }
+        }
+      }
+    ]);
+
+    const result = stats[0] || { total: 0, needingReminders: 0, maxRemindersReached: 0 };
+    
+    res.json({
+      success: true,
+      stats: {
+        totalUnverified: result.total,
+        needingReminders: result.needingReminders,
+        maxRemindersReached: result.maxRemindersReached,
+        lastJobRun: new Date().toISOString()
+      }
+    });
+  } catch (error) {
+    console.error('Unverified stats error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to get stats' 
+    });
+  }
+});
+
   return router;
 };

@@ -193,7 +193,7 @@ try {
 
 // ===== Enhanced Update Management =====
 
-const BUILD_TIMESTAMP = '2024-08-11-v1.76.63'; 
+const BUILD_TIMESTAMP = '2024-08-12-v1.76.64'; 
 
 const CACHE_NAME = `salmart-cache-${BUILD_TIMESTAMP}`;
 const DYNAMIC_CACHE_NAME = `salmart-dynamic-${BUILD_TIMESTAMP}`;
