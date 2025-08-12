@@ -14,7 +14,19 @@ class VideoEditor {
         this.textOverlays = [];
         this.selectedOverlay = null;
         this.isDragging = false;
-        this.quality = 'medium';
+        this.quality = 'auto'; // auto-adjusts for target file size
+        this.targetFileSize = 6 * 1024 * 1024; // 6MB target
+        this.maxDuration = 60; // 60 seconds max
+        
+        // WhatsApp-like compression settings
+        this.compressionSettings = {
+            targetWidth: 720,
+            targetHeight: 1280,
+            targetFrameRate: 30,
+            targetBitrate: 800000, // Will be dynamically calculated
+            audioEnabled: true,
+            audioBitrate: 128000
+        };
         
         // DOM elements
         this.modal = null;
@@ -70,11 +82,12 @@ class VideoEditor {
         if (applyTextBtn) applyTextBtn.addEventListener('click', () => this.applyText());
         if (cancelTextBtn) cancelTextBtn.addEventListener('click', () => this.hideTextEditor());
         
-        // Quality selection
+        // Quality selection - now auto-calculates based on target size
         const qualityInputs = document.querySelectorAll('input[name="quality"]');
         qualityInputs.forEach(input => {
             input.addEventListener('change', (e) => {
                 this.quality = e.target.value;
+                this.updateCompressionSettings();
             });
         });
         
@@ -83,6 +96,74 @@ class VideoEditor {
         if (playPauseBtn) {
             playPauseBtn.addEventListener('click', () => this.togglePlayback());
         }
+    }
+    
+    updateCompressionSettings() {
+        const duration = this.endTime - this.startTime;
+        
+        // Calculate target bitrate based on file size and duration
+        const totalBitsAvailable = this.targetFileSize * 8; // Convert to bits
+        const audioBits = this.compressionSettings.audioBitrate * duration;
+        const videoBits = totalBitsAvailable - audioBits;
+        const targetVideoBitrate = Math.floor(videoBits / duration);
+        
+        // Adjust resolution based on quality setting
+        switch (this.quality) {
+            case 'high':
+                this.compressionSettings.targetWidth = 720;
+                this.compressionSettings.targetHeight = 1280;
+                this.compressionSettings.targetBitrate = Math.min(targetVideoBitrate, 1200000);
+                break;
+            case 'medium':
+                this.compressionSettings.targetWidth = 540;
+                this.compressionSettings.targetHeight = 960;
+                this.compressionSettings.targetBitrate = Math.min(targetVideoBitrate, 800000);
+                break;
+            case 'low':
+                this.compressionSettings.targetWidth = 480;
+                this.compressionSettings.targetHeight = 854;
+                this.compressionSettings.targetBitrate = Math.min(targetVideoBitrate, 500000);
+                break;
+            default: // auto
+                this.compressionSettings.targetBitrate = Math.min(targetVideoBitrate, 1000000);
+                this.autoAdjustResolution();
+        }
+        
+        console.log('Compression settings updated:', this.compressionSettings);
+    }
+    
+    autoAdjustResolution() {
+        if (!this.video) return;
+        
+        const originalWidth = this.video.videoWidth;
+        const originalHeight = this.video.videoHeight;
+        const aspectRatio = originalWidth / originalHeight;
+        
+        // Determine if video is portrait or landscape
+        if (aspectRatio < 1) { // Portrait
+            this.compressionSettings.targetWidth = Math.min(720, originalWidth);
+            this.compressionSettings.targetHeight = Math.min(1280, originalHeight);
+        } else { // Landscape
+            this.compressionSettings.targetWidth = Math.min(1280, originalWidth);
+            this.compressionSettings.targetHeight = Math.min(720, originalHeight);
+        }
+        
+        // Maintain aspect ratio
+        if (originalWidth > this.compressionSettings.targetWidth) {
+            this.compressionSettings.targetHeight = Math.floor(
+                (this.compressionSettings.targetWidth / originalWidth) * originalHeight
+            );
+        }
+        
+        if (originalHeight > this.compressionSettings.targetHeight) {
+            this.compressionSettings.targetWidth = Math.floor(
+                (this.compressionSettings.targetHeight / originalHeight) * originalWidth
+            );
+        }
+        
+        // Ensure dimensions are even (required for some codecs)
+        this.compressionSettings.targetWidth = Math.floor(this.compressionSettings.targetWidth / 2) * 2;
+        this.compressionSettings.targetHeight = Math.floor(this.compressionSettings.targetHeight / 2) * 2;
     }
     
     openEditor() {
@@ -117,35 +198,25 @@ class VideoEditor {
             this.video.src = URL.createObjectURL(this.originalVideoFile);
             this.video.muted = true;
             this.video.preload = 'metadata';
+            this.video.crossOrigin = 'anonymous';
             
             // Wait for metadata to load
             await new Promise((resolve, reject) => {
                 this.video.addEventListener('loadedmetadata', resolve);
                 this.video.addEventListener('error', reject);
+                setTimeout(() => reject(new Error('Video load timeout')), 10000);
             });
             
             this.duration = this.video.duration;
-            this.endTime = Math.min(this.duration, MAX_VIDEO_DURATION);
+            this.endTime = Math.min(this.duration, this.maxDuration);
             
-            // Set canvas size
-            const aspectRatio = this.video.videoWidth / this.video.videoHeight;
-            const maxWidth = 600;
-            const maxHeight = 400;
-            
-            if (aspectRatio > maxWidth / maxHeight) {
-                this.canvas.width = maxWidth;
-                this.canvas.height = maxWidth / aspectRatio;
-            } else {
-                this.canvas.height = maxHeight;
-                this.canvas.width = maxHeight * aspectRatio;
-            }
-            
-            this.canvas.style.width = this.canvas.width + 'px';
-            this.canvas.style.height = this.canvas.height + 'px';
+            // Set canvas size based on video dimensions
+            this.setupCanvasSize();
             
             // Setup timeline
             this.setupTimeline();
             this.setupCanvasEvents();
+            this.updateCompressionSettings();
             this.updateDisplay();
             this.drawFrame();
             
@@ -153,10 +224,57 @@ class VideoEditor {
             document.getElementById('total-time').textContent = this.formatTime(this.duration);
             document.getElementById('end-time').textContent = this.formatTime(this.endTime);
             
+            // Show estimated file size
+            this.updateFileSizeEstimate();
+            
         } catch (error) {
             console.error('Error setting up video editor:', error);
             showToast('Error loading video for editing', '#dc3545');
             this.closeEditor();
+        }
+    }
+    
+    setupCanvasSize() {
+        const originalWidth = this.video.videoWidth;
+        const originalHeight = this.video.videoHeight;
+        const aspectRatio = originalWidth / originalHeight;
+        
+        // Display canvas size (for preview)
+        const maxDisplayWidth = 600;
+        const maxDisplayHeight = 400;
+        
+        let displayWidth, displayHeight;
+        
+        if (aspectRatio > maxDisplayWidth / maxDisplayHeight) {
+            displayWidth = maxDisplayWidth;
+            displayHeight = maxDisplayWidth / aspectRatio;
+        } else {
+            displayHeight = maxDisplayHeight;
+            displayWidth = maxDisplayHeight * aspectRatio;
+        }
+        
+        // Set canvas size to match target compression resolution
+        this.canvas.width = this.compressionSettings.targetWidth;
+        this.canvas.height = this.compressionSettings.targetHeight;
+        
+        // Set display size
+        this.canvas.style.width = displayWidth + 'px';
+        this.canvas.style.height = displayHeight + 'px';
+    }
+    
+    updateFileSizeEstimate() {
+        const duration = this.endTime - this.startTime;
+        const videoBits = this.compressionSettings.targetBitrate * duration;
+        const audioBits = this.compressionSettings.audioBitrate * duration;
+        const totalBits = videoBits + audioBits;
+        const estimatedSize = Math.floor(totalBits / 8); // Convert to bytes
+        
+        const estimatedSizeMB = (estimatedSize / (1024 * 1024)).toFixed(1);
+        
+        // Update UI if element exists
+        const sizeElement = document.getElementById('estimated-size');
+        if (sizeElement) {
+            sizeElement.textContent = `Estimated size: ${estimatedSizeMB}MB`;
         }
     }
     
@@ -206,14 +324,16 @@ class VideoEditor {
             this.startTime = Math.max(0, Math.min(time, this.endTime - 1));
         } else if (this.isDragging === 'end') {
             this.endTime = Math.max(this.startTime + 1, Math.min(time, this.duration));
-            // Limit to MAX_VIDEO_DURATION
-            if (this.endTime - this.startTime > MAX_VIDEO_DURATION) {
-                this.endTime = this.startTime + MAX_VIDEO_DURATION;
+            // Limit to maxDuration
+            if (this.endTime - this.startTime > this.maxDuration) {
+                this.endTime = this.startTime + this.maxDuration;
             }
         }
         
         this.updateTimelineHandles();
         this.updateDisplay();
+        this.updateCompressionSettings();
+        this.updateFileSizeEstimate();
         this.seekTo(this.startTime);
     }
     
@@ -277,8 +397,12 @@ class VideoEditor {
         // Clear canvas
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         
-        // Draw video frame
-        this.ctx.drawImage(this.video, 0, 0, this.canvas.width, this.canvas.height);
+        // Draw video frame scaled to canvas size
+        this.ctx.drawImage(
+            this.video, 
+            0, 0, this.video.videoWidth, this.video.videoHeight,
+            0, 0, this.canvas.width, this.canvas.height
+        );
         
         // Draw text overlays
         this.textOverlays.forEach(overlay => {
@@ -290,11 +414,23 @@ class VideoEditor {
         if (!this.ctx) return;
         
         this.ctx.save();
-        this.ctx.font = `${overlay.fontSize}px Arial`;
+        
+        // Scale font size based on canvas resolution
+        const scaleFactor = this.canvas.width / 720; // Base scale on 720p width
+        const scaledFontSize = Math.max(16, overlay.fontSize * scaleFactor);
+        
+        this.ctx.font = `bold ${scaledFontSize}px Arial, sans-serif`;
         this.ctx.fillStyle = overlay.color;
-        this.ctx.strokeStyle = 'black';
-        this.ctx.lineWidth = 2;
+        this.ctx.strokeStyle = 'rgba(0, 0, 0, 0.8)';
+        this.ctx.lineWidth = Math.max(2, scaledFontSize / 16);
         this.ctx.textAlign = 'center';
+        this.ctx.textBaseline = 'middle';
+        
+        // Add text shadow for better readability
+        this.ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+        this.ctx.shadowBlur = 4;
+        this.ctx.shadowOffsetX = 2;
+        this.ctx.shadowOffsetY = 2;
         
         // Draw stroke first
         this.ctx.strokeText(overlay.text, overlay.x, overlay.y);
@@ -306,13 +442,13 @@ class VideoEditor {
         // Draw selection border if selected
         if (overlay === this.selectedOverlay) {
             this.ctx.save();
-            this.ctx.strokeStyle = '#28a745';
-            this.ctx.lineWidth = 2;
-            this.ctx.setLineDash([5, 5]);
+            this.ctx.strokeStyle = '#25D366'; // WhatsApp green
+            this.ctx.lineWidth = 3;
+            this.ctx.setLineDash([8, 4]);
             
             const metrics = this.ctx.measureText(overlay.text);
-            const width = metrics.width + 20;
-            const height = overlay.fontSize + 10;
+            const width = metrics.width + 30;
+            const height = scaledFontSize + 20;
             
             this.ctx.strokeRect(
                 overlay.x - width/2,
@@ -338,7 +474,8 @@ class VideoEditor {
         if (!this.video) return;
         
         this.isPlaying = true;
-        document.getElementById('play-pause-btn').textContent = '⏸️';
+        const playBtn = document.getElementById('play-pause-btn');
+        if (playBtn) playBtn.textContent = '⏸️';
         
         // Animation loop
         const animate = () => {
@@ -371,7 +508,8 @@ class VideoEditor {
     
     pauseVideo() {
         this.isPlaying = false;
-        document.getElementById('play-pause-btn').textContent = '▶️';
+        const playBtn = document.getElementById('play-pause-btn');
+        if (playBtn) playBtn.textContent = '▶️';
         if (this.video) {
             this.video.pause();
         }
@@ -379,24 +517,20 @@ class VideoEditor {
     
     handleCanvasClick(e) {
         const rect = this.canvas.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        
-        // Scale coordinates
-        const scaleX = this.canvas.width / rect.width;
-        const scaleY = this.canvas.height / rect.height;
-        const canvasX = x * scaleX;
-        const canvasY = y * scaleY;
+        const x = (e.clientX - rect.left) * (this.canvas.width / rect.width);
+        const y = (e.clientY - rect.top) * (this.canvas.height / rect.height);
         
         // Check if clicking on text overlay
         let clickedOverlay = null;
         for (const overlay of this.textOverlays) {
+            const scaleFactor = this.canvas.width / 720;
+            const scaledFontSize = Math.max(16, overlay.fontSize * scaleFactor);
             const metrics = this.ctx.measureText(overlay.text);
-            const width = metrics.width + 20;
-            const height = overlay.fontSize + 10;
+            const width = metrics.width + 30;
+            const height = scaledFontSize + 20;
             
-            if (canvasX >= overlay.x - width/2 && canvasX <= overlay.x + width/2 &&
-                canvasY >= overlay.y - height/2 && canvasY <= overlay.y + height/2) {
+            if (x >= overlay.x - width/2 && x <= overlay.x + width/2 &&
+                y >= overlay.y - height/2 && y <= overlay.y + height/2) {
                 clickedOverlay = overlay;
                 break;
             }
@@ -415,14 +549,11 @@ class VideoEditor {
     handleCanvasMouseMove(e) {
         if (this.isDragging === 'text' && this.selectedOverlay) {
             const rect = this.canvas.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
+            const x = (e.clientX - rect.left) * (this.canvas.width / rect.width);
+            const y = (e.clientY - rect.top) * (this.canvas.height / rect.height);
             
-            const scaleX = this.canvas.width / rect.width;
-            const scaleY = this.canvas.height / rect.height;
-            
-            this.selectedOverlay.x = x * scaleX;
-            this.selectedOverlay.y = y * scaleY;
+            this.selectedOverlay.x = Math.max(50, Math.min(this.canvas.width - 50, x));
+            this.selectedOverlay.y = Math.max(30, Math.min(this.canvas.height - 30, y));
             
             this.drawFrame();
         }
@@ -438,7 +569,8 @@ class VideoEditor {
         const textEditor = document.getElementById('text-editor');
         if (textEditor) {
             textEditor.style.display = 'block';
-            document.getElementById('text-input').focus();
+            const textInput = document.getElementById('text-input');
+            if (textInput) textInput.focus();
         }
     }
     
@@ -447,7 +579,8 @@ class VideoEditor {
         if (textEditor) {
             textEditor.style.display = 'none';
         }
-        document.getElementById('text-input').value = '';
+        const textInput = document.getElementById('text-input');
+        if (textInput) textInput.value = '';
     }
     
     applyText() {
@@ -455,7 +588,7 @@ class VideoEditor {
         const fontSizeSelect = document.getElementById('font-size');
         const colorInput = document.getElementById('text-color');
         
-        const text = textInput.value.trim();
+        const text = textInput ? textInput.value.trim() : '';
         if (!text) {
             showToast('Please enter some text', '#dc3545');
             return;
@@ -465,8 +598,8 @@ class VideoEditor {
             text: text,
             x: this.canvas.width / 2,
             y: this.canvas.height / 2,
-            fontSize: parseInt(fontSizeSelect.value),
-            color: colorInput.value
+            fontSize: fontSizeSelect ? parseInt(fontSizeSelect.value) : 32,
+            color: colorInput ? colorInput.value : '#FFFFFF'
         };
         
         this.textOverlays.push(overlay);
@@ -482,76 +615,131 @@ class VideoEditor {
         }
         
         try {
-            showVideoProcessingModal('Processing video...');
-            updateProcessingProgress('Preparing video processing...');
+            if (typeof showVideoProcessingModal === 'function') {
+                showVideoProcessingModal('Processing video...');
+            }
+            if (typeof updateProcessingProgress === 'function') {
+                updateProcessingProgress('Preparing video compression...');
+            }
             
-            // Create processed video using canvas recording
-            const processedFile = await this.createProcessedVideo();
+            // Create processed video with WhatsApp-like compression
+            const processedFile = await this.createCompressedVideo();
             
             if (processedFile) {
                 // Update the global processed video file
-                processedVideoFile = processedFile;
+                if (typeof window !== 'undefined') {
+                    window.processedVideoFile = processedFile;
+                }
                 
                 // Update preview
                 const previewContainer = document.getElementById('video-preview-container');
-                previewContainer.innerHTML = '';
+                if (previewContainer) {
+                    previewContainer.innerHTML = '';
+                    
+                    const video = document.createElement('video');
+                    video.src = URL.createObjectURL(processedFile);
+                    video.controls = true;
+                    video.muted = true;
+                    video.style.maxWidth = '100%';
+                    video.style.maxHeight = '200px';
+                    previewContainer.appendChild(video);
+                }
                 
-                const video = document.createElement('video');
-                video.src = URL.createObjectURL(processedFile);
-                video.controls = true;
-                video.muted = true;
-                video.style.maxWidth = '100%';
-                video.style.maxHeight = '200px';
-                previewContainer.appendChild(video);
+                const fileSizeMB = (processedFile.size / (1024 * 1024)).toFixed(1);
+                const message = `Video processed successfully! Duration: ${this.formatTime(this.endTime - this.startTime)}, Size: ${fileSizeMB}MB`;
                 
-                showProcessingStatus(`Video processed successfully! Duration: ${this.formatTime(this.endTime - this.startTime)}`, false);
-                showToast('Video processed successfully!', '#28a745');
+                if (typeof showProcessingStatus === 'function') {
+                    showProcessingStatus(message, false);
+                }
+                if (typeof showToast === 'function') {
+                    showToast('Video processed successfully!', '#25D366');
+                }
+                
                 this.closeEditor();
             }
             
         } catch (error) {
             console.error('Error processing video:', error);
-            showToast('Error processing video. Please try again.', '#dc3545');
+            if (typeof showToast === 'function') {
+                showToast('Error processing video. Please try again.', '#dc3545');
+            }
         } finally {
-            hideVideoProcessingModal();
+            if (typeof hideVideoProcessingModal === 'function') {
+                hideVideoProcessingModal();
+            }
         }
     }
     
-    async createProcessedVideo() {
+    async createCompressedVideo() {
         return new Promise((resolve, reject) => {
-            updateProcessingProgress('Creating processed video...');
+            if (typeof updateProcessingProgress === 'function') {
+                updateProcessingProgress('Starting video compression...');
+            }
             
-            const stream = this.canvas.captureStream(30); // 30fps
+            // Create a higher quality stream for better compression
+            const stream = this.canvas.captureStream(this.compressionSettings.targetFrameRate);
+            
+            // Use modern codec settings for better compression
+            let mimeType = 'video/webm;codecs=vp9';
+            if (!MediaRecorder.isTypeSupported(mimeType)) {
+                mimeType = 'video/webm;codecs=vp8';
+            }
+            if (!MediaRecorder.isTypeSupported(mimeType)) {
+                mimeType = 'video/webm';
+            }
+            
             const recorder = new MediaRecorder(stream, {
-                mimeType: 'video/webm',
-                videoBitsPerSecond: this.getVideoBitrate()
+                mimeType: mimeType,
+                videoBitsPerSecond: this.compressionSettings.targetBitrate,
+                audioBitsPerSecond: this.compressionSettings.audioBitrate
             });
             
             const chunks = [];
-            recorder.ondataavailable = (e) => chunks.push(e.data);
-            recorder.onstop = () => {
-                const blob = new Blob(chunks, { type: 'video/webm' });
-                const file = new File([blob], 'processed-video.webm', { type: 'video/webm' });
-                resolve(file);
+            recorder.ondataavailable = (e) => {
+                if (e.data.size > 0) {
+                    chunks.push(e.data);
+                }
             };
-            recorder.onerror = reject;
             
-            recorder.start();
+            recorder.onstop = () => {
+                try {
+                    const blob = new Blob(chunks, { type: mimeType });
+                    const file = new File([blob], 'compressed-video.webm', { 
+                        type: mimeType,
+                        lastModified: Date.now()
+                    });
+                    
+                    console.log(`Final video size: ${(file.size / (1024 * 1024)).toFixed(2)}MB`);
+                    resolve(file);
+                } catch (error) {
+                    reject(error);
+                }
+            };
             
-            // Record the trimmed portion
-            this.recordTrimmedSection(recorder);
+            recorder.onerror = (e) => {
+                console.error('MediaRecorder error:', e);
+                reject(new Error('Recording failed'));
+            };
+            
+            recorder.start(100); // Record in 100ms chunks for better quality
+            
+            // Record the trimmed section with smooth playback
+            this.recordTrimmedSectionSmooth(recorder);
         });
     }
     
-    async recordTrimmedSection(recorder) {
+    async recordTrimmedSectionSmooth(recorder) {
         if (!this.video) return;
         
         const duration = this.endTime - this.startTime;
-        const frameRate = 30;
+        const frameRate = this.compressionSettings.targetFrameRate;
+        const frameInterval = 1000 / frameRate;
         const totalFrames = Math.floor(duration * frameRate);
         let currentFrame = 0;
         
+        // Seek to start
         this.video.currentTime = this.startTime;
+        await this.waitForVideoSeek();
         
         const recordFrame = async () => {
             if (currentFrame >= totalFrames) {
@@ -560,31 +748,37 @@ class VideoEditor {
             }
             
             const progress = (currentFrame / totalFrames) * 100;
-            updateProcessingProgress(`Recording: ${Math.round(progress)}%`);
+            if (typeof updateProcessingProgress === 'function') {
+                updateProcessingProgress(`Compressing: ${Math.round(progress)}%`);
+            }
             
+            // Update video time
+            const currentVideoTime = this.startTime + (currentFrame / frameRate);
+            this.video.currentTime = currentVideoTime;
+            
+            // Wait for video to seek and update canvas
+            await this.waitForVideoSeek();
             this.drawFrame();
+            
             currentFrame++;
             
-            // Advance video time
-            const timeStep = duration / totalFrames;
-            this.video.currentTime = this.startTime + (currentFrame * timeStep);
-            
-            // Wait for next frame
-            await new Promise(resolve => setTimeout(resolve, 1000 / frameRate));
-            recordFrame();
+            // Use more precise timing
+            setTimeout(recordFrame, frameInterval);
         };
         
-        // Start recording
-        setTimeout(recordFrame, 100);
+        // Start recording after a brief delay
+        setTimeout(recordFrame, 200);
     }
     
-    getVideoBitrate() {
-        const bitrates = {
-            'low': 500000,    // 500 kbps
-            'medium': 1000000, // 1 Mbps
-            'high': 2000000    // 2 Mbps
-        };
-        return bitrates[this.quality] || bitrates.medium;
+    waitForVideoSeek() {
+        return new Promise((resolve) => {
+            if (this.video.readyState >= 2) {
+                resolve();
+            } else {
+                this.video.addEventListener('canplay', resolve, { once: true });
+                setTimeout(resolve, 50); // Fallback timeout
+            }
+        });
     }
     
     formatTime(seconds) {
@@ -597,12 +791,14 @@ class VideoEditor {
         if (this.video) {
             this.video.pause();
             URL.revokeObjectURL(this.video.src);
+            this.video = null;
         }
         
         this.isPlaying = false;
         this.textOverlays = [];
         this.selectedOverlay = null;
         this.isDragging = false;
+        this.originalVideoFile = null;
     }
 }
 
@@ -626,6 +822,7 @@ if (typeof originalVideoInputHandler === 'undefined') {
                 await originalHandler.call(this, e);
             }
             
+            // Show edit
             // Show edit button if video is selected
             const editBtn = document.getElementById('edit-video-btn');
             const file = e.target.files[0];
