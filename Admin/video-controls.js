@@ -389,12 +389,17 @@ function initializeReelsModal() {
     function hideControlsAfterDelay() {
         clearTimeout(controlsTimeout);
         controlsTimeout = setTimeout(() => {
-            modal.querySelector('.reels-controls').style.opacity = '0';
+            if (modal.querySelector('.reels-controls')) {
+                modal.querySelector('.reels-controls').style.opacity = '0';
+            }
         }, 3000);
     }
 
     function showControls() {
-        modal.querySelector('.reels-controls').style.opacity = '1';
+        const controls = modal.querySelector('.reels-controls');
+        if (controls) {
+            controls.style.opacity = '1';
+        }
         hideControlsAfterDelay();
     }
 
@@ -451,10 +456,14 @@ function initializeReelsModal() {
 
     reelsVideo.addEventListener('timeupdate', () => {
         const progress = (reelsVideo.currentTime / reelsVideo.duration) * 100;
-        reelsProgressBar.style.width = `${progress}%`;
-        reelsCurrentTime.textContent = formatTime(reelsVideo.currentTime);
+        if (reelsProgressBar) {
+            reelsProgressBar.style.width = `${progress}%`;
+        }
+        if (reelsCurrentTime) {
+            reelsCurrentTime.textContent = formatTime(reelsVideo.currentTime);
+        }
 
-        if (reelsVideo.buffered.length > 0) {
+        if (reelsVideo.buffered.length > 0 && reelsBufferedBar) {
             const bufferedEnd = reelsVideo.buffered.end(reelsVideo.buffered.length - 1);
             const bufferedPercent = (bufferedEnd / reelsVideo.duration) * 100;
             reelsBufferedBar.style.width = `${bufferedPercent}%`;
@@ -544,264 +553,111 @@ function initializeReelsModal() {
     });
 }
 
-// Modified video controls initialization
+// THIS IS THE CORRECT, AND ONLY, `initializeVideoControls` FUNCTION
 function initializeVideoControls(postElement) {
     const container = postElement.querySelector('.post-video-container');
     if (!container) return;
 
     const video = container.querySelector('.post-video');
-    const thumbnailCanvas = container.querySelector('.video-thumbnail');
-    const loadingSpinner = container.querySelector('.loading-spinner');
-    const playPauseBtn = container.querySelector('.play-pause');
-    const muteBtn = container.querySelector('.mute-button');
-    const fullscreenBtn = container.querySelector('.fullscreen-button');
-    const progressBar = container.querySelector('.progress-bar');
-    const bufferedBar = container.querySelector('.buffered-bar');
-    const progressContainer = container.querySelector('.progress-container');
-    const seekPreview = container.querySelector('.seek-preview');
-    const volumeSlider = container.querySelector('.volume-slider');
-    const playbackSpeed = container.querySelector('.playback-speed');
-    const currentTimeDisplay = container.querySelector('.current-time');
-    const durationDisplay = container.querySelector('.duration');
+    const playOverlay = container.querySelector('.video-play-overlay');
+    const playButton = container.querySelector('.video-play-button');
+    const durationBadge = container.querySelector('.video-duration-badge');
+    const durationText = container.querySelector('.video-duration-text');
+    const loadingSpinner = container.querySelector('.video-thumbnail-loading');
 
     // Initialize Reels modal if not already done
     if (!document.getElementById('reels-modal')) {
         initializeReelsModal();
     }
 
-    // Video click handler for opening Reels modal
-    video.addEventListener('click', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        window.openReelsModal(video);
-    });
-
-    // Add click cursor to video
-    video.style.cursor = 'pointer';
-    video.setAttribute('playsinline', '');
-    video.setAttribute('webkit-playsinline', '');
-    video.setAttribute('crossorigin', 'anonymous');
-    video.removeAttribute('autoplay');
-    video.muted = true;
-
-    // Rest of the original functionality for inline controls
-    const throttle = (func, limit) => {
-        let inThrottle;
-        return function() {
-            const args = arguments;
-            const context = this;
-            if (!inThrottle) {
-                func.apply(context, args);
-                inThrottle = true;
-                setTimeout(() => inThrottle = false, limit);
-            }
-        }
-    };
-
-    const debounce = (func, delay) => {
-        let timeoutId;
-        return function() {
-            const args = arguments;
-            const context = this;
-            clearTimeout(timeoutId);
-            timeoutId = setTimeout(() => func.apply(context, args), delay);
-        }
-    };
-
-    video.addEventListener('loadedmetadata', () => {
-        video.currentTime = 2;
-    });
-
-    video.addEventListener('seeked', () => {
-        if (video.currentTime === 2 && !video.dataset.thumbnailGenerated) {
-            const ctx = thumbnailCanvas.getContext('2d');
-            thumbnailCanvas.width = video.videoWidth;
-            thumbnailCanvas.height = video.videoHeight;
-            ctx.drawImage(video, 0, 0, thumbnailCanvas.width, thumbnailCanvas.height);
-            video.poster = thumbnailCanvas.toDataURL('image/jpeg');
-            video.dataset.thumbnailGenerated = 'true';
-            video.currentTime = 0;
-        }
-    });
-
-    function formatVideoTime(seconds) {
+    // Format time helper
+    function formatTime(seconds) {
         const mins = Math.floor(seconds / 60);
         const secs = Math.floor(seconds % 60);
         return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
     }
 
-    if (durationDisplay) {
-        video.addEventListener('loadedmetadata', () => {
-            durationDisplay.textContent = formatVideoTime(video.duration);
-        });
-    }
-
-    // Inline play/pause (alternative to modal)
-    if (playPauseBtn) {
-        playPauseBtn.addEventListener('click', (e) => {
-            e.stopPropagation(); // Prevent modal from opening
-            if (video.paused) {
-                loadingSpinner.style.display = 'block';
-                video.play().then(() => {
-                    loadingSpinner.style.display = 'none';
-                    playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
-                }).catch(e => {
-                    loadingSpinner.style.display = 'none';
-                    console.error('Play error:', e);
-                });
-            } else {
-                video.pause();
-                playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
-            }
-        });
-    }
-
-    // Rest of the original control handlers remain the same...
-    // (keeping all the existing functionality for inline video controls)
-    
-    const throttledTimeUpdate = throttle(() => {
-        if (progressBar && currentTimeDisplay) {
-            const progress = (video.currentTime / video.duration) * 100;
-            progressBar.style.width = `${progress}%`;
-            progressBar.setAttribute('aria-valuenow', progress);
-            currentTimeDisplay.textContent = formatVideoTime(video.currentTime);
-
-            if (video.buffered.length > 0 && bufferedBar) {
-                const bufferedEnd = video.buffered.end(video.buffered.length - 1);
-                const bufferedPercent = (bufferedEnd / video.duration) * 100;
-                bufferedBar.style.width = `${bufferedPercent}%`;
-            }
+    // Show video duration when metadata loads
+    video.addEventListener('loadedmetadata', () => {
+        if (durationText && durationBadge) {
+            durationText.textContent = formatTime(video.duration);
+            durationBadge.style.display = 'block';
         }
-    }, 100);
-
-    video.addEventListener('timeupdate', throttledTimeUpdate);
-
-    if (muteBtn) {
-        muteBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            video.muted = !video.muted;
-            muteBtn.innerHTML = video.muted ? '<i class="fas fa-volume-mute"></i>' : '<i class="fas fa-volume-up"></i>';
-            if (volumeSlider) volumeSlider.value = video.muted ? 0 : video.volume * 100;
-        });
-    }
-
-    if (volumeSlider) {
-        volumeSlider.addEventListener('input', throttle(() => {
-            video.volume = volumeSlider.value / 100;
-            video.muted = volumeSlider.value == 0;
-            if (muteBtn) muteBtn.innerHTML = video.muted ? '<i class="fas fa-volume-mute"></i>' : '<i class="fas fa-volume-up"></i>';
-        }, 50));
-    }
-
-    if (playbackSpeed) {
-        playbackSpeed.addEventListener('change', () => {
-            video.playbackRate = parseFloat(playbackSpeed.value);
-        });
-    }
-
-    if (fullscreenBtn) {
-        fullscreenBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-                const elem = container;
-                if (elem.requestFullscreen) {
-                    elem.requestFullscreen().catch(e => console.error('Fullscreen error:', e));
-                } else if (elem.webkitRequestFullscreen) {
-                    elem.webkitRequestFullscreen();
-                }
-                fullscreenBtn.innerHTML = '<i class="fas fa-compress"></i>';
-            } else {
-                if (document.exitFullscreen) {
-                    document.exitFullscreen().catch(e => console.error('Exit fullscreen error:', e));
-                } else if (document.webkitExitFullscreen) {
-                    document.webkitExitFullscreen();
-                }
-                fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>';
-            }
-        });
-    }
-
-    // Progress bar interaction
-    if (progressContainer) {
-        let isDragging = false;
-        let isHoveringProgress = false;
-
-        const updateProgress = (e, isTouch = false) => {
-            const rect = progressContainer.getBoundingClientRect();
-            const posX = isTouch ? e.touches[0].clientX - rect.left : e.clientX - rect.left;
-            const width = rect.width;
-            let progress = posX / width;
-            progress = Math.max(0, Math.min(1, progress));
-            const seekTime = progress * video.duration;
-            video.currentTime = seekTime;
-            if (progressBar) {
-                progressBar.style.width = `${progress * 100}%`;
-                progressBar.setAttribute('aria-valuenow', progress * 100);
-            }
-        };
-
-        const debouncedSeekPreview = debounce((posX, seekTime) => {
-            if (seekPreview && !isDragging && isHoveringProgress) {
-                seekPreview.style.display = 'block';
-                seekPreview.style.left = `${posX}px`;
-                seekPreview.innerHTML = `<div style="background: rgba(0,0,0,0.8); color: white; padding: 2px 6px; border-radius: 3px; font-size: 12px;">${formatVideoTime(seekTime)}</div>`;
-            }
-        }, 100);
-
-        progressContainer.addEventListener('mousedown', (e) => {
-            e.stopPropagation();
-            isDragging = true;
-            updateProgress(e);
-        });
-
-        document.addEventListener('mousemove', (e) => {
-            if (isDragging) updateProgress(e);
-        });
-
-        document.addEventListener('mouseup', () => {
-            isDragging = false;
-            if (seekPreview) seekPreview.style.display = 'none';
-        });
-
-        progressContainer.addEventListener('mousemove', throttle((e) => {
-            if (!isDragging) {
-                isHoveringProgress = true;
-                const rect = progressContainer.getBoundingClientRect();
-                const posX = e.clientX - rect.left;
-                const width = rect.width;
-                let progress = posX / width;
-                progress = Math.max(0, Math.min(1, progress));
-                const seekTime = progress * video.duration;
-                debouncedSeekPreview(posX, seekTime);
-            }
-        }, 50));
-
-        progressContainer.addEventListener('mouseleave', () => {
-            isHoveringProgress = false;
-            if (seekPreview && !isDragging) seekPreview.style.display = 'none';
-        });
-
-        progressContainer.addEventListener('click', (e) => {
-            e.stopPropagation();
-            updateProgress(e);
-        });
-    }
-
-    video.addEventListener('canplay', () => {
-        if (loadingSpinner) loadingSpinner.style.display = 'none';
     });
 
-    video.addEventListener('error', () => {
-        if (loadingSpinner) loadingSpinner.style.display = 'none';
-        console.error('Failed to load video');
+    // Handle thumbnail/play button click
+    const handlePlayClick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        // Show loading state
+        if (loadingSpinner) {
+            loadingSpinner.style.display = 'block';
+        }
+        if (playButton) {
+            playButton.classList.add('loading');
+        }
+        
+        // Open Reels modal
+        setTimeout(() => {
+            window.openReelsModal(video);
+            
+            // Hide loading state
+            if (loadingSpinner) {
+                loadingSpinner.style.display = 'none';
+            }
+            if (playButton) {
+                playButton.classList.remove('loading');
+            }
+        }, 300);
+    };
+
+    // Add click handlers
+    if (playOverlay) {
+        playOverlay.addEventListener('click', handlePlayClick);
+    }
+    
+    // Also handle direct video click as backup
+    video.addEventListener('click', handlePlayClick);
+
+    // Ensure video shows poster/thumbnail
+    video.setAttribute('playsinline', '');
+    video.setAttribute('webkit-playsinline', '');
+    video.setAttribute('crossorigin', 'anonymous');
+    video.removeAttribute('autoplay');
+    video.muted = true;
+    video.preload = 'metadata';
+
+    // Generate thumbnail at 2 seconds if no poster
+    if (!video.poster || video.poster === '') {
+        video.addEventListener('loadedmetadata', () => {
+            video.currentTime = 2;
+        });
+
+        video.addEventListener('seeked', () => {
+            if (video.currentTime === 2 && !video.dataset.thumbnailGenerated) {
+                const canvas = document.createElement('canvas');
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                video.poster = canvas.toDataURL('image/jpeg', 0.8);
+                video.dataset.thumbnailGenerated = 'true';
+                video.currentTime = 0;
+            }
+        });
+    }
+
+    // Optional: Add hover effects
+    container.addEventListener('mouseenter', () => {
+        if (playButton) {
+            playButton.style.transform = 'scale(1.05)';
+        }
     });
 
-    video.addEventListener('ended', () => {
-        if (playPauseBtn) playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
-        video.currentTime = 0;
-        if (progressBar) {
-            progressBar.style.width = '0%';
-            progressBar.setAttribute('aria-valuenow', 0);
+    container.addEventListener('mouseleave', () => {
+        if (playButton) {
+            playButton.style.transform = 'scale(1)';
         }
     });
 }

@@ -667,27 +667,36 @@ function renderPost(post) {
 
     const productImageForChat = post.postType === 'video_ad' ? (post.thumbnail || '') : (post.photo || '');
 
-    if (post.postType === 'video_ad') {
-        descriptionContent = `
-            <h2 class="product-title">${escapeHtml(post.title || '')}</h2>
-            <div class="post-description-text" style="margin-bottom: 10px; margin-left: -10px">
-                <p>${escapeHtml(post.description || '')}</p>
+
+if (post.postType === 'video_ad') {
+    mediaContent = `
+        <div class="post-video-container">
+            <video class="post-video" preload="metadata" muted playsinline aria-label="Video ad for ${post.description || 'product'}" poster="${post.thumbnail || ''}">
+                <source data-src="${post.video || ''}" type="video/mp4" />
+                <source data-src="${post.video ? post.video.replace('.mp4', '.webm') : ''}" type="video/webm" />
+                <source data-src="${post.video ? post.video.replace('.mp4', '.ogg') : ''}" type="video/ogg" />
+                Your browser does not support the video tag.
+            </video>
+            
+            <!-- Play overlay with Facebook-style play button -->
+            <div class="video-play-overlay">
+                <button class="video-play-button" aria-label="Play video">
+                    <i class="fas fa-play"></i>
+                </button>
             </div>
-        `;
-        mediaContent = `
-            <div class="post-video-container">
-                <video class="post-video" preload="metadata" muted playsinline aria-label="Video ad for ${post.description || 'product'}" poster="${post.thumbnail || ''}">
-                    <source data-src="${post.video || ''}" type="video/mp4" />
-                    <source data-src="${post.video ? post.video.replace('.mp4', '.webm') : ''}" type="video/webm" />
-                    <source data-src="${post.video ? post.video.replace('.mp4', '.ogg') : ''}" type="video/ogg" />
-                    Your browser does not support the video tag.
-                </video>
-                <canvas class="video-thumbnail" style="display: none;"></canvas>
-                <div class="loading-spinner" style="display: none;">
-                    <i class="fas fa-spinner fa-spin"></i>
-                </div>
-                <div class="custom-controls">
-                    <button class="control-button play-pause" aria-label="Play or pause video">
+            
+            <!-- Optional: Video duration badge -->
+            <div class="video-duration-badge" style="display: none;">
+                <span class="video-duration-text">0:00</span>
+            </div>
+            
+            <!-- Loading spinner (hidden by default) -->
+            <div class="video-thumbnail-loading" style="display: none;">
+                <div class="video-loading-spinner"></div>
+            </div>
+            
+            <!-- Hide original controls since we're using thumbnail view -->          <div class="custom-controls">
+                <button class="control-button play-pause" aria-label="Play or pause video">
                         <i class="fas fa-play"></i>
                     </button>
                     <div class="progress-container">
@@ -718,7 +727,7 @@ function renderPost(post) {
                 </div>
             </div>
         `;
-        buttonContent = `
+       buttonContent = `
         <div style="margin-top: -50px">
             <a href="${post.productLink || '#'}" class="checkout-product-btn ${isSold ? 'sold-out' : ''}" aria-label="Check out product ${post.description || 'product'}" ${!post.productLink || isSold ? 'disabled' : ''}>
                 <i class="fas fa-shopping-cart"></i> ${isSold ? 'Sold Out' : 'Check Out Product'}

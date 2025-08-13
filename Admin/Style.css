@@ -7,7 +7,215 @@
   --border-radius: 12px;
 }
 
+/* Facebook Reels-Style Video Thumbnail Display */
 
+/* Video thumbnail container - Facebook style */
+.post-video-container {
+    position: relative;
+    width: 100%;
+    border-radius: 12px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: #000;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.post-video-container:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+/* Hide the actual video element and show poster/thumbnail */
+.post-video {
+    width: 100%;
+    height: 280px;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.3s ease;
+    pointer-events: none; /* Prevent default video controls */
+}
+
+.post-video-container:hover .post-video {
+    transform: scale(1.02);
+}
+
+/* Play button overlay - Facebook style */
+.video-play-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+    z-index: 2;
+}
+
+.post-video-container:hover .video-play-overlay {
+    background: rgba(0, 0, 0, 0.4);
+}
+
+.video-play-button {
+    width: 80px;
+    height: 80px;
+    background: rgba(255, 255, 255, 0.95);
+    border: none;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
+}
+
+.video-play-button:hover {
+    background: rgba(255, 255, 255, 1);
+    transform: scale(1.1);
+    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.4);
+}
+
+.video-play-button:active {
+    transform: scale(1.05);
+}
+
+.video-play-button i {
+    font-size: 32px;
+    color: #1877f2;
+    margin-left: 4px; /* Slight offset to center the play icon visually */
+}
+
+/* Video duration badge */
+.video-duration-badge {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    z-index: 3;
+}
+
+/* Hide original video controls when showing thumbnail */
+.post-video-container .custom-controls {
+    display: none;
+}
+
+/* Loading state */
+.video-thumbnail-loading {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 4;
+}
+
+.video-loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-top: 3px solid #1877f2;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Video quality indicator */
+.video-quality-badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: 500;
+    z-index: 3;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+    .video-play-button {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .video-play-button i {
+        font-size: 24px;
+    }
+    
+    .post-video {
+        height: 250px;
+    }
+}
+
+@media (max-width: 480px) {
+    .video-play-button {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .video-play-button i {
+        font-size: 20px;
+    }
+    
+    .post-video {
+        height: 200px;
+    }
+    
+    .post-video-container {
+        border-radius: 8px;
+    }
+}
+
+/* Hover effects for better UX */
+.post-video-container::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(24, 119, 242, 0.1), rgba(24, 119, 242, 0.05));
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.post-video-container:hover::after {
+    opacity: 1;
+}
+
+/* Pulse animation for play button when video is loading */
+.video-play-button.loading {
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+    50% {
+        box-shadow: 0 4px 25px rgba(24, 119, 242, 0.4);
+    }
+    100% {
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+}
 
 /* --- Styles to add/update in your main.css file --- */
 
@@ -1845,179 +2053,12 @@ background: #f1f3f8;
   color: #f1f3f8;
 }
 
-.post-video-container {
-  position: relative;
-  width: 100%;
-  max-width: 540px;
-  aspect-ratio: 7.5 / 12;
-  margin: 0 auto;
-  overflow: hidden;
-  border-radius: 8px; /* Slightly increased border radius */
-  background-color: #000;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Softer shadow */
-  transition: box-shadow 0.3s ease;
-  scroll-behavior: smooth;
-}
 
-.post-video-container:hover {
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Darker shadow on hover */
-}
 
-.post-video {
-  width: 100%;
-  height: 100%;
-  display: block;
-  object-fit: contain;
-  scroll-behavior: smooth;
-}
 
-.post-video::-webkit-media-controls {
-  display: none !important;
-}
 
-.loading-spinner {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 20px;
-  color: #fff;
-  background: rgba(0, 0, 0, 0.5);
-  padding: 12px;
-  border-radius: 50%;
-  z-index: 2;
-}
 
-.custom-controls {
-  position: absolute;
-  bottom: 0;
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 16px;
-  background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(8px);
-  transition: opacity 0.3s ease;
-  opacity: 0;
-}
-
-.post-video-container:hover .custom-controls {
-  opacity: 1;
-}
-
-.control-button {
-  background: none;
-  border: none;
-  color: #fff;
-  font-size: 18px;
-  padding: 6px;
-  cursor: pointer;
-  transition: transform 0.2s ease, color 0.2s ease;
-}
-
-.control-button:hover {
-  transform: scale(1.15);
-  color: #ffd700;
-}
-
-.progress-container {
-  flex-grow: 1;
-  height: 6px;
-  background: rgba(255, 255, 255, 0.25);
-  border-radius: 3px;
-  margin: 0 10px;
-  position: relative;
-  cursor: pointer;
-}
-
-.buffered-bar {
-  height: 100%;
-  background: rgba(255, 255, 255, 0.4);
-  width: 0;
-  position: absolute;
-  top: 0;
-  left: 0;
-  border-radius: 3px;
-}
-
-.progress-bar {
-  height: 100%;
-  background: #28a745;
-  width: 0;
-  position: absolute;
-  top: 0;
-  left: 0;
-  transition: width 0.2s linear;
-  border-radius: 3px;
-}
-
-.time-display {
-  color: #fff;
-  font-size: 13px;
-  min-width: 50px;
-}
-
-.volume-control {
-  width: 80px;
-}
-
-.volume-slider {
-  width: 100%;
-  accent-color: #fff;
-  cursor: pointer;
-}
-
-.playback-speed {
-  background: none;
-  border: none;
-  color: #fff;
-  font-size: 13px;
-  cursor: pointer;
-  transition: color 0.2s;
-}
-
-.playback-speed:hover {
-  color: #ccc;
-}
-
-.seek-preview {
-  position: absolute;
-  top: -90px;
-  transform: translateX(-50%);
-  background: #000;
-  border: 1px solid #fff;
-  border-radius: 6px;
-  overflow: hidden;
-}
-
-.seek-preview-canvas {
-  width: 130px;
-  height: 72px;
-}
-
-@media (max-width: 768px) {
-  .post-video-container {
-    max-width: 100%;
-    border-radius: 12px;
-  }
-
-  .custom-controls {
-    padding: 8px 10px;
-  }
-
-  .control-button {
-    font-size: 16px;
-  }
-
-  .volume-control {
-    width: 60px;
-  }
-
-  .time-display {
-    font-size: 11px;
-  }
-}
+.
 
 .buy:hover {
   background: #f3f8f1;
@@ -2073,8 +2114,6 @@ background: #f1f3f8;
 }
 
 
-
-/* public/css/style.css (or similar) */
 
 .user-suggestions-wrapper {
   margin-bottom: 20px;
