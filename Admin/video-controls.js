@@ -365,6 +365,8 @@ function createReelsModal() {
 // Initialize Reels modal functionality
 function initializeReelsModal() {
     const modal = createReelsModal();
+    if (!modal) return; // Safety check
+    
     const reelsVideo = modal.querySelector('.reels-video');
     const reelsLoading = modal.querySelector('.reels-loading');
     const reelsPlayPause = modal.querySelector('.reels-play-pause');
@@ -381,6 +383,7 @@ function initializeReelsModal() {
     let controlsTimeout;
 
     function formatTime(seconds) {
+        if (!seconds || isNaN(seconds)) return '0:00';
         const mins = Math.floor(seconds / 60);
         const secs = Math.floor(seconds % 60);
         return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
@@ -389,8 +392,9 @@ function initializeReelsModal() {
     function hideControlsAfterDelay() {
         clearTimeout(controlsTimeout);
         controlsTimeout = setTimeout(() => {
-            if (modal.querySelector('.reels-controls')) {
-                modal.querySelector('.reels-controls').style.opacity = '0';
+            const controls = modal.querySelector('.reels-controls');
+            if (controls) {
+                controls.style.opacity = '0';
             }
         }, 3000);
     }
@@ -405,6 +409,8 @@ function initializeReelsModal() {
 
     // Open modal with video
     window.openReelsModal = function(originalVideo) {
+        if (!originalVideo) return;
+        
         currentOriginalVideo = originalVideo;
         modal.classList.add('active');
         document.body.style.overflow = 'hidden';
@@ -427,13 +433,17 @@ function initializeReelsModal() {
     function closeModal() {
         modal.classList.remove('active');
         document.body.style.overflow = '';
-        reelsVideo.pause();
-        reelsVideo.currentTime = 0;
+        if (reelsVideo) {
+            reelsVideo.pause();
+            reelsVideo.currentTime = 0;
+        }
         currentOriginalVideo = null;
     }
 
     // Event listeners
-    reelsCloseBtn.addEventListener('click', closeModal);
+    if (reelsCloseBtn) {
+        reelsCloseBtn.addEventListener('click', closeModal);
+    }
 
     modal.addEventListener('click', (e) => {
         if (e.target === modal || e.target.classList.contains('reels-overlay')) {
@@ -442,65 +452,81 @@ function initializeReelsModal() {
     });
 
     // Video events
-    reelsVideo.addEventListener('loadstart', () => {
-        reelsLoading.style.display = 'block';
-    });
+    if (reelsVideo) {
+        reelsVideo.addEventListener('loadstart', () => {
+            if (reelsLoading) reelsLoading.style.display = 'block';
+        });
 
-    reelsVideo.addEventListener('canplay', () => {
-        reelsLoading.style.display = 'none';
-    });
+        reelsVideo.addEventListener('canplay', () => {
+            if (reelsLoading) reelsLoading.style.display = 'none';
+        });
 
-    reelsVideo.addEventListener('loadedmetadata', () => {
-        reelsDuration.textContent = formatTime(reelsVideo.duration);
-    });
+        reelsVideo.addEventListener('loadedmetadata', () => {
+            if (reelsDuration) {
+                reelsDuration.textContent = formatTime(reelsVideo.duration);
+            }
+        });
 
-    reelsVideo.addEventListener('timeupdate', () => {
-        const progress = (reelsVideo.currentTime / reelsVideo.duration) * 100;
-        if (reelsProgressBar) {
-            reelsProgressBar.style.width = `${progress}%`;
-        }
-        if (reelsCurrentTime) {
-            reelsCurrentTime.textContent = formatTime(reelsVideo.currentTime);
-        }
+        reelsVideo.addEventListener('timeupdate', () => {
+            if (!reelsVideo.duration) return;
+            
+            const progress = (reelsVideo.currentTime / reelsVideo.duration) * 100;
+            if (reelsProgressBar) {
+                reelsProgressBar.style.width = `${progress}%`;
+            }
+            if (reelsCurrentTime) {
+                reelsCurrentTime.textContent = formatTime(reelsVideo.currentTime);
+            }
 
-        if (reelsVideo.buffered.length > 0 && reelsBufferedBar) {
-            const bufferedEnd = reelsVideo.buffered.end(reelsVideo.buffered.length - 1);
-            const bufferedPercent = (bufferedEnd / reelsVideo.duration) * 100;
-            reelsBufferedBar.style.width = `${bufferedPercent}%`;
-        }
-    });
+            if (reelsVideo.buffered.length > 0 && reelsBufferedBar) {
+                const bufferedEnd = reelsVideo.buffered.end(reelsVideo.buffered.length - 1);
+                const bufferedPercent = (bufferedEnd / reelsVideo.duration) * 100;
+                reelsBufferedBar.style.width = `${bufferedPercent}%`;
+            }
+        });
 
-    reelsVideo.addEventListener('ended', () => {
-        reelsPlayPause.innerHTML = '<i class="fas fa-play"></i>';
-        reelsVideo.currentTime = 0;
-    });
+        reelsVideo.addEventListener('ended', () => {
+            if (reelsPlayPause) {
+                reelsPlayPause.innerHTML = '<i class="fas fa-play"></i>';
+            }
+            reelsVideo.currentTime = 0;
+        });
+    }
 
     // Control events
-    reelsPlayPause.addEventListener('click', () => {
-        if (reelsVideo.paused) {
-            reelsVideo.play();
-            reelsPlayPause.innerHTML = '<i class="fas fa-pause"></i>';
-        } else {
-            reelsVideo.pause();
-            reelsPlayPause.innerHTML = '<i class="fas fa-play"></i>';
-        }
-        showControls();
-    });
+    if (reelsPlayPause) {
+        reelsPlayPause.addEventListener('click', () => {
+            if (reelsVideo.paused) {
+                reelsVideo.play();
+                reelsPlayPause.innerHTML = '<i class="fas fa-pause"></i>';
+            } else {
+                reelsVideo.pause();
+                reelsPlayPause.innerHTML = '<i class="fas fa-play"></i>';
+            }
+            showControls();
+        });
+    }
 
-    reelsMuteBtn.addEventListener('click', () => {
-        reelsVideo.muted = !reelsVideo.muted;
-        reelsMuteBtn.innerHTML = reelsVideo.muted ? 
-            '<i class="fas fa-volume-mute"></i>' : '<i class="fas fa-volume-up"></i>';
-        showControls();
-    });
+    if (reelsMuteBtn) {
+        reelsMuteBtn.addEventListener('click', () => {
+            reelsVideo.muted = !reelsVideo.muted;
+            reelsMuteBtn.innerHTML = reelsVideo.muted ? 
+                '<i class="fas fa-volume-mute"></i>' : '<i class="fas fa-volume-up"></i>';
+            showControls();
+        });
+    }
 
     // Progress bar seeking
-    reelsProgressTrack.addEventListener('click', (e) => {
-        const rect = reelsProgressTrack.getBoundingClientRect();
-        const progress = (e.clientX - rect.left) / rect.width;
-        reelsVideo.currentTime = progress * reelsVideo.duration;
-        showControls();
-    });
+    if (reelsProgressTrack) {
+        reelsProgressTrack.addEventListener('click', (e) => {
+            if (!reelsVideo.duration) return;
+            
+            const rect = reelsProgressTrack.getBoundingClientRect();
+            const progress = (e.clientX - rect.left) / rect.width;
+            reelsVideo.currentTime = progress * reelsVideo.duration;
+            showControls();
+        });
+    }
 
     // Tap zones for mobile-like interaction
     tapZones.forEach(zone => {
@@ -508,12 +534,14 @@ function initializeReelsModal() {
             e.stopPropagation();
             const action = zone.dataset.action;
             
+            if (!reelsVideo) return;
+            
             switch (action) {
                 case 'seek-backward':
                     reelsVideo.currentTime = Math.max(0, reelsVideo.currentTime - 10);
                     break;
                 case 'play-pause':
-                    reelsPlayPause.click();
+                    if (reelsPlayPause) reelsPlayPause.click();
                     break;
                 case 'seek-forward':
                     reelsVideo.currentTime = Math.min(reelsVideo.duration, reelsVideo.currentTime + 10);
@@ -536,29 +564,36 @@ function initializeReelsModal() {
                 break;
             case ' ':
                 e.preventDefault();
-                reelsPlayPause.click();
+                if (reelsPlayPause) reelsPlayPause.click();
                 break;
             case 'ArrowLeft':
-                reelsVideo.currentTime = Math.max(0, reelsVideo.currentTime - 10);
-                showControls();
+                if (reelsVideo) {
+                    reelsVideo.currentTime = Math.max(0, reelsVideo.currentTime - 10);
+                    showControls();
+                }
                 break;
             case 'ArrowRight':
-                reelsVideo.currentTime = Math.min(reelsVideo.duration, reelsVideo.currentTime + 10);
-                showControls();
+                if (reelsVideo) {
+                    reelsVideo.currentTime = Math.min(reelsVideo.duration, reelsVideo.currentTime + 10);
+                    showControls();
+                }
                 break;
             case 'm':
-                reelsMuteBtn.click();
+                if (reelsMuteBtn) reelsMuteBtn.click();
                 break;
         }
     });
 }
 
-// THIS IS THE CORRECT, AND ONLY, `initializeVideoControls` FUNCTION
+// SINGLE, CORRECTED initializeVideoControls function
 function initializeVideoControls(postElement) {
     const container = postElement.querySelector('.post-video-container');
     if (!container) return;
 
     const video = container.querySelector('.post-video');
+    if (!video) return;
+
+    // Get new structure elements (with null checks)
     const playOverlay = container.querySelector('.video-play-overlay');
     const playButton = container.querySelector('.video-play-button');
     const durationBadge = container.querySelector('.video-duration-badge');
@@ -572,6 +607,7 @@ function initializeVideoControls(postElement) {
 
     // Format time helper
     function formatTime(seconds) {
+        if (!seconds || isNaN(seconds)) return '0:00';
         const mins = Math.floor(seconds / 60);
         const secs = Math.floor(seconds % 60);
         return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
@@ -579,7 +615,7 @@ function initializeVideoControls(postElement) {
 
     // Show video duration when metadata loads
     video.addEventListener('loadedmetadata', () => {
-        if (durationText && durationBadge) {
+        if (durationText && durationBadge && video.duration) {
             durationText.textContent = formatTime(video.duration);
             durationBadge.style.display = 'block';
         }
@@ -590,7 +626,7 @@ function initializeVideoControls(postElement) {
         e.preventDefault();
         e.stopPropagation();
         
-        // Show loading state
+        // Show loading state (only if elements exist)
         if (loadingSpinner) {
             loadingSpinner.style.display = 'block';
         }
@@ -602,7 +638,7 @@ function initializeVideoControls(postElement) {
         setTimeout(() => {
             window.openReelsModal(video);
             
-            // Hide loading state
+            // Hide loading state (only if elements exist)
             if (loadingSpinner) {
                 loadingSpinner.style.display = 'none';
             }
@@ -612,7 +648,7 @@ function initializeVideoControls(postElement) {
         }, 300);
     };
 
-    // Add click handlers
+    // Add click handlers (only if elements exist)
     if (playOverlay) {
         playOverlay.addEventListener('click', handlePlayClick);
     }
@@ -628,36 +664,55 @@ function initializeVideoControls(postElement) {
     video.muted = true;
     video.preload = 'metadata';
 
-    // Generate thumbnail at 2 seconds if no poster
+    // Generate thumbnail at 2 seconds if no poster (SAFE VERSION)
     if (!video.poster || video.poster === '') {
+        let thumbnailGenerated = false;
+        
         video.addEventListener('loadedmetadata', () => {
-            video.currentTime = 2;
+            if (!thumbnailGenerated && video.duration > 2) {
+                video.currentTime = 2;
+            }
         });
 
         video.addEventListener('seeked', () => {
-            if (video.currentTime === 2 && !video.dataset.thumbnailGenerated) {
-                const canvas = document.createElement('canvas');
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                video.poster = canvas.toDataURL('image/jpeg', 0.8);
-                video.dataset.thumbnailGenerated = 'true';
-                video.currentTime = 0;
+            if (video.currentTime === 2 && !thumbnailGenerated && video.videoWidth > 0) {
+                try {
+                    // Create canvas safely
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    
+                    if (ctx && video.videoWidth && video.videoHeight) {
+                        canvas.width = video.videoWidth;
+                        canvas.height = video.videoHeight;
+                        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                        video.poster = canvas.toDataURL('image/jpeg', 0.8);
+                        thumbnailGenerated = true;
+                        video.currentTime = 0;
+                    }
+                } catch (error) {
+                    console.warn('Could not generate video thumbnail:', error);
+                    thumbnailGenerated = true; // Prevent retrying
+                }
             }
         });
     }
 
-    // Optional: Add hover effects
-    container.addEventListener('mouseenter', () => {
-        if (playButton) {
+    // Optional: Add hover effects (only if elements exist)
+    if (playButton) {
+        container.addEventListener('mouseenter', () => {
             playButton.style.transform = 'scale(1.05)';
-        }
-    });
+        });
 
-    container.addEventListener('mouseleave', () => {
-        if (playButton) {
+        container.addEventListener('mouseleave', () => {
             playButton.style.transform = 'scale(1)';
+        });
+    }
+
+    // Error handling
+    video.addEventListener('error', (e) => {
+        console.error('Video error:', e);
+        if (loadingSpinner) {
+            loadingSpinner.style.display = 'none';
         }
     });
 }

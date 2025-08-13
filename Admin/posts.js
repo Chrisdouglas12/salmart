@@ -668,10 +668,14 @@ function renderPost(post) {
     const productImageForChat = post.postType === 'video_ad' ? (post.thumbnail || '') : (post.photo || '');
 
 
+// Update your mediaContent for video_ad posts in renderPost:
+
 if (post.postType === 'video_ad') {
     mediaContent = `
         <div class="post-video-container">
-            <video class="post-video" preload="metadata" muted playsinline aria-label="Video ad for ${post.description || 'product'}" poster="${post.thumbnail || ''}">
+            <video class="post-video" preload="metadata" playsinline 
+                   aria-label="Video ad for ${post.description || 'product'}" 
+                   poster="${post.thumbnail || ''}">
                 <source data-src="${post.video || ''}" type="video/mp4" />
                 <source data-src="${post.video ? post.video.replace('.mp4', '.webm') : ''}" type="video/webm" />
                 <source data-src="${post.video ? post.video.replace('.mp4', '.ogg') : ''}" type="video/ogg" />
