@@ -200,6 +200,16 @@ app.get('/', (req, res) => {
   res.send('Salmart API is running on port 3000');
 });
 
+
+// Very lightweight health check
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'ok',
+    uptime: process.uptime(), // seconds app has been running
+    timestamp: Date.now()     // current server time
+  });
+});
+
 // Nodemailer Configuration
 const transporter = nodemailer.createTransport({
   service: 'gmail',
