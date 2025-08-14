@@ -7,6 +7,7 @@ const jwt = require('jsonwebtoken');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const nodemailer = require('nodemailer');
 require('dotenv').config();
 const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
@@ -14,6 +15,7 @@ const User = require('../models/userSchema.js');
 const PlatformWallet = require('../models/platformWallet.js');
 const Transaction = require('../models/transactionSchema');
 const Post = require('../models/postSchema');
+const Visit = require('../models/visitSchema.js')
 const Admin = require('../models/adminSchema.js');
 const RefundRequests = require('../models/refundSchema.js');
 const Report = require('../models/reportSchema.js');
@@ -40,6 +42,14 @@ const logger = winston.createLogger({
   ],
 });
 
+// Configure nodemailer
+const transporter = nodemailer.createTransport({
+  service: 'Zoho', 
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
+  }
+});
 
 const JWT_SECRET = process.env.JWT_SECRET;
 const SECRET_ADMIN_CODE = process.env.SECRET_ADMIN_CODE;
@@ -675,5 +685,337 @@ router.get('/admin/unverified-stats', async (req, res) => {
   }
 });
 
+// Rate limiting for visit tracking (add after your existing imports)
+const visitLimiter = {
+  visits: new Map(),
+  
+  isAllowed(ip) {
+    const now = Date.now();
+    const windowMs = 15 * 60 * 1000; // 15 minutes
+    const maxVisits = 5;
+    
+    if (!this.visits.has(ip)) {
+      this.visits.set(ip, []);
+    }
+    
+    const visits = this.visits.get(ip);
+    const recentVisits = visits.filter(time => now - time < windowMs);
+    
+    if (recentVisits.length >= maxVisits) {
+      return false;
+    }
+    
+    recentVisits.push(now);
+    this.visits.set(ip, recentVisits);
+    return true;
+  }
+};
+
+// Helper function to detect device type
+function getDeviceType(userAgent) {
+  if (!userAgent) return 'Unknown';
+  
+  const ua = userAgent.toLowerCase();
+  if (ua.includes('mobile') || ua.includes('android') || ua.includes('iphone')) return 'Mobile';
+  if (ua.includes('tablet') || ua.includes('ipad')) return 'Tablet';
+  if (ua.includes('windows') || ua.includes('mac') || ua.includes('linux')) return 'Desktop';
+  
+  return 'Other';
+}
+
+// Helper function to detect bots
+function isBot(userAgent) {
+  if (!userAgent) return false;
+  
+  const botPatterns = [
+    'bot', 'crawler', 'spider', 'scraper', 'facebook', 'twitter',
+    'google', 'bing', 'yahoo', 'baidu', 'yandex', 'duckduckbot'
+  ];
+  
+  return botPatterns.some(pattern => userAgent.toLowerCase().includes(pattern));
+}
+
+// Helper function to send admin notification email
+async function sendVisitNotificationEmail(visitData) {
+  const emailHTML = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <style>
+            body { font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { 
+                background: linear-gradient(135deg, #28a745 0%, #20c997 100%); 
+                color: white; 
+                padding: 25px; 
+                border-radius: 10px 10px 0 0; 
+                text-align: center;
+            }
+            .header h2 { margin: 0; font-size: 24px; }
+            .header .emoji { font-size: 30px; margin-bottom: 10px; }
+            .content { 
+                background: #f8f9fa; 
+                padding: 25px; 
+                border-radius: 0 0 10px 10px; 
+                border: 1px solid #e9ecef;
+            }
+            .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+            .info-box { 
+                background: white; 
+                padding: 15px; 
+                border-radius: 8px; 
+                border-left: 4px solid #28a745; 
+                box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            }
+            .info-box.full-width { grid-column: 1 / -1; }
+            .label { font-weight: 600; color: #28a745; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+            .value { margin-top: 5px; font-size: 14px; word-break: break-all; }
+            .stats-row { display: flex; justify-content: space-between; margin: 20px 0; }
+            .stat { text-align: center; }
+            .stat-number { font-size: 24px; font-weight: bold; color: #28a745; }
+            .stat-label { font-size: 12px; color: #666; }
+            .footer { 
+                text-align: center; 
+                margin-top: 20px; 
+                padding-top: 20px; 
+                border-top: 1px solid #ddd; 
+                color: #666; 
+                font-size: 12px; 
+            }
+            .cta-button {
+                display: inline-block;
+                background: #28a745;
+                color: white;
+                padding: 12px 25px;
+                border-radius: 25px;
+                text-decoration: none;
+                font-weight: 600;
+                margin: 15px 0;
+                text-align: center;
+            }
+            @media (max-width: 600px) {
+                .info-grid { grid-template-columns: 1fr; }
+                .stats-row { flex-direction: column; gap: 15px; }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <div class="emoji">🛒📈</div>
+                <h2>New Salmart Page Visit</h2>
+                <p style="margin: 5px 0 0 0; opacity: 0.9;">Someone just discovered your platform!</p>
+            </div>
+            
+            <div class="content">
+                <div class="info-grid">
+                    <div class="info-box">
+                        <div class="label">⏰ Visit Time</div>
+                        <div class="value">${new Date(visitData.timestamp).toLocaleString('en-US', {
+                          weekday: 'long',
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                          hour: 'numeric',
+                          minute: '2-digit',
+                          timeZoneName: 'short'
+                        })}</div>
+                    </div>
+                    
+                    <div class="info-box">
+                        <div class="label">🌐 IP Address</div>
+                        <div class="value">${visitData.ip || 'Hidden'}</div>
+                    </div>
+                    
+                    <div class="info-box">
+                        <div class="label">📱 Device Type</div>
+                        <div class="value">${visitData.deviceType}</div>
+                    </div>
+                    
+                    <div class="info-box">
+                        <div class="label">🔗 Traffic Source</div>
+                        <div class="value">${visitData.referrer || 'Direct Visit'}</div>
+                    </div>
+                    
+                    <div class="info-box full-width">
+                        <div class="label">📍 Page URL</div>
+                        <div class="value">${visitData.url}</div>
+                    </div>
+                    
+                    <div class="info-box full-width">
+                        <div class="label">🆔 Session ID</div>
+                        <div class="value">${visitData.sessionId}</div>
+                    </div>
+                </div>
+                
+                <div style="text-align: center; margin: 25px 0;">
+                    <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/admin/dashboard" class="cta-button">
+                        View Admin Dashboard
+                    </a>
+                </div>
+            </div>
+            
+            <div class="footer">
+                <p><strong>Salmart Visit Tracking System</strong></p>
+                <p>This notification was generated automatically when someone visited your landing page.</p>
+                <p>Generated at ${new Date().toLocaleString()}</p>
+            </div>
+        </div>
+    </body>
+    </html>
+  `;
+
+  const mailOptions = {
+    from: `"Salmart System" <${process.env.EMAIL_USER}>`,
+    to: process.env.ADMIN_EMAIL || process.env.EMAIL_USER,
+    subject: `🔔 New Salmart Page Visit - ${new Date().toLocaleDateString()}`,
+    html: emailHTML
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    logger.info('Visit notification email sent successfully');
+  } catch (error) {
+    logger.error('Error sending visit notification email:', error.message);
+  }
+}
+
+// Main visit tracking route
+router.post('/api/track-visit', async (req, res) => {
+  try {
+    const clientIP = req.ip || 
+                    req.connection?.remoteAddress || 
+                    req.socket?.remoteAddress || 
+                    req.headers['x-forwarded-for']?.split(',')[0] || 
+                    'Unknown';
+
+    // Rate limiting check
+    if (!visitLimiter.isAllowed(clientIP)) {
+      return res.status(429).json({ 
+        success: false, 
+        message: 'Too many visits from this IP' 
+      });
+    }
+
+    const visitData = {
+      timestamp: new Date(),
+      ip: clientIP,
+      userAgent: req.get('User-Agent') || '',
+      referrer: req.body.referrer || req.get('Referer') || 'Direct visit',
+      url: req.body.url || req.get('Host') || '',
+      sessionId: req.body.sessionId || `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      deviceType: getDeviceType(req.get('User-Agent')),
+      isBot: isBot(req.get('User-Agent')),
+      location: {
+        country: req.get('CF-IPCountry') || 'Unknown', // Cloudflare header
+        city: req.get('CF-IPCity') || 'Unknown'
+      }
+    };
+
+    // Skip bot visits for email notifications
+    if (!visitData.isBot) {
+      // Save to database
+      const visit = new Visit(visitData);
+      await visit.save();
+
+      // Send email notification to admin (async, don't wait)
+      sendVisitNotificationEmail(visitData).catch(error => {
+        logger.error('Failed to send visit notification:', error.message);
+      });
+
+      logger.info('Page visit tracked and notification sent', {
+        ip: visitData.ip,
+        deviceType: visitData.deviceType,
+        referrer: visitData.referrer,
+        sessionId: visitData.sessionId
+      });
+    } else {
+      logger.info('Bot visit detected and ignored', {
+        ip: visitData.ip,
+        userAgent: visitData.userAgent
+      });
+    }
+
+    res.json({ 
+      success: true, 
+      message: 'Visit tracked successfully',
+      timestamp: visitData.timestamp
+    });
+
+  } catch (error) {
+    logger.error('Error tracking visit:', error.message);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to track visit' 
+    });
+  }
+});
+
+// Optional: Get visit analytics for admin dashboard
+router.get('/api/admin/visit-analytics', verifyAdmin, async (req, res) => {
+  try {
+    const { days = 7 } = req.query;
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - parseInt(days));
+
+    const analytics = await Visit.aggregate([
+      {
+        $match: {
+          timestamp: { $gte: startDate },
+          isBot: { $ne: true }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            date: { $dateToString: { format: "%Y-%m-%d", date: "$timestamp" } },
+            deviceType: "$deviceType"
+          },
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $group: {
+          _id: "$_id.date",
+          totalVisits: { $sum: "$count" },
+          devices: {
+            $push: {
+              type: "$_id.deviceType",
+              count: "$count"
+            }
+          }
+        }
+      },
+      { $sort: { "_id": 1 } }
+    ]);
+
+    const totalVisits = await Visit.countDocuments({
+      timestamp: { $gte: startDate },
+      isBot: { $ne: true }
+    });
+
+    const uniqueIPs = await Visit.distinct('ip', {
+      timestamp: { $gte: startDate },
+      isBot: { $ne: true }
+    });
+
+    res.json({
+      success: true,
+      analytics: {
+        totalVisits,
+        uniqueVisitors: uniqueIPs.length,
+        dailyData: analytics,
+        period: `${days} days`
+      }
+    });
+
+  } catch (error) {
+    logger.error('Error fetching visit analytics:', error.message);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to fetch analytics' 
+    });
+  }
+});
   return router;
 };

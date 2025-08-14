@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 require('dotenv').config();
 
-const Admin = require('./models/adminSchema'); // Adjust path if needed
+const Admin = require('./models/adminSchema'); 
 
 async function deleteAdminByEmail(emailToDelete) {
   try {

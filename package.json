@@ -13,6 +13,7 @@
     "npm": "9.x"
   },
   "dependencies": {
+    "@capacitor/android": "^7.4.2",
     "@ffprobe-installer/ffprobe": "^2.1.2",
     "@hotwired/turbo": "^8.0.13",
     "axios": "^1.10.0",
@@ -23,6 +24,7 @@
     "cors": "^2.8.5",
     "debug": "^4.4.1",
     "dotenv": "^16.4.7",
+    "expo": "^53.0.20",
     "express": "^4.21.2",
     "express-validator": "^7.2.1",
     "firebase-admin": "^13.2.0",
