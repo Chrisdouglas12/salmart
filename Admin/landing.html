@@ -535,58 +535,186 @@
         });
     </script>
     
-    <script>
-const API_BASE_URL = window.API_BASE_URL || (window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart.onrender.com');
-// Function to track page visits
-function trackPageVisit() {
-    // Get visitor information
-    const visitData = {
-        timestamp: new Date().toISOString(),
-        userAgent: navigator.userAgent,
-        referrer: document.referrer || 'Direct visit',
-        url: window.location.href,
-        ip: null, // Will be detected server-side
-        sessionId: generateSessionId()
+<script>
+    
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
+    });
+
+    window.addEventListener('scroll', () => {
+        const header = document.querySelector('.header');
+        if (window.scrollY > 100) {
+            header.style.background = 'rgba(255, 255, 255, 0.98)';
+            header.style.boxShadow = '0 2px 20px rgba(40, 167, 69, 0.15)';
+        } else {
+            header.style.background = 'rgba(255, 255, 255, 0.95)';
+            header.style.boxShadow = '0 2px 20px rgba(40, 167, 69, 0.1)';
+        }
+    });
+
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
     };
 
-    // Send data to your backend
-    fetch(`${API_BASE_URL}/api/track-visit`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(visitData)
-    })
-    .then(response => response.json())
-    .then(data => {
-        console.log('Visit tracked:', data);
-    })
-    .catch(error => {
-        console.error('Error tracking visit:', error);
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '1';
+                entry.target.style.transform = 'translateY(0)';
+            }
+        });
+    }, observerOptions);
+
+    document.querySelectorAll('.feature-card').forEach(card => {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(30px)';
+        card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+        observer.observe(card);
     });
-}
 
-// Generate a simple session ID
-function generateSessionId() {
-    return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-}
+    document.querySelectorAll('.btn, .btn-cta').forEach(btn => {
+        btn.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-2px)';
+        });
+        
+        btn.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+        });
+    });
 
-// Track visit when page loads
-document.addEventListener('DOMContentLoaded', function() {
-    // Small delay to ensure page is fully loaded
-    setTimeout(trackPageVisit, 1000);
-});
+    // === NEW VISIT TRACKING CODE ===
+    
+    // Configuration - Update this with your actual backend URL
+const API_BASE_URL = window.API_BASE_URL || (window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart.onrender.com');
+    
+    // Generate unique session ID
+    function generateSessionId() {
+        return 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    }
 
-// Optional: Track when user actually interacts with the page (to avoid bot traffic)
-let hasInteracted = false;
-['click', 'scroll', 'keypress', 'mousemove'].forEach(event => {
-    document.addEventListener(event, function() {
+    // Get or create session ID
+    function getSessionId() {
+        let sessionId = sessionStorage.getItem('salmart_session_id');
+        if (!sessionId) {
+            sessionId = generateSessionId();
+            sessionStorage.setItem('salmart_session_id', sessionId);
+        }
+        return sessionId;
+    }
+
+    // Collect visitor information
+    function getVisitorInfo() {
+        return {
+            timestamp: new Date().toISOString(),
+            userAgent: navigator.userAgent,
+            referrer: document.referrer || 'Direct visit',
+            url: window.location.href,
+            sessionId: getSessionId(),
+            pageTitle: document.title,
+            screenResolution: `${screen.width}x${screen.height}`,
+            browserLanguage: navigator.language,
+            timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+            // Additional context
+            isFirstVisit: !localStorage.getItem('salmart_visited'),
+            previousVisit: localStorage.getItem('salmart_last_visit')
+        };
+    }
+
+    // Track page visit
+    async function trackPageVisit() {
+        try {
+            const visitData = getVisitorInfo();
+            
+            console.log('📊 Tracking page visit...', visitData);
+
+            const response = await fetch(`${API_BASE_URL}/api/track-visit`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(visitData)
+            });
+
+            const data = await response.json();
+            
+            if (data.success) {
+                console.log('✅ Visit tracked successfully:', data);
+                
+                // Mark as visited
+                localStorage.setItem('salmart_visited', 'true');
+                localStorage.setItem('salmart_last_visit', new Date().toISOString());
+            } else {
+                console.warn('⚠️ Visit tracking failed:', data.message);
+            }
+
+        } catch (error) {
+            console.error('❌ Error tracking visit:', error);
+            // Fail silently - don't affect user experience
+        }
+    }
+
+    // Track user engagement
+    let hasInteracted = false;
+    let engagementStartTime = Date.now();
+    
+    function trackEngagement() {
         if (!hasInteracted) {
             hasInteracted = true;
+            console.log('👆 User engagement detected');
+            
+            // Track meaningful interaction after user actually engages
+            setTimeout(trackPageVisit, 500);
+        }
+    }
+
+    // Multiple engagement triggers
+    const engagementEvents = ['click', 'scroll', 'keypress', 'mousemove', 'touchstart'];
+    engagementEvents.forEach(event => {
+        document.addEventListener(event, trackEngagement, { 
+            once: true, 
+            passive: true 
+        });
+    });
+
+    // Fallback: Track after 3 seconds if no interaction
+    setTimeout(() => {
+        if (!hasInteracted) {
+            console.log('⏰ Fallback: Tracking visit after 3 seconds');
             trackPageVisit();
         }
-    }, { once: true });
-});
-    </script>
+    }, 3000);
+
+    // Track time on page when user leaves
+    window.addEventListener('beforeunload', () => {
+        const timeOnPage = Math.round((Date.now() - engagementStartTime) / 1000);
+        if (timeOnPage > 5) { // Only track if user spent more than 5 seconds
+            console.log(`⏱️ User spent ${timeOnPage} seconds on page`);
+            // You could send this data too if needed
+        }
+    });
+
+    // Optional: Track button clicks for conversion analysis
+    document.querySelectorAll('.btn-cta, .btn-primary').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            const buttonText = this.textContent.trim();
+            console.log(`🎯 CTA clicked: ${buttonText}`);
+            
+            // You could track specific button clicks
+            // trackButtonClick(buttonText, this.href);
+        });
+    });
+
+    console.log('🚀 Salmart visit tracking initialized');
+</script>
 </body>
 </html>
