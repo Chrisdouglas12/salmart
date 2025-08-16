@@ -4,9 +4,9 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { StatusBar } from 'expo-status-bar';
 
 // Import screens
-import LoginScreen from './LoginScreen';
-import RegistrationScreen from './RegistrationScreen';
-import BottomTabNavigator from './BottomTabNavigator';
+import LoginScreen from './screens/LoginScreen';
+import RegistrationScreen from './screens/RegistrationScreen';
+
 
 const Stack = createStackNavigator();
 

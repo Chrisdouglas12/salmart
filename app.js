@@ -65,7 +65,7 @@ const app = express();
 app.use(express.json());
 app.set('trust proxy', true);
 app.use(cors({
-  origin: ['http://localhost:8158', 'https://salmart.onrender.com', 'https://salmart.vercel.app', 'https://salmartonline.com.ng'],
+  origin: ['http://localhost:8158', 'https://salmart.onrender.com', 'https://salmart.vercel.app', 'https://salmartonline.com.ng', 'http://10.0.2.2:3000' ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   credentials: true,
   allowedHeaders: ['Content-Type', 'Authorization'],
@@ -98,7 +98,7 @@ mongoose.connect(process.env.MONGO_URI, {
 const server = require('http').createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: ['http://localhost:8158', 'https://salmart.onrender.com', 'https://salmart.vercel.app', 'https://salmartonline.com.ng' ],
+    origin: ['http://localhost:8158', 'https://salmart.onrender.com', 'https://salmart.vercel.app', 'https://salmartonline.com.ng', 'http://10.0.2.2:3000'  ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     credentials: true,
   },

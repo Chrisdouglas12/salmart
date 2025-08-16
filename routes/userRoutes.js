@@ -440,9 +440,10 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ message: 'User not found' });
     }
 
-// if (!user.isVerified) {
-//return res.status(403).json({ message: 'Email not verified. Please check your email inbox.' });  
-// }
+if (!user.isVerified) {
+return res.status(403).json({ message: 'Email not verified. Please check your email inbox.' });  
+  
+}
 
     if (user.isBanned) {
       return res.status(403).json({ message: 'Your account has been suspended. Please contact our support team.' });
