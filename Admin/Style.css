@@ -7,7 +7,7 @@
   --border-radius: 12px;
 }
 
-/* Facebook Reels-Style Video Thumbnail Display */
+
 
 /* Video thumbnail container - Facebook style */
 .post-video-container {
@@ -391,7 +391,7 @@ img.lazy-loading.loaded {
     top: 0;
     left: 0;
     width: 100%;
-    height: 100%;
+    height: 200%;
     object-fit: cover; /* This is crucial. It makes the image fill the container without distortion. */
     cursor: pointer;
 }
@@ -404,7 +404,7 @@ img.lazy-loading.loaded {
 }
 
 .post-image{
-  height: 800px;
+  height: 100%;
 }
 
 * {
@@ -455,7 +455,7 @@ img.lazy-loading.loaded {
   height: 100%;
   object-fit: contain; /* Ensures entire image/video is visible */
   display: block;
-  max-height: 500px; /* Max height for the media */
+  max-height: 800px; /* Max height for the media */
   min-height: 50px;
   scroll-behavior: smooth;
 }

@@ -879,7 +879,72 @@ body.no-scroll {
   <script type="module" src="posts-interaction.js"></script>
 <script src="posts-sharing.js"></script>
 
-  
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const postsContainer = document.getElementById('posts-container');
+        
+        // Ensure the posts container exists before proceeding.
+        if (!postsContainer) {
+            console.error("Posts container not found. Banner cannot be added.");
+            return;
+        }
+
+        // Check if the user is logged in by looking for a userId in localStorage.
+        const isLoggedIn = localStorage.getItem('userId') !== null;
+        
+        // Only show the banner if the user is not logged in and the banner doesn't already exist.
+        if (!isLoggedIn && !document.getElementById('login-register-banner')) {
+            const bannerHtml = `
+                <div id="login-register-banner" style="
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    padding: 20px;
+                    margin-bottom: 20px;
+                    background-color: #f0f0f0;
+                    border-radius: 8px;
+                    border: 1px solid #ddd;
+                    text-align: center;
+                    animation: fadeIn 0.5s ease-in-out;
+                ">
+                    <h3 style="margin: 0 0 10px 0; font-size: 1.2em; color: #333;">Welcome!</h3>
+                    <p style="margin: 0 0 15px 0; font-size: 1em; color: #555;">Log in or register to connect with sellers and get personalized recommendations.</p>
+                    <div style="display: flex; gap: 10px;">
+                        <a href="SignIn.html" style="
+                            background-color: #007bff;
+                            color: white;
+                            padding: 10px 20px;
+                            border-radius: 5px;
+                            text-decoration: none;
+                            font-weight: bold;
+                            transition: background-color 0.3s;
+                        ">Login</a>
+                        <a href="SignIn.html?register=true" style="
+                            background-color: #28a745;
+                            color: white;
+                            padding: 10px 20px;
+                            border-radius: 5px;
+                            text-decoration: none;
+                            font-weight: bold;
+                            transition: background-color 0.3s;
+                        ">Register</a>
+                    </div>
+                </div>
+                <style>
+                    @keyframes fadeIn {
+                        from { opacity: 0; transform: translateY(-20px); }
+                        to { opacity: 1; transform: translateY(0); }
+                    }
+                </style>
+            `;
+
+            // Insert the banner at the beginning of the posts container.
+            postsContainer.insertAdjacentHTML('afterbegin', bannerHtml);
+        }
+    });
+</script>
+
   </div>
 </body>
 </html>

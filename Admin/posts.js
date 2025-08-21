@@ -352,7 +352,7 @@ function updateProfilePictures(userId, profilePicture) {
     document.querySelectorAll(`img.post-avatar[data-user-id="${userId}"], img.promoted-avatar[data-user-id="${userId}"], img.user-suggestion-avatar[data-user-id="${userId}"]`).forEach(img => {
         img.src = cleanedUrl;
         img.onerror = () => {
-            img.src = '/salmart-192x192.png';
+            img.src = '/default-avater.png';
         };
     });
 }
@@ -415,7 +415,7 @@ function renderUserSuggestion(user) {
     `;
     const avatarImg = suggestionElement.querySelector('.user-suggestion-avatar');
     if (avatarImg) {
-        lazyLoadImage(avatarImg, user.profilePicture || '/salmart-192x192.png');
+        lazyLoadImage(avatarImg, user.profilePicture || '/default-avater.png');
     }
     return suggestionElement;
 }
@@ -461,7 +461,7 @@ function renderPromotedPost(post) {
     let mediaContent = '';
     let productDetails = '';
     let buttonContent = '';
-    const productImageForChat = post.photo || '/salmart-192x192.png';
+    const productImageForChat = post.photo;
 
     mediaContent = `<img class="promoted-image"  onerror="this.src='/salmart-192x192.png'">`;
     productDetails = `
@@ -598,10 +598,10 @@ function createPromotedPostsRow(posts) {
     wrapperContainer.style.cssText = `margin-bottom: 20px;`;
     const headerElement = document.createElement('div');
     headerElement.classList.add('promoted-posts-header');
-    headerElement.innerHTML = '<h3><i class="fas fa-fire"></i> Suggested products for you</h3>';
+    headerElement.innerHTML = '<h3> Suggested products for you</h3>';
     headerElement.style.cssText = `
-        font-size: 16px;
-        color: #333;
+        font-size: 14px;
+        text-align: center;
         margin-bottom: 0;
         background-color: #fff;
     `;
@@ -612,9 +612,9 @@ function createPromotedPostsRow(posts) {
         overflow-x: auto;
         gap: 15px;
         padding: 10px 0;
-        background-color: #f9f9f9;
+        background-color: #fff;
         border-radius: 8px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        box-shadow: 0 0 10px # ddd;
         scroll-snap-type: x mandatory;
         -webkit-overflow-scrolling: touch;
         position: relative;
@@ -746,12 +746,12 @@ if (post.postType === 'video_ad') {
             </div>
         `;
         mediaContent = `
-  <div class="post-image-wrapper" >
+  
                 <div class="product-image">
                     <div class="badge">${post.productCondition || 'New'}</div>
-                    <img class="post-image" onclick="window.openImage('${productImageForChat.replace(/'/g, "\\'")}')" alt="Product Image" onerror="this.src='/salmart-192x192.png'">
+                    <img class="post-image" onclick="window.openImage('${productImageForChat.replace(/'/g, "\\'")}')" alt="Product Image">
                 </div>
-                </div>
+                
             `;
 
 
@@ -1242,6 +1242,7 @@ const throttledScrollHandler = throttle(() => {
 window.addEventListener('scroll', throttledScrollHandler, {
     passive: true
 });
+
 
 
 
