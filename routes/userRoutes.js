@@ -95,16 +95,10 @@ router.post('/register', async (req, res) => {
       email,
       password,
       phoneNumber,
-      state,
-      city,
-      accountNumber,
-      bankCode,
-      accountName,
-      bankName
     } = req.body;
 
     // --- Input Validation ---
-    if (!email || !password || !phoneNumber || !state || !city) {
+    if (!email || !password ) {
       return res.status(400).json({ message: 'All required fields must be provided.' });
     }
 
@@ -126,16 +120,9 @@ router.post('/register', async (req, res) => {
       email: normalizedEmail,
       password: hashedPassword,
       phoneNumber: phoneNumber?.trim(),
-      state: state?.trim(),
-      city: city?.trim(),
       isVerified: false,
       verificationToken,
-      bankDetails: {
-        accountNumber,
-        bankCode,
-        accountName,
-        bankName,
-      }
+      
     });
 
     await newUser.save();
@@ -495,20 +482,6 @@ router.get('/verify-token', verifyToken, async (req, res) => {
   }
 });
 
-// Update user
-router.patch('/users/:id', verifyToken, async (req, res) => {
-  try {
-    const { id } = req.params;
-    const updatedUser = await User.findByIdAndUpdate(id, req.body, { new: true });
-    if (!updatedUser) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-    res.json(updatedUser);
-  } catch (error) {
-    console.error('Update user error:', error.message);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
 
 
 router.get('/users-profile/:id', verifyToken, async (req, res) => {
@@ -541,6 +514,120 @@ router.get('/users-profile/:id', verifyToken, async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
+
+
+// Route to complete/update profile with password verification
+router.post('/complete-profile', verifyToken, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const { bankName, accountNumber, accountName, bankCode, state, city, password } = req.body; // Include password
+
+    // 1. Password and other validation
+    if (!password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password is required to confirm changes'
+      });
+    }
+
+    if (!bankName || !accountNumber || !accountName || !bankCode) {
+      return res.status(400).json({
+        success: false,
+        message: 'All bank details are required'
+      });
+    }
+
+    if (!state || !city) {
+      return res.status(400).json({
+        success: false,
+        message: 'State and city are required'
+      });
+    }
+
+    // Validate account number format (10 digits)
+    if (!/^\d{10}$/.test(accountNumber)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Account number must be exactly 10 digits'
+      });
+    }
+
+    // 2. Find the user by their ID
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // 3. Verify the provided password against the stored hash
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if (!isMatch) {
+      return res.status(401).json({
+        success: false,
+        message: 'Incorrect password. Please try again.'
+      });
+    }
+
+    // 4. If password is correct, proceed to update the user profile
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      {
+        $set: {
+          bankDetails: {
+            bankName: bankName.trim(),
+            accountNumber: accountNumber.trim(),
+            accountName: accountName.trim(),
+            bankCode: bankCode.trim()
+          },
+          state: state.trim(),
+          city: city.trim(),
+          updatedAt: new Date()
+        }
+      },
+      {
+        new: true,
+        runValidators: true,
+        select: 'firstName lastName email bankDetails state city'
+      }
+    );
+
+    res.json({
+      success: true,
+      message: 'Profile completed successfully',
+      user: {
+        id: updatedUser._id,
+        firstName: updatedUser.firstName,
+        lastName: updatedUser.lastName,
+        email: updatedUser.email,
+        bankDetails: updatedUser.bankDetails,
+        state: updatedUser.state,
+        city: updatedUser.city
+      }
+    });
+
+  } catch (error) {
+    console.error('Error completing profile:', error);
+
+    // Handle validation errors
+    if (error.name === 'ValidationError') {
+      const validationErrors = Object.values(error.errors).map(err => err.message);
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed: ' + validationErrors.join(', ')
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      message: 'Failed to complete profile'
+    });
+  }
+});
+
 
 // Profile picture upload
 router.post('/upload-profile-picture', verifyToken, upload.single('profilePicture'), async (req, res) => {
@@ -1140,6 +1227,43 @@ router.post('/api/password-reset/reset', async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
+
+// Route to get profile details for the logged-in user
+router.get('/get-profile-details', verifyToken, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+
+    // Find the user by ID and select the necessary fields
+    const user = await User.findById(userId)
+      .select('bankDetails state city');
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Return the profile details
+    res.json({
+      success: true,
+      message: 'Profile details fetched successfully',
+      bankDetails: user.bankDetails,
+      locationDetails: {
+        state: user.state,
+        city: user.city
+      }
+    });
+
+  } catch (error) {
+    console.error('Error fetching profile details:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch profile details'
+    });
+  }
+});
+
 
 // Enhanced Upload Route for View-Once Images with Multiple Upload Support
 router.post('/upload-image', upload.single('image'), async (req, res) => {

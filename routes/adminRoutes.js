@@ -283,7 +283,7 @@ router.post('/admin/resolve-report', verifyAdmin, async (req, res) => {
   // --- User Management Routes ---
   
 // Get all users
-router.get('/api/admin/users', verifyAdmin, async (req, res) => {
+router.get('/api/admin/users', async (req, res) => {
   try {
     const users = await User.find().select(
       'firstName lastName email profilePicture phoneNumber isVerified state city followers following blockedUsers interests createdAt updatedAt viewCount reportCount isReported isBanned isAdmin isSystemUser notificationPreferences fcmTokens notificationEnabled paystack bankDetails'

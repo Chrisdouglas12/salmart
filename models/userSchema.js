@@ -10,7 +10,7 @@ const userSchema = new mongoose.Schema({
 
   phoneNumber: {
     type: String,
-    required: true,
+    required: false,
     trim: true,
     validate: {
       validator: function (v) {
@@ -23,8 +23,8 @@ const userSchema = new mongoose.Schema({
   isVerified: { type: Boolean, default: false },
   verificationToken: { type: String },
 
-  state: { type: String, trim: true, required: true, maxlength: 50 },
-  city: { type: String, trim: true, required: true, maxlength: 50 },
+  state: { type: String, trim: true, required: false, maxlength: 50 },
+  city: { type: String, trim: true, required: false, maxlength: 50 },
 
   followers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   following: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],

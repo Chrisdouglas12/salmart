@@ -251,24 +251,126 @@
       </div>
     </div>
 
-    <div id="overlay" class="overlay"></div>
-    <div id="bottom-sheet" class="bottom-sheet">
-      <div class="bottom-sheet-header">
-        <h3>Update Bank Details</h3>
-        <span id="close-sheet" class="close-sheet">×</span>
+ <div id="overlay" class="overlay"></div>
+<div id="bottom-sheet" class="bottom-sheet">
+  <div class="bottom-sheet-header">
+    <h3>Account Settings</h3>
+    <span id="close-sheet" class="close-sheet">×</span>
+  </div>
+
+  <form id="profile-completion-form">
+    <div class="form-section">
+      <h4><i class="fas fa-map-marker-alt"></i> Location Details</h4>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="state">State *</label>
+          <div class="select-wrapper">
+            <select id="state" class="form-input" required>
+              <option value="">Select State</option>
+              </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="city">City *</label>
+          <div class="select-wrapper">
+            <select id="city" class="form-input" required>
+              <option value="">Select City</option>
+              </select>
+          </div>
+        </div>
       </div>
-      <form id="bank-details-form">
-        <label for="bankName">Bank Name:</label>
-        <input type="text" id="bankName" required>
-        <label for="bankCode">Bank Code:</label>
-        <input type="text" id="bankCode" required>
-        <label for="accountNumber">Account Number:</label>
-        <input type="number" id="accountNumber" required>
-        <label for="accountName">Account Name:</label>
-        <input type="text" id="accountName" required>
-        <button type="submit" class="submit-bank-btn">Save</button>
-      </form>
     </div>
+
+    <div class="form-section">
+      <h4><i class="fas fa-university"></i> Bank Details</h4>
+
+      <div class="form-group">
+        <label for="bankList">Select Bank *</label>
+        <div class="select-wrapper">
+          <select id="bankList" class="form-input" required>
+            <option value="">Choose your bank</option>
+            </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="accountNumber">Account Number *</label>
+          <input
+            type="text"
+            id="accountNumber"
+            class="form-input"
+            placeholder="Enter account number"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="bankCode">Bank Code</label>
+          <input
+            type="text"
+            id="bankCode"
+            class="form-input"
+            placeholder="Auto-filled"
+            readonly
+          />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="bankName">Bank Name</label>
+        <input
+          type="text"
+          id="bankName"
+          class="form-input"
+          placeholder="Auto-filled"
+          readonly
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="accountName">Account Name *</label>
+        <input
+          type="text"
+          id="accountName"
+          class="form-input"
+          placeholder="Auto-filled after verification"
+          readonly
+        />
+      </div>
+    </div>
+
+    <div class="form-section">
+      <h4><i class="fas fa-lock"></i> Security Confirmation</h4>
+      <div class="form-group">
+        <label for="password">Enter your password to confirm:</label>
+        <input
+        class="form-input"
+          type="password"
+          id="password"
+          name="password"
+          placeholder="Enter your password"
+          required
+        />
+      </div>
+    </div>
+
+    <div class="form-footer">
+      <p class="info-text">
+        <i class="fas fa-info-circle"></i>
+        Setup your profile to start buying and selling with full access to
+        all features.
+      </p>
+      <button type="submit" class="submit-profile-btn">
+        <i class="fas fa-check-circle"></i>
+      Submit
+      </button>
+    </div>
+  </form>
+</div>
+
 
 <div id="profile-pic-modal" class="modern-profile-modal">
   <div class="modal-content">
