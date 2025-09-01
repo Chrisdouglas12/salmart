@@ -9,7 +9,7 @@
     "generate-ssl": "mkdir -p ssl && openssl req -nodes -new -x509 -keyout ssl/key.pem -out ssl/cert.pem -subj '/CN=localhost'"
   },
   "engines": {
-    "node": "18.x",
+    "node": "22.x",
     "npm": "9.x"
   },
   "dependencies": {
