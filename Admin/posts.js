@@ -781,7 +781,7 @@ if (post.postType === 'video_ad') {
       <div class="actions">
         <button class="btn btn-primary promote-button ${isSold ? 'sold-out' : ''}" data-post-id="${post._id || ''}" aria-label="Promote this post" ${isSold ? 'disabled title="Cannot promote sold out post"' : ''} >
           <i class="${isSold ? 'fas fa-times-circle' : 'fas fa-bullhorn'}"></i> 
-          ${isSold ? 'Sold Out' : 'Promote Post'}
+          ${isSold ? 'Sold Out' : 'Promote'}
         </button>
       </div>
     ` : '';
