@@ -671,7 +671,7 @@ function createPromotedPostsRow(posts) {
     }
     // Corrected this line to check for the existence of headerElement
     const headerElement = document.createElement('h3');
-    headerElement.textContent = 'Promoted Posts';
+    headerElement.textContent = '';
     wrapperContainer.appendChild(headerElement);
     wrapperContainer.appendChild(rowContainer);
     rowContainer.style.position = 'relative';
