@@ -8,6 +8,28 @@
 }
 
 
+/*
+ * Styles for the post image container.
+ * This sets a maximum height and ensures the image
+ * fits properly within that space.
+ */
+.product-image {
+    position: relative;
+    max-height: 500px; 
+    width: 100%;
+    overflow: hidden; /* This is important to crop the image if it exceeds the max-height */
+}
+
+/*
+ * These styles ensure the actual image scales correctly.
+ * 'object-fit' is key here.
+ */
+.post-image {
+    width: 100%;
+    height: 100%;
+    /* Alternatively, you can use 'cover' to fill the space and crop the image: */
+    /* object-fit: cover; */
+}
 
 /* Video thumbnail container - Facebook style */
 .post-video-container {

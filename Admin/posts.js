@@ -46,32 +46,59 @@ class ImageLoader {
     }
 
     setSource(imgElement, src) {
-        const isPlaceholder = src === DEFAULT_PLACEHOLDER_IMAGE || !src;
-        if (isPlaceholder) {
-            imgElement.src = DEFAULT_PLACEHOLDER_IMAGE;
-            imgElement.classList.add('lazy-loading');
-            return;
-        }
+    const parentPlaceholder = imgElement.closest('.image-placeholder');
 
-        if (this.cache.has(src)) {
-            imgElement.src = this.cache.get(src);
-            imgElement.classList.remove('lazy-loading');
-            imgElement.classList.add('loaded');
-            return;
+    if (!src) {
+        imgElement.src = '';
+        if (parentPlaceholder) {
+            parentPlaceholder.classList.add('error');
+            imgElement.style.display = 'none'; // Hide the broken image icon
         }
-
-        imgElement.src = src;
-        imgElement.onload = () => {
-            imgElement.classList.remove('lazy-loading');
-            imgElement.classList.add('loaded');
-            this.cache.set(src, src);
-        };
-        imgElement.onerror = () => {
-            imgElement.src = '';
-            imgElement.classList.remove('lazy-loading');
-            console.error(`Failed to load image: ${src}`);
-        };
+        imgElement.classList.remove('lazy-loading');
+        console.error(`Missing image source for element.`);
+        return;
     }
+
+    // Show loading state
+    if (parentPlaceholder) {
+        parentPlaceholder.classList.add('loading');
+    }
+    imgElement.classList.add('lazy-loading');
+
+    // Check cache first
+    if (this.cache.has(src)) {
+        imgElement.src = this.cache.get(src);
+        imgElement.classList.remove('lazy-loading');
+        imgElement.classList.add('loaded');
+        if (parentPlaceholder) {
+            parentPlaceholder.classList.remove('loading');
+        }
+        return;
+    }
+
+    imgElement.src = src;
+
+    imgElement.onload = () => {
+        imgElement.classList.remove('lazy-loading');
+        imgElement.classList.add('loaded');
+        if (parentPlaceholder) {
+            parentPlaceholder.classList.remove('loading');
+        }
+        this.cache.set(src, src);
+    };
+
+    imgElement.onerror = () => {
+        imgElement.src = ''; // Prevents a broken image icon
+        imgElement.classList.remove('lazy-loading');
+        if (parentPlaceholder) {
+            parentPlaceholder.classList.remove('loading');
+            parentPlaceholder.classList.add('error');
+            imgElement.style.display = 'none'; // Hide the broken image icon
+        }
+        console.error(`Failed to load image: ${src}`);
+    };
+}
+
 
     handleIntersections(entries, observer) {
         entries.forEach(entry => {
@@ -596,15 +623,6 @@ function createPromotedPostsRow(posts) {
     const wrapperContainer = document.createElement('div');
     wrapperContainer.classList.add('promoted-posts-wrapper');
     wrapperContainer.style.cssText = `margin-bottom: 20px;`;
-    const headerElement = document.createElement('div');
-    headerElement.classList.add('promoted-posts-header');
-    headerElement.innerHTML = '<h3> Suggested products for you</h3>';
-    headerElement.style.cssText = `
-        font-size: 14px;
-        text-align: center;
-        margin-bottom: 0;
-        background-color: #fff;
-    `;
     const rowContainer = document.createElement('div');
     rowContainer.classList.add('promoted-posts-row-container');
     rowContainer.style.cssText = `
@@ -745,17 +763,15 @@ if (post.postType === 'video_ad') {
                 <p>${escapeHtml(post.description || '')}</p>
             </div>
         `;
-        mediaContent = `
-  
-                <div class="product-image">
-                    <div class="badge">${post.productCondition || 'New'}</div>
-                    <img class="post-image" onclick="window.openImage('${productImageForChat.replace(/'/g, "\\'")}')" alt="Product Image">
-                </div>
-                
-            `;
-
-
-        productDetails = `
+mediaContent = `
+    <div class="product-image">
+        <div class="badge">${post.productCondition || 'New'}</div>
+        <div class="image-placeholder">
+            <img class="post-image" onclick="window.openImage('${productImageForChat.replace(/'/g, "\\'")}')" alt="Product Image">
+        </div>
+    </div>
+`;
+ productDetails = `
             <div class="content">
                 <div class="details-grid">
                     <div class="detail-item">

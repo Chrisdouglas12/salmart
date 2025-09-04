@@ -14,9 +14,10 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
+import { jwtDecode } from 'jwt-decode';
 import API_BASE_URL from '../config';
 
-export default function LoginScreen() {
+export default function LoginScreen({ setIsLoggedIn }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -78,14 +79,35 @@ export default function LoginScreen() {
       const data = await response.json();
 
       if (response.ok) {
-        await AsyncStorage.setItem('token', data.token);
-        Alert.alert('Success', 'Login successful', [
-          { text: 'OK', onPress: () => navigation.navigate('Home') }
-        ]);
+        // --- THE FIX STARTS HERE ---
+        // 1. Get the token from the response
+        const token = data.token;
+        
+        // 2. Decode the token to get the payload (which contains the user ID)
+        const decodedToken = jwtDecode(token);
+        console.log('Decoded Token:', decodedToken); // <-- Check your console for the user ID property name
+        
+        // 3. Extract the user ID. The property name might be 'userId', '_id', or 'id'.
+        //    Adjust this line based on what you see in the console.
+        const userId = decodedToken.userId || decodedToken._id; // <-- Adjust this line
+
+        if (!userId) {
+          Alert.alert('Login Error', 'User ID not found in token payload. Please check your token structure.');
+          setIsLoading(false);
+          return;
+        }
+
+        // 4. Save both the token and the extracted user ID
+        await AsyncStorage.setItem('token', token);
+        await AsyncStorage.setItem('userId', userId);
+        
+        setIsLoggedIn(true);
+        Alert.alert('Success', 'Login successful');
       } else {
         Alert.alert('Error', data.message || 'Invalid credentials');
       }
     } catch (err) {
+      console.error('Login Error:', err);
       Alert.alert('Error', 'Network problem. Please try again');
     } finally {
       setIsLoading(false);

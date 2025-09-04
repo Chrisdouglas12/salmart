@@ -6,7 +6,8 @@ import { StatusBar } from 'expo-status-bar';
 // Import screens
 import LoginScreen from './screens/LoginScreen';
 import RegistrationScreen from './screens/RegistrationScreen';
-
+import MessagesScreen from './screens/MessagesScreen';
+import ChatScreen from './screens/ChatScreen';
 
 const Stack = createStackNavigator();
 
@@ -44,10 +45,14 @@ export default function App() {
             // Main App Stack
             <>
               <Stack.Screen 
-                name="MainTabs" 
-                component={BottomTabNavigator} 
+                name="MessagesScreen" 
+                component={MessagesScreen}
+                options={{ 
+                  title: 'Messages',
+                  headerShown: false,
+                }}
               />
-              {/* Add other screens that should be accessible after login */}
+
               <Stack.Screen 
                 name="Search" 
                 component={SearchScreen}
@@ -78,6 +83,26 @@ export default function App() {
                   headerTintColor: '#fff',
                 }}
               />
+              <Stack.Screen 
+                name="Profile" 
+                component={ProfileScreen}
+                options={{ 
+                  title: 'Profile',
+                  headerShown: true,
+                  headerStyle: { backgroundColor: '#28a745' },
+                  headerTintColor: '#fff',
+                }}
+              />
+              <Stack.Screen 
+                name="Chat" 
+                component={ChatScreen}
+                options={({ route }) => ({
+                  title: route.params?.recipientName || 'Chat',
+                  headerShown: false,
+                  headerStyle: { backgroundColor: '#28a745' },
+                  headerTintColor: '#fff',
+                })}
+              />
             </>
           )}
         </Stack.Navigator>
@@ -88,33 +113,44 @@ export default function App() {
 
 // Placeholder screens for the additional functionality
 const SearchScreen = () => {
-  const { View, Text, StyleSheet } = require('react-native');
+  const { View, Text } = require('react-native');
   return (
-    <View style={searchStyles.container}>
-      <Text style={searchStyles.text}>🔍 Search functionality coming soon!</Text>
+    <View style={placeholderStyles.container}>
+      <Text style={placeholderStyles.text}>🔍 Search functionality coming soon!</Text>
     </View>
   );
 };
 
 const CreateAdScreen = () => {
-  const { View, Text, StyleSheet } = require('react-native');
+  const { View, Text } = require('react-native');
   return (
-    <View style={searchStyles.container}>
-      <Text style={searchStyles.text}>📢 Create Ad functionality coming soon!</Text>
+    <View style={placeholderStyles.container}>
+      <Text style={placeholderStyles.text}>📢 Create Ad functionality coming soon!</Text>
     </View>
   );
 };
 
 const CreateRequestScreen = () => {
-  const { View, Text, StyleSheet } = require('react-native');
+  const { View, Text } = require('react-native');
   return (
-    <View style={searchStyles.container}>
-      <Text style={searchStyles.text}>➕ Create Request functionality coming soon!</Text>
+    <View style={placeholderStyles.container}>
+      <Text style={placeholderStyles.text}>➕ Create Request functionality coming soon!</Text>
     </View>
   );
 };
 
-const searchStyles = {
+const ProfileScreen = () => {
+  const { View, Text } = require('react-native');
+  return (
+    <View style={placeholderStyles.container}>
+      <Text style={placeholderStyles.text}>👤 Profile functionality coming soon!</Text>
+    </View>
+  );
+};
+
+
+
+const placeholderStyles = {
   container: {
     flex: 1,
     justifyContent: 'center',
