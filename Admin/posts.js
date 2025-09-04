@@ -46,58 +46,58 @@ class ImageLoader {
     }
 
     setSource(imgElement, src) {
-    const parentPlaceholder = imgElement.closest('.image-placeholder');
+        const parentPlaceholder = imgElement.closest('.image-placeholder');
 
-    if (!src) {
-        imgElement.src = '';
-        if (parentPlaceholder) {
-            parentPlaceholder.classList.add('error');
-            imgElement.style.display = 'none'; // Hide the broken image icon
+        if (!src) {
+            imgElement.src = '';
+            if (parentPlaceholder) {
+                parentPlaceholder.classList.add('error');
+                imgElement.style.display = 'none'; // Hide the broken image icon
+            }
+            imgElement.classList.remove('lazy-loading');
+            console.error(`Missing image source for element.`);
+            return;
         }
-        imgElement.classList.remove('lazy-loading');
-        console.error(`Missing image source for element.`);
-        return;
+
+        // Show loading state
+        if (parentPlaceholder) {
+            parentPlaceholder.classList.add('loading');
+        }
+        imgElement.classList.add('lazy-loading');
+
+        // Check cache first
+        if (this.cache.has(src)) {
+            imgElement.src = this.cache.get(src);
+            imgElement.classList.remove('lazy-loading');
+            imgElement.classList.add('loaded');
+            if (parentPlaceholder) {
+                parentPlaceholder.classList.remove('loading');
+            }
+            return;
+        }
+
+        imgElement.src = src;
+
+        imgElement.onload = () => {
+            imgElement.classList.remove('lazy-loading');
+            imgElement.classList.add('loaded');
+            if (parentPlaceholder) {
+                parentPlaceholder.classList.remove('loading');
+            }
+            this.cache.set(src, src);
+        };
+
+        imgElement.onerror = () => {
+            imgElement.src = ''; // Prevents a broken image icon
+            imgElement.classList.remove('lazy-loading');
+            if (parentPlaceholder) {
+                parentPlaceholder.classList.remove('loading');
+                parentPlaceholder.classList.add('error');
+                imgElement.style.display = 'none'; // Hide the broken image icon
+            }
+            console.error(`Failed to load image: ${src}`);
+        };
     }
-
-    // Show loading state
-    if (parentPlaceholder) {
-        parentPlaceholder.classList.add('loading');
-    }
-    imgElement.classList.add('lazy-loading');
-
-    // Check cache first
-    if (this.cache.has(src)) {
-        imgElement.src = this.cache.get(src);
-        imgElement.classList.remove('lazy-loading');
-        imgElement.classList.add('loaded');
-        if (parentPlaceholder) {
-            parentPlaceholder.classList.remove('loading');
-        }
-        return;
-    }
-
-    imgElement.src = src;
-
-    imgElement.onload = () => {
-        imgElement.classList.remove('lazy-loading');
-        imgElement.classList.add('loaded');
-        if (parentPlaceholder) {
-            parentPlaceholder.classList.remove('loading');
-        }
-        this.cache.set(src, src);
-    };
-
-    imgElement.onerror = () => {
-        imgElement.src = ''; // Prevents a broken image icon
-        imgElement.classList.remove('lazy-loading');
-        if (parentPlaceholder) {
-            parentPlaceholder.classList.remove('loading');
-            parentPlaceholder.classList.add('error');
-            imgElement.style.display = 'none'; // Hide the broken image icon
-        }
-        console.error(`Failed to load image: ${src}`);
-    };
-}
 
 
     handleIntersections(entries, observer) {
@@ -207,7 +207,11 @@ socket.on('postCommented', async ({
 });
 
 // Socket event handlers
-socket.on('postPromoted', async ({ postId, category, post }) => {
+socket.on('postPromoted', async ({
+    postId,
+    category,
+    post
+}) => {
     console.log(`📢 Real-time: Post ${postId} was promoted!`);
     await salmartCache.updatePostPromotionStatus(postId, true, category);
     promotedPostIdsInserted.clear();
@@ -217,7 +221,10 @@ socket.on('postPromoted', async ({ postId, category, post }) => {
     }
 });
 
-socket.on('postUnpromoted', async ({ postId, category }) => {
+socket.on('postUnpromoted', async ({
+    postId,
+    category
+}) => {
     console.log(`📢 Real-time: Post ${postId} was unpromoted!`);
     promotedPostIdsInserted.delete(postId);
     await salmartCache.updatePostPromotionStatus(postId, false, category);
@@ -227,7 +234,10 @@ socket.on('postUnpromoted', async ({ postId, category }) => {
     }
 });
 
-socket.on('newPost', async ({ post, category }) => {
+socket.on('newPost', async ({
+    post,
+    category
+}) => {
     console.log(`📢 Real-time: New post ${post._id} created in category ${category}!`);
     await salmartCache.addNewPostToCache(post, category);
     promotedPostIdsInserted.clear();
@@ -659,6 +669,9 @@ function createPromotedPostsRow(posts) {
         const fillerElement = createPromotedPostFiller();
         rowContainer.appendChild(fillerElement);
     }
+    // Corrected this line to check for the existence of headerElement
+    const headerElement = document.createElement('h3');
+    headerElement.textContent = 'Promoted Posts';
     wrapperContainer.appendChild(headerElement);
     wrapperContainer.appendChild(rowContainer);
     rowContainer.style.position = 'relative';
@@ -686,76 +699,71 @@ function renderPost(post) {
     const productImageForChat = post.postType === 'video_ad' ? (post.thumbnail || '') : (post.photo || '');
 
 
-// Update your mediaContent for video_ad posts in renderPost:
-
-if (post.postType === 'video_ad') {
-    mediaContent = `
-        <div class="post-video-container">
-            <video class="post-video" preload="metadata" playsinline 
-                   aria-label="Video ad for ${post.description || 'product'}" 
-                   poster="${post.thumbnail || ''}">
-                <source data-src="${post.video || ''}" type="video/mp4" />
-                <source data-src="${post.video ? post.video.replace('.mp4', '.webm') : ''}" type="video/webm" />
-                <source data-src="${post.video ? post.video.replace('.mp4', '.ogg') : ''}" type="video/ogg" />
-                Your browser does not support the video tag.
-            </video>
-            
-            <!-- Play overlay with Facebook-style play button -->
-            <div class="video-play-overlay">
-                <button class="video-play-button" aria-label="Play video">
-                    <i class="fas fa-play"></i>
-                </button>
-            </div>
-            
-            <!-- Optional: Video duration badge -->
-            <div class="video-duration-badge" style="display: none;">
-                <span class="video-duration-text">0:00</span>
-            </div>
-            
-            <!-- Loading spinner (hidden by default) -->
-            <div class="video-thumbnail-loading" style="display: none;">
-                <div class="video-loading-spinner"></div>
-            </div>
-            
-            <!-- Hide original controls since we're using thumbnail view -->          <div class="custom-controls">
-                <button class="control-button play-pause" aria-label="Play or pause video">
+    if (post.postType === 'video_ad') {
+        mediaContent = `
+            <div class="post-video-container">
+                <video class="post-video" preload="metadata" playsinline 
+                       aria-label="Video ad for ${post.description || 'product'}" 
+                       poster="${post.thumbnail || ''}">
+                    <source data-src="${post.video || ''}" type="video/mp4" />
+                    <source data-src="${post.video ? post.video.replace('.mp4', '.webm') : ''}" type="video/webm" />
+                    <source data-src="${post.video ? post.video.replace('.mp4', '.ogg') : ''}" type="video/ogg" />
+                    Your browser does not support the video tag.
+                </video>
+                
+                <div class="video-play-overlay">
+                    <button class="video-play-button" aria-label="Play video">
                         <i class="fas fa-play"></i>
                     </button>
-                    <div class="progress-container">
-                        <div class="buffered-bar"></div>
-                        <div class="progress-bar" role="slider" aria-label="Video progress" aria-valuemin="0" aria-valuemax="100"></div>
-                        <div class="seek-preview" style="display: none;">
-                            <canvas class="seek-preview-canvas"></canvas>
-                        </div>
-                    </div>
-                    <div class="time-display">
-                        <span class="current-time">0:00</span> / <span class="duration">0:00</span>
-                    </div>
-                    <button class="control-button mute-button" aria-label="Mute or unmute video">
-                        <i class="fas fa-volume-mute"></i>
-                    </button>
-                    <div class="volume-control">
-                        <input type="range" class="volume-slider" min="0" max="100" value="100" aria-label="Volume control">
-                    </div>
-                    <select class="playback-speed" aria-label="Playback speed">
-                        <option value="0.5">0.5x</option>
-                        <option value="1" selected>1x</option>
-                        <option value="1.5">1.5x</option>
-                        <option value="2">2x</option>
-                    </select>
-                    <button class="control-button fullscreen-button" aria-label="Toggle fullscreen">
-                        <i class="fas fa-expand"></i>
-                    </button>
                 </div>
-            </div>
-        `;
-       buttonContent = `
-        <div style="margin-top: -50px">
-            <a href="${post.productLink || '#'}" class="checkout-product-btn ${isSold ? 'sold-out' : ''}" aria-label="Check out product ${post.description || 'product'}" ${!post.productLink || isSold ? 'disabled' : ''}>
-                <i class="fas fa-shopping-cart"></i> ${isSold ? 'Sold Out' : 'Check Out Product'}
-            </a>
-            </div>
-        `;
+                
+                <div class="video-duration-badge" style="display: none;">
+                    <span class="video-duration-text">0:00</span>
+                </div>
+                
+                <div class="video-thumbnail-loading" style="display: none;">
+                    <div class="video-loading-spinner"></div>
+                </div>
+                
+                <div class="custom-controls">
+                    <button class="control-button play-pause" aria-label="Play or pause video">
+                            <i class="fas fa-play"></i>
+                        </button>
+                        <div class="progress-container">
+                            <div class="buffered-bar"></div>
+                            <div class="progress-bar" role="slider" aria-label="Video progress" aria-valuemin="0" aria-valuemax="100"></div>
+                            <div class="seek-preview" style="display: none;">
+                                <canvas class="seek-preview-canvas"></canvas>
+                            </div>
+                        </div>
+                        <div class="time-display">
+                            <span class="current-time">0:00</span> / <span class="duration">0:00</span>
+                        </div>
+                        <button class="control-button mute-button" aria-label="Mute or unmute video">
+                            <i class="fas fa-volume-mute"></i>
+                        </button>
+                        <div class="volume-control">
+                            <input type="range" class="volume-slider" min="0" max="100" value="100" aria-label="Volume control">
+                        </div>
+                        <select class="playback-speed" aria-label="Playback speed">
+                            <option value="0.5">0.5x</option>
+                            <option value="1" selected>1x</option>
+                            <option value="1.5">1.5x</option>
+                            <option value="2">2x</option>
+                        </select>
+                        <button class="control-button fullscreen-button" aria-label="Toggle fullscreen">
+                            <i class="fas fa-expand"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+        buttonContent = `
+            <div style="margin-top: -50px">
+                <a href="${post.productLink || '#'}" class="checkout-product-btn ${isSold ? 'sold-out' : ''}" aria-label="Check out product ${post.description || 'product'}" ${!post.productLink || isSold ? 'disabled' : ''}>
+                    <i class="fas fa-shopping-cart"></i> ${isSold ? 'Sold Out' : 'Check Out Product'}
+                </a>
+                </div>
+            `;
     } else {
         descriptionContent = `
             <h2 class="product-title">${escapeHtml(post.title || 'No description')}</h2>
@@ -763,15 +771,16 @@ if (post.postType === 'video_ad') {
                 <p>${escapeHtml(post.description || '')}</p>
             </div>
         `;
-mediaContent = `
-    <div class="product-image">
-        <div class="badge">${post.productCondition || 'New'}</div>
-        <div class="image-placeholder">
-            <img class="post-image" onclick="window.openImage('${productImageForChat.replace(/'/g, "\\'")}')" alt="Product Image">
-        </div>
-    </div>
-`;
- productDetails = `
+        mediaContent = `
+            <div class="product-image">
+                <div class="badge">${post.productCondition || 'New'}</div>
+                <div class="image-placeholder">
+                    <img class="post-image" onclick="window.openImage('${productImageForChat.replace(/'/g, "\\'")}')" alt="Product Image">
+                </div>
+            </div>
+        `;
+
+        productDetails = `
             <div class="content">
                 <div class="details-grid">
                     <div class="detail-item">
@@ -794,27 +803,27 @@ mediaContent = `
         if (currentLoggedInUser) {
             if (isPostCreator) {
                 buttonContent = !post.isPromoted ? `
-      <div class="actions">
-        <button class="btn btn-primary promote-button ${isSold ? 'sold-out' : ''}" data-post-id="${post._id || ''}" aria-label="Promote this post" ${isSold ? 'disabled title="Cannot promote sold out post"' : ''} >
-          <i class="${isSold ? 'fas fa-times-circle' : 'fas fa-bullhorn'}"></i> 
-          ${isSold ? 'Sold Out' : 'Promote'}
-        </button>
-      </div>
-    ` : '';
+          <div class="actions">
+            <button class="btn btn-primary promote-button ${isSold ? 'sold-out' : ''}" data-post-id="${post._id || ''}" aria-label="Promote this post" ${isSold ? 'disabled title="Cannot promote sold out post"' : ''} >
+              <i class="${isSold ? 'fas fa-times-circle' : 'fas fa-bullhorn'}"></i> 
+              ${isSold ? 'Sold Out' : 'Promote'}
+            </button>
+          </div>
+        ` : '';
 
             } else {
                 buttonContent = `
-  <div class="actions">
-    <button class="btn btn-secondary send-message-btn ${isSold ? 'unavailable' : ''}" data-recipient-id="${post.createdBy ? post.createdBy.userId : ''}" data-product-image="${productImageForChat}" data-product-description="${escapeHtml(post.title || '')}" data-post-id="${post._id || ''}" ${isSold ? 'disabled' : ''}>
-      <i class="fas ${isSold ? 'fa-ban' : 'fa-paper-plane'}"></i> 
-      ${isSold ? 'Unavailable' : 'Message'}
-    </button>
-    <button class="btn btn-primary buy-now-button ${isSold ? 'sold-out' : ''}" data-post-id="${post._id || ''}" data-product-image="${productImageForChat}" data-product-title="${escapeHtml(post.title || 'Untitled Product')}" data-product-description="${escapeHtml(post.description || 'No description available.')}" data-product-location="${escapeHtml(post.location || 'N/A')}" data-product-condition="${escapeHtml(post.productCondition || 'N/A')}" data-product-price="${post.price ? '₦' + Number(post.price).toLocaleString('en-NG') : '₦0.00'}" data-seller-id="${post.createdBy ? post.createdBy.userId : ''}" ${isSold ? 'disabled' : ''}>
-      <i class="fas ${isSold ? 'fa-times-circle' : 'fa-shopping-cart'}"></i> 
-      ${isSold ? 'Sold Out' : 'Buy Now'}
-    </button>
-  </div>
-`;
+          <div class="actions">
+            <button class="btn btn-secondary send-message-btn ${isSold ? 'unavailable' : ''}" data-recipient-id="${post.createdBy ? post.createdBy.userId : ''}" data-product-image="${productImageForChat}" data-product-description="${escapeHtml(post.title || '')}" data-post-id="${post._id || ''}" ${isSold ? 'disabled' : ''}>
+              <i class="fas ${isSold ? 'fa-ban' : 'fa-paper-plane'}"></i> 
+              ${isSold ? 'Unavailable' : 'Message'}
+            </button>
+            <button class="btn btn-primary buy-now-button ${isSold ? 'sold-out' : ''}" data-post-id="${post._id || ''}" data-product-image="${productImageForChat}" data-product-title="${escapeHtml(post.title || 'Untitled Product')}" data-product-description="${escapeHtml(post.description || 'No description available.')}" data-product-location="${escapeHtml(post.location || 'N/A')}" data-product-condition="${escapeHtml(post.productCondition || 'N/A')}" data-product-price="${post.price ? '₦' + Number(post.price).toLocaleString('en-NG') : '₦0.00'}" data-seller-id="${post.createdBy ? post.createdBy.userId : ''}" ${isSold ? 'disabled' : ''}>
+              <i class="fas ${isSold ? 'fa-times-circle' : 'fa-shopping-cart'}"></i> 
+              ${isSold ? 'Sold Out' : 'Buy Now'}
+            </button>
+          </div>
+        `;
             }
         } else {
             buttonContent = `
@@ -974,7 +983,7 @@ async function fetchInitialPosts(category = currentCategory, clearExisting = fal
             scrollObserver.disconnect(); // Stop observing on clear
         }
     }
-    
+
 
 
     try {
@@ -996,11 +1005,11 @@ async function fetchInitialPosts(category = currentCategory, clearExisting = fal
         }
 
         const sortedPosts = [...allPosts].sort((a, b) => {
-    if (a.isPromoted && b.isPromoted) {
-        return new Date(b.promotedAt || b.createdAt) - new Date(a.promotedAt || a.createdAt);
-    }
-    return b.isPromoted ? 1 : a.isPromoted ? -1 : new Date(b.createdAt) - new Date(a.createdAt);
-});
+            if (a.isPromoted && b.isPromoted) {
+                return new Date(b.promotedAt || b.createdAt) - new Date(a.promotedAt || a.createdAt);
+            }
+            return b.isPromoted ? 1 : a.isPromoted ? -1 : new Date(b.createdAt) - new Date(a.createdAt);
+        });
 
 
         const availablePromotedPosts = sortedPosts.filter(post => post.isPromoted === true && post.postType !== 'video_ad');
@@ -1127,6 +1136,7 @@ async function fetchMorePosts(category, lastPostId) {
             const newLastPostElement = postsContainer.querySelector('.post:last-of-type');
 
             if (newLastPostElement && scrollObserver) {
+                scrollObserver.unobserve(newLastPostElement); // unobserve the old one before observing the new one
                 scrollObserver.observe(newLastPostElement);
             }
         } else {
@@ -1310,7 +1320,7 @@ function monitorScrollPerformance() {
 // monitorScrollPerformance();
 
 // Also listen for focus events as a backup
-window.addEventListener('focus', async () => {
+window.addEventListener('focus', async() => {
     if (isAuthReady) {
         const justCreatedPost = sessionStorage.getItem('justCreatedPost');
         if (justCreatedPost) {
