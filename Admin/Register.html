@@ -27,48 +27,26 @@
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <link rel="stylesheet" href="Register.css">
-
-<style>
-/* Minimal checkbox fix - only add this if your Register.css doesn't handle it properly */
-.custom-checkbox input[type="checkbox"] {
-  position: absolute;
-  opacity: 0;
-  cursor: pointer;
-  height: 0;
-  width: 0;
-}
-
-.custom-checkbox {
-  position: relative;
-  cursor: pointer;
-  user-select: none;
-}
-
-.checkmark {
-  position: relative;
-  display: inline-block;
-  cursor: pointer;
-}
-
-.checkbox-group {
-  cursor: pointer;
-}
-</style>
 </head>
 <body>
   <div class="container">
+    <!-- HEADER -->
     <div class="header">
-      <span class="quick-badge">⚡ Quick Start</span>
+      
+      <img src="./assets/logo-1.png" alt="Salmart Logo" style="max-width:90px; width: 50px; margin-bottom:10px ; border: solid 1px #fff; padding: 10px; border-radius: 100%; box-shadow: 0 0 10px #ddd; margin-top: 15px">
+      
       <h1>Salmart</h1>
-      <p>Get started in seconds! Complete your profile anytime later.</p>
-      <h2>Create Account</h2>
+      <p style="color:#555;">Safe buying & selling across Nigeria with <strong>escrow protection</strong>. No scam zone.</p>
+      <span class="quick-badge">⚡ Quick Start</span>
     </div>
 
+    <!-- QUICK INFO -->
     <div class="complete-later">
       <i class="fas fa-info-circle"></i>
       <p><strong>Quick Registration!</strong><br>Just basic info needed. Add bank details, location, and preferences later in your profile.</p>
     </div>
 
+    <!-- FORM -->
     <div class="form-container">
       <form id="quickRegistrationForm">
         
@@ -110,6 +88,11 @@
           </div>
         </div>
 
+        <!-- TRUST BADGES -->
+        <div class="trust-badges" style="margin:10px 0; font-size:13px; color:#28a745; text-align: center">
+          <p>🔒 Data Secured | 🔐 Escrow Protection | 🛡️ Trusted in Nigeria</p>
+        </div>
+
         <div class="checkbox-group" onclick="toggleCheckbox(event)">
           <div class="custom-checkbox">
             <input type="checkbox" id="acceptTerms" required>
@@ -120,9 +103,9 @@
           </label>
         </div>
 
+        <!-- CTA -->
         <button type="submit" class="submit-btn" id="submitBtn">
-          <i class="fas fa-rocket"></i>
-          <span id="btnText">Submit & Start Trading</span>
+          <span id="btnText">🚀 Submit & Register</span>
           <div id="btnSpinner" class="loading-spinner" style="display: none;"></div>
         </button>
 
@@ -132,11 +115,38 @@
       </form>
     </div>
 
+    <!-- WHY REGISTER -->
+    <div class="why-register" style="background-color: #fff; padding: 10px; border-radius: 20px; border: solid 1px #fff; box-shadow: 0 0 10px #ddd; margin-bottom: 20px; border-bottom-color: #28a745; border-top-color: #28a745">
+      <h3 style="text-align: center; margin-top: 0px">Why Join Salmart?</h3>
+      <ul>
+        <li>🔒 Safe Escrow Payment</li>
+        <li>🛬 Meet buyers & sellers</li>
+        <li>📢 Post products for free</li>
+        <li>↗️ Instant notifications</li>
+          <li>💬 Realtime Chats 
+          </li>
+      </ul>
+    </div>
+
+    <!-- SOCIAL PROOF -->
+    <div class="social-proof" style="text-align: center;">
+      <p><i class="fas fa-users" style="color: #28a745"></i> Join <strong>other Nigerians</strong> and start buying and selling safely on Salmart!</p>
+    </div>
+    <div style="margin-top: 20px">
+    <p>Checkout our <a href="index.html" style="text-decoration: none; color: #28a745">homepage here</a></p>
+    </div>
+
+    <!-- SUPPORT -->
+    <div style="margin:15px 0; font-size:13px; text-align: center">
+      <p>Need help? Contact <a style="color: #28a745; text-decoration: none;" href="mailto:support@salmartonline.com.ng">support@salmartonline.com.ng</a></p>
+    </div>
+
     <div class="footer">
       &copy; 2025 Salmart Technologies. All rights reserved.
     </div>
   </div>
 
+  <!-- SUCCESS MODAL -->
   <div id="successModal" class="modal">
     <div class="modal-content">
       <div class="modal-icon">
@@ -149,11 +159,8 @@
   </div>
 
   <script>
-    // Checkbox toggle function - add this to your Register.js file
     function toggleCheckbox(event) {
-      // Prevent triggering if clicking on links
       if (event.target.tagName === 'A') return;
-      
       const checkbox = document.getElementById('acceptTerms');
       checkbox.checked = !checkbox.checked;
     }

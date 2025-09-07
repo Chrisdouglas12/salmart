@@ -1,0 +1,35 @@
+{
+  "expo": {
+    "name": "Salmart",
+    "slug": "Salmart",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/salmart-512x512.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/salmart-512x512.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/salmart-512x512.png",
+        "backgroundColor": "#ffffff"
+      },
+      "edgeToEdgeEnabled": true,
+      "package": "com.chrisdouglas.Salmart"
+    },
+    "web": {
+      "favicon": "./assets/salmart-512x512.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "f6963f71-bb3f-445d-b700-141e640c8d49"
+      }
+    }
+  }
+}

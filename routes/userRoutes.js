@@ -20,13 +20,28 @@ const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
 require('dotenv').config();
 
-// Configure nodemailer (add this near the top of your file after other requires)
+
+
 const transporter = nodemailer.createTransport({
   service: 'Zoho', 
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS
-  }
+  },
+  
+  // Connection pooling for better performance
+  pool: true,
+  maxConnections: 5,
+  maxMessages: 10,
+  rateDelta: 1000, // 1 second
+  rateLimit: 5, // max 5 emails per second
+  // Connection timeout
+  connectionTimeout: 10000, // 10 seconds
+  socketTimeout: 10000, // 10 seconds
+  
+  // Retry settings
+  retries: 2,
+  retryDelay: 2000
 });
 
 // Generate verification token
@@ -98,7 +113,7 @@ router.post('/register', async (req, res) => {
     } = req.body;
 
     // --- Input Validation ---
-    if (!email || !password ) {
+    if (!email || !password) {
       return res.status(400).json({ message: 'All required fields must be provided.' });
     }
 
@@ -122,260 +137,191 @@ router.post('/register', async (req, res) => {
       phoneNumber: phoneNumber?.trim(),
       isVerified: false,
       verificationToken,
-      
     });
 
     await newUser.save();
 
     const verifyUrl = `https://salmartonline.com.ng/verify-email.html?token=${verificationToken}`;
 
-    // --- Email Sending Logic ---
+    // --- Optimized Email Template ---
     const emailHtml = `
-      <!DOCTYPE html>
-      <html lang="en">
-      <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <title>Welcome to Salmart</title>
-        <style>
-          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-          
-          /* Reset and base styles */
-          * { margin: 0; padding: 0; box-sizing: border-box; }
-          body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; }
-          
-          /* Responsive */
-          @media only screen and (max-width: 600px) {
-            .container { width: 100% !important; padding: 10px !important; }
-            .content { padding: 20px !important; }
-            .button { font-size: 16px !important; padding: 14px 28px !important; }
-            .header-icon { font-size: 32px !important; }
-            .brand-name { font-size: 20px !important; }
-          }
-        </style>
-      </head>
-      <body style="margin: 0; padding: 20px 0; background-color: #f8f9fa; color: #333;">
-        
-        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #f8f9fa;">
-          <tr>
-            <td align="center" style="padding: 20px 0;">
-              
-              <table class="container" role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; box-shadow: 0 8px 32px rgba(40, 167, 69, 0.12); overflow: hidden; border: 1px solid rgba(40, 167, 69, 0.1);">
-                
-                <tr>
-                  <td style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); padding: 0; position: relative;">
-                    <div style="height: 4px; background: linear-gradient(90deg, #28a745, #20c997, #28a745);"></div>
-                    
-                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
-                      <tr>
-                        <td align="center" style="padding: 40px 30px; position: relative;">
-                         
-                          <table role="presentation" cellspacing="0" cellpadding="0" border="0">
-                            <tr>
-                              <td align="center" style="position: relative; z-index: 1;">
-                               
-                                
-                                <h1 class="brand-name" style="color: #ffffff; font-size: 24px; font-weight: 700; margin: 0; letter-spacing: -0.5px;">Salmart</h1>
-                                <p style="color: rgba(255, 255, 255, 0.9); font-size: 14px; margin: 8px 0 0 0; font-weight: 500;">Your Online Social Marketplace</p>
-                              </td>
-                            </tr>
-                          </table>
-                        </td>
-                      </tr>
-                    </table>
-                  </td>
-                </tr>
-                
-                <tr>
-                  <td class="content" style="padding: 48px 40px;">
-                    
-                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
-                      <tr>
-                        <td>
-                          <div style="text-align: center; margin-bottom: 32px;">
-                            <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #28a745, #20c997); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; position: relative;">
-                              <span style="font-size: 40px; color: #ffffff;">✓</span>
-                              <div style="position: absolute; width: 100px; height: 100px; border: 2px solid rgba(40, 167, 69, 0.2); border-radius: 50%; top: -10px; left: -10px;"></div>
-                            </div>
-                          </div>
-                          
-                          <h2 style="color: #2c3e50; font-size: 28px; font-weight: 600; text-align: center; margin: 0 0 16px 0; line-height: 1.3; letter-spacing: -0.5px;">
-                            Welcome to Salmart, ${newUser.firstName}! 🎉
-                          </h2>
-                          
-                          <p style="color: #6c757d; font-size: 16px; line-height: 1.6; text-align: center; margin: 0 0 32px 0;">
-                            Thank you for joining our community! We're excited to have you as part of the Salmart family. 
-                            To get started and secure your account, please verify your email address.
-                          </p>
-                        </td>
-                      </tr>
-                    </table>
-                    
-                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
-                      <tr>
-                        <td align="center" style="padding: 0 0 32px 0;">
-                          <table role="presentation" cellspacing="0" cellpadding="0" border="0">
-                            <tr>
-                              <td align="center" style="border-radius: 12px; background: linear-gradient(135deg, #28a745, #20c997); box-shadow: 0 4px 16px rgba(40, 167, 69, 0.3);">
-                                <a href="${verifyUrl}" class="button" style="display: inline-block; color: #ffffff; font-size: 18px; font-weight: 600; text-decoration: none; padding: 16px 32px; border-radius: 12px; letter-spacing: 0.5px; transition: all 0.3s ease;">
-                                  ✉️ Verify My Email Address
-                                </a>
-                              </td>
-                            </tr>
-                          </table>
-                          
-                          <p style="margin: 20px 0 0 0; font-size: 14px; color: #9ca3af; text-align: center;">
-                            Or copy and paste this link in your browser:<br>
-                            <a href="${verifyUrl}" style="color: #28a745; text-decoration: none; word-break: break-all; font-size: 13px;">${verifyUrl}</a>
-                          </p>
-                        </td>
-                      </tr>
-                    </table>
-                    
-                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
-                      <tr>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Welcome to Salmart</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; }
+    
+    @media only screen and (max-width: 600px) {
+      .container { width: 100% !important; padding: 10px !important; }
+      .content { padding: 20px !important; }
+      .button { font-size: 16px !important; padding: 14px 28px !important; }
+    }
+  </style>
+</head>
+<body style="margin: 0; padding: 20px 0; background-color: #f8f9fa; color: #333;">
 
-                <!-- First Box -->
-<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #f8f9fa;">
   <tr>
-    <td style="background-color: rgba(40, 167, 69, 0.05); border: 1px solid rgba(40, 167, 69, 0.15); border-radius: 12px; padding: 24px;">
-      <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+    <td align="center" style="padding: 20px 0;">
+      
+      <table class="container" role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; border: 1px solid #e9ecef;">
+        
+        <!-- Header -->
         <tr>
-          <td>
-            <h3 style="color: #28a745; font-size: 16px; font-weight: 600; margin: 0 0 12px 0; display: flex; align-items: center;">
-              🔒 What happens next?
-            </h3>
-            <ul style="color: #6c757d; font-size: 14px; line-height: 1.6; margin: 0; padding-left: 20px;">
-              <li style="margin-bottom: 8px;">Click the verification button above</li>
-              <li style="margin-bottom: 8px;">Your account will be activated instantly</li>
-              <li style="margin-bottom: 8px;">Start exploring thousands of products</li>
-              <li>Enjoy secure shopping with trusted sellers</li>
-            </ul>
+          <td style="background-color: #28a745; padding: 30px; text-align: center;">
+            <h1 style="color: #ffffff; font-size: 24px; font-weight: 700; margin: 0;">Salmart</h1>
+            <p style="color: #ffffff; font-size: 14px; margin: 8px 0 0 0;">Your Online Social Marketplace</p>
           </td>
         </tr>
-      </table>
-    </td>
-  </tr>
-</table>
-
-<!-- Spacer Row (Acts like vertical space between blocks) -->
-<table role="presentation" width="100%">
-  <tr>
-    <td height="24" style="line-height: 24px;">&nbsp;</td>
-  </tr>
-</table>
-
-<!-- Second Box -->
-<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
-  <tr>
-    <td style="background-color: #f8f9fa; border-left: 4px solid #28a745; padding: 20px; border-radius: 8px; padding-top: 10px;">
-      <p style="color: #495057; font-size: 14px; margin: 0; line-height: 1.5;">
-        <strong style="color: #28a745;">🛡️ Security Notice:</strong><br>
-        This verification link will expire in <strong>24 hours</strong> for your security. 
-        If you didn't create this account, please ignore this email.
-      </p>
-    </td>
-  </tr>
-</table>
-                <tr>
-                  <td style="background-color: #f8f9fa; padding: 32px 40px; border-top: 1px solid #e9ecef;">
-                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
-                      <tr>
-                        <td align="center">
-                          <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin: 0 0 20px 0;">
-                            <tr>
-                              <td style="padding: 0 10px;">
-                                <a href="#" style="color: #28a745; text-decoration: none; font-size: 24px;">📱</a>
-                              </td>
-                              <td style="padding: 0 10px;">
-                                <a href="#" style="color: #28a745; text-decoration: none; font-size: 24px;">📧</a>
-                              </td>
-                              <td style="padding: 0 10px;">
-                                <a href="#" style="color: #28a745; text-decoration: none; font-size: 24px;">🌐</a>
-                              </td>
-                            </tr>
-                          </table>
-                          
-                          <p style="color: #6c757d; font-size: 14px; margin: 0 0 16px 0; text-align: center;">
-                            Need help? Contact our support team at 
-                            <a href="mailto:support@salmart.com" style="color: #28a745; text-decoration: none;">support@salmartonline.com.ng</a>
-                          </p>
-                          
-                          <p style="color: #9ca3af; font-size: 12px; text-align: center; margin: 0; line-height: 1.5;">
-                            © ${new Date().getFullYear()} Salmart. All rights reserved.<br>
-                            Nigeria's first social E-commerce Marketplace<br>
-                            <a href="https://salmartonline.com.ng/Privacy.html" style="color: #9ca3af; text-decoration: none;">Privacy Policy</a> | 
-                            <a href="https://salmartonline.com.ng/Community.html" style="color: #9ca3af; text-decoration: none;">Terms of Service</a>
-                          </p>
-                        </td>
-                      </tr>
-                    </table>
-                  </td>
-                </tr>
-                
-              </table>
-              
-            </td>
-          </tr>
-        </table>
         
-      </body>
-      </html>
-    `;
+        <!-- Main Content -->
+        <tr>
+          <td class="content" style="padding: 40px;">
+            
+            <div style="text-align: center; margin-bottom: 30px;">
+              <div style="width: 60px; height: 60px; background-color: #28a745; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 20px;">
+                <span style="font-size: 30px; color: #ffffff;">✓</span>
+              </div>
+              
+              <h2 style="color: #2c3e50; font-size: 26px; font-weight: 600; margin: 0 0 15px 0;">
+                Welcome to Salmart, ${newUser.firstName || 'Valued Customer'}!
+              </h2>
+              
+              <p style="color: #6c757d; font-size: 16px; line-height: 1.5; margin: 0 0 30px 0;">
+                Thank you for joining our community! Please verify your email address to activate your account.
+              </p>
+            </div>
+            
+            <!-- CTA Button -->
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${verifyUrl}" style="display: inline-block; background-color: #28a745; color: #ffffff; font-size: 16px; font-weight: 600; text-decoration: none; padding: 15px 30px; border-radius: 8px;">
+                Verify My Email Address
+              </a>
+              
+              <p style="margin: 15px 0 0 0; font-size: 13px; color: #9ca3af;">
+                Or copy this link: <a href="${verifyUrl}" style="color: #28a745; word-break: break-all;">${verifyUrl}</a>
+              </p>
+            </div>
+            
+            <!-- Info Box -->
+            <div style="background-color: #f8f9fa; border-left: 4px solid #28a745; padding: 20px; margin: 30px 0;">
+              <p style="color: #495057; font-size: 14px; margin: 0;">
+                <strong>Security Notice:</strong> This link expires in 24 hours. If you didn't create this account, please ignore this email.
+              </p>
+            </div>
+            
+          </td>
+        </tr>
+        
+        <!-- Footer -->
+        <tr>
+          <td style="background-color: #f8f9fa; padding: 30px; text-align: center; border-top: 1px solid #e9ecef;">
+            <p style="color: #6c757d; font-size: 14px; margin: 0 0 15px 0;">
+              Need help? Contact us at <a href="mailto:support@salmartonline.com.ng" style="color: #28a745;">support@salmartonline.com.ng</a>
+            </p>
+            
+            <p style="color: #9ca3af; font-size: 12px; margin: 0;">
+              © ${new Date().getFullYear()} Salmart. All rights reserved.<br>
+              <a href="https://salmartonline.com.ng/Privacy.html" style="color: #9ca3af;">Privacy Policy</a> | 
+              <a href="https://salmartonline.com.ng/Community.html" style="color: #9ca3af;">Terms of Service</a>
+            </p>
+          </td>
+        </tr>
+        
+      </table>
+      
+    </td>
+  </tr>
+</table>
 
+</body>
+</html>`;
+
+    // --- Email Sending with Retry Logic ---
     const emailOptions = {
       from: `"Salmart Team" <${process.env.EMAIL_USER}>`,
       to: newUser.email,
-      subject: '🎉 Welcome to Salmart - Verify Your Account',
+      subject: 'Welcome to Salmart - Verify Your Account',
       html: emailHtml,
-      // More reliable email headers for deliverability
       headers: {
-        'X-Priority': '1', 
-        'Importance': 'high',
+        'Message-ID': `<${Date.now()}-${Math.random().toString(36)}@salmartonline.com.ng>`,
+        'X-Mailer': 'Salmart-System-1.0',
+        'List-Unsubscribe': '<mailto:unsubscribe@salmartonline.com.ng>',
       },
-      text: `
-        Welcome to Salmart, ${newUser.firstName}!
-        
-        Thank you for joining our community! To activate your account and start shopping, please verify your email address by clicking the link below:
-        
-        ${verifyUrl}
-        
-        This link will expire in 24 hours for security reasons.
-        
-        If you didn't create this account, please ignore this email.
-        
-        Best regards,
-        The Salmart Team
-        
-        Need help? Contact us at support@salmart.com
-        © ${new Date().getFullYear()} Salmart. All rights reserved.
-      `.trim()
-    };
-    
-    console.log('Sending verification email to:', newUser.email);
-    
-    transporter.sendMail(emailOptions, (emailError, emailResult) => {
-      if (emailError) {
-        console.error('Failed to send verification email:', emailError);
-      } else {
-        console.log('Verification email sent successfully:', {
-          messageId: emailResult.messageId,
-          response: emailResult.response,
-          to: newUser.email
-        });
-      }
-    });
+      text: `Welcome to Salmart, ${newUser.firstName || 'Valued Customer'}!
 
-    res.status(201).json({
-      message: 'Registration successful! A verification email has been sent to your inbox. Please check your email (including spam folder) to activate your account.',
-      userId: newUser._id,
-      email: newUser.email,
-      verificationSent: true
-    });
+Thank you for joining our community! 
+
+Please verify your email address: ${verifyUrl}
+
+This link expires in 24 hours.
+
+If you didn't create this account, please ignore this email.
+
+Need help? Contact: support@salmartonline.com.ng
+
+© ${new Date().getFullYear()} Salmart. All rights reserved.`
+    };
+
+    // Retry function with exponential backoff
+    async function sendEmailWithRetry(emailOptions, maxRetries = 3) {
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          const result = await transporter.sendMail(emailOptions);
+          console.log(`✅ Email sent successfully on attempt ${attempt}:`, {
+            messageId: result.messageId,
+            to: newUser.email,
+            attempt: attempt
+          });
+          return result;
+        } catch (error) {
+          console.log(`❌ Email send attempt ${attempt} failed:`, error.message);
+          
+          if (attempt === maxRetries) {
+            throw error; // Final attempt failed
+          }
+          
+          // Exponential backoff: wait 2^attempt seconds
+          const delayMs = Math.pow(2, attempt) * 1000;
+          console.log(`⏳ Retrying in ${delayMs}ms...`);
+          await new Promise(resolve => setTimeout(resolve, delayMs));
+        }
+      }
+    }
+
+    // Send email with retry logic
+    console.log('📧 Sending verification email to:', newUser.email);
+    
+    try {
+      await sendEmailWithRetry(emailOptions);
+      
+      // Success response
+      res.status(201).json({
+        message: 'Registration successful! A verification email has been sent to your inbox. Please check your email (including spam folder) to activate your account.',
+        userId: newUser._id,
+        email: newUser.email,
+        verificationSent: true
+      });
+      
+    } catch (emailError) {
+      console.error('❌ Failed to send verification email after all retries:', emailError);
+      
+      // Still return success but indicate email issue
+      res.status(201).json({
+        message: 'Registration successful! However, there was an issue sending the verification email. Please try requesting a new verification email.',
+        userId: newUser._id,
+        email: newUser.email,
+        verificationSent: false,
+        emailError: true
+      });
+    }
 
   } catch (error) {
-    console.error('Registration error:', {
+    console.error('❌ Registration error:', {
       message: error.message,
       stack: error.stack,
     });
@@ -389,6 +335,8 @@ router.post('/register', async (req, res) => {
     }
   }
 });
+
+
 
 // Verify email router
 router.get('/verify-email', async (req, res) => {

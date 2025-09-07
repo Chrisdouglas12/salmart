@@ -19,7 +19,7 @@
     }
   ],
   "share_target": {
-    "action": "/Ads.html",
+    "action": "Ads.html",
     "method": "POST",
     "enctype": "multipart/form-data",
     "params": {

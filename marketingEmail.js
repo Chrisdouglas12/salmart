@@ -74,39 +74,41 @@ async function sendMarketingEmails() {
 
 async function sendSingleEmail(user, index) {
   // Personalized subject line
-  const subject = `🚀 ${user.firstName || 'Seller'}, Post Your First Product Today! [#${index+1}]`;
+  const subject = `💚 ${user.firstName || 'Friend'}, Buy & Sell Safely on Salmart [#${index+1}]`;
   const postProductUrl = 'https://salmartonline.com.ng/index.html';
 
   // Generate unique Message-ID
   const messageId = `<${crypto.randomBytes(16).toString('hex')}@salmartonline.com.ng>`;
 
   const emailHtml = `
-  <div style="font-family: Arial, sans-serif; max-width:600px; margin:auto; color:#333;">
-    <h2 style="color:#28a745;">Hi ${user.firstName || 'Seller'},</h2>
-    <p>Do you know? The fastest way to start earning on <strong>Salmart</strong> is by posting your first product!</p>
+  <div style="font-family:Arial, sans-serif;max-width:600px;margin:auto;color:#333;">
+    <h2 style="color:#28a745;">Hello ${user.firstName || 'Salmart User'} 👋</h2>
     
-    <h3 style="color:#28a745;">How to Post in 6 Easy Steps:</h3>
-    <ol>
-      <li><a href="https://salmartonline.com.ng/SignIn.html">↗️ Log in to your account</a></li>
-      <li><a href="https://salmartonline.com.ng/index.html">🏠 Navigate to the Market Tab</a></li>
-      <li>📢 Click on the create an ad button</li>
-      <li>📸 Upload clear a photo of your item</li>
-      <li>💰 Add price, description, location, condition, title</li>
-      <li>🚀 Click publish – and wait for buyers!</li>
-    </ol>
-
-    <p style="margin:20px 0;">It’s that simple. Start posting now and get connected to buyers today!</p>
+    <p>We know one of the biggest fears in online buying and selling is <strong>scam</strong>.  
+    That’s why we built <strong>Salmart</strong> – a marketplace where <u>everyone is protected</u>.</p>
     
-    <a href="${postProductUrl}" style="background:#28a745;color:#fff;padding:12px 20px;text-decoration:none;border-radius:5px;display:inline-block;">
-      👉 Post Your First Product Now
+    <h3 style="color:#28a745;">Here’s how Salmart keeps you safe:</h3>
+    <ul>
+      <li>💰 <b>Buyers</b> – Your money goes into escrow first. Sellers only get paid after you confirm delivery.</li>
+      <li>📦 <b>Sellers</b> – You won’t lose your goods. Payment is guaranteed before you deliver.</li>
+      <li>🔒 <b>No Scams</b> – Salmart is designed to make sure both sides are covered.</li>
+    </ul>
+    
+    <p style="margin:20px 0;">👉 Don’t just sign up, take the next step today:  
+    Post your first product or make your first safe purchase!</p>
+    
+    <a href="${postProductUrl}" 
+       style="background:#28a745;color:#fff;padding:12px 20px;text-decoration:none;border-radius:5px;display:inline-block;">
+       🚀 Start Now
     </a>
     
     <p style="margin-top:30px;font-size:14px;">
-      Need help? Reply to this email or contact support@salmartonline.com.ng
+      Got questions? Our team is here to help – just reply to this email or write us at  
+      <a href="mailto:support@salmartonline.com.ng">support@salmartonline.com.ng</a>.
     </p>
     
     <p style="font-size:12px;color:#666;margin-top:20px;">
-      Salmart Technologies – Safer E-commerce in Nigeria. <br/>
+      Salmart Technologies – Buy and Sell Without Fear.
     </p>
   </div>`;
 

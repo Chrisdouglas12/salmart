@@ -1,0 +1,40 @@
+{
+  "name": "workingexpoapp",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "dev": "USE_POLLING=1 node node_modules/expo/bin/cli start -c"
+  },
+  "dependencies": {
+    "@react-native-async-storage/async-storage": "^2.2.0",
+    "@react-navigation/bottom-tabs": "^7.4.6",
+    "@react-navigation/native": "^7.1.17",
+    "@react-navigation/stack": "^7.4.7",
+    "date-fns": "^4.1.0",
+    "expo": "~53.0.20",
+    "expo-constants": "^17.1.7",
+    "expo-device": "^7.1.4",
+    "expo-image-picker": "^16.1.4",
+    "expo-linear-gradient": "^14.1.5",
+    "expo-notifications": "^0.31.4",
+    "expo-status-bar": "~2.2.3",
+    "firebase": "^12.2.1",
+    "jwt-decode": "^4.0.0",
+    "react": "19.0.0",
+    "react-native": "0.79.5",
+    "react-native-elements": "^3.4.3",
+    "react-native-is-edge-to-edge": "^1.1.6",
+    "react-native-safe-area-context": "^5.6.0",
+    "react-native-screens": "^4.14.0",
+    "socket.io-client": "^4.8.1"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.20.0",
+    "eas-cli": "^16.18.0"
+  },
+  "private": true
+}

@@ -8,7 +8,7 @@ const Transaction = require('../models/transactionSchema.js');
 const Message = require('../models/messageSchema.js');
 const verifyToken = require('../middleware/auths.js');
 const NotificationService = require('../services/notificationService.js');
-const { sendFCMNotification } = require('../services/notificationUtils.js');
+const { sendFCMNotification, sendExpoNotification } = require('../services/notificationUtils.js');
 const winston = require('winston');
 const mongoose = require('mongoose');
 
@@ -47,23 +47,37 @@ module.exports = (io) => {
     }
   });
 
-  // --- UPDATED save-fcm-token endpoint ---
+  // Updated save-fcm-token endpoint to handle both FCM and Expo tokens
   router.post('/api/save-fcm-token', verifyToken, async (req, res) => {
     try {
-      const { token } = req.body;
+      const { token, platform, deviceType } = req.body;
       const userId = req.user.userId;
 
       if (!token) {
         logger.warn(`Token missing in save-fcm-token request for user ${userId}`);
         return res.status(400).json({ error: 'Token is required' });
       }
-      
-      // Use $addToSet to add the token to the array without creating duplicates
+
+      // Create token object with metadata
+      const tokenData = {
+        token: token,
+        platform: platform || 'web', // 'web', 'ios', 'android'
+        deviceType: deviceType || 'fcm', // 'fcm', 'expo'
+        lastUpdated: new Date()
+      };
+
+      // Remove any existing tokens with the same token value to avoid duplicates
       await User.findByIdAndUpdate(userId, {
-        $addToSet: { fcmTokens: token },
+        $pull: { fcmTokens: { token: token } }
+      });
+
+      // Add the new token with metadata
+      await User.findByIdAndUpdate(userId, {
+        $addToSet: { fcmTokens: tokenData },
         notificationEnabled: true
       });
-      logger.info(`FCM token added for user ${userId}: ${token}`);
+
+      logger.info(`${deviceType || 'FCM'} token added for user ${userId} on ${platform || 'web'}: ${token}`);
       res.json({ success: true });
     } catch (error) {
       const userId = req.user?.userId || 'unknown';
@@ -72,14 +86,27 @@ module.exports = (io) => {
     }
   });
 
-  // --- UPDATED check-fcm-token debug endpoint ---
+  // Updated debug endpoint to show token types
   router.get('/check-fcm-token', verifyToken, async (req, res) => {
     try {
       const userId = req.user.userId;
       const user = await User.findById(userId);
-      const tokenCount = user?.fcmTokens?.length || 0;
-      logger.info(`Checked FCM tokens for user ${userId}. Count: ${tokenCount}, Enabled: ${user?.notificationEnabled}`);
-      res.json({ fcmTokenCount: tokenCount, notificationEnabled: user?.notificationEnabled });
+      const tokens = user?.fcmTokens || [];
+      
+      // Group tokens by type for better debugging
+      const tokensByType = tokens.reduce((acc, tokenData) => {
+        const type = typeof tokenData === 'string' ? 'legacy' : tokenData.deviceType || 'fcm';
+        acc[type] = (acc[type] || 0) + 1;
+        return acc;
+      }, {});
+
+      logger.info(`Checked tokens for user ${userId}. Total: ${tokens.length}, Types: ${JSON.stringify(tokensByType)}, Enabled: ${user?.notificationEnabled}`);
+      
+      res.json({ 
+        totalTokens: tokens.length,
+        tokensByType: tokensByType,
+        notificationEnabled: user?.notificationEnabled 
+      });
     } catch (error) {
       const userId = req.user?.userId || 'unknown';
       logger.error(`Error checking FCM token for user ${userId}: ${error.message}`);
@@ -87,7 +114,7 @@ module.exports = (io) => {
     }
   });
 
-  // Manual Notification Test Endpoint
+  // Updated manual notification test endpoint to support both FCM and Expo
   router.post('/send-notification', verifyToken, async (req, res) => {
     const { userId, title, body, type } = req.body;
 
@@ -106,19 +133,48 @@ module.exports = (io) => {
       }
 
       if (!user.fcmTokens || user.fcmTokens.length === 0) {
-        logger.error(`User with ID ${userId} does not have an FCM token`);
-        return res.status(404).send('User token not found');
+        logger.error(`User with ID ${userId} does not have any notification tokens`);
+        return res.status(404).send('User tokens not found');
       }
 
-      logger.info(`Sending FCM notification to user ${userId}`);
-      await sendFCMNotification(userId, title, body, { type }, req.io);
-      logger.info(`Notification successfully sent to user ${userId}`);
+      logger.info(`Sending notifications to user ${userId} via ${user.fcmTokens.length} token(s)`);
+      
+      // Send to all token types
+      await sendNotificationToAllTokens(userId, title, body, { type }, req.io);
+      
+      logger.info(`Notifications successfully sent to user ${userId}`);
       res.status(200).send('Notification sent');
     } catch (error) {
       logger.error(`Error sending notification to user ${userId || 'unknown'}: ${error.message}`);
       res.status(500).send('Error sending notification');
     }
   });
+
+  // Helper function to send notifications to all token types
+  async function sendNotificationToAllTokens(userId, title, body, data, io) {
+    const user = await User.findById(userId);
+    const tokens = user?.fcmTokens || [];
+
+    for (const tokenData of tokens) {
+      try {
+        if (typeof tokenData === 'string') {
+          // Legacy FCM token (backward compatibility)
+          await sendFCMNotification(userId, title, body, data, io);
+          logger.info(`Sent FCM notification to legacy token for user ${userId}`);
+        } else if (tokenData.deviceType === 'expo') {
+          // Expo push token
+          await sendExpoNotification(tokenData.token, title, body, data);
+          logger.info(`Sent Expo notification to user ${userId} on ${tokenData.platform}`);
+        } else {
+          // FCM token (web)
+          await sendFCMNotification(userId, title, body, data, io);
+          logger.info(`Sent FCM notification to user ${userId} on ${tokenData.platform}`);
+        }
+      } catch (error) {
+        logger.error(`Failed to send notification via ${tokenData.deviceType || 'fcm'} to user ${userId}: ${error.message}`);
+      }
+    }
+  }
 
   // Get Notification Counts
   router.get('/notification-counts', verifyToken, async (req, res) => {
@@ -165,22 +221,22 @@ module.exports = (io) => {
   
   // To delete and dismiss notification
   router.post('/notifications/:id/dismiss', verifyToken, async (req, res) => {
-  const notificationId = req.params.id;
-  const userId = req.user.userId;
+    const notificationId = req.params.id;
+    const userId = req.user.userId;
 
-  try {
-    const deleted = await Notification.findOneAndDelete({ _id: notificationId, userId });
+    try {
+      const deleted = await Notification.findOneAndDelete({ _id: notificationId, userId });
 
-    if (!deleted) {
-      return res.status(404).json({ message: 'Notification not found or already dismissed' });
+      if (!deleted) {
+        return res.status(404).json({ message: 'Notification not found or already dismissed' });
+      }
+
+      res.status(200).json({ message: 'Notification dismissed (deleted)' });
+    } catch (error) {
+      console.error('Dismiss error:', error);
+      res.status(500).json({ message: 'Server error during dismiss' });
     }
-
-    res.status(200).json({ message: 'Notification dismissed (deleted)' });
-  } catch (error) {
-    console.error('Dismiss error:', error);
-    res.status(500).json({ message: 'Server error during dismiss' });
-  }
-});
+  });
 
   // Mark Messages as Viewed
   router.post('/messages/mark-as-viewed', verifyToken, async (req, res) => {
@@ -205,7 +261,7 @@ module.exports = (io) => {
     }
   });
 
-  // --- UPDATED deals/mark-as-viewed endpoint ---
+  // Mark deals as viewed
   router.post('/deals/mark-as-viewed', verifyToken, async (req, res) => {
     try {
       const userId = req.user.userId;

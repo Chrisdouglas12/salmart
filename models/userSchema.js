@@ -65,7 +65,12 @@ lastVerificationReminderSent: { type: Date },
     promotion: { type: Boolean, default: true },
   },
 
-  fcmTokens: { type: [String], default: [] },
+  fcmTokens: [{
+  token: { type: String, required: true },
+  platform: { type: String, enum: ['web', 'ios', 'android'], default: 'web' },
+  deviceType: { type: String, enum: ['fcm', 'expo'], default: 'fcm' },
+  lastUpdated: { type: Date, default: Date.now }
+}],
   socketId: { type: String, default: null },
   notificationEnabled: { type: Boolean, default: true },
 
