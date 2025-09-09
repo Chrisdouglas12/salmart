@@ -40,8 +40,8 @@ const userSchema = new mongoose.Schema({
   isAdmin: { type: Boolean, default: false },
   isSystemUser: { type: Boolean, default: false },
   verificationReminderSent: { type: Boolean, default: false },
-verificationReminderCount: { type: Number, default: 0 },
-lastVerificationReminderSent: { type: Date },
+  verificationReminderCount: { type: Number, default: 0 },
+  lastVerificationReminderSent: { type: Date },
 
   resetPasswordToken: { type: String, default: undefined },
   resetPasswordExpiry: { type: Date, default: undefined },
@@ -65,12 +65,14 @@ lastVerificationReminderSent: { type: Date },
     promotion: { type: Boolean, default: true },
   },
 
+  // ✅ Fix here: token no longer required
   fcmTokens: [{
-  token: { type: String, required: true },
-  platform: { type: String, enum: ['web', 'ios', 'android'], default: 'web' },
-  deviceType: { type: String, enum: ['fcm', 'expo'], default: 'fcm' },
-  lastUpdated: { type: Date, default: Date.now }
-}],
+    token: { type: String }, 
+    platform: { type: String, enum: ['web', 'ios', 'android'], default: 'web' },
+    deviceType: { type: String, enum: ['fcm', 'expo'], default: 'fcm' },
+    lastUpdated: { type: Date, default: Date.now }
+  }],
+
   socketId: { type: String, default: null },
   notificationEnabled: { type: Boolean, default: true },
 
@@ -99,7 +101,7 @@ lastVerificationReminderSent: { type: Date },
   }
 });
 
-// 🧼 Pre-save hook to deduplicate all relevant arrays
+// 🧼 Pre-save hook to deduplicate all relevant arrays + filter invalid tokens
 userSchema.pre('save', function (next) {
   const toObjectIdStr = id => id.toString();
 
@@ -113,7 +115,8 @@ userSchema.pre('save', function (next) {
     this.blockedUsers = [...new Set(this.blockedUsers.map(toObjectIdStr))];
   }
   if (Array.isArray(this.fcmTokens)) {
-    this.fcmTokens = [...new Set(this.fcmTokens)];
+    // ✅ Keep only valid tokens
+    this.fcmTokens = this.fcmTokens.filter(t => t && t.token);
   }
   if (Array.isArray(this.interests)) {
     this.interests = [...new Set(this.interests.map(i => i.trim().toLowerCase()))];
