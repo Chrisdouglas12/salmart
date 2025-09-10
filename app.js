@@ -65,7 +65,7 @@ const app = express();
 app.use(express.json());
 app.set('trust proxy', true);
 app.use(cors({
-  origin: ['http://localhost:8158', 'https://salmart.onrender.com', 'https://salmart.vercel.app', 'https://salmartonline.com.ng', 'http://10.0.2.2:3000' ],
+  origin: ['http://localhost:8158', 'https://salmart.onrender.com', 'https://salmart.vercel.app', 'https://salmartonline.com.ng', 'http://10.0.2.2:3000', 'null' ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   credentials: true,
   allowedHeaders: ['Content-Type', 'Authorization'],
