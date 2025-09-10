@@ -1833,28 +1833,6 @@ cron.schedule('0 */6 * * *', () => {
 
 console.log('⏰ Verification reminder cron jobs scheduled.');
 
-// 7. Optional: Add cleanup job for very old unverified accounts (runs daily)
-cron.schedule('0 2 * * *', async () => {
-  try {
-    console.log('🧹 Running cleanup job for old unverified accounts...');
-    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-
-    const result = await User.deleteMany({
-      isVerified: false,
-      createdAt: { $lt: thirtyDaysAgo },
-      verificationReminderCount: { $gte: 3 }
-    });
-
-    console.log(`🗑️ Cleanup completed: ${result.deletedCount} old unverified accounts removed`);
-  } catch (error) {
-    console.error('🚨 Cleanup job error:', error);
-  }
-}, {
-  scheduled: true,
-  timezone: "Africa/Lagos"
-});
-
-console.log('🧹 Old account cleanup job scheduled to run daily at 2 AM');
 
 module.exports.sendVerificationReminders = sendVerificationReminders;
 
