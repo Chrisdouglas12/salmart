@@ -47,44 +47,66 @@ module.exports = (io) => {
     }
   });
 
-  // Updated save-fcm-token endpoint to handle both FCM and Expo tokens
-  router.post('/api/save-fcm-token', verifyToken, async (req, res) => {
-    try {
-      const { token, platform, deviceType } = req.body;
-      const userId = req.user.userId;
+// A simple function to get the user ID from the request
+function getUserIdFromRequest(req) {
+  // Option 1: Get from JWT (from web)
+  if (req.user && req.user.userId) {
+    return req.user.userId;
+  }
+  // Option 2: Get from the request body (from native app)
+  if (req.body.userId) {
+    return req.body.userId;
+  }
+  return null; // Return null if user ID is not found in either place
+}
 
-      if (!token) {
-        logger.warn(`Token missing in save-fcm-token request for user ${userId}`);
-        return res.status(400).json({ error: 'Token is required' });
-      }
+// Updated save-fcm-token endpoint to handle both FCM and Expo tokens
+// 🚨 Remove the verifyToken middleware for this endpoint
+router.post('/api/save-fcm-token', async (req, res) => {
+  try {
+    const { token, platform, deviceType } = req.body;
+    
+    // 📢 NEW: Get userId from a helper function that checks both JWT and body
+    const userId = getUserIdFromRequest(req);
 
-      // Create token object with metadata
-      const tokenData = {
-        token: token,
-        platform: platform || 'web', // 'web', 'ios', 'android'
-        deviceType: deviceType || 'fcm', // 'fcm', 'expo'
-        lastUpdated: new Date()
-      };
-
-      // Remove any existing tokens with the same token value to avoid duplicates
-      await User.findByIdAndUpdate(userId, {
-        $pull: { fcmTokens: { token: token } }
-      });
-
-      // Add the new token with metadata
-      await User.findByIdAndUpdate(userId, {
-        $addToSet: { fcmTokens: tokenData },
-        notificationEnabled: true
-      });
-
-      logger.info(`${deviceType || 'FCM'} token added for user ${userId} on ${platform || 'web'}: ${token}`);
-      res.json({ success: true });
-    } catch (error) {
-      const userId = req.user?.userId || 'unknown';
-      logger.error(`Error saving FCM token for user ${userId}: ${error.message}`);
-      res.status(500).json({ error: 'Failed to save token' });
+    if (!userId) {
+      logger.warn(`User ID is missing in save-fcm-token request.`);
+      return res.status(401).json({ error: 'User ID is required' });
     }
-  });
+
+    if (!token) {
+      logger.warn(`Token missing in save-fcm-token request for user ${userId}`);
+      return res.status(400).json({ error: 'Token is required' });
+    }
+
+    // Create token object with metadata
+    const tokenData = {
+      token: token,
+      platform: platform || 'web', // 'web', 'ios', 'android'
+      deviceType: deviceType || 'fcm', // 'fcm', 'expo'
+      lastUpdated: new Date()
+    };
+
+    // Remove any existing tokens with the same token value to avoid duplicates
+    await User.findByIdAndUpdate(userId, {
+      $pull: { fcmTokens: { token: token } }
+    });
+
+    // Add the new token with metadata
+    await User.findByIdAndUpdate(userId, {
+      $addToSet: { fcmTokens: tokenData },
+      notificationEnabled: true
+    });
+
+    logger.info(`${deviceType || 'FCM'} token added for user ${userId} on ${platform || 'web'}: ${token}`);
+    res.json({ success: true });
+  } catch (error) {
+    const userId = req.body?.userId || req.user?.userId || 'unknown';
+    logger.error(`Error saving FCM token for user ${userId}: ${error.message}`);
+    res.status(500).json({ error: 'Failed to save token' });
+  }
+});
+
 
   // Updated debug endpoint to show token types
   router.get('/check-fcm-token', verifyToken, async (req, res) => {
@@ -150,31 +172,35 @@ module.exports = (io) => {
     }
   });
 
-  // Helper function to send notifications to all token types
-  async function sendNotificationToAllTokens(userId, title, body, data, io) {
-    const user = await User.findById(userId);
-    const tokens = user?.fcmTokens || [];
+// Helper function to send notifications to all token types
+async function sendNotificationToAllTokens(userId, title, body, data, io) {
+  const user = await User.findById(userId);
+  const tokens = user?.fcmTokens || [];
 
-    for (const tokenData of tokens) {
-      try {
-        if (typeof tokenData === 'string') {
-          // Legacy FCM token (backward compatibility)
-          await sendFCMNotification(userId, title, body, data, io);
-          logger.info(`Sent FCM notification to legacy token for user ${userId}`);
-        } else if (tokenData.deviceType === 'expo') {
-          // Expo push token
-          await sendExpoNotification(tokenData.token, title, body, data);
-          logger.info(`Sent Expo notification to user ${userId} on ${tokenData.platform}`);
-        } else {
-          // FCM token (web)
-          await sendFCMNotification(userId, title, body, data, io);
-          logger.info(`Sent FCM notification to user ${userId} on ${tokenData.platform}`);
-        }
-      } catch (error) {
-        logger.error(`Failed to send notification via ${tokenData.deviceType || 'fcm'} to user ${userId}: ${error.message}`);
+  for (const tokenData of tokens) {
+    try {
+      if (typeof tokenData === 'string') {
+        // Legacy FCM token (backward compatibility)
+        // 📢 FIX HERE: Use the token string itself
+        await sendFCMNotification(tokenData, title, body, data, io);
+        logger.info(`Sent FCM notification to legacy token for user ${userId}`);
+      } else if (tokenData.deviceType === 'expo') {
+        // Expo push token
+        // This part was already correct
+        await sendExpoNotification(tokenData.token, title, body, data);
+        logger.info(`Sent Expo notification to user ${userId} on ${tokenData.platform}`);
+      } else {
+        // FCM token (web)
+        // 📢 FIX HERE: Use the token from the tokenData object
+        await sendFCMNotification(tokenData.token, title, body, data, io);
+        logger.info(`Sent FCM notification to user ${userId} on ${tokenData.platform}`);
       }
+    } catch (error) {
+      logger.error(`Failed to send notification via ${tokenData.deviceType || 'fcm'} to user ${userId}: ${error.message}`);
     }
   }
+}
+
 
   // Get Notification Counts
   router.get('/notification-counts', verifyToken, async (req, res) => {
