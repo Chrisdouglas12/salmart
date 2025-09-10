@@ -140,19 +140,13 @@ function displayMessage(message, isOptimistic = false) {
         return;
     }
 
-    // If this is an optimistic message and it corresponds to a message that now has a real _id,
-    // we should let `updateOptimisticMessageId` handle it.
     if (isOptimistic && messageId.startsWith('temp_')) {
-        // Store the optimistic message data, associated with its tempId
-        // This map will be used by `updateOptimisticMessageId`
+
         optimisticMessagesMap.set(messageId, message);
     } else if (message._id && optimisticMessagesMap.has(message.tempId) && message.tempId) {
-        // This branch should ideally not be hit if `updateOptimisticMessageId` works correctly
-        // by handling the DOM update and `displayedMessages` Set.
-        // If it does, it indicates a logic flow issue where `displayMessage` is called
-        // for a confirmed message that *still* has an active optimistic entry.
+        
         console.warn(`Display message for confirmed ID ${message._id} but optimistic entry ${message.tempId} exists. Potential double render.`);
-        // Fall through to display for now, but inspect why.
+
     }
 
     const messageDate = new Date(message.createdAt);
@@ -620,10 +614,7 @@ sendBtn.onclick = async () => {
     // Error handling for sendMessage is now via socket.on('messageError')
 };
 
-// --- Socket.IO Event Listeners ---
 
-// NEW: Listener for message status updates (primarily for the sender's own messages)
-// This will update the tempId to the real _id and update the status (e.g., to 'delivered').
 socket.on('messageStatusUpdate', async ({ _id, tempId, status, createdAt, attachment, viewOnce }) => {
     console.log(`Received messageStatusUpdate: tempId=${tempId}, _id=${_id}, status=${status}`);
     if (tempId) {

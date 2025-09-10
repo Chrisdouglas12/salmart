@@ -39,12 +39,10 @@ const getNotificationCounts = async (userId) => {
 
     // Count unread messages
     const messagesCount = await Message.countDocuments({ 
-      receiverId: userId, 
-      status: 'sent' 
-    }).catch(err => {
-      logger.error(`MongoDB query error for messages: ${err.message}`);
-      return 0;
-    });
+  receiverId: userId, 
+  status: { $in: ['sent', 'delivered'] } // Check both statuses
+});
+
 
     // Count unread deal notifications
     const dealsCount = await Notification.countDocuments({
@@ -71,42 +69,19 @@ const getNotificationCounts = async (userId) => {
 // Enhanced function for React Native with badge updates
 const sendCountsToUser = async (io, userId, counts) => {
   try {
-    if (!mongoose.Types.ObjectId.isValid(userId)) {
-      logger.warn(`Invalid user ID in sendCountsToUser: ${JSON.stringify(userId)}`);
-      throw new Error('Invalid user ID');
-    }
-    
-    // Ensure totalCount is included
     const countsWithTotal = {
       ...counts,
       totalCount: counts.totalCount || (counts.notificationCount + counts.messagesCount + counts.dealsCount)
     };
 
-    logger.info(`Emitting countsUpdate to user ${userId}: ${JSON.stringify(countsWithTotal)}`, { userId, ...countsWithTotal });
-    
-    // Emit general counts update
-    io.to(`user_${userId}`).emit('countsUpdate', { userId, ...countsWithTotal });
-    
-    // Emit badge update specifically for React Native
+    // Single comprehensive emission
     io.to(`user_${userId}`).emit('badge-update', {
       userId,
-      totalCount: countsWithTotal.totalCount,
-      notificationCount: countsWithTotal.notificationCount,
-      messagesCount: countsWithTotal.messagesCount,
-      dealsCount: countsWithTotal.dealsCount,
+      ...countsWithTotal,
       timestamp: new Date().toISOString()
     });
 
-    // Emit individual count updates for granular handling
-    io.to(`user_${userId}`).emit('notification-counts', {
-      userId,
-      general: countsWithTotal.notificationCount,
-      messages: countsWithTotal.messagesCount,
-      deals: countsWithTotal.dealsCount,
-      total: countsWithTotal.totalCount
-    });
-
-    logger.info(`Emitted all count updates to user ${userId}`);
+    logger.info(`Emitted badge update to user ${userId}: ${JSON.stringify(countsWithTotal)}`);
   } catch (error) {
     logger.error(`Error sending counts to user ${userId}: ${error.message}`);
   }
@@ -176,11 +151,11 @@ const updateSpecificCount = async (io, userId, type) => {
         });
         break;
       case 'messages':
-        count = await Message.countDocuments({ 
-          receiverId: userId, 
-          status: 'sent' 
-        });
-        break;
+  count = await Message.countDocuments({ 
+    receiverId: userId, 
+    status: { $in: ['sent', 'delivered'] }
+  });
+  break;
       case 'deals':
         count = await Notification.countDocuments({
           userId,
@@ -227,9 +202,9 @@ const resetCounts = async (io, userId, type = 'all') => {
         break;
       case 'messages':
         await Message.updateMany(
-          { receiverId: userId, status: 'sent' },
-          { status: 'read' }
-        );
+  { receiverId: userId, status: { $in: ['sent', 'delivered'] } },
+  { status: 'seen' } 
+);
         break;
       case 'deals':
         await Notification.updateMany(

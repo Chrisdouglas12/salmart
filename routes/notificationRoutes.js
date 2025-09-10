@@ -172,35 +172,36 @@ router.post('/api/save-fcm-token', async (req, res) => {
     }
   });
 
-// Helper function to send notifications to all token types
 async function sendNotificationToAllTokens(userId, title, body, data, io) {
   const user = await User.findById(userId);
   const tokens = user?.fcmTokens || [];
 
-  for (const tokenData of tokens) {
-    try {
-      if (typeof tokenData === 'string') {
-        // Legacy FCM token (backward compatibility)
-        // 📢 FIX HERE: Use the token string itself
-        await sendFCMNotification(tokenData, title, body, data, io);
-        logger.info(`Sent FCM notification to legacy token for user ${userId}`);
-      } else if (tokenData.deviceType === 'expo') {
-        // Expo push token
-        // This part was already correct
-        await sendExpoNotification(tokenData.token, title, body, data);
-        logger.info(`Sent Expo notification to user ${userId} on ${tokenData.platform}`);
-      } else {
-        // FCM token (web)
-        // 📢 FIX HERE: Use the token from the tokenData object
-        await sendFCMNotification(tokenData.token, title, body, data, io);
-        logger.info(`Sent FCM notification to user ${userId} on ${tokenData.platform}`);
-      }
-    } catch (error) {
-      logger.error(`Failed to send notification via ${tokenData.deviceType || 'fcm'} to user ${userId}: ${error.message}`);
+  // Group tokens by type for batch processing
+  const fcmTokens = tokens.filter(tokenData => {
+    if (typeof tokenData === 'string') return true;
+    return tokenData.deviceType !== 'expo';
+  });
+  
+  const expoTokens = tokens.filter(tokenData => {
+    return typeof tokenData === 'object' && tokenData.deviceType === 'expo';
+  });
+
+  try {
+    // Send FCM notifications as batch
+    if (fcmTokens.length > 0) {
+      await sendFCMNotification(fcmTokens, title, body, data, io);
+      logger.info(`Sent FCM notifications to ${fcmTokens.length} tokens for user ${userId}`);
     }
+
+    // Send Expo notifications as batch
+    if (expoTokens.length > 0) {
+      await sendExpoNotification(expoTokens, title, body, data);
+      logger.info(`Sent Expo notifications to ${expoTokens.length} tokens for user ${userId}`);
+    }
+  } catch (error) {
+    logger.error(`Failed to send notifications to user ${userId}: ${error.message}`);
   }
 }
-
 
   // Get Notification Counts
   router.get('/notification-counts', verifyToken, async (req, res) => {

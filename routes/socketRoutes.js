@@ -1,5 +1,5 @@
 // socketRoutes.js
-const jwt = require('jsonwebtoken'); // Import jwt for token verification
+const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 const User = require('../models/userSchema.js');
 const Notification = require('../models/notificationSchema.js');
@@ -22,6 +22,215 @@ const logger = winston.createLogger({
 });
 
 const userSocketMap = new Map();
+
+// 📢 NEW: Helper function to format message for notifications
+const formatNotificationMessage = (messageType, text, offerDetails, attachment) => {
+  let notificationText = '';
+  let messageTypeFormatted = messageType || 'text';
+
+  switch (messageType) {
+    case 'image':
+      notificationText = '📷 Photo';
+      break;
+    case 'video':
+      notificationText = '🎥 Video';
+      break;
+    case 'audio':
+      notificationText = '🎵 Audio';
+      break;
+    case 'document':
+      notificationText = '📄 Document';
+      break;
+    case 'location':
+      notificationText = '📍 Location';
+      break;
+    case 'offer':
+      if (offerDetails && offerDetails.proposedPrice) {
+        notificationText = `💰 Offer: ₦${Number(offerDetails.proposedPrice).toLocaleString('en-NG')}`;
+      } else {
+        notificationText = '💰 New Offer';
+      }
+      break;
+    case 'counter-offer':
+      if (offerDetails && offerDetails.proposedPrice) {
+        notificationText = `🔄 Counter-offer: ₦${Number(offerDetails.proposedPrice).toLocaleString('en-NG')}`;
+      } else {
+        notificationText = '🔄 Counter Offer';
+      }
+      break;
+    default:
+      // For text messages or other types
+      if (text) {
+        try {
+          // Handle JSON messages
+          if (text.startsWith('{') && text.endsWith('}')) {
+            const parsedMessage = JSON.parse(text);
+            notificationText = parsedMessage.text || text;
+          } else {
+            notificationText = text;
+          }
+        } catch (e) {
+          notificationText = text;
+        }
+      } else {
+        notificationText = 'New message';
+      }
+  }
+
+  // Truncate if too long
+  const maxLength = 100;
+  if (notificationText.length > maxLength) {
+    notificationText = notificationText.substring(0, maxLength - 3) + '...';
+  }
+
+  return notificationText;
+};
+
+// 📢 NEW: Enhanced FCM notification function
+const sendEnhancedFCMNotification = async (
+  receiverFcmTokens,
+  senderName,
+  senderProfilePicture,
+  notificationText,
+  messageType,
+  messageData,
+  productImageUrl = null
+) => {
+  try {
+    if (!receiverFcmTokens || receiverFcmTokens.length === 0) {
+      logger.warn('No FCM tokens available for receiver');
+      return;
+    }
+
+    // 📢 NEW: Create rich notification payload
+    const notificationPayload = {
+      title: senderName,
+      body: notificationText,
+      data: {
+        // Core message data
+        type: 'message',
+        senderId: messageData.senderId.toString(),
+        receiverId: messageData.receiverId.toString(),
+        messageId: messageData.messageId.toString(),
+        chatId: messageData.chatRoomId,
+        senderName: senderName,
+        messageType: messageType,
+        timestamp: new Date().toISOString(),
+        
+        // 📢 NEW: Additional data for WhatsApp-like experience
+        avatar: senderProfilePicture || '',
+        productImage: productImageUrl || '',
+        
+        // 📢 NEW: Grouping and threading
+        tag: `chat_${messageData.chatRoomId}`, // For Android grouping
+        threadId: messageData.chatRoomId, // For iOS threading
+        
+        // 📢 NEW: Action data for quick reply
+        actions: JSON.stringify([
+          { id: 'reply', title: 'Reply' },
+          { id: 'mark_read', title: 'Mark as Read' }
+        ])
+      }
+    };
+
+    // 📢 NEW: Platform-specific configurations
+    const androidConfig = {
+      priority: 'high',
+      notification: {
+        title: senderName,
+        body: notificationText,
+        icon: 'ic_notification',
+        color: '#00A86B',
+        sound: 'default',
+        channelId: messageType === 'offer' || messageType === 'counter-offer' 
+          ? 'system_notifications' 
+          : 'chat_messages',
+        tag: `chat_${messageData.chatRoomId}`, // Group notifications by chat
+        group: 'chat_messages',
+        groupSummary: false,
+        // 📢 NEW: Large icon for sender avatar
+        ...(senderProfilePicture && {
+          largeIcon: senderProfilePicture
+        }),
+        // 📢 NEW: Big picture for product images
+        ...(productImageUrl && {
+          bigPicture: productImageUrl,
+          style: 'bigPicture'
+        })
+      },
+      data: notificationPayload.data
+    };
+
+    const iosConfig = {
+      aps: {
+        alert: {
+          title: senderName,
+          body: notificationText
+        },
+        sound: 'default',
+        badge: 1, // Will be updated with actual count
+        'thread-id': messageData.chatRoomId,
+        category: 'CHAT_MESSAGE',
+        'mutable-content': 1 // For rich notifications
+      },
+      data: notificationPayload.data
+    };
+
+    // 📢 NEW: Send to multiple tokens
+    const results = await Promise.allSettled(
+      receiverFcmTokens.map(async (tokenObj) => {
+        if (!tokenObj.token) return;
+
+        const payload = {
+          to: tokenObj.token,
+          ...notificationPayload,
+          // Platform-specific config
+          ...(tokenObj.platform === 'android' ? { android: androidConfig } : { apns: iosConfig })
+        };
+
+        logger.info(`Sending FCM notification to token: ${tokenObj.token.substring(0, 20)}...`);
+        
+        // Call your existing FCM service
+        return await sendFCMNotification(
+          [tokenObj], // Pass as array
+          senderName,
+          notificationText,
+          notificationPayload.data,
+          null, // io parameter
+          productImageUrl,
+          senderProfilePicture,
+          `message_${messageData.senderId}_${messageData.receiverId}`
+        );
+      })
+    );
+
+    // 📢 NEW: Log results
+    const successful = results.filter(r => r.status === 'fulfilled').length;
+    const failed = results.filter(r => r.status === 'rejected').length;
+    
+    logger.info(`FCM notification results: ${successful} successful, ${failed} failed`);
+    
+    // 📢 NEW: Clean up invalid tokens
+    const invalidTokens = [];
+    results.forEach((result, index) => {
+      if (result.status === 'rejected' && result.reason?.code === 'messaging/invalid-registration-token') {
+        invalidTokens.push(receiverFcmTokens[index].token);
+      }
+    });
+
+    if (invalidTokens.length > 0) {
+      logger.info(`Removing ${invalidTokens.length} invalid FCM tokens`);
+      // Remove invalid tokens from user document
+      await User.updateOne(
+        { _id: messageData.receiverId },
+        { $pull: { fcmTokens: { token: { $in: invalidTokens } } } }
+      );
+    }
+
+  } catch (error) {
+    logger.error(`Error sending enhanced FCM notification: ${error.message}`);
+  }
+};
 
 const initializeSocket = (io) => {
   logger.info('Initializing Socket.IO event handlers');
@@ -56,8 +265,6 @@ const initializeSocket = (io) => {
     socket.join(`user_${authenticatedUserId}`);
     logger.info(`Socket ${socket.id} (User: ${authenticatedUserId}) connected and joined user_${authenticatedUserId}`);
 
-    // --- UPDATED: Call triggerCountUpdate on connection ---
-    // This fetches the latest counts and sends them to the user's room.
     NotificationService.triggerCountUpdate(io, authenticatedUserId).catch(err => logger.error(`Error sending initial counts to ${authenticatedUserId}: ${err.message}`));
 
     socket.on('joinRoom', async (userId) => {
@@ -81,7 +288,6 @@ const initializeSocket = (io) => {
         userSocketMap.set(userId, socket.id);
       }
 
-      // --- UPDATED: Call triggerCountUpdate on joinRoom ---
       await NotificationService.triggerCountUpdate(io, userId);
       logger.info(`Notification counts sent to user ${userId} after joinRoom event.`);
     });
@@ -120,6 +326,7 @@ const initializeSocket = (io) => {
       }
     });
 
+    // 📢 ENHANCED: sendMessage event with improved push notifications
     socket.on('sendMessage', async (messageData) => {
       try {
         logger.info(`Received sendMessage event: ${JSON.stringify(messageData)}`);
@@ -138,8 +345,9 @@ const initializeSocket = (io) => {
           return;
         }
 
-        const sender = await User.findById(senderId).select('firstName lastName profilePicture role fcmTokens'); // Select fcmTokens
-        const receiver = await User.findById(receiverId).select('firstName lastName profilePicture fcmTokens'); // Select fcmTokens
+        // 📢 ENHANCED: Get more user data including FCM tokens
+        const sender = await User.findById(senderId).select('firstName lastName profilePicture role fcmTokens');
+        const receiver = await User.findById(receiverId).select('firstName lastName profilePicture fcmTokens');
 
         if (!sender || !receiver) {
           logger.error(`Sender or receiver not found: sender=${senderId}, receiver=${receiverId}`);
@@ -147,40 +355,25 @@ const initializeSocket = (io) => {
           return;
         }
 
-        let notificationText = text || 'Sent you a message';
+        // 📢 NEW: Format notification message using helper function
+        const notificationText = formatNotificationMessage(messageType, text, offerDetails, attachment);
+        
         let productImageUrl = null;
-        let senderProfilePictureUrl = sender.profilePicture || null;
+        const senderProfilePictureUrl = sender.profilePicture || null;
+        const senderName = `${sender.firstName} ${sender.lastName}`;
 
+        // Extract product image URL
         try {
           if (text && text.startsWith('{') && text.endsWith('}')) {
-            try {
-              const parsedMessage = JSON.parse(text);
-              if (parsedMessage.text) notificationText = parsedMessage.text;
-              if (parsedMessage.image) productImageUrl = parsedMessage.image;
-            } catch (jsonParseError) {
-              logger.warn(`Text is not valid JSON despite starting with '{': ${text.substring(0, 50)}...`);
-            }
+            const parsedMessage = JSON.parse(text);
+            if (parsedMessage.image) productImageUrl = parsedMessage.image;
           } else if (attachment && attachment.url && attachment.fileType?.startsWith('image')) {
             productImageUrl = attachment.url;
           } else if (offerDetails && offerDetails.image) {
             productImageUrl = offerDetails.image;
           }
-
-          if (offerDetails && !(['offer', 'counter-offer'].includes(messageType) && text && text.startsWith('{'))) {
-            if (offerDetails.productName) {
-              notificationText = `${notificationText} - Product: ${offerDetails.productName}`;
-            }
-            if (offerDetails.proposedPrice) {
-              notificationText = `${notificationText} - Offer: ₦${Number(offerDetails.proposedPrice).toLocaleString('en-NG')}`;
-            }
-          }
         } catch (e) {
-          logger.error(`Error processing notification text for sender ${senderId}: ${e.message}`);
-        }
-
-        const maxLength = 80;
-        if (notificationText.length > maxLength) {
-          notificationText = notificationText.substring(0, maxLength - 3) + '...';
+          logger.error(`Error extracting product image for sender ${senderId}: ${e.message}`);
         }
 
         const newMessage = new Message({
@@ -224,6 +417,7 @@ const initializeSocket = (io) => {
         };
 
         const chatRoomId = [senderId, receiverId].sort().join('_');
+        
         socket.emit('messageStatusUpdate', {
           _id: messagePayload._id,
           tempId: messagePayload.tempId,
@@ -237,18 +431,21 @@ const initializeSocket = (io) => {
 
         io.to(`user_${receiverId}`).emit('newMessageNotification', {
           senderId: senderId.toString(),
-          senderName: `${sender.firstName} ${sender.lastName}`,
+          senderName: senderName,
           senderProfilePicture: senderProfilePictureUrl,
           text: notificationText,
           createdAt: new Date(),
           productImageUrl,
           chatRoomId: chatRoomId,
+          messageType: messageType, // 📢 NEW: Include message type
         });
         logger.info(`Emitted newMessageNotification to user_${receiverId}`);
 
+        // 📢 ENHANCED: Check if receiver needs push notification
         const receiverIsOnline = io.sockets.adapter.rooms.get(`user_${receiverId}`)?.size > 0;
         let receiverIsInChatRoom = false;
         const socketsInChatRoom = io.sockets.adapter.rooms.get(`chat_${chatRoomId}`);
+        
         if (socketsInChatRoom) {
           for (const sockId of socketsInChatRoom) {
             const connectedSocket = io.sockets.sockets.get(sockId);
@@ -259,40 +456,64 @@ const initializeSocket = (io) => {
           }
         }
 
-        if (!receiverIsOnline || !receiverIsInChatRoom) {
-          logger.info(`Receiver ${receiverId} not actively online or in chat. FCM condition met.`);
-          if (!newMessage.metadata?.isSystemMessage) {
-            // --- UPDATED: Pass the fcmTokens array ---
-            await sendFCMNotification(
-              receiver.fcmTokens,
-              'New Message',
-              `${sender.firstName} ${sender.lastName}: ${notificationText}`,
-              {
-                type: 'message',
-                senderId: senderId.toString(),
-                receiverId: receiverId.toString(),
-                messageId: savedMessage._id.toString(),
-                chatRoomId: chatRoomId,
-                messageType: savedMessage.messageType,
-              },
-              io,
-              productImageUrl,
-              senderProfilePictureUrl,
-              `message_${senderId.toString()}_${receiverId.toString()}`
-            );
-            logger.info(`FCM notification attempt completed for user ${receiverId}`);
-          }
+        // 📢 ENHANCED: Send push notification with rich content
+        if ((!receiverIsOnline || !receiverIsInChatRoom) && !newMessage.metadata?.isSystemMessage) {
+          logger.info(`Receiver ${receiverId} not actively online or in chat. Sending enhanced FCM notification.`);
+          
+          await sendEnhancedFCMNotification(
+            receiver.fcmTokens,
+            senderName,
+            senderProfilePictureUrl,
+            notificationText,
+            messageType,
+            {
+              senderId: senderId.toString(),
+              receiverId: receiverId.toString(),
+              messageId: savedMessage._id.toString(),
+              chatRoomId: chatRoomId
+            },
+            productImageUrl
+          );
+          
+          logger.info(`Enhanced FCM notification sent for user ${receiverId}`);
         } else {
           logger.info(`Receiver ${receiverId} is online and actively in chat room, skipping FCM.`);
         }
 
-        // --- UPDATED: Correct parameter order for triggerCountUpdate ---
         await NotificationService.triggerCountUpdate(io, receiverId);
         logger.info(`Message sent and processed from ${senderId} to ${receiverId}`);
 
       } catch (error) {
         logger.error(`Error sending message from ${authenticatedUserId} to ${messageData.receiverId}: ${error.message}`, error.stack);
         socket.emit('messageError', { tempId: messageData.tempId, error: error.message });
+      }
+    });
+
+    // 📢 NEW: Handle quick reply from notifications
+    socket.on('quickReply', async (replyData) => {
+      try {
+        const { chatId, message, originalMessageId } = replyData;
+        const senderId = authenticatedUserId;
+        
+        // Extract receiver ID from chatId
+        const [id1, id2] = chatId.split('_');
+        const receiverId = id1 === senderId ? id2 : id1;
+        
+        logger.info(`Quick reply from ${senderId} to ${receiverId}: ${message}`);
+        
+        // Create and process the message like a regular sendMessage
+        const messageData = {
+          receiverId,
+          text: message,
+          messageType: 'text',
+          tempId: `quick_${Date.now()}`
+        };
+        
+        // Trigger the regular sendMessage flow
+        socket.emit('sendMessage', messageData);
+        
+      } catch (error) {
+        logger.error(`Error handling quick reply: ${error.message}`);
       }
     });
 
@@ -330,11 +551,9 @@ const initializeSocket = (io) => {
           });
           logger.info(`Emitted messagesSeen to user_${senderId} for message IDs: ${messageIds}`);
 
-          // --- UPDATED: Correct parameter order for triggerCountUpdate ---
           await NotificationService.triggerCountUpdate(io, senderId);
         }
 
-        // --- UPDATED: Correct parameter order for triggerCountUpdate ---
         await NotificationService.triggerCountUpdate(io, receiverId);
         logger.info(`Mark as seen processed for sender ${senderId} and receiver ${receiverId}`);
 
@@ -351,306 +570,6 @@ const initializeSocket = (io) => {
       }
       io.to(`user_${data.receiverId}`).emit('typing', { senderId: data.senderId, receiverId: data.receiverId });
       logger.info(`Typing signal from ${data.senderId} to ${data.receiverId}`);
-    });
-
-    socket.on('acceptOffer', async ({ offerId, acceptorId, productId, proposedPrice, productName, productImage }) => {
-      try {
-        logger.info(`acceptOffer event received from ${authenticatedUserId}: offerId=${offerId}, acceptorId=${acceptorId}`);
-        if (authenticatedUserId !== acceptorId) {
-          logger.warn(`Unauthorized acceptOffer attempt by ${authenticatedUserId} for acceptor ${acceptorId}.`);
-          throw new Error('Unauthorized action');
-        }
-
-        const originalOffer = await Message.findById(offerId);
-        if (!originalOffer) {
-          logger.error(`Offer ${offerId} not found`);
-          throw new Error('Offer not found');
-        }
-        if (originalOffer.receiverId.toString() !== acceptorId) {
-          logger.warn(`Unauthorized accept attempt for offer ${offerId} by ${acceptorId} (not receiver).`);
-          throw new Error('Not authorized to accept this offer');
-        }
-
-        await Message.findByIdAndUpdate(originalOffer._id, {
-          'offerDetails.status': 'accepted',
-          status: 'seen'
-        });
-        logger.info(`Original offer ${offerId} updated to accepted status`);
-
-        const sellerId = originalOffer.senderId;
-        const chatRoomId = [acceptorId, sellerId.toString()].sort().join('_');
-        const acceptorUser = await User.findById(acceptorId);
-        const sellerUser = await User.findById(sellerId);
-
-        const buyerAcceptMessageToSeller = new Message({
-          senderId: acceptorId,
-          receiverId: sellerId,
-          messageType: 'buyerAccept',
-          text: JSON.stringify({
-            text: `Your offer for ${productName || 'Product'} at ₦${proposedPrice.toLocaleString('en-NG')} was accepted.`,
-            image: productImage
-          }),
-          offerDetails: { productId, productName, proposedPrice, image: productImage, status: 'accepted' },
-          status: 'sent',
-          isRead: false,
-          createdAt: new Date(),
-          metadata: { isSystemMessage: true, actionRequired: false }
-        });
-        const savedBuyerAcceptMsg = await buyerAcceptMessageToSeller.save();
-        logger.info(`Created buyerAccept message to seller ${sellerId}: ${savedBuyerAcceptMsg._id}`);
-
-        const sellerAcceptMessageToBuyer = new Message({
-          senderId: sellerId,
-          receiverId: acceptorId,
-          messageType: 'sellerAccept',
-          text: JSON.stringify({
-            text: `You accepted the offer of ₦${proposedPrice.toLocaleString('en-NG')} for "${productName || 'Product'}".`,
-            image: productImage
-          }),
-          offerDetails: { productId, productName, proposedPrice, image: productImage, status: 'accepted' },
-          status: 'sent',
-          isRead: false,
-          createdAt: new Date(),
-          metadata: { isSystemMessage: true, actionRequired: true }
-        });
-        const savedSellerAcceptMsg = await sellerAcceptMessageToBuyer.save();
-        logger.info(`Created sellerAccept message to buyer ${acceptorId}: ${savedSellerAcceptMsg._id}`);
-
-        io.to(`chat_${chatRoomId}`).emit('newMessage', { ...savedBuyerAcceptMsg.toObject(), _id: savedBuyerAcceptMsg._id.toString(), status: 'delivered' });
-        io.to(`chat_${chatRoomId}`).emit('newMessage', { ...savedSellerAcceptMsg.toObject(), _id: savedSellerAcceptMsg._id.toString(), status: 'delivered' });
-        logger.info(`Emitted acceptOffer messages to chatRoomId ${chatRoomId}`);
-
-        await Post.findByIdAndUpdate(productId, { price: proposedPrice, status: 'sold' });
-        logger.info(`Post ${productId} updated price to ${proposedPrice} and status to sold.`);
-
-        // --- UPDATED: Pass the fcmTokens array ---
-        await sendFCMNotification(
-          sellerUser.fcmTokens,
-          'Offer Accepted',
-          `${acceptorUser?.firstName || 'A user'} accepted your offer for ${productName || 'product'} at ₦${proposedPrice.toLocaleString('en-NG')}.`,
-          {
-            type: 'offer-accepted',
-            productId: productId.toString(),
-            chatRoomId: chatRoomId,
-            messageId: savedBuyerAcceptMsg._id.toString(),
-          },
-          io,
-          productImage || null,
-          acceptorUser?.profilePicture || null,
-          `offer_accepted_${productId.toString()}`
-        );
-        logger.info(`FCM notification sent for offer ${offerId} accepted by ${acceptorId}`);
-
-        // --- UPDATED: Correct parameter order for triggerCountUpdate ---
-        await NotificationService.triggerCountUpdate(io, sellerId);
-        await NotificationService.triggerCountUpdate(io, acceptorId);
-        logger.info(`Offer ${offerId} accepted and processed by ${acceptorId}`);
-
-      } catch (error) {
-        logger.error(`Error accepting offer ${offerId} by ${authenticatedUserId}: ${error.message}`, error.stack);
-        socket.emit('offerError', { error: error.message });
-      }
-    });
-
-    socket.on('declineOffer', async ({ offerId, declinerId, productId, productName, productImage }) => {
-      try {
-        logger.info(`declineOffer event received from ${authenticatedUserId}: offerId=${offerId}, declinerId=${declinerId}`);
-        if (authenticatedUserId !== declinerId) {
-          logger.warn(`Unauthorized declineOffer attempt by ${authenticatedUserId} for decliner ${declinerId}.`);
-          throw new Error('Unauthorized action');
-        }
-
-        const originalOffer = await Message.findById(offerId);
-        if (!originalOffer) {
-          logger.error(`Offer ${offerId} not found`);
-          throw new Error('Offer not found');
-        }
-        if (originalOffer.receiverId.toString() !== declinerId) {
-          logger.warn(`Unauthorized decline attempt for offer ${offerId} by ${declinerId} (not receiver).`);
-          throw new Error('Not authorized to decline this offer');
-        }
-
-        await Message.findByIdAndUpdate(originalOffer._id, {
-          'offerDetails.status': 'rejected',
-          status: 'seen'
-        });
-        logger.info(`Original offer ${offerId} updated to rejected status`);
-
-        const sellerId = originalOffer.senderId;
-        const chatRoomId = [declinerId, sellerId.toString()].sort().join('_');
-        const declinerUser = await User.findById(declinerId);
-        const sellerUser = await User.findById(sellerId);
-
-        const declineMessageToSeller = new Message({
-          senderId: declinerId,
-          receiverId: sellerId,
-          messageType: 'reject-offer',
-          text: JSON.stringify({
-            text: `Your offer for ${productName || 'Product'} was rejected.`,
-            image: productImage
-          }),
-          offerDetails: { productId, productName, image: productImage, status: 'rejected' },
-          status: 'sent',
-          isRead: false,
-          createdAt: new Date(),
-          metadata: { isSystemMessage: true, actionRequired: false }
-        });
-        const savedDeclineToSeller = await declineMessageToSeller.save();
-        logger.info(`Created decline message for seller ${sellerId}: ${savedDeclineToSeller._id}`);
-
-        const declineMessageToBuyer = new Message({
-          senderId: sellerId,
-          receiverId: declinerId,
-          messageType: 'reject-offer',
-          text: JSON.stringify({
-            text: `You rejected the offer for ${productName || 'Product'}.`,
-            image: productImage
-          }),
-          offerDetails: { productId, productName, image: productImage, status: 'rejected' },
-          status: 'sent',
-          isRead: false,
-          createdAt: new Date(),
-          metadata: { isSystemMessage: true, actionRequired: false }
-        });
-        const savedDeclineToBuyer = await declineMessageToBuyer.save();
-        logger.info(`Created decline message for buyer ${declinerId}: ${savedDeclineToBuyer._id}`);
-
-        io.to(`chat_${chatRoomId}`).emit('newMessage', { ...savedDeclineToSeller.toObject(), _id: savedDeclineToSeller._id.toString(), status: 'delivered' });
-        io.to(`chat_${chatRoomId}`).emit('newMessage', { ...savedDeclineToBuyer.toObject(), _id: savedDeclineToBuyer._id.toString(), status: 'delivered' });
-        logger.info(`Emitted declineOffer messages to chatRoomId ${chatRoomId}`);
-
-        // --- UPDATED: Pass the fcmTokens array ---
-        await sendFCMNotification(
-          sellerUser.fcmTokens,
-          'Offer Declined',
-          `${declinerUser?.firstName || 'A user'} declined your offer for ${productName || 'Product'}.`,
-          {
-            type: 'offer-declined',
-            productId: productId.toString(),
-            chatRoomId: chatRoomId,
-            messageId: savedDeclineToSeller._id.toString(),
-          },
-          io,
-          productImage || null,
-          declinerUser?.profilePicture || null,
-          `offer_declined_${productId.toString()}`
-        );
-        logger.info(`FCM notification sent for offer ${offerId} declined by ${declinerId}`);
-
-        // --- UPDATED: Correct parameter order for triggerCountUpdate ---
-        await NotificationService.triggerCountUpdate(io, sellerId);
-        await NotificationService.triggerCountUpdate(io, declinerId);
-        logger.info(`Offer ${offerId} declined and processed by ${declinerId}`);
-
-      } catch (error) {
-        logger.error(`Error declining offer ${offerId} by ${authenticatedUserId}: ${error.message}`, error.stack);
-        socket.emit('offerError', { error: error.message });
-      }
-    });
-
-    socket.on('endBargain', async ({ offerId, enderId, productId, productName, otherParticipantId }) => {
-      try {
-        logger.info(`endBargain event received from ${authenticatedUserId}: offerId=${offerId}, enderId=${enderId}, productId=${productId}, otherParticipantId=${otherParticipantId}`);
-        if (authenticatedUserId !== enderId) {
-          logger.warn(`Unauthorized endBargain attempt by ${authenticatedUserId} for ender ${enderId}.`);
-          throw new Error('Unauthorized action');
-        }
-
-        let actualOtherParticipantId = otherParticipantId;
-        const originalOffer = offerId ? await Message.findById(offerId) : null;
-
-        if (originalOffer) {
-          if (originalOffer.senderId.toString() !== enderId && originalOffer.receiverId.toString() !== enderId) {
-            logger.warn(`Unauthorized endBargain attempt for offer ${offerId} by ${enderId}`);
-            throw new Error('Not authorized to end this bargain');
-          }
-          actualOtherParticipantId = originalOffer.senderId.toString() === enderId ? originalOffer.receiverId.toString() : originalOffer.senderId.toString();
-
-          await Message.findByIdAndUpdate(originalOffer._id, {
-            'offerDetails.status': 'ended',
-            status: 'seen'
-          });
-          logger.info(`Original offer ${offerId} updated to ended status`);
-        } else {
-          if (!actualOtherParticipantId) {
-            logger.error(`Cannot end bargain: otherParticipantId not provided for ender ${enderId} when offerId is missing.`);
-            socket.emit('offerError', { error: 'Cannot end bargain without specifying other participant.' });
-            return;
-          }
-          logger.warn(`endBargain received without specific offerId from ${enderId}. Proceeding with provided otherParticipantId: ${actualOtherParticipantId}.`);
-        }
-
-        const enderUser = await User.findById(enderId);
-        const otherParticipantUser = await User.findById(actualOtherParticipantId);
-        const chatRoomId = [enderId, actualOtherParticipantId].sort().join('_');
-
-        const endBargainMessage = new Message({
-          senderId: enderId,
-          receiverId: actualOtherParticipantId,
-          messageType: 'end-bargain',
-          text: JSON.stringify({
-            text: `${enderUser?.firstName || 'A user'} ended the bargain for ${productName || 'Product'}.`,
-            productId,
-            productName
-          }),
-          offerDetails: { productId, productName, status: 'ended' },
-          status: 'sent',
-          isRead: false,
-          createdAt: new Date(),
-          metadata: { isSystemMessage: true, actionRequired: false }
-        });
-        const savedEndBargainMsg = await endBargainMessage.save();
-        logger.info(`Created end-bargain message ${savedEndBargainMsg._id} for product ${productId}`);
-
-        const endBargainMessageForEnder = new Message({
-          senderId: actualOtherParticipantId,
-          receiverId: enderId,
-          messageType: 'end-bargain',
-          text: JSON.stringify({
-            text: `You ended the bargain for ${productName || 'Product'}.`,
-            productId,
-            productName
-          }),
-          offerDetails: { productId, productName, status: 'ended' },
-          status: 'sent',
-          isRead: false,
-          createdAt: new Date(),
-          metadata: { isSystemMessage: true, actionRequired: false }
-        });
-        const savedEndBargainForEnder = await endBargainMessageForEnder.save();
-        logger.info(`Created end-bargain message for ender ${enderId}: ${savedEndBargainForEnder._id}`);
-
-        io.to(`chat_${chatRoomId}`).emit('newMessage', { ...savedEndBargainForEnder.toObject(), _id: savedEndBargainForEnder._id.toString(), status: 'delivered' });
-        io.to(`chat_${chatRoomId}`).emit('newMessage', { ...savedEndBargainMsg.toObject(), _id: savedEndBargainMsg._id.toString(), status: 'delivered' });
-        logger.info(`Emitted endBargain messages to chatRoomId ${chatRoomId}`);
-
-        // --- UPDATED: Pass the fcmTokens array ---
-        await sendFCMNotification(
-          otherParticipantUser.fcmTokens,
-          'Bargain Ended',
-          `${enderUser?.firstName || 'A user'} ended the bargain for ${productName || 'Product'}.`,
-          {
-            type: 'bargain-ended',
-            productId: productId.toString(),
-            chatRoomId: chatRoomId,
-            messageId: savedEndBargainMsg._id.toString(),
-          },
-          io,
-          null,
-          null,
-          `bargain_ended_${productId.toString()}`
-        );
-        logger.info(`FCM notification sent for bargain ended on product ${productId} by ${enderId}`);
-
-        // --- UPDATED: Correct parameter order for triggerCountUpdate ---
-        await NotificationService.triggerCountUpdate(io, enderId);
-        await NotificationService.triggerCountUpdate(io, actualOtherParticipantId);
-        logger.info(`Bargain for product ${productId} ended and processed by ${enderId}`);
-
-      } catch (error) {
-        logger.error(`Error ending bargain for offer ${offerId || 'N/A'} by ${authenticatedUserId}: ${error.message}`, error.stack);
-        socket.emit('offerError', { error: error.message });
-      }
     });
 
     socket.on('imageViewed', async ({ messageId, viewerId }) => {
