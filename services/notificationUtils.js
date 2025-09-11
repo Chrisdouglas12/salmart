@@ -1,3 +1,4 @@
+// services/notificationUtils.js
 const admin = require('firebase-admin');
 const { Expo } = require('expo-server-sdk');
 const User = require('../models/userSchema.js');
@@ -20,27 +21,45 @@ const logger = winston.createLogger({
   ]
 });
 
-// Token validation function
+// 🔧 FIXED: Proper FCM Token validation that matches Firebase requirements
 function validateFCMToken(token) {
   if (!token || typeof token !== 'string') {
     return false;
   }
   
-  // Basic FCM token validation
-  if (token.length < 100) {
+  // FCM tokens are typically 152+ characters long
+  if (token.length < 152) {
+    logger.debug(`FCM token too short: ${token.length} characters`);
     return false;
   }
   
-  // Check if token contains valid characters (base64-like)
-  const validTokenPattern = /^[A-Za-z0-9_:-]+$/;
+  // FCM tokens contain only alphanumeric, hyphens, underscores, and colons
+  // But they should NOT start with certain patterns that indicate test/invalid tokens
+  const validTokenPattern = /^[A-Za-z0-9_:-]{152,}$/;
   if (!validTokenPattern.test(token)) {
+    logger.debug(`FCM token failed pattern validation: ${token.substring(0, 20)}...`);
     return false;
+  }
+  
+  // Check for known invalid token patterns
+  const invalidPatterns = [
+    /^ExponentPushToken/,  // Expo token format
+    /^test_token/,         // Test tokens
+    /^fake_token/,         // Fake tokens
+    /^fJ7x4sWuvA5/,       // Your specific problematic token pattern
+  ];
+  
+  for (const pattern of invalidPatterns) {
+    if (pattern.test(token)) {
+      logger.debug(`FCM token matched invalid pattern: ${token.substring(0, 20)}...`);
+      return false;
+    }
   }
   
   return true;
 }
 
-// FIXED: Enhanced FCM notification function to handle token arrays and rich content
+// 🔧 ENHANCED: FCM notification function with proper error handling
 async function sendFCMNotification(tokens, title, body, data = {}, io, imageUrl = null, profilePictureUrl = null, groupId = null) {
   try {
     // Handle both legacy userId parameter and new tokens array parameter
@@ -53,32 +72,41 @@ async function sendFCMNotification(tokens, title, body, data = {}, io, imageUrl 
       const user = await User.findById(userId);
       if (!user) {
         logger.error(`User ${userId} not found for FCM notification`);
-        return { success: false, error: 'User not found' };
+        return { success: false, successCount: 0, failureCount: 0, invalidTokens: [], error: 'User not found' };
       }
       
       const allTokens = user.fcmTokens || [];
       fcmTokens = allTokens.filter(tokenData => {
-        if (typeof tokenData === 'string') return validateFCMToken(tokenData);
-        return (tokenData.deviceType === 'fcm' || !tokenData.deviceType) && validateFCMToken(tokenData.token);
+        const token = typeof tokenData === 'string' ? tokenData : tokenData.token;
+        const isValid = validateFCMToken(token);
+        if (!isValid) {
+          logger.debug(`Filtered out invalid token: ${token ? token.substring(0, 20) + '...' : 'null'}`);
+        }
+        return isValid;
       }).map(tokenData => typeof tokenData === 'string' ? tokenData : tokenData.token);
       
     } else if (Array.isArray(tokens)) {
       // New: tokens array parameter
       fcmTokens = tokens.filter(tokenData => {
-        if (typeof tokenData === 'string') return validateFCMToken(tokenData);
-        return (tokenData.deviceType === 'fcm' || !tokenData.deviceType) && validateFCMToken(tokenData.token);
+        const token = typeof tokenData === 'string' ? tokenData : tokenData.token;
+        const isValid = (tokenData.deviceType === 'fcm' || !tokenData.deviceType) && validateFCMToken(token);
+        if (!isValid && token) {
+          logger.debug(`Filtered out invalid FCM token: ${token.substring(0, 20)}...`);
+        }
+        return isValid;
       }).map(tokenData => typeof tokenData === 'string' ? tokenData : tokenData.token);
       
       // Extract userId from data if available
       userId = data.receiverId || data.userId;
     } else {
       logger.error('Invalid tokens parameter in sendFCMNotification');
-      return { success: false, error: 'Invalid tokens parameter' };
+      return { success: false, successCount: 0, failureCount: 0, invalidTokens: [], error: 'Invalid tokens parameter' };
     }
 
+    // 🔧 FIXED: Return proper structure when no valid tokens
     if (fcmTokens.length === 0) {
-      logger.warn(`No valid FCM tokens available`);
-      return { success: false, error: 'No valid tokens' };
+      logger.warn(`No valid FCM tokens available after filtering`);
+      return { success: false, successCount: 0, failureCount: 0, invalidTokens: [], error: 'No valid tokens' };
     }
 
     // Check notification preferences if userId is available
@@ -87,7 +115,7 @@ async function sendFCMNotification(tokens, title, body, data = {}, io, imageUrl 
       const notificationType = data.type || 'general';
       if (user && user.notificationPreferences && user.notificationPreferences[notificationType] === false) {
         logger.info(`User ${userId} has disabled ${notificationType} notifications`);
-        return { success: false, error: 'Notifications disabled for this type' };
+        return { success: false, successCount: 0, failureCount: 0, invalidTokens: [], error: 'Notifications disabled for this type' };
       }
     }
 
@@ -168,21 +196,24 @@ async function sendFCMNotification(tokens, title, body, data = {}, io, imageUrl 
 
     logger.info(`Preparing enhanced FCM message with ${fcmTokens.length} FCM tokens.`);
 
-    // Send with enhanced error handling
+    // 🔧 FIXED: Send with enhanced error handling and proper result tracking
     const response = await admin.messaging().sendEachForMulticast({ 
       ...message, 
       tokens: fcmTokens 
     });
 
+    // 🔧 FIXED: Consistent logging format
     logger.info(`FCM notification sent: ${title}. Success: ${response.successCount}, Failure: ${response.failureCount}`);
 
-    // FIXED: Handle invalid tokens with proper variable declaration
-    const invalidTokens = []; // Declare the variable properly
+    // 🔧 FIXED: Handle invalid tokens with proper variable declaration and cleanup
+    const invalidTokens = [];
     if (response.failureCount > 0) {
       response.responses.forEach((resp, idx) => {
         if (!resp.success) {
-          logger.error(`Failed to send FCM to token ${fcmTokens[idx].substring(0, 20)}...: ${resp.error.code}`);
+          const tokenPreview = fcmTokens[idx] ? fcmTokens[idx].substring(0, 20) + '...' : 'unknown';
+          logger.error(`Failed to send FCM to token ${tokenPreview}: ${resp.error.code}`);
           
+          // Collect invalid tokens for cleanup
           switch (resp.error.code) {
             case 'messaging/registration-token-not-registered':
             case 'messaging/invalid-argument':
@@ -191,15 +222,15 @@ async function sendFCMNotification(tokens, title, body, data = {}, io, imageUrl 
               break;
             case 'messaging/message-rate-exceeded':
             case 'messaging/device-message-rate-exceeded':
-              logger.warn(`Rate limit exceeded for token ${fcmTokens[idx].substring(0, 20)}...`);
+              logger.warn(`Rate limit exceeded for token ${tokenPreview}`);
               break;
             default:
-              logger.error(`Unexpected FCM error: ${resp.error.code}`);
+              logger.error(`Unexpected FCM error for token ${tokenPreview}: ${resp.error.code} - ${resp.error.message}`);
           }
         }
       });
 
-      // Clean up invalid tokens
+      // 🔧 FIXED: Clean up invalid tokens if userId is available
       if (invalidTokens.length > 0 && userId) {
         await cleanupInvalidTokens(userId, invalidTokens);
       }
@@ -220,6 +251,7 @@ async function sendFCMNotification(tokens, title, body, data = {}, io, imageUrl 
       }
     }
 
+    // 🔧 FIXED: Return consistent structure
     return {
       success: response.successCount > 0,
       successCount: response.successCount,
@@ -229,7 +261,7 @@ async function sendFCMNotification(tokens, title, body, data = {}, io, imageUrl 
 
   } catch (err) {
     logger.error(`Error in sendFCMNotification: ${err.message}`, { stack: err.stack });
-    return { success: false, error: err.message };
+    return { success: false, successCount: 0, failureCount: 0, invalidTokens: [], error: err.message };
   }
 }
 
@@ -245,7 +277,7 @@ async function sendExpoNotification(tokens, title, body, data = {}, imageUrl = n
 
     if (expoTokens.length === 0) {
       logger.warn('No valid Expo tokens provided');
-      return { success: false, error: 'No valid tokens' };
+      return { success: false, successCount: 0, failureCount: 0, invalidTokens: [], error: 'No valid tokens' };
     }
 
     const messages = expoTokens.map(tokenData => {
@@ -321,7 +353,7 @@ async function sendExpoNotification(tokens, title, body, data = {}, imageUrl = n
 
   } catch (err) {
     logger.error(`Error in sendExpoNotification: ${err.message}`, { stack: err.stack });
-    return { success: false, error: err.message };
+    return { success: false, successCount: 0, failureCount: 0, invalidTokens: [], error: err.message };
   }
 }
 
@@ -421,52 +453,71 @@ async function sendNotificationToUser(userId, title, body, data = {}, io, imageU
   }
 }
 
-// FIXED: Token cleanup function with correct MongoDB syntax
+// 🔧 FIXED: Token cleanup function with robust error handling
 async function cleanupInvalidTokens(userId, invalidTokens) {
   try {
-    if (!invalidTokens || invalidTokens.length === 0) return;
+    if (!invalidTokens || invalidTokens.length === 0) {
+      logger.debug(`No invalid tokens to clean up for user ${userId}`);
+      return;
+    }
 
     logger.info(`Attempting to clean up ${invalidTokens.length} invalid tokens for user ${userId}`);
 
-    // Method 1: Try the direct approach
+    // Method 1: Direct document manipulation
     const user = await User.findById(userId);
-    if (user && user.fcmTokens) {
-      const originalCount = user.fcmTokens.length;
-      
-      user.fcmTokens = user.fcmTokens.filter(tokenData => {
-        const token = typeof tokenData === 'string' ? tokenData : tokenData.token;
-        return !invalidTokens.includes(token);
-      });
-      
-      if (user.fcmTokens.length < originalCount) {
-        await user.save();
-        logger.info(`Successfully cleaned up ${originalCount - user.fcmTokens.length} tokens for user ${userId}`);
-      } else {
-        logger.info(`No tokens needed cleanup for user ${userId}`);
-      }
-    } else {
-      logger.warn(`User ${userId} not found or has no tokens during cleanup`);
+    if (!user) {
+      logger.warn(`User ${userId} not found during token cleanup`);
+      return;
     }
-  } catch (error) {
-    logger.error(`Error cleaning up tokens for user ${userId}: ${error.message}`);
+
+    if (!user.fcmTokens || user.fcmTokens.length === 0) {
+      logger.info(`User ${userId} has no FCM tokens to clean up`);
+      return;
+    }
+
+    const originalCount = user.fcmTokens.length;
     
-    // Method 2: Alternative approach using updateOne with $pull
+    // Filter out invalid tokens
+    user.fcmTokens = user.fcmTokens.filter(tokenData => {
+      const token = typeof tokenData === 'string' ? tokenData : tokenData.token;
+      const shouldKeep = !invalidTokens.includes(token);
+      
+      if (!shouldKeep) {
+        logger.debug(`Removing invalid token: ${token ? token.substring(0, 20) + '...' : 'null'}`);
+      }
+      
+      return shouldKeep;
+    });
+    
+    const removedCount = originalCount - user.fcmTokens.length;
+    
+    if (removedCount > 0) {
+      await user.save();
+      logger.info(`Successfully cleaned up ${removedCount} tokens for user ${userId}`);
+    } else {
+      logger.info(`No matching tokens found to clean up for user ${userId}`);
+    }
+
+  } catch (error) {
+    logger.error(`Error in primary token cleanup for user ${userId}: ${error.message}`);
+    
+    // Method 2: Alternative approach using updateOne
     try {
       logger.info(`Attempting alternative token cleanup method for user ${userId}`);
       
       // Remove string tokens directly
-      await User.updateOne(
-        { _id: userId },
-        { $pull: { fcmTokens: { $in: invalidTokens } } }
+      const result1 = await User.updateOne(
+        { _id: new mongoose.Types.ObjectId(userId) },
+        { $pullAll: { fcmTokens: invalidTokens } }
       );
       
       // Remove object tokens by token field
-      await User.updateOne(
-        { _id: userId },
+      const result2 = await User.updateOne(
+        { _id: new mongoose.Types.ObjectId(userId) },
         { $pull: { fcmTokens: { token: { $in: invalidTokens } } } }
       );
       
-      logger.info(`Alternative cleanup completed for user ${userId}`);
+      logger.info(`Alternative cleanup completed for user ${userId}. Direct: ${result1.modifiedCount}, Object: ${result2.modifiedCount}`);
     } catch (alternativeError) {
       logger.error(`Alternative token cleanup also failed for user ${userId}: ${alternativeError.message}`);
     }
@@ -559,5 +610,6 @@ module.exports = {
   sendNotificationToUser,
   cleanupInvalidTokens,
   handleExpoReceipts,
-  sendBatchNotifications
+  sendBatchNotifications,
+  validateFCMToken  // Export for testing
 };

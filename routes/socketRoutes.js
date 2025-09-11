@@ -93,107 +93,7 @@ const formatNotificationMessage = (messageType, text, offerDetails, attachment) 
   return notificationText;
 };
 
-// 📢 NEW: Enhanced FCM notification function with proper error handling
-const sendEnhancedFCMNotification = async (
-  receiverFcmTokens,
-  senderName,
-  senderProfilePicture,
-  notificationText,
-  messageType,
-  messageData,
-  productImageUrl = null
-) => {
-  try {
-    if (!receiverFcmTokens || receiverFcmTokens.length === 0) {
-      logger.warn('No FCM tokens available for receiver');
-      return { success: 0, failed: 0, invalidTokens: [] };
-    }
-
-    // 📢 FIXED: Filter and validate FCM tokens
-    const validTokens = receiverFcmTokens.filter(tokenObj => {
-      if (!tokenObj || !tokenObj.token) {
-        logger.warn('Invalid token object found');
-        return false;
-      }
-      
-      if (!isValidFCMToken(tokenObj.token)) {
-        logger.warn(`Invalid FCM token format: ${tokenObj.token.substring(0, 20)}...`);
-        return false;
-      }
-      
-      return true;
-    });
-
-    if (validTokens.length === 0) {
-      logger.warn('No valid FCM tokens found after filtering');
-      return { success: 0, failed: 0, invalidTokens: receiverFcmTokens.map(t => t.token).filter(Boolean) };
-    }
-
-    // 📢 FIXED: Create proper notification payload
-    const baseNotificationData = {
-      // Core message data
-      type: 'message',
-      senderId: messageData.senderId.toString(),
-      receiverId: messageData.receiverId.toString(),
-      messageId: messageData.messageId.toString(),
-      chatId: messageData.chatRoomId,
-      senderName: senderName,
-      messageType: messageType,
-      timestamp: new Date().toISOString(),
-      
-      // Additional data for WhatsApp-like experience
-      avatar: senderProfilePicture || '',
-      productImage: productImageUrl || '',
-      
-      // Grouping and threading
-      tag: `chat_${messageData.chatRoomId}`,
-      threadId: messageData.chatRoomId,
-      
-      // Action data for quick reply
-      canReply: 'true',
-      actions: JSON.stringify([
-        { id: 'reply', title: 'Reply' },
-        { id: 'mark_read', title: 'Mark as Read' }
-      ])
-    };
-
-    // 📢 FIXED: Send notifications using your existing service
-    logger.info(`Sending enhanced FCM notification to ${validTokens.length} valid tokens`);
-    
-    const results = await Promise.allSettled(
-      validTokens.map(async (tokenObj) => {
-        try {
-          logger.info(`Sending FCM to token: ${tokenObj.token.substring(0, 20)}...`);
-          
-          // Use your existing FCM service with proper parameters
-          const result = await sendFCMNotification(
-            [tokenObj], // Pass single token in array format
-            senderName,
-            notificationText,
-            baseNotificationData,
-            null, // io parameter
-            productImageUrl,
-            senderProfilePicture,
-            `message_${messageData.senderId}_${messageData.receiverId}`
-          );
-          
-          return { success: true, token: tokenObj.token, result };
-        } catch (error) {
-          logger.error(`Failed to send FCM to token ${tokenObj.token.substring(0, 20)}...: ${error.message}`);
-          return { 
-            success: false, 
-            token: tokenObj.token, 
-            error: error.message,
-            isInvalid: error.message.includes('invalid-registration-token') || 
-                      error.message.includes('invalid-argument')
-          };
-        }
-      })
-    );
-
-    // 📢 FIXED: Process results properly
-    const successful = results.filter(r => r.status === 'fulfilled' && r.value.success).length;
-    const failed = results.filter(r => r.status === 'rejected' || (r.status === 'fulfilled' && !r.value.success)).length;
+None r.status === 'rejected' || (r.status === 'fulfilled' && !r.value.success)).length;
     
     // 📢 FIXED: Collect invalid tokens properly
     const invalidTokens = [];
@@ -479,26 +379,32 @@ const initializeSocket = (io) => {
           }
         }
 
-        // 📢 ENHANCED: Send push notification with rich content
+        // 📢 ENHANCED: Send push notification with rich content using fixed service
         if ((!receiverIsOnline || !receiverIsInChatRoom) && !newMessage.metadata?.isSystemMessage) {
           logger.info(`Receiver ${receiverId} not actively online or in chat. Sending enhanced FCM notification.`);
           
-          const fcmResult = await sendEnhancedFCMNotification(
+          // Use the fixed FCM service directly
+          const fcmResult = await sendFCMNotification(
             receiver.fcmTokens || [],
             senderName,
-            senderProfilePictureUrl,
             notificationText,
-            messageType,
             {
+              type: 'message',
               senderId: senderId.toString(),
               receiverId: receiverId.toString(),
               messageId: savedMessage._id.toString(),
-              chatRoomId: chatRoomId
+              chatId: chatRoomId,
+              chatRoomId: chatRoomId,
+              messageType: messageType,
+              timestamp: new Date().toISOString()
             },
-            productImageUrl
+            io,
+            productImageUrl,
+            senderProfilePictureUrl,
+            `message_${senderId}_${receiverId}`
           );
           
-          logger.info(`Enhanced FCM notification completed for user ${receiverId}. Results: ${JSON.stringify(fcmResult)}`);
+          logger.info(`Enhanced FCM notification completed for user ${receiverId}. Success: ${fcmResult.successCount}, Failed: ${fcmResult.failureCount}, Invalid: ${fcmResult.invalidTokens.length}`);
         } else {
           logger.info(`Receiver ${receiverId} is online and actively in chat room, skipping FCM.`);
         }
