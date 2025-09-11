@@ -28,7 +28,7 @@ const adminRoutes = require('./routes/adminRoutes.js');
 const adminRoutes1 = require('./routes/adminRoutes1.js');
 const promoteRoutes = require('./routes/promoteRoutes.js');
 const cleanupPromotions = require('./cron/promotionCleanUp.js');
-const initializeSocket = require('./routes/socketRoutes.js'); // Import your socket handler
+const { initializeSocket } = require('./routes/socketRoutes.js');
 
 
 // Initialize Winston logger
@@ -127,7 +127,7 @@ const io = new Server(server, {
 logger.info('✅ Socket.IO initialized');
 
 // --- Pass io instance to your Socket.IO event handler ---
-initializeSocket(io); // This replaces the simple io.on('connection') block here
+initializeSocket(io);
 
 // Routes
 app.use(userRoutes(io));
