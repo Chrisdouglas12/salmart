@@ -163,7 +163,7 @@ try {
 // ===== CRITICAL: Enhanced Update Management with Force Cache Bust =====
 
 // IMPORTANT: Change this timestamp for every deployment to force cache updates
-const BUILD_TIMESTAMP = '2025-09-10-v2.01.12'; 
+const BUILD_TIMESTAMP = '2025-09-11-v2.01.13'; 
 
 const CACHE_NAME = `salmart-cache-${BUILD_TIMESTAMP}`;
 const DYNAMIC_CACHE_NAME = `salmart-dynamic-${BUILD_TIMESTAMP}`;

@@ -20,7 +20,27 @@ const logger = winston.createLogger({
   ]
 });
 
-// 📢 UPDATED: Enhanced FCM notification function to handle token arrays and rich content
+// Token validation function
+function validateFCMToken(token) {
+  if (!token || typeof token !== 'string') {
+    return false;
+  }
+  
+  // Basic FCM token validation
+  if (token.length < 100) {
+    return false;
+  }
+  
+  // Check if token contains valid characters (base64-like)
+  const validTokenPattern = /^[A-Za-z0-9_:-]+$/;
+  if (!validTokenPattern.test(token)) {
+    return false;
+  }
+  
+  return true;
+}
+
+// FIXED: Enhanced FCM notification function to handle token arrays and rich content
 async function sendFCMNotification(tokens, title, body, data = {}, io, imageUrl = null, profilePictureUrl = null, groupId = null) {
   try {
     // Handle both legacy userId parameter and new tokens array parameter
@@ -33,32 +53,32 @@ async function sendFCMNotification(tokens, title, body, data = {}, io, imageUrl 
       const user = await User.findById(userId);
       if (!user) {
         logger.error(`User ${userId} not found for FCM notification`);
-        return;
+        return { success: false, error: 'User not found' };
       }
       
       const allTokens = user.fcmTokens || [];
       fcmTokens = allTokens.filter(tokenData => {
-        if (typeof tokenData === 'string') return true;
-        return tokenData.deviceType === 'fcm' || !tokenData.deviceType;
+        if (typeof tokenData === 'string') return validateFCMToken(tokenData);
+        return (tokenData.deviceType === 'fcm' || !tokenData.deviceType) && validateFCMToken(tokenData.token);
       }).map(tokenData => typeof tokenData === 'string' ? tokenData : tokenData.token);
       
     } else if (Array.isArray(tokens)) {
       // New: tokens array parameter
       fcmTokens = tokens.filter(tokenData => {
-        if (typeof tokenData === 'string') return true;
-        return (tokenData.deviceType === 'fcm' || !tokenData.deviceType) && tokenData.token;
+        if (typeof tokenData === 'string') return validateFCMToken(tokenData);
+        return (tokenData.deviceType === 'fcm' || !tokenData.deviceType) && validateFCMToken(tokenData.token);
       }).map(tokenData => typeof tokenData === 'string' ? tokenData : tokenData.token);
       
       // Extract userId from data if available
       userId = data.receiverId || data.userId;
     } else {
       logger.error('Invalid tokens parameter in sendFCMNotification');
-      return;
+      return { success: false, error: 'Invalid tokens parameter' };
     }
 
     if (fcmTokens.length === 0) {
-      logger.warn(`No FCM tokens available`);
-      return;
+      logger.warn(`No valid FCM tokens available`);
+      return { success: false, error: 'No valid tokens' };
     }
 
     // Check notification preferences if userId is available
@@ -67,29 +87,27 @@ async function sendFCMNotification(tokens, title, body, data = {}, io, imageUrl 
       const notificationType = data.type || 'general';
       if (user && user.notificationPreferences && user.notificationPreferences[notificationType] === false) {
         logger.info(`User ${userId} has disabled ${notificationType} notifications`);
-        return;
+        return { success: false, error: 'Notifications disabled for this type' };
       }
     }
 
-    // 📢 NEW: Enhanced message payload with rich content support
+    // Enhanced message payload with rich content support
     const baseMessage = {
       notification: { 
         title, 
         body,
-        // 📢 NEW: Add image to notification for supported platforms
         ...(imageUrl && { image: imageUrl })
       },
       data: { 
         ...data, 
         ...(userId && { userId: userId.toString() }),
-        // 📢 NEW: Add rich content data
         ...(imageUrl && { imageUrl }),
         ...(profilePictureUrl && { profilePictureUrl }),
         ...(groupId && { groupId })
       }
     };
 
-    // 📢 NEW: Platform-specific configurations
+    // Platform-specific configurations
     const androidConfig = {
       priority: 'high',
       notification: {
@@ -98,7 +116,6 @@ async function sendFCMNotification(tokens, title, body, data = {}, io, imageUrl 
         icon: 'ic_notification',
         color: '#00A86B',
         sound: 'default',
-        // 📢 NEW: Enhanced Android notification features
         channelId: data.type === 'message' ? 'chat_messages' : 'default',
         ...(groupId && { 
           tag: groupId,
@@ -122,12 +139,10 @@ async function sendFCMNotification(tokens, title, body, data = {}, io, imageUrl 
           alert: { title, body },
           sound: 'default',
           badge: 1,
-          // 📢 NEW: iOS-specific features
           ...(data.chatId && { 'thread-id': data.chatId }),
           category: 'CHAT_MESSAGE',
           'mutable-content': 1
         },
-        // 📢 NEW: Custom data for rich notifications
         ...(imageUrl && { imageUrl }),
         ...(profilePictureUrl && { profilePictureUrl })
       }
@@ -139,9 +154,8 @@ async function sendFCMNotification(tokens, title, body, data = {}, io, imageUrl 
         icon: profilePictureUrl || 'https://salmartonline.com.ng/salmart-192x192.png',
         image: imageUrl || null,
         requireInteraction: true,
-        // 📢 NEW: Web notification enhancements
         badge: 'https://salmartonline.com.ng/salmart-96x96.png',
-        ...(data.chatId && { tag: data.chatId }) // Group notifications by chat
+        ...(data.chatId && { tag: data.chatId })
       }
     };
 
@@ -154,7 +168,7 @@ async function sendFCMNotification(tokens, title, body, data = {}, io, imageUrl 
 
     logger.info(`Preparing enhanced FCM message with ${fcmTokens.length} FCM tokens.`);
 
-    // 📢 NEW: Send with enhanced error handling
+    // Send with enhanced error handling
     const response = await admin.messaging().sendEachForMulticast({ 
       ...message, 
       tokens: fcmTokens 
@@ -162,11 +176,9 @@ async function sendFCMNotification(tokens, title, body, data = {}, io, imageUrl 
 
     logger.info(`FCM notification sent: ${title}. Success: ${response.successCount}, Failure: ${response.failureCount}`);
 
-    // Handle invalid tokens
+    // FIXED: Handle invalid tokens with proper variable declaration
+    const invalidTokens = []; // Declare the variable properly
     if (response.failureCount > 0) {
-      const invalidTokens = [];
-      const expiredTokens = [];
-      
       response.responses.forEach((resp, idx) => {
         if (!resp.success) {
           logger.error(`Failed to send FCM to token ${fcmTokens[idx].substring(0, 20)}...: ${resp.error.code}`);
@@ -187,7 +199,7 @@ async function sendFCMNotification(tokens, title, body, data = {}, io, imageUrl 
         }
       });
 
-      // 📢 NEW: Clean up invalid tokens
+      // Clean up invalid tokens
       if (invalidTokens.length > 0 && userId) {
         await cleanupInvalidTokens(userId, invalidTokens);
       }
@@ -212,7 +224,7 @@ async function sendFCMNotification(tokens, title, body, data = {}, io, imageUrl 
       success: response.successCount > 0,
       successCount: response.successCount,
       failureCount: response.failureCount,
-      invalidTokens: invalidTokens || []
+      invalidTokens: invalidTokens
     };
 
   } catch (err) {
@@ -221,7 +233,7 @@ async function sendFCMNotification(tokens, title, body, data = {}, io, imageUrl 
   }
 }
 
-// 📢 ENHANCED: Expo notification with rich content support
+// Enhanced Expo notification with rich content support
 async function sendExpoNotification(tokens, title, body, data = {}, imageUrl = null, profilePictureUrl = null) {
   try {
     // Handle single token or token array
@@ -246,10 +258,8 @@ async function sendExpoNotification(tokens, title, body, data = {}, imageUrl = n
         body,
         data: {
           ...data,
-          // 📢 NEW: Rich content data for Expo
           ...(imageUrl && { imageUrl }),
           ...(profilePictureUrl && { profilePictureUrl }),
-          // 📢 NEW: WhatsApp-like data structure
           messageType: data.messageType || 'text',
           chatId: data.chatId || data.chatRoomId,
           senderId: data.senderId,
@@ -257,9 +267,7 @@ async function sendExpoNotification(tokens, title, body, data = {}, imageUrl = n
         },
         badge: 1,
         priority: 'high',
-        // 📢 NEW: Use appropriate channel based on message type
         channelId: data.type === 'message' ? 'chat_messages' : 'default',
-        // 📢 NEW: Grouping support
         ...(data.chatId && { 
           categoryId: 'chat',
           groupId: data.chatId 
@@ -280,13 +288,11 @@ async function sendExpoNotification(tokens, title, body, data = {}, imageUrl = n
         const ticketChunk = await expo.sendPushNotificationsAsync(chunk);
         allTickets.push(...ticketChunk);
         
-        // 📢 NEW: Count successes and failures
         ticketChunk.forEach((ticket, index) => {
           if (ticket.status === 'error') {
             failureCount++;
             logger.error(`Expo notification error: ${ticket.message}`);
             
-            // 📢 NEW: Track invalid tokens
             if (ticket.details && ticket.details.error === 'DeviceNotRegistered') {
               const tokenData = chunk[index];
               const token = typeof tokenData === 'string' ? tokenData : tokenData.token;
@@ -319,36 +325,36 @@ async function sendExpoNotification(tokens, title, body, data = {}, imageUrl = n
   }
 }
 
-// 📢 ENHANCED: Main notification function with better token handling
+// Enhanced main notification function with better token handling
 async function sendNotificationToUser(userId, title, body, data = {}, io, imageUrl = null, profilePictureUrl = null, groupId = null) {
   try {
     if (!mongoose.Types.ObjectId.isValid(userId)) {
       logger.warn(`Invalid userId in sendNotificationToUser: ${userId}`);
-      return;
+      return [{ success: false, error: 'Invalid user ID' }];
     }
 
     const user = await User.findById(userId);
     if (!user) {
       logger.error(`User ${userId} not found for notification`);
-      return;
+      return [{ success: false, error: 'User not found' }];
     }
 
     const tokens = user.fcmTokens || [];
     if (tokens.length === 0) {
       logger.warn(`No tokens found for user ${userId}`);
-      return;
+      return [{ success: false, error: 'No tokens found' }];
     }
 
     // Check notification preferences
     const notificationType = data.type || 'general';
     if (user.notificationPreferences && user.notificationPreferences[notificationType] === false) {
       logger.info(`User ${userId} has disabled ${notificationType} notifications`);
-      return;
+      return [{ success: false, error: 'Notifications disabled' }];
     }
 
     logger.info(`Sending notifications to user ${userId} via ${tokens.length} token(s)`);
 
-    // 📢 NEW: Separate tokens by type for batch processing
+    // Separate tokens by type for batch processing
     const fcmTokens = tokens.filter(tokenData => {
       if (typeof tokenData === 'string') return true;
       return tokenData.deviceType === 'fcm' || !tokenData.deviceType;
@@ -387,7 +393,7 @@ async function sendNotificationToUser(userId, title, body, data = {}, io, imageU
       );
       results.push({ type: 'expo', ...expoResult });
 
-      // 📢 NEW: Clean up invalid Expo tokens
+      // Clean up invalid Expo tokens
       if (expoResult.invalidTokens && expoResult.invalidTokens.length > 0) {
         await cleanupInvalidTokens(userId, expoResult.invalidTokens);
       }
@@ -415,31 +421,59 @@ async function sendNotificationToUser(userId, title, body, data = {}, io, imageU
   }
 }
 
-// 📢 ENHANCED: Token cleanup function
+// FIXED: Token cleanup function with correct MongoDB syntax
 async function cleanupInvalidTokens(userId, invalidTokens) {
   try {
     if (!invalidTokens || invalidTokens.length === 0) return;
 
-    const result = await User.findByIdAndUpdate(userId, {
-      $pull: { 
-        fcmTokens: { 
-          $or: [
-            { $in: invalidTokens }, // For legacy string tokens
-            { token: { $in: invalidTokens } } // For object tokens
-          ]
-        }
-      }
-    });
+    logger.info(`Attempting to clean up ${invalidTokens.length} invalid tokens for user ${userId}`);
 
-    if (result) {
-      logger.info(`Cleaned up ${invalidTokens.length} invalid tokens for user ${userId}`);
+    // Method 1: Try the direct approach
+    const user = await User.findById(userId);
+    if (user && user.fcmTokens) {
+      const originalCount = user.fcmTokens.length;
+      
+      user.fcmTokens = user.fcmTokens.filter(tokenData => {
+        const token = typeof tokenData === 'string' ? tokenData : tokenData.token;
+        return !invalidTokens.includes(token);
+      });
+      
+      if (user.fcmTokens.length < originalCount) {
+        await user.save();
+        logger.info(`Successfully cleaned up ${originalCount - user.fcmTokens.length} tokens for user ${userId}`);
+      } else {
+        logger.info(`No tokens needed cleanup for user ${userId}`);
+      }
+    } else {
+      logger.warn(`User ${userId} not found or has no tokens during cleanup`);
     }
   } catch (error) {
     logger.error(`Error cleaning up tokens for user ${userId}: ${error.message}`);
+    
+    // Method 2: Alternative approach using updateOne with $pull
+    try {
+      logger.info(`Attempting alternative token cleanup method for user ${userId}`);
+      
+      // Remove string tokens directly
+      await User.updateOne(
+        { _id: userId },
+        { $pull: { fcmTokens: { $in: invalidTokens } } }
+      );
+      
+      // Remove object tokens by token field
+      await User.updateOne(
+        { _id: userId },
+        { $pull: { fcmTokens: { token: { $in: invalidTokens } } } }
+      );
+      
+      logger.info(`Alternative cleanup completed for user ${userId}`);
+    } catch (alternativeError) {
+      logger.error(`Alternative token cleanup also failed for user ${userId}: ${alternativeError.message}`);
+    }
   }
 }
 
-// 📢 ENHANCED: Expo receipt handling with better error management
+// Enhanced Expo receipt handling with better error management
 async function handleExpoReceipts(tickets) {
   try {
     const receiptIds = tickets
@@ -468,7 +502,6 @@ async function handleExpoReceipts(tickets) {
               message: details?.message
             });
             
-            // 📢 NEW: Handle different error types
             if (details && details.error) {
               switch (details.error) {
                 case 'DeviceNotRegistered':
@@ -497,7 +530,7 @@ async function handleExpoReceipts(tickets) {
   }
 }
 
-// 📢 NEW: Batch notification function for multiple users
+// Batch notification function for multiple users
 async function sendBatchNotifications(userIds, title, body, data = {}, io, imageUrl = null, profilePictureUrl = null) {
   try {
     logger.info(`Sending batch notifications to ${userIds.length} users: ${title}`);
@@ -526,5 +559,5 @@ module.exports = {
   sendNotificationToUser,
   cleanupInvalidTokens,
   handleExpoReceipts,
-  sendBatchNotifications // 📢 NEW: Export batch function
+  sendBatchNotifications
 };

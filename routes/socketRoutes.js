@@ -23,7 +23,14 @@ const logger = winston.createLogger({
 
 const userSocketMap = new Map();
 
-// 📢 NEW: Helper function to format message for notifications
+// 📢 Helper function to validate FCM token format
+const isValidFCMToken = (token) => {
+  if (!token || typeof token !== 'string') return false;
+  // FCM tokens are typically 152+ characters long and contain specific patterns
+  return token.length > 100 && /^[A-Za-z0-9_-]+:[A-Za-z0-9_-]+$/.test(token);
+};
+
+// 📢 Helper function to format message for notifications
 const formatNotificationMessage = (messageType, text, offerDetails, attachment) => {
   let notificationText = '';
   let messageTypeFormatted = messageType || 'text';
@@ -86,7 +93,7 @@ const formatNotificationMessage = (messageType, text, offerDetails, attachment) 
   return notificationText;
 };
 
-// 📢 NEW: Enhanced FCM notification function
+// 📢 NEW: Enhanced FCM notification function with proper error handling
 const sendEnhancedFCMNotification = async (
   receiverFcmTokens,
   senderName,
@@ -99,136 +106,140 @@ const sendEnhancedFCMNotification = async (
   try {
     if (!receiverFcmTokens || receiverFcmTokens.length === 0) {
       logger.warn('No FCM tokens available for receiver');
-      return;
+      return { success: 0, failed: 0, invalidTokens: [] };
     }
 
-    // 📢 NEW: Create rich notification payload
-    const notificationPayload = {
-      title: senderName,
-      body: notificationText,
-      data: {
-        // Core message data
-        type: 'message',
-        senderId: messageData.senderId.toString(),
-        receiverId: messageData.receiverId.toString(),
-        messageId: messageData.messageId.toString(),
-        chatId: messageData.chatRoomId,
-        senderName: senderName,
-        messageType: messageType,
-        timestamp: new Date().toISOString(),
-        
-        // 📢 NEW: Additional data for WhatsApp-like experience
-        avatar: senderProfilePicture || '',
-        productImage: productImageUrl || '',
-        
-        // 📢 NEW: Grouping and threading
-        tag: `chat_${messageData.chatRoomId}`, // For Android grouping
-        threadId: messageData.chatRoomId, // For iOS threading
-        
-        // 📢 NEW: Action data for quick reply
-        actions: JSON.stringify([
-          { id: 'reply', title: 'Reply' },
-          { id: 'mark_read', title: 'Mark as Read' }
-        ])
+    // 📢 FIXED: Filter and validate FCM tokens
+    const validTokens = receiverFcmTokens.filter(tokenObj => {
+      if (!tokenObj || !tokenObj.token) {
+        logger.warn('Invalid token object found');
+        return false;
       }
+      
+      if (!isValidFCMToken(tokenObj.token)) {
+        logger.warn(`Invalid FCM token format: ${tokenObj.token.substring(0, 20)}...`);
+        return false;
+      }
+      
+      return true;
+    });
+
+    if (validTokens.length === 0) {
+      logger.warn('No valid FCM tokens found after filtering');
+      return { success: 0, failed: 0, invalidTokens: receiverFcmTokens.map(t => t.token).filter(Boolean) };
+    }
+
+    // 📢 FIXED: Create proper notification payload
+    const baseNotificationData = {
+      // Core message data
+      type: 'message',
+      senderId: messageData.senderId.toString(),
+      receiverId: messageData.receiverId.toString(),
+      messageId: messageData.messageId.toString(),
+      chatId: messageData.chatRoomId,
+      senderName: senderName,
+      messageType: messageType,
+      timestamp: new Date().toISOString(),
+      
+      // Additional data for WhatsApp-like experience
+      avatar: senderProfilePicture || '',
+      productImage: productImageUrl || '',
+      
+      // Grouping and threading
+      tag: `chat_${messageData.chatRoomId}`,
+      threadId: messageData.chatRoomId,
+      
+      // Action data for quick reply
+      canReply: 'true',
+      actions: JSON.stringify([
+        { id: 'reply', title: 'Reply' },
+        { id: 'mark_read', title: 'Mark as Read' }
+      ])
     };
 
-    // 📢 NEW: Platform-specific configurations
-    const androidConfig = {
-      priority: 'high',
-      notification: {
-        title: senderName,
-        body: notificationText,
-        icon: 'ic_notification',
-        color: '#00A86B',
-        sound: 'default',
-        channelId: messageType === 'offer' || messageType === 'counter-offer' 
-          ? 'system_notifications' 
-          : 'chat_messages',
-        tag: `chat_${messageData.chatRoomId}`, // Group notifications by chat
-        group: 'chat_messages',
-        groupSummary: false,
-        // 📢 NEW: Large icon for sender avatar
-        ...(senderProfilePicture && {
-          largeIcon: senderProfilePicture
-        }),
-        // 📢 NEW: Big picture for product images
-        ...(productImageUrl && {
-          bigPicture: productImageUrl,
-          style: 'bigPicture'
-        })
-      },
-      data: notificationPayload.data
-    };
-
-    const iosConfig = {
-      aps: {
-        alert: {
-          title: senderName,
-          body: notificationText
-        },
-        sound: 'default',
-        badge: 1, // Will be updated with actual count
-        'thread-id': messageData.chatRoomId,
-        category: 'CHAT_MESSAGE',
-        'mutable-content': 1 // For rich notifications
-      },
-      data: notificationPayload.data
-    };
-
-    // 📢 NEW: Send to multiple tokens
+    // 📢 FIXED: Send notifications using your existing service
+    logger.info(`Sending enhanced FCM notification to ${validTokens.length} valid tokens`);
+    
     const results = await Promise.allSettled(
-      receiverFcmTokens.map(async (tokenObj) => {
-        if (!tokenObj.token) return;
-
-        const payload = {
-          to: tokenObj.token,
-          ...notificationPayload,
-          // Platform-specific config
-          ...(tokenObj.platform === 'android' ? { android: androidConfig } : { apns: iosConfig })
-        };
-
-        logger.info(`Sending FCM notification to token: ${tokenObj.token.substring(0, 20)}...`);
-        
-        // Call your existing FCM service
-        return await sendFCMNotification(
-          [tokenObj], // Pass as array
-          senderName,
-          notificationText,
-          notificationPayload.data,
-          null, // io parameter
-          productImageUrl,
-          senderProfilePicture,
-          `message_${messageData.senderId}_${messageData.receiverId}`
-        );
+      validTokens.map(async (tokenObj) => {
+        try {
+          logger.info(`Sending FCM to token: ${tokenObj.token.substring(0, 20)}...`);
+          
+          // Use your existing FCM service with proper parameters
+          const result = await sendFCMNotification(
+            [tokenObj], // Pass single token in array format
+            senderName,
+            notificationText,
+            baseNotificationData,
+            null, // io parameter
+            productImageUrl,
+            senderProfilePicture,
+            `message_${messageData.senderId}_${messageData.receiverId}`
+          );
+          
+          return { success: true, token: tokenObj.token, result };
+        } catch (error) {
+          logger.error(`Failed to send FCM to token ${tokenObj.token.substring(0, 20)}...: ${error.message}`);
+          return { 
+            success: false, 
+            token: tokenObj.token, 
+            error: error.message,
+            isInvalid: error.message.includes('invalid-registration-token') || 
+                      error.message.includes('invalid-argument')
+          };
+        }
       })
     );
 
-    // 📢 NEW: Log results
-    const successful = results.filter(r => r.status === 'fulfilled').length;
-    const failed = results.filter(r => r.status === 'rejected').length;
+    // 📢 FIXED: Process results properly
+    const successful = results.filter(r => r.status === 'fulfilled' && r.value.success).length;
+    const failed = results.filter(r => r.status === 'rejected' || (r.status === 'fulfilled' && !r.value.success)).length;
     
-    logger.info(`FCM notification results: ${successful} successful, ${failed} failed`);
-    
-    // 📢 NEW: Clean up invalid tokens
+    // 📢 FIXED: Collect invalid tokens properly
     const invalidTokens = [];
-    results.forEach((result, index) => {
-      if (result.status === 'rejected' && result.reason?.code === 'messaging/invalid-registration-token') {
-        invalidTokens.push(receiverFcmTokens[index].token);
+    results.forEach((result) => {
+      if (result.status === 'fulfilled' && !result.value.success && result.value.isInvalid) {
+        invalidTokens.push(result.value.token);
+      } else if (result.status === 'rejected') {
+        // Handle rejected promises
+        logger.error(`Promise rejected in FCM sending: ${result.reason}`);
       }
     });
 
+    logger.info(`FCM notification results: ${successful} successful, ${failed} failed, ${invalidTokens.length} invalid tokens`);
+
+    // 📢 FIXED: Clean up invalid tokens with proper MongoDB query
     if (invalidTokens.length > 0) {
-      logger.info(`Removing ${invalidTokens.length} invalid FCM tokens`);
-      // Remove invalid tokens from user document
-      await User.updateOne(
-        { _id: messageData.receiverId },
-        { $pull: { fcmTokens: { token: { $in: invalidTokens } } } }
-      );
+      try {
+        logger.info(`Removing ${invalidTokens.length} invalid FCM tokens from user ${messageData.receiverId}`);
+        
+        const updateResult = await User.updateOne(
+          { _id: new mongoose.Types.ObjectId(messageData.receiverId) },
+          { 
+            $pull: { 
+              fcmTokens: { 
+                token: { $in: invalidTokens } 
+              } 
+            } 
+          }
+        );
+        
+        logger.info(`Successfully removed invalid tokens. Modified: ${updateResult.modifiedCount}`);
+      } catch (cleanupError) {
+        logger.error(`Error cleaning up invalid tokens for user ${messageData.receiverId}: ${cleanupError.message}`);
+      }
     }
 
+    return { 
+      success: successful, 
+      failed: failed, 
+      invalidTokens: invalidTokens,
+      totalProcessed: validTokens.length
+    };
+
   } catch (error) {
-    logger.error(`Error sending enhanced FCM notification: ${error.message}`);
+    logger.error(`Error in sendEnhancedFCMNotification: ${error.message}`, error.stack);
+    return { success: 0, failed: 0, invalidTokens: [], error: error.message };
   }
 };
 
@@ -333,24 +344,33 @@ const initializeSocket = (io) => {
         const senderId = authenticatedUserId;
         const { receiverId, text, messageType, offerDetails, attachment, tempId } = messageData;
 
+        // 📢 FIXED: Input validation
         if (!senderId || !receiverId) {
           logger.warn(`Missing senderId (${senderId}) or receiverId (${receiverId}) from messageData.`);
           socket.emit('messageError', { tempId, error: 'Missing senderId or receiverId' });
           return;
         }
 
-        if (messageType === 'text' && !text) {
+        if (!mongoose.Types.ObjectId.isValid(senderId) || !mongoose.Types.ObjectId.isValid(receiverId)) {
+          logger.warn(`Invalid ObjectId format: senderId=${senderId}, receiverId=${receiverId}`);
+          socket.emit('messageError', { tempId, error: 'Invalid user IDs' });
+          return;
+        }
+
+        if (messageType === 'text' && (!text || text.trim() === '')) {
           logger.warn(`Text message missing content.`);
           socket.emit('messageError', { tempId, error: 'Text messages require content' });
           return;
         }
 
-        // 📢 ENHANCED: Get more user data including FCM tokens
-        const sender = await User.findById(senderId).select('firstName lastName profilePicture role fcmTokens');
-        const receiver = await User.findById(receiverId).select('firstName lastName profilePicture fcmTokens');
+        // 📢 ENHANCED: Get more user data including FCM tokens with better error handling
+        const [sender, receiver] = await Promise.all([
+          User.findById(senderId).select('firstName lastName profilePicture role fcmTokens').lean(),
+          User.findById(receiverId).select('firstName lastName profilePicture fcmTokens').lean()
+        ]);
 
         if (!sender || !receiver) {
-          logger.error(`Sender or receiver not found: sender=${senderId}, receiver=${receiverId}`);
+          logger.error(`Sender or receiver not found: sender=${!!sender}, receiver=${!!receiver}`);
           socket.emit('messageError', { tempId, error: 'Sender or receiver not found' });
           return;
         }
@@ -360,11 +380,11 @@ const initializeSocket = (io) => {
         
         let productImageUrl = null;
         const senderProfilePictureUrl = sender.profilePicture || null;
-        const senderName = `${sender.firstName} ${sender.lastName}`;
+        const senderName = `${sender.firstName} ${sender.lastName}`.trim();
 
-        // Extract product image URL
+        // Extract product image URL with better error handling
         try {
-          if (text && text.startsWith('{') && text.endsWith('}')) {
+          if (text && typeof text === 'string' && text.startsWith('{') && text.endsWith('}')) {
             const parsedMessage = JSON.parse(text);
             if (parsedMessage.image) productImageUrl = parsedMessage.image;
           } else if (attachment && attachment.url && attachment.fileType?.startsWith('image')) {
@@ -373,12 +393,12 @@ const initializeSocket = (io) => {
             productImageUrl = offerDetails.image;
           }
         } catch (e) {
-          logger.error(`Error extracting product image for sender ${senderId}: ${e.message}`);
+          logger.warn(`Error extracting product image for sender ${senderId}: ${e.message}`);
         }
 
         const newMessage = new Message({
-          senderId,
-          receiverId,
+          senderId: new mongoose.Types.ObjectId(senderId),
+          receiverId: new mongoose.Types.ObjectId(receiverId),
           text: text,
           messageType: messageType || 'text',
           status: 'sent',
@@ -418,6 +438,7 @@ const initializeSocket = (io) => {
 
         const chatRoomId = [senderId, receiverId].sort().join('_');
         
+        // Emit status update to sender
         socket.emit('messageStatusUpdate', {
           _id: messagePayload._id,
           tempId: messagePayload.tempId,
@@ -426,9 +447,11 @@ const initializeSocket = (io) => {
         });
         logger.info(`Emitted messageStatusUpdate to sender's socket ${socket.id} for tempId ${tempId}`);
 
+        // Broadcast to chat room
         io.to(`chat_${chatRoomId}`).emit('newMessage', messagePayload);
         logger.info(`Broadcasted newMessage to chat room chat_${chatRoomId} for message ${savedMessage._id}`);
 
+        // Send notification to receiver
         io.to(`user_${receiverId}`).emit('newMessageNotification', {
           senderId: senderId.toString(),
           senderName: senderName,
@@ -437,7 +460,7 @@ const initializeSocket = (io) => {
           createdAt: new Date(),
           productImageUrl,
           chatRoomId: chatRoomId,
-          messageType: messageType, // 📢 NEW: Include message type
+          messageType: messageType,
         });
         logger.info(`Emitted newMessageNotification to user_${receiverId}`);
 
@@ -460,8 +483,8 @@ const initializeSocket = (io) => {
         if ((!receiverIsOnline || !receiverIsInChatRoom) && !newMessage.metadata?.isSystemMessage) {
           logger.info(`Receiver ${receiverId} not actively online or in chat. Sending enhanced FCM notification.`);
           
-          await sendEnhancedFCMNotification(
-            receiver.fcmTokens,
+          const fcmResult = await sendEnhancedFCMNotification(
+            receiver.fcmTokens || [],
             senderName,
             senderProfilePictureUrl,
             notificationText,
@@ -475,16 +498,17 @@ const initializeSocket = (io) => {
             productImageUrl
           );
           
-          logger.info(`Enhanced FCM notification sent for user ${receiverId}`);
+          logger.info(`Enhanced FCM notification completed for user ${receiverId}. Results: ${JSON.stringify(fcmResult)}`);
         } else {
           logger.info(`Receiver ${receiverId} is online and actively in chat room, skipping FCM.`);
         }
 
+        // Update notification counts
         await NotificationService.triggerCountUpdate(io, receiverId);
         logger.info(`Message sent and processed from ${senderId} to ${receiverId}`);
 
       } catch (error) {
-        logger.error(`Error sending message from ${authenticatedUserId} to ${messageData.receiverId}: ${error.message}`, error.stack);
+        logger.error(`Error sending message from ${authenticatedUserId}: ${error.message}`, error.stack);
         socket.emit('messageError', { tempId: messageData.tempId, error: error.message });
       }
     });
@@ -495,18 +519,23 @@ const initializeSocket = (io) => {
         const { chatId, message, originalMessageId } = replyData;
         const senderId = authenticatedUserId;
         
+        if (!chatId || !message || typeof message !== 'string' || message.trim() === '') {
+          logger.warn(`Invalid quick reply data from ${senderId}`);
+          return;
+        }
+        
         // Extract receiver ID from chatId
         const [id1, id2] = chatId.split('_');
         const receiverId = id1 === senderId ? id2 : id1;
         
-        logger.info(`Quick reply from ${senderId} to ${receiverId}: ${message}`);
+        logger.info(`Quick reply from ${senderId} to ${receiverId}: ${message.substring(0, 50)}...`);
         
         // Create and process the message like a regular sendMessage
         const messageData = {
           receiverId,
-          text: message,
+          text: message.trim(),
           messageType: 'text',
-          tempId: `quick_${Date.now()}`
+          tempId: `quick_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
         };
         
         // Trigger the regular sendMessage flow
@@ -520,17 +549,28 @@ const initializeSocket = (io) => {
     socket.on('markAsSeen', async ({ messageIds, senderId, receiverId }) => {
       try {
         logger.info(`markAsSeen event received from ${authenticatedUserId}: messageIds=${messageIds}, senderId=${senderId}, receiverId=${receiverId}`);
+        
         if (authenticatedUserId !== receiverId) {
           logger.warn(`Unauthorized markAsSeen attempt by ${authenticatedUserId} for receiver ${receiverId}.`);
-          throw new Error('Unauthorized action');
+          socket.emit('markSeenError', { error: 'Unauthorized action' });
+          return;
         }
 
-        if (!messageIds || messageIds.length === 0 || !senderId || !receiverId) {
-          logger.warn(`Missing required fields or empty messageIds in markAsSeen: messageIds=${messageIds}, senderId=${senderId}, receiverId=${receiverId}`);
-          throw new Error('Missing required fields');
+        if (!messageIds || !Array.isArray(messageIds) || messageIds.length === 0 || !senderId || !receiverId) {
+          logger.warn(`Missing required fields or empty messageIds in markAsSeen`);
+          socket.emit('markSeenError', { error: 'Missing required fields' });
+          return;
         }
 
-        const messageObjectIds = messageIds.map(id => new mongoose.Types.ObjectId(id));
+        // Validate ObjectIds
+        const validMessageIds = messageIds.filter(id => mongoose.Types.ObjectId.isValid(id));
+        if (validMessageIds.length === 0) {
+          logger.warn(`No valid message IDs provided`);
+          socket.emit('markSeenError', { error: 'No valid message IDs' });
+          return;
+        }
+
+        const messageObjectIds = validMessageIds.map(id => new mongoose.Types.ObjectId(id));
 
         const result = await Message.updateMany(
           {
@@ -545,11 +585,11 @@ const initializeSocket = (io) => {
 
         if (result.modifiedCount > 0) {
           io.to(`user_${senderId}`).emit('messagesSeen', {
-            messageIds: messageIds,
+            messageIds: validMessageIds,
             seenBy: receiverId,
             seenAt: new Date(),
           });
-          logger.info(`Emitted messagesSeen to user_${senderId} for message IDs: ${messageIds}`);
+          logger.info(`Emitted messagesSeen to user_${senderId} for ${validMessageIds.length} message IDs`);
 
           await NotificationService.triggerCountUpdate(io, senderId);
         }
@@ -558,18 +598,31 @@ const initializeSocket = (io) => {
         logger.info(`Mark as seen processed for sender ${senderId} and receiver ${receiverId}`);
 
       } catch (error) {
-        logger.error(`Error updating message status for sender ${senderId} and receiver ${receiverId}: ${error.message}`, error.stack);
+        logger.error(`Error updating message status: ${error.message}`, error.stack);
         socket.emit('markSeenError', { error: error.message });
       }
     });
 
     socket.on('typing', (data) => {
-      if (authenticatedUserId !== data.senderId) {
-        logger.warn(`Unauthorized typing signal from ${authenticatedUserId} for sender ${data.senderId}`);
-        return;
+      try {
+        if (authenticatedUserId !== data.senderId) {
+          logger.warn(`Unauthorized typing signal from ${authenticatedUserId} for sender ${data.senderId}`);
+          return;
+        }
+        
+        if (!data.receiverId) {
+          logger.warn(`Missing receiverId in typing event from ${data.senderId}`);
+          return;
+        }
+        
+        io.to(`user_${data.receiverId}`).emit('typing', { 
+          senderId: data.senderId, 
+          receiverId: data.receiverId 
+        });
+        logger.info(`Typing signal from ${data.senderId} to ${data.receiverId}`);
+      } catch (error) {
+        logger.error(`Error handling typing event: ${error.message}`);
       }
-      io.to(`user_${data.receiverId}`).emit('typing', { senderId: data.senderId, receiverId: data.receiverId });
-      logger.info(`Typing signal from ${data.senderId} to ${data.receiverId}`);
     });
 
     socket.on('imageViewed', async ({ messageId, viewerId }) => {
@@ -581,9 +634,20 @@ const initializeSocket = (io) => {
           return;
         }
 
+        if (!mongoose.Types.ObjectId.isValid(messageId)) {
+          logger.warn(`Invalid messageId in imageViewed: ${messageId}`);
+          return;
+        }
+
         const message = await Message.findById(messageId);
         if (!message || message.messageType !== 'image' || !message.viewOnce) {
           logger.warn(`Invalid view-once image message: ${messageId}`);
+          return;
+        }
+
+        // Check if already viewed
+        if (message.viewOnce.viewed) {
+          logger.info(`Image ${messageId} already viewed by ${viewerId}`);
           return;
         }
 
