@@ -9,7 +9,7 @@ const mongoose = require('mongoose');
 // Initialize Expo SDK
 const expo = new Expo({
   accessToken: process.env.EXPO_ACCESS_TOKEN,
-  useFcmV1: false
+  useFcmV1: true 
 });
 
 if (!process.env.EXPO_ACCESS_TOKEN) {
