@@ -7,7 +7,14 @@ const NotificationService = require('./notificationService.js');
 const mongoose = require('mongoose');
 
 // Initialize Expo SDK
-const expo = new Expo();
+const expo = new Expo({
+  accessToken: process.env.EXPO_ACCESS_TOKEN,
+  useFcmV1: false
+});
+
+if (!process.env.EXPO_ACCESS_TOKEN) {
+  logger.error('EXPO_ACCESS_TOKEN not found in environment variables');
+}
 
 const logger = winston.createLogger({
   level: 'info',
