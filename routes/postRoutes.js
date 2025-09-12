@@ -11,7 +11,7 @@ const Report = require('../models/reportSchema.js');
 const Notification = require('../models/notificationSchema.js');
 const verifyToken = require('../middleware/auths.js');
 const NotificationService = require('../services/notificationService.js');
-const { sendFCMNotification } = require('../services/notificationUtils.js');
+const { sendNotificationToUser } = require('../services/notificationUtils.js');
 const multer = require('multer');
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const cloudinary = require('cloudinary').v2;
@@ -314,8 +314,8 @@ const isValidSalmartLink = (link) => {
                 await notification.save();
                 logger.info(`Created notification for follower ${followerId} for post ${newPost._id}`);
 
-                if (follower.fcmToken && follower.notificationEnabled !== false) {
-                  await sendFCMNotification(
+                if (follower.fcmTokens && follower.notificationEnabled !== false) {
+                  await sendNotificationToUser(
                     followerId,
                     'New Post',
                     `${user.firstName} ${user.lastName} created a new post`,
@@ -678,10 +678,10 @@ const isValidSalmartLink = (link) => {
             });
             await notification.save();
             logger.info(`Created like notification for user ${post.createdBy.userId._id} for post ${postId}`);
-            await sendFCMNotification(
+            await sendNotificationToUser(
               post.createdBy.userId._id.toString(),
               'New Like',
-              `${user.firstName} ${user.lastName} liked your post`,
+              `${user.firstName} ${user.lastName} liked your Ad`,
               { type: 'like', postId: postId.toString() },
               req.io
             );
@@ -751,10 +751,10 @@ const isValidSalmartLink = (link) => {
       });
       await notification.save();
 
-      await sendFCMNotification(
+      await sendNotificationToUser(
         post.createdBy.userId._id.toString(),
         'New Comment',
-        `${user.firstName} ${user.lastName} commented on your post`,
+        `${user.firstName} ${user.lastName} commented on your Ad`,
         { type: 'comment', postId: postId.toString() },
         req.io
       );
@@ -769,7 +769,7 @@ const isValidSalmartLink = (link) => {
       // Find all followers, excluding the user who is commenting
       const followers = await User.find({ 
         _id: { 
-          $in: seller.followers, 
+          $in: user.followers, 
           $ne: userId 
         } 
       });
@@ -784,7 +784,7 @@ const isValidSalmartLink = (link) => {
           productName: post.title || '',
         });
 
-        await sendFCMNotification(
+        await sendNotificationToUser(
           follower._id.toString(),
           'New Product Alert',
           `${seller.firstName} just dropped something new – check it out!`,
@@ -946,7 +946,7 @@ const isValidSalmartLink = (link) => {
           },
           createdAt: new Date(),
         });
-        await sendFCMNotification(
+        await sendNotificationToUser(
           postCreatorId,
           'New Reply',
           `${user.firstName} ${user.lastName} replied to your comment`,

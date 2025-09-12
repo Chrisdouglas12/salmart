@@ -6,7 +6,7 @@ const User = require('../models/userSchema.js');
 const Notification = require('../models/notificationSchema')
 const PlatformWallet = require('../models/platformWallet.js')
 const NotificationService = require('../services/notificationService.js');
-const { sendFCMNotification } = require('../services/notificationUtils.js');
+const { sendNotificationToUser } = require('../services/notificationUtils.js');
 const Post = require('../models/postSchema.js');
 const Payment = require('../models/paymentSchema.js');
 const verifyToken = require('../middleware/auths.js'); 
@@ -606,7 +606,7 @@ if (!wallet) {
     await notification.save();
 
     // Send FCM notification
-    await sendFCMNotification(
+    await sendNotificationToUser(
       userId,
       'Promotion Activated',
       `Your ad "${notificationData.productTitle}" is now promoted for ${payment.durationDays} days!`,

@@ -14,7 +14,7 @@ const User = require('../models/userSchema.js');
 const Transaction = require('../models/transactionSchema.js');
 const Escrow = require('../models/escrowSchema.js');
 const Notification = require('../models/notificationSchema.js');
-const { sendFCMNotification } = require('../services/notificationUtils.js');
+const { sendNotificationToUser } = require('../services/notificationUtils.js');
 const NotificationService = require('../services/notificationService.js');
 
 const paystack = require('paystack-api')(process.env.PAYSTACK_SECRET_KEY);
@@ -244,10 +244,11 @@ module.exports = (io) => {
       logger.debug('Emitted receiveMessage to seller via socket', { sellerId });
       
       // Send FCM notification
-      await sendFCMNotification(
+      await sendNotificationToUser(
         sellerId,
-        'Payment Receipt Received',
-        `${buyerName} completed payment for ${productTitle}`,
+        'New Sales Alert',
+        `${buyerName} c
+        just made a successful payment for ${productTitle}`,
         { 
           type: 'payment_receipt', 
           senderId: buyerId, 
@@ -814,7 +815,7 @@ logger.info(`[PAYMENT VERIFIED]`, {
       // Send initial notifications
       logger.debug('Sending initial FCM notifications and updating notification count', { requestId });
       await Promise.all([
-        sendFCMNotification(
+        sendNotificationToUser(
           seller._id.toString(),
           'Payment Received',
           `${receiptData.buyerName} paid for your product: "${receiptData.productTitle}" Kindly deliver the item to recieve payment`,

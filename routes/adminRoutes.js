@@ -24,7 +24,7 @@ const Payment = require('../models/paymentSchema.js');
 const verifyAdmin = require('../middleware/verifyAdmin.js');
 const Notification = require('../models/notificationSchema.js');
 const NotificationService = require('../services/notificationService.js');
-const { sendFCMNotification } = require('../services/notificationUtils.js');
+const { sendNotificationToUser } = require('../services/notificationUtils.js');
 const winston = require('winston');
 
 const paystack = require('paystack-api')(process.env.PAYSTACK_SECRET_KEY);
