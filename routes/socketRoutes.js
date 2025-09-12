@@ -1,10 +1,11 @@
-// socketRoutes.js - Simplified Version
+// socketRoutes.js - Fixed Version
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 const User = require('../models/userSchema.js');
 const Message = require('../models/messageSchema.js');
 const NotificationService = require('../services/notificationService.js');
-const { sendFCMNotification } = require('../services/notificationUtils.js');
+// 🔧 FIXED: Import the unified notification function instead of sendFCMNotification
+const { sendNotificationToUser } = require('../services/notificationUtils.js');
 const winston = require('winston');
 
 const logger = winston.createLogger({
@@ -48,6 +49,10 @@ class SocketManager {
 
   getUserSocket(userId) {
     return this.userSocketMap.get(userId);
+  }
+
+  isUserOnline(userId) {
+    return this.userSocketMap.has(userId);
   }
 }
 
@@ -125,11 +130,18 @@ const formatNotificationMessage = (messageType, text, offerDetails) => {
   return notificationText;
 };
 
-// Simplified FCM notification
-const sendMessageNotification = async (messageData, senderName, notificationText, imageUrl, senderProfilePicture) => {
+// 🔧 UPDATED: Simplified unified notification function
+const sendMessageNotification = async (messageData, senderName, notificationText, io, imageUrl, senderProfilePicture) => {
   try {
     if (!messageData.receiverId) {
       return { success: false, error: 'Missing receiverId' };
+    }
+
+    // Check if user is online first
+    const receiverIsOnline = socketManager.isUserOnline(messageData.receiverId);
+    if (receiverIsOnline) {
+      logger.info(`User ${messageData.receiverId} is online, skipping push notification`);
+      return { success: true, reason: 'User online, notification skipped' };
     }
 
     const receiver = await User.findById(messageData.receiverId)
@@ -145,9 +157,9 @@ const sendMessageNotification = async (messageData, senderName, notificationText
       return { success: false, error: 'Notifications disabled' };
     }
 
-    const fcmTokens = receiver.fcmTokens || [];
-    if (fcmTokens.length === 0) {
-      return { success: false, error: 'No FCM tokens' };
+    const tokens = receiver.fcmTokens || [];
+    if (tokens.length === 0) {
+      return { success: false, error: 'No notification tokens' };
     }
 
     const dataPayload = {
@@ -157,20 +169,36 @@ const sendMessageNotification = async (messageData, senderName, notificationText
       messageId: messageData._id || '',
       chatId: `${messageData.senderId}_${messageData.receiverId}`.split('_').sort().join('_'),
       messageType: messageData.messageType || 'text',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      ...(imageUrl && { imageUrl }),
+      ...(senderProfilePicture && { profilePictureUrl: senderProfilePicture })
     };
 
-    const result = await sendFCMNotification(
-      fcmTokens,
+    // 🔧 FIXED: Use sendNotificationToUser instead of sendFCMNotification
+    const results = await sendNotificationToUser(
+      messageData.receiverId,
       senderName,
       notificationText,
       dataPayload,
-      null, // io object
+      io,
       imageUrl,
       senderProfilePicture
     );
 
-    return result;
+    // Check if any notifications were sent successfully
+    const anySuccess = results.some(result => result.success);
+    const successCount = results.reduce((sum, result) => sum + (result.successCount || 0), 0);
+    const failureCount = results.reduce((sum, result) => sum + (result.failureCount || 0), 0);
+
+    logger.info(`Message notification result for user ${messageData.receiverId}: Success: ${successCount}, Failure: ${failureCount}`);
+
+    return {
+      success: anySuccess,
+      successCount,
+      failureCount,
+      results,
+      ...(anySuccess ? {} : { error: 'All notifications failed' })
+    };
 
   } catch (error) {
     logger.error(`Error in sendMessageNotification: ${error.message}`);
@@ -413,7 +441,7 @@ const initializeSocket = (io) => {
           imageUrl = attachment.url;
         }
 
-        // Send notification to receiver
+        // Send notification to receiver (socket notification)
         io.to(`user_${receiverId}`).emit('newMessageNotification', {
           senderId,
           senderName,
@@ -425,22 +453,23 @@ const initializeSocket = (io) => {
           messageId: savedMessage._id.toString()
         });
 
-        // Check if receiver is online
-        const receiverIsOnline = io.sockets.adapter.rooms.get(`user_${receiverId}`)?.size > 0;
-        
-        // Send push notification if offline
-        if (!receiverIsOnline) {
-          const fcmResult = await sendMessageNotification(
-            { ...messageData, _id: savedMessage._id.toString(), senderId },
-            senderName,
-            notificationText,
-            imageUrl,
-            sender.profilePicture
-          );
-          
-          if (fcmResult.error) {
-            logger.error(`FCM failed for user ${receiverId}: ${fcmResult.error}`);
-          }
+        // 🔧 UPDATED: Send push notification using unified function
+        const notificationResult = await sendMessageNotification(
+          { 
+            ...messageData, 
+            _id: savedMessage._id.toString(), 
+            senderId, 
+            receiverId 
+          },
+          senderName,
+          notificationText,
+          io,
+          imageUrl,
+          sender.profilePicture
+        );
+
+        if (!notificationResult.success && notificationResult.error && notificationResult.error !== 'User online, notification skipped') {
+          logger.error(`Push notification failed for user ${receiverId}: ${notificationResult.error}`);
         }
 
         // Update notification counts

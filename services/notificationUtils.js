@@ -21,24 +21,52 @@ const logger = winston.createLogger({
   ]
 });
 
-// 🔧 SIMPLIFIED: Much more permissive FCM token validation
+// 🔧 NEW: Token type detection and validation
+function detectTokenType(token) {
+  if (!token || typeof token !== 'string') {
+    return 'invalid';
+  }
+  
+  // Check for Expo token pattern
+  if (token.startsWith('ExponentPushToken[') && token.endsWith(']')) {
+    return 'expo';
+  }
+  
+  // Check if it's a valid Expo token using Expo SDK
+  if (Expo.isExpoPushToken(token)) {
+    return 'expo';
+  }
+  
+  // Check for FCM token characteristics
+  if (token.length > 100 && !token.includes('[') && !token.includes(']')) {
+    return 'fcm';
+  }
+  
+  return 'invalid';
+}
+
 function validateFCMToken(token) {
   if (!token || typeof token !== 'string') {
     return false;
   }
   
-  // Minimum reasonable length check (Firebase tokens are usually 140+ chars)
+  // Must be reasonably long (FCM tokens are usually 140+ chars)
   if (token.length < 100) {
     return false;
   }
   
-  // Only exclude obvious non-FCM tokens - much more permissive
+  // Should not contain brackets (Expo tokens do)
+  if (token.includes('[') || token.includes(']')) {
+    return false;
+  }
+  
+  // Exclude obvious non-FCM tokens
   const excludePatterns = [
-    /^ExponentPushToken/,  // Expo tokens
-    /^test_?token/i,       // Test tokens
-    /^fake_?token/i,       // Fake tokens
-    /^dummy/i,             // Dummy tokens
-    /^\s*$/                // Empty/whitespace tokens
+    /^ExponentPushToken/,
+    /^test_?token/i,
+    /^fake_?token/i,
+    /^dummy/i,
+    /^\s*$/
   ];
   
   for (const pattern of excludePatterns) {
@@ -50,7 +78,15 @@ function validateFCMToken(token) {
   return true;
 }
 
-// 🔧 SIMPLIFIED: FCM notification function with minimal validation
+function validateExpoToken(token) {
+  if (!token || typeof token !== 'string') {
+    return false;
+  }
+  
+  return Expo.isExpoPushToken(token);
+}
+
+// 🔧 UPDATED: FCM notification function
 async function sendFCMNotification(tokens, title, body, data = {}, io, imageUrl = null, profilePictureUrl = null, groupId = null) {
   try {
     let fcmTokens = [];
@@ -66,19 +102,20 @@ async function sendFCMNotification(tokens, title, body, data = {}, io, imageUrl 
         return { success: false, successCount: 0, failureCount: 0, invalidTokens: [], error: 'User not found' };
       }
       
-      // Much more lenient token filtering
+      // Filter for FCM tokens only
       const allTokens = user.fcmTokens || [];
       fcmTokens = allTokens.filter(tokenData => {
         const token = typeof tokenData === 'string' ? tokenData : tokenData.token;
-        return validateFCMToken(token);
+        const tokenType = detectTokenType(token);
+        return tokenType === 'fcm' && validateFCMToken(token);
       }).map(tokenData => typeof tokenData === 'string' ? tokenData : tokenData.token);
       
     } else if (Array.isArray(tokens)) {
-      // New: tokens array parameter
+      // New: tokens array parameter - only get FCM tokens
       fcmTokens = tokens.filter(tokenData => {
         const token = typeof tokenData === 'string' ? tokenData : tokenData.token;
-        // Only validate if it's intended to be an FCM token
-        return (tokenData.deviceType === 'fcm' || !tokenData.deviceType) && validateFCMToken(token);
+        const tokenType = detectTokenType(token);
+        return tokenType === 'fcm' && validateFCMToken(token);
       }).map(tokenData => typeof tokenData === 'string' ? tokenData : tokenData.token);
       
       userId = data.receiverId || data.userId;
@@ -88,8 +125,8 @@ async function sendFCMNotification(tokens, title, body, data = {}, io, imageUrl 
     }
 
     if (fcmTokens.length === 0) {
-      logger.warn(`No valid FCM tokens available for sending notification`);
-      return { success: false, successCount: 0, failureCount: 0, invalidTokens: [], error: 'No valid tokens' };
+      logger.info(`No valid FCM tokens available for sending notification`);
+      return { success: false, successCount: 0, failureCount: 0, invalidTokens: [], error: 'No valid FCM tokens' };
     }
 
     // Check notification preferences
@@ -102,7 +139,7 @@ async function sendFCMNotification(tokens, title, body, data = {}, io, imageUrl 
       }
     }
 
-    // Simplified message payload
+    // FCM message payload
     const message = {
       notification: { 
         title, 
@@ -151,14 +188,14 @@ async function sendFCMNotification(tokens, title, body, data = {}, io, imageUrl 
 
     logger.info(`FCM notification result - Success: ${response.successCount}, Failure: ${response.failureCount}`);
 
-    // Handle failures with less aggressive token cleanup
+    // Handle failures
     const invalidTokens = [];
     if (response.failureCount > 0) {
       response.responses.forEach((resp, idx) => {
         if (!resp.success) {
           logger.error(`FCM error for token ${idx}: ${resp.error.code}`);
           
-          // Only mark as invalid for specific error codes that definitely indicate bad tokens
+          // Mark as invalid for specific error codes
           if (resp.error.code === 'messaging/registration-token-not-registered' ||
               resp.error.code === 'messaging/invalid-registration-token') {
             invalidTokens.push(fcmTokens[idx]);
@@ -166,7 +203,7 @@ async function sendFCMNotification(tokens, title, body, data = {}, io, imageUrl 
         }
       });
 
-      // Clean up only definitely invalid tokens
+      // Clean up invalid tokens
       if (invalidTokens.length > 0 && userId) {
         await cleanupInvalidTokens(userId, invalidTokens);
       }
@@ -199,36 +236,44 @@ async function sendFCMNotification(tokens, title, body, data = {}, io, imageUrl 
   }
 }
 
-// Simplified Expo notification
+// 🔧 UPDATED: Expo notification function
 async function sendExpoNotification(tokens, title, body, data = {}, imageUrl = null, profilePictureUrl = null) {
   try {
-    const tokenArray = Array.isArray(tokens) ? tokens : [tokens];
-    const expoTokens = tokenArray.filter(tokenData => {
-      const token = typeof tokenData === 'string' ? tokenData : tokenData.token;
-      return Expo.isExpoPushToken(token);
-    });
+    let expoTokens = [];
 
-    if (expoTokens.length === 0) {
-      return { success: false, successCount: 0, failureCount: 0, invalidTokens: [], error: 'No valid tokens' };
+    if (Array.isArray(tokens)) {
+      // Filter for Expo tokens only
+      expoTokens = tokens.filter(tokenData => {
+        const token = typeof tokenData === 'string' ? tokenData : tokenData.token;
+        const tokenType = detectTokenType(token);
+        return tokenType === 'expo' && validateExpoToken(token);
+      }).map(tokenData => typeof tokenData === 'string' ? tokenData : tokenData.token);
+    } else if (typeof tokens === 'string') {
+      if (validateExpoToken(tokens)) {
+        expoTokens = [tokens];
+      }
     }
 
-    const messages = expoTokens.map(tokenData => {
-      const token = typeof tokenData === 'string' ? tokenData : tokenData.token;
-      
-      return {
-        to: token,
-        sound: 'default',
-        title,
-        body,
-        data: {
-          ...data,
-          ...(imageUrl && { imageUrl }),
-          ...(profilePictureUrl && { profilePictureUrl })
-        },
-        badge: 1,
-        priority: 'high'
-      };
-    });
+    if (expoTokens.length === 0) {
+      logger.info(`No valid Expo tokens available for sending notification`);
+      return { success: false, successCount: 0, failureCount: 0, invalidTokens: [], error: 'No valid Expo tokens' };
+    }
+
+    logger.info(`Sending Expo notification to ${expoTokens.length} tokens: ${title}`);
+
+    const messages = expoTokens.map(token => ({
+      to: token,
+      sound: 'default',
+      title,
+      body,
+      data: {
+        ...data,
+        ...(imageUrl && { imageUrl }),
+        ...(profilePictureUrl && { profilePictureUrl })
+      },
+      badge: 1,
+      priority: 'high'
+    }));
 
     const chunks = expo.chunkPushNotifications(messages);
     let successCount = 0;
@@ -242,10 +287,9 @@ async function sendExpoNotification(tokens, title, body, data = {}, imageUrl = n
         ticketChunk.forEach((ticket, index) => {
           if (ticket.status === 'error') {
             failureCount++;
+            logger.error(`Expo error for token ${index}: ${ticket.details?.error || 'Unknown error'}`);
             if (ticket.details && ticket.details.error === 'DeviceNotRegistered') {
-              const tokenData = chunk[index];
-              const token = typeof tokenData === 'string' ? tokenData : tokenData.token;
-              invalidTokens.push(token);
+              invalidTokens.push(expoTokens[index]);
             }
           } else {
             successCount++;
@@ -257,6 +301,8 @@ async function sendExpoNotification(tokens, title, body, data = {}, imageUrl = n
         failureCount += chunk.length;
       }
     }
+
+    logger.info(`Expo notification result - Success: ${successCount}, Failure: ${failureCount}`);
 
     return { 
       success: successCount > 0, 
@@ -271,7 +317,7 @@ async function sendExpoNotification(tokens, title, body, data = {}, imageUrl = n
   }
 }
 
-// Simplified main notification function
+// 🔧 UPDATED: Main notification function with proper token separation
 async function sendNotificationToUser(userId, title, body, data = {}, io, imageUrl = null, profilePictureUrl = null, groupId = null) {
   try {
     if (!mongoose.Types.ObjectId.isValid(userId)) {
@@ -294,20 +340,28 @@ async function sendNotificationToUser(userId, title, body, data = {}, io, imageU
       return [{ success: false, error: 'Notifications disabled' }];
     }
 
-    // Separate tokens by type
-    const fcmTokens = tokens.filter(tokenData => {
-      if (typeof tokenData === 'string') return true;
-      return tokenData.deviceType === 'fcm' || !tokenData.deviceType;
-    });
+    // 🔧 NEW: Separate tokens by detected type
+    const fcmTokens = [];
+    const expoTokens = [];
 
-    const expoTokens = tokens.filter(tokenData => {
-      return typeof tokenData === 'object' && tokenData.deviceType === 'expo';
+    tokens.forEach(tokenData => {
+      const token = typeof tokenData === 'string' ? tokenData : tokenData.token;
+      const tokenType = detectTokenType(token);
+      
+      if (tokenType === 'fcm') {
+        fcmTokens.push(tokenData);
+      } else if (tokenType === 'expo') {
+        expoTokens.push(tokenData);
+      } else {
+        logger.warn(`Unknown token type for token: ${token.substring(0, 20)}...`);
+      }
     });
 
     const results = [];
 
     // Send FCM notifications
     if (fcmTokens.length > 0) {
+      logger.info(`Sending FCM notifications to ${fcmTokens.length} tokens`);
       const fcmResult = await sendFCMNotification(
         fcmTokens, 
         title, 
@@ -323,6 +377,7 @@ async function sendNotificationToUser(userId, title, body, data = {}, io, imageU
 
     // Send Expo notifications
     if (expoTokens.length > 0) {
+      logger.info(`Sending Expo notifications to ${expoTokens.length} tokens`);
       const expoResult = await sendExpoNotification(
         expoTokens, 
         title, 
@@ -346,7 +401,7 @@ async function sendNotificationToUser(userId, title, body, data = {}, io, imageU
   }
 }
 
-// Simplified token cleanup - less aggressive
+// 🔧 UPDATED: Token cleanup function
 async function cleanupInvalidTokens(userId, invalidTokens) {
   try {
     if (!invalidTokens || invalidTokens.length === 0) {
@@ -408,5 +463,7 @@ module.exports = {
   sendNotificationToUser,
   cleanupInvalidTokens,
   sendBatchNotifications,
-  validateFCMToken
+  validateFCMToken,
+  validateExpoToken,
+  detectTokenType
 };
