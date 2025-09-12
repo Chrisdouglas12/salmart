@@ -3319,3 +3319,15 @@
 {"level":"warn","message":"No FCM tokens for user 6865680685b3194e8bc38b92","timestamp":"2025-08-13T08:49:39.440Z"}
 {"level":"warn","message":"No FCM tokens for user 685cfc99d8a56197d12a2534","timestamp":"2025-08-13T08:49:41.114Z"}
 {"level":"warn","message":"No FCM tokens for user 6843d062f457581752641ee3","timestamp":"2025-08-21T14:26:28.452Z"}
+{"level":"warn","message":"No valid FCM tokens available after filtering","timestamp":"2025-09-12T07:53:00.231Z"}
+{"level":"error","message":"Invalid tokens parameter in sendFCMNotification","timestamp":"2025-09-12T07:59:23.157Z"}
+{"level":"error","message":"Invalid tokens parameter in sendFCMNotification","timestamp":"2025-09-12T07:59:23.214Z"}
+{"level":"warn","message":"No valid FCM tokens available after filtering","timestamp":"2025-09-12T08:00:18.194Z"}
+{"level":"warn","message":"No valid FCM tokens available after filtering","timestamp":"2025-09-12T08:01:34.541Z"}
+{"level":"warn","message":"No valid FCM tokens available after filtering","timestamp":"2025-09-12T08:16:56.703Z"}
+{"level":"warn","message":"No valid FCM tokens available after filtering","timestamp":"2025-09-12T08:17:08.639Z"}
+{"level":"info","message":"No valid FCM tokens available after basic filtering","timestamp":"2025-09-12T08:28:07.721Z"}
+{"level":"info","message":"No valid FCM tokens available after basic filtering","timestamp":"2025-09-12T08:39:16.359Z"}
+{"level":"warn","message":"No valid FCM tokens available for sending notification","timestamp":"2025-09-12T09:00:14.783Z"}
+{"level":"warn","message":"No valid FCM tokens available for sending notification","timestamp":"2025-09-12T09:01:07.488Z"}
+{"level":"warn","message":"No valid FCM tokens available for sending notification","timestamp":"2025-09-12T09:08:53.762Z"}

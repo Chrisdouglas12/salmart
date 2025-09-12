@@ -7,89 +7,43 @@ mongoose.connect(process.env.MONGO_URI, {
   useUnifiedTopology: true,
   serverSelectionTimeoutMS: 5000,
   socketTimeoutMS: 45000,
-}).then(() => {
+})
+.then(() => {
   console.log('✅ MongoDB connected');
-  cleanUsers();
-}).catch(err => {
+  cleanupExistingTokens();
+})
+.catch((err) => {
   console.error('❌ MongoDB connection error:', err);
 });
 
-async function cleanUsers() {
+// One-time migration to clean up existing tokens
+const cleanupExistingTokens = async () => {
   try {
-    const users = await User.find({});
-    console.log(`🔍 Found ${users.length} users`);
-
+    const users = await User.find({ fcmTokens: { $exists: true, $ne: [] } });
     let updatedCount = 0;
 
     for (const user of users) {
-      let modified = false;
-      const toObjectIdStr = id => id.toString();
+      let hasChanges = false;
+      const cleanTokens = new Map();
 
-      // Followers
-      if (Array.isArray(user.followers)) {
-        const unique = [...new Set(user.followers.map(toObjectIdStr))];
-        if (unique.length !== user.followers.length) {
-          user.followers = unique;
-          modified = true;
-        }
-      }
+      user.fcmTokens.forEach((tokenObj) => {
+        const token = typeof tokenObj === 'string' ? tokenObj : tokenObj.token;
+      //  if (validateFCMToken(token)) {
+        //  cleanTokens.set(token, {
+      //      token,
+      //      platform: tokenObj.platform || 'web',
+     //       deviceType: tokenObj.deviceType || 'fcm',
+    //        lastUpdated: new Date(),
+    //        isActive: true,
+     //     });
+      //    hasChanges = true;
+    //    }
+   //   });
 
-      // Following
-      if (Array.isArray(user.following)) {
-        const unique = [...new Set(user.following.map(toObjectIdStr))];
-        if (unique.length !== user.following.length) {
-          user.following = unique;
-          modified = true;
-        }
-      }
-
-      // Blocked Users
-      if (Array.isArray(user.blockedUsers)) {
-        const unique = [...new Set(user.blockedUsers.map(toObjectIdStr))];
-        if (unique.length !== user.blockedUsers.length) {
-          user.blockedUsers = unique;
-          modified = true;
-        }
-      }
-
-      // FCM Tokens
-      if (Array.isArray(user.fcmTokens)) {
-        const unique = [...new Set(user.fcmTokens)];
-        if (unique.length !== user.fcmTokens.length) {
-          user.fcmTokens = unique;
-          modified = true;
-        }
-      }
-
-      // Interests
-      if (Array.isArray(user.interests)) {
-        const unique = [...new Set(user.interests.map(i => i.trim().toLowerCase()))];
-        if (unique.length !== user.interests.length) {
-          user.interests = unique;
-          modified = true;
-        }
-      }
-
-      // userRelevanceScores
-      if (Array.isArray(user.userRelevanceScores)) {
-        const uniqueMap = new Map();
-        user.userRelevanceScores.forEach(score => {
-          if (score?.userId) {
-            uniqueMap.set(score.userId.toString(), score);
-          }
-        });
-
-        if (uniqueMap.size !== user.userRelevanceScores.length) {
-          user.userRelevanceScores = Array.from(uniqueMap.values());
-          modified = true;
-        }
-      }
-
-      // Save if modified
-      if (modified) {
+      if (hasChanges) {
+        user.fcmTokens = Array.from(cleanTokens.values());
         await user.save();
         updatedCount++;
-        console.log(`✅ Cleaned user: ${user._id}`);
       }
     }
 
@@ -99,4 +53,7 @@ async function cleanUsers() {
     console.error('❌ Error during cleanup:', err);
     mongoose.disconnect();
   }
-}
+};
+
+// Assuming validateFCMToken is defined elsewhere
+// If not, you'll need to implement this function to validate FCM tokens
