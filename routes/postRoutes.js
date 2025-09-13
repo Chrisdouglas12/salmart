@@ -270,7 +270,7 @@ router.post(
         category,
         createdBy: {
           userId: user._id,
-          name: `${user.firstName} ${user.lastName}`, // Kept name for consistency in 'createdBy'
+          name: `${user.firstName} ${user.lastName}`,
         },
         createdAt: new Date(),
         likes: [],
@@ -288,8 +288,8 @@ router.post(
       await newPost.save();
       logger.info(`Post created by user ${userId}: ${newPost._id}`);
 
-      // 🔧 IMPROVED: Enhanced notification system
-      await notifyFollowersOfNewPost(newPost, user, userId, req);
+      // Simplified notification system
+      await notifyFollowersOfNewPost(newPost, user, req);
 
       res.status(201).json({
         message: 'Post created successfully',
@@ -307,345 +307,97 @@ router.post(
 );
 
 /**
- * 🔧 IMPROVED: Robust notification system for new posts
- * Send notifications to all followers when a new post is created
+ * Simplified notification system for new posts
+ * Uses the exact same pattern as the like notification system
  */
-async function notifyFollowersOfNewPost(newPost, user, userId, req) {
+async function notifyFollowersOfNewPost(newPost, user, req) {
   try {
     const followers = user.followers || [];
     
     if (followers.length === 0) {
-      logger.info(`No followers to notify for user ${userId}`);
+      logger.info(`No followers to notify for user ${user._id}`);
       return;
     }
 
     logger.info(`Sending notifications to ${followers.length} followers for new post ${newPost._id}`);
 
-    // 🔧 IMPROVED: Process notifications in batches to avoid overwhelming the system
-    const BATCH_SIZE = 10;
-    const batches = [];
-    
-    for (let i = 0; i < followers.length; i += BATCH_SIZE) {
-      batches.push(followers.slice(i, i + BATCH_SIZE));
-    }
+    // Process each follower
+    for (const followerId of followers) {
+      try {
+        // Skip if it's the post creator
+        if (followerId.toString() === user._id.toString()) {
+          logger.info(`Skipping self-notification for user ${followerId}`);
+          continue;
+        }
 
-    for (const batch of batches) {
-      const batchPromises = batch
-        .filter((followerId) => followerId.toString() !== userId.toString())
-        .map(async (followerId) => {
-          try {
-            // 🔧 FIXED: Query correct fields including fcmTokens (not fcmToken)
-            const follower = await User.findById(followerId)
-              .select('notificationPreferences fcmTokens blockedUsers notificationEnabled socketId firstName lastName')
-              .lean();
+        // Check if follower exists and get their preferences
+        const follower = await User.findById(followerId)
+          .select('blockedUsers notificationPreferences notificationEnabled')
+          .lean();
 
-            if (!follower) {
-              logger.warn(`Follower ${followerId} not found`);
-              return { success: false, followerId, reason: 'not_found' };
-            }
+        if (!follower) {
+          logger.warn(`Follower ${followerId} not found`);
+          continue;
+        }
 
-            // Skip if the follower has blocked the post creator
-            if (follower.blockedUsers?.includes(userId)) {
-              logger.info(`Skipping notification for blocked user ${followerId}`);
-              return { success: false, followerId, reason: 'blocked' };
-            }
+        // Skip if the follower has blocked the post creator
+        if (follower.blockedUsers && follower.blockedUsers.includes(user._id)) {
+          logger.info(`Skipping notification - user ${followerId} has blocked ${user._id}`);
+          continue;
+        }
 
-            // 🔧 FIXED: Check correct notification preference field (new_post, not posts)
-            if (follower.notificationPreferences?.new_post === false) {
-              logger.info(`Follower ${followerId} has disabled new post notifications`);
-              return { success: false, followerId, reason: 'disabled' };
-            }
+        // Skip if follower has disabled new post notifications specifically
+        if (follower.notificationPreferences && follower.notificationPreferences.new_post === false) {
+          logger.info(`Skipping notification - user ${followerId} has disabled new post notifications`);
+          continue;
+        }
 
-            // Create in-app notification
-            const notification = new Notification({
-              userId: followerId,
-              type: 'new_post',
-              senderId: userId,
-              postId: newPost._id,
-              message: `New listing from ${user.firstName} ${user.lastName} You might like to checkout.`,
-              createdAt: new Date(),
-            });
+        // Skip if follower has disabled all notifications
+        if (follower.notificationEnabled === false) {
+          logger.info(`Skipping notification - user ${followerId} has disabled all notifications`);
+          continue;
+        }
 
-            await notification.save();
-            logger.info(`Created in-app notification for follower ${followerId} for post ${newPost._id}`);
-
-            // 🔧 IMPROVED: Enhanced push notification handling
-            if (follower.notificationEnabled !== false && follower.fcmTokens?.length > 0) {
-              await sendNotificationToUser(
-                followerId,
-                follower,
-                'New Post',
-                `${user.firstName} ${user.lastName} created a new post`,
-                { 
-                  type: 'new_post', 
-                  postId: newPost._id.toString(),
-                  senderId: userId.toString(),
-                  senderName: `${user.firstName} ${user.lastName}`,
-                  postType: newPost.postType
-                },
-                req.io
-              );
-            }
-
-            // Update notification count via socket
-            await NotificationService.triggerCountUpdate(req.io, followerId);
-
-            return { success: true, followerId };
-          } catch (notifError) {
-            logger.error(`Notification error for user ${followerId}: ${notifError.message}`, {
-              error: notifError,
-              followerId,
-              postId: newPost._id
-            });
-            return { success: false, followerId, error: notifError.message };
-          }
+        // Create and save notification - exact same pattern as like notification
+        const notification = new Notification({
+          userId: followerId,
+          senderId: user._id,
+          type: 'new_post',
+          postId: newPost._id,
+          message: `${user.firstName} ${user.lastName} created a new post you might like to check out.`,
+          createdAt: new Date()
         });
 
-      // Wait for current batch to complete before processing next batch
-      const batchResults = await Promise.allSettled(batchPromises);
-      
-      // Log batch results
-      const successful = batchResults.filter(r => r.status === 'fulfilled' && r.value?.success).length;
-      const failed = batchResults.filter(r => r.status === 'rejected' || !r.value?.success).length;
-      
-      logger.info(`Batch completed: ${successful} successful, ${failed} failed notifications`);
-      
-      // Small delay between batches to prevent overwhelming the system
-      if (batches.indexOf(batch) < batches.length - 1) {
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await notification.save();
+        logger.info(`Created new post notification for user ${followerId} for post ${newPost._id}`);
+
+        // Send FCM notification - exact same pattern as like notification  
+        await sendNotificationToUser(
+          followerId.toString(),
+          'New Post',
+          `${user.firstName} ${user.lastName} created a new post you might like to check out.`,
+          { type: 'new_post', postId: newPost._id.toString() },
+          req.io
+        );
+
+        // Update notification count - exact same pattern as like notification
+        await NotificationService.triggerCountUpdate(req.io, followerId.toString());
+
+      } catch (error) {
+        logger.error(`Error sending notification to follower ${followerId}: ${error.message}`);
+        // Continue with next follower
       }
     }
 
     logger.info(`Completed sending notifications for post ${newPost._id}`);
+
   } catch (error) {
     logger.error(`Error in notifyFollowersOfNewPost: ${error.message}`, {
       error,
       postId: newPost._id,
-      userId
+      userId: user._id
     });
-    // Don't throw the error - we don't want notification failures to prevent post creation
-  }
-}
-
-/**
- * 🔧 IMPROVED: Send push notification to a specific follower
- * Supports both FCM and Expo tokens with proper error handling
- */
-async function sendPushNotificationToFollower(userId, follower, title, body, data, io) {
-  try {
-    // 🔧 IMPROVED: Better token validation and filtering
-    const activeTokens = follower.fcmTokens?.filter(tokenObj => 
-      tokenObj && 
-      tokenObj.isActive !== false && 
-      tokenObj.token && 
-      typeof tokenObj.token === 'string' && 
-      tokenObj.token.trim().length > 10
-    ) || [];
-
-    if (activeTokens.length === 0) {
-      logger.info(`No active tokens found for user ${userId}`);
-      return;
-    }
-
-    // Separate FCM and Expo tokens based on deviceType
-    const fcmTokens = activeTokens
-      .filter(tokenObj => tokenObj.deviceType === 'fcm' || !tokenObj.deviceType)
-      .map(tokenObj => tokenObj.token);
-      
-    const expoTokens = activeTokens
-      .filter(tokenObj => tokenObj.deviceType === 'expo')
-      .map(tokenObj => tokenObj.token);
-
-    const promises = [];
-
-    // 🔧 IMPROVED: Send to FCM tokens if available
-    if (fcmTokens.length > 0) {
-      promises.push(
-        sendFCMNotification(fcmTokens, title, body, data, userId)
-          .catch(error => {
-            logger.error(`FCM notification failed for user ${userId}: ${error.message}`);
-          })
-      );
-    }
-
-    // 🔧 IMPROVED: Send to Expo tokens if available
-    if (expoTokens.length > 0) {
-      promises.push(
-        sendExpoNotification(expoTokens, title, body, data, userId)
-          .catch(error => {
-            logger.error(`Expo notification failed for user ${userId}: ${error.message}`);
-          })
-      );
-    }
-
-    // 🔧 IMPROVED: Send real-time socket notification if user is online
-    if (io && follower.socketId) {
-      promises.push(
-        Promise.resolve(io.to(follower.socketId).emit('new_notification', {
-          type: 'new_post',
-          title,
-          body,
-          data,
-          timestamp: new Date()
-        }))
-      );
-    }
-
-    await Promise.allSettled(promises);
-    
-    logger.info(`Push notifications sent to user ${userId}: ${fcmTokens.length} FCM, ${expoTokens.length} Expo tokens${follower.socketId ? ', socket notification sent' : ''}`);
-    
-  } catch (error) {
-    logger.error(`Error sending push notification to user ${userId}: ${error.message}`, {
-      error,
-      userId
-    });
-  }
-}
-
-/**
- * 🔧 IMPROVED: Send FCM notification with proper error handling
- */
-async function sendFCMNotification(tokens, title, body, data, userId) {
-  try {
-    // Check if you have your existing sendNotificationToUser function
-    if (typeof sendNotificationToUser === 'function') {
-      // Use existing function if available
-      await sendNotificationToUser(userId, title, body, data);
-      return;
-    }
-
-    // If using Firebase Admin SDK directly:
-    const admin = require('firebase-admin');
-    
-    if (!admin.apps.length) {
-      logger.warn('Firebase Admin SDK not initialized for FCM notifications');
-      return;
-    }
-
-    // Prepare FCM message
-    const message = {
-      notification: {
-        title,
-        body
-      },
-      data: {
-        // Convert all data values to strings for FCM
-        ...Object.keys(data).reduce((acc, key) => {
-          acc[key] = String(data[key]);
-          return acc;
-        }, {})
-      },
-      tokens: tokens.slice(0, 100) // FCM allows max 100 tokens per request
-    };
-
-    const response = await admin.messaging().sendMulticast(message);
-    
-    // 🔧 IMPROVED: Handle failed tokens and cleanup
-    if (response.failureCount > 0) {
-      const failedTokens = [];
-      response.responses.forEach((resp, idx) => {
-        if (!resp.success) {
-          const errorCode = resp.error?.code;
-          failedTokens.push({
-            token: tokens[idx],
-            error: resp.error?.message,
-            shouldRemove: ['messaging/invalid-registration-token', 'messaging/registration-token-not-registered'].includes(errorCode)
-          });
-        }
-      });
-      
-      // Remove invalid tokens
-      const tokensToRemove = failedTokens.filter(f => f.shouldRemove).map(f => f.token);
-      if (tokensToRemove.length > 0) {
-        await cleanupInvalidTokens(userId, tokensToRemove);
-      }
-      
-      logger.warn(`FCM notification partially failed for user ${userId}:`, {
-        successful: response.successCount,
-        failed: response.failureCount,
-        failedTokens: failedTokens.map(f => ({ error: f.error, shouldRemove: f.shouldRemove }))
-      });
-    } else {
-      logger.info(`FCM notification sent successfully to user ${userId}: ${response.successCount} tokens`);
-    }
-    
-  } catch (error) {
-    logger.error(`Error sending FCM notification to user ${userId}: ${error.message}`, { error });
-    throw error;
-  }
-}
-
-/**
- * 🔧 IMPROVED: Send Expo notification (if you're using Expo)
- */
-async function sendExpoNotification(tokens, title, body, data, userId) {
-  try {
-    // If you're not using Expo, you can remove this function
-    // This is a placeholder for Expo push notifications
-    const { Expo } = require('expo-server-sdk');
-    
-    if (!Expo.isExpoPushToken) {
-      logger.warn('Expo SDK not properly configured');
-      return;
-    }
-
-    const expo = new Expo();
-    
-    const messages = tokens
-      .filter(token => Expo.isExpoPushToken(token))
-      .map(token => ({
-        to: token,
-        sound: 'default',
-        title,
-        body,
-        data
-      }));
-
-    if (messages.length === 0) {
-      logger.info(`No valid Expo tokens for user ${userId}`);
-      return;
-    }
-
-    const chunks = expo.chunkPushNotifications(messages);
-    const responses = [];
-
-    for (let chunk of chunks) {
-      const response = await expo.sendPushNotificationsAsync(chunk);
-      responses.push(...response);
-    }
-
-    // Handle any errors
-    const errors = responses.filter(response => response.status === 'error');
-    if (errors.length > 0) {
-      logger.warn(`Expo notification errors for user ${userId}:`, errors);
-    }
-
-    logger.info(`Expo notifications sent to user ${userId}: ${responses.length - errors.length} successful, ${errors.length} failed`);
-    
-  } catch (error) {
-    logger.error(`Error sending Expo notification to user ${userId}: ${error.message}`, { error });
-    throw error;
-  }
-}
-
-/**
- * 🔧 IMPROVED: Clean up invalid tokens from user document
- */
-async function cleanupInvalidTokens(userId, invalidTokens) {
-  try {
-    await User.updateOne(
-      { _id: userId },
-      {
-        $pull: {
-          fcmTokens: { token: { $in: invalidTokens } }
-        }
-      }
-    );
-    
-    logger.info(`Cleaned up ${invalidTokens.length} invalid tokens for user ${userId}`);
-  } catch (error) {
-    logger.error(`Error cleaning up invalid tokens for user ${userId}: ${error.message}`);
+    // Don't throw - notification failures shouldn't prevent post creation
   }
 }
 
