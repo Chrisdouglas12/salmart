@@ -433,19 +433,17 @@ router.post('/admin/promote-post', verifyAdmin, async (req, res) => {
       endDate,
       durationDays: parseInt(durationDays),
       amountPaid: 0, // Free for admin
-      
       paymentReference: `ADMIN_${Date.now()}`,
       promotedAt: new Date(),
       promotedByAdmin: true
     };
     
-    
     await post.save();
 
-    // Create notification
+    // Create notification and send push notification - following the exact pattern
     const systemUser = await User.findOne({ isSystemUser: true });
     if (systemUser) {
-      await Notification.create({
+      const notification = new Notification({
         userId: postOwnerId,
         senderId: systemUser._id,
         postId: post._id,
@@ -457,6 +455,21 @@ router.post('/admin/promote-post', verifyAdmin, async (req, res) => {
           promotedByAdminId: adminId
         }
       });
+
+      await notification.save();
+      logger.info(`Created promotion notification for user ${postOwnerId} for post ${post._id}`);
+
+      // Send push notification - exact same pattern as like notification
+      await sendNotificationToUser(
+        postOwnerId.toString(),
+        'Post Promoted!',
+        `Cheers! you have recieved free promotion for your post "${post.title}" for ${durationDays} day(s).`,
+        { type: 'admin_promotion', postId: post._id.toString() },
+        req.io
+      );
+
+      // Update notification count - exact same pattern as like notification
+      await NotificationService.triggerCountUpdate(req.io, postOwnerId.toString());
     }
 
     logger.info(`Post manually promoted by admin`, {
