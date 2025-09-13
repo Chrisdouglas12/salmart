@@ -162,191 +162,492 @@ module.exports = (io) => {
     logger.info('Attached io to request object in postRoutes');
     next();
   });
+//Create a new post
+router.post(
+  '/post',
+  verifyToken,
+  upload.fields([{ name: 'photo', maxCount: 1 }, { name: 'video', maxCount: 1 }]),
+  async (req, res) => {
+    let tempFiles = [];
+    try {
+      const { description, title, productCondition, location, category, price, postType = 'regular', productLink } = req.body;
+      const userId = req.user.userId;
 
-  router.post(
-    '/post',
-    verifyToken,
-    upload.fields([{ name: 'photo', maxCount: 1 }, { name: 'video', maxCount: 1 }]),
-    async (req, res) => {
-      let tempFiles = [];
-      try {
-        const { description, title, productCondition, location, category, price, postType = 'regular', productLink } = req.body;
-        const userId = req.user.userId;
+      logger.info(`Starting post creation for user ${userId}, type: ${postType}`);
 
-        logger.info(`Starting post creation for user ${userId}, type: ${postType}`);
+      const user = await User.findById(userId);
+      if (!user) {
+        logger.error(`User ${userId} not found`);
+        return res.status(404).json({ message: 'User not found' });
+      }
 
-        const user = await User.findById(userId);
-        if (!user) {
-          logger.error(`User ${userId} not found`);
-          return res.status(404).json({ message: 'User not found' });
+      const validCategories = ['electronics', 'fashion', 'home', 'vehicles', 'music', 'others'];
+      if (!validCategories.includes(category)) {
+        logger.warn(`Invalid category ${category} by user ${userId}`);
+        return res.status(400).json({ message: 'Invalid category' });
+      }
+
+      const sanitizedDescription = sanitizeHtml(description, {
+        allowedTags: [],
+        allowedAttributes: {},
+      });
+      const sanitizedTitle = sanitizeHtml(title, {
+        allowedTags: [],
+        allowedAttributes: {},
+      });
+
+      let photoUrl = null;
+      let videoUrl = null;
+
+      const isProduction = process.env.NODE_ENV === 'production';
+
+      const validDomains = isProduction
+        ? ['salmartonline.com.ng', 'salmart.onrender.com']
+        : ['localhost'];
+
+      const isValidSalmartLink = (link) => {
+        try {
+          const { hostname } = new URL(link);
+          return validDomains.includes(hostname);
+        } catch {
+          return false;
         }
+      };
 
-        const validCategories = ['electronics', 'fashion', 'home', 'vehicles', 'music', 'others'];
-        if (!validCategories.includes(category)) {
-          logger.warn(`Invalid category ${category} by user ${userId}`);
-          return res.status(400).json({ message: 'Invalid category' });
-        }
-
-        const sanitizedDescription = sanitizeHtml(description, {
-          allowedTags: [],
-          allowedAttributes: {},
-        });
-        const sanitizedTitle = sanitizeHtml(title, {
-          allowedTags: [],
-          allowedAttributes: {},
-        });
-
-        let photoUrl = null;
-        let videoUrl = null;
-
-        const isProduction = process.env.NODE_ENV === 'production';
-
-const validDomains = isProduction
-  ? ['salmartonline.com.ng', 'salmart.onrender.com']
-  : ['localhost'];
-
-const isValidSalmartLink = (link) => {
-  try {
-    const { hostname } = new URL(link);
-    return validDomains.includes(hostname);
-  } catch {
-    return false;
-  }
-};
-
-        if (postType === 'video_ad') {
-          if (!description || !category || !req.files?.video?.[0] || !productLink) {
-            logger.warn(`Missing fields in video ad post creation by user ${userId}`);
-            return res.status(400).json({
-              message: 'Description, category, video, and product link are required'
-            });
-          }
-
-          if (!isValidSalmartLink(productLink)) {
-            logger.warn(`Invalid product link ${productLink} by user ${userId}`);
-            return res.status(400).json({
-              message: 'Product link must be a valid Salmart URL (e.g., https://salmartonline.com.ng/product/123)'
-            });
-          }
-
-          const videoFile = req.files.video[0];
-          if (isProduction) {
-            videoUrl = videoFile.path;
-          } else {
-            videoUrl = await uploadToCloudinary(videoFile.path, 'video');
-            tempFiles.push(videoFile.path);
-          }
-        } else if (postType === 'regular') {
-          if (!title || !productCondition || !price || !location || !category || !req.files?.photo?.[0]) {
-            logger.warn(`Missing fields in regular post creation by user ${userId}`);
-            return res.status(400).json({
-              message: 'All fields are required for regular posts'
-            });
-          }
-
-          if (isNaN(price) || Number(price) < 0) {
-            logger.warn(`Invalid price ${price} by user ${userId}`);
-            return res.status(400).json({
-              message: 'Price must be a valid non-negative number'
-            });
-          }
-
-          const photoFile = req.files.photo[0];
-          if (isProduction) {
-            photoUrl = photoFile.path;
-          } else {
-            photoUrl = await uploadToCloudinary(photoFile.path, 'image');
-            tempFiles.push(photoFile.path);
-          }
-        } else {
-          logger.warn(`Invalid postType ${postType} by user ${userId}`);
-          return res.status(400).json({ message: 'Invalid post type' });
-        }
-
-        const newPost = new Post({
-          postType,
-          title: sanitizedTitle,
-          description: sanitizedDescription,
-          category,
-          createdBy: {
-            userId: user._id,
-            name: `${user.firstName} ${user.lastName}`, // Kept name for consistency in 'createdBy'
-          },
-          createdAt: new Date(),
-          likes: [],
-          ...(postType === 'video_ad'
-            ? { video: videoUrl, productLink }
-            : {
-                photo: photoUrl,
-                location,
-                productCondition,
-                price: Number(price)
-              }
-          ),
-        });
-
-        await newPost.save();
-        logger.info(`Post created by user ${userId}: ${newPost._id}`);
-
-        const followers = user.followers || [];
-        const notificationPromises = followers
-          .filter((followerId) => followerId.toString() !== userId.toString())
-          .map(async (followerId) => {
-            try {
-              const follower = await User.findById(followerId)
-                .select('notificationPreferences fcmToken blockedUsers')
-                .lean();
-
-              if (follower.blockedUsers?.includes(userId)) {
-                logger.info(`Skipping notification for blocked user ${followerId}`);
-                return;
-              }
-
-              if (follower.notificationPreferences?.posts !== false) {
-                const notification = new Notification({
-                  userId: followerId,
-                  type: 'new_post',
-                  senderId: userId,
-                  postId: newPost._id,
-                  message: `${user.firstName} ${user.lastName} created a new post`,
-                  createdAt: new Date(),
-                });
-                await notification.save();
-                logger.info(`Created notification for follower ${followerId} for post ${newPost._id}`);
-
-                if (follower.fcmTokens && follower.notificationEnabled !== false) {
-                  await sendNotificationToUser(
-                    followerId,
-                    'New Post',
-                    `${user.firstName} ${user.lastName} created a new post`,
-                    { type: 'new_post', postId: newPost._id.toString() },
-                    req.io
-                  );
-                }
-
-                await NotificationService.triggerCountUpdate(req.io, followerId);
-              }
-            } catch (notifError) {
-              logger.error(`Notification error for user ${followerId}: ${notifError.message}`);
-            }
+      if (postType === 'video_ad') {
+        if (!description || !category || !req.files?.video?.[0] || !productLink) {
+          logger.warn(`Missing fields in video ad post creation by user ${userId}`);
+          return res.status(400).json({
+            message: 'Description, category, video, and product link are required'
           });
+        }
 
-        await Promise.all(notificationPromises);
+        if (!isValidSalmartLink(productLink)) {
+          logger.warn(`Invalid product link ${productLink} by user ${userId}`);
+          return res.status(400).json({
+            message: 'Product link must be a valid Salmart URL (e.g., https://salmartonline.com.ng/product/123)'
+          });
+        }
 
-        res.status(201).json({
-          message: 'Post created successfully',
-          post: newPost
+        const videoFile = req.files.video[0];
+        if (isProduction) {
+          videoUrl = videoFile.path;
+        } else {
+          videoUrl = await uploadToCloudinary(videoFile.path, 'video');
+          tempFiles.push(videoFile.path);
+        }
+      } else if (postType === 'regular') {
+        if (!title || !productCondition || !price || !location || !category || !req.files?.photo?.[0]) {
+          logger.warn(`Missing fields in regular post creation by user ${userId}`);
+          return res.status(400).json({
+            message: 'All fields are required for regular posts'
+          });
+        }
+
+        if (isNaN(price) || Number(price) < 0) {
+          logger.warn(`Invalid price ${price} by user ${userId}`);
+          return res.status(400).json({
+            message: 'Price must be a valid non-negative number'
+          });
+        }
+
+        const photoFile = req.files.photo[0];
+        if (isProduction) {
+          photoUrl = photoFile.path;
+        } else {
+          photoUrl = await uploadToCloudinary(photoFile.path, 'image');
+          tempFiles.push(photoFile.path);
+        }
+      } else {
+        logger.warn(`Invalid postType ${postType} by user ${userId}`);
+        return res.status(400).json({ message: 'Invalid post type' });
+      }
+
+      const newPost = new Post({
+        postType,
+        title: sanitizedTitle,
+        description: sanitizedDescription,
+        category,
+        createdBy: {
+          userId: user._id,
+          name: `${user.firstName} ${user.lastName}`, // Kept name for consistency in 'createdBy'
+        },
+        createdAt: new Date(),
+        likes: [],
+        ...(postType === 'video_ad'
+          ? { video: videoUrl, productLink }
+          : {
+              photo: photoUrl,
+              location,
+              productCondition,
+              price: Number(price)
+            }
+        ),
+      });
+
+      await newPost.save();
+      logger.info(`Post created by user ${userId}: ${newPost._id}`);
+
+      // 🔧 IMPROVED: Enhanced notification system
+      await notifyFollowersOfNewPost(newPost, user, userId, req);
+
+      res.status(201).json({
+        message: 'Post created successfully',
+        post: newPost
+      });
+    } catch (error) {
+      logger.error(`Post creation error for user ${req.user?.userId}: ${error.message}`);
+      res.status(500).json({
+        message: `Server error: ${error.message}`
+      });
+    } finally {
+      cleanupFiles(tempFiles);
+    }
+  }
+);
+
+/**
+ * 🔧 IMPROVED: Robust notification system for new posts
+ * Send notifications to all followers when a new post is created
+ */
+async function notifyFollowersOfNewPost(newPost, user, userId, req) {
+  try {
+    const followers = user.followers || [];
+    
+    if (followers.length === 0) {
+      logger.info(`No followers to notify for user ${userId}`);
+      return;
+    }
+
+    logger.info(`Sending notifications to ${followers.length} followers for new post ${newPost._id}`);
+
+    // 🔧 IMPROVED: Process notifications in batches to avoid overwhelming the system
+    const BATCH_SIZE = 10;
+    const batches = [];
+    
+    for (let i = 0; i < followers.length; i += BATCH_SIZE) {
+      batches.push(followers.slice(i, i + BATCH_SIZE));
+    }
+
+    for (const batch of batches) {
+      const batchPromises = batch
+        .filter((followerId) => followerId.toString() !== userId.toString())
+        .map(async (followerId) => {
+          try {
+            // 🔧 FIXED: Query correct fields including fcmTokens (not fcmToken)
+            const follower = await User.findById(followerId)
+              .select('notificationPreferences fcmTokens blockedUsers notificationEnabled socketId firstName lastName')
+              .lean();
+
+            if (!follower) {
+              logger.warn(`Follower ${followerId} not found`);
+              return { success: false, followerId, reason: 'not_found' };
+            }
+
+            // Skip if the follower has blocked the post creator
+            if (follower.blockedUsers?.includes(userId)) {
+              logger.info(`Skipping notification for blocked user ${followerId}`);
+              return { success: false, followerId, reason: 'blocked' };
+            }
+
+            // 🔧 FIXED: Check correct notification preference field (new_post, not posts)
+            if (follower.notificationPreferences?.new_post === false) {
+              logger.info(`Follower ${followerId} has disabled new post notifications`);
+              return { success: false, followerId, reason: 'disabled' };
+            }
+
+            // Create in-app notification
+            const notification = new Notification({
+              userId: followerId,
+              type: 'new_post',
+              senderId: userId,
+              postId: newPost._id,
+              message: `New listing from ${user.firstName} ${user.lastName} You might like to checkout.`,
+              createdAt: new Date(),
+            });
+
+            await notification.save();
+            logger.info(`Created in-app notification for follower ${followerId} for post ${newPost._id}`);
+
+            // 🔧 IMPROVED: Enhanced push notification handling
+            if (follower.notificationEnabled !== false && follower.fcmTokens?.length > 0) {
+              await sendNotificationToUser(
+                followerId,
+                follower,
+                'New Post',
+                `${user.firstName} ${user.lastName} created a new post`,
+                { 
+                  type: 'new_post', 
+                  postId: newPost._id.toString(),
+                  senderId: userId.toString(),
+                  senderName: `${user.firstName} ${user.lastName}`,
+                  postType: newPost.postType
+                },
+                req.io
+              );
+            }
+
+            // Update notification count via socket
+            await NotificationService.triggerCountUpdate(req.io, followerId);
+
+            return { success: true, followerId };
+          } catch (notifError) {
+            logger.error(`Notification error for user ${followerId}: ${notifError.message}`, {
+              error: notifError,
+              followerId,
+              postId: newPost._id
+            });
+            return { success: false, followerId, error: notifError.message };
+          }
         });
-      } catch (error) {
-        logger.error(`Post creation error for user ${req.user?.userId}: ${error.message}`);
-        res.status(500).json({
-          message: `Server error: ${error.message}`
-        });
-      } finally {
-        cleanupFiles(tempFiles);
+
+      // Wait for current batch to complete before processing next batch
+      const batchResults = await Promise.allSettled(batchPromises);
+      
+      // Log batch results
+      const successful = batchResults.filter(r => r.status === 'fulfilled' && r.value?.success).length;
+      const failed = batchResults.filter(r => r.status === 'rejected' || !r.value?.success).length;
+      
+      logger.info(`Batch completed: ${successful} successful, ${failed} failed notifications`);
+      
+      // Small delay between batches to prevent overwhelming the system
+      if (batches.indexOf(batch) < batches.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, 100));
       }
     }
-  );
+
+    logger.info(`Completed sending notifications for post ${newPost._id}`);
+  } catch (error) {
+    logger.error(`Error in notifyFollowersOfNewPost: ${error.message}`, {
+      error,
+      postId: newPost._id,
+      userId
+    });
+    // Don't throw the error - we don't want notification failures to prevent post creation
+  }
+}
+
+/**
+ * 🔧 IMPROVED: Send push notification to a specific follower
+ * Supports both FCM and Expo tokens with proper error handling
+ */
+async function sendPushNotificationToFollower(userId, follower, title, body, data, io) {
+  try {
+    // 🔧 IMPROVED: Better token validation and filtering
+    const activeTokens = follower.fcmTokens?.filter(tokenObj => 
+      tokenObj && 
+      tokenObj.isActive !== false && 
+      tokenObj.token && 
+      typeof tokenObj.token === 'string' && 
+      tokenObj.token.trim().length > 10
+    ) || [];
+
+    if (activeTokens.length === 0) {
+      logger.info(`No active tokens found for user ${userId}`);
+      return;
+    }
+
+    // Separate FCM and Expo tokens based on deviceType
+    const fcmTokens = activeTokens
+      .filter(tokenObj => tokenObj.deviceType === 'fcm' || !tokenObj.deviceType)
+      .map(tokenObj => tokenObj.token);
+      
+    const expoTokens = activeTokens
+      .filter(tokenObj => tokenObj.deviceType === 'expo')
+      .map(tokenObj => tokenObj.token);
+
+    const promises = [];
+
+    // 🔧 IMPROVED: Send to FCM tokens if available
+    if (fcmTokens.length > 0) {
+      promises.push(
+        sendFCMNotification(fcmTokens, title, body, data, userId)
+          .catch(error => {
+            logger.error(`FCM notification failed for user ${userId}: ${error.message}`);
+          })
+      );
+    }
+
+    // 🔧 IMPROVED: Send to Expo tokens if available
+    if (expoTokens.length > 0) {
+      promises.push(
+        sendExpoNotification(expoTokens, title, body, data, userId)
+          .catch(error => {
+            logger.error(`Expo notification failed for user ${userId}: ${error.message}`);
+          })
+      );
+    }
+
+    // 🔧 IMPROVED: Send real-time socket notification if user is online
+    if (io && follower.socketId) {
+      promises.push(
+        Promise.resolve(io.to(follower.socketId).emit('new_notification', {
+          type: 'new_post',
+          title,
+          body,
+          data,
+          timestamp: new Date()
+        }))
+      );
+    }
+
+    await Promise.allSettled(promises);
+    
+    logger.info(`Push notifications sent to user ${userId}: ${fcmTokens.length} FCM, ${expoTokens.length} Expo tokens${follower.socketId ? ', socket notification sent' : ''}`);
+    
+  } catch (error) {
+    logger.error(`Error sending push notification to user ${userId}: ${error.message}`, {
+      error,
+      userId
+    });
+  }
+}
+
+/**
+ * 🔧 IMPROVED: Send FCM notification with proper error handling
+ */
+async function sendFCMNotification(tokens, title, body, data, userId) {
+  try {
+    // Check if you have your existing sendNotificationToUser function
+    if (typeof sendNotificationToUser === 'function') {
+      // Use existing function if available
+      await sendNotificationToUser(userId, title, body, data);
+      return;
+    }
+
+    // If using Firebase Admin SDK directly:
+    const admin = require('firebase-admin');
+    
+    if (!admin.apps.length) {
+      logger.warn('Firebase Admin SDK not initialized for FCM notifications');
+      return;
+    }
+
+    // Prepare FCM message
+    const message = {
+      notification: {
+        title,
+        body
+      },
+      data: {
+        // Convert all data values to strings for FCM
+        ...Object.keys(data).reduce((acc, key) => {
+          acc[key] = String(data[key]);
+          return acc;
+        }, {})
+      },
+      tokens: tokens.slice(0, 100) // FCM allows max 100 tokens per request
+    };
+
+    const response = await admin.messaging().sendMulticast(message);
+    
+    // 🔧 IMPROVED: Handle failed tokens and cleanup
+    if (response.failureCount > 0) {
+      const failedTokens = [];
+      response.responses.forEach((resp, idx) => {
+        if (!resp.success) {
+          const errorCode = resp.error?.code;
+          failedTokens.push({
+            token: tokens[idx],
+            error: resp.error?.message,
+            shouldRemove: ['messaging/invalid-registration-token', 'messaging/registration-token-not-registered'].includes(errorCode)
+          });
+        }
+      });
+      
+      // Remove invalid tokens
+      const tokensToRemove = failedTokens.filter(f => f.shouldRemove).map(f => f.token);
+      if (tokensToRemove.length > 0) {
+        await cleanupInvalidTokens(userId, tokensToRemove);
+      }
+      
+      logger.warn(`FCM notification partially failed for user ${userId}:`, {
+        successful: response.successCount,
+        failed: response.failureCount,
+        failedTokens: failedTokens.map(f => ({ error: f.error, shouldRemove: f.shouldRemove }))
+      });
+    } else {
+      logger.info(`FCM notification sent successfully to user ${userId}: ${response.successCount} tokens`);
+    }
+    
+  } catch (error) {
+    logger.error(`Error sending FCM notification to user ${userId}: ${error.message}`, { error });
+    throw error;
+  }
+}
+
+/**
+ * 🔧 IMPROVED: Send Expo notification (if you're using Expo)
+ */
+async function sendExpoNotification(tokens, title, body, data, userId) {
+  try {
+    // If you're not using Expo, you can remove this function
+    // This is a placeholder for Expo push notifications
+    const { Expo } = require('expo-server-sdk');
+    
+    if (!Expo.isExpoPushToken) {
+      logger.warn('Expo SDK not properly configured');
+      return;
+    }
+
+    const expo = new Expo();
+    
+    const messages = tokens
+      .filter(token => Expo.isExpoPushToken(token))
+      .map(token => ({
+        to: token,
+        sound: 'default',
+        title,
+        body,
+        data
+      }));
+
+    if (messages.length === 0) {
+      logger.info(`No valid Expo tokens for user ${userId}`);
+      return;
+    }
+
+    const chunks = expo.chunkPushNotifications(messages);
+    const responses = [];
+
+    for (let chunk of chunks) {
+      const response = await expo.sendPushNotificationsAsync(chunk);
+      responses.push(...response);
+    }
+
+    // Handle any errors
+    const errors = responses.filter(response => response.status === 'error');
+    if (errors.length > 0) {
+      logger.warn(`Expo notification errors for user ${userId}:`, errors);
+    }
+
+    logger.info(`Expo notifications sent to user ${userId}: ${responses.length - errors.length} successful, ${errors.length} failed`);
+    
+  } catch (error) {
+    logger.error(`Error sending Expo notification to user ${userId}: ${error.message}`, { error });
+    throw error;
+  }
+}
+
+/**
+ * 🔧 IMPROVED: Clean up invalid tokens from user document
+ */
+async function cleanupInvalidTokens(userId, invalidTokens) {
+  try {
+    await User.updateOne(
+      { _id: userId },
+      {
+        $pull: {
+          fcmTokens: { token: { $in: invalidTokens } }
+        }
+      }
+    );
+    
+    logger.info(`Cleaned up ${invalidTokens.length} invalid tokens for user ${userId}`);
+  } catch (error) {
+    logger.error(`Error cleaning up invalid tokens for user ${userId}: ${error.message}`);
+  }
+}
 
   router.get('/post', async (req, res) => {
     try {
