@@ -2404,3 +2404,69 @@ background: #f1f3f8;
     padding-right: 10px;
   }
 }
+
+/* Quantity display styling */
+.quantity-icon {
+    background: linear-gradient(135deg, #4CAF50, #45a049);
+    color: white;
+}
+
+.quantity-value {
+    font-weight: 600;
+    color: #2e7d32;
+}
+
+/* For promoted posts quantity */
+.promoted-quantity {
+    font-size: 13px;
+    color: #4CAF50;
+    font-weight: 500;
+    margin: 5px 0;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.promoted-quantity::before {
+    content: '📦';
+    font-size: 12px;
+}
+
+/* Low stock warning */
+.quantity-value[data-quantity="1"],
+.quantity-value[data-quantity="2"],
+.quantity-value[data-quantity="3"] {
+    color: #ff9800;
+    font-weight: 700;
+}
+
+.promoted-quantity[data-quantity="1"],
+.promoted-quantity[data-quantity="2"], 
+.promoted-quantity[data-quantity="3"] {
+    color: #ff9800;
+}
+
+/* Out of stock styling */
+.quantity-value[data-quantity="0"] {
+    color: #dc3545;
+    font-weight: 700;
+}
+
+.promoted-quantity[data-quantity="0"] {
+    color: #dc3545;
+}
+
+.promoted-quantity[data-quantity="0"]::before {
+    content: '❌';
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .promoted-quantity {
+        font-size: 12px;
+    }
+    
+    .quantity-value {
+        font-size: 13px;
+    }
+}

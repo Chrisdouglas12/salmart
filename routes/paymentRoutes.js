@@ -43,290 +43,372 @@ module.exports = (io) => {
     next();
   });
 
-  // Helper function to validate required fields
-  const validatePaymentRequest = (body) => {
-    const { email, postId, buyerId } = body;
-    const errors = [];
-    
-    if (!email) errors.push('Email is required');
-    if (!buyerId) errors.push('Buyer ID is required');
-    if (!postId) errors.push('Post ID is required');
-    
-    return errors;
-  };
+//validatePaymentRequest function
+function validatePaymentRequest(body) {
+  const errors = [];
+  const { email, postId, buyerId, quantity, totalPrice } = body;
 
-  // Helper function to generate modern receipt image
-  const generateModernReceipt = async (receiptData) => {
-    logger.debug('Starting receipt generation', { receiptDataRef: receiptData.reference });
-    try {
-      const {
+  if (!email || !email.trim()) {
+    errors.push('Email is required');
+  }
+
+  if (!postId || !postId.trim()) {
+    errors.push('Post ID is required');
+  }
+
+  if (!buyerId || !buyerId.trim()) {
+    errors.push('Buyer ID is required');
+  }
+
+  if (quantity !== undefined) {
+    const qty = parseInt(quantity);
+    if (isNaN(qty) || qty < 1 || qty > 10000) {
+      errors.push('Quantity must be between 1 and 10000');
+    }
+  }
+
+  if (totalPrice !== undefined) {
+    const price = parseFloat(totalPrice);
+    if (isNaN(price) || price <= 0) {
+      errors.push('Total price must be a positive number');
+    }
+  }
+
+  return errors;
+}
+// Helper function to generate modern receipt image
+const generateModernReceipt = async (receiptData) => {
+  logger.debug('Starting receipt generation', { receiptDataRef: receiptData.reference });
+  try {
+    const {
+      reference,
+      amountPaid,
+      transactionDate,
+      buyerName,
+      email,
+      productTitle,
+      sellerName,
+      quantity = 1,
+      unitPrice
+    } = receiptData;
+
+    const receiptsDir = path.join(__dirname, 'receipts');
+    await fs.mkdir(receiptsDir, { recursive: true });
+    
+    const imagePath = path.join(receiptsDir, `${reference}.png`);
+    
+    // Create modern receipt with professional design (increased height for quantity info)
+    const image = new Jimp(650, 1100, 0xFFFFFFFF); // White background, increased height
+    
+    // Load fonts
+    const fontSmall = await Jimp.loadFont(Jimp.FONT_SANS_14_BLACK);
+    const fontRegular = await Jimp.loadFont(Jimp.FONT_SANS_16_BLACK);
+    const fontBold = await Jimp.loadFont(Jimp.FONT_SANS_32_BLACK);
+    const fontLarge = await Jimp.loadFont(Jimp.FONT_SANS_64_BLACK);
+
+    // Header gradient background (Green tones)
+    const headerHeight = 180;
+    const startColor = Jimp.cssColorToHex('#218838'); // Darker green
+    const endColor = Jimp.cssColorToHex('#28a745'); // Your specified green
+    
+    for (let y = 0; y < headerHeight; y++) {
+      for (let x = 0; x < 650; x++) {
+        const ratio = y / headerHeight;
+        const r = Math.floor(Jimp.intToRGBA(startColor).r + (Jimp.intToRGBA(endColor).r - Jimp.intToRGBA(startColor).r) * ratio);
+        const g = Math.floor(Jimp.intToRGBA(startColor).g + (Jimp.intToRGBA(endColor).g - Jimp.intToRGBA(startColor).g) * ratio);
+        const b = Math.floor(Jimp.intToRGBA(startColor).b + (Jimp.intToRGBA(endColor).b - Jimp.intToRGBA(startColor).b) * ratio);
+        image.setPixelColor(Jimp.rgbaToInt(r, g, b, 255), x, y);
+      }
+    }
+
+    // Company logo area (modern design - Darker Green)
+    const logoArea = await Jimp.create(100, 100, Jimp.cssColorToHex('#1e7e34FF')); // Darker green for logo area
+    logoArea.print(fontLarge, 25, 20, 'S', 50, 60);
+    image.composite(logoArea, 50, 40);
+
+    // Company name and title
+    image.print(fontBold, 170, 50, 'SALMART', 400);
+    image.print(fontRegular, 170, 85, 'Payment Receipt', 400);
+    image.print(fontSmall, 170, 110, 'Digital Transaction Confirmation', 400);
+
+    // Success indicator with modern styling (Your specified green)
+    const successBadge = await Jimp.create(200, 50, Jimp.cssColorToHex('#28a745FF')); // Your specified green
+    successBadge.print(fontRegular, 40, 15, 'VERIFIED', 120);
+    image.composite(successBadge, 450, 65);
+
+    // Main content area with card-like design (increased height)
+    const cardY = 220;
+    const cardHeight = 700;
+    
+    // Card background (White - F9FAFBFF)
+    const card = await Jimp.create(590, cardHeight, 0xF9FAFBFF); // Keeping light background for readability
+    
+    // Add subtle border (Light green-grey)
+    const borderColor = Jimp.cssColorToHex('#D4EDDAFF'); // Light green-grey border
+    for (let i = 0; i < 2; i++) {
+      card.scan(i, 0, 1, cardHeight, function (x, y, idx) {
+        this.bitmap.data[idx] = Jimp.intToRGBA(borderColor).r;
+        this.bitmap.data[idx + 1] = Jimp.intToRGBA(borderColor).g;
+        this.bitmap.data[idx + 2] = Jimp.intToRGBA(borderColor).b;
+      });
+      card.scan(590 - 1 - i, 0, 1, cardHeight, function (x, y, idx) {
+        this.bitmap.data[idx] = Jimp.intToRGBA(borderColor).r;
+        this.bitmap.data[idx + 1] = Jimp.intToRGBA(borderColor).g;
+        this.bitmap.data[idx + 2] = Jimp.intToRGBA(borderColor).b;
+      });
+    }
+    
+    image.composite(card, 30, cardY);
+
+    // Transaction details with modern layout
+    let yPos = cardY + 40;
+    const leftMargin = 60;
+    const rightMargin = 450;
+    const lineHeight = 45;
+
+    // Transaction Reference
+    image.print(fontSmall, leftMargin, yPos, 'TRANSACTION REFERENCE', 300);
+    image.print(fontRegular, leftMargin, yPos + 18, reference.toUpperCase(), 500);
+    yPos += lineHeight + 10;
+
+    // Divider line (Light green-grey)
+    for (let x = leftMargin; x < 590; x++) {
+      image.setPixelColor(Jimp.cssColorToHex('#D4EDDAFF'), x, yPos);
+    }
+    yPos += 25;
+
+    // Order Summary Section with emphasis (Light green background)
+    const orderBg = await Jimp.create(530, 140, Jimp.cssColorToHex('#EAF7EDFF')); // Very light green
+    image.composite(orderBg, leftMargin, yPos);
+    
+    const summaryTextColor = Jimp.cssColorToHex('#1e7e34FF'); // Darker green for text
+    image.print(fontSmall, leftMargin + 20, yPos + 15, 'ORDER SUMMARY', 300);
+    
+    // Quantity and unit price
+    image.print(fontRegular, leftMargin + 20, yPos + 40, `Quantity: ${quantity}`, 200);
+    if (unitPrice) {
+      image.print(fontRegular, leftMargin + 250, yPos + 40, `Unit Price: ₦${Number(unitPrice).toLocaleString('en-NG')}`, 250);
+    }
+    
+    // Total amount (emphasized)
+    image.print(fontSmall, leftMargin + 20, yPos + 70, 'TOTAL AMOUNT PAID', 300);
+    image.print(fontBold, leftMargin + 20, yPos + 90, `₦${Number(amountPaid).toLocaleString('en-NG')}`, 400, summaryTextColor);
+    yPos += 160;
+
+    // Transaction details grid
+    const details = [
+      { label: 'PAYMENT DATE', value: new Date(transactionDate).toLocaleDateString('en-NG', { 
+        year: 'numeric', month: 'long', day: 'numeric', 
+        hour: '2-digit', minute: '2-digit' 
+      })},
+      { label: 'BUYER NAME', value: buyerName },
+      { label: 'BUYER EMAIL', value: email },
+      { label: 'PRODUCT', value: productTitle },
+      { label: 'SELLER', value: sellerName },
+      { label: 'STATUS', value: 'COMPLETED' }
+    ];
+
+    details.forEach(({ label, value }) => {
+      image.print(fontSmall, leftMargin, yPos, label, 250);
+      image.print(fontRegular, leftMargin, yPos + 18, value, 500);
+      yPos += lineHeight;
+    });
+
+    // Footer section (adjusted for new height)
+    yPos = 1000;
+    
+    // Footer divider (Light green-grey)
+    for (let x = 50; x < 600; x++) {
+      image.setPixelColor(Jimp.cssColorToHex('#D4EDDAFF'), x, yPos - 20);
+    }
+
+    // Footer text
+    image.print(fontSmall, 50, yPos, '© 2025 Salmart Technologies', 300);
+    image.print(fontSmall, 50, yPos + 20, 'Secure Digital Commerce Platform', 300);
+    image.print(fontSmall, 400, yPos, `Receipt ID: ${reference.slice(-8)}`, 200);
+    image.print(fontSmall, 400, yPos + 20, new Date().toISOString().split('T')[0], 200);
+
+    // Save image
+    await image.writeAsync(imagePath);
+    logger.debug('Receipt image saved locally', { imagePath });
+    
+    // Upload to Cloudinary
+    const cloudinaryResponse = await cloudinary.uploader.upload(imagePath, {
+      public_id: `receipts/${reference}`,
+      folder: 'salmart_receipts',
+      quality: 'auto:good',
+      format: 'png'
+    });
+    logger.debug('Receipt image uploaded to Cloudinary', { url: cloudinaryResponse.secure_url });
+
+    // Clean up local file
+    await fs.unlink(imagePath);
+    logger.debug('Local receipt image deleted', { imagePath });
+    
+    return cloudinaryResponse.secure_url;
+  } catch (error) {
+    logger.error('Receipt generation failed:', { error: error.message, stack: error.stack, reference: receiptData.reference });
+    throw error;
+  }
+};
+
+// Helper function to send receipt to seller (updated message)
+const sendReceiptToSeller = async (receiptData, receiptImageUrl, io) => {
+  logger.debug('Starting send receipt to seller', { buyerId: receiptData.buyerId, sellerId: receiptData.sellerId, reference: receiptData.reference });
+  try {
+    const { buyerId, sellerId, buyerName, productTitle, reference, quantity = 1 } = receiptData;
+
+    const quantityText = quantity > 1 ? ` (Qty: ${quantity})` : '';
+    const message = new Message({
+      senderId: buyerId,
+      receiverId: sellerId,
+      messageType: 'image',
+      attachment: { url: receiptImageUrl },
+      text: `Payment Receipt - ${productTitle}${quantityText}`,
+      status: 'sent',
+      timestamp: new Date()
+    });
+
+    await message.save();
+    logger.debug('Receipt message saved to DB', { messageId: message._id });
+    
+    // Emit to seller in real-time
+    io.to(`user_${sellerId}`).emit('receiveMessage', message.toObject());
+    logger.debug('Emitted receiveMessage to seller via socket', { sellerId });
+    
+    // Send FCM notification with quantity info
+    const notificationText = quantity > 1 
+      ? `${buyerName} just made a successful payment for ${quantity}x ${productTitle}`
+      : `${buyerName} just made a successful payment for ${productTitle}`;
+      
+    await sendNotificationToUser(
+      sellerId,
+      'New Sales 🎉',
+      notificationText,
+      { 
+        type: 'payment_receipt', 
+        senderId: buyerId, 
+        receiptImageUrl,
         reference,
-        amountPaid,
-        transactionDate,
-        buyerName,
+        quantity
+      }
+    );
+    logger.debug('FCM notification sent for receipt', { sellerId });
+
+    return { success: true };
+  } catch (error) {
+    logger.error('Failed to send receipt to seller:', { error: error.message, stack: error.stack, reference: receiptData.reference });
+    return { success: false, error: error.message };
+  }
+};
+
+// Process buy orders
+router.post('/pay', async (req, res) => {
+  const requestId = `PAY_${Date.now()}`;
+  logger.info('Payment initiation started', { requestId, body: req.body });
+
+  try {
+    const validationErrors = validatePaymentRequest(req.body);
+    if (validationErrors.length > 0) {
+      logger.warn('Payment initiation validation failed', { requestId, errors: validationErrors });
+      return res.status(400).json({ 
+        success: false, 
+        message: validationErrors.join(', ') 
+      });
+    }
+
+    const { email, postId, buyerId, quantity = 1, totalPrice } = req.body;
+    const trimmedPostId = postId.trim();
+    
+    const post = await Post.findById(trimmedPostId);
+    if (!post) {
+      logger.warn('Payment initiation: Product not found', { requestId, postId: trimmedPostId });
+      return res.status(404).json({ 
+        success: false, 
+        message: "Product not found" 
+      });
+    }
+
+    if (post.isSold) {
+      logger.warn('Payment initiation: Product already sold', { requestId, postId: trimmedPostId });
+      return res.status(400).json({ 
+        success: false, 
+        message: "Product is already sold" 
+      });
+    }
+
+    // Check if requested quantity is available
+    if (!post.isAvailable(quantity)) {
+      logger.warn('Payment initiation: Insufficient quantity', { 
+        requestId, 
+        postId: trimmedPostId, 
+        availableQuantity: post.quantity,
+        requestedQuantity: quantity 
+      });
+      return res.status(400).json({ 
+        success: false, 
+        message: `Insufficient quantity. Only ${post.quantity} items available.` 
+      });
+    }
+
+    // Calculate amount - use totalPrice from frontend if provided and valid, otherwise calculate
+    let amount;
+    const expectedTotal = parseFloat(post.price) * quantity;
+    
+    if (totalPrice && Math.abs(totalPrice - expectedTotal) < 0.01) {
+      // Use frontend total if it matches our calculation (allowing for small floating point differences)
+      amount = totalPrice * 100; // Convert to kobo
+    } else {
+      // Fall back to server calculation
+      amount = expectedTotal * 100; // Convert to kobo
+      logger.info('Using server-calculated total', { 
+        requestId, 
+        frontendTotal: totalPrice, 
+        serverTotal: expectedTotal 
+      });
+    }
+
+    const sellerId = post.createdBy.userId.toString();
+
+    const protocol = req.headers['x-forwarded-proto'] === 'https' ? 'https' : 'http';
+    const host = req.get('host');
+    const API_BASE_URL = process.env.BASE_URL || `${protocol}://${host}`;
+
+    const paystackInitializeResponse = await paystack.transaction.initialize({
+      email,
+      amount: amount,
+      callback_url: `${API_BASE_URL}/payment-success?postId=${trimmedPostId}&buyerId=${buyerId}&quantity=${quantity}`,
+      metadata: {
+        postId: trimmedPostId,
         email,
-        productTitle,
-        sellerName
-      } = receiptData;
+        buyerId,
+        sellerId: sellerId.toString(),
+        quantity: quantity,
+        unitPrice: post.price,
+        totalAmount: amount / 100, // Store in Naira
+      },
+    });
 
-      const receiptsDir = path.join(__dirname, 'receipts');
-      await fs.mkdir(receiptsDir, { recursive: true });
-      
-      const imagePath = path.join(receiptsDir, `${reference}.png`);
-      
-      // Create modern receipt with professional design
-      const image = new Jimp(650, 1000, 0xFFFFFFFF); // White background
-      
-      // Load fonts
-      const fontSmall = await Jimp.loadFont(Jimp.FONT_SANS_14_BLACK);
-      const fontRegular = await Jimp.loadFont(Jimp.FONT_SANS_16_BLACK);
-      const fontBold = await Jimp.loadFont(Jimp.FONT_SANS_32_BLACK);
-      const fontLarge = await Jimp.loadFont(Jimp.FONT_SANS_64_BLACK);
-
-      // Header gradient background (Green tones)
-      const headerHeight = 180;
-      const startColor = Jimp.cssColorToHex('#218838'); // Darker green
-      const endColor = Jimp.cssColorToHex('#28a745'); // Your specified green
-      
-      for (let y = 0; y < headerHeight; y++) {
-        for (let x = 0; x < 650; x++) {
-          const ratio = y / headerHeight;
-          const r = Math.floor(Jimp.intToRGBA(startColor).r + (Jimp.intToRGBA(endColor).r - Jimp.intToRGBA(startColor).r) * ratio);
-          const g = Math.floor(Jimp.intToRGBA(startColor).g + (Jimp.intToRGBA(endColor).g - Jimp.intToRGBA(startColor).g) * ratio);
-          const b = Math.floor(Jimp.intToRGBA(startColor).b + (Jimp.intToRGBA(endColor).b - Jimp.intToRGBA(startColor).b) * ratio);
-          image.setPixelColor(Jimp.rgbaToInt(r, g, b, 255), x, y);
-        }
-      }
-
-      // Company logo area (modern design - Darker Green)
-      const logoArea = await Jimp.create(100, 100, Jimp.cssColorToHex('#1e7e34FF')); // Darker green for logo area
-      logoArea.print(fontLarge, 25, 20, 'S', 50, 60);
-      image.composite(logoArea, 50, 40);
-
-      // Company name and title
-      image.print(fontBold, 170, 50, 'SALMART', 400);
-      image.print(fontRegular, 170, 85, 'Payment Receipt', 400);
-      image.print(fontSmall, 170, 110, 'Digital Transaction Confirmation', 400);
-
-      // Success indicator with modern styling (Your specified green)
-      const successBadge = await Jimp.create(200, 50, Jimp.cssColorToHex('#28a745FF')); // Your specified green
-      successBadge.print(fontRegular, 40, 15, 'VERIFIED', 120);
-      image.composite(successBadge, 450, 65);
-
-      // Main content area with card-like design
-      const cardY = 220;
-      const cardHeight = 600;
-      
-      // Card background (White - F9FAFBFF)
-      const card = await Jimp.create(590, cardHeight, 0xF9FAFBFF); // Keeping light background for readability
-      
-      // Add subtle border (Light green-grey)
-      const borderColor = Jimp.cssColorToHex('#D4EDDAFF'); // Light green-grey border
-      for (let i = 0; i < 2; i++) {
-        card.scan(i, 0, 1, cardHeight, function (x, y, idx) {
-          this.bitmap.data[idx] = Jimp.intToRGBA(borderColor).r;
-          this.bitmap.data[idx + 1] = Jimp.intToRGBA(borderColor).g;
-          this.bitmap.data[idx + 2] = Jimp.intToRGBA(borderColor).b;
-        });
-        card.scan(590 - 1 - i, 0, 1, cardHeight, function (x, y, idx) {
-          this.bitmap.data[idx] = Jimp.intToRGBA(borderColor).r;
-          this.bitmap.data[idx + 1] = Jimp.intToRGBA(borderColor).g;
-          this.bitmap.data[idx + 2] = Jimp.intToRGBA(borderColor).b;
-        });
-      }
-      
-      image.composite(card, 30, cardY);
-
-      // Transaction details with modern layout
-      let yPos = cardY + 40;
-      const leftMargin = 60;
-      const rightMargin = 450;
-      const lineHeight = 45;
-
-      // Transaction Reference
-      image.print(fontSmall, leftMargin, yPos, 'TRANSACTION REFERENCE', 300);
-      image.print(fontRegular, leftMargin, yPos + 18, reference.toUpperCase(), 500);
-      yPos += lineHeight + 10;
-
-      // Divider line (Light green-grey)
-      for (let x = leftMargin; x < 590; x++) {
-        image.setPixelColor(Jimp.cssColorToHex('#D4EDDAFF'), x, yPos);
-      }
-      yPos += 25;
-
-      // Amount section with emphasis (Light green background, darker green text)
-      const amountBg = await Jimp.create(530, 80, Jimp.cssColorToHex('#EAF7EDFF')); // Very light green
-      image.composite(amountBg, leftMargin, yPos);
-      
-      const amountTextColor = Jimp.cssColorToHex('#1e7e34FF'); // Darker green for text
-      image.print(fontSmall, leftMargin + 20, yPos + 15, 'AMOUNT PAID', 300);
-      image.print(fontBold, leftMargin + 20, yPos + 35, `${Number(amountPaid).toLocaleString('en-NG')}`, 400, amountTextColor);
-      yPos += 100;
-
-      // Transaction details grid
-      const details = [
-        { label: 'PAYMENT DATE', value: new Date(transactionDate).toLocaleDateString('en-NG', { 
-          year: 'numeric', month: 'long', day: 'numeric', 
-          hour: '2-digit', minute: '2-digit' 
-        })},
-        { label: 'BUYER NAME', value: buyerName },
-        { label: 'BUYER EMAIL', value: email },
-        { label: 'PRODUCT', value: productTitle },
-        { label: 'SELLER', value: sellerName },
-        { label: 'STATUS', value: 'COMPLETED' }
-      ];
-
-      details.forEach(({ label, value }) => {
-        image.print(fontSmall, leftMargin, yPos, label, 250);
-        image.print(fontRegular, leftMargin, yPos + 18, value, 500);
-        yPos += lineHeight;
-      });
-
-      // Footer section
-      yPos = 900;
-      
-      // Footer divider (Light green-grey)
-      for (let x = 50; x < 600; x++) {
-        image.setPixelColor(Jimp.cssColorToHex('#D4EDDAFF'), x, yPos - 20);
-      }
-
-      // Footer text
-      image.print(fontSmall, 50, yPos, ' 2025 Salmart Technologies', 300);
-      image.print(fontSmall, 50, yPos + 20, 'Secure Digital Commerce Platform', 300);
-      image.print(fontSmall, 400, yPos, `Receipt ID: ${reference.slice(-8)}`, 200);
-      image.print(fontSmall, 400, yPos + 20, new Date().toISOString().split('T')[0], 200);
-
-      // Save image
-      await image.writeAsync(imagePath);
-      logger.debug('Receipt image saved locally', { imagePath });
-      
-      // Upload to Cloudinary
-      const cloudinaryResponse = await cloudinary.uploader.upload(imagePath, {
-        public_id: `receipts/${reference}`,
-        folder: 'salmart_receipts',
-        quality: 'auto:good',
-        format: 'png'
-      });
-      logger.debug('Receipt image uploaded to Cloudinary', { url: cloudinaryResponse.secure_url });
-
-      // Clean up local file
-      await fs.unlink(imagePath);
-      logger.debug('Local receipt image deleted', { imagePath });
-      
-      return cloudinaryResponse.secure_url;
-    } catch (error) {
-      logger.error('Receipt generation failed:', { error: error.message, stack: error.stack, reference: receiptData.reference });
-      throw error;
-    }
-  };
-
-  // Helper function to send receipt to seller
-  const sendReceiptToSeller = async (receiptData, receiptImageUrl, io) => {
-    logger.debug('Starting send receipt to seller', { buyerId: receiptData.buyerId, sellerId: receiptData.sellerId, reference: receiptData.reference });
-    try {
-      const { buyerId, sellerId, buyerName, productTitle, reference } = receiptData;
-
-      const message = new Message({
-        senderId: buyerId,
-        receiverId: sellerId,
-        messageType: 'image',
-        attachment: { url: receiptImageUrl },
-        text: `Payment Receipt - ${productTitle}`,
-        status: 'sent',
-        timestamp: new Date()
-      });
-
-      await message.save();
-      logger.debug('Receipt message saved to DB', { messageId: message._id });
-      
-      // Emit to seller in real-time
-      io.to(`user_${sellerId}`).emit('receiveMessage', message.toObject());
-      logger.debug('Emitted receiveMessage to seller via socket', { sellerId });
-      
-      // Send FCM notification
-      await sendNotificationToUser(
-        sellerId,
-        'New Sales Alert',
-        `${buyerName} c
-        just made a successful payment for ${productTitle}`,
-        { 
-          type: 'payment_receipt', 
-          senderId: buyerId, 
-          receiptImageUrl,
-          reference 
-        }
-      );
-      logger.debug('FCM notification sent for receipt', { sellerId });
-
-      return { success: true };
-    } catch (error) {
-      logger.error('Failed to send receipt to seller:', { error: error.message, stack: error.stack, reference: receiptData.reference });
-      return { success: false, error: error.message };
-    }
-  };
-
-  // Process buy orders
-  router.post('/pay', async (req, res) => {
-    const requestId = `PAY_${Date.now()}`;
-    logger.info('Payment initiation started', { requestId, body: req.body });
-
-    try {
-      const validationErrors = validatePaymentRequest(req.body);
-      if (validationErrors.length > 0) {
-        logger.warn('Payment initiation validation failed', { requestId, errors: validationErrors });
-        return res.status(400).json({ 
-          success: false, 
-          message: validationErrors.join(', ') 
-        });
-      }
-
-      const { email, postId, buyerId } = req.body;
-      const trimmedPostId = postId.trim();
-      
-      const post = await Post.findById(trimmedPostId);
-      if (!post) {
-        logger.warn('Payment initiation: Product not found', { requestId, postId: trimmedPostId });
-        return res.status(404).json({ 
-          success: false, 
-          message: "Product not found" 
-        });
-      }
-
-      if (post.isSold) {
-        logger.warn('Payment initiation: Product already sold', { requestId, postId: trimmedPostId });
-        return res.status(400).json({ 
-          success: false, 
-          message: "Product is already sold" 
-        });
-      }
-
-      const amount = parseFloat(post.price) * 100;
-      const sellerId = post.createdBy.userId.toString(); // Ensure you're getting the ID string
-
-
-      const protocol = req.headers['x-forwarded-proto'] === 'https' ? 'https' : 'http';
-const host = req.get('host');
-const API_BASE_URL = process.env.BASE_URL || `${protocol}://${host}`;
-
-const paystackInitializeResponse = await paystack.transaction.initialize({
-  email,
-  amount: amount,
-  callback_url: `${API_BASE_URL}/payment-success?postId=${trimmedPostId}&buyerId=${buyerId}`,
-  metadata: {
-    postId: trimmedPostId,
-    email,
-    buyerId,
-    sellerId: sellerId.toString(), // Ensure sellerId is string for metadata
-  },
+    logger.info('Payment initialized successfully with Paystack', { 
+      requestId, 
+      reference: paystackInitializeResponse.data.reference,
+      quantity,
+      totalAmount: amount / 100
+    });
+    
+    res.json({ success: true, url: paystackInitializeResponse.data.authorization_url });
+  } catch (error) {
+    logger.error('Payment initiation failed', { 
+      requestId, 
+      error: error.message, 
+      stack: error.stack, 
+      body: req.body 
+    });
+    res.status(500).json({ success: false, message: "Payment initialization failed" });
+  }
 });
 
-      logger.info('Payment initialized successfully with Paystack', { requestId, reference: paystackInitializeResponse.data.reference });
-      res.json({ success: true, url: paystackInitializeResponse.data.authorization_url });
-    } catch (error) {
-      logger.error('Payment initiation failed', { requestId, error: error.message, stack: error.stack, body: req.body });
-      res.status(500).json({ success: false, message: "Payment initialization failed" });
-    }
-  });
+
 
   router.get('/payment-success', async (req, res) => {
     const requestId = `SUCCESS_${Date.now()}`;
@@ -652,6 +734,8 @@ const paystackInitializeResponse = await paystack.transaction.initialize({
       }
 
       // Extract IDs from Paystack metadata (more reliable than query params for consistency)
+      const quantity = parseInt(data.data.metadata.quantity) || 1;
+const unitPrice = parseFloat(data.data.metadata.unitPrice) || 0;
       const retrievedPostId = data.data.metadata.postId;
       const retrievedBuyerId = data.data.metadata.buyerId; // Use this if you want to find buyer by ID
       const buyerEmailFromPaystack = data.data.customer.email;
@@ -751,17 +835,19 @@ logger.info(`[PAYMENT VERIFIED]`, {
   amountToTransferNaira,
 });
       // Prepare receipt data
-      const receiptData = {
-        reference,
-        amountPaid,
-        transactionDate: data.data.paid_at,
-        buyerName: `${buyer.firstName || ''} ${buyer.lastName || ''}`.trim(),
-        email: buyer.email,
-        productTitle: post.title || post.description || "Product",
-        sellerName: `${seller.firstName} ${seller.lastName}`,
-        buyerId: buyer._id.toString(),
-        sellerId: seller._id.toString()
-      };
+const receiptData = {
+  reference,
+  amountPaid,
+  transactionDate: data.data.paid_at,
+  buyerName: `${buyer.firstName || ''} ${buyer.lastName || ''}`.trim(),
+  email: buyer.email,
+  productTitle: post.title || post.description || "Product",
+  sellerName: `${seller.firstName} ${seller.lastName}`,
+  buyerId: buyer._id.toString(),
+  sellerId: seller._id.toString(),
+  quantity: quantity,
+  unitPrice: unitPrice
+};
       logger.debug('Prepared receipt data', { requestId, receiptDataRef: reference });
 
       // Create database records
@@ -806,24 +892,43 @@ logger.info(`[PAYMENT VERIFIED]`, {
         notificationId: notification._id 
       });
 
-      // Mark post as sold
-      logger.debug('Attempting to mark post as sold', { requestId, postId: post._id });
-      post.isSold = true;
-      await post.save();
-      logger.info('Post marked as sold successfully', { requestId, postId: post._id });
+// Update quantity after successful purchase
+logger.debug('Updating post quantity', { requestId, postId: post._id, purchasedQty: quantity });
+
+post.quantity = Math.max(post.quantity - quantity, 0); // Prevent negative quantity
+
+// Mark post as sold only if quantity is exhausted
+if (post.postType === 'regular' && post.quantity <= 0) {
+  await post.save(); // pre-save hook will auto-set isSold = true
+  logger.info('Post marked as sold successfully (quantity exhausted)', {
+    requestId,
+    postId: post._id,
+    postType: post.postType,
+  });
+} else {
+  await post.save(); // save updated quantity even if not sold out
+  logger.info('Post quantity updated', {
+    requestId,
+    postId: post._id,
+    remainingQuantity: post.quantity,
+    postType: post.postType,
+  });
+}
 
       // Send initial notifications
       logger.debug('Sending initial FCM notifications and updating notification count', { requestId });
       await Promise.all([
         sendNotificationToUser(
-          seller._id.toString(),
-          'Payment Received',
-          `${receiptData.buyerName} paid for your product: "${receiptData.productTitle}" Kindly deliver the item to recieve payment`,
-          { type: 'payment', postId: post._id.toString() }, // Use post._id
-          req.io,
-          post.photo,
-          buyer.profilePicture
-        ),
+       seller._id.toString(),
+      'New Sales 🎉',
+       quantity > 1 
+     ? `${receiptData.buyerName} paid for ${quantity}x ${receiptData.productTitle}. Kindly deliver the items to receive payment`
+     : `${receiptData.buyerName} paid for your product: "${receiptData.productTitle}" Kindly deliver the item to receive payment`,
+     { type: 'payment', postId: post._id.toString(), quantity: quantity },
+      req.io,
+      post.photo,
+     buyer.profilePicture
+    ),
         NotificationService.triggerCountUpdate(seller._id.toString(), req.io)
       ]);
       logger.info('Initial notifications sent to seller', { requestId });

@@ -62,7 +62,8 @@
         /* Main Container */
         .product-container {
             max-width: 1200px;
-           
+            margin: 30px auto;
+            padding: 0 20px;
         }
 
         .product-grid {
@@ -110,21 +111,21 @@
 
         /* Product Info Section */
         .product-info-section {
-            padding: 10px;
+            padding: 40px;
             display: flex;
             flex-direction: column;
             gap: 25px;
         }
 
         .product-header h1 {
-            font-size: 1em;
+            font-size: 2.2em;
             font-weight: 700;
             color: #1a1a1a;
             margin-bottom: 15px;
         }
 
         .product-price {
-            font-size: 1em;
+            font-size: 2em;
             font-weight: 700;
             color: #28a745;
             display: flex;
@@ -148,6 +149,99 @@
             padding: 20px;
             border-radius: 12px;
             border-left: 4px solid #28a745;
+        }
+
+        /* Quantity Selector */
+        .quantity-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            border: 2px solid #e8f5e8;
+        }
+
+        .quantity-label {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .quantity-selector {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            justify-content: space-between;
+        }
+
+        .quantity-controls {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            border: 2px solid #28a745;
+            border-radius: 12px;
+            background: white;
+        }
+
+        .quantity-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.2em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .quantity-btn:first-child {
+            border-radius: 10px 0 0 10px;
+        }
+
+        .quantity-btn:last-child {
+            border-radius: 0 10px 10px 0;
+        }
+
+        .quantity-btn:hover {
+            background: #20c997;
+            transform: scale(1.05);
+        }
+
+        .quantity-btn:active {
+            transform: scale(0.95);
+        }
+
+        .quantity-input {
+            width: 80px;
+            height: 41px;
+            text-align: center;
+            border: none;
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #333;
+            background: white;
+        }
+
+        .quantity-input:focus {
+            outline: none;
+        }
+
+        .total-price {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: #28a745;
+            background: rgba(40, 167, 69, 0.1);
+            padding: 12px 20px;
+            border-radius: 25px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         /* Product Meta */
@@ -454,6 +548,12 @@
                 flex-wrap: wrap;
                 gap: 10px;
             }
+
+            .quantity-selector {
+                flex-direction: column;
+                gap: 15px;
+                align-items: center;
+            }
         }
 
         /* Loading Animation */
@@ -503,6 +603,24 @@
 
                 <div class="product-description" id="productDescription">
                     
+                </div>
+
+                <div class="quantity-section">
+                    <div class="quantity-label">
+                        <i class="fas fa-shopping-cart"></i>
+                        Select Quantity
+                    </div>
+                    <div class="quantity-selector">
+                        <div class="quantity-controls">
+                            <button class="quantity-btn" id="decreaseBtn">-</button>
+                            <input type="number" id="quantityInput" class="quantity-input" value="1" min="1" max="10000">
+                            <button class="quantity-btn" id="increaseBtn">+</button>
+                        </div>
+                        <div class="total-price" id="totalPrice">
+                            <i class="fas fa-calculator"></i>
+                            Total: ₦0
+                        </div>
+                    </div>
                 </div>
 
                 <div class="product-meta">
@@ -634,6 +752,6 @@
 
     <div id="toast-message" class="toast-message"></div>
 
-    <script src="checkout.js"> </script>
+    <script src="./scripts/checkout.js"></script>
 </body>
 </html>

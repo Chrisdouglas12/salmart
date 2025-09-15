@@ -298,11 +298,11 @@
   </div>
 
   
-   <script src="auth.js"></script>
+   <script src="./scripts/auth.js"></script>
   <script type="module">
     // Assume salmartCache.js is correctly linked or its content is here
    
-     import { salmartCache } from './salmartCache.js'; 
+     import { salmartCache } from './scripts/salmartCache.js'; 
 
 
     const API_BASE_URL = window.API_BASE_URL || (window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart.onrender.com');
@@ -1689,7 +1689,7 @@
 
   </script>
   
- <script src="/idb-keyval-iife.js"></script>
-   <script src="sw-update-manager.js"></script>
+ <script src="./scripts/idb-keyval-iife.js"></script>
+   <script src="./scripts/sw-update-manager.js"></script>
 </body>
 </html>

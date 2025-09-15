@@ -1,0 +1,263 @@
+.main-layout {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  padding: 10px;
+}
+
+.header-section {
+  position: fixed;
+  display: flex;
+  justify-content: space-around;
+  padding: 20px;
+  top: 0;
+  height: 50px;
+  text-align: center;
+  align-items: center;
+}
+
+.feed {
+  flex: 1;
+  max-width: 600px;
+  min-width: 300px;
+}
+
+.sidebar {
+  width: 200px;
+  height: calc(100vh - 80px);
+  position: fixed;
+  top: 100px;
+  z-index: 1;
+  padding-top: 40px;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  background: #fff;
+  overflow: hidden;
+}
+
+.sidebar.left {
+  left: 0;
+}
+
+.sidebar.right {
+  right: 0;
+}
+
+.sidebar iframe {
+  width: 90%;
+  height: 100%;
+  border: none;
+}
+
+.side-bar {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 20000;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  box-shadow: 0 0 10px #ddd;
+  height: 100vh;
+  width: 70%;
+}
+
+.side-bar ul {
+  list-style: none;
+  padding-top: 20px;
+  margin-left: 5px;
+}
+
+.side-bar li {
+  margin-bottom: 10px;
+  border: 0.1px solid #fff;
+  padding: 10px;
+  border-end-end-radius: 20px;
+  background-color: #fff;
+  box-shadow: 0 0 10px #ddd;
+  margin-right: 3px;
+}
+
+.side-bar .active {
+  color: #ddd;
+}
+
+.side-bar a {
+  text-decoration: none;
+  color: var(--primary-color);
+  padding-right: 10%;
+}
+
+.side-bar i {
+  margin-right: 20px;
+}
+
+.profile-sec {
+  width: 100%;
+  border-bottom: 0.1px solid #fff;
+  padding-bottom: 5px;
+  display: flex;
+  box-shadow: 0 0 10px #ddd;
+}
+
+.profile-sec img {
+  border: 0.1px solid #fff;
+  box-shadow: 0 0 10px #ddd;
+  border-radius: 100%;
+  width: 45px;
+  height: 45px;
+  object-fit: cover;
+  margin-left: 5px;
+  margin-top: 10px;
+}
+
+.menu-icon {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 20px;
+  height: 15px;
+  cursor: pointer;
+  position: fixed;
+  z-index: 2;
+  margin-bottom: 9px;
+  margin-left: 20px;
+  margin-top: 20px;
+}
+
+.menu-icon div {
+  width: 100%;
+  height: 2px;
+  background-color: var(--primary-color);
+  border-radius: 2px;
+  text-align: center;
+}
+
+.category-filter {
+  top: 70px;
+  z-index: 80;
+  background: #fff;
+  width: 100vw;
+  padding: 10px 0;
+  border-bottom: 1px solid #eee;
+  margin: 0 auto;
+}
+
+.category-scroll {
+  display: inline-flex;
+  overflow-x: auto;
+  gap: 8px;
+  box-sizing: border-box;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.category-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.category-btn {
+  flex: 0 auto;
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: 1px solid #e0e0e0;
+  background-color: #f8f9fa;
+  color: #333;
+  font-size: 12px;
+  font-family: 'Poppins', sans-serif;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.category-btn:hover {
+  background-color: #e9ecef;
+}
+
+.category-btn.active {
+  background-color: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
+.category-scroll-wrapper {
+  display: flex;
+  justify-content: center;
+  overflow-x: auto;
+}
+
+.create-post-container {
+  text-align: center;
+  position: relative;
+  align-items: center;
+  margin: 0 auto;
+  box-shadow: 0 0 10px #ddd;
+  padding: 10px 0;
+  border: 1px solid #fff;
+}
+
+.post-input {
+  margin-bottom: 0;
+  border: 1px solid white;
+  width: 48.5%;
+  height: 40px;
+  margin-top: 70px;
+  box-shadow: 0 0 10px #ddd;
+  border-radius: 30px;
+  color: grey;
+}
+
+/* Responsive Design */
+@media (min-width: 900px) {
+  .main-layout {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    padding: 10px;
+  }
+
+  .sidebar {
+    display: block;
+    width: 200px;
+    height: calc(100vh - 80px);
+    position: fixed;
+    top: 100px;
+    z-index: 1;
+    padding-top: 40px;
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    background: #fff;
+    overflow: hidden;
+  }
+
+  /* Left sidebar */
+  .sidebar.left {
+    left: 0;
+  }
+
+  /* Right sidebar */
+  .sidebar.right {
+    right: 0;
+  }
+
+  .feed {
+    flex: 1;
+    max-width: 600px;
+    min-width: 300px;
+  }
+
+  .category-scroll-wrapper {
+    margin: 0 auto;
+  }
+
+  .category-filter {
+  }
+}
+
+@media (max-width: 899px) {
+  .sidebar {
+    display: none;
+  }
+  .feed {
+    padding: 10px;
+  }
+}

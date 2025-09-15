@@ -170,7 +170,17 @@ router.post(
   async (req, res) => {
     let tempFiles = [];
     try {
-      const { description, title, productCondition, location, category, price, postType = 'regular', productLink } = req.body;
+      const { 
+        description, 
+        title, 
+        productCondition, 
+        location, 
+        category, 
+        price, 
+        postType = 'regular', 
+        productLink,
+        quantity // 🆕 Added quantity from request body
+      } = req.body;
       const userId = req.user.userId;
 
       logger.info(`Starting post creation for user ${userId}, type: ${postType}`);
@@ -181,7 +191,7 @@ router.post(
         return res.status(404).json({ message: 'User not found' });
       }
 
-      const validCategories = ['electronics', 'fashion', 'home', 'vehicles', 'music', 'others'];
+      const validCategories = ['electronics', 'fashion', 'home', 'vehicles', 'music', 'books', 'food_items', 'others'];
       if (!validCategories.includes(category)) {
         logger.warn(`Invalid category ${category} by user ${userId}`);
         return res.status(400).json({ message: 'Invalid category' });
@@ -251,6 +261,26 @@ router.post(
           });
         }
 
+        // 🆕 Validate quantity for regular posts
+        let quantity = 1; // Default quantity
+        if (quantity !== undefined && quantity !== null && quantity !== '') {
+          quantity = parseInt(quantity, 10);
+          
+          if (isNaN(quantity) || quantity < 0 || !Number.isInteger(quantity)) {
+            logger.warn(`Invalid quantity ${quantity} by user ${userId}`);
+            return res.status(400).json({
+              message: 'Quantity must be a non-negative integer'
+            });
+          }
+          
+          if (quantity > 10000) { // Reasonable upper limit
+            logger.warn(`Quantity too high ${quantity} by user ${userId}`);
+            return res.status(400).json({
+              message: 'Quantity cannot exceed 10,000'
+            });
+          }
+        }
+
         const photoFile = req.files.photo[0];
         if (isProduction) {
           photoUrl = photoFile.path;
@@ -258,11 +288,15 @@ router.post(
           photoUrl = await uploadToCloudinary(photoFile.path, 'image');
           tempFiles.push(photoFile.path);
         }
+
+        // 🆕 Log quantity info
+        logger.info(`Creating regular post with quantity: ${quantity} for user ${userId}`);
       } else {
         logger.warn(`Invalid postType ${postType} by user ${userId}`);
         return res.status(400).json({ message: 'Invalid post type' });
       }
 
+      // 🆕 Create post with quantity support
       const newPost = new Post({
         postType,
         title: sanitizedTitle,
@@ -275,28 +309,55 @@ router.post(
         createdAt: new Date(),
         likes: [],
         ...(postType === 'video_ad'
-          ? { video: videoUrl, productLink }
+          ? { 
+              video: videoUrl, 
+              productLink 
+            }
           : {
               photo: photoUrl,
               location,
               productCondition,
-              price: Number(price)
+              price: Number(price),
+              quantity: quantity // 🆕 Include quantity for regular posts
             }
         ),
       });
 
       await newPost.save();
-      logger.info(`Post created by user ${userId}: ${newPost._id}`);
+      
+      // 🆕 Enhanced logging with quantity and sold status
+      const logMessage = postType === 'regular' 
+        ? `Post created by user ${userId}: ${newPost._id} (quantity: ${newPost.quantity}, isSold: ${newPost.isSold}, stockStatus: ${newPost.stockStatus})`
+        : `Video ad created by user ${userId}: ${newPost._id}`;
+      
+      logger.info(logMessage);
 
       // Simplified notification system
       await notifyFollowersOfNewPost(newPost, user, req);
 
+      // 🆕 Enhanced response with quantity info
+      const responsePost = {
+        ...newPost.toObject(),
+        stockStatus: newPost.stockStatus, // Include virtual field
+      };
+
       res.status(201).json({
         message: 'Post created successfully',
-        post: newPost
+        post: responsePost
       });
     } catch (error) {
       logger.error(`Post creation error for user ${req.user?.userId}: ${error.message}`);
+      
+      // 🆕 Enhanced error handling for quantity-specific errors
+      if (error.name === 'ValidationError') {
+        const quantityError = error.errors.quantity;
+        if (quantityError) {
+          return res.status(400).json({
+            message: quantityError.message || 'Invalid quantity value'
+          });
+        }
+      }
+      
       res.status(500).json({
         message: `Server error: ${error.message}`
       });
@@ -358,13 +419,22 @@ async function notifyFollowersOfNewPost(newPost, user, req) {
           continue;
         }
 
+        // 🆕 Enhanced notification message with quantity info for regular posts
+        let notificationMessage = `${user.firstName} ${user.lastName} created a new post you might like to check out.`;
+        
+        if (newPost.postType === 'regular' && newPost.quantity > 1) {
+          notificationMessage = `${user.firstName} ${user.lastName} listed ${newPost.quantity} ${newPost.title} - check it out!`;
+        } else if (newPost.postType === 'regular') {
+          notificationMessage = `${user.firstName} ${user.lastName} listed "${newPost.title}" - check it out!`;
+        }
+
         // Create and save notification - exact same pattern as like notification
         const notification = new Notification({
           userId: followerId,
           senderId: user._id,
           type: 'new_post',
           postId: newPost._id,
-          message: `${user.firstName} ${user.lastName} created a new post you might like to check out.`,
+          message: notificationMessage,
           createdAt: new Date()
         });
 
@@ -375,7 +445,7 @@ async function notifyFollowersOfNewPost(newPost, user, req) {
         await sendNotificationToUser(
           followerId.toString(),
           'New Post',
-          `${user.firstName} ${user.lastName} created a new post you might like to check out.`,
+          notificationMessage,
           { type: 'new_post', postId: newPost._id.toString() },
           req.io
         );
@@ -404,7 +474,7 @@ async function notifyFollowersOfNewPost(newPost, user, req) {
   router.get('/post', async (req, res) => {
     try {
       const { category } = req.query;
-      const validCategories = ['electronics', 'fashion', 'home', 'vehicles', 'music', 'others'];
+      const validCategories = ['electronics', 'fashion', 'home', 'vehicles', 'music',  'books', 'food_items', 'others'];
       const categoryFilter = category && validCategories.includes(category) ? { category } : {};
 
       let loggedInUserId = null;

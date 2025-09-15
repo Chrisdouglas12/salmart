@@ -1,0 +1,242 @@
+.checkout-product-btn {
+  background: #fff;
+  color: #28a745;
+  border: solid 1px #fff;
+  border-bottom: #28a745;
+  box-shadow: 0 0 10px #ddd;
+  padding: 8px 16px;
+  border-radius: 8px;
+  width: 100%;
+  font-size: 14px;
+  margin-top: 8px;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.1s ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 40px;
+}
+
+.checkout-product-btn i {
+  margin-right: 8px;
+}
+
+.buy-now-button:disabled {
+  background: #f0fdf4;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+  cursor: not-allowed;
+  opacity: 0.9;
+}
+
+.buy-now-button button {
+  background: #28a745;
+  color: #fff;
+}
+
+.thumbnail {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 5px;
+  border: 2px solid #ddd;
+  cursor: pointer;
+}
+
+.gallery-image {
+  width: 100%;
+  max-width: 700px;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+.profile-pic {
+  position: fixed;
+  z-index: 5;
+  width: 40px;
+  height: 40px;
+  border: 0.1px solid #F4F1F8;
+  margin-left: 60px;
+  border-radius: 50%;
+  margin-top: 10px;
+}
+
+.profile-pic a {
+  display: inline-block;
+  padding: 10px;
+  color: white;
+  background-color: var(--primary-color);
+  border-radius: 5px;
+  font-size: 16px;
+  font-weight: bold;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.profile-pic a:hover {
+  background-color: var(--primary-color);
+  transform: scale(1.05);
+}
+
+.profile-pic a:active {
+  background-color: var(--primary-color);
+  transform: scale(0.98);
+}
+
+#send-msg {
+  position: fixed;
+  bottom: 0;
+  display: block;
+}
+
+#Username {
+  margin-left: 80px;
+  margin-top: -50px;
+  font-weight: bold;
+}
+
+#pic {
+  width: 60px;
+  border: 1px solid black;
+  box-shadow: 0 0 10px #ddd;
+  border-radius: 50%;
+}
+
+.toast-message {
+  position: fixed;
+  bottom: 50px;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  background-color: var(--primary-color);
+  color: white;
+  padding: 12px 25px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: bold;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  opacity: 0;
+  transition: opacity 0.5s ease, bottom 0.5s ease;
+  z-index: 1000;
+  max-width: 90%;
+  word-wrap: break-word;
+  visibility: hidden;
+  font-family: 'Poppins', sans-serif;
+}
+
+.toast-message.show {
+  opacity: 1;
+  bottom: 70px;
+  visibility: visible;
+}
+
+.user-suggestions-wrapper {
+  margin-bottom: 20px;
+  padding: 15px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.user-suggestions-wrapper h3 {
+  font-size: 1.1em;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.user-suggestions-row {
+  display: flex;
+  overflow-x: auto;
+  gap: 15px;
+  padding-bottom: 10px;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.user-suggestions-row::-webkit-scrollbar {
+  display: none;
+}
+
+.user-suggestion-card {
+  flex: 0 0 auto;
+  width: 150px;
+  text-align: center;
+  scroll-snap-align: start;
+  background-color: #f0f2f5;
+  padding: 10px;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.user-suggestion-card .user-info-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  width: 100%;
+}
+
+.user-suggestion-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 8px;
+  border: 2px solid #ddd;
+}
+
+.user-suggestion-name {
+  font-weight: bold;
+  margin-bottom: 5px;
+  color: #333;
+  font-size: 0.9em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+}
+
+.user-suggestion-follow-btn {
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 0.85em;
+  width: 90%;
+  margin-top: 5px;
+  transition: background-color 0.2s ease;
+}
+
+.user-suggestion-follow-btn:hover {
+  background-color: #0056b3;
+}
+
+.user-suggestion-follow-btn:disabled {
+  background-color: #fff;
+  cursor: not-allowed;
+}
+
+/* Basic styling for images during lazy loading */
+img.lazy-loading {
+  background-color: #f0f0f0;
+  transition: filter 0.5s ease-out;
+}
+
+img.lazy-loading.loaded {
+  opacity: 0;
+  animation: fadeIn 0.5s forwards;
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+  }
+}
