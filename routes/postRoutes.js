@@ -420,12 +420,12 @@ async function notifyFollowersOfNewPost(newPost, user, req) {
         }
 
         // 🆕 Enhanced notification message with quantity info for regular posts
-        let notificationMessage = `${user.firstName} ${user.lastName} created a new post you might like to check out.`;
+        let notificationMessage = `New listing from ${user.firstName} ${user.lastName}. you might be interested in it.`;
         
         if (newPost.postType === 'regular' && newPost.quantity > 1) {
-          notificationMessage = `${user.firstName} ${user.lastName} listed ${newPost.quantity} ${newPost.title} - check it out!`;
+          notificationMessage = `${user.firstName} ${user.lastName} listed ${newPost.quantity} ${newPost.title} - you might be interested in it.`;
         } else if (newPost.postType === 'regular') {
-          notificationMessage = `${user.firstName} ${user.lastName} listed "${newPost.title}" - check it out!`;
+          notificationMessage = `${user.firstName} ${user.lastName} listed "${newPost.title}" - you might be interested in it.!`;
         }
 
         // Create and save notification - exact same pattern as like notification
@@ -444,7 +444,7 @@ async function notifyFollowersOfNewPost(newPost, user, req) {
         // Send FCM notification - exact same pattern as like notification  
         await sendNotificationToUser(
           followerId.toString(),
-          'New Post',
+          'New Listing',
           notificationMessage,
           { type: 'new_post', postId: newPost._id.toString() },
           req.io
