@@ -451,7 +451,7 @@ function renderUserSuggestion(user) {
             <img class="user-suggestion-avatar" data-user-id="${user._id}" onerror="this.src='/default-avater.png'">
             <h5 class="user-suggestion-name">${escapeHtml(user.name)}</h5>
         </a>
-        <button class="follow-button user-suggestion-follow-btn" data-user-id="${user._id}" ${isFollowingUser ? 'disabled' : ''}>
+        <button class="follow-button user-suggestion-follow-btn" data-user-id="${user._id}" ${isFollowingUser ? 'disabled' : ''} style="color: #28a746; margin-top: 5px">
             ${isFollowingUser ? '<i class="fas fa-user-check"></i> Following' : '<i class="fas fa-user-plus"></i> Follow'}
         </button>
     `;

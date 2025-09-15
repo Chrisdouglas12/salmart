@@ -252,9 +252,10 @@
 }
 
 .follow-button {
-  color: var(--primary-color);
+  color: #28a745;
   cursor: pointer;
   border: none;
+  background-color: #fff;
   font-size: 13px;
   font-weight: 700;
   transition: background-color 0.2s ease, color 0.2s ease;
@@ -262,15 +263,12 @@
   margin-top: -10px;
 }
 
-.follow-button:hover {
-  background-color: #f3f8f1;
-  color: #FFFFFF;
-}
+
 
 .follow-button:disabled {
   background-color: #fff;
+  color: #28a745;
   cursor: not-allowed;
-  color: var(--primary-color);
 }
 
 .post-header .follow-button[disabled] {

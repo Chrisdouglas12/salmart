@@ -189,17 +189,27 @@
 .promoted-price {
   font-size: 1rem;
   font-weight: bold;
-  color: #e74c3c;
+  color: #ee5a24;
   margin-left: 0%;
 }
 
 .promoted-location {
-  font-size: 0.8rem;
-  color: #666;
+  font-size: 0.7rem;
+  color: #ee5a24;
+  background: #fff;
+  border: solid 1px #fff;
+  box-shadow: 0 0 10px #ddd;
+  padding: 5px;
+  border-radius: 6px;
   margin-left: 0%;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.promoted-location::before {
+  content: '📍';
+  font-size: 9px;
 }
 
 /* Promoted Actions */
@@ -216,13 +226,14 @@
 
 .promoted-cta-button {
   width: 49.9%;
-  background: #28a745;
-  color: white;
-  border: none;
-  padding: 00.7rem 1rem;
-  border-radius: 4px;
+  background: #fff;
+  color: #28a745;
+  border: solid 1px #fff;
+  padding: 00.7rem 0.8rem;
+  border-radius: 6px;
+  box-shadow: 0 0 10px #ddd;
   font-weight: 600;
-  margin: 0;
+  margin-top: -10px;
   font-size: 0.6rem;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -244,25 +255,37 @@
 }
 
 .promoted-quantity {
-  font-size: 13px;
-  color: #4CAF50;
+  font-size: 10px;
+  color: #ee5a24;
+  background: #fff;
+  border: solid 1px #fff;
+  box-shadow: 0 0 10px #ddd;
+  padding: 5px;
+  border-radius: 6px;
   font-weight: 500;
   margin: 5px 0;
   display: flex;
   align-items: center;
   gap: 5px;
+
+
+}
+
+.promoted-quantity {
+  animation: flicker 2s infinite;
+}
+
+@keyframes flicker {
+  0%, 100% { box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);; }
+  50% { box-shadow: 4px 4px 10px #ff4; }
 }
 
 .promoted-quantity::before {
   content: '📦';
-  font-size: 12px;
+  font-size: 9px;
 }
 
-.promoted-quantity[data-quantity="1"],
-.promoted-quantity[data-quantity="2"],
-.promoted-quantity[data-quantity="3"] {
-  color: #ff9800;
-}
+
 
 .promoted-quantity[data-quantity="0"] {
   color: #dc3545;

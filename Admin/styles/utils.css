@@ -1,9 +1,11 @@
+
+
+
 .checkout-product-btn {
   background: #fff;
   color: #28a745;
   border: solid 1px #fff;
   border-bottom: #28a745;
-  box-shadow: 0 0 10px #ddd;
   padding: 8px 16px;
   border-radius: 8px;
   width: 100%;
@@ -204,24 +206,23 @@
 
 .user-suggestion-follow-btn {
   background-color: #28a745;
-  color: white;
+  color: #28a745;
   border: none;
   border-radius: 5px;
   padding: 8px 12px;
   cursor: pointer;
   font-size: 0.85em;
   width: 90%;
-  margin-top: 5px;
+  margin-top: 10px;
   transition: background-color 0.2s ease;
 }
 
-.user-suggestion-follow-btn:hover {
-  background-color: #0056b3;
-}
+
 
 .user-suggestion-follow-btn:disabled {
   background-color: #fff;
   cursor: not-allowed;
+  color: #28a745;
 }
 
 /* Basic styling for images during lazy loading */
