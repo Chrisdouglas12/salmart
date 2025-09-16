@@ -12,7 +12,11 @@ const Review = require('../models/reviewSchema.js');
 const Report = require('../models/reportSchema.js'); // Added import
 const verifyToken = require('../middleware/auths');
 const fs = require('fs');
+const Notification = require('../notificationSchema.js')
+const { sendNotificationToUser } = require('../services/notificationUtils.js')
+const NotificationService = require('../services/notificationService.js');
 const Message = require('../models/messageSchema.js');
+
 const path = require('path');
 const multer = require('multer');
 const cloudinary = require('cloudinary').v2;
