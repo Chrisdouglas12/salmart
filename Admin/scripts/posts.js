@@ -605,10 +605,12 @@ function createPromotedPostFiller() {
         flex: 0 0 auto;
         width: calc((100% / 5) - 12px);
         min-width: 200px;
-        background: #28a745;
+        background: #fff;
         border-radius: 8px;
         padding: 20px;
-        color: white;
+        color: #28a745;
+        border: solid 1px #fff;
+        box-shadow: 0 0 10px #ddd;
         text-align: center;
         display: flex;
         flex-direction: column;
@@ -625,7 +627,7 @@ function createPromotedPostFiller() {
             Explore trending products and find amazing deals
         </p>
         <button style="
-            background: rgba(255,255,255,0.2);
+            background: #28a746;
             border: 1px solid rgba(255,255,255,0.3);
             color: white;
             padding: 8px 16px;
