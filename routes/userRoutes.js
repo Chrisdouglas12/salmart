@@ -777,39 +777,98 @@ router.get('/user/:userId', async (req, res) => {
   }
 });
 
-// Follow a user
+// Follow a user with push notifications
 router.post('/follow/:id', verifyToken, async (req, res) => {
   try {
     const userId = req.user.userId;
     const targetUserId = req.params.id;
+    
+    // Basic validation
     if (!userId || !targetUserId) {
       return res.status(400).json({ message: 'Invalid user ID' });
     }
+    
     if (userId === targetUserId) {
       return res.status(400).json({ message: "You can't follow yourself" });
     }
+
+    // Find both users
     const user = await User.findById(userId);
     const targetUser = await User.findById(targetUserId);
+    
     if (!user || !targetUser) {
       return res.status(404).json({ message: 'User not found' });
     }
+
     const isFollowing = user.following.includes(targetUserId);
+
     if (isFollowing) {
+      // Unfollow logic
       user.following.pull(targetUserId);
       targetUser.followers.pull(userId);
+      
+      logger.info(`User ${userId} unfollowed user ${targetUserId}`);
     } else {
+      // Follow logic
       user.following.push(targetUserId);
       targetUser.followers.push(userId);
+      
+      logger.info(`User ${userId} followed user ${targetUserId}`);
+
+      // 🔔 NEW: Send follow notification
+      try {
+        // Create notification record in database
+        const notification = new Notification({
+          userId: targetUserId, // The person being followed receives the notification
+          type: 'follow',
+          senderId: userId, // The person doing the following
+          message: `${user.firstName} ${user.lastName} started following you`,
+          createdAt: new Date(),
+        });
+        
+        await notification.save();
+        logger.info(`Created follow notification for user ${targetUserId} from user ${userId}`);
+
+        // Send push notification
+        await sendNotificationToUser(
+          targetUserId.toString(),
+          'New Follower',
+          `${user.firstName} ${user.lastName} started following you`,
+          { 
+            type: 'follow', 
+            followerId: userId.toString(),
+            followerName: `${user.firstName} ${user.lastName}`,
+            followerProfilePicture: user.profilePicture || null
+          },
+          req.io,
+          null, // imageUrl
+          user.profilePicture // profilePictureUrl
+        );
+
+        // Trigger notification count update
+        await NotificationService.triggerCountUpdate(req.io, targetUserId.toString());
+        
+        logger.info(`Sent follow notification to user ${targetUserId}`);
+      } catch (notificationError) {
+        // Log notification error but don't fail the follow action
+        logger.error(`Failed to send follow notification: ${notificationError.message}`);
+      }
     }
+
+    // Save both users
     await user.save();
     await targetUser.save();
+
     res.status(200).json({
       success: true,
       message: isFollowing ? 'User unfollowed successfully' : 'User followed successfully',
       isFollowing: !isFollowing,
+      followerCount: targetUser.followers.length,
+      followingCount: user.following.length
     });
+
   } catch (error) {
-    console.error('Follow error:', error.message);
+    logger.error('Follow error:', error.message);
     res.status(500).json({ message: 'Server error' });
   }
 });

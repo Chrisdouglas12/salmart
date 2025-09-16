@@ -153,7 +153,7 @@ class SalmartCache {
     }
 
     async _updatePostInAllCategories(postId, updates) {
-        const categories = ['all', 'electronics', 'fashion', 'home', 'sports', 'books', 'automotive'];
+        const categories = ['all', 'electronics', 'fashion', 'food_items', 'others', 'books', 'music'];
         
         if (updates.quantity !== undefined) {
         updates.isSold = updates.quantity < 1;

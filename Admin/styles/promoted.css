@@ -42,7 +42,6 @@
   position: relative;
   overflow-x: auto;
   overflow-y: hidden;
-  margin-bottom: 1rem;
   display: none;
   background: #fff;
   border-radius: 15px;
@@ -281,7 +280,7 @@
 }
 
 @keyframes gentlePulse {
-  0%, 100% { transform: scale(1); }
+  0%, 100% { transform: scale }
   50% { transform: scale(1.02); }
 }
 

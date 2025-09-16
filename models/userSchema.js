@@ -1,5 +1,9 @@
 const mongoose = require('mongoose');
 
+// Define valid enum values as constants for reuse
+const VALID_PLATFORMS = ['web', 'ios', 'android'];
+const VALID_DEVICE_TYPES = ['fcm', 'expo'];
+
 const userSchema = new mongoose.Schema({
   // Basic Info
   firstName: { type: String, required: true, trim: true },
@@ -66,7 +70,7 @@ const userSchema = new mongoose.Schema({
     promotion: { type: Boolean, default: true },
   },
 
-  // 🔧 FIXED: Updated FCM tokens with proper validation and enum handling
+  // 🔧 ENHANCED: FCM tokens with better validation and platform detection
   fcmTokens: [{
     token: { 
       type: String,
@@ -74,7 +78,7 @@ const userSchema = new mongoose.Schema({
       trim: true,
       validate: {
         validator: function(v) {
-          // Basic validation only - must be non-empty string with reasonable length
+          // Basic validation - must be non-empty string with reasonable length
           return v && typeof v === 'string' && v.length >= 10 && v.length <= 500;
         },
         message: 'Token must be a valid string between 10-500 characters'
@@ -82,13 +86,48 @@ const userSchema = new mongoose.Schema({
     }, 
     platform: { 
       type: String, 
-      enum: ['web', 'ios', 'android'], 
-      default: 'web' 
+      enum: {
+        values: VALID_PLATFORMS,
+        message: 'Platform must be one of: web, ios, android'
+      },
+      default: 'web',
+      // 🔧 NEW: Custom setter to handle unknown values gracefully
+      set: function(value) {
+        // If the value is not valid, try to normalize it
+        if (!value || !VALID_PLATFORMS.includes(value.toLowerCase())) {
+          // Try to detect from the token or default to web
+          const token = this.token;
+          if (token && typeof token === 'string') {
+            if (token.startsWith('ExponentPushToken[')) {
+              return 'android'; // Expo tokens are typically mobile
+            }
+          }
+          return 'web'; // Safe default
+        }
+        return value.toLowerCase();
+      }
     },
     deviceType: { 
       type: String, 
-      enum: ['fcm', 'expo'], 
-      default: 'fcm' 
+      enum: {
+        values: VALID_DEVICE_TYPES,
+        message: 'Device type must be one of: fcm, expo'
+      },
+      default: 'fcm',
+      // 🔧 NEW: Custom setter to auto-detect device type
+      set: function(value) {
+        // Auto-detect if not provided or invalid
+        if (!value || !VALID_DEVICE_TYPES.includes(value)) {
+          const token = this.token;
+          if (token && typeof token === 'string') {
+            if (token.startsWith('ExponentPushToken[') || token.startsWith('expo-')) {
+              return 'expo';
+            }
+          }
+          return 'fcm'; // Default
+        }
+        return value;
+      }
     },
     deviceId: { type: String }, 
     userAgent: { type: String }, 
@@ -124,7 +163,7 @@ const userSchema = new mongoose.Schema({
   }
 });
 
-// 🔧 FIXED: Enhanced pre-save hook with proper platform validation
+// 🔧 ENHANCED: Pre-save hook with comprehensive platform normalization
 userSchema.pre('save', function (next) {
   const toObjectIdStr = id => id.toString();
 
@@ -150,57 +189,70 @@ userSchema.pre('save', function (next) {
     this.userRelevanceScores = Array.from(uniqueMap.values());
   }
 
-  // 🔧 FIXED: Enhanced token validation with platform normalization
+  // 🔧 ENHANCED: Token validation with platform normalization and cleanup
   if (Array.isArray(this.fcmTokens)) {
     const validTokens = new Map();
-    const validPlatforms = ['web', 'ios', 'android'];
-    const validDeviceTypes = ['fcm', 'expo'];
     
     this.fcmTokens.forEach(tokenObj => {
-      // Basic checks only - let schema validation handle format
-      if (tokenObj && tokenObj.token && typeof tokenObj.token === 'string' && tokenObj.token.trim()) {
-        const cleanToken = tokenObj.token.trim();
-        
-        // Normalize platform - fix invalid values
-        let platform = tokenObj.platform;
-        if (!platform || !validPlatforms.includes(platform)) {
-          // Try to detect platform from user agent or token format
-          if (tokenObj.userAgent) {
-            const ua = tokenObj.userAgent.toLowerCase();
-            if (ua.includes('iphone') || ua.includes('ios') || ua.includes('safari')) {
-              platform = 'ios';
-            } else if (ua.includes('android') || ua.includes('chrome mobile')) {
-              platform = 'android';
-            } else {
-              platform = 'web';
-            }
-          } else {
-            platform = 'web'; // Default fallback
-          }
-        }
-
-        // Normalize device type
-        let deviceType = tokenObj.deviceType;
-        if (!deviceType || !validDeviceTypes.includes(deviceType)) {
-          // Auto-detect device type from token format
-          if (cleanToken.startsWith('ExponentPushToken[') || cleanToken.startsWith('expo-')) {
-            deviceType = 'expo';
-          } else {
-            deviceType = 'fcm';
-          }
-        }
-        
-        // Use token as key to automatically deduplicate
-        validTokens.set(cleanToken, {
-          token: cleanToken,
-          platform: platform,
-          deviceType: deviceType,
-          deviceId: tokenObj.deviceId || null,
-          userAgent: tokenObj.userAgent || null,
-          lastUpdated: new Date(),
-          isActive: tokenObj.isActive !== false
-        });
+      // Skip invalid token objects
+      if (!tokenObj || !tokenObj.token || typeof tokenObj.token !== 'string') {
+        return;
       }
+
+      const cleanToken = tokenObj.token.trim();
+      
+      // Skip empty or very short tokens
+      if (cleanToken.length < 10) {
+        return;
+      }
+
+      // 🔧 NEW: Comprehensive platform detection and normalization
+      let platform = tokenObj.platform;
+      
+      // Handle unknown or invalid platforms
+      if (!platform || !VALID_PLATFORMS.includes(platform)) {
+        // Try to detect from user agent first
+        if (tokenObj.userAgent) {
+          const ua = tokenObj.userAgent.toLowerCase();
+          if (ua.includes('iphone') || ua.includes('ios') || ua.includes('safari')) {
+            platform = 'ios';
+          } else if (ua.includes('android') || ua.includes('chrome mobile')) {
+            platform = 'android';
+          } else if (ua.includes('chrome') || ua.includes('firefox') || ua.includes('edge')) {
+            platform = 'web';
+          } else {
+            platform = 'web'; // Default for unknown user agents
+          }
+        } else {
+          // Try to detect from token format
+          if (cleanToken.startsWith('ExponentPushToken[')) {
+            platform = 'android'; // Expo tokens are typically mobile
+          } else {
+            platform = 'web'; // Safe default
+          }
+        }
+      }
+
+      // 🔧 NEW: Auto-detect device type
+      let deviceType = tokenObj.deviceType;
+      if (!deviceType || !VALID_DEVICE_TYPES.includes(deviceType)) {
+        if (cleanToken.startsWith('ExponentPushToken[') || cleanToken.startsWith('expo-')) {
+          deviceType = 'expo';
+        } else {
+          deviceType = 'fcm';
+        }
+      }
+      
+      // Use token as key to automatically deduplicate
+      validTokens.set(cleanToken, {
+        token: cleanToken,
+        platform: platform,
+        deviceType: deviceType,
+        deviceId: tokenObj.deviceId || null,
+        userAgent: tokenObj.userAgent || null,
+        lastUpdated: new Date(),
+        isActive: tokenObj.isActive !== false
+      });
     });
     
     this.fcmTokens = Array.from(validTokens.values());
@@ -216,7 +268,7 @@ userSchema.pre('save', function (next) {
   next();
 });
 
-// 🔧 ENHANCED: Improved helper methods with better validation
+// 🔧 ENHANCED: Helper methods with better validation and platform handling
 userSchema.methods.addToken = function(tokenData) {
   if (typeof tokenData === 'string') {
     tokenData = { token: tokenData };
@@ -227,14 +279,13 @@ userSchema.methods.addToken = function(tokenData) {
   }
 
   const cleanToken = tokenData.token.trim();
-  const validPlatforms = ['web', 'ios', 'android'];
 
   // Remove existing token if it exists
   this.fcmTokens = this.fcmTokens.filter(t => t.token !== cleanToken);
   
-  // Normalize platform
+  // 🔧 ENHANCED: Smart platform detection
   let platform = tokenData.platform;
-  if (!platform || !validPlatforms.includes(platform)) {
+  if (!platform || !VALID_PLATFORMS.includes(platform)) {
     // Try to detect from user agent
     if (tokenData.userAgent) {
       const ua = tokenData.userAgent.toLowerCase();
@@ -246,13 +297,18 @@ userSchema.methods.addToken = function(tokenData) {
         platform = 'web';
       }
     } else {
-      platform = 'web'; // Safe default
+      // Try to detect from token format
+      if (cleanToken.startsWith('ExponentPushToken[')) {
+        platform = 'android'; // Expo tokens are typically mobile
+      } else {
+        platform = 'web'; // Safe default
+      }
     }
   }
 
-  // Detect device type if not provided
+  // Auto-detect device type if not provided
   let deviceType = tokenData.deviceType;
-  if (!deviceType) {
+  if (!deviceType || !VALID_DEVICE_TYPES.includes(deviceType)) {
     if (cleanToken.startsWith('ExponentPushToken[') || cleanToken.startsWith('expo-')) {
       deviceType = 'expo';
     } else {
@@ -282,28 +338,68 @@ userSchema.methods.removeToken = function(token) {
   return this.save();
 };
 
-userSchema.methods.getActiveTokens = function(deviceType = null) {
+userSchema.methods.getActiveTokens = function(deviceType = null, platform = null) {
   let tokens = this.fcmTokens.filter(t => t.isActive && t.token);
   
   if (deviceType) {
     tokens = tokens.filter(t => t.deviceType === deviceType);
   }
   
+  if (platform) {
+    tokens = tokens.filter(t => t.platform === platform);
+  }
+  
   return tokens;
 };
 
-userSchema.methods.getActiveFCMTokens = function() {
-  return this.getActiveTokens('fcm').map(t => t.token);
+userSchema.methods.getActiveFCMTokens = function(platform = null) {
+  return this.getActiveTokens('fcm', platform).map(t => t.token);
 };
 
-userSchema.methods.getActiveExpoTokens = function() {
-  return this.getActiveTokens('expo').map(t => t.token);
+userSchema.methods.getActiveExpoTokens = function(platform = null) {
+  return this.getActiveTokens('expo', platform).map(t => t.token);
 };
 
-// 🔧 ADDED: Method to clean up invalid tokens for existing users
+// 🔧 NEW: Method to fix existing tokens with unknown platforms
+userSchema.methods.fixUnknownPlatforms = function() {
+  let fixed = false;
+  
+  this.fcmTokens.forEach(tokenObj => {
+    if (!VALID_PLATFORMS.includes(tokenObj.platform)) {
+      const oldPlatform = tokenObj.platform;
+      
+      // Try to detect from user agent
+      if (tokenObj.userAgent) {
+        const ua = tokenObj.userAgent.toLowerCase();
+        if (ua.includes('iphone') || ua.includes('ios') || ua.includes('safari')) {
+          tokenObj.platform = 'ios';
+        } else if (ua.includes('android') || ua.includes('chrome mobile')) {
+          tokenObj.platform = 'android';
+        } else {
+          tokenObj.platform = 'web';
+        }
+      } else {
+        // Try to detect from token format
+        if (tokenObj.token && tokenObj.token.startsWith('ExponentPushToken[')) {
+          tokenObj.platform = 'android';
+        } else {
+          tokenObj.platform = 'web';
+        }
+      }
+      
+      tokenObj.lastUpdated = new Date();
+      fixed = true;
+      
+      console.log(`Fixed platform from "${oldPlatform}" to "${tokenObj.platform}" for user ${this._id}`);
+    }
+  });
+  
+  return fixed ? this.save() : Promise.resolve(this);
+};
+
+// 🔧 ENHANCED: Comprehensive token cleanup method
 userSchema.methods.cleanupTokens = function() {
-  const validPlatforms = ['web', 'ios', 'android'];
-  const validDeviceTypes = ['fcm', 'expo'];
+  const originalCount = this.fcmTokens.length;
   
   this.fcmTokens = this.fcmTokens.filter(tokenObj => {
     // Remove tokens with invalid basic structure
@@ -311,13 +407,30 @@ userSchema.methods.cleanupTokens = function() {
       return false;
     }
     
+    // Remove very short tokens
+    if (tokenObj.token.trim().length < 10) {
+      return false;
+    }
+    
     // Fix platform if invalid
-    if (!validPlatforms.includes(tokenObj.platform)) {
-      tokenObj.platform = 'web';
+    if (!VALID_PLATFORMS.includes(tokenObj.platform)) {
+      // Try to detect and fix
+      if (tokenObj.userAgent) {
+        const ua = tokenObj.userAgent.toLowerCase();
+        if (ua.includes('iphone') || ua.includes('ios') || ua.includes('safari')) {
+          tokenObj.platform = 'ios';
+        } else if (ua.includes('android') || ua.includes('chrome mobile')) {
+          tokenObj.platform = 'android';
+        } else {
+          tokenObj.platform = 'web';
+        }
+      } else {
+        tokenObj.platform = 'web';
+      }
     }
     
     // Fix device type if invalid
-    if (!validDeviceTypes.includes(tokenObj.deviceType)) {
+    if (!VALID_DEVICE_TYPES.includes(tokenObj.deviceType)) {
       if (tokenObj.token.startsWith('ExponentPushToken[') || tokenObj.token.startsWith('expo-')) {
         tokenObj.deviceType = 'expo';
       } else {
@@ -328,6 +441,11 @@ userSchema.methods.cleanupTokens = function() {
     return true;
   });
   
+  const cleanedCount = originalCount - this.fcmTokens.length;
+  if (cleanedCount > 0) {
+    console.log(`Cleaned up ${cleanedCount} invalid tokens for user ${this._id}`);
+  }
+  
   return this.save();
 };
 
@@ -337,7 +455,7 @@ userSchema.index({ interests: 1 });
 userSchema.index({ 'fcmTokens.token': 1 });
 userSchema.index({ 'fcmTokens.lastUpdated': 1 });
 userSchema.index({ 'fcmTokens.deviceType': 1 });
-// Email index is automatically created by unique: true, so we don't need to add it here
+userSchema.index({ 'fcmTokens.platform': 1 });
 userSchema.index({ firstName: 1, lastName: 1 });
 userSchema.index({ createdAt: -1 });
 

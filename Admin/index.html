@@ -58,13 +58,26 @@
   
     <title>Home | Salmart</title>
     
-    <link rel="manifest" href="/manifest.json" />
-<meta name="theme-color" content="#ffffff">
-<meta name="msapplication-navbutton-color" content="#ffffff">
-<meta name="nav-color" content="#ffffff">
+<!-- PWA Manifest -->
+<link rel="manifest" href="/manifest.json">
+
+<!-- Theme colors -->
+<meta name="theme-color" content="#00A86B"> <!-- brand green -->
+<meta name="msapplication-navbutton-color" content="#00A86B">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="color-scheme" content="light">
+
+<!-- Viewport (safe for iPhone X+ notch) -->
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<link rel="apple-touch-icon" href="/salmart-192x192.png" />
+
+<!-- iOS PWA support -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Salmart">
+
+<!-- App icons (iOS looks here, not manifest) -->
+<link rel="apple-touch-icon" sizes="192x192" href="/salmart-192x192.png">
+<link rel="apple-touch-icon" sizes="512x512" href="/salmart-512x512.png">
+<link rel="apple-touch-icon" sizes="1024x1024" href="/salmart-512x512.png">
        <link rel="stylesheet" href="./styles/utils.css">
     <link rel="stylesheet" href="./styles/main.css">
      <link rel="stylesheet" href="./styles/modals.css">
@@ -589,6 +602,8 @@ body.no-scroll {
             <button class="category-btn active" data-category="all"><i class="fas fa-layer-group"></i> All</button>
             <button class="category-btn" data-category="electronics"><i class="fas fa-tv"></i> Electronics</button>
             <button class="category-btn" data-category="fashion"><i class="fas fa-tshirt"></i> Fashion</button>
+             <button class="category-btn" data-category="books"><i class="fas fa-book-open"></i> Books</button>
+            <button class="category-btn" data-category="food"><i class="fas fa-utensils"></i> Food</button>
             <button class="category-btn" data-category="home"><i class="fas fa-tree"></i> Home & Garden</button>
             <button class="category-btn" data-category="vehicles"><i class="fas fa-car"></i> Vehicles</button>
             <button class="category-btn" data-category="music"><i class="fas fa-guitar"></i> Music Gear</button>
