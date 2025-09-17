@@ -389,19 +389,20 @@
 
 .detail-label {
   font-size: 0.8em;
-  color: black;
+  color: #28a745;
   font-weight: 600px;
   text-transform: uppercase;
 }
 
 .detail-value {
   font-size: 0.8em;
-  color: #888;
-  font-weight: 600px;
+  color: black;
+  font-weight: 800px;
 }
 
 .price-value {
   color: #e44d3a;
+  font-weight: 700px;
 }
 
 .badge {
@@ -548,4 +549,156 @@
     width: 100%;
     border-radius: 0 !important;
   }
+}
+
+/* Enhanced Image Placeholder Styles */
+.image-placeholder {
+    position: relative;
+    width: 100%;
+    min-height: 300px; /* Changed from fixed height to min-height */
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.image-placeholder img {
+    position: relative; /* Changed from absolute to relative */
+    width: 100%;
+    height: auto; /* Let image maintain aspect ratio */
+    max-height: 400px;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+/* When image loads successfully */
+.image-placeholder.loaded {
+    border: none;
+    background: none;
+    min-height: auto; /* Remove min-height when loaded */
+    display: block; /* Change to block to let image dictate height */
+}
+
+/* Loading state */
+.image-placeholder.loading {
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+    border-color: #2196f3;
+}
+
+.image-placeholder.loading::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    animation: shimmer 1.5s infinite;
+}
+
+/* Error state - shows structured placeholder instead of broken image */
+.image-placeholder.error {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-color: #ced4da;
+}
+
+/* Placeholder content structure */
+.placeholder-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: #6c757d;
+    z-index: 2;
+    position: relative;
+}
+
+.placeholder-icon {
+    font-size: 2.5rem;
+    margin-bottom: 8px;
+    opacity: 0.6;
+}
+
+.placeholder-text {
+    font-size: 0.85rem;
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+
+.placeholder-subtext {
+    font-size: 0.75rem;
+    opacity: 0.7;
+}
+
+/* Loading spinner for placeholder */
+.loading-spinner {
+    width: 24px;
+    height: 24px;
+    border: 2px solid #e9ecef;
+    border-top: 2px solid #2196f3;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 8px;
+}
+
+/* Shimmer animation */
+@keyframes shimmer {
+    0% { left: -100%; }
+    100% { left: 100%; }
+}
+
+/* Spinner animation */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Hide actual image when there's an error but keep structure */
+.image-placeholder.error img,
+.image-placeholder.loading img {
+    opacity: 0;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* When image loads successfully */
+.image-placeholder.loaded {
+    border: none;
+    background: none;
+}
+
+.image-placeholder.loaded img {
+    opacity: 1 !important;
+}
+
+.image-placeholder.loaded .placeholder-content {
+    display: none !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .image-placeholder {
+        min-height: 160px;
+    }
+    
+    .placeholder-icon {
+        font-size: 2rem;
+    }
+    
+    .placeholder-text {
+        font-size: 0.8rem;
+    }
+}
+
+/* For very tall images, add a reasonable max-height */
+.image-placeholder.loaded img {
+    max-height: 70vh; /* Prevents extremely tall images from taking over */
 }

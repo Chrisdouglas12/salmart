@@ -194,7 +194,7 @@
 
 .promoted-location {
   font-size: 0.7rem;
-  color: #ee5a24;
+  color: #28a745;
   background: #fff;
   border: solid 1px #fff;
   box-shadow: 0 0 10px #ddd;
@@ -228,7 +228,7 @@
   background: #fff;
   color: #28a745;
   border: solid 1px #fff;
-  padding: 00.7rem 0.8rem;
+  padding: 10px;
   border-radius: 6px;
   box-shadow: 0 0 10px #ddd;
   font-weight: 600;
@@ -256,13 +256,13 @@
 
 
 
-.promoted-quantity{
-  font-size: 10px;
-  color: #ee5a24;
-  background: linear-gradient(-45deg, #ffeaa7, #f3f8f1, #f3f8f1, #fdcb6e);
+.promoted-quantity {
+  font-size: 0.6rem;
+  color: #fff;
+  background: linear-gradient(-45deg, #28a745, #34ce57, #40d869, #28a745);
   background-size: 400% 400%;
   border: none;
-  padding: 6px 10px;
+  padding: 5px;
   border-radius: 6px;
   font-weight: 600;
   margin: 5px 0;
@@ -270,7 +270,22 @@
   align-items: center;
   gap: 5px;
   animation: gradientShift 3s ease infinite, gentlePulse 2s ease-in-out infinite;
-  box-shadow: 0 2px 10px rgba(253, 121, 168, 0.3);
+  box-shadow: 0 2px 10px rgba(40, 167, 69, 0.4);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Add a subtle shine effect */
+.promoted-quantity::before {
+  content: '🔥';
+  font-size: 9px;
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  animation: shine 4s ease-in-out infinite;
 }
 
 @keyframes gradientShift {
@@ -280,14 +295,30 @@
 }
 
 @keyframes gentlePulse {
-  0%, 100% { transform: scale }
+  0%, 100% { 
+  }
   50% { transform: scale(1.02); }
 }
 
-.promoted-quantity::before {
-  content: '🔥';
-  font-size: 9px;
+@keyframes shine {
+  0% { left: -100%; }
+  50% { left: -100%; }
+  100% { left: 100%; }
 }
+
+/* Alternative version with more vibrant contrast */
+.promoted-quantity.vibrant {
+  background: linear-gradient(-45deg, #28a745, #20c997, #17a2b8, #28a745);
+  box-shadow: 0 2px 15px rgba(40, 167, 69, 0.5);
+}
+
+/* Hover effect for interactive elements */
+.promoted-quantity:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 20px rgba(40, 167, 69, 0.6);
+  animation-duration: 2s, 1.5s; /* Speed up animations on hover */
+}
+
 
 
 .promoted-quantity[data-quantity="0"] {

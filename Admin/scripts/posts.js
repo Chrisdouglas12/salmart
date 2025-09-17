@@ -46,59 +46,93 @@ class ImageLoader {
     }
 
     setSource(imgElement, src) {
-        const parentPlaceholder = imgElement.closest('.image-placeholder');
+    const parentPlaceholder = imgElement.closest('.image-placeholder');
 
-        if (!src) {
-            imgElement.src = '';
-            if (parentPlaceholder) {
-                parentPlaceholder.classList.add('error');
-                imgElement.style.display = 'none'; // Hide the broken image icon
-            }
-            imgElement.classList.remove('lazy-loading');
-            console.error(`Missing image source for element.`);
-            return;
-        }
-
-        // Show loading state
+    if (!src) {
         if (parentPlaceholder) {
-            parentPlaceholder.classList.add('loading');
+            parentPlaceholder.classList.add('error');
+            parentPlaceholder.innerHTML = `
+                <div class="placeholder-content">
+                    <div class="placeholder-icon">
+                        <i class="fas fa-image"></i>
+                    </div>
+                    <div class="placeholder-text">No Image Available</div>
+                    <div class="placeholder-subtext">Product photo not found</div>
+                </div>
+            `;
         }
-        imgElement.classList.add('lazy-loading');
-
-        // Check cache first
-        if (this.cache.has(src)) {
-            imgElement.src = this.cache.get(src);
-            imgElement.classList.remove('lazy-loading');
-            imgElement.classList.add('loaded');
-            if (parentPlaceholder) {
-                parentPlaceholder.classList.remove('loading');
-            }
-            return;
-        }
-
-        imgElement.src = src;
-
-        imgElement.onload = () => {
-            imgElement.classList.remove('lazy-loading');
-            imgElement.classList.add('loaded');
-            if (parentPlaceholder) {
-                parentPlaceholder.classList.remove('loading');
-            }
-            this.cache.set(src, src);
-        };
-
-        imgElement.onerror = () => {
-            imgElement.src = ''; // Prevents a broken image icon
-            imgElement.classList.remove('lazy-loading');
-            if (parentPlaceholder) {
-                parentPlaceholder.classList.remove('loading');
-                parentPlaceholder.classList.add('error');
-                imgElement.style.display = 'none'; // Hide the broken image icon
-            }
-            console.error(`Failed to load image: ${src}`);
-        };
+        imgElement.style.display = 'none';
+        imgElement.classList.remove('lazy-loading');
+        console.error('Missing image source for element.');
+        return;
     }
 
+    // Show loading state
+    if (parentPlaceholder) {
+        parentPlaceholder.classList.add('loading');
+        parentPlaceholder.classList.remove('error');
+    }
+    imgElement.classList.add('lazy-loading');
+
+    // Check cache first
+    if (this.cache.has(src)) {
+        imgElement.src = this.cache.get(src);
+        imgElement.style.opacity = '1';
+        imgElement.classList.remove('lazy-loading');
+        imgElement.classList.add('loaded');
+        if (parentPlaceholder) {
+            parentPlaceholder.classList.remove('loading');
+            parentPlaceholder.classList.add('loaded');
+            // Hide placeholder content when image loads
+            const placeholderContent = parentPlaceholder.querySelector('.placeholder-content');
+            if (placeholderContent) {
+                placeholderContent.style.display = 'none';
+            }
+        }
+        return;
+    }
+
+    imgElement.src = src;
+
+    imgElement.onload = () => {
+        imgElement.style.opacity = '1';
+        imgElement.classList.remove('lazy-loading');
+        imgElement.classList.add('loaded');
+        if (parentPlaceholder) {
+            parentPlaceholder.classList.remove('loading');
+            parentPlaceholder.classList.add('loaded');
+            // Hide placeholder content when image loads successfully
+            const placeholderContent = parentPlaceholder.querySelector('.placeholder-content');
+            if (placeholderContent) {
+                placeholderContent.style.display = 'none';
+            }
+        }
+        this.cache.set(src, src);
+    };
+
+    imgElement.onerror = () => {
+        imgElement.src = '';
+        imgElement.style.opacity = '0';
+        imgElement.classList.remove('lazy-loading');
+        if (parentPlaceholder) {
+            parentPlaceholder.classList.remove('loading');
+            parentPlaceholder.classList.add('error');
+            // Show error placeholder content
+            const placeholderContent = parentPlaceholder.querySelector('.placeholder-content');
+            if (placeholderContent) {
+                placeholderContent.innerHTML = `
+                    <div class="placeholder-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="placeholder-text">Failed to load image</div>
+                    <div class="placeholder-subtext">Check your connection</div>
+                `;
+                placeholderContent.style.display = 'flex';
+            }
+        }
+        console.error(`Failed to load image: ${src}`);
+    }
+    }
 
     handleIntersections(entries, observer) {
         entries.forEach(entry => {
@@ -511,7 +545,7 @@ function renderPromotedPost(post) {
             <h4 class="promoted-title">${escapeHtml(post.title || 'No description')}</h4>
             <p class="promoted-price">${post.price ? '₦' + Number(post.price).toLocaleString('en-NG') : 'Price not specified'}</p>
             <p class="promoted-location">${escapeHtml(post.location || 'N/A')}</p>
-            <p class="promoted-quantity">${post.quantity || 1} Remaining</p>
+            <p class="promoted-quantity">🔥 ${post.quantity || 1} Remaining</p>
         </div>
     `;
     
@@ -787,13 +821,19 @@ function renderPost(post) {
             </div>
         `;
         mediaContent = `
-            <div class="product-image">
-                <div class="badge">${post.productCondition || 'New'}</div>
-                <div class="image-placeholder">
-                    <img class="post-image" onclick="window.openImage('${productImageForChat.replace(/'/g, "\\'")}')" alt="Product Image">
-                </div>
+    <div class="product-image">
+        <div class="badge">${post.productCondition || 'New'}</div>
+        <div class="image-placeholder">
+            <div class="placeholder-content">
+                <div class="loading-spinner"></div>
+                <div class="placeholder-text">Loading image...</div>
             </div>
-        `;
+            <img class="post-image" 
+                 onclick="window.openImage('${productImageForChat.replace(/'/g, "\\'")}')" 
+                 alt="Product Image">
+        </div>
+    </div>
+`;
 
         productDetails = `
             <div class="content">
@@ -1367,6 +1407,6 @@ window.addEventListener('beforeunload', () => {
             window.videoIntersectionObserver.unobserve(video);
         });
     }
-    // ADD THIS LINE:
+  
     imageLoader.disconnect();
 });

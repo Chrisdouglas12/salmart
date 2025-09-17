@@ -1,6 +1,7 @@
+/*This script handles dynamic caching for Chats.js*/
+
 // Import idb-keyval functions
 import { get, set, del, clear, keys, values, entries } from './idb-keyval-iife.js';
-
 
 const API_BASE_URL = window.API_BASE_URL || (window.location.hostname === 'localhost'
     ? 'http://localhost:3000'
@@ -12,6 +13,7 @@ const API_BASE_URL = window.API_BASE_URL || (window.location.hostname === 'local
 class SalmartCache2 {
     constructor(apiBaseUrl = API_BASE_URL) {
         this.API_BASE_URL = apiBaseUrl;
+        this.activeListeners = new Map(); // Track active listeners for cleanup
     }
 
     /**
@@ -46,13 +48,19 @@ class SalmartCache2 {
      * Fetches chat messages for a specific conversation with proper cache-to-server sync
      * @param {string} userId - The current user's ID
      * @param {string} receiverId - The other participant's ID
+     * @param {boolean} forceRefresh - Force network fetch instead of cache-first
      * @returns {Promise<Array>} - Array of chat messages
      */
-    async getChatMessages(userId, receiverId) {
+    async getChatMessages(userId, receiverId, forceRefresh = false) {
         if (!userId || !receiverId) return [];
         
         const chatKey = [userId, receiverId].sort().join('_');
         const dbKey = `chat_messages_${chatKey}`;
+        
+        // If force refresh is requested, fetch from network first
+        if (forceRefresh) {
+            return this._fetchChatMessagesFromNetwork(userId, receiverId, dbKey);
+        }
         
         // Return cached data immediately, then update in background
         try {
@@ -60,7 +68,7 @@ class SalmartCache2 {
             if (cachedMessages.length > 0) {
                 console.log(`✅ [SalmartCache] Serving ${cachedMessages.length} chat messages from IndexedDB.`);
                 
-                // Background sync for new messages
+                // Background sync for new messages with UI notification
                 this._backgroundSyncChatMessages(userId, receiverId, cachedMessages)
                     .catch(e => console.warn('Background chat message sync failed:', e));
                 
@@ -71,8 +79,19 @@ class SalmartCache2 {
         }
         
         // Network fetch if no cache
+        return this._fetchChatMessagesFromNetwork(userId, receiverId, dbKey);
+    }
+
+    /**
+     * Fetch chat messages from network
+     * @param {string} userId - Current user ID
+     * @param {string} receiverId - Other participant ID  
+     * @param {string} dbKey - Database key for caching
+     * @returns {Promise<Array>} - Array of messages
+     */
+    async _fetchChatMessagesFromNetwork(userId, receiverId, dbKey) {
         try {
-            console.log(`🔄 [SalmartCache] Initial fetch for chat messages.`);
+            console.log(`🔄 [SalmartCache] Fetching chat messages from network.`);
             const messagesFromNetwork = await this._fetchWithNetworkFallback(`${this.API_BASE_URL}/messages?user1=${userId}&user2=${receiverId}`, {
                 headers: this._getAuthHeaders(),
             });
@@ -93,7 +112,7 @@ class SalmartCache2 {
     }
 
     /**
-     * Background sync for new chat messages
+     * Background sync for new chat messages with UI updates
      * @param {string} userId - Current user ID
      * @param {string} receiverId - Other participant ID
      * @param {Array} cachedMessages - Currently cached messages
@@ -133,12 +152,75 @@ class SalmartCache2 {
                 await set(dbKey, updatedMessages);
                 console.log(`💾 [SalmartCache] Updated chat message cache with ${updatedMessages.length} total messages.`);
                 
-                // Notify the UI about new messages
-                this._notifyNewChatMessages(newMessages, userId, receiverId);
+                // Notify the UI about new messages - THIS IS KEY FOR YOUR ISSUE
+                this._notifyNewChatMessages(newMessages, updatedMessages, userId, receiverId);
             }
         } catch (error) {
             console.warn('⚠️ [SalmartCache] Background chat message sync failed:', error.message);
         }
+    }
+
+    /**
+     * Setup real-time chat message listener for a specific chat
+     * @param {string} userId - Current user ID
+     * @param {string} receiverId - Other participant ID
+     * @param {function} onNewMessages - Callback when new messages arrive
+     * @returns {function} - Cleanup function to remove listener
+     */
+    setupChatMessageListener(userId, receiverId, onNewMessages) {
+        if (!userId || !receiverId || typeof onNewMessages !== 'function') {
+            console.warn('[SalmartCache] Invalid parameters for chat message listener');
+            return () => {};
+        }
+
+        const chatKey = [userId, receiverId].sort().join('_');
+        const eventName = `newChatMessages_${chatKey}`;
+        
+        const handleNewMessages = (event) => {
+            const { messages, allMessages } = event.detail;
+            console.log(`📨 [SalmartCache] Received ${messages.length} new messages for chat ${chatKey}`);
+            onNewMessages(messages, allMessages);
+        };
+
+        // Add event listener
+        window.addEventListener(eventName, handleNewMessages);
+        
+        // Store listener for cleanup
+        this.activeListeners.set(`${userId}_${receiverId}`, {
+            eventName,
+            handler: handleNewMessages
+        });
+
+        console.log(`🎧 [SalmartCache] Setup message listener for chat ${chatKey}`);
+
+        // Return cleanup function
+        return () => {
+            window.removeEventListener(eventName, handleNewMessages);
+            this.activeListeners.delete(`${userId}_${receiverId}`);
+            console.log(`🗑️ [SalmartCache] Cleaned up message listener for chat ${chatKey}`);
+        };
+    }
+
+    /**
+     * Cleanup all active listeners (call when leaving chat page)
+     */
+    cleanupAllListeners() {
+        for (const [key, listener] of this.activeListeners.entries()) {
+            window.removeEventListener(listener.eventName, listener.handler);
+            console.log(`🗑️ [SalmartCache] Cleaned up listener for ${key}`);
+        }
+        this.activeListeners.clear();
+    }
+
+    /**
+     * Refresh chat messages for currently active chat
+     * @param {string} userId - Current user ID
+     * @param {string} receiverId - Other participant ID
+     * @returns {Promise<Array>} - Refreshed messages
+     */
+    async refreshChatMessages(userId, receiverId) {
+        console.log(`🔄 [SalmartCache] Force refreshing chat messages for ${userId} <-> ${receiverId}`);
+        return this.getChatMessages(userId, receiverId, true);
     }
 
     /**
@@ -170,6 +252,9 @@ class SalmartCache2 {
                 
                 await set(dbKey, cachedMessages);
                 console.log(`💾 [SalmartCache] Added new chat message to cache`);
+                
+                // Notify UI about the new message
+                this._notifyNewChatMessages([newMessage], cachedMessages, userId, receiverId);
             }
         } catch (error) {
             console.error('❌ [SalmartCache] Error adding chat message to cache:', error);
@@ -200,6 +285,9 @@ class SalmartCache2 {
                 cachedMessages[messageIndex] = { ...cachedMessages[messageIndex], ...updates };
                 await set(dbKey, cachedMessages);
                 console.log(`💾 [SalmartCache] Updated chat message ${messageId} in cache`);
+                
+                // Notify UI about message update
+                this._notifyMessageUpdate(cachedMessages[messageIndex], userId, receiverId);
             }
         } catch (error) {
             console.error('❌ [SalmartCache] Error updating chat message in cache:', error);
@@ -398,17 +486,54 @@ class SalmartCache2 {
     /**
      * Notifies UI about new chat messages
      * @param {Array} newMessages - Array of new messages
+     * @param {Array} allMessages - All messages including new ones
      * @param {string} userId - Current user ID
      * @param {string} receiverId - Other participant ID
      */
-    _notifyNewChatMessages(newMessages, userId, receiverId) {
+    _notifyNewChatMessages(newMessages, allMessages, userId, receiverId) {
         if (typeof window !== 'undefined') {
-            window.dispatchEvent(new CustomEvent('newChatMessagesFromCache', {
+            const chatKey = [userId, receiverId].sort().join('_');
+            
+            // Emit specific event for this chat
+            window.dispatchEvent(new CustomEvent(`newChatMessages_${chatKey}`, {
                 detail: { 
-                    messages: newMessages, 
+                    messages: newMessages,
+                    allMessages: allMessages,
                     userId, 
                     receiverId,
-                    chatKey: [userId, receiverId].sort().join('_')
+                    chatKey
+                }
+            }));
+
+            // Also emit general event for backward compatibility
+            window.dispatchEvent(new CustomEvent('newChatMessagesFromCache', {
+                detail: { 
+                    messages: newMessages,
+                    allMessages: allMessages,
+                    userId, 
+                    receiverId,
+                    chatKey
+                }
+            }));
+        }
+    }
+
+    /**
+     * Notifies UI about message updates (status changes, etc.)
+     * @param {object} updatedMessage - The updated message
+     * @param {string} userId - Current user ID
+     * @param {string} receiverId - Other participant ID
+     */
+    _notifyMessageUpdate(updatedMessage, userId, receiverId) {
+        if (typeof window !== 'undefined') {
+            const chatKey = [userId, receiverId].sort().join('_');
+            
+            window.dispatchEvent(new CustomEvent(`messageUpdated_${chatKey}`, {
+                detail: { 
+                    message: updatedMessage,
+                    userId, 
+                    receiverId,
+                    chatKey
                 }
             }));
         }
