@@ -1,0 +1,272 @@
+    .side-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 260px;
+  height: 100vh;
+  overflow-y: auto; /* scrolls independently */
+  background-color: #fff;
+  z-index: 1000;
+  display: none; /* initially hidden */
+}
+
+body.no-scroll {
+  overflow: hidden; /* disables body scroll */
+}
+        /* Skeleton Loader */
+        .skeleton-post {
+            background: white;
+     
+            margin: 10px;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.05);
+            
+        }
+
+        .skeleton-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .skeleton-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: skeleton-loading 1.5s infinite;
+            margin-right: 10px;
+        }
+
+        .skeleton-user-info {
+            flex: 1;
+        }
+
+        .skeleton-line {
+            height: 12px;
+            border-radius: 4px;
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: skeleton-loading 1.5s infinite;
+            margin-bottom: 8px;
+        }
+
+        .skeleton-line.short {
+            width: 60%;
+        }
+
+        .skeleton-line.very-short {
+            width: 30%;
+        }
+
+        .skeleton-image {
+            width: 100%;
+            height: 200px;
+            border-radius: 10px;
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: skeleton-loading 1.5s infinite;
+            margin: 10px 0;
+        }
+           .skeleton-button {
+            width: 40%;
+            height: 40px;
+            border-radius: 5px;
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: skeleton-loading 1.5s infinite;
+            margin: 10px auto;
+        }
+
+        .skeleton-actions {
+            display: flex;
+            gap: 20px;
+            margin-top: 10px;
+        }
+
+        @keyframes skeleton-loading {
+            0% {
+                background-position: 200% 0;
+            }
+            100% {
+                background-position: -200% 0;
+            }
+        }
+
+        /* Toast (override inline styles for smoother animation) */
+        #toast {
+            min-width: 200px;
+            color: white;
+            text-align: center;
+            border-radius: 8px;
+            padding: 12px 16px;
+            position: fixed;
+            z-index: 1000;
+            left: 50%;
+            bottom: 30px;
+            transform: translateX(-50%);
+            font-family: Poppins, sans-serif;
+            font-size: 14px;
+            opacity: 0;
+            transition: opacity 0.5s ease, bottom 0.5s ease;
+        }
+
+        #toast.show {
+            opacity: 1;
+            bottom: 50px;
+        }
+
+
+        /* Professional Install Button Solution */
+        .install-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 50; /* Reduced z-index to stay below header */
+            padding: 16px 24px;
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            box-shadow: 0 8px 25px rgba(40, 167, 69, 0.3);
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: none;
+            align-items: center;
+            gap: 8px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            user-select: none;
+            -webkit-user-select: none;
+            /* Ensure it doesn't interfere with scrolling */
+            pointer-events: auto;
+        }
+
+        .install-btn::before {
+            content: "📱";
+            font-size: 16px;
+        }
+
+        .install-btn:hover {
+            background: linear-gradient(135deg, #1e7e34 0%, #17a2b8 100%);
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 12px 35px rgba(40, 167, 69, 0.4);
+        }
+
+        .install-btn:active {
+            transform: translateY(0) scale(1.02);
+        }
+
+        /* Slide up animation for bottom positioning */
+        .install-btn.show {
+            display: flex !important;
+            animation: slideUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(100px);
+                opacity: 0;
+                scale: 0.8;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+                scale: 1;
+            }
+        }
+
+        /* Auto-hide functionality */
+        .install-btn.auto-hide {
+            animation: autoHide 0.3s ease-out 5s forwards;
+        }
+
+        @keyframes autoHide {
+            to {
+                opacity: 0.7;
+                transform: scale(0.9);
+            }
+        }
+
+        .install-btn.auto-hide:hover {
+            opacity: 1;
+            transform: scale(1.05) translateY(-2px);
+        }
+
+        /* Alternative: Compact floating button */
+        .install-btn.compact {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            padding: 0;
+            font-size: 24px;
+            justify-content: center;
+        }
+
+        .install-btn.compact::before {
+            margin: 0;
+        }
+
+        .install-btn.compact .btn-text {
+            display: none;
+        }
+
+
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+
+
+            .install-btn {
+                right: 15px;
+                bottom: 90px; /* Above bottom navigation */
+                padding: 12px 20px;
+                font-size: 13px;
+            }
+
+            .install-btn.compact {
+                width: 50px;
+                height: 50px;
+                bottom: 90px;
+            }
+
+
+        @media (max-width: 480px) {
+            .install-btn {
+                right: 10px;
+                bottom: 85px;
+                padding: 10px 16px;
+                font-size: 12px;
+            }
+
+            /* Option: Show as banner at top instead on very small screens */
+            .install-btn.banner-mode {
+                position: fixed;
+                top: 70px;
+                left: 10px;
+                right: 10px;
+                bottom: auto;
+                border-radius: 12px;
+                z-index: 40;
+                margin: 0;
+                width: calc(100% - 20px);
+            }
+        }
+
+        /* Hide button when PWA is installed */
+        .install-btn.installed {
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(0);
+        }
+.profile-pic  img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
