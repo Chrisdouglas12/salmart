@@ -1,11 +1,11 @@
-// socketRoutes.js - Fixed Version
+// socketRoutes.js - Fully Updated Version
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 const User = require('../models/userSchema.js');
 const Message = require('../models/messageSchema.js');
 const NotificationService = require('../services/notificationService.js');
 // 🔧 FIXED: Import the unified notification function instead of sendFCMNotification
-const { sendNotificationToUser } = require('../services/notificationUtils.js');
+const { sendNotificationToUser } = require('../services/notificationUtils.js'); // Assuming this function handles the FCM payload with profilePictureUrl
 const winston = require('winston');
 
 const logger = winston.createLogger({
@@ -130,7 +130,15 @@ const formatNotificationMessage = (messageType, text, offerDetails) => {
   return notificationText;
 };
 
-// 🔧 UPDATED: Simplified unified notification function
+/**
+ * 🔧 UPDATED: Simplified unified notification function
+ * @param {object} messageData - The message data object.
+ * @param {string} senderName - The name of the sender.
+ * @param {string} notificationText - The formatted text for the notification body.
+ * @param {object} io - The Socket.IO instance.
+ * @param {string | null} imageUrl - URL for an image attachment (for Big Picture Style).
+ * @param {string | null} senderProfilePicture - URL for the sender's profile picture.
+ */
 const sendMessageNotification = async (messageData, senderName, notificationText, io, imageUrl, senderProfilePicture) => {
   try {
     if (!messageData.receiverId) {
@@ -162,16 +170,17 @@ const sendMessageNotification = async (messageData, senderName, notificationText
       return { success: false, error: 'No notification tokens' };
     }
 
+    // 🔧 KEY UPDATE: Add profilePictureUrl to the data payload
     const dataPayload = {
       type: 'message',
       senderId: messageData.senderId || '',
       receiverId: messageData.receiverId,
       messageId: messageData._id || '',
-      chatId: `${messageData.senderId}_${messageData.receiverId}`.split('_').sort().join('_'),
+      chatId: [messageData.senderId, messageData.receiverId].sort().join('_'),
       messageType: messageData.messageType || 'text',
       timestamp: new Date().toISOString(),
-      ...(imageUrl && { imageUrl }),
-      ...(senderProfilePicture && { profilePictureUrl: senderProfilePicture })
+      ...(imageUrl && { imageUrl }), // For image attachment big picture style
+      ...(senderProfilePicture && { profilePictureUrl: senderProfilePicture }) // For sender's profile icon/badge
     };
 
     // 🔧 FIXED: Use sendNotificationToUser instead of sendFCMNotification
@@ -181,8 +190,8 @@ const sendMessageNotification = async (messageData, senderName, notificationText
       notificationText,
       dataPayload,
       io,
-      imageUrl,
-      senderProfilePicture
+      imageUrl, // Pass imageUrl to potentially set FCM notification image
+      senderProfilePicture // Pass profile picture to potentially set FCM notification small/large icon
     );
 
     // Check if any notifications were sent successfully
@@ -374,6 +383,7 @@ const initializeSocket = (io) => {
         const { receiverId, text, messageType = 'text', offerDetails, attachment, tempId } = messageData;
 
         // Get users
+        // 🔧 FIXED: Ensure 'profilePicture' is selected for the sender
         const [sender, receiver] = await Promise.all([
           User.findById(senderId).select('firstName lastName profilePicture').lean(),
           User.findById(receiverId).select('firstName lastName blockedUsers notificationPreferences').lean()
@@ -414,6 +424,7 @@ const initializeSocket = (io) => {
             _id: senderId,
             firstName: sender.firstName,
             lastName: sender.lastName,
+            // 🔧 Ensure profilePicture is included for socket message
             profilePicture: sender.profilePicture
           }
         };
@@ -434,8 +445,9 @@ const initializeSocket = (io) => {
         // Prepare notification
         const senderName = `${sender.firstName} ${sender.lastName}`.trim();
         const notificationText = formatNotificationMessage(messageType, text, offerDetails);
+        const senderProfilePicture = sender.profilePicture || null; // 🔧 Get sender's profile picture URL
         
-        // Get image URL
+        // Get image URL for Big Picture Style (if the message is an image)
         let imageUrl = null;
         if (attachment?.url && attachment.fileType?.startsWith('image')) {
           imageUrl = attachment.url;
@@ -445,7 +457,8 @@ const initializeSocket = (io) => {
         io.to(`user_${receiverId}`).emit('newMessageNotification', {
           senderId,
           senderName,
-          senderProfilePicture: sender.profilePicture,
+          // 🔧 Ensure profile picture is included in the socket notification
+          senderProfilePicture: senderProfilePicture, 
           text: notificationText,
           createdAt: new Date(),
           chatRoomId,
@@ -453,7 +466,7 @@ const initializeSocket = (io) => {
           messageId: savedMessage._id.toString()
         });
 
-        // 🔧 UPDATED: Send push notification using unified function
+        // 🔧 UPDATED: Send push notification using unified function, passing profile picture
         const notificationResult = await sendMessageNotification(
           { 
             ...messageData, 
@@ -465,7 +478,7 @@ const initializeSocket = (io) => {
           notificationText,
           io,
           imageUrl,
-          sender.profilePicture
+          senderProfilePicture // 🔧 Pass profile picture for push notification
         );
 
         if (!notificationResult.success && notificationResult.error && notificationResult.error !== 'User online, notification skipped') {

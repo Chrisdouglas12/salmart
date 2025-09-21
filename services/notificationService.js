@@ -1,3 +1,5 @@
+//notificationService.js
+
 const Notification = require('../models/notificationSchema.js');
 const Message = require('../models/messageSchema.js'); 
 

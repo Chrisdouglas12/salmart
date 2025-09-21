@@ -46,92 +46,98 @@ class ImageLoader {
     }
 
     setSource(imgElement, src) {
-    const parentPlaceholder = imgElement.closest('.image-placeholder');
+        const parentPlaceholder = imgElement.closest('.image-placeholder, .video-thumbnail-wrapper');
 
-    if (!src) {
-        if (parentPlaceholder) {
-            parentPlaceholder.classList.add('error');
-            parentPlaceholder.innerHTML = `
+        if (!src) {
+            if (parentPlaceholder) {
+                parentPlaceholder.classList.add('error');
+                parentPlaceholder.innerHTML = `
                 <div class="placeholder-content">
                     <div class="placeholder-icon">
                         <i class="fas fa-image"></i>
                     </div>
-                    <div class="placeholder-text">No Image Available</div>
-                    <div class="placeholder-subtext">Product photo not found</div>
+                    <div class="placeholder-text">No Media Available</div>
+                    <div class="placeholder-subtext">Content photo not found</div>
                 </div>
             `;
-        }
-        imgElement.style.display = 'none';
-        imgElement.classList.remove('lazy-loading');
-        console.error('Missing image source for element.');
-        return;
-    }
-
-    // Show loading state
-    if (parentPlaceholder) {
-        parentPlaceholder.classList.add('loading');
-        parentPlaceholder.classList.remove('error');
-    }
-    imgElement.classList.add('lazy-loading');
-
-    // Check cache first
-    if (this.cache.has(src)) {
-        imgElement.src = this.cache.get(src);
-        imgElement.style.opacity = '1';
-        imgElement.classList.remove('lazy-loading');
-        imgElement.classList.add('loaded');
-        if (parentPlaceholder) {
-            parentPlaceholder.classList.remove('loading');
-            parentPlaceholder.classList.add('loaded');
-            // Hide placeholder content when image loads
-            const placeholderContent = parentPlaceholder.querySelector('.placeholder-content');
-            if (placeholderContent) {
-                placeholderContent.style.display = 'none';
             }
+            imgElement.style.display = 'none';
+            imgElement.classList.remove('lazy-loading');
+            console.error('Missing media source for element.');
+            return;
         }
-        return;
-    }
 
-    imgElement.src = src;
-
-    imgElement.onload = () => {
-        imgElement.style.opacity = '1';
-        imgElement.classList.remove('lazy-loading');
-        imgElement.classList.add('loaded');
+        // Show loading state
         if (parentPlaceholder) {
-            parentPlaceholder.classList.remove('loading');
-            parentPlaceholder.classList.add('loaded');
-            // Hide placeholder content when image loads successfully
-            const placeholderContent = parentPlaceholder.querySelector('.placeholder-content');
-            if (placeholderContent) {
-                placeholderContent.style.display = 'none';
+            parentPlaceholder.classList.add('loading');
+            parentPlaceholder.classList.remove('error');
+        }
+        imgElement.classList.add('lazy-loading');
+
+        // Check cache first
+        if (this.cache.has(src)) {
+            imgElement.src = this.cache.get(src);
+            imgElement.style.opacity = '1';
+            imgElement.classList.remove('lazy-loading');
+            imgElement.classList.add('loaded');
+            if (parentPlaceholder) {
+                parentPlaceholder.classList.remove('loading');
+                parentPlaceholder.classList.add('loaded');
+                // Hide placeholder content when image loads
+                const placeholderContent = parentPlaceholder.querySelector('.placeholder-content');
+                if (placeholderContent) {
+                    placeholderContent.style.display = 'none';
+                }
+                // For video thumbnails, ensure play button is visible
+                const playOverlay = parentPlaceholder.querySelector('.video-play-overlay');
+                if (playOverlay) playOverlay.style.display = 'flex';
             }
+            return;
         }
-        this.cache.set(src, src);
-    };
 
-    imgElement.onerror = () => {
-        imgElement.src = '';
-        imgElement.style.opacity = '0';
-        imgElement.classList.remove('lazy-loading');
-        if (parentPlaceholder) {
-            parentPlaceholder.classList.remove('loading');
-            parentPlaceholder.classList.add('error');
-            // Show error placeholder content
-            const placeholderContent = parentPlaceholder.querySelector('.placeholder-content');
-            if (placeholderContent) {
-                placeholderContent.innerHTML = `
+        imgElement.src = src;
+
+        imgElement.onload = () => {
+            imgElement.style.opacity = '1';
+            imgElement.classList.remove('lazy-loading');
+            imgElement.classList.add('loaded');
+            if (parentPlaceholder) {
+                parentPlaceholder.classList.remove('loading');
+                parentPlaceholder.classList.add('loaded');
+                // Hide placeholder content when image loads successfully
+                const placeholderContent = parentPlaceholder.querySelector('.placeholder-content');
+                if (placeholderContent) {
+                    placeholderContent.style.display = 'none';
+                }
+                // For video thumbnails, ensure play button is visible
+                const playOverlay = parentPlaceholder.querySelector('.video-play-overlay');
+                if (playOverlay) playOverlay.style.display = 'flex';
+            }
+            this.cache.set(src, src);
+        };
+
+        imgElement.onerror = () => {
+            imgElement.src = '';
+            imgElement.style.opacity = '0';
+            imgElement.classList.remove('lazy-loading');
+            if (parentPlaceholder) {
+                parentPlaceholder.classList.remove('loading');
+                parentPlaceholder.classList.add('error');
+                // Show error placeholder content
+                const placeholderContent = parentPlaceholder.querySelector('.placeholder-content');
+                if (placeholderContent) {
+                    placeholderContent.innerHTML = `
                     <div class="placeholder-icon">
                         <i class="fas fa-exclamation-triangle"></i>
                     </div>
-                    <div class="placeholder-text">Failed to load image</div>
+                    <div class="placeholder-text">Failed to load media</div>
                     <div class="placeholder-subtext">Check your connection</div>
                 `;
-                placeholderContent.style.display = 'flex';
+                    placeholderContent.style.display = 'flex';
+                }
             }
+            console.error(`Failed to load image: ${src}`);
         }
-        console.error(`Failed to load image: ${src}`);
-    }
     }
 
     handleIntersections(entries, observer) {
@@ -174,6 +180,8 @@ function lazyLoadImage(imgElement, originalSrc) {
     if (!imgElement) return;
     imageLoader.observe(imgElement, originalSrc);
 }
+
+// 🚫 REMOVED: lazyLoadVideo function and window.videoIntersectionObserver logic
 
 // --- Cached DOM Elements ---
 const postsContainer = document.getElementById('posts-container');
@@ -433,46 +441,6 @@ function updateProfilePictures(userId, profilePicture) {
     });
 }
 
-
-/**
- * Initializes lazy loading for a video element.
- * It initially loads only the poster and metadata, then loads the full video when in view.
- * @param {HTMLVideoElement} videoElement - The video DOM element to lazy load.
- */
-function lazyLoadVideo(videoElement) {
-    const sourceElements = videoElement.querySelectorAll('source[data-src]');
-    if (sourceElements.length === 0) return;
-
-    if (!window.videoIntersectionObserver) {
-        window.videoIntersectionObserver = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                const video = entry.target;
-                if (entry.isIntersecting) {
-                    video.querySelectorAll('source[data-src]').forEach(source => {
-                        source.src = source.dataset.src;
-                    });
-                    video.load();
-                    video.classList.remove('lazy-loading');
-                    // REMOVED AUTOPLAY - Don't auto-play videos
-                    video.removeAttribute('autoplay');
-                } else {
-                    if (!video.paused) {
-                        video.pause();
-                    }
-                }
-            });
-        }, {
-            rootMargin: '0px 0px 300px 0px',
-            threshold: 0.1 // Reduced for better performance
-        });
-    }
-
-    videoElement.classList.add('lazy-loading');
-    // Disable autoplay and set proper attributes
-    videoElement.removeAttribute('autoplay');
-    videoElement.setAttribute('preload', 'metadata');
-    window.videoIntersectionObserver.observe(videoElement);
-}
 
 // --- UI Rendering Functions (From your provided code) ---
 
@@ -749,15 +717,22 @@ function renderPost(post) {
 
 
     if (post.postType === 'video_ad') {
+        // 📢 FIX: Reverting to the video element for thumbnail, but removing data-src
+        // to prevent external lazyLoadVideo from attempting to load resources (if it's still present).
+        // We rely on the 'poster' attribute for the thumbnail preview.
         mediaContent = `
             <div class="post-video-container">
-                <video class="post-video" preload="metadata" playsinline 
-                       aria-label="Video ad for ${post.description || 'product'}" 
-                       poster="${post.videoThumbnail || ''}">
-                    <source data-src="${post.video || ''}" type="video/mp4" />
-                    <source data-src="${post.video ? post.video.replace('.mp4', '.webm') : ''}" type="video/webm" />
-                    <source data-src="${post.video ? post.video.replace('.mp4', '.ogg') : ''}" type="video/ogg" />
-                    Your browser does not support the video tag.
+                
+                <video class="post-video" 
+                       playsinline 
+                       webkit-playsinline 
+                       crossorigin="anonymous" 
+                       muted
+                       poster="${post.videoThumbnail || ''}"
+                       preload="none"
+                       style="width: 100%; height: 100%; object-fit: cover; cursor: pointer;">
+                    
+                    <source src="${post.video || ''}" type="video/mp4">
                 </video>
                 
                 <div class="video-play-overlay">
@@ -766,45 +741,11 @@ function renderPost(post) {
                     </button>
                 </div>
                 
-                <div class="video-duration-badge" style="display: none;">
-                    <span class="video-duration-text">0:00</span>
+                <div class="video-duration-badge" style="display: block;">
+                    <span class="video-duration-text">--:--</span>
                 </div>
                 
-                <div class="video-thumbnail-loading" style="display: none;">
-                    <div class="video-loading-spinner"></div>
-                </div>
-                
-                <div class="custom-controls">
-                    <button class="control-button play-pause" aria-label="Play or pause video">
-                            <i class="fas fa-play"></i>
-                        </button>
-                        <div class="progress-container">
-                            <div class="buffered-bar"></div>
-                            <div class="progress-bar" role="slider" aria-label="Video progress" aria-valuemin="0" aria-valuemax="100"></div>
-                            <div class="seek-preview" style="display: none;">
-                                <canvas class="seek-preview-canvas"></canvas>
-                            </div>
-                        </div>
-                        <div class="time-display">
-                            <span class="current-time">0:00</span> / <span class="duration">0:00</span>
-                        </div>
-                        <button class="control-button mute-button" aria-label="Mute or unmute video">
-                            <i class="fas fa-volume-mute"></i>
-                        </button>
-                        <div class="volume-control">
-                            <input type="range" class="volume-slider" min="0" max="100" value="100" aria-label="Volume control">
-                        </div>
-                        <select class="playback-speed" aria-label="Playback speed">
-                            <option value="0.5">0.5x</option>
-                            <option value="1" selected>1x</option>
-                            <option value="1.5">1.5x</option>
-                            <option value="2">2x</option>
-                        </select>
-                        <button class="control-button fullscreen-button" aria-label="Toggle fullscreen">
-                            <i class="fas fa-expand"></i>
-                        </button>
-                    </div>
-                </div>
+            </div>
             `;
         buttonContent = `
             <div style="margin-top: -50px">
@@ -1001,13 +942,16 @@ if (quantityElement && post.quantity !== undefined) {
     }
 
     if (post.postType === 'video_ad') {
+        // We rely on the external script's DOMContentLoaded to find this video
+        // and its initializeVideoControls function to attach the click handler.
+        
+        // **If the external script is in a separate file, you MUST manually call 
+        // initializeVideoControls() for this newly inserted post.**
         const videoElement = postElement.querySelector('.post-video');
-        if (videoElement) {
-            lazyLoadVideo(videoElement);
-            if (window.initializeVideoControls) {
-                window.initializeVideoControls(postElement);
-            }
+        if (videoElement && window.initializeVideoControls) {
+            window.initializeVideoControls(postElement);
         }
+        
     } else {
         const postImgElement = postElement.querySelector('.post-image');
         if (postImgElement) {
@@ -1033,11 +977,7 @@ async function fetchInitialPosts(category = currentCategory, clearExisting = fal
     postsContainer.classList.add('loading');
 
     if (clearExisting) {
-        if (window.videoIntersectionObserver) {
-            postsContainer.querySelectorAll('.post-video').forEach(video => {
-                window.videoIntersectionObserver.unobserve(video);
-            });
-        }
+        // 🚫 REMOVED: Video Intersection Observer cleanup since it's gone
         postsContainer.innerHTML = '';
         suggestionCounter = 0;
         // The fix is here: clear the Set when the page is re-rendered
@@ -1297,16 +1237,13 @@ let isScrolling = false;
 let scrollTimeout;
 
 function optimizeVideoControlsDuringScroll() {
+    // We keep this function but it mostly does nothing now for videos, 
+    // as the main resource drain is gone. We keep the scroll state management.
     const videoContainers = document.querySelectorAll('.post-video-container');
 
     videoContainers.forEach(container => {
-        if (isScrolling) { // Use the global isScrolling variable
+        if (isScrolling) { 
             container.classList.add('scrolling');
-            // Temporarily disable expensive hover effects
-            const seekPreview = container.querySelector('.seek-preview');
-            if (seekPreview) {
-                seekPreview.style.display = 'none';
-            }
         } else {
             container.classList.remove('scrolling');
         }
@@ -1396,17 +1333,11 @@ window.addEventListener('focus', async() => {
 });
 
 
-
-
 window.addEventListener('beforeunload', () => {
     if (socket) {
         socket.disconnect();
     }
-    if (window.videoIntersectionObserver) {
-        postsContainer.querySelectorAll('.post-video').forEach(video => {
-            window.videoIntersectionObserver.unobserve(video);
-        });
-    }
+    // 🚫 REMOVED: Video Intersection Observer disconnect
   
     imageLoader.disconnect();
 });

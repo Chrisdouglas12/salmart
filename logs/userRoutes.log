@@ -2758,3 +2758,6 @@
 {"level":"info","message":"Attached io to request object in userRoutes","timestamp":"2025-07-26T10:00:43.611Z"}
 {"level":"info","message":"Attached io to request object in userRoutes","timestamp":"2025-07-26T10:01:12.275Z"}
 {"level":"info","message":"Attached io to request object in userRoutes","timestamp":"2025-07-26T10:01:13.827Z"}
+{"level":"info","message":"User 6843d062f457581752641ee3 followed user 68b5937a20c55c06625be82b","timestamp":"2025-09-21T21:02:18.176Z"}
+{"level":"info","message":"Created follow notification for user 68b5937a20c55c06625be82b from user 6843d062f457581752641ee3","timestamp":"2025-09-21T21:02:18.602Z"}
+{"level":"info","message":"Sent follow notification to user 68b5937a20c55c06625be82b","timestamp":"2025-09-21T21:02:19.461Z"}
