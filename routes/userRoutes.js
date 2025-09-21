@@ -4,7 +4,7 @@ const User = require('../models/userSchema.js');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 const cron = require('node-cron');
 const jwt = require('jsonwebtoken');
 const Post = require('../models/postSchema.js');
@@ -39,28 +39,7 @@ const logger = winston.createLogger({
 require('dotenv').config();
 
 
-
-const transporter = nodemailer.createTransport({
-  service: 'Zoho', 
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  },
-  
-  // Connection pooling for better performance
-  pool: true,
-  maxConnections: 5,
-  maxMessages: 10,
-  rateDelta: 1000, // 1 second
-  rateLimit: 5, // max 5 emails per second
-  // Connection timeout
-  connectionTimeout: 10000, // 10 seconds
-  socketTimeout: 10000, // 10 seconds
-  
-  // Retry settings
-  retries: 2,
-  retryDelay: 2000
-});
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Generate verification token
 function generateVerificationToken() {
@@ -259,18 +238,14 @@ router.post('/register', async (req, res) => {
 </body>
 </html>`;
 
-    // --- Email Sending with Retry Logic ---
-    const emailOptions = {
-      from: `"Salmart Team" <${process.env.EMAIL_USER}>`,
-      to: newUser.email,
-      subject: 'Welcome to Salmart - Verify Your Account',
-      html: emailHtml,
-      headers: {
-        'Message-ID': `<${Date.now()}-${Math.random().toString(36)}@salmartonline.com.ng>`,
-        'X-Mailer': 'Salmart-System-1.0',
-        'List-Unsubscribe': '<mailto:unsubscribe@salmartonline.com.ng>',
-      },
-      text: `Welcome to Salmart, ${newUser.firstName || 'Valued Customer'}!
+    
+    try {
+      const { data, error } = await resend.emails.send({
+        from: 'noreply@salmartonline.com.ng',
+        to: [newUser.email],
+        subject: 'Welcome to Salmart - Verify Your Account',
+        html: emailHtml,
+        text: `Welcome to Salmart, ${newUser.firstName || 'Valued Customer'}!
 
 Thank you for joining our community! 
 
@@ -283,39 +258,11 @@ If you didn't create this account, please ignore this email.
 Need help? Contact: support@salmartonline.com.ng
 
 © ${new Date().getFullYear()} Salmart. All rights reserved.`
-    };
+      });
 
-    // Retry function with exponential backoff
-    async function sendEmailWithRetry(emailOptions, maxRetries = 3) {
-      for (let attempt = 1; attempt <= maxRetries; attempt++) {
-        try {
-          const result = await transporter.sendMail(emailOptions);
-          console.log(`✅ Email sent successfully on attempt ${attempt}:`, {
-            messageId: result.messageId,
-            to: newUser.email,
-            attempt: attempt
-          });
-          return result;
-        } catch (error) {
-          console.log(`❌ Email send attempt ${attempt} failed:`, error.message);
-          
-          if (attempt === maxRetries) {
-            throw error; // Final attempt failed
-          }
-          
-          // Exponential backoff: wait 2^attempt seconds
-          const delayMs = Math.pow(2, attempt) * 1000;
-          console.log(`⏳ Retrying in ${delayMs}ms...`);
-          await new Promise(resolve => setTimeout(resolve, delayMs));
-        }
+      if (error) {
+        throw new Error(error.message);
       }
-    }
-
-    // Send email with retry logic
-    console.log('📧 Sending verification email to:', newUser.email);
-    
-    try {
-      await sendEmailWithRetry(emailOptions);
       
       // Success response
       res.status(201).json({
@@ -1197,8 +1144,16 @@ router.post('/api/password-reset/request', async (req, res) => {
       `
     };
 
-    await transporter.sendMail(mailOptions);
-    
+    const { data, error } = await resend.emails.send({
+  from: 'noreply@salmartonline.com.ng',
+  to: [email],
+  subject: 'Password Reset - Salmart',
+  html: mailOptions.html
+});
+
+if (error) {
+  throw new Error(error.message);
+}
     res.status(200).json({ 
       message: 'Password reset link sent to your email',
       success: true 
@@ -1505,10 +1460,10 @@ router.post('/resend-verification', async (req, res) => {
     const verifyUrl = `https://salmartonline.com.ng/verify-email.html?token=${user.verificationToken}`;
 
     // Send verification email
-    await transporter.sendMail({
-      from: `"Salmart" <${process.env.EMAIL_USER}>`,
-      to: user.email,
-      subject: 'Verify your email address - Resent',
+    const { data, error } = await resend.emails.send({
+  from: 'noreply@salmartonline.com.ng', // Replace with your verified domain
+  to: [user.email],
+  subject: 'Verify your email address - Resent',
       html: `
         <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f8f9fa; padding: 20px;">
           <div style="background-color: white; padding: 40px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
@@ -1556,6 +1511,10 @@ router.post('/resend-verification', async (req, res) => {
         </div>
       `
     });
+
+if (error) {
+  throw new Error(error.message);
+}
 
     res.status(200).json({ 
       message: 'Verification email sent successfully',
@@ -1760,28 +1719,30 @@ async function sendVerificationReminders(isInitialCheck = false) {
             </html>
           `;
 
-          const emailOptions = {
-            from: `"Salmart Team" <${process.env.EMAIL_USER}>`,
-            to: user.email,
-            subject: subject,
-            html: emailHtml,
-            text: `
-              Hi ${user.firstName},
+          
+const { data, error } = await resend.emails.send({
+  from: 'noreply@salmartonline.com.ng',
+  to: [user.email],
+  subject: subject,
+  html: emailHtml,
+  text: `
+    Hi ${user.firstName},
 
-              This is reminder #${reminderCount} to verify your Salmart account.
-              
-              Click here to verify: ${verifyUrl}
-              
-              Verification unlocks features like secure buying/selling, messaging, reviews, and notifications.
-              
-              If you didn't create this account, please ignore this email.
-              
-              Best regards,
-              Salmart Team
-            `.trim()
-          };
-
-          await transporter.sendMail(emailOptions);
+    This is reminder #${reminderCount} to verify your Salmart account.
+    
+    Click here to verify: ${verifyUrl}
+    
+    Verification unlocks features like secure buying/selling, messaging, reviews, and notifications.
+    
+    If you didn't create this account, please ignore this email.
+    
+    Best regards,
+    Salmart Team
+  `.trim()
+});  
+if (error) {
+  throw new Error(error.message);
+}
 
           user.verificationReminderCount = reminderCount;
           user.lastVerificationReminderSent = new Date();
