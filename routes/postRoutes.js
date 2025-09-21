@@ -41,43 +41,50 @@ logger.info('✅ Cloudinary configured in postRoutes');
 
 const isProduction = process.env.NODE_ENV === 'production';
 
-// Multer storage config
-const storage = isProduction
-  ? new CloudinaryStorage({
-      cloudinary: cloudinary,
-      params: async (req, file) => {
-        const folder = 'Uploads';
-        let resourceType = 'auto';
-        let transformation = [];
+const storage = isProduction ? new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: async (req, file) => {
+    const folder = 'Uploads';
+    let resourceType = 'auto';
+    let transformation = [];
+    let eager = [];
 
-        if (file.mimetype.startsWith('video/')) {
-          resourceType = 'video';
-          transformation.push(
-            { duration: "60", crop: "limit" },
-            { quality: "auto:eco", fetch_format: "mp4" }
-          );
-        } else if (file.mimetype.startsWith('image/')) {
-          resourceType = 'image';
-          transformation.push(
-            { quality: "auto:good", fetch_format: "auto" }
-          );
+    if (file.mimetype.startsWith('video/')) {
+      resourceType = 'video';
+      transformation.push(
+        { duration: "60", crop: "limit" },
+        { quality: "auto:eco", fetch_format: "mp4" }
+      );
+      
+      // Generate thumbnail at 5 seconds
+      eager.push(
+        {
+          start_offset: "5.0", // 5 seconds
+          format: "jpg",
+          crop: "fill",
+          width: 400,
+          height: 350,
+          quality: "auto:good"
         }
+      );
+    } else if (file.mimetype.startsWith('image/')) {
+      resourceType = 'image';
+      transformation.push(
+        { quality: "auto:good", fetch_format: "auto" }
+      );
+    }
 
-        return {
-          folder: folder,
-          resource_type: resourceType,
-          allowed_formats: ['jpg', 'png', 'jpeg', 'mp4'],
-          transformation: transformation,
-          eager: [
-            ...(file.mimetype.startsWith('video/') ?
-              [{ duration: "60", crop: "limit", quality: "auto:eco", fetch_format: "mp4" }] : []),
-          ],
-          eager_async: true,
-          invalidate: true,
-        };
-      },
-    })
-  : multer.diskStorage({
+    return {
+      folder: folder,
+      resource_type: resourceType,
+      allowed_formats: ['jpg', 'png', 'jpeg', 'mp4'],
+      transformation: transformation,
+      eager: eager,
+      eager_async: false, // Set to false to wait for thumbnail generation
+      invalidate: true,
+    };
+  },
+}) : multer.diskStorage({
       destination: (req, file, cb) => {
         const uploadDir = path.join(__dirname, '../Uploads/');
         if (!fs.existsSync(uploadDir)) {
@@ -104,6 +111,27 @@ const upload = multer({
   },
 });
 
+// Helper function to extract Cloudinary thumbnail URL
+const getCloudinaryThumbnailUrl = (videoUrl) => {
+  try {
+    // Extract public_id from video URL
+    const urlParts = videoUrl.split('/');
+    const uploadIndex = urlParts.findIndex(part => part === 'upload');
+    if (uploadIndex === -1) return null;
+    
+    // Get public_id (everything after version number, remove extension)
+    const publicIdWithExt = urlParts.slice(uploadIndex + 2).join('/');
+    const publicId = publicIdWithExt.replace(/\.[^/.]+$/, '');
+    
+    // Construct thumbnail URL
+    const baseUrl = urlParts.slice(0, uploadIndex + 1).join('/');
+    return `${baseUrl}/image/upload/so_5.0,c_fill,w_400,h_350,q_auto:good/${publicId}.jpg`;
+  } catch (error) {
+    logger.error(`Error generating thumbnail URL: ${error.message}`);
+    return null;
+  }
+};
+
 // Helper function for Cloudinary upload (used in development environment if not direct multer-storage-cloudinary)
 const uploadToCloudinary = (filePath, resourceType = 'auto') => {
   return new Promise((resolve, reject) => {
@@ -112,20 +140,30 @@ const uploadToCloudinary = (filePath, resourceType = 'auto') => {
     const transformationParams = {
       folder: 'Uploads',
     };
+    
     if (resourceType === 'video') {
       transformationParams.resource_type = 'video';
       transformationParams.transformation = [
         { duration: "60", crop: "limit" },
         { quality: "auto:eco", fetch_format: "mp4" }
       ];
+      // Add thumbnail generation for videos only
       transformationParams.eager = [
-        { duration: "60", crop: "limit", quality: "auto:eco", fetch_format: "mp4" }
+        {
+          start_offset: "5.0",
+          format: "jpg",
+          crop: "fill",
+          width: 400,
+          height: 350,
+          quality: "auto:good"
+        }
       ];
-      transformationParams.eager_async = true;
+      transformationParams.eager_async = false; // Wait for thumbnail
       transformationParams.invalidate = true;
     } else {
       transformationParams.resource_type = resourceType;
       transformationParams.transformation = [{ quality: "auto:good", fetch_format: "auto" }];
+      // No eager transformations for images
     }
 
     const stream = cloudinary.uploader.upload_stream(
@@ -163,6 +201,7 @@ module.exports = (io) => {
     next();
   });
 //Create a new post
+//Create a new post
 router.post(
   '/post',
   verifyToken,
@@ -179,7 +218,7 @@ router.post(
         price, 
         postType = 'regular', 
         productLink,
-        quantity // 🆕 Added quantity from request body
+        quantity // Added quantity from request body
       } = req.body;
       const userId = req.user.userId;
 
@@ -206,9 +245,6 @@ router.post(
         allowedAttributes: {},
       });
 
-      let photoUrl = null;
-      let videoUrl = null;
-
       const isProduction = process.env.NODE_ENV === 'production';
 
       const validDomains = isProduction
@@ -223,6 +259,8 @@ router.post(
           return false;
         }
       };
+
+      let newPost;
 
       if (postType === 'video_ad') {
         if (!description || !category || !req.files?.video?.[0] || !productLink) {
@@ -240,12 +278,35 @@ router.post(
         }
 
         const videoFile = req.files.video[0];
+        let videoUrl;
+        
         if (isProduction) {
           videoUrl = videoFile.path;
         } else {
           videoUrl = await uploadToCloudinary(videoFile.path, 'video');
           tempFiles.push(videoFile.path);
         }
+
+        // Generate thumbnail URL only for video posts
+        const thumbnailUrl = getCloudinaryThumbnailUrl(videoUrl);
+
+        newPost = new Post({
+          postType,
+          description: sanitizedDescription,
+          category,
+          createdBy: {
+            userId: user._id,
+            name: `${user.firstName} ${user.lastName}`,
+          },
+          createdAt: new Date(),
+          likes: [],
+          video: videoUrl, 
+          productLink,
+          videoThumbnail: thumbnailUrl
+        });
+
+        logger.info(`Video ad created for user ${userId}: ${videoUrl}`);
+        
       } else if (postType === 'regular') {
         if (!title || !productCondition || !price || !location || !category || !req.files?.photo?.[0]) {
           logger.warn(`Missing fields in regular post creation by user ${userId}`);
@@ -261,19 +322,19 @@ router.post(
           });
         }
 
-        // 🆕 Validate quantity for regular posts
-        let quantity = 1; // Default quantity
+        // Validate quantity for regular posts
+        let validatedQuantity = 1; // Default quantity
         if (quantity !== undefined && quantity !== null && quantity !== '') {
-          quantity = parseInt(quantity, 10);
+          validatedQuantity = parseInt(quantity, 10);
           
-          if (isNaN(quantity) || quantity < 0 || !Number.isInteger(quantity)) {
+          if (isNaN(validatedQuantity) || validatedQuantity < 0 || !Number.isInteger(validatedQuantity)) {
             logger.warn(`Invalid quantity ${quantity} by user ${userId}`);
             return res.status(400).json({
               message: 'Quantity must be a non-negative integer'
             });
           }
           
-          if (quantity > 10000) { // Reasonable upper limit
+          if (validatedQuantity > 10000) { // Reasonable upper limit
             logger.warn(`Quantity too high ${quantity} by user ${userId}`);
             return res.status(400).json({
               message: 'Quantity cannot exceed 10,000'
@@ -282,6 +343,8 @@ router.post(
         }
 
         const photoFile = req.files.photo[0];
+        let photoUrl;
+        
         if (isProduction) {
           photoUrl = photoFile.path;
         } else {
@@ -289,43 +352,35 @@ router.post(
           tempFiles.push(photoFile.path);
         }
 
-        // 🆕 Log quantity info
-        logger.info(`Creating regular post with quantity: ${quantity} for user ${userId}`);
+        newPost = new Post({
+          postType,
+          title: sanitizedTitle,
+          description: sanitizedDescription,
+          category,
+          createdBy: {
+            userId: user._id,
+            name: `${user.firstName} ${user.lastName}`,
+          },
+          createdAt: new Date(),
+          likes: [],
+          photo: photoUrl,
+          location,
+          productCondition,
+          price: Number(price),
+          quantity: validatedQuantity
+        });
+
+        logger.info(`Creating regular post with quantity: ${validatedQuantity} for user ${userId}`);
+        
       } else {
         logger.warn(`Invalid postType ${postType} by user ${userId}`);
         return res.status(400).json({ message: 'Invalid post type' });
       }
 
-      // 🆕 Create post with quantity support
-      const newPost = new Post({
-        postType,
-        title: sanitizedTitle,
-        description: sanitizedDescription,
-        category,
-        createdBy: {
-          userId: user._id,
-          name: `${user.firstName} ${user.lastName}`,
-        },
-        createdAt: new Date(),
-        likes: [],
-        ...(postType === 'video_ad'
-          ? { 
-              video: videoUrl, 
-              productLink 
-            }
-          : {
-              photo: photoUrl,
-              location,
-              productCondition,
-              price: Number(price),
-              quantity: quantity // 🆕 Include quantity for regular posts
-            }
-        ),
-      });
-
+      // Save the post
       await newPost.save();
       
-      // 🆕 Enhanced logging with quantity and sold status
+      // Enhanced logging with quantity and sold status for regular posts
       const logMessage = postType === 'regular' 
         ? `Post created by user ${userId}: ${newPost._id} (quantity: ${newPost.quantity}, isSold: ${newPost.isSold}, stockStatus: ${newPost.stockStatus})`
         : `Video ad created by user ${userId}: ${newPost._id}`;
@@ -335,7 +390,7 @@ router.post(
       // Simplified notification system
       await notifyFollowersOfNewPost(newPost, user, req);
 
-      // 🆕 Enhanced response with quantity info
+      // Enhanced response with quantity info
       const responsePost = {
         ...newPost.toObject(),
         stockStatus: newPost.stockStatus, // Include virtual field
@@ -345,10 +400,11 @@ router.post(
         message: 'Post created successfully',
         post: responsePost
       });
+      
     } catch (error) {
       logger.error(`Post creation error for user ${req.user?.userId}: ${error.message}`);
       
-      // 🆕 Enhanced error handling for quantity-specific errors
+      // Enhanced error handling for quantity-specific errors
       if (error.name === 'ValidationError') {
         const quantityError = error.errors.quantity;
         if (quantityError) {
@@ -423,9 +479,9 @@ async function notifyFollowersOfNewPost(newPost, user, req) {
         let notificationMessage = `New listing from ${user.firstName} ${user.lastName}. you might be interested in it.`;
         
         if (newPost.postType === 'regular' && newPost.quantity > 1) {
-          notificationMessage = `${user.firstName} ${user.lastName} listed ${newPost.quantity} ${newPost.title} - you might be interested in it.`;
+          notificationMessage = `📷 ${user.firstName} ${user.lastName} listed ${newPost.quantity} ${newPost.title} - you might be interested in it.`;
         } else if (newPost.postType === 'regular') {
-          notificationMessage = `${user.firstName} ${user.lastName} listed "${newPost.title}" - you might be interested in it.!`;
+          notificationMessage = `📷 ${user.firstName} ${user.lastName} listed "${newPost.title}" - you might be interested in it!`;
         }
 
         // Create and save notification - exact same pattern as like notification
@@ -639,7 +695,7 @@ async function notifyFollowersOfNewPost(newPost, user, req) {
           (followedId) => followedId.toString() === post.createdBy.userId._id.toString()
         ),
         postType: post.postType,
-        media: post.postType === 'video_ad' ? { video: post.video } : { photo: post.photo },
+        media: post.postType === 'video_ad' ? { video: post.video, thumbnail: post.videoThumbnail} : { photo: post.photo },
         isLiked: loggedInUserId ? post.likes.includes(loggedInUserId) : false,
       }));
 
@@ -696,28 +752,31 @@ async function notifyFollowersOfNewPost(newPost, user, req) {
 
       // Construct the response object, mapping populated user data to the expected fields
       const postData = {
-        ...post, // Spread the lean object
-        createdBy: {
-          userId: post.createdBy.userId._id,
-          name: `${post.createdBy.userId.firstName} ${post.createdBy.userId.lastName}`,
-          profilePicture: post.createdBy.userId.profilePicture || 'default-avatar.png',
-        },
-        likes: post.likes || [],
-        comments: post.comments.map(comment => ({
-            ...comment,
-            // Map populated userId data to profilePicture and name
-            profilePicture: comment.userId?.profilePicture || 'default-avatar.png',
-            name: `${comment.userId?.firstName || 'Unknown'} ${comment.userId?.lastName || 'User'}`,
-            replies: comment.replies.map(reply => ({
-                ...reply,
-                // Map populated userId data to profilePicture and name for replies
-                profilePicture: reply.userId?.profilePicture || 'default-avatar.png',
-                name: `${reply.userId?.firstName || 'Unknown'} ${reply.userId?.lastName || 'User'}`,
-            }))
-        })) || [], // Ensure comments is an array
-        isLiked: loggedInUserId ? post.likes.includes(loggedInUserId) : false,
-      };
-
+  ...post,
+  createdBy: {
+    userId: post.createdBy.userId._id,
+    name: `${post.createdBy.userId.firstName} ${post.createdBy.userId.lastName}`,
+    profilePicture: post.createdBy.userId.profilePicture || 'default-avatar.png',
+  },
+  likes: post.likes || [],
+  comments: post.comments.map(comment => ({
+    ...comment,
+    profilePicture: comment.userId?.profilePicture || 'default-avatar.png',
+    name: `${comment.userId?.firstName || 'Unknown'} ${comment.userId?.lastName || 'User'}`,
+    replies: comment.replies.map(reply => ({
+      ...reply,
+      profilePicture: reply.userId?.profilePicture || 'default-avatar.png',
+      name: `${reply.userId?.firstName || 'Unknown'} ${reply.userId?.lastName || 'User'}`,
+    }))
+  })) || [],
+  media: post.postType === 'video_ad' 
+    ? { 
+        video: post.video,
+        thumbnail: post.videoThumbnail 
+      } 
+    : { photo: post.photo },
+  isLiked: loggedInUserId ? post.likes.includes(loggedInUserId) : false,
+};
       // No need to delete postData.createdBy.userId._id if you use .lean() and restructure as above
       logger.info(`Fetched post ${postId} for user ${loggedInUserId || 'anonymous'}`);
       res.status(200).json(postData);
@@ -758,6 +817,12 @@ async function notifyFollowersOfNewPost(newPost, user, req) {
                 name: `${reply.userId?.firstName || 'Unknown'} ${reply.userId?.lastName || 'User'}`,
             }))
         })) || [],
+        media: post.postType === 'video_ad' 
+    ? { 
+        video: post.video,
+        thumbnail: post.videoThumbnail 
+      } 
+    : { photo: post.photo },
       }));
 
       logger.info(`Fetched ${userPosts.length} posts for user ${Id}`);
@@ -1207,7 +1272,7 @@ async function notifyFollowersOfNewPost(newPost, user, req) {
             createdAt: new Date(),
           });
           await notification.save();
-          await sendFCMNotification(
+          await sendNotificationToUser(
             admin._id.toString(),
             'Post Reported',
             `Post ${postId} reported for: ${reason}`,

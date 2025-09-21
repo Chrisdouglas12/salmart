@@ -745,7 +745,7 @@ function renderPost(post) {
     let descriptionContent = '';
     let buttonContent = '';
 
-    const productImageForChat = post.postType === 'video_ad' ? (post.thumbnail || '') : (post.photo || '');
+    const productImageForChat = post.postType === 'video_ad' ? (post.videoThumbnail || '') : (post.photo || '');
 
 
     if (post.postType === 'video_ad') {
@@ -753,7 +753,7 @@ function renderPost(post) {
             <div class="post-video-container">
                 <video class="post-video" preload="metadata" playsinline 
                        aria-label="Video ad for ${post.description || 'product'}" 
-                       poster="${post.thumbnail || ''}">
+                       poster="${post.videoThumbnail || ''}">
                     <source data-src="${post.video || ''}" type="video/mp4" />
                     <source data-src="${post.video ? post.video.replace('.mp4', '.webm') : ''}" type="video/webm" />
                     <source data-src="${post.video ? post.video.replace('.mp4', '.ogg') : ''}" type="video/ogg" />

@@ -29,7 +29,7 @@ required: function () {
 return this.postType === 'video_ad';
 },
 },
-thumbnail: {
+videoThumbnail: {
 type: String,
 required: false,
 },
