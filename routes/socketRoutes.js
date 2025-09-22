@@ -1,11 +1,10 @@
-// socketRoutes.js - Fully Updated Version
+// socketRoutes.js - Fixed Version with Clean Notifications
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 const User = require('../models/userSchema.js');
 const Message = require('../models/messageSchema.js');
 const NotificationService = require('../services/notificationService.js');
-// 🔧 FIXED: Import the unified notification function instead of sendFCMNotification
-const { sendNotificationToUser } = require('../services/notificationUtils.js'); // Assuming this function handles the FCM payload with profilePictureUrl
+const { sendNotificationToUser } = require('../services/notificationUtils.js');
 const winston = require('winston');
 
 const logger = winston.createLogger({
@@ -84,60 +83,59 @@ const checkRateLimit = (userId, eventType, limit = 50) => {
   return true;
 };
 
-// Simplified message formatting
+// FIXED: Clean notification message formatting
 const formatNotificationMessage = (messageType, text, offerDetails) => {
-  const maxLength = 100;
+  const maxLength = 80; // Reduced to prevent truncation
   let notificationText = '';
 
   switch (messageType) {
     case 'image':
-      notificationText = '📷 Photo';
+      notificationText = 'Photo';
       break;
     case 'video':
-      notificationText = '🎥 Video';
+      notificationText = 'Video';
       break;
     case 'audio':
-      notificationText = '🎵 Audio';
+      notificationText = 'Audio message';
       break;
     case 'document':
-      notificationText = '📄 Document';
+      notificationText = 'Document';
       break;
     case 'location':
-      notificationText = '📍 Location';
+      notificationText = 'Location';
       break;
     case 'offer':
     case 'counter-offer':
       if (offerDetails?.proposedPrice) {
         const price = Number(offerDetails.proposedPrice).toLocaleString('en-NG');
-        notificationText = `💰 Offer: ₦${price}`;
+        notificationText = `Offer: ₦${price}`;
       } else {
-        notificationText = '💰 Offer';
+        notificationText = 'Made an offer';
       }
       break;
     default:
-      if (text) {
-        notificationText = String(text).trim();
+      if (text && typeof text === 'string') {
+        // Clean the text - remove any JSON formatting or special characters
+        notificationText = text.trim()
+          .replace(/[{}"\[\]]/g, '') // Remove JSON characters
+          .replace(/\\n/g, ' ') // Replace newlines with spaces
+          .replace(/\s+/g, ' ') // Replace multiple spaces with single space
+          .trim();
       } else {
         notificationText = 'New message';
       }
   }
 
-  // Simple truncation
+  // Clean truncation with proper ellipsis
   if (notificationText.length > maxLength) {
-    notificationText = notificationText.substring(0, maxLength - 3) + '...';
+    notificationText = notificationText.substring(0, maxLength - 1).trim() + '…';
   }
 
   return notificationText;
 };
 
 /**
- * 🔧 UPDATED: Simplified unified notification function
- * @param {object} messageData - The message data object.
- * @param {string} senderName - The name of the sender.
- * @param {string} notificationText - The formatted text for the notification body.
- * @param {object} io - The Socket.IO instance.
- * @param {string | null} imageUrl - URL for an image attachment (for Big Picture Style).
- * @param {string | null} senderProfilePicture - URL for the sender's profile picture.
+ * FIXED: Clean unified notification function
  */
 const sendMessageNotification = async (messageData, senderName, notificationText, io, imageUrl, senderProfilePicture) => {
   try {
@@ -170,7 +168,7 @@ const sendMessageNotification = async (messageData, senderName, notificationText
       return { success: false, error: 'No notification tokens' };
     }
 
-    // 🔧 KEY UPDATE: Add profilePictureUrl to the data payload
+    // FIXED: Clean data payload structure
     const dataPayload = {
       type: 'message',
       senderId: messageData.senderId || '',
@@ -179,19 +177,22 @@ const sendMessageNotification = async (messageData, senderName, notificationText
       chatId: [messageData.senderId, messageData.receiverId].sort().join('_'),
       messageType: messageData.messageType || 'text',
       timestamp: new Date().toISOString(),
-      ...(imageUrl && { imageUrl }), // For image attachment big picture style
-      ...(senderProfilePicture && { profilePictureUrl: senderProfilePicture }) // For sender's profile icon/badge
+      senderName: senderName,
+      // Store clean message text separately
+      messageText: messageData.text || '',
+      ...(imageUrl && { imageUrl }),
+      ...(senderProfilePicture && { profilePictureUrl: senderProfilePicture })
     };
 
-    // 🔧 FIXED: Use sendNotificationToUser instead of sendFCMNotification
+    // FIXED: Send clean notification
     const results = await sendNotificationToUser(
       messageData.receiverId,
-      senderName,
-      notificationText,
-      dataPayload,
+      senderName, // Clean sender name as title
+      notificationText, // Clean formatted text as body
+      dataPayload, // Clean structured data
       io,
-      imageUrl, // Pass imageUrl to potentially set FCM notification image
-      senderProfilePicture // Pass profile picture to potentially set FCM notification small/large icon
+      imageUrl,
+      senderProfilePicture
     );
 
     // Check if any notifications were sent successfully
@@ -382,8 +383,7 @@ const initializeSocket = (io) => {
 
         const { receiverId, text, messageType = 'text', offerDetails, attachment, tempId } = messageData;
 
-        // Get users
-        // 🔧 FIXED: Ensure 'profilePicture' is selected for the sender
+        // Get users - ensure profilePicture is selected
         const [sender, receiver] = await Promise.all([
           User.findById(senderId).select('firstName lastName profilePicture').lean(),
           User.findById(receiverId).select('firstName lastName blockedUsers notificationPreferences').lean()
@@ -414,7 +414,7 @@ const initializeSocket = (io) => {
 
         const savedMessage = await message.save();
 
-        // Prepare message payload
+        // Prepare clean message payload for socket
         const messagePayload = {
           ...savedMessage.toObject(),
           _id: savedMessage._id.toString(),
@@ -424,7 +424,6 @@ const initializeSocket = (io) => {
             _id: senderId,
             firstName: sender.firstName,
             lastName: sender.lastName,
-            // 🔧 Ensure profilePicture is included for socket message
             profilePicture: sender.profilePicture
           }
         };
@@ -442,43 +441,45 @@ const initializeSocket = (io) => {
         // Broadcast to chat room
         io.to(`chat_${chatRoomId}`).emit('newMessage', messagePayload);
         
-        // Prepare notification
+        // Prepare clean notification data
         const senderName = `${sender.firstName} ${sender.lastName}`.trim();
-        const notificationText = formatNotificationMessage(messageType, text, offerDetails);
-        const senderProfilePicture = sender.profilePicture || null; // 🔧 Get sender's profile picture URL
+        const senderProfilePicture = sender.profilePicture || null;
         
-        // Get image URL for Big Picture Style (if the message is an image)
+        // FIXED: Clean notification text formatting
+        const notificationText = formatNotificationMessage(messageType, text, offerDetails);
+        
+        // Get image URL for notifications
         let imageUrl = null;
         if (attachment?.url && attachment.fileType?.startsWith('image')) {
           imageUrl = attachment.url;
         }
 
-        // Send notification to receiver (socket notification)
+        // Send clean socket notification to receiver
         io.to(`user_${receiverId}`).emit('newMessageNotification', {
           senderId,
           senderName,
-          // 🔧 Ensure profile picture is included in the socket notification
           senderProfilePicture: senderProfilePicture, 
-          text: notificationText,
+          text: notificationText, // Clean text
           createdAt: new Date(),
           chatRoomId,
           messageType,
           messageId: savedMessage._id.toString()
         });
 
-        // 🔧 UPDATED: Send push notification using unified function, passing profile picture
+        // FIXED: Send clean push notification
         const notificationResult = await sendMessageNotification(
           { 
             ...messageData, 
             _id: savedMessage._id.toString(), 
             senderId, 
-            receiverId 
+            receiverId,
+            text: text // Pass original clean text
           },
-          senderName,
-          notificationText,
+          senderName, // Clean sender name
+          notificationText, // Clean formatted text
           io,
           imageUrl,
-          senderProfilePicture // 🔧 Pass profile picture for push notification
+          senderProfilePicture
         );
 
         if (!notificationResult.success && notificationResult.error && notificationResult.error !== 'User online, notification skipped') {

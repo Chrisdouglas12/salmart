@@ -1,3 +1,4 @@
+
 import {
     salmartCache
 } from './salmartCache.js';
@@ -6,6 +7,12 @@ import {
 const API_BASE_URL = window.API_BASE_URL || (window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart.onrender.com');
 const SOCKET_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : 'https://salmart.onrender.com';
 const DEFAULT_PLACEHOLDER_IMAGE = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+
+// --- Configuration Constants for Feed Insertion ---
+const POSTS_BEFORE_SUGGESTION = 5;
+const USERS_PER_SUGGESTION_ROW = 8;
+const NORMAL_POSTS_BEFORE_PROMOTED_ROW = 2;
+const PROMOTED_POSTS_PER_INSERT = 5;
 
 
 // Throttle utility function
@@ -25,11 +32,12 @@ function throttle(func, limit) {
 // --- Optimized Image Loading (New) ---
 class ImageLoader {
     constructor() {
-        this.cache = new Map();
+        // Optimized rootMargin for better lazy loading: 300px above/below viewport
         this.observer = new IntersectionObserver(this.handleIntersections.bind(this), {
-            rootMargin: '800px 0px 800px 0px', // Load images much further away
+            rootMargin: '300px 0px 300px 0px',
             threshold: 0.01
         });
+        this.cache = new Map();
         this.loader = new Image();
         this.batch = [];
     }
@@ -181,8 +189,6 @@ function lazyLoadImage(imgElement, originalSrc) {
     imageLoader.observe(imgElement, originalSrc);
 }
 
-// 🚫 REMOVED: lazyLoadVideo function and window.videoIntersectionObserver logic
-
 // --- Cached DOM Elements ---
 const postsContainer = document.getElementById('posts-container');
 // Note: `loadMoreBtn` is no longer used for infinite scroll.
@@ -294,6 +300,69 @@ socket.on('postSoldStatusChanged', async ({ postId, isSold, quantity, category }
     updatePostSoldStatus(postId, isSold, quantity);
 });
 
+// Listen for post updates from server
+if (socket && socket.connected) {
+    socket.on('postUpdated', async (data) => {
+        const { postId, updatedPost, userId } = data;
+        
+        // Only update if it's not the current user (they already see their changes)
+        const currentUserId = localStorage.getItem('userId');
+        if (userId === currentUserId) return;
+        
+        try {
+            // Update cache with new data
+            await salmartCache.updatePostInCache(postId, updatedPost, 'all');
+            
+            // Update UI immediately
+            updatePostUIElements(postId, updatedPost);
+            
+            console.log(`Post ${postId} updated via socket`);
+        } catch (error) {
+            console.error('Socket post update error:', error);
+        }
+    });
+}
+
+// Function to update UI elements
+function updatePostUIElements(postId, updatedPost) {
+    const postElements = document.querySelectorAll(`[data-post-id="${postId}"]`);
+    
+    postElements.forEach(postElement => {
+        // Update price
+        if (updatedPost.price) {
+            const priceElements = postElement.querySelectorAll('.price-value, .price, .product-price');
+            priceElements.forEach(el => {
+                el.textContent = `₦${Number(updatedPost.price).toLocaleString('en-NG')}`;
+            })
+        }
+        
+        // Update description/title
+        if (updatedPost.description) {
+            const titleElements = postElement.querySelectorAll('.product-title, .title, .post-description-text p');
+            titleElements.forEach(el => {
+                el.textContent = updatedPost.description;
+            })
+        }
+        
+        // Update condition
+        if (updatedPost.condition) {
+            const conditionElements = postElement.querySelectorAll('.condition-badge, .condition, .product-condition');
+            conditionElements.forEach(el => {
+                el.textContent = updatedPost.condition;
+            })
+        }
+        
+        // Update sold status
+        if (updatedPost.hasOwnProperty('isSold') || updatedPost.quantity !== undefined) {
+            const isSold = updatedPost.isSold || (updatedPost.quantity !== undefined && updatedPost.quantity < 1);
+            if (isSold) {
+                postElement.classList.add('sold-post');
+            } else {
+                postElement.classList.remove('sold-post');
+            }
+        }
+    });
+}
 // --- Utility Functions (Correctly kept here) ---
 
 /**
@@ -328,6 +397,7 @@ function updatePostSoldStatus(postId, isSold, quantity) {
         quantityElements.forEach(qtyElement => {
             if (quantity !== undefined) {
                 qtyElement.textContent = `${quantity} Remaining`;
+                qtyElement.setAttribute('data-quantity', quantity); // Update data attribute
             }
         });
 
@@ -359,6 +429,13 @@ function updatePostSoldStatus(postId, isSold, quantity) {
                 button.innerHTML = '<i class="fas fa-paper-plane"></i> Message';
             }
         });
+        
+        // Update post container class
+        if (shouldDisable) {
+            element.classList.add('sold-post');
+        } else {
+            element.classList.remove('sold-post');
+        }
     });
 }
 /**
@@ -400,6 +477,7 @@ function formatTime(timestamp) {
  * @returns {string} - The escaped HTML string.
  */
 function escapeHtml(text) {
+    if (typeof text !== 'string') return '';
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
@@ -432,9 +510,10 @@ window.updateFollowButtonsUI = function(userId, isFollowing) {
  * @param {string} profilePicture - The new URL of the profile picture.
  */
 function updateProfilePictures(userId, profilePicture) {
-    const cleanedUrl = profilePicture.split('?')[0];
+    const cleanedUrl = profilePicture ? profilePicture.split('?')[0] : '/default-avater.png';
     document.querySelectorAll(`img.post-avatar[data-user-id="${userId}"], img.promoted-avatar[data-user-id="${userId}"], img.user-suggestion-avatar[data-user-id="${userId}"]`).forEach(img => {
-        img.src = cleanedUrl;
+        // Update the src directly, as ImageLoader handles the cache/lazy aspect
+        img.src = cleanedUrl; 
         img.onerror = () => {
             img.src = '/default-avater.png';
         };
@@ -448,12 +527,26 @@ function renderUserSuggestion(user) {
     const suggestionElement = document.createElement('div');
     suggestionElement.classList.add('user-suggestion-card');
     const isFollowingUser = currentFollowingList.includes(user._id.toString());
+    
+    // NOTE: Inline CSS is kept here as it was in your original code, but external CSS is recommended.
+    suggestionElement.style.cssText = `
+        flex: 0 0 auto;
+        width: 100%;
+        max-width: 120px; 
+        padding: 10px;
+        text-align: center;
+        border-radius: 8px;
+        background-color: #f8f8f8;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        scroll-snap-align: start; /* Added for scroll-snap */
+    `;
+
     suggestionElement.innerHTML = `
-        <a href="Profile.html?userId=${user._id}" class="user-info-link">
-            <img class="user-suggestion-avatar" data-user-id="${user._id}" onerror="this.src='/default-avater.png'">
-            <h5 class="user-suggestion-name">${escapeHtml(user.name)}</h5>
+        <a href="Profile.html?userId=${user._id}" class="user-info-link" style="text-decoration: none; color: inherit;">
+            <img class="user-suggestion-avatar" data-user-id="${user._id}" onerror="this.src='/default-avater.png'" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover; margin-bottom: 5px;">
+            <h5 class="user-suggestion-name" style="margin: 0; font-size: 0.85em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(user.name)}</h5>
         </a>
-        <button class="follow-button user-suggestion-follow-btn" data-user-id="${user._id}" ${isFollowingUser ? 'disabled' : ''} style="color: #28a746; margin-top: 5px">
+        <button class="follow-button user-suggestion-follow-btn" data-user-id="${user._id}" ${isFollowingUser ? 'disabled' : ''} style="color: #28a746; margin-top: 5px; background: none; border: 1px solid #28a746; padding: 5px 10px; border-radius: 15px; font-size: 0.75em; cursor: pointer; transition: background 0.2s;">
             ${isFollowingUser ? '<i class="fas fa-user-check"></i> Following' : '<i class="fas fa-user-plus"></i> Follow'}
         </button>
     `;
@@ -470,24 +563,22 @@ function createUserSuggestionsContainer(users) {
     }
     const wrapperContainer = document.createElement('div');
     wrapperContainer.classList.add('user-suggestions-wrapper');
-    wrapperContainer.style.cssText = `...`; // your styles
+    // NOTE: Inline CSS is kept here as it was in your original code, but external CSS is recommended.
+    wrapperContainer.style.cssText = `margin: 20px 0; padding: 15px; background-color: #fff; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);`; 
     const headerElement = document.createElement('h3');
     headerElement.textContent = 'Suggested People to Follow';
-    headerElement.style.cssText = `...`; // your styles
+    headerElement.style.cssText = `margin-top: 0; margin-bottom: 15px; font-size: 1.1em; color: #333;`; 
     wrapperContainer.appendChild(headerElement);
-    const cardsPerRow = 8;
-    for (let i = 0; i < users.length; i += cardsPerRow) {
-        const rowContainer = document.createElement('div');
-        rowContainer.classList.add('user-suggestions-row');
-        rowContainer.style.cssText = `...`; // your styles
-        const currentRowUsers = users.slice(i, i + cardsPerRow);
-        currentRowUsers.forEach(user => {
-            const userCard = renderUserSuggestion(user);
-            userCard.style.cssText = `...`; // your styles
-            rowContainer.appendChild(userCard);
-        });
-        wrapperContainer.appendChild(rowContainer);
-    }
+    
+    const rowContainer = document.createElement('div');
+    rowContainer.classList.add('user-suggestions-row');
+    rowContainer.style.cssText = `display: flex; overflow-x: auto; gap: 15px; padding-bottom: 5px; scroll-snap-type: x mandatory;`; 
+    
+    users.forEach(user => {
+        const userCard = renderUserSuggestion(user);
+        rowContainer.appendChild(userCard);
+    });
+    wrapperContainer.appendChild(rowContainer);
     return wrapperContainer;
 }
 
@@ -505,23 +596,18 @@ function renderPromotedPost(post) {
     let mediaContent = '';
     let productDetails = '';
     let buttonContent = '';
-    const productImageForChat = post.photo;
+    const productImageForChat = post.photo || DEFAULT_PLACEHOLDER_IMAGE; // Use a default image if none
 
-    mediaContent = `<img class="promoted-image"  onerror="this.src='/salmart-192x192.png'">`;
+    mediaContent = `<img class="promoted-image" onerror="this.src='/salmart-192x192.png'">`;
     productDetails = `
         <div class="promoted-product-info">
             <h4 class="promoted-title">${escapeHtml(post.title || 'No description')}</h4>
             <p class="promoted-price">${post.price ? '₦' + Number(post.price).toLocaleString('en-NG') : 'Price not specified'}</p>
             <p class="promoted-location">${escapeHtml(post.location || 'N/A')}</p>
-            <p class="promoted-quantity">🔥 ${post.quantity || 1} Remaining</p>
+            <p class="promoted-quantity" data-quantity="${post.quantity || 1}">🔥 ${post.quantity || 1} Remaining</p>
         </div>
     `;
     
-    const promotedQuantityElement = postElement.querySelector('.promoted-quantity');
-if (promotedQuantityElement && post.quantity !== undefined) {
-    promotedQuantityElement.setAttribute('data-quantity', post.quantity);
-}
-
     if (currentLoggedInUser && !isPostCreator) {
         buttonContent = `
             <div class="button-container">
@@ -532,10 +618,10 @@ if (promotedQuantityElement && post.quantity !== undefined) {
                     data-product-location="${escapeHtml(post.location || 'N/A')}"
                     data-product-condition="${escapeHtml(post.productCondition || 'N/A')}"
                     data-product-price="${post.price ? '₦' + Number(post.price).toLocaleString('en-NG') : '₦0.00'}"
-                    data-seller-id="${post.createdBy ? post.createdBy.userId : ''}
+                    data-seller-id="${post.createdBy ? post.createdBy.userId : ''}"
                     data-product-quantity="${post.quantity || 1}"
                     ${isSold ? 'disabled' : ''}>
-                    <i class="fas fa-shopping-cart"></i> ${isSold ? 'Sold' : 'Buy'}
+                    <i class="fas fa-shopping-cart"></i> ${isSold ? 'Sold Out' : 'Buy Now'}
                 </button>
                 <button class="promoted-cta-button send-message-btn ${isSold ? 'unavailable' : ''}"
                     data-recipient-id="${post.createdBy ? post.createdBy.userId : ''}"
@@ -562,7 +648,7 @@ if (promotedQuantityElement && post.quantity !== undefined) {
     } else {
         buttonContent = `
             <a href="javascript:void(0);" style="pointer-events: none; color: #28a745; font-size: 14px; font-weight: 400;">
-                <i class="fas fa-toggle-on"></i> Active
+                <i class="fas fa-toggle-on"></i> Active (Your Post)
             </a>
         `;
     }
@@ -573,11 +659,13 @@ if (promotedQuantityElement && post.quantity !== undefined) {
             <span>Promoted</span>
         </div>
         <div class="promoted-header">
-            <img class="promoted-avatar" data-user-id="${post.createdBy?.userId || ''}" onerror="this.src='/salmart-192x192.png'" alt="User Avatar">
-            <div class="promoted-user-info">
-                <h5 class="promoted-user-name">${escapeHtml(post.createdBy ? post.createdBy.name : 'Unknown')}</h5>
-                <span class="promoted-time">${formatTime(post.createdAt || new Date())}</span>
-            </div>
+            <a href="Profile.html?userId=${post.createdBy?.userId || ''}" style="display: flex; align-items: center; text-decoration: none; color: inherit;">
+                <img class="promoted-avatar" data-user-id="${post.createdBy?.userId || ''}" onerror="this.src='/salmart-192x192.png'" alt="User Avatar">
+                <div class="promoted-user-info">
+                    <h5 class="promoted-user-name">${escapeHtml(post.createdBy ? post.createdBy.name : 'Unknown')}</h5>
+                    <span class="promoted-time">${formatTime(post.createdAt || new Date())}</span>
+                </div>
+            </a>
         </div>
         <div class="promoted-media">
             ${mediaContent}
@@ -596,6 +684,9 @@ if (promotedQuantityElement && post.quantity !== undefined) {
     if (promotedAvatarElement) {
         lazyLoadImage(promotedAvatarElement, post.createdBy?.profilePicture || '/salmart-192x192.png');
     }
+    
+    // Add the post ID to the set to prevent immediate re-insertion
+    promotedPostIdsInserted.add(post._id);
 
     return postElement;
 }
@@ -603,6 +694,7 @@ if (promotedQuantityElement && post.quantity !== undefined) {
 function createPromotedPostFiller() {
     const fillerElement = document.createElement('div');
     fillerElement.classList.add('promoted-post-filler');
+    // NOTE: Inline CSS is kept here as it was in your original code, but external CSS is recommended.
     fillerElement.style.cssText = `
         flex: 0 0 auto;
         width: calc((100% / 5) - 12px);
@@ -630,7 +722,7 @@ function createPromotedPostFiller() {
         </p>
         <button style="
             background: #28a746;
-            border: 1px solid rgba(255,255,255,0.3);
+            border: none;
             color: white;
             padding: 8px 16px;
             border-radius: 20px;
@@ -638,8 +730,7 @@ function createPromotedPostFiller() {
             cursor: pointer;
             font-size: 0.8em;
             transition: all 0.3s ease;
-        " onmouseover="this.style.background='rgba(255,255,255,0.3)'"
-           onmouseout="this.style.background='rgba(255,255,255,0.2)'">
+        " onclick="window.location.href='/browse.html'">
             Browse All
         </button>
     `;
@@ -649,9 +740,11 @@ function createPromotedPostFiller() {
 function createPromotedPostsRow(posts) {
     const wrapperContainer = document.createElement('div');
     wrapperContainer.classList.add('promoted-posts-wrapper');
+    // NOTE: Inline CSS is kept here as it was in your original code, but external CSS is recommended.
     wrapperContainer.style.cssText = `margin-bottom: 20px;`;
     const rowContainer = document.createElement('div');
     rowContainer.classList.add('promoted-posts-row-container');
+    // NOTE: Inline CSS is kept here as it was in your original code, but external CSS is recommended.
     rowContainer.style.cssText = `
         display: flex;
         overflow-x: auto;
@@ -659,7 +752,7 @@ function createPromotedPostsRow(posts) {
         padding: 10px 0;
         background-color: #fff;
         border-radius: 8px;
-        box-shadow: 0 0 10px # ddd;
+        box-shadow: 0 0 10px #ddd;
         scroll-snap-type: x mandatory;
         -webkit-overflow-scrolling: touch;
         position: relative;
@@ -668,9 +761,9 @@ function createPromotedPostsRow(posts) {
         scrollbar-width: none;
     `;
 
-    const postsToRender = posts.filter(post => !promotedPostIdsInserted.has(post._id));
-    postsToRender.forEach(post => {
-        const postElement = renderPromotedPost(post);
+    posts.forEach(post => {
+        // IMPORTANT: The renderPromotedPost function is now responsible for adding the ID to the Set
+        const postElement = renderPromotedPost(post); 
         postElement.style.cssText = `
             flex: 0 0 auto;
             width: calc((100% / 5) - 12px);
@@ -678,17 +771,17 @@ function createPromotedPostsRow(posts) {
             scroll-snap-align: start;
         `;
         rowContainer.appendChild(postElement);
-        promotedPostIdsInserted.add(post._id);
     });
 
-    const fillerCount = Math.max(0, 5 - postsToRender.length);
+    const fillerCount = Math.max(0, PROMOTED_POSTS_PER_INSERT - posts.length);
     for (let i = 0; i < fillerCount; i++) {
         const fillerElement = createPromotedPostFiller();
         rowContainer.appendChild(fillerElement);
     }
-    // Corrected this line to check for the existence of headerElement
+    
+    // Header remains empty as per your original code's intention
     const headerElement = document.createElement('h3');
-    headerElement.textContent = '';
+    headerElement.textContent = ''; 
     wrapperContainer.appendChild(headerElement);
     wrapperContainer.appendChild(rowContainer);
     rowContainer.style.position = 'relative';
@@ -707,19 +800,27 @@ function renderPost(post) {
     const isFollowing = currentFollowingList.includes(post.createdBy?.userId?.toString());
     const isPostCreator = post.createdBy && post.createdBy.userId === currentLoggedInUser;
     const isSold = post.isSold || (post.quantity !== undefined && post.quantity < 1);
+    
+    if (isSold) {
+        postElement.classList.add('sold-post');
+    }
 
     let mediaContent = '';
     let productDetails = '';
     let descriptionContent = '';
     let buttonContent = '';
 
-    const productImageForChat = post.postType === 'video_ad' ? (post.videoThumbnail || '') : (post.photo || '');
+    const productImageForChat = post.postType === 'video_ad' ? (post.videoThumbnail || DEFAULT_PLACEHOLDER_IMAGE) : (post.photo || DEFAULT_PLACEHOLDER_IMAGE);
 
 
     if (post.postType === 'video_ad') {
-        // 📢 FIX: Reverting to the video element for thumbnail, but removing data-src
-        // to prevent external lazyLoadVideo from attempting to load resources (if it's still present).
-        // We rely on the 'poster' attribute for the thumbnail preview.
+        descriptionContent = `
+            <p class="product-title">${escapeHtml(post.description)}</p>
+            <div class="post-description-text" style="margin-bottom: 10px; margin-left: -10px;">
+                
+            </div>
+        `;
+
         mediaContent = `
             <div class="post-video-container">
                 
@@ -794,6 +895,14 @@ function renderPost(post) {
 
                     </div>
                 </div>
+                ${post.quantity !== undefined ? `
+                    <div class="detail-item" style="display: none;">
+                        <div class="detail-text">
+                            <div class="detail-label"><i class="fas fa-archive" class="detail-icon quantity-icon"></i> Quantity</div>
+                            <div class="detail-value quantity-value" data-quantity="${post.quantity || 1}">${post.quantity || 1} Remaining</div>
+                        </div>
+                    </div>
+                ` : ''}
             </div>
         `;
         if (currentLoggedInUser) {
@@ -930,23 +1039,13 @@ function renderPost(post) {
         ${postActionsHtml}
     `;
 
-const quantityElement = postElement.querySelector('.quantity-value');
-if (quantityElement && post.quantity !== undefined) {
-    quantityElement.setAttribute('data-quantity', post.quantity);
-}
-
-
     const postAvatarElement = postElement.querySelector('.post-avatar');
     if (postAvatarElement) {
         lazyLoadImage(postAvatarElement, post.createdBy?.profilePicture || '/salmart-192x192.png');
     }
 
     if (post.postType === 'video_ad') {
-        // We rely on the external script's DOMContentLoaded to find this video
-        // and its initializeVideoControls function to attach the click handler.
-        
-        // **If the external script is in a separate file, you MUST manually call 
-        // initializeVideoControls() for this newly inserted post.**
+        // We rely on window.initializeVideoControls to be defined in an external script
         const videoElement = postElement.querySelector('.post-video');
         if (videoElement && window.initializeVideoControls) {
             window.initializeVideoControls(postElement);
@@ -977,16 +1076,31 @@ async function fetchInitialPosts(category = currentCategory, clearExisting = fal
     postsContainer.classList.add('loading');
 
     if (clearExisting) {
-        // 🚫 REMOVED: Video Intersection Observer cleanup since it's gone
         postsContainer.innerHTML = '';
         suggestionCounter = 0;
         // The fix is here: clear the Set when the page is re-rendered
         promotedPostIdsInserted.clear();
         if (scrollObserver) {
             scrollObserver.disconnect(); // Stop observing on clear
+            // Re-initialize the observer after clearing it
+            scrollObserver = new IntersectionObserver(async(entries) => {
+                const lastEntry = entries[0];
+                if (lastEntry.isIntersecting && !isLoading) {
+                    const lastPostElement = lastEntry.target;
+                    const lastPostId = lastPostElement.dataset.postId;
+                    if (lastPostId) {
+                        // Unobserve before fetching more to prevent immediate re-trigger
+                        scrollObserver.unobserve(lastPostElement);
+                        await fetchMorePosts(currentCategory, lastPostId);
+                    }
+                }
+            }, {
+                root: null,
+                rootMargin: '0px 0px 200px 0px',
+                threshold: 0.1
+            });
         }
     }
-
 
 
     try {
@@ -1008,18 +1122,21 @@ async function fetchInitialPosts(category = currentCategory, clearExisting = fal
         }
 
         const sortedPosts = [...allPosts].sort((a, b) => {
-            if (a.isPromoted && b.isPromoted) {
-                return new Date(b.promotedAt || b.createdAt) - new Date(a.promotedAt || a.createdAt);
-            }
-            return b.isPromoted ? 1 : a.isPromoted ? -1 : new Date(b.createdAt) - new Date(a.createdAt);
+            // Sort promoted posts first, then by date
+            if (a.isPromoted && !b.isPromoted) return -1;
+            if (!a.isPromoted && b.isPromoted) return 1;
+            
+            // For both promoted or both non-promoted, sort by date. promotedAt should be the true time for promoted.
+            const dateA = new Date(a.promotedAt || a.createdAt);
+            const dateB = new Date(b.promotedAt || b.createdAt);
+            return dateB - dateA;
         });
 
 
         const availablePromotedPosts = sortedPosts.filter(post => post.isPromoted === true && post.postType !== 'video_ad');
 
         const nonPromotedPosts = sortedPosts.filter(post => !post.isPromoted || post.postType === 'video_ad');
-        availablePromotedPosts.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
-
+        
         const fragment = document.createDocumentFragment();
 
         let allUserSuggestions = [];
@@ -1027,33 +1144,32 @@ async function fetchInitialPosts(category = currentCategory, clearExisting = fal
             allUserSuggestions = await salmartCache.fetchUserSuggestions();
         }
 
-        const initialPromotedPosts = availablePromotedPosts.filter(post => !promotedPostIdsInserted.has(post._id)).slice(0, 5);
+        // --- Initial Insertion (Promoted Posts and First Set of Normal Posts) ---
+        
+        // 1. Insert the first promoted row if available
+        const initialPromotedPosts = availablePromotedPosts.filter(post => !promotedPostIdsInserted.has(post._id)).slice(0, PROMOTED_POSTS_PER_INSERT);
         if (initialPromotedPosts.length > 0) {
             const promotedRow = createPromotedPostsRow(initialPromotedPosts);
             fragment.appendChild(promotedRow);
         }
 
         let normalPostCount = 0;
-        let promotedPostsInsertedIndex = initialPromotedPosts.length;
-        const postsBeforeSuggestion = 5;
-        const usersPerSuggestionRow = 8;
-        const promotedPostsPerInsert = 5;
-        const normalPostsBeforePromotedRow = 2;
-
-
+        
+        // --- Main Post Loop for remaining normal posts and interspersing promoted/suggestions ---
         for (let i = 0; i < nonPromotedPosts.length; i++) {
             const post = nonPromotedPosts[i];
             const postElement = renderPost(post);
             fragment.appendChild(postElement);
             normalPostCount++;
 
-            if (normalPostCount % postsBeforeSuggestion === 0 &&
+            // 1. Insert User Suggestions
+            if (normalPostCount % POSTS_BEFORE_SUGGESTION === 0 &&
                 currentLoggedInUser &&
                 allUserSuggestions.length > 0 &&
-                suggestionCounter * usersPerSuggestionRow < allUserSuggestions.length) {
+                suggestionCounter * USERS_PER_SUGGESTION_ROW < allUserSuggestions.length) {
 
-                const startIndex = suggestionCounter * usersPerSuggestionRow;
-                const endIndex = Math.min(startIndex + usersPerSuggestionRow, allUserSuggestions.length);
+                const startIndex = suggestionCounter * USERS_PER_SUGGESTION_ROW;
+                const endIndex = Math.min(startIndex + USERS_PER_SUGGESTION_ROW, allUserSuggestions.length);
                 const usersForThisRow = allUserSuggestions.slice(startIndex, endIndex);
 
                 if (usersForThisRow.length > 0) {
@@ -1065,16 +1181,16 @@ async function fetchInitialPosts(category = currentCategory, clearExisting = fal
                 }
             }
 
-            if (normalPostCount % normalPostsBeforePromotedRow === 0) {
+            // 2. Insert Promoted Row
+            if (normalPostCount % NORMAL_POSTS_BEFORE_PROMOTED_ROW === 0) {
+                // Find the next batch of promoted posts that haven't been inserted yet
                 const nextPromotedPosts = availablePromotedPosts
-                    .slice(promotedPostsInsertedIndex)
                     .filter(post => !promotedPostIdsInserted.has(post._id))
-                    .slice(0, promotedPostsPerInsert);
+                    .slice(0, PROMOTED_POSTS_PER_INSERT);
 
                 if (nextPromotedPosts.length > 0) {
                     const promotedRow = createPromotedPostsRow(nextPromotedPosts);
                     fragment.appendChild(promotedRow);
-                    promotedPostsInsertedIndex += nextPromotedPosts.length;
                 }
             }
         }
@@ -1096,7 +1212,7 @@ async function fetchInitialPosts(category = currentCategory, clearExisting = fal
 
         // Start observing the last post for infinite scroll
         const lastPostElement = postsContainer.querySelector('.post:last-of-type');
-        if (lastPostElement) {
+        if (lastPostElement && scrollObserver) {
             scrollObserver.observe(lastPostElement);
         }
 
@@ -1139,14 +1255,23 @@ async function fetchMorePosts(category, lastPostId) {
             const newLastPostElement = postsContainer.querySelector('.post:last-of-type');
 
             if (newLastPostElement && scrollObserver) {
-                scrollObserver.unobserve(newLastPostElement); // unobserve the old one before observing the new one
+                // We've already unobserved the previous last element in the IntersectionObserver callback
                 scrollObserver.observe(newLastPostElement);
             }
         } else {
             console.log('No more older posts to load.');
-            const lastPostElement = postsContainer.querySelector('.post:last-of-type');
-            if (lastPostElement) {
+            // Stop observing the current last post
+            const lastPostElement = document.querySelector(`[data-post-id="${lastPostId}"]`);
+            if (lastPostElement && scrollObserver) {
                 scrollObserver.unobserve(lastPostElement);
+            }
+            // Optional: Add a "You're all caught up" message
+            if (!postsContainer.querySelector('.end-of-feed-message')) {
+                const endMessage = document.createElement('div');
+                endMessage.classList.add('end-of-feed-message');
+                endMessage.style.cssText = `text-align: center; padding: 20px; color: #6c757d; font-style: italic;`;
+                endMessage.innerHTML = '<i class="fas fa-check-circle"></i> You\'re all caught up!';
+                postsContainer.appendChild(endMessage);
             }
         }
     } catch (error) {
@@ -1166,15 +1291,16 @@ window.redirectToLogin = function() {
 // --- Initializers ---
 
 document.addEventListener('DOMContentLoaded', async function() {
+    // Initialize IntersectionObserver for infinite scroll
     scrollObserver = new IntersectionObserver(async(entries) => {
         const lastEntry = entries[0];
         if (lastEntry.isIntersecting && !isLoading) {
-            const lastPostElement = postsContainer.querySelector('.post:last-of-type');
-            if (lastPostElement) {
-                const lastPostId = lastPostElement.dataset.postId;
-                if (lastPostId) {
-                    await fetchMorePosts(currentCategory, lastPostId);
-                }
+            const lastPostElement = lastEntry.target;
+            const lastPostId = lastPostElement.dataset.postId;
+            if (lastPostId) {
+                // Stop observing the current last element to avoid re-triggering while loading
+                scrollObserver.unobserve(lastPostElement); 
+                await fetchMorePosts(currentCategory, lastPostId);
             }
         }
     }, {
@@ -1208,7 +1334,8 @@ async function initializeAppData() {
     if (justCreatedPost) {
         sessionStorage.removeItem('justCreatedPost');
         console.log('🔄 Detected return from post creation, marking cache as stale...');
-        await salmartCache.markCacheAsStale(currentCategory);
+        // Mark *both* the current category and 'all' as stale
+        await salmartCache.markCacheAsStale(currentCategory); 
         await salmartCache.markCacheAsStale('all');
     }
     isAuthReady = true;
@@ -1218,6 +1345,7 @@ async function initializeAppData() {
 
 window.fetchPosts = fetchInitialPosts;
 window.salmartCache = salmartCache;
+
 // Listen for page visibility changes to refresh posts when returning from other pages
 document.addEventListener('visibilitychange', async () => {
     if (!document.hidden && isAuthReady) {
@@ -1226,7 +1354,10 @@ document.addEventListener('visibilitychange', async () => {
         if (justCreatedPost) {
             sessionStorage.removeItem('justCreatedPost');
             console.log('🔄 Detected return from post creation, clearing cache...');
-            await salmartCache.clearCache();
+            // In a visibility change, a full cache clear might be too aggressive, 
+            // but for a new post scenario, clearing/staling the necessary caches and re-fetching is standard.
+            await salmartCache.markCacheAsStale(currentCategory); 
+            await salmartCache.markCacheAsStale('all');
             await fetchInitialPosts(currentCategory, true);
         }
     }
@@ -1237,8 +1368,8 @@ let isScrolling = false;
 let scrollTimeout;
 
 function optimizeVideoControlsDuringScroll() {
-    // We keep this function but it mostly does nothing now for videos, 
-    // as the main resource drain is gone. We keep the scroll state management.
+    // Only apply/remove the 'scrolling' class if it's used for something critical in CSS.
+    // If not, this function can be safely removed entirely.
     const videoContainers = document.querySelectorAll('.post-video-container');
 
     videoContainers.forEach(container => {
@@ -1270,55 +1401,6 @@ window.addEventListener('scroll', throttledScrollHandler, {
 });
 
 
-
-
-// Debounce function for expensive operations
-function debounce(func, delay) {
-    let timeoutId;
-    return function() {
-        const args = arguments;
-        const context = this;
-        clearTimeout(timeoutId);
-        timeoutId = setTimeout(() => func.apply(context, args), delay);
-    }
-}
-
-// Performance monitoring (optional - for debugging)
-function monitorScrollPerformance() {
-    let lastScrollTime = performance.now();
-    let frameCount = 0;
-
-    function checkScrollFPS() {
-        const now = performance.now();
-        frameCount++;
-
-        if (now - lastScrollTime >= 1000) {
-            const fps = frameCount;
-            if (fps < 30) {
-                console.warn(`Low scroll FPS detected: ${fps}fps`);
-            }
-            frameCount = 0;
-            lastScrollTime = now;
-        }
-
-        if (isScrolling) {
-            requestAnimationFrame(checkScrollFPS);
-        }
-    }
-
-    window.addEventListener('scroll', () => {
-        if (!isScrolling) {
-            requestAnimationFrame(checkScrollFPS);
-        }
-    }, {
-        passive: true
-    });
-}
-
-
-// Call this if you want to monitor performance (optional)
-// monitorScrollPerformance();
-
 // Also listen for focus events as a backup
 window.addEventListener('focus', async() => {
     if (isAuthReady) {
@@ -1326,7 +1408,8 @@ window.addEventListener('focus', async() => {
         if (justCreatedPost) {
             sessionStorage.removeItem('justCreatedPost');
             console.log('🔄 Detected return from post creation via focus, clearing cache...');
-            await salmartCache.clearCache();
+            await salmartCache.markCacheAsStale(currentCategory); 
+            await salmartCache.markCacheAsStale('all');
             await fetchInitialPosts(currentCategory, true);
         }
     }
@@ -1337,7 +1420,8 @@ window.addEventListener('beforeunload', () => {
     if (socket) {
         socket.disconnect();
     }
-    // 🚫 REMOVED: Video Intersection Observer disconnect
-  
+    if (scrollObserver) {
+        scrollObserver.disconnect();
+    }
     imageLoader.disconnect();
 });

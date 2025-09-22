@@ -1185,13 +1185,15 @@ async function notifyFollowersOfNewPost(newPost, user, req) {
         return res.status(403).json({ success: false, message: 'Not authorized to edit this post' });
       }
 
-      const { description, productCondition, price, location } = req.body;
+      const { description, productCondition, price, location , quantity, category} = req.body;
       let tempFiles = [];
 
       if (description) post.description = sanitizeHtml(description, { allowedTags: [], allowedAttributes: {} });
       if (productCondition) post.productCondition = productCondition;
       if (price) post.price = Number(price);
       if (location) post.location = location;
+      if (quantity) post.quantity = quantity;
+      if (category) post.category = category;
       if (req.file) {
         if (isProduction) {
           post.photo = req.file.path;
@@ -1210,7 +1212,12 @@ async function notifyFollowersOfNewPost(newPost, user, req) {
           profilePicture: post.createdBy.userId.profilePicture || 'default-avatar.png', // Use User profile picture
         },
       };
-
+// In your post edit route (after successful database update)
+io.emit('postUpdated', {
+    postId: updatedPost._id,
+    updatedPost: updatedPost,
+    userId: req.user.id // The user who made the edit
+});
       logger.info(`Post ${postId} edited by user ${userId}`);
       res.json({ success: true, message: 'Post updated successfully', post: updatedPost });
 

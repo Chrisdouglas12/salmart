@@ -126,58 +126,39 @@ class SalmartCache {
     async updatePostInCache(postId, updates, category = 'all') {
         if (!postId || !updates) return;
         
-// Ensure quantity is properly handled in updates
-    if (updates.quantity !== undefined) {
-        updates.isSold = updates.quantity < 1;
-    }
-        const dbKey = this._getPersonalizedDBKey(`posts_category_${category}`);
+        // Ensure quantity is properly handled in updates
+        if (updates.quantity !== undefined) {
+            updates.isSold = updates.quantity < 1;
+        }
+        
+        // Use a Set for the categories to prevent duplicates and ensure 'all' is always checked
+        const categoriesToUpdate = new Set([category, 'all']);
 
         try {
             if (typeof get !== 'undefined' && typeof set !== 'undefined') {
-                let cachedData = (await get(dbKey)) || { data: [], cachedAt: Date.now() };
-                let cachedPosts = cachedData.data || [];
+                for (const cat of categoriesToUpdate) {
+                    const dbKey = this._getPersonalizedDBKey(`posts_category_${cat}`);
+                    let cachedData = (await get(dbKey)) || { data: [], cachedAt: Date.now() };
+                    let cachedPosts = cachedData.data || [];
 
-                const postIndex = cachedPosts.findIndex(post => post._id === postId);
-                if (postIndex !== -1) {
-                    cachedPosts[postIndex] = { ...cachedPosts[postIndex], ...updates };
-                    await set(dbKey, { data: cachedPosts, cachedAt: cachedData.cachedAt });
-                    console.log(`💾 [SalmartCache] Updated post ${postId} in cache for category ${category}`);
-
-                    // Update other categories
-                    await this._updatePostInAllCategories(postId, updates);
+                    const postIndex = cachedPosts.findIndex(post => post._id === postId);
+                    
+                    if (postIndex !== -1) {
+                        cachedPosts[postIndex] = { ...cachedPosts[postIndex], ...updates };
+                        await set(dbKey, { data: cachedPosts, cachedAt: cachedData.cachedAt });
+                        console.log(`💾 [SalmartCache] Updated post ${postId} in cache for category ${cat}`);
+                    }
+                    // If the post is not found in 'all', it might be because the cache is old, 
+                    // but we only update the category if the post exists there.
                 }
             }
         } catch (error) {
             console.error('❌ [SalmartCache] Error updating post in cache:', error);
         }
     }
-
-    async _updatePostInAllCategories(postId, updates) {
-        const categories = ['all', 'electronics', 'fashion', 'food_items', 'others', 'books', 'music'];
-        
-        if (updates.quantity !== undefined) {
-        updates.isSold = updates.quantity < 1;
-    }
-        const userId = localStorage.getItem('userId') || 'anonymous';
-
-        for (const category of categories) {
-            try {
-                const dbKey = `posts_category_${category}_${userId}`;
-                if (typeof get !== 'undefined' && typeof set !== 'undefined') {
-                    let cachedData = (await get(dbKey)) || { data: [], cachedAt: Date.now() };
-                    let cachedPosts = cachedData.data || [];
-                    const postIndex = cachedPosts.findIndex(post => post._id === postId);
-
-                    if (postIndex !== -1) {
-                        cachedPosts[postIndex] = { ...cachedPosts[postIndex], ...updates };
-                        await set(dbKey, { data: cachedPosts, cachedAt: cachedData.cachedAt });
-                    }
-                }
-            } catch (error) {
-                console.warn(`⚠️ [SalmartCache] Could not update post in category ${category}:`, error);
-            }
-        }
-    }
+    
+    // NOTE: _updatePostInAllCategories is now simplified and integrated into updatePostInCache 
+    // to prevent redundant code and ensure key consistency. The old implementation is effectively removed.
 
     async optimisticLikeUpdate(postId, isLiked, userId, category = 'all') {
         if (!postId || !userId) return;
@@ -185,6 +166,7 @@ class SalmartCache {
         this.pendingUpdates.set(`like_${postId}`, { isLiked, timestamp: Date.now() });
 
         try {
+            // Optimistically update the primary category cache
             const dbKey = this._getPersonalizedDBKey(`posts_category_${category}`);
             let cachedData = (await get(dbKey)) || { data: [], cachedAt: Date.now() };
             let cachedPosts = cachedData.data || [];
@@ -201,8 +183,9 @@ class SalmartCache {
                 } else {
                     updatedLikes = updatedLikes.filter(id => id !== userId);
                 }
-
-                await this.updatePostInCache(postId, { likes: updatedLikes }, category);
+                
+                // Use the main update function to ensure 'all' is also updated
+                await this.updatePostInCache(postId, { likes: updatedLikes }, category); 
                 this._updateLikeUI(postId, updatedLikes, userId);
             }
 
@@ -216,6 +199,7 @@ class SalmartCache {
             });
 
             if (response.likes) {
+                // Update with network data to reflect true state across all relevant caches
                 await this.updatePostInCache(postId, { likes: response.likes }, category);
                 this._updateLikeUI(postId, response.likes, userId);
             }
@@ -230,25 +214,27 @@ class SalmartCache {
 
     async addNewPostToCache(newPost, category = 'all') {
         try {
-            const dbKey = this._getPersonalizedDBKey(`posts_category_${category}`);
-            if (typeof get !== 'undefined' && typeof set !== 'undefined') {
-                let cachedData = (await get(dbKey)) || { data: [], cachedAt: Date.now() };
-                let cachedPosts = cachedData.data || [];
+            const categoriesToUpdate = new Set([category, 'all']);
 
-                const updatedPosts = [newPost, ...cachedPosts];
-                const uniquePosts = updatedPosts.filter((post, index, arr) => 
-                    arr.findIndex(p => p._id === post._id) === index
-                );
-
-                await set(dbKey, { data: uniquePosts, cachedAt: Date.now() });
-                console.log(`💾 [SalmartCache] Added new post to cache for category: ${category}`);
-
-                // Mark cache as stale
-                await this.markCacheAsStale(category);
-                if (category !== 'all') {
-                    await this.markCacheAsStale('all');
+            for (const cat of categoriesToUpdate) {
+                const dbKey = this._getPersonalizedDBKey(`posts_category_${cat}`);
+                if (typeof get !== 'undefined' && typeof set !== 'undefined') {
+                    let cachedData = (await get(dbKey)) || { data: [], cachedAt: Date.now() };
+                    let cachedPosts = cachedData.data || [];
+    
+                    const updatedPosts = [newPost, ...cachedPosts];
+                    const uniquePosts = updatedPosts.filter((post, index, arr) => 
+                        arr.findIndex(p => p._id === post._id) === index
+                    );
+    
+                    await set(dbKey, { data: uniquePosts, cachedAt: Date.Now() });
+                    console.log(`💾 [SalmartCache] Added new post to cache for category: ${cat}`);
+    
+                    // Mark cache as stale
+                    await this.markCacheAsStale(cat);
                 }
             }
+
         } catch (error) {
             console.error('❌ [SalmartCache] Error adding new post to cache:', error);
             await this.markCacheAsStale(category);
@@ -296,6 +282,7 @@ class SalmartCache {
             });
 
             if (response) {
+                // Use the main update function to ensure all relevant caches are hit
                 await this.updatePostInCache(postId, response, category);
                 const currentUserId = localStorage.getItem('userId');
                 if (response.likes && currentUserId) {
@@ -325,7 +312,7 @@ class SalmartCache {
                             if (a.isPromoted && b.isPromoted) {
                                 return new Date(b.promotedAt || b.createdAt) - new Date(a.promotedAt || a.createdAt);
                             }
-                            return b.isPromoted ? 1 : a.isPromoted ? -1 : new Date(b.createdAt) - new Date(a.createdAt);
+                            return b.isPromoted ? -1 : a.isPromoted ? 1 : new Date(b.createdAt) - new Date(a.createdAt);
                         });
 
                         this._backgroundSyncNewPosts(category, sortedCachedPosts).catch(e => console.warn('Background sync failed:', e));
@@ -444,6 +431,59 @@ class SalmartCache {
             }
         });
     }
+    
+    async removePostFromCache(postId) {
+        if (!postId) {
+            console.warn('❌ [SalmartCache] Post ID is required to remove post from cache');
+            return;
+        }
+
+        try {
+            const categories = ['all', 'electronics', 'fashion', 'food_items', 'others', 'books', 'music'];
+            let removedFromAnyCategory = false;
+
+            // Remove from all category caches
+            for (const category of categories) {
+                // FIX: Use the centralized key generator
+                const dbKey = this._getPersonalizedDBKey(`posts_category_${category}`);
+                
+                if (typeof get !== 'undefined' && typeof set !== 'undefined') {
+                    try {
+                        const cachedData = await get(dbKey);
+                        if (cachedData && cachedData.data && Array.isArray(cachedData.data)) {
+                            const originalLength = cachedData.data.length;
+                            const filteredPosts = cachedData.data.filter(post => post._id !== postId);
+                            
+                            if (filteredPosts.length !== originalLength) {
+                                await set(dbKey, { 
+                                    data: filteredPosts, 
+                                    cachedAt: cachedData.cachedAt || Date.now() 
+                                });
+                                removedFromAnyCategory = true;
+                                console.log(`💾 [SalmartCache] Removed post ${postId} from ${category} cache`);
+                            }
+                        }
+                    } catch (error) {
+                        console.warn(`⚠️ [SalmartCache] Could not remove post from ${category} cache:`, error);
+                    }
+                }
+            }
+
+            if (removedFromAnyCategory) {
+                console.log(`✅ [SalmartCache] Successfully removed post ${postId} from cache`);
+                
+                // Mark caches as potentially stale for consistency
+                await this.markCacheAsStale('all');
+            } else {
+                console.log(`ℹ️ [SalmartCache] Post ${postId} was not found in any cache`);
+            }
+
+        } catch (error) {
+            console.error(`❌ [SalmartCache] Error removing post ${postId} from cache:`, error);
+            // Fallback: mark all caches as stale
+            await this.markCacheAsStale('all');
+        }
+    }
 
     async _backgroundSyncNewPosts(category, cachedPosts) {
         if (cachedPosts.length === 0) return;
@@ -472,7 +512,7 @@ class SalmartCache {
                     if (a.isPromoted && b.isPromoted) {
                         return new Date(b.promotedAt || b.createdAt) - new Date(a.promotedAt || a.createdAt);
                     }
-                    return b.isPromoted ? 1 : a.isPromoted ? -1 : new Date(b.createdAt) - new Date(a.createdAt);
+                    return b.isPromoted ? -1 : a.isPromoted ? 1 : new Date(b.createdAt) - new Date(a.createdAt);
                 });
 
                 if (typeof set !== 'undefined') {
@@ -509,7 +549,8 @@ class SalmartCache {
                             if (a.isPromoted && b.isPromoted) {
                                 return new Date(b.promotedAt || b.createdAt) - new Date(a.promotedAt || a.createdAt);
                             }
-                            return b.isPromoted ? 1 : a.isPromoted ? -1 : new Date(b.createdAt) - new Date(a.createdAt);
+                            // FIX: Corrected sort logic for non-promoted vs promoted posts
+                            return b.isPromoted ? -1 : a.isPromoted ? 1 : new Date(b.createdAt) - new Date(a.createdAt);
                         });
 
                         await set(dbKey, { data: cachedPosts, cachedAt: Date.now() });
@@ -538,12 +579,13 @@ class SalmartCache {
                     console.log(`🗑️ [SalmartCache] Cleared cache for category: ${category}`);
                 }
             } else {
-                const categories = ['all', 'electronics', 'fashion', 'home', 'sports', 'books', 'automotive'];
-                const userId = localStorage.getItem('userId') || 'anonymous';
+                const categories = ['all', 'electronics', 'fashion', 'home', 'sports', 'books', 'automotive', 'food_items', 'others', 'music'];
+                // NOTE: removed need for 'userId' variable here, it's inside _getPersonalizedDBKey
 
                 for (const cat of categories) {
-                    const dbKey = `posts_category_${cat}_${userId}`;
-                    const staleKey = `cache_stale_${cat}_${userId}`;
+                    // FIX: Use the centralized key generator
+                    const dbKey = this._getPersonalizedDBKey(`posts_category_${cat}`);
+                    const staleKey = this._getPersonalizedDBKey(`cache_stale_${cat}`);
                     if (typeof del !== 'undefined') {
                         await del(dbKey);
                         await del(staleKey);
