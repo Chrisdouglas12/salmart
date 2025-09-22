@@ -729,7 +729,7 @@ function renderPost(post) {
                        crossorigin="anonymous" 
                        muted
                        poster="${post.videoThumbnail || ''}"
-                       preload="none"
+                       preload="metadata"
                        style="width: 100%; height: 100%; object-fit: cover; cursor: pointer;">
                     
                     <source src="${post.video || ''}" type="video/mp4">

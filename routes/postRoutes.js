@@ -114,24 +114,33 @@ const upload = multer({
 // Helper function to extract Cloudinary thumbnail URL
 const getCloudinaryThumbnailUrl = (videoUrl) => {
   try {
-    // Extract public_id from video URL
+    if (!videoUrl) {
+      logger.warn('No video URL provided for thumbnail generation');
+      return null;
+    }
+    
     const urlParts = videoUrl.split('/');
     const uploadIndex = urlParts.findIndex(part => part === 'upload');
-    if (uploadIndex === -1) return null;
+    if (uploadIndex === -1) {
+      logger.warn(`Invalid Cloudinary URL format: ${videoUrl}`);
+      return null;
+    }
     
-    // Get public_id (everything after version number, remove extension)
+    // Get the public_id (everything after version number, remove extension)
     const publicIdWithExt = urlParts.slice(uploadIndex + 2).join('/');
     const publicId = publicIdWithExt.replace(/\.[^/.]+$/, '');
     
-    // Construct thumbnail URL
-    const baseUrl = urlParts.slice(0, uploadIndex + 1).join('/');
-    return `${baseUrl}/image/upload/so_5.0,c_fill,w_400,h_350,q_auto:good/${publicId}.jpg`;
+    // Construct thumbnail URL properly - replace 'video' with 'image' in resource type
+    const baseUrl = urlParts.slice(0, uploadIndex - 1).join('/'); // Go one step back to exclude 'video'
+    const thumbnailUrl = `${baseUrl}/image/upload/so_5.0,c_fill,w_400,h_350,q_auto:good/${publicId}.jpg`;
+    
+    logger.info(`Generated thumbnail URL: ${thumbnailUrl}`);
+    return thumbnailUrl;
   } catch (error) {
     logger.error(`Error generating thumbnail URL: ${error.message}`);
     return null;
   }
 };
-
 // Helper function for Cloudinary upload (used in development environment if not direct multer-storage-cloudinary)
 const uploadToCloudinary = (filePath, resourceType = 'auto') => {
   return new Promise((resolve, reject) => {
@@ -289,6 +298,8 @@ router.post(
 
         // Generate thumbnail URL only for video posts
         const thumbnailUrl = getCloudinaryThumbnailUrl(videoUrl);
+logger.info(`Generated thumbnail URL: ${thumbnailUrl}`); // Add this line
+console.log('Thumbnail URL:', thumbnailUrl); // Add this for debugging
 
         newPost = new Post({
           postType,
