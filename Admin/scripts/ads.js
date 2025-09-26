@@ -706,7 +706,7 @@ async function submitAd() {
     if (error.name === 'AbortError') {
       showToast('Request timed out. Please check your connection and try again.', '#dc3545');
     } else if (error.name === 'TypeError' && error.message.includes('fetch')) {
-      showToast('Network error. Please check your connection and try again.', '#dc3545');
+      showToast('Something went wrong. Please try again.', '#dc3545');
     } else {
       showToast('An unexpected error occurred. Please try again.', '#dc3545');
     }
